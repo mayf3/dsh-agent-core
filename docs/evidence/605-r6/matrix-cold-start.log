@@ -1,0 +1,10 @@
+cold startup ready; 5227 business/evidence records and all three full protected records unchanged; epoch/capacity bookkeeping allowed; spawn=0
+✔ MATRIX cold-start (290.475959ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 352.653083

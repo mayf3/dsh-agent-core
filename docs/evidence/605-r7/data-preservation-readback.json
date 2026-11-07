@@ -1,0 +1,31 @@
+{
+  "at": "2026-11-07T04:29:25.553444+00:00",
+  "inputs": [
+    {
+      "path": "/private/tmp/w6-state-compat-readable/sanitized/control/turn-recovery-v3.json",
+      "bytes": 10700760,
+      "sha256": "1488d505a69c65c417af96be0da05fb40b52fb2adc2c1cbd3d88d4dd3e85864a",
+      "verifiedSHA256": "1488d505a69c65c417af96be0da05fb40b52fb2adc2c1cbd3d88d4dd3e85864a"
+    },
+    {
+      "path": "/private/tmp/w6-state-compat-readable/sanitized/control/turn-recovery-v3.json.abandonment-declarations.json",
+      "bytes": 4062,
+      "sha256": "139348609fb6e4936cb2339450ad47ef23869a9337f08f8a76bf1b27501839d3",
+      "verifiedSHA256": "139348609fb6e4936cb2339450ad47ef23869a9337f08f8a76bf1b27501839d3"
+    },
+    {
+      "path": "/private/tmp/w6-state-compat-readable/sanitized/control/turn-recovery-v3.json.faults.json",
+      "bytes": 147,
+      "sha256": "1177da0f7dbe7b722ec2dce5ae6a404d2a0460d05bb901f0493dec3f180d3486",
+      "verifiedSHA256": "1177da0f7dbe7b722ec2dce5ae6a404d2a0460d05bb901f0493dec3f180d3486"
+    },
+    {
+      "path": "/private/tmp/w6-state-compat-readable/sanitized/scheduler/jobs.json",
+      "bytes": 7016723,
+      "sha256": "5fe2b0d530f271e5c9c0c0f41e62b0732c9735580d4d0ff12dabb1de26609d77",
+      "verifiedSHA256": "5fe2b0d530f271e5c9c0c0f41e62b0732c9735580d4d0ff12dabb1de26609d77"
+    }
+  ],
+  "continuationSHA256": "0d5976f37179bedb2247120a3ce0009c35d6def54bec32990e6fed7a59558cc8",
+  "r6FactsReboundByExactBytes": true
+}

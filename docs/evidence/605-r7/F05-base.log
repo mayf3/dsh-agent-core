@@ -1,0 +1,22 @@
+✖ G: unsafe credential (group/world readable) fails loud on the real chain (0.467792ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 42.405
+
+✖ failing tests:
+
+test at packages/agent-router/test/luna-credential-chain.test.js:186:1
+✖ G: unsafe credential (group/world readable) fails loud on the real chain (0.467792ms)
+  Error: dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout
+      at cliBin (file:///private/tmp/h605-r2/packages/agent-provisioning/src/index.js:76:11)
+      at gates (file:///private/tmp/h605-r2/packages/agent-router/test/luna-credential-chain.test.js:42:46)
+      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/luna-credential-chain.test.js:187:8)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.start (node:internal/test_runner/test:1257:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)

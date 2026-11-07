@@ -1,0 +1,82 @@
+[
+  {
+    "id": "F01",
+    "file": "packages/agent-router/test/broker-rpc.test.js",
+    "line": 322,
+    "name": "seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept)",
+    "original": "test at packages/agent-router/test/broker-rpc.test.js:322:1\n✖ seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept) (0.491083ms)\n  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /response was lost/. Input:\n  \n  'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {\"state\":\"STILL_UNKNOWN\",\"operation\":\"create\",\"reason\":\"read-back transport failed\"}'\n  \n      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/broker-rpc.test.js:330:10)\n      at async Test.run (node:internal/test_runner/test:1404:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: 'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {\"state\":\"STILL_UNKNOWN\",\"operation\":\"create\",\"reason\":\"read-back transport failed\"}',\n    expected: /response was lost/,\n    operator: 'match',\n    diff: 'simple'\n  }\n",
+    "pattern": "^seam:\\ a\\ gateway\\ THROW\\ resolves\\ as\\ mutation_outcome_unknown\\ with\\ zero\\ automatic\\ retry\\ \\(true\\ transport\\ loss\\ semantics\\ kept\\)$"
+  },
+  {
+    "id": "F02",
+    "file": "packages/agent-router/test/broker-rpc.test.js",
+    "line": 334,
+    "name": "seam: a structured gateway failure passes through declared codes verbatim at the correct depth",
+    "original": "test at packages/agent-router/test/broker-rpc.test.js:334:1\n✖ seam: a structured gateway failure passes through declared codes verbatim at the correct depth (0.155875ms)\n  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /outcome is unknown/. Input:\n  \n  'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {\"state\":\"STILL_UNKNOWN\",\"operation\":\"create\",\"reason\":\"read-back response unusable\"}'\n  \n      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/broker-rpc.test.js:340:10)\n      at async Test.run (node:internal/test_runner/test:1404:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: 'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {\"state\":\"STILL_UNKNOWN\",\"operation\":\"create\",\"reason\":\"read-back response unusable\"}',\n    expected: /outcome is unknown/,\n    operator: 'match',\n    diff: 'simple'\n  }\n",
+    "pattern": "^seam:\\ a\\ structured\\ gateway\\ failure\\ passes\\ through\\ declared\\ codes\\ verbatim\\ at\\ the\\ correct\\ depth$"
+  },
+  {
+    "id": "F03",
+    "file": "packages/agent-router/test/luna-credential-chain.test.js",
+    "line": 157,
+    "name": "E: valid canonical credential — child initializes on the openai-codex route",
+    "original": "test at packages/agent-router/test/luna-credential-chain.test.js:157:1\n✖ E: valid canonical credential — child initializes on the openai-codex route (1.7235ms)\n  Error: dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout\n      at cliBin (file:///private/tmp/h605-r2/packages/agent-provisioning/src/index.js:76:11)\n      at gates (file:///private/tmp/h605-r2/packages/agent-router/test/luna-credential-chain.test.js:42:46)\n      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/luna-credential-chain.test.js:158:8)\n      at Test.runInAsyncScope (node:async_hooks:226:14)\n      at Test.run (node:internal/test_runner/test:1397:25)\n      at Test.start (node:internal/test_runner/test:1257:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)\n",
+    "pattern": "^E:\\ valid\\ canonical\\ credential\\ —\\ child\\ initializes\\ on\\ the\\ openai\\-codex\\ route$"
+  },
+  {
+    "id": "F04",
+    "file": "packages/agent-router/test/luna-credential-chain.test.js",
+    "line": 169,
+    "name": "F: missing credential fails loud on the real chain — never a silent fallback",
+    "original": "test at packages/agent-router/test/luna-credential-chain.test.js:169:1\n✖ F: missing credential fails loud on the real chain — never a silent fallback (0.098834ms)\n  Error: dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout\n      at cliBin (file:///private/tmp/h605-r2/packages/agent-provisioning/src/index.js:76:11)\n      at gates (file:///private/tmp/h605-r2/packages/agent-router/test/luna-credential-chain.test.js:42:46)\n      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/luna-credential-chain.test.js:170:8)\n      at Test.runInAsyncScope (node:async_hooks:226:14)\n      at Test.run (node:internal/test_runner/test:1397:25)\n      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)\n      at Test.postRun (node:internal/test_runner/test:1537:19)\n      at Test.run (node:internal/test_runner/test:1462:12)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n",
+    "pattern": "^F:\\ missing\\ credential\\ fails\\ loud\\ on\\ the\\ real\\ chain\\ —\\ never\\ a\\ silent\\ fallback$"
+  },
+  {
+    "id": "F05",
+    "file": "packages/agent-router/test/luna-credential-chain.test.js",
+    "line": 186,
+    "name": "G: unsafe credential (group/world readable) fails loud on the real chain",
+    "original": "test at packages/agent-router/test/luna-credential-chain.test.js:186:1\n✖ G: unsafe credential (group/world readable) fails loud on the real chain (0.09325ms)\n  Error: dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout\n      at cliBin (file:///private/tmp/h605-r2/packages/agent-provisioning/src/index.js:76:11)\n      at gates (file:///private/tmp/h605-r2/packages/agent-router/test/luna-credential-chain.test.js:42:46)\n      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/luna-credential-chain.test.js:187:8)\n      at Test.runInAsyncScope (node:async_hooks:226:14)\n      at Test.run (node:internal/test_runner/test:1397:25)\n      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)\n      at Test.postRun (node:internal/test_runner/test:1537:19)\n      at Test.run (node:internal/test_runner/test:1462:12)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n",
+    "pattern": "^G:\\ unsafe\\ credential\\ \\(group/world\\ readable\\)\\ fails\\ loud\\ on\\ the\\ real\\ chain$"
+  },
+  {
+    "id": "F06",
+    "file": "packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js",
+    "line": 1,
+    "name": "packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js",
+    "original": "test at packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js:1:1\n✖ packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js (37.034625ms)\n  'test failed'\n",
+    "pattern": null
+  },
+  {
+    "id": "F07",
+    "file": "packages/agent-router/test/process-lifecycle/message-origin.test.js",
+    "line": 175,
+    "name": "R3: a settled or unknown turnExecutionId proves nothing (absent leaf)",
+    "original": "test at packages/agent-router/test/process-lifecycle/message-origin.test.js:175:1\n✖ R3: a settled or unknown turnExecutionId proves nothing (absent leaf) (0.126125ms)\n  TypeError: Cannot read properties of undefined (reading 'ctx')\n      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/process-lifecycle/message-origin.test.js:180:32)\n      at async Test.run (node:internal/test_runner/test:1404:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n",
+    "pattern": "^R3:\\ a\\ settled\\ or\\ unknown\\ turnExecutionId\\ proves\\ nothing\\ \\(absent\\ leaf\\)$"
+  },
+  {
+    "id": "F08",
+    "file": "packages/agent-router/test/route-chain/native-goal-composed.test.js",
+    "line": 14,
+    "name": "scripted native rounds obtain fresh parent proof after prior settlement through real child transport",
+    "original": "test at packages/agent-router/test/route-chain/native-goal-composed.test.js:14:1\n✖ scripted native rounds obtain fresh parent proof after prior settlement through real child transport (0.6665ms)\n  AssertionError [ERR_ASSERTION]: paired native build is required; this conformance test must not silently skip\n      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/route-chain/native-goal-composed.test.js:15:10)\n      at Test.runInAsyncScope (node:async_hooks:226:14)\n      at Test.run (node:internal/test_runner/test:1397:25)\n      at Test.start (node:internal/test_runner/test:1257:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: undefined,\n    expected: true,\n    operator: '==',\n    diff: 'simple'\n  }\n",
+    "pattern": "^scripted\\ native\\ rounds\\ obtain\\ fresh\\ parent\\ proof\\ after\\ prior\\ settlement\\ through\\ real\\ child\\ transport$"
+  },
+  {
+    "id": "F09",
+    "file": "packages/agent-router/test/route-chain/native-goal-composed.test.js",
+    "line": 74,
+    "name": "real child timeout removes native queued admission before old owner release",
+    "original": "test at packages/agent-router/test/route-chain/native-goal-composed.test.js:74:43\n✖ real child timeout removes native queued admission before old owner release (37.646541ms)\n  Error: agent agt_cancel-source (generation 1) RPC initialize rejected: AGENT_PROCESS_EXITED\n      at AgentProcess.rejectAllPending (file:///private/tmp/h605-r2/packages/agent-router/src/process/rpc-channel.js:358:35)\n      at AgentProcess.onChildExit (file:///private/tmp/h605-r2/packages/agent-router/src/process/spawn.js:143:10)\n      at ChildProcess.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/src/process/spawn.js:77:47)\n      at ChildProcess.wrapper (node:events:639:12)\n      at ChildProcess.emit (node:events:514:20)\n      at ChildProcess._handle.onexit (node:internal/child_process:294:12) {\n    code: 'AGENT_PROCESS_EXITED',\n    agentId: 'agt_cancel-source',\n    processGeneration: 1,\n    method: 'initialize',\n    evidence: { code: 1, signal: null }\n  }\n",
+    "pattern": "^real\\ child\\ timeout\\ removes\\ native\\ queued\\ admission\\ before\\ old\\ owner\\ release$"
+  },
+  {
+    "id": "F10",
+    "file": "packages/agent-router/test/route-chain/native-goal-composed.test.js",
+    "line": 74,
+    "name": "real child cancel removes native queued admission before old owner release",
+    "original": "test at packages/agent-router/test/route-chain/native-goal-composed.test.js:74:43\n✖ real child cancel removes native queued admission before old owner release (34.797875ms)\n  Error: agent agt_cancel-source (generation 1) RPC initialize rejected: AGENT_PROCESS_EXITED\n      at AgentProcess.rejectAllPending (file:///private/tmp/h605-r2/packages/agent-router/src/process/rpc-channel.js:358:35)\n      at AgentProcess.onChildExit (file:///private/tmp/h605-r2/packages/agent-router/src/process/spawn.js:143:10)\n      at ChildProcess.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/src/process/spawn.js:77:47)\n      at ChildProcess.wrapper (node:events:639:12)\n      at ChildProcess.emit (node:events:514:20)\n      at ChildProcess._handle.onexit (node:internal/child_process:294:12) {\n    code: 'AGENT_PROCESS_EXITED',\n    agentId: 'agt_cancel-source',\n    processGeneration: 1,\n    method: 'initialize',\n    evidence: { code: 1, signal: null }\n  }\n",
+    "pattern": "^real\\ child\\ cancel\\ removes\\ native\\ queued\\ admission\\ before\\ old\\ owner\\ release$"
+  }
+]

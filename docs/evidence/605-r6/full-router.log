@@ -1,0 +1,1756 @@
+✔ 1. set/get/list round-trip (3.229334ms)
+✔ 2. survives restart: a new instance over the same store file (1.070875ms)
+✔ 3. document shape is atomic and versioned (1.242791ms)
+✔ 4. missing file is a legal empty table (0.0915ms)
+✔ 5. corrupt / unsupported store fails loud (never silently reset) (2.011084ms)
+✔ 6. absolute-path contract: relative and ~-prefixed storeFile rejected (0.099083ms)
+✔ 7. row validation (0.720208ms)
+✔ 8. FIX3: persist failure rolls back RAM, keeps disk, rejects the caller (1.406292ms)
+✔ 9. FIX3: a failed NEW binding rolls back too (no phantom row) (0.9365ms)
+✔ 10. freshSessionFor mints on first sight, returns the same row on retry (1.778667ms)
+✔ 11. freshSessionFor: different requestIds mint different sessions (0.973667ms)
+✔ 12. freshSessionFor: mapping is per-agent (same requestId, two agents) (0.817375ms)
+✔ 13. freshSessionFor hands the mint the used-id set (router collision loop input) (1.053625ms)
+✔ 14. freshSessionFor: concurrent first deliveries converge on ONE row (0.735209ms)
+✔ 15. freshSessions survive restart; older documents (no table) still load (1.516667ms)
+✔ 16. freshSessionFor validation and corrupt-table fail-loud (1.138667ms)
+✔ 17. fresh request mapping is durable and restarts keep resolving the same session (0.773584ms)
+✔ 17b. legacy lineage-marked fresh rows load byte-stable across restart and persist (0.9325ms)
+✔ 17c. legacy fresh row with a malformed marker fails the store load loud (0.444667ms)
+✔ legacy durable cut receipt loads, round-trips byte-stable, and stays queryable across normal writes (1.427625ms)
+✔ legacy durable cut receipt drift fails the store load loud (fail-closed compat) (0.6875ms)
+✔ legacy durable cut receipt referencing a missing conversation fails the load loud (0.495333ms)
+✔ post-rename durability failure poisons the store for later writes (sticky unknown) (9.143458ms)
+✔ 15. workspace round-trip: string stored verbatim, null preserved (1.814542ms)
+✔ 16. legacy rows WITHOUT workspace load as null (no forced migration, AC8) (1.00975ms)
+✔ 17. restart keeps workspace; a workspace-typed-garbage row fails loud (1.172083ms)
+✔ 18. set rejects a non-string non-null workspace (empty string included) (0.317625ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-broker-lRXdaX/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [broker] execute as agent agt_a (capability forum_my_notifications)
+✔ broker RPC: executed as the ACTUAL proc.agentId via the gateway (9.456792ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-broker-L9sM2t/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [broker] execute as agent agt_a (capability scheduler)
+✔ broker RPC: passes the exact immutable active-turn context beside actual agentId (1.716125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-broker-Rwcjpp/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [broker] execute as agent agt_a (capability scheduler)
+[router] [broker] execute as agent agt_a (capability scheduler)
+[router] [broker] execute as agent agt_a (capability scheduler)
+✔ broker RPC: stale generation, settled execution, and cleared turn never forward ingress context (1.704041ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-broker-epkHGz/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [broker] execute as agent agt_a (capability scheduler)
+✔ broker RPC: delayed turn-A carrier cannot inherit live turn-B ingress context (1.269584ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-broker-M50kPv/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [broker] agent agt_a: IGNORING child-supplied identity fields: agentId, callerAgentId, principalId, clientId, scope, audience, authorization, processGeneration, turnExecutionId, feishuChatId, ingressContext, activeIngressContext
+[router] [broker] execute as agent agt_a (capability forum_my_notifications)
+✔ broker RPC: forged child-supplied identity/context is IGNORED (actual Router values win) (1.302917ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-broker-FXQAIj/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: feishu:chat-1... -> agent agt_b + session main + workspace (agent default)
+✔ broker RPC: gateway absent -> fails closed, switch RPC unaffected (1.85775ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-broker-3eYZCc/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ broker RPC: unknown method still rejected (1.248917ms)
+✔ seam: a committed scheduler create reaches the model as the exact 11-field success (no double transport envelope) (0.356375ms)
+✖ seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept) (0.491083ms)
+✖ seam: a structured gateway failure passes through declared codes verbatim at the correct depth (0.155875ms)
+✔ seam: agent_session_send accepted/replied/timeout survive the corrected depth; a gateway throw stays outcome_unknown with zero retry (0.174333ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-broker-c5GoDH/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [broker] execute as agent agt_a (capability agent_session_send)
+✔ broker RPC forwards the printable child invocation anchor without treating it as identity (1.774875ms)
+✔ T1: inherited private parent TMPDIR is overridden to the fixed child TMPDIR without touching the parent env (0.774875ms)
+✔ T2: no caller channel can override or drop the fixed child TMPDIR (0.601125ms)
+﹣ T3: real plugin boot under an untraversable parent TMPDIR — plugin tree, initialize and provider registration all pass (0.164ms) # deepseek-harness CLI not resolvable (DSH_HARNESS_ROOT/checkout missing) — real child boot not run
+✔ T4: mkdtemp under the child TMPDIR (spill-local primitive) yields a random 0700 child-owned directory (27.079333ms)
+✔ T5: sentinel credentials never cross the env/log boundary and no full child env dump is asserted anywhere (0.830375ms)
+✔ four independent deadline fields with the frozen code defaults (0.718209ms)
+✔ global deployment env names override the code defaults (0.075834ms)
+✔ legacy DSH_AGENT_TURN_TIMEOUT=900000 maps to turnTimeoutMs only (production mitigation preserved) (0.1385ms)
+✔ legacy DSH_AGENT_DELIVER_TIMEOUT maps to promptReceiptTimeoutMs only (0.052167ms)
+✔ per-Agent static override > global env > code default (0.080542ms)
+✔ invalid env values fail loud before any spawn (0.198917ms)
+✔ per-Agent override file: valid shape loads; unknown agent entries apply only to that agent (3.045458ms)
+✔ per-Agent override file: malformed content fails loud (1.34975ms)
+✔ absent override file is not an error; DSH_AGENT_PROCESS_OVERRIDES_FILE locates it (0.270166ms)
+✔ zero-config construction resolves the canonical Luna built-in default (1.055666ms)
+✔ explicit constructor route wins over env; env wins over the default (0.728042ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-delivery-oguGiQ/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186170,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186170,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session main requestId job-1... (msg-1) in 3ms
+✔ D1 main first deliver: accepted, sessionId fixed main, one process, one prompt (7.162792ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-delivery-wwN0JL/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186172,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186172,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session main requestId job-1... (msg-1) in 0ms
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186172,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186172,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session main requestId job-2... (msg-2) in 0ms
+✔ D2 main again: same fixed session, process reused, no second mapping (1.706458ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-delivery-8gGwpm/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186174,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186174,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session fresh-70fa0beb02bd321b3e29ef750e2e685e requestId req-A... (msg-1) in 0ms
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186175,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186175,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session fresh-0e4dcfd94380c05baf6b9692ea7f855c requestId req-B... (msg-2) in 0ms
+✔ D3 fresh: different requestIds -> different new sessions (2.626958ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-delivery-XTEzu3/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186177,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186177,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session fresh-5c83d70d424940a12e25df42c5ed43aa requestId req-X... (msg-1) in 1ms
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186177,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186177,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session fresh-5c83d70d424940a12e25df42c5ed43aa requestId req-X... (msg-2) in 0ms
+✔ D4 fresh: same requestId retry -> same session, never a second one (2.41ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-delivery-v3iLJy/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186179,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186179,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session fresh-5c83d70d424940a12e25df42c5ed43aa requestId req-X... (msg-1) in 0ms
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186179,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186179,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session fresh-5c83d70d424940a12e25df42c5ed43aa requestId req-X... (msg-2) in 0ms
+✔ D4b fresh: concurrent first deliveries of the same requestId converge on ONE session (2.238875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-delivery-X4XgAs/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186181,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186182,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session fresh-5c83d70d424940a12e25df42c5ed43aa requestId req-X... (msg-1) in 1ms
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186182,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186182,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session fresh-e552d12e412871a44522fccc59a4316f requestId req-Y... (msg-2) in 0ms
+✔ D5 caller cannot specify or resume an arbitrary non-main session (2.123ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-delivery-UqHX4l/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186183,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186183,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session fresh-5c83d70d424940a12e25df42c5ed43aa requestId req-X... (msg-1) in 0ms
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186183,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186183,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session main requestId req-M... (msg-2) in 0ms
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-delivery-UqHX4l/bindings.json
+[router] delivery v0 fresh mapping table loaded: 1 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186184,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186184,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session fresh-5c83d70d424940a12e25df42c5ed43aa requestId req-X... (msg-1) in 0ms
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186184,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186184,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session main requestId req-M2... (msg-2) in 0ms
+✔ D6 restart: fresh mapping survives a fresh router over the same store; main stays main (2.45525ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-delivery-2B1CTb/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186186,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186186,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session main requestId j1... (msg-1) in 1ms
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186186,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186186,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session fresh-5c83d70d424940a12e25df42c5ed43aa requestId req-X... (msg-2) in 0ms
+[router] process for agt_delivery-v0-1 is dead (exit 9, state n/a); will respawn
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186186,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186186,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session main requestId j2... (msg-1) in 0ms
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186187,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186187,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session fresh-5c83d70d424940a12e25df42c5ed43aa requestId req-X... (msg-2) in 0ms
+✔ D6b agent process restart: dead process respawns, session target unchanged (2.397ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-delivery-Wfhq17/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186188,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186188,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_delivery-v0-1 session main requestId j1... (msg-1) in 0ms
+✔ D7 accepted resolves immediately: no turn completion required at the router level (1.621083ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-delivery-EAiBea/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ D8 validation: sessionMode / agentId / requestId / message contracts (0.853208ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-delivery-n2ZeeF/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186191,"routeChainId":"single-route","agentId":"agt_a","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186191,"routeChainId":"single-route","agentId":"agt_a","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_a session fresh-df028d38596487c8e910a72646a65477 requestId same-req... (msg-1) in 1ms
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186192,"routeChainId":"single-route","agentId":"agt_b","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186192,"routeChainId":"single-route","agentId":"agt_b","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_b session fresh-2cc43d8cd891842015d8b80cbea86412 requestId same-req... (msg-1) in 1ms
+✔ D9 fresh mappings are namespaced per agent (3.009583ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-delivery-QeoF6X/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-delivery-QeoF6X/bindings2.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ D10 disabled enforcement (AGENT_DEFINITION_DISABLED_ENFORCEMENT_FIX): a disabled agent is rejected BEFORE ensureRunning — never spawned, main and fresh alike (1.113667ms)
+✔ FEISHU_MAPPING: p2p/group/thread/(none) -> feishu namespace; mobile -> mobile (0.3415ms)
+✔ FEISHU_REPLY_OWED: every Feishu subtype owes a reply; mobile never does (0.052ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-feishu-mFiQUS/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel bound; default binding -> agt_a + session main
+[router] binding created: channelConversation feishu:oc_thread_conv:to... -> agent agt_a + session main + workspace (agent default)
+[router] channelConversation feishu:oc_thread_conv:to... -> binding -> agent agt_a + session main (channel=thread chat=oc_exact_chat sender=ou_tes text="thread turn mentions ou_decoy_id")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186247,"routeChainId":"single-route","agentId":"agt_a","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186247,"routeChainId":"single-route","agentId":"agt_a","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_a (pid 4242) produced a 10B reply
+[router] reply sent back to oc_thread_co...
+✔ TRUSTED_INGRESS: exact Feishu chat/conversation/message fields reach the routed turn without parsing (6.535542ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-feishu-ejjSfG/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel bound; default binding -> agt_a + session main
+[router] binding created: channelConversation feishu:oc_p2p_1... -> agent agt_a + session main + workspace (agent default)
+[router] channelConversation feishu:oc_p2p_1... -> binding -> agent agt_a + session main (channel=p2p chat=oc_p2p_1 sender=ou_tes text="hello")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186250,"routeChainId":"single-route","agentId":"agt_a","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186250,"routeChainId":"single-route","agentId":"agt_a","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_a (pid 4242) produced a 10B reply
+[router] reply sent back to oc_p2p_1...
+✔ FEISHU_P2P_REPLY: p2p ingress replies to Feishu and binds under feishu:<conversationId> (1.893583ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-feishu-SOGBB6/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel bound; default binding -> agt_a + session main
+[router] binding created: channelConversation feishu:oc_group_1... -> agent agt_a + session main + workspace (agent default)
+[router] channelConversation feishu:oc_group_1... -> binding -> agent agt_a + session main (channel=group chat=oc_group_1 sender=ou_tes text="hello")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186252,"routeChainId":"single-route","agentId":"agt_a","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186252,"routeChainId":"single-route","agentId":"agt_a","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_a (pid 4242) produced a 10B reply
+[router] reply sent back to oc_group_1...
+✔ FEISHU_GROUP_REPLY: group ingress replies to Feishu and binds under feishu:<conversationId> (1.963ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-feishu-dA4xFn/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel bound; default binding -> agt_a + session main
+[router] binding created: channelConversation feishu:oc_existing... -> agent agt_a + session main + workspace (agent default)
+[router] bookmark: feishu:oc_existing... x agt_a -> session main
+[router] switch: feishu:oc_existing... -> agent agt_b + session main + workspace (agent default)
+[router] channelConversation feishu:oc_existing... -> binding -> agent agt_b + session main (channel=p2p chat=oc_existing sender=ou_tes text="hello")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186254,"routeChainId":"single-route","agentId":"agt_b","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186254,"routeChainId":"single-route","agentId":"agt_b","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_b (pid 4242) produced a 10B reply
+[router] reply sent back to oc_existing...
+✔ FEISHU_EXISTING_BINDING_KEY_PRESERVED: pre-existing feishu:<id> binding is HIT, not orphaned (3.11075ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-feishu-JUGDyS/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel bound; default binding -> agt_a + session main
+[router] binding created: channelConversation mobile:surf-7... -> agent agt_a + session main + workspace (agent default)
+[router] channelConversation mobile:surf-7... -> binding -> agent agt_a + session main (channel=mobile chat=surf-7 sender=mobile text="hi")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186257,"routeChainId":"single-route","agentId":"agt_a","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186257,"routeChainId":"single-route","agentId":"agt_a","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_a (pid 4242) produced a 10B reply
+✔ MOBILE_BINDING_NAMESPACE_UNCHANGED: mobile ingress -> mobile:<surfaceId>, no Feishu reply (1.71275ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-feishu-ohCQTP/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel bound; default binding -> agt_a + session main
+[router] binding created: channelConversation feishu:oc_b... -> agent agt_a + session main + workspace (agent default)
+[router] bookmark: feishu:oc_b... x agt_a -> session main
+[router] switch: feishu:oc_b... -> agent agt_b + session main + workspace (agent default)
+[router] channelConversation feishu:oc_b... -> binding -> agent agt_b + session main (channel=p2p chat=oc_b sender=ou_tes text="hello")
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1794025186259,"sequence":1,"category":"other","agentId":"agt_b","routeRef":null,"transportAttempt":1,"processGeneration":null,"categoryCount":1,"windowCount":1}
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186259,"routeChainId":"single-route","agentId":"agt_b","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"unproven","attemptOutcome":"stop:unknown_failure_class"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186259,"routeChainId":"single-route","agentId":"agt_b","primaryRoute":"global","finalRoute":"NONE","finalOutcome":"stop:unknown_failure_class","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] ERROR delivery to agt_b failed during execution: AGENT_DISABLED
+✔ DISABLED_ENFORCEMENT: an existing binding to a disabled Agent rejects the ingress and NEVER spawns (2.213917ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-feishu-hF0IOo/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel bound; default binding -> agt_a + session main
+[router] binding created: channelConversation feishu:oc_ghost... -> agent agt_a + session main + workspace (agent default)
+[router] bookmark: feishu:oc_ghost... x agt_a -> session main
+[router] switch: feishu:oc_ghost... -> agent agt_b + session main + workspace (agent default)
+[router] channelConversation feishu:oc_ghost... -> binding -> agent agt_b + session main (channel=p2p chat=oc_ghost sender=ou_tes text="hello")
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1794025186261,"sequence":1,"category":"other","agentId":"agt_b","routeRef":null,"transportAttempt":1,"processGeneration":null,"categoryCount":1,"windowCount":1}
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186261,"routeChainId":"single-route","agentId":"agt_b","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"unproven","attemptOutcome":"stop:unknown_failure_class"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186261,"routeChainId":"single-route","agentId":"agt_b","primaryRoute":"global","finalRoute":"NONE","finalOutcome":"stop:unknown_failure_class","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] ERROR delivery to agt_b failed during execution: AGENT_NOT_FOUND
+✔ DISABLED_ENFORCEMENT: an unknown agent behind an existing binding also never spawns (1.933542ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-ux-seam-czW53c/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel bound; default binding -> agt_a + session main
+[router] binding created: channelConversation feishu:oc_g1... -> agent agt_a + session main + workspace (agent default)
+[router] channelConversation feishu:oc_g1... -> binding -> agent agt_a + session main (channel=group chat=oc_g1 sender=ou_hum text="hi")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186310,"routeChainId":"single-route","agentId":"agt_a","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186310,"routeChainId":"single-route","agentId":"agt_a","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_a (pid 4242) produced a 10B reply
+[router] reply sent back to oc_g1...
+✔ UX-SEAM-1: the success call passes EXACTLY the approved UX intent — and nothing else (5.789708ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-ux-seam-C9ezWK/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel bound; default binding -> agt_a + session main
+[router] binding created: channelConversation feishu:oc_g1:topic:omt_1... -> agent agt_a + session main + workspace (agent default)
+[router] channelConversation feishu:oc_g1:topic:omt_1... -> binding -> agent agt_a + session main (channel=thread chat=oc_g1 sender=ou_hum text="hi")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186313,"routeChainId":"single-route","agentId":"agt_a","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186313,"routeChainId":"single-route","agentId":"agt_a","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_a (pid 4242) produced a 10B reply
+[router] reply sent back to oc_g1:topic:...
+✔ UX-SEAM-2: the success ux object carries NO identity values of any kind (1.621541ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-ux-seam-10rm5d/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel bound; default binding -> agt_a + session main
+[router] binding created: channelConversation feishu:oc_p1... -> agent agt_a + session main + workspace (agent default)
+[router] channelConversation feishu:oc_p1... -> binding -> agent agt_a + session main (channel=p2p chat=oc_p1 sender=ou_x text="hi")
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1794025186314,"sequence":1,"category":"other","agentId":"agt_a","routeRef":null,"transportAttempt":1,"processGeneration":null,"categoryCount":1,"windowCount":1}
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186314,"routeChainId":"single-route","agentId":"agt_a","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"unproven","attemptOutcome":"stop:unknown_failure_class"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186314,"routeChainId":"single-route","agentId":"agt_a","primaryRoute":"global","finalRoute":"NONE","finalOutcome":"stop:unknown_failure_class","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] ERROR delivery to agt_a failed during execution: unclassified
+✔ UX-SEAM-3: the deterministic FAILURE receipt call is byte-preserved — two arguments, no UX opts (1.521583ms)
+✔ UX-SEAM-4: Router source keeps the frozen UX call shapes (main-stable structural check) (0.287042ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2normal-6kwa2C/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_92332c45c1cac2... -> agent agt_stock_agent + session main + workspace (agent default)
+[router] channelConversation feishu:oc_92332c45c1cac2... -> binding -> agent agt_stock_agent + session main (channel=group chat=oc_92332c45c1cac2ef89857abfee8ed762 sender=ou_sen text="hello")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186370,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186370,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 9301) produced a 8B reply
+✔ V2 normal: first contact binds workspace=null + session main, turns in the Agent primary workspace (9.125958ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2normal-YY5d7G/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_92332c45c1cac2... -> agent agt_stock_agent + session main + workspace (agent default)
+[router] channelConversation feishu:oc_92332c45c1cac2... -> binding -> agent agt_stock_agent + session main (channel=group chat=oc_92332c45c1cac2ef89857abfee8ed762 sender=ou_sen text="hello")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186375,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186375,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 9302) produced a 8B reply
+✔ V2 normal: the conversation-derived workspace is NEVER chosen (4.380958ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2normal-jE8v42/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_92332c45c1cac2... -> agent agt_stock_agent + session main + workspace (agent default)
+[router] channelConversation feishu:oc_92332c45c1cac2... -> binding -> agent agt_stock_agent + session main (channel=group chat=oc_92332c45c1cac2ef89857abfee8ed762 sender=ou_sen text="first")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186380,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186380,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 9303) produced a 8B reply
+[router] channelConversation feishu:oc_92332c45c1cac2... -> binding -> agent agt_stock_agent + session main (channel=group chat=oc_92332c45c1cac2ef89857abfee8ed762 sender=ou_sen text="second")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186380,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186380,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 9303) produced a 9B reply
+✔ V2 normal: second message RESUMES the same main (create/resume regression) (4.744792ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2normal-MtTnhs/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_p2p_v2... -> agent agt_stock_agent + session main + workspace (agent default)
+[router] channelConversation feishu:oc_p2p_v2... -> binding -> agent agt_stock_agent + session main (channel=p2p chat=oc_p2p_v2 sender=ou_sen text="dm")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186384,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186384,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 9304) produced a 5B reply
+✔ V2 normal: p2p ingress has the same shape (no p2p special case) (4.377708ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2normal-xxoMO2/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_92332c45c1cac2... -> agent agt_stock_agent + session main + workspace (agent default)
+[router] channelConversation feishu:oc_92332c45c1cac2... -> binding -> agent agt_stock_agent + session main (channel=group chat=oc_92332c45c1cac2ef89857abfee8ed762 sender=ou_sen text="main turn")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186388,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186388,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 9305) produced a 12B reply
+[router] switch: feishu:oc_92332c45c1cac2... -> agent agt_stock_agent + session cron-run-1 + workspace (agent default)
+[router] channelConversation feishu:oc_92332c45c1cac2... -> binding -> agent agt_stock_agent + session cron-run-1 (channel=group chat=oc_92332c45c1cac2ef89857abfee8ed762 sender=ou_sen text="cron turn")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025186389,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025186389,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 9305) produced a 12B reply
+✔ V2 normal: fresh non-main sessions in the SAME conversation share the primary cwd (4.369417ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/rq-router-startup-7YIZYE/bindings-6b9b26e0e1693.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ RQ-005 Router startup consumes configured evidence before publishing its registry and reports invalid custody (59.549375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/rq-router-fixture-JbkbGZ/bindings-3ef8168fffc56.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ RQ-005 fixture drives real Router apply: consume before service publication, then admit fleet (55.477667ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/rq-router-inert-BMvchm/bindings-d3ab800085149.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ RQ-007 production composition stays inert without a bootstrapped launcher even if evidence custody passes (52.336208ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t1-2IZA7E/bindings-977a7fea8f1788.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_gen-safety ready pid=9101 (0ms)
+✔ T1 fresh store: first runtime mints generation 1 (10.076667ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t2-QY3O12/bindings-25bf953c5ddda.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_gen-safety ready pid=9102 (0ms)
+[router] [router] agent agt_gen-safety ready pid=9103 (0ms)
+[router] [router] agent agt_gen-safety ready pid=9104 (0ms)
+✔ T2 same-runtime respawn: generations 1 -> 2 -> 3 (10.034083ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t3-Q30MQG/bindings-03eeb83bd27de8.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_gen-safety ready pid=9105 (0ms)
+✔ T3 REGRESSION runtime restart above durable history: fresh allocator mints strictly above the collision boundary (RED on the in-memory-only allocator) (56.015459ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t4-a2cVsy/bindings-449337872d813.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_gen-safety ready pid=9106 (1ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t4-a2cVsy/bindings-d4d3458b9878f.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_gen-safety ready pid=9107 (1ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t4-a2cVsy/bindings-8bf6d1acfb7bd8.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_gen-safety ready pid=9108 (0ms)
+✔ T4 multiple restarts: consecutive restarts never reissue a durable generation (110.386875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t5-nUeD44/bindings-291d45828dd4d8.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_gen-safety-b ready pid=9109 (0ms)
+[router] [router] agent agt_gen-safety ready pid=9110 (0ms)
+✔ T5 per-agent isolation: agent A durable history never lifts or pollutes agent B (35.139375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t6-Uk7tyS/bindings-dff5783a86e6b8.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_gen-safety ready pid=9111 (1ms)
+✔ T6 empty durable history behaves exactly like a fresh store (11.97925ms)
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1794025186841,"sequence":1,"category":"other","agentId":null,"code":"AGENT_PROCESS_RECOVERY_STARTUP_BLOCKED","reason":"durable_store_invalid","categoryCount":1,"windowCount":1}
+[router] ERROR delivery-failure-alert {"kind":"delivery_failure_alert","tsWallMs":1794025186841,"category":"other","windowCount":1,"threshold":1,"windowMs":300000,"agentId":null,"code":"AGENT_PROCESS_RECOVERY_STARTUP_BLOCKED","reason":"durable_store_invalid"}
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t7-r37VRO/bindings-a314a82775d42.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ T7 malformed durable store: fail loud, never mints from a fallback generation 1, store untouched (3.747958ms)
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1794025187245,"sequence":1,"category":"other","agentId":null,"code":"AGENT_PROCESS_RECOVERY_STARTUP_BLOCKED","reason":"durable_store_invalid","categoryCount":1,"windowCount":1}
+[router] ERROR delivery-failure-alert {"kind":"delivery_failure_alert","tsWallMs":1794025187245,"category":"other","windowCount":1,"threshold":1,"windowMs":300000,"agentId":null,"code":"AGENT_PROCESS_RECOVERY_STARTUP_BLOCKED","reason":"durable_store_invalid"}
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t8-soA6FP/bindings-c5945006e2b138.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ T8 existing overlapping store: stays fail-closed, allocator never runs, store never self-heals (403.635375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t9-yvPOJa/bindings-ae3e552873821.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_gen-safety ready pid=9112 (0ms)
+✔ T9 concurrent ensureRunning stays single-flight: exactly one allocation (generation 1) (10.6025ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t10-kfzmEZ/bindings-4099784f210108.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_gen-safety ready pid=9113 (0ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t10-kfzmEZ/bindings-c45856940e34d8.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_gen-safety ready pid=9114 (1ms)
+✔ T10 crash before the first turn: reissue after restart is safe (nothing durable collided) (11.113125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t11-KsXBhq/bindings-5bf13f4abf68f8.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ T11 generation exhaustion: MAX_SAFE_INTEGER durable floor fails before STARTUP mutation or spawn (39.935875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t12-l6at1J/bindings-f693e58a41127.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_gen-safety ready pid=9115 (1ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t12-l6at1J/bindings-ce3d013898e188.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_gen-safety ready pid=9116 (0ms)
+✔ T12 restart integration: durable store -> spawn -> restart -> spawn -> validator PASS with disjoint ranges (67.33925ms)
+✖ E: valid canonical credential — child initializes on the openai-codex route (1.7235ms)
+✖ F: missing credential fails loud on the real chain — never a silent fallback (0.098834ms)
+✖ G: unsafe credential (group/world readable) fails loud on the real chain (0.09325ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-priws-SHHdCy/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_x... -> agent agt_stock_agent + session main + workspace (agent default)
+[router] channelConversation feishu:oc_x... -> binding -> agent agt_stock_agent + session main (channel=p2p chat=oc_x sender=ou_sen text="first turn after import")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025187477,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025187477,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 7301) produced a 26B reply
+✔ D: imported agent — spawn hands the process the imported workspace + env mechanically (8.939333ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-priws-QGF20V/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025187482,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025187482,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_stock_agent session main requestId r1... (d-1) in 1ms
+✔ D: deliver V0 resolves the imported workspace as the per-session cwd (AC3) (4.159083ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-priws-GzGvCO/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_x... -> agent agt_stock_agent + session main + workspace (agent default)
+[router] channelConversation feishu:oc_x... -> binding -> agent agt_stock_agent + session main (channel=p2p chat=oc_x sender=ou_sen text="hello")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025187486,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025187486,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 7303) produced a 8B reply
+✔ D: default agent (no entry) — env still set mechanically to the derived default path (3.36225ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-priws-sFNvSg/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_x... -> agent agt_stock_agent + session main + workspace (agent default)
+[router] channelConversation feishu:oc_x... -> binding -> agent agt_stock_agent + session main (channel=p2p chat=oc_x sender=ou_sen text="hello")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025187490,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025187490,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 7304) produced a 8B reply
+✔ D/AC7: the router ensure() writes NOTHING into the imported directory (4.446959ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-priws-NjXNCR/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_x... -> agent agt_stock_agent + session main + workspace (agent default)
+[router] channelConversation feishu:oc_x... -> binding -> agent agt_stock_agent + session main (channel=p2p chat=oc_x sender=ou_sen text="post-import fresh session")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025187494,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025187494,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 7305) produced a 28B reply
+[router] channelConversation feishu:oc_x... -> binding -> agent agt_stock_agent + session main (channel=p2p chat=oc_x sender=ou_sen text="resume pre-import main")
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1794025187494,"sequence":1,"category":"other","agentId":"agt_stock_agent","routeRef":null,"transportAttempt":1,"processGeneration":null,"categoryCount":1,"windowCount":1}
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025187494,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"unproven","attemptOutcome":"stop:unknown_failure_class"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025187494,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"NONE","finalOutcome":"stop:unknown_failure_class","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] ERROR delivery to agt_stock_agent failed during execution: SESSION_WORKSPACE_MISMATCH
+✔ AC9: pre-import session frozen in the old default workspace → structured rejection, no remap (4.116958ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-priws-icokIO/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_x... -> agent agt_stock_agent + session main + workspace (agent default)
+[router] channelConversation feishu:oc_x... -> binding -> agent agt_stock_agent + session main (channel=p2p chat=oc_x sender=ou_sen text="run 1")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025187498,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025187498,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 7306) produced a 8B reply
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-priws-d5OCBP/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_x... -> agent agt_stock_agent + session main + workspace (agent default)
+[router] channelConversation feishu:oc_x... -> binding -> agent agt_stock_agent + session main (channel=p2p chat=oc_x sender=ou_sen text="run 2")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025187500,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025187500,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 7307) produced a 8B reply
+✔ I: restart over the same static config re-resolves the identical imported workspace (6.545791ms)
+✔ DLV1 deliver resolves on the receipt alone — no event, no idle, no turn/end (3.639584ms)
+✔ DLV2 deliver shares the production queue and cannot bypass an in-flight turn (1.791ms)
+✔ DLV3 a dead child (no receipt) rejects via the receipt deadline as outcome_unknown and cleans up (153.040125ms)
+✔ DLV4 a late receipt after the deadline cannot resolve the timed-out call — but correlation continues (153.669708ms)
+✔ AgentProcess prototype method descriptors preserved (B-1: enumerable false, composition complete) (0.428917ms)
+✔ TurnReconciliationStore prototype method descriptors preserved (B-1: enumerable false, composition complete) (0.114541ms)
+✔ declaration unblocks admission for one agent; historical fence query and other agents unchanged (1.748917ms)
+✔ declaration is idempotent per declarationId and does not restamp (0.18525ms)
+✔ a NEW unknown after a declaration fences the agent again; a further declaration abandons only it (0.28925ms)
+✔ abandonment persists across restarts; late old results stay isolated; no-replay keeps correlation (108.4495ms)
+✔ declaration validation: arguments and admission readiness fail loud (0.166625ms)
+✔ durable validator rejects a malformed abandonment marker and accepts the closed shape (58.366875ms)
+✔ review r4130766501 regression: retrying a COMPLETED declaration never adopts a later unknown turn (0.514041ms)
+✔ scope binding survives restart: retry after reopen still cannot adopt a later unknown (82.112792ms)
+✔ partial-write recovery: retry completes exactly the registered original scope (59.972ms)
+✔ a declarationId bound to another agent fails loud and never restamps (1.026167ms)
+✔ marker-only reconstruction: a store with no registry file still binds retries to the marker scope (81.767ms)
+✔ empty-scope declaration registers its (empty) operation: later turns are never adopted (0.576125ms)
+✔ durable validator rejects a malformed scope registry fail-closed (58.493791ms)
+✔ rollback/reupgrade regression: the scope registry survives an old-binary rewrite of the recovery file (103.680167ms)
+✔ entry-gate projection: stuck fences without durable exit evidence are reported; observed exits are not (43.4525ms)
+✔ owner risk acceptance stamps an explicit audit decision and fabricates no exit evidence (1.102375ms)
+✔ declaration scope matches the admission blocker: settled records with an active fence are abandonable (82.080042ms)
+✔ V3 parsed terminal and child exit remain uncommitted together when durable settlement fails (65.811958ms)
+✔ V3 over-cap durable record keeps startup business admission fail closed (20.747833ms)
+✔ V3 unavailable durable path keeps startup business admission fail closed (0.587584ms)
+✔ V3 restored durable fence blocks the real outer entry with closed structured diagnostics (41.00775ms)
+✔ V3 invalid durable store blocks the real outer entry before route execution (0.828458ms)
+✔ V3 old-generation cleanup cannot clear a newer generation fence (0.637083ms)
+✔ RQ-009 verified startup proof survives the real durable validator without inventing child exit (54.123292ms)
+✔ V3 durable unknown reservation and fence survive a store reopen (36.369417ms)
+✔ V3 C-024 preserves the exact pre-write hard deadline when unknown is marked later (0.26125ms)
+✔ V3 restart mints a fresh runtime epoch while old durable handles remain queryable (40.780792ms)
+✔ V3 restart converts a crash-interrupted prompt write into a durable blocked fence (40.127708ms)
+✔ V3 restart settles a reservation with no prompt-write attempt as proven not admitted (24.896583ms)
+✔ V3 durable write failure rolls back the transition and closes business admission (16.429042ms)
+✔ V3 restart settles durable child exit but keeps REAP fence without registry cleanup proof (65.397667ms)
+✔ V3 restart completes a normal late-evidence fence cleanup without a new prompt (48.046834ms)
+✔ V3 restart clears a REAP fence only after durable registry cleanup proof (75.473791ms)
+✔ V3 invalid durable store keeps startup business admission fail closed (1.529041ms)
+✔ V3 durable schema drift keeps startup business admission fail closed (17.708541ms)
+✔ V3 invalid durable top-level and issuance authority fail startup closed (53.43225ms)
+✔ V3 repeated restart and mutation keeps durable runtime epochs bounded (5409.019708ms)
+✔ V3 resolved record eviction atomically retires caller correlation capacity and bytes (10.285333ms)
+✔ V3 caller correlation keys are type-safe and byte-bounded before authority mutation (0.134417ms)
+✔ V3 durable record correlation must match the durable exact secondary index (16.767542ms)
+✔ V3 impossible unresolved-cleared durable state keeps startup admission fail closed (30.965208ms)
+✔ V3 durable recovery stores answer evidence without storing answer bytes (39.088209ms)
+✔ V3 trusted exact-started-then-idle settles unknown without killing resident child (51.2445ms)
+✔ V3 exact-started-then-idle negative control: missing exact receipt correlation stays fenced (26.508417ms)
+✔ V3 exact-started-then-idle negative control: idle observed before the matched start stays fenced (27.000292ms)
+✔ V3 exact-started-then-idle negative control: later turn start stays fenced (26.977167ms)
+✔ V3 exact-started-then-idle negative control: second turn start before exact receipt stays fenced (27.1975ms)
+✔ V3 exact-started-then-idle negative control: event stream gap stays fenced (26.665833ms)
+✔ V3 exact-started-then-idle negative control: one-active-turn invariant violation stays fenced (26.982958ms)
+✔ V3 hard deadline performs one exact REAP and waits for real child exit before reopening (43.3175ms)
+✔ V3 registry cleanup CAS mismatch keeps DRAINING and preserves the settled fence (38.539959ms)
+✔ V3 caller unknown before the hard deadline does not start REAP early (64.328917ms)
+✔ V3 child exit before hard deadline settles without a second shutdown (27.591291ms)
+✔ V3 failed exact ownership keeps the fence and never signals the child (42.112875ms)
+✔ V3 registry REAP CAS failure rolls durable shutdown eligibility back to blocked (41.672042ms)
+✔ V3 grace expiry sends one forced termination and still waits for real exit (71.8615ms)
+✔ V3 late evidence after claim but before shutdown commit cancels REAP with zero shutdown (44.854ms)
+✔ V3 duplicate and concurrent recovery triggers join one logical operation (44.439791ms)
+✔ V3 coordinator restart rejoins the durable claim with one shutdown (50.662833ms)
+✔ V3 simulated-child real outer entry recovers without a new prompt, then accepts exactly one new request (47.554333ms)
+✔ PROMPT_EVENT_BEFORE_RPC_RESPONSE: pre-response events are replayed on receipt binding (4.9045ms)
+✔ UNRELATED_IDLE_OR_QUEUE_REMOVAL: unrelated evidence never releases the fence; exact failure settles late_failed (73.079042ms)
+✔ PRIOR_TURN_LATE_EVENT_AFTER_NEXT_CALL: duplicate A events during B are excluded; B completes on its own events (1.41775ms)
+✔ B08 replay observes an intervening later turn/start before considering future idle (301.932125ms)
+✔ B08: stale idle before exact terminal cannot close the current turn (2.308208ms)
+✔ ENVELOPE_COMPLETED: stable handle, store query=settled (1.7335ms)
+✔ ENVELOPE_FAILED: structured provider failure with a stable handle (2.422625ms)
+✔ FAILED_EVIDENCE: a failed durable settlement cannot publish terminal proof to the caller (1.869666ms)
+✔ B05 raw session/prompt RPC cannot bypass admission/queue/watermark/fence (0.441083ms)
+✔ ENVELOPE_NOT_ADMITTED: validation fails before reservation, handle=null (0.485041ms)
+✔ ENVELOPE_OUTCOME_UNKNOWN: the envelope always exposes a queryable handle (store=pending) (121.916209ms)
+✔ NON_OUTCOME_DIRECT 0: exact terminal+idle rejects unknown, settles termination only (2.98925ms)
+✔ NON_OUTCOME_DIRECT 1: exact terminal+idle rejects unknown, settles termination only (1.534583ms)
+✔ NON_OUTCOME_DIRECT 2: exact terminal+idle rejects unknown, settles termination only (1.659209ms)
+✔ NON_OUTCOME_DIRECT 3: exact terminal+idle rejects unknown, settles termination only (1.619667ms)
+✔ NON_OUTCOME_DIRECT 4: exact terminal+idle rejects unknown, settles termination only (1.374542ms)
+✔ NON_OUTCOME_DIRECT 5: exact terminal+idle rejects unknown, settles termination only (0.49725ms)
+✔ NON_OUTCOME_DIRECT 6: exact terminal+idle rejects unknown, settles termination only (0.546375ms)
+✔ NON_OUTCOME_DIRECT 7: exact terminal+idle rejects unknown, settles termination only (0.418ms)
+✔ NON_OUTCOME_DIRECT 8: exact terminal+idle rejects unknown, settles termination only (0.392958ms)
+✔ NON_OUTCOME_DIRECT 9: exact terminal+idle rejects unknown, settles termination only (0.375708ms)
+✔ NON_OUTCOME_DIRECT 10: exact terminal+idle rejects unknown, settles termination only (0.45075ms)
+✔ NON_OUTCOME_DIRECT 11: exact terminal+idle rejects unknown, settles termination only (0.378125ms)
+✔ NON_OUTCOME_DIRECT 12: exact terminal+idle rejects unknown, settles termination only (0.331167ms)
+✔ NON_OUTCOME_DIRECT 13: exact terminal+idle rejects unknown, settles termination only (0.325917ms)
+✔ NON_OUTCOME_DIRECT 14: exact terminal+idle rejects unknown, settles termination only (0.666916ms)
+✔ NON_OUTCOME_DELIVER: acceptance remains receipt-only; aborted turn has no successful outcome (0.555083ms)
+✔ NON_OUTCOME_REPLAY: pre-receipt abort+idle settles the original waiter without waiting for its deadline (0.607ms)
+✔ EVENT_RING_WRAP_DURING_ACTIVE_TURN: sequence matcher survives ring eviction (14.73025ms)
+✔ STDERR_AND_CREATIONS_OVERFLOW: caps + exact counters (74.156333ms)
+✔ B12 process audit count/bytes are hard-capped with drop accounting (1.3265ms)
+✔ UTF8_OUTPUT_INCREMENTAL_TAIL: multibyte output over cap keeps a valid UTF-8 tail (75.974917ms)
+✔ queued turn caps: 65th queued turn is rejected pre-queue; oversized prompts never cached (3.411041ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/h605-r2/packages/feishu-connector/src/index.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js (37.034625ms)
+✔ CTR-EPAR-005: a deleted exact id whose string matches another agent display name sends ZERO (0.802792ms)
+✔ CTR-EPAR-005: a disabled id is target_disabled even when its name is referenced (0.1165ms)
+✔ CTR-EPAR-005: the exact enabled id still resolves and admits once (0.632791ms)
+✔ non-A2A paths keep the existing resolution semantics (name fallback unchanged) (0.086625ms)
+✔ A2A same-id rename remains exact: the id always selects that id (0.064458ms)
+✔ TURN_TIMEOUT_THEN_LATE_SUCCESS: settlement=late_completed, output available via handle (86.343208ms)
+✔ TURN_TIMEOUT_THEN_LATE_FAILURE: settlement=late_failed, no_output (81.1005ms)
+✔ TURN_TIMEOUT_THEN_CHILD_EXIT_NO_TERMINAL: pending-first order; terminated_without_outcome; fence released (123.378458ms)
+✔ B09 parser receipt/terminal evidence beats exit before the receipt Promise continuation (1.988875ms)
+✔ PARSED_OUTCOME_PRECEDES_CHILD_EXIT: exact turn/end received pre-exit wins over child_real_exit (122.615667ms)
+✔ DUPLICATE_CONFLICTING_LATE_EVIDENCE: state/output unchanged; duplicate + conflict audits (123.737833ms)
+✔ HANDOFF_VISIBLE_BEFORE_RELEASE: reconciliation visible before slot release — never not_found (121.661959ms)
+✔ LATE_OUTPUT_AFTER_GENERATION_EXIT: late_completed output survives graceful real exit, identical on repeat reads (72.758ms)
+✔ scheduler seam snapshot separates outcome evidence / cancel requested / termination proven (83.25075ms)
+✔ late output remains readable through the reconciliation handle after the generation exited (72.274083ms)
+✔ NON_OUTCOME_LATE {"kind":"aborted","reason":{"kind":"disposed"}}: termination proof never becomes late success (33.041834ms)
+✔ NON_OUTCOME_LATE {"kind":"blocked"}: termination proof never becomes late success (33.381ms)
+✔ NON_OUTCOME_LATE {"kind":"max-tokens"}: termination proof never becomes late success (32.992667ms)
+✔ NON_OUTCOME_LATE {"kind":"interrupted"}: termination proof never becomes late success (31.945375ms)
+✔ NON_OUTCOME_LATE {"kind":"future-reason"}: termination proof never becomes late success (33.006167ms)
+✔ NON_OUTCOME_LATE null: termination proof never becomes late success (31.827458ms)
+✔ EXIT_REASON {"kind":"aborted","reason":{"kind":"disposed"}}: frozen parser evidence uses exact outcome precedence (1.462583ms)
+✔ EXIT_REASON {"kind":"blocked"}: frozen parser evidence uses exact outcome precedence (1.376625ms)
+✔ EXIT_REASON {"kind":"max-tokens"}: frozen parser evidence uses exact outcome precedence (1.019333ms)
+✔ EXIT_REASON {"kind":"interrupted"}: frozen parser evidence uses exact outcome precedence (0.943208ms)
+✔ EXIT_REASON {"kind":"future-reason"}: frozen parser evidence uses exact outcome precedence (0.9525ms)
+✔ EXIT_REASON undefined: frozen parser evidence uses exact outcome precedence (1.101ms)
+✔ EXIT_REASON null: frozen parser evidence uses exact outcome precedence (0.450708ms)
+✔ EXIT_REASON "completed": frozen parser evidence uses exact outcome precedence (0.471792ms)
+✔ EXIT_REASON {"kind":"completed"}: frozen parser evidence uses exact outcome precedence (0.386583ms)
+✔ EXIT_REASON {"kind":"error","error":{"code":"QUOTA","message":"insufficient_quota"}}: frozen parser evidence uses exact outcome precedence (0.332208ms)
+✔ NON_OUTCOME_CORRELATION: unrelated aborted events and stale idle cannot release the original fence (32.259583ms)
+✔ R4: deliver forwards a valid messageOrigin (frozen) into the admission opts (1.740875ms)
+✔ R4: legacy deliver callers keep zero messageOrigin in the admission opts (0.140209ms)
+✔ R4: malformed control options and origins reject fail-loud before admission (0.454792ms)
+✔ R4: promptWrite carries messageOrigin as session/prompt sibling metadata (0.234958ms)
+✔ R4: promptWrite omits messageOrigin for legacy callers (0.094417ms)
+✔ R3: a deliver-originated source Run proves its turnExecutionId via the execution map (0.24325ms)
+✖ R3: a settled or unknown turnExecutionId proves nothing (absent leaf) (0.126125ms)
+✔ R3: the ordinary turn-mode path keeps its trusted ingressContext binding AND the source leaf (0.063833ms)
+✔ R3: child-supplied identity fields stay ignored while the runtime proof is derived (0.080125ms)
+✔ B04: known non-writable stdin rejects before any write attempt (3.684334ms)
+✔ STDIN_SYNC_THROW_ZERO_BYTE: proven zero-byte -> not_admitted; broken stream still tears down (1.190917ms)
+✔ V3 durable write-intent failure sends zero prompt bytes and is never classified as a stdin zero-byte rejection (0.475458ms)
+✔ STDIN_ASYNC_WRITE_ERROR: admission unknown -> outcome_unknown visible pre-exit, then terminated_without_outcome (0.917667ms)
+✔ STDIN_CLOSE_AFTER_PARTIAL_WRITE: pipe close with unknown admission -> unknown, no replay, teardown (0.547625ms)
+✔ FATAL_PROTOCOL_FRAME_OVERFLOW: oversized stdout frame -> immediate teardown, buffers capped (1.783958ms)
+✔ row 2: crash after prompt write classifies the previous epoch without replay (43.201667ms)
+✔ row 4: durable real-exit observation routes termination-only (child_real_exit), never business (56.108041ms)
+✔ row 5: HR restart-lost abandonment stays exceptional and honest (70.421958ms)
+✔ row 6: repeated restart reclassifies idempotently (settle-once, no audit growth, no fence flap) (67.920584ms)
+✔ row 8: an unrelated Agent is unaffected by another agent's unresolved fence (92.558667ms)
+﹣ r4 salvaged corpus adapter requires HR_R4_SALVAGE_ROOT (0.324542ms) # external immutable input not supplied
+✔ NEG-RQ reviewed B1 floor time missing rejects without settlement (66.348583ms)
+✔ NEG-RQ reviewed B1 validator time string rejects without settlement (62.250041ms)
+✔ NEG-RQ reviewed B1 inhibition time missing rejects without settlement (51.995041ms)
+✔ NEG-RQ reviewed B2 inhibition after authorization rejects without settlement (54.17625ms)
+✔ NEG-RQ reviewed B2 quiescence before inhibition rejects without settlement (83.631375ms)
+✔ NEG-RQ reviewed B2 subject history after cut rejects without settlement (66.087667ms)
+✔ NEG-RQ reviewed B2 stop before deployment proof rejects without settlement (50.354375ms)
+✔ ACC-RQ-007 planned stop within the prospective cut verifies without historical floor inference (88.2725ms)
+✔ ACC-RQ-001 one startup bundle settles only its exact old turn, preserving unknown outcome and null exit (58.0715ms)
+✔ NEG-RQ-015 new evidence kind cannot enter through ordinary settlement constructors (46.362334ms)
+✔ NEG-RQ zero-write: subject agent differs (48.338ms)
+✔ NEG-RQ zero-write: old tree still present (48.099083ms)
+✔ NEG-RQ zero-write: bundle preimage digest differs (46.477292ms)
+✔ NEG-RQ zero-write: floor proof is missing (45.7365ms)
+✔ NEG-RQ zero-write: launch authorization digest differs (51.088459ms)
+✔ NEG-RQ zero-write: controlled stop missing for planned restart (47.180958ms)
+✔ NEG-RQ zero-write: window descriptor is absent (47.2855ms)
+✔ NEG-RQ zero-write: host differs (44.781666ms)
+✔ NEG-RQ-007 two bundles for one handle reject both before either can settle (45.301334ms)
+✔ NEG-RQ-007 stable differing duplicate is batch zero-write (48.488084ms)
+✔ NEG-RQ-007 stable malformed duplicate is batch zero-write (49.58425ms)
+✔ NEG-RQ-007 replacement collision before subject is batch zero-write (46.039667ms)
+✔ NEG-RQ-007 replacement collision after subject is batch zero-write (49.870375ms)
+✔ NEG-RQ-007 same-subject bytes replaced during verification are zero-write (44.866375ms)
+✔ NEG-RQ-003 same-window lost during batch rejects both cached proofs (96.348709ms)
+✔ NEG-RQ-003 same-window loss followed by positive during batch rejects both cached proofs (75.42875ms)
+✔ NEG-RQ-003 same-window lost after batch before settlement rejects both cached proofs (77.980375ms)
+✔ ACC-RQ-003 stable shared window settles both distinct subjects once (104.334334ms)
+✔ NEG-RQ-003 transient window-lock stat failure remains sticky after recovery (79.402458ms)
+✔ NEG-RQ-018 shared window lost between settlements leaves second record untouched (94.357083ms)
+✔ NEG-RQ-008 replay of a valid already-settled bundle is settle-once audit only (56.628958ms)
+✔ NEG-RQ-002 settled different business result fails V8 P5 with zero-write (50.117375ms)
+✔ NEG-RQ-002 settled different termination evidence fails V8 P5 with zero-write (48.980917ms)
+✔ ACC-RQ-007 persistence failure rolls the exact record back and leaves its fence active (40.052542ms)
+✔ RQ generic bundle.json (retired fixed-name gate removed) verifies and settles exactly once (60.709583ms)
+✔ RQ foreign operation id bundle is rejected fail-closed with zero store writes (40.180458ms)
+✔ CHILD_EXIT_WITH_MULTIPLE_PENDING_RPC: all reject with EXITED before the store hook (3.040416ms)
+✔ PARENT_RPC_RESPONSE_WRITE_RESERVE: handler deadline aborts; ONE timeout response inside the reserve (1401.703083ms)
+✔ B03: expired inherited turn budget invokes no handler and writes no response (105.726208ms)
+✔ PARENT_RPC_WRITE_EXCEEDS_TOTAL_DEADLINE: one attempt, no post-deadline write, responseWrite=unknown (902.313916ms)
+✔ B04 known broken stdin takes precedence over pending/deadline guards and drains existing RPCs (11.397334ms)
+✔ pending RPC cap: the 1025th concurrent RPC is rejected before write (no pending eviction) (4.57675ms)
+✔ GRACEFUL_SHUTDOWN_SUCCESS: one graceful write, kill=0, exact settlement order (2.461584ms)
+✔ B14 graceful ACK waits the remaining grace and shutdown awaits real exitPromise (222.403583ms)
+✔ SHUTDOWN_GRACE_EXPIRES_THEN_KILL: grace expiry escalates to exactly one SIGKILL + real exit await (679.085583ms)
+✔ SHUTDOWN_OWNERSHIP_MISMATCH: token mismatch -> no graceful write, no kill, REAP retained, loud audit (54.188666ms)
+✔ CONCURRENT_SHUTDOWN: exact shared Promise identity; one write/kill/exit wait; EMPTY after real exit (262.340291ms)
+✔ registry disposal waits real child exit and exact turn settlement despite another worker shutdown failure (2.422125ms)
+✔ registry disposal attempts worker shutdown after no-child startup cleanup throws (0.351458ms)
+✔ P1-1 a kill(0) === false on a REAL ChildProcess (the EPERM shape: live process, undeliverable signal) is NOT death evidence (2.675375ms)
+✔ P1-1 an EPERM probe failure is never death evidence (fail closed) (1.000875ms)
+✔ P1-1 a kill(0) === false on a duck-typed (non-ChildProcess) child is NOT evidence (0.110667ms)
+✔ P1-1 an explicit OS not-found verdict (ESRCH) IS death evidence (0.886958ms)
+✔ P1-1 any other probe throw is never death evidence; no probe surface or bad pid is never evidence (0.657959ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/stale-reg-reap-hKtoE3/bindings-0b6344b6525ad8.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_stale-reg ready pid=9101 (0ms)
+✔ D1-a a REAP fence whose cleanup CAS was missed still rejects admission — no fence deletion, no parallel generation (fail closed) (5.294958ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/stale-reg-exited-gcoBXR/bindings-103b39190539f8.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_stale-reg ready pid=9102 (0ms)
+[router] process for agt_stale-reg is dead (exit unobserved, state EXITED); will respawn
+[router] [router] agent agt_stale-reg ready pid=9103 (0ms)
+✔ D1-b a terminal-EXITED process in a READY slot never serves admission again (1.45275ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/stale-reg-esrch-NenSLK/bindings-459a597d88c208.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_stale-reg ready pid=9104 (0ms)
+[router] process for agt_stale-reg is dead (exit unobserved, state READY); will respawn
+[router] [router] agent agt_stale-reg ready pid=9105 (0ms)
+[router] reuse process for agt_stale-reg (pid 9105)
+✔ D1-c an OS-proven dead child (exact-pid ESRCH) in a READY slot rebuilds exactly once, then stable reuse (2.057416ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/stale-reg-live-CHH2pd/bindings-48c1bdcb4c6e5.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_stale-reg ready pid=9106 (0ms)
+[router] reuse process for agt_stale-reg (pid 9106)
+✔ D1-negative a LIVE process keeps the exact current semantics (no premature invalidation) (1.7555ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/stale-reg-audit-6cO7uE/bindings-d6b4c358fb3e2.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_stale-reg ready pid=9107 (0ms)
+[router] process for agt_stale-reg is dead (exit unobserved, state EXITED); will respawn
+[router] [router] agent agt_stale-reg ready pid=9108 (1ms)
+[router] reuse process for agt_stale-reg (pid 9108)
+✔ D1-stale the dead old generation stays audit-only after rebuild (no slot mutation) (1.972417ms)
+✔ INITIALIZE_REQUEST_NEVER_REPLIES: one total deadline, shared result rejects once, REAP then EMPTY (184.351875ms)
+✔ INITIALIZE_PROVIDER_NEVER_READY: retries never reset the one initialize deadline (701.219667ms)
+✔ trusted native policy is sent at initialize and readiness requires its exact acknowledgement (3.399166ms)
+✔ trusted native policy acknowledgement mismatch fails initialize before readiness (1.177583ms)
+✔ legacy initialize omits trusted native policy and accepts the existing acknowledgement (0.728208ms)
+✔ state machine: only the legal SPAWNING->INITIALIZING->READY->DRAINING->EXITED graph; illegal moves fail loud (1.943958ms)
+✔ PROMPT_RECEIPT_NEVER_REPLIES (turn path): receipt unknown stays fenced until hard-deadline REAP (107.882958ms)
+✔ DELIVER_TIMEOUT_USES_PROMPT_RECEIPT_FIELD: the config field is the binding receipt deadline (181.257375ms)
+✔ DELIVER_CANNOT_BYPASS_UNKNOWN_FENCE: a second deliver while unknown is not_admitted with write delta 0 (185.536666ms)
+✔ B06: settling one of multiple unresolved unknowns does not release the others (1.999375ms)
+✔ UNKNOWN_REJECTS_QUEUED_TURNS: B/C write delta 0; A late_completed (72.677625ms)
+✔ crash-orphaned UNKNOWN stays fenced across restarts; no gate replays or settles it (45.753875ms)
+✔ admin abandonment unblocks admission only; the UNKNOWN record is never settled or erased (93.757041ms)
+✔ restart-quiescence evidence without an authenticated context settles nothing (fail-closed) (0.302792ms)
+✔ UNKNOWN_FENCE_SELF_LOCK_REPAIRED: idle before the same-batch turn/end settles late and releases the fence without any new admission (85.489542ms)
+✔ RECEIPT_CORRELATION_MISSING: terminal present but receipt never correlated — pending, no fake release (83.130584ms)
+✔ LATER_TURN_STARTED: a later turn/start after the terminal never settles the old turn (82.940292ms)
+✔ MULTI_UNKNOWN_ISOLATED: releasing one fence never releases another (C-016) (3.243209ms)
+✔ CHILD_EXIT_SETTLES_TERMINATED_WITHOUT_OUTCOME: fence released, no new admission needed (124.291458ms)
+✔ RELEASE_SENDS_NOTHING_NEW: deliver-mode late settlement produces no second business prompt and no duplicate delivery (152.904167ms)
+✔ classifyUnknownFence covers the six bounded, secret-free categories (0.340542ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/v5-router-mount-yqMZwU/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel bound; default binding -> agt_efficiency-agent + session main
+[router] ERROR delivery to unresolved failed during admission: unclassified
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/v5-integrated-v0xije/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel bound; default binding -> agt_efficiency-agent + session main
+✔ V5 only the private authenticated callback registers exact opts identity (0.983375ms)
+✔ V5 Router mounts a distinct private Feishu callback; public route cannot grant provenance (10.296791ms)
+✔ V5 raw OpenID absence, fallback, mismatch and prototype spoof reject before route (0.162791ms)
+✔ V5 post-binding correlation cap failure is still pre-turn admission (0.082416ms)
+✔ V5 AgentProcess mint uses exact opts lookup, not caller ingressContext (0.5175ms)
+✔ V5 durable correlation is write-once and legacy missing field reads null (24.924ms)
+✔ V5 malformed optional correlation rejects before sequence or durable mutation (0.265459ms)
+✔ V5 native prompt receipt remains separate from ingress message identity (0.376167ms)
+[router] binding created: channelConversation feishu:oc_chat... -> agent agt_efficiency-agent + session main + workspace (agent default)
+[router] channelConversation feishu:oc_chat... -> binding -> agent agt_efficiency-agent + session main (channel=p2p chat=oc_chat sender=ou_own text="hello")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025208668,"routeChainId":"single-route","agentId":"agt_efficiency-agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025208668,"routeChainId":"single-route","agentId":"agt_efficiency-agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_efficiency-agent (pid 4242) produced a 16B reply
+[router] reply sent back to oc_chat...
+[router] channelConversation feishu:oc_chat... -> binding -> agent agt_efficiency-agent + session main (channel=p2p chat=oc_chat sender=ou_own text="hello")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025208708,"routeChainId":"single-route","agentId":"agt_efficiency-agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025208708,"routeChainId":"single-route","agentId":"agt_efficiency-agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_efficiency-agent (pid 4242) produced a 16B reply
+[router] reply sent back to oc_chat...
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025208748,"routeChainId":"single-route","agentId":"agt_efficiency-agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025208748,"routeChainId":"single-route","agentId":"agt_efficiency-agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/v5-integrated-pTiEWZ/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel bound; default binding -> agt_efficiency-agent + session main
+✔ V5 mounted private callback reaches real C-010 mint; public route and chain remain unbound (132.335625ms)
+[router] binding created: channelConversation feishu:oc_chat... -> agent agt_efficiency-agent + session main + workspace (agent default)
+[router] channelConversation feishu:oc_chat... -> binding -> agent agt_efficiency-agent + session main (channel=p2p chat=oc_chat sender=ou_own text="hello")
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1794025208780,"sequence":1,"category":"other","agentId":"agt_efficiency-agent","routeRef":null,"transportAttempt":1,"processGeneration":1,"categoryCount":1,"windowCount":1}
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025208781,"routeChainId":"single-route","agentId":"agt_efficiency-agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"session_create_resume_rejection","admissionProven":"proven_no_admission","attemptOutcome":"session_create_resume_rejection"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025208781,"routeChainId":"single-route","agentId":"agt_efficiency-agent","primaryRoute":"global","finalRoute":"NONE","finalOutcome":"session_create_resume_rejection","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] ERROR delivery to agt_efficiency-agent failed during admission: unclassified
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/v5-integrated-NQS4ZN/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel bound; default binding -> agt_efficiency-agent + session main
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025208829,"routeChainId":"single-route","agentId":"agt_efficiency-agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025208829,"routeChainId":"single-route","agentId":"agt_efficiency-agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_efficiency-agent session main requestId req-v5-deliver... (native-receipt) in 40ms
+✔ V5 real C-010 mint persists trusted identity before synthetic prompt byte failure (32.969209ms)
+[router] binding created: channelConversation feishu:oc_chat... -> agent agt_efficiency-agent + session main + workspace (agent default)
+[router] channelConversation feishu:oc_chat... -> binding -> agent agt_efficiency-agent + session main (channel=p2p chat=oc_chat sender=ou_own text="hello")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025208870,"routeChainId":"single-route","agentId":"agt_efficiency-agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025208870,"routeChainId":"single-route","agentId":"agt_efficiency-agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_efficiency-agent (pid 4242) produced a 16B reply
+[router] reply sent back to oc_chat...
+[router] binding created: channelConversation feishu:oc_other... -> agent agt_efficiency-agent + session main + workspace (agent default)
+[router] bookmark: feishu:oc_other... x agt_efficiency-agent -> session main
+[router] switch: feishu:oc_other... -> agent agt_other + session main + workspace (agent default)
+[router] channelConversation feishu:oc_other... -> binding -> agent agt_other + session main (channel=p2p chat=oc_other sender=ou_own text="hello")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025208914,"routeChainId":"single-route","agentId":"agt_other","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025208914,"routeChainId":"single-route","agentId":"agt_other","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_other (pid 4242) produced a 16B reply
+[router] reply sent back to oc_other...
+✔ V5 deliver remains unbound; duplicate private message IDs remain distinct records (133.490708ms)
+✔ workflow_execution origin: valid provenance is frozen and forwarded into the admission opts (1.388958ms)
+✔ workflow_execution origin: the exact-id admission gate applies (wrong-target family) (0.229167ms)
+✔ workflow_execution origin: malformed provenance rejects fail-loud before admission (0.169083ms)
+✔ workflow_execution origin: unknown kinds stay rejected (0.071958ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-registry-m8VyVV/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_registry-fx ready pid=4101 (0ms)
+✔ B01: STARTUP CAS precedes async bootstrap and all callers share the exact resultPromise (4.946625ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-registry-E3Cjz1/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ B01 frozen bootstrap rejection settles shared STARTUP and returns slot to EMPTY (1.882625ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-registry-VZrGnC/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ B01 post-processRef setup failure with no child converges STARTUP to EMPTY (1.178375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-registry-sjTkLw/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_registry-fx ready pid=4102 (0ms)
+✔ CONCURRENT_ENSURE_RUNNING: 30 calls -> one spawn, one pid, shared READY reference (0.915125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-registry-bXGIoJ/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ B14 disposer fences and cancels a no-child STARTUP before spawn (0.945041ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-registry-ICyrTu/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_registry-fx ready pid=4103 (0ms)
+✔ B14 runtime disposer awaits child exit and retains REAP until then (1.299792ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-registry-BSoJq8/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_registry-fx ready pid=4104 (0ms)
+✔ SPAWN_ERROR_BEFORE_CHILD_HANDLE: sync spawn throw -> bounded reject + slot EMPTY, no fence (1.096916ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-registry-su4qzC/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ REGISTRY_STARTUP_FATAL_ATOMIC_REAP: REAP before real exit; racers error; no EMPTY window (0.94875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-registry-Km80Y3/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_registry-fx ready pid=4106 (0ms)
+[router] [router] agent agt_registry-fx ready pid=4107 (0ms)
+✔ REGISTRY_READY_FATAL_ATOMIC_REAP: no generation g+1 before g really exited (1.485792ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-registry-W1xlGS/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ STARTUP_RESULT_REJECTS_WHILE_REAP_WAITS: bounded original reject + immediate reaping reject (1.107333ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-registry-4MFMbY/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_registry-fx ready pid=4109 (0ms)
+[router] [router] agent agt_registry-fx ready pid=4110 (0ms)
+✔ OLD_GENERATION_LATE_EXIT_AFTER_RESPAWN: stale exit callback on the old process leaves g+1 untouched (audit only) (0.942875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wedge-DUFSTG/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_startup-fx ready pid=5201 (0ms)
+✔ F1 resolveWorkspace: bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation (5.880125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wedge-f5YyA9/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_startup-fx ready pid=5202 (0ms)
+✔ F1 resolveDshHome: bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation (1.209541ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wedge-OPVAdE/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_startup-fx ready pid=5203 (0ms)
+✔ F1 resolveProcessConfig: bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation (0.998292ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wedge-XaOJ9p/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_startup-fx ready pid=5204 (0ms)
+✔ F1 provisionHome: bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation (1.020458ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wedge-krycEX/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_startup-fx ready pid=5205 (0ms)
+✔ F1 processFactory: bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation (0.992625ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wedge-Nfo7SL/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_startup-fx ready pid=5206 (0ms)
+✔ F1 spawn (sync throw after processRef exists): bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation (1.389125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wedge-nOl84n/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_startup-fx ready pid=5207 (0ms)
+✔ F1 audit-probe regression: pre-spawn provisioning throw -> bounded reject -> EMPTY -> second ensureRunning does not hang (0.985083ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wedge-p5Air1/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_startup-fx ready pid=5208 (0ms)
+✔ F1 discipline is idempotent: repeated re-invocation cannot double-settle or empty a newer generation (0.900042ms)
+✔ F2 UNKNOWN_AGENT_OVERRIDE = FAIL_LOUD before any process spawn, structured and secret-free (1.562834ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wedge-FIbatC/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_startup-fx ready pid=5209 (0ms)
+✔ F2 KNOWN_AGENT_OVERRIDE = PASS: a registered agent override applies end-to-end (1.010125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wedge-CA33yC/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_startup-fx ready pid=5210 (0ms)
+✔ F2 EMPTY_OVERRIDES = PASS: no override file behaves exactly as before (0.729958ms)
+✔ handle embeds epoch/discriminator/generation/monotonic seq; seq is continuous per agent (1.11125ms)
+✔ QUERY_PENDING_REPEATABLE: two reads are byte-identical and non-consuming (0.721833ms)
+✔ QUERY_NO_OUTPUT_REPEATABLE: settled failed record reads no_output twice, byte-identical (0.262ms)
+✔ QUERY_EVICTED_REPEATABLE: a legally issued + resolved + evicted handle reads evicted twice (7.899292ms)
+✔ QUERY_RESTART_LOST_REPEATABLE: a foreign runtimeEpoch handle uniformly reads restart_lost (0.077583ms)
+✔ QUERY_NEVER_EXISTED_REPEATABLE: seq beyond the high-water / unknown agent / malformed format (0.094458ms)
+✔ CALLER_CORRELATION_RESTORE: exact triple restores the same handle without any admission (0.167083ms)
+✔ B10 mint correlation conflict leaves authority/sequence/capacity unchanged (0.259833ms)
+✔ B11 pending output never reports terminal available/no_output (0.123541ms)
+✔ B10 failed oversized mint at full capacity evicts nothing (6.803875ms)
+✔ B12 per-record hard cap fails before committing oversized identity (0.29075ms)
+✔ B12 complete-record accounting rejects oversized mutable metadata without exceeding caps (0.402917ms)
+✔ B12 aggregate byte pressure preserves mandatory unknown headroom and truncates optional output (2.45875ms)
+✔ B12 cap-sized quote output is measured by retained UTF-8 bytes, not JSON escaping (0.535375ms)
+✔ B10 handle classification rejects aliases and unsafe integers (0.052625ms)
+✔ caller correlation: same triple + same handle idempotent; different handle fails loud (0.127833ms)
+✔ settle-once: first winning settlement wins; duplicate + conflicting evidence only append audit (0.187042ms)
+✔ B12 reconciliation audit obeys exact count and byte hard caps (4.499917ms)
+✔ settleDirect rejects records that already entered the late machine and vice versa (0.105458ms)
+✔ onTurnReconciled emits exactly once per winning settlement (0.129834ms)
+✔ UNRESOLVED_RECONCILIATION_CAP_PRESSURE: unresolved records are not evictable; the next mint fails pre-reservation (5.977334ms)
+✔ ROUTER_GLOBAL_RECONCILIATION_CAP: global record cap rejects a mint on another agent, no eviction of unresolved (2026.884041ms)
+✔ B12 issuance metadata fails loud before forgetting sparse legal generations (7.516333ms)
+✔ resolved eviction frees capacity: settled records are evictable, unresolved are not (0.661084ms)
+✔ R3 route: one real startup-blocked request enters shared alert feed once (2.095333ms)
+✔ R3 route: one real per-agent fence rejection enters shared alert feed once (35.87025ms)
+✔ R3 deliver: one real startup-blocked request enters shared alert feed once (0.855084ms)
+✔ R3 deliver: one real per-agent fence rejection enters shared alert feed once (32.749917ms)
+✔ R3 product: one real startup-blocked request enters shared alert feed once (0.606166ms)
+✔ R3 product: one real per-agent fence rejection enters shared alert feed once (32.941833ms)
+✔ R3 website: one real startup-blocked request enters shared alert feed once (0.739ms)
+✔ R3 website: one real per-agent fence rejection enters shared alert feed once (31.322625ms)
+✔ R3 blocked observation accepts only bounded code/reason/agent metadata (0.128958ms)
+✔ R3 a blocked process acquisition already counted by the chain is not counted again by ingress (9.419875ms)
+✔ R3 website: late blocked acquisition alerts once without exposing raw Agent identity (8.369833ms)
+✔ R3 product: observing rejection preserves its existing raw-fence fallback (32.718333ms)
+✔ R3 website: observing rejection preserves its existing raw-fence fallback (43.550167ms)
+✔ R3 real router initialization alerts on an invalid startup store before any delivery (2.529125ms)
+✔ default off: no canaryRuntimeRoot => zero filesystem effect, normal turn (0.929375ms)
+✔ absent descriptor is the ordinary fast path (no injection, no marker) (1.844333ms)
+✔ quota mode: acquire/dispatch boundary crossed, fixed terminal 429, hop luna, exact counts (2.94925ms)
+✔ quota mode on a length-1 chain: fixture 429 stays terminal (no next route) (1.210875ms)
+✔ outcome_unknown mode: STOP before acquire — zero acquires, no generation (0.989958ms)
+✔ binding mismatches: wrong agent / route / channel / sender / partial marker / no ingress (3.740625ms)
+✔ other-Agent isolation: a matching descriptor never affects another agent turn (0.618459ms)
+✔ expired descriptor: no injection, not consumed, ordinary turn (0.673125ms)
+✔ malformed descriptors fail loud with zero attempts (10.269584ms)
+✔ metadata drift (wrong mode bits) fails loud (0.728084ms)
+✔ one-shot race: exactly one of two concurrent matching turns gets the injection (1.243333ms)
+✔ crash after rename: used marker alone never re-consumes; ordinary turn (0.481208ms)
+✔ nonce collision: new descriptor whose used marker already exists fails loud (0.785458ms)
+✔ admission (deliver) entries never match the canary binding (0.627875ms)
+✔ after clear (descriptor + used marker absent) the seam is inert (0.942875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/native-router-GlRHNQ/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: mcp:pilot... -> agent agt_pilot + session main + workspace (agent default)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025211675,"routeChainId":"single-route","agentId":"agt_pilot","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025211675,"routeChainId":"single-route","agentId":"agt_pilot","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+✔ real Router ProductSurface seam preserves dedicated binding/main and hands source metadata to original chain (56.556916ms)
+✔ real AgentProcess receipt-only product surface holds trusted context until original terminal (2.8775ms)
+✔ source owner retains exact native reply before publication, survives reset and restart (53.329417ms)
+✔ source reserve fails before followup when durable retention is unavailable (0.302ms)
+✔ B002: visible text and its native ID survive an empty completion anchor in the same exact turn (48.777ms)
+✔ B002: a wholly-empty native completion records no visible reply rather than retaining an empty business answer (39.924208ms)
+✔ #1332 fresh spawn + suspended 59243-event resume: no prompt before application readiness (4.154959ms)
+✔ R1 readiness: initialize ready cannot bypass session preparation acknowledgement (2.494ms)
+✔ R1 readiness: absent capability and mismatched acknowledgement fail closed (1.113833ms)
+✔ R1 readiness: never-ready child respects caller deadline and late ack cannot admit (36.062834ms)
+✔ R4 readiness: process state and newly installed UNKNOWN fence gate acknowledgement (0.568791ms)
+✔ R1 readiness: each call obtains a fresh ack; expired caller budget writes nothing (0.252208ms)
+✔ R1 readiness: an acknowledgement processed beyond the absolute budget cannot admit (6.23325ms)
+✔ R1 readiness preserves private-session log suppression without forwarding custody payload (0.376708ms)
+✔ CTR-R2 fresh/idle transport failure respawns twice with exponential delay, one reply/dispatch (10.148584ms)
+✔ CTR-R3 exhaustion durably retains original message, coordinates and explicit resend semantics (9.86825ms)
+✔ CTR-R2 no replay after unsafe/unknown event {"type":"assistant/message","data":{"message":{"content":[{"type":"text","text":"partial"}]}}} (0.635875ms)
+✔ CTR-R2 no replay after unsafe/unknown event {"type":"assistant/message","data":{"message":{"content":[{"type":"tool-call","name":"write"}]}}} (0.705875ms)
+✔ CTR-R2 no replay after unsafe/unknown event {"type":"tool/start","data":{}} (0.602416ms)
+✔ CTR-R2 no replay after unsafe/unknown event {"type":"unrecognized/provider-event","data":{}} (0.526791ms)
+✔ CTR-R5 final unknown increments caller-bound class without replay or respawn (902.203333ms)
+✔ CTR-R2/R3 async admission returns one receipt then recovers delayed failures and persists exhaustion (10.511167ms)
+✔ CTR-R3 failed exact generation reap still retains message and resend notice (6.107375ms)
+✔ CTR-R2 arbitrary fetch-failed text never provides replay authority (1.121292ms)
+✔ CTR-R5 all four categories and threshold are recomputable from structured log events (0.392667ms)
+✔ CTR-R5 real child exit after receipt counts child_exit_without_outcome and never retries (0.761ms)
+✔ CTR-R2 parent RPC observation denies replay even without assistant/tool events (0.707292ms)
+✔ accepted original-source custody forbids a second prompt and retains failed original (4.461416ms)
+✔ CTR-R1 never-serviceable preparation respawns twice and dead-letters without any prompt (5.031208ms)
+✔ CTR-R3 real ingress failure reply keeps its prefix and explicitly says 请重发 (9.902584ms)
+✔ scenario 7 runs in a clean child-process environment (32.314958ms)
+✔ native continuation uses a new owned queue execution after the initial turn settles (7.100166ms)
+✔ duplicate native reservation cannot mint another execution or enqueue twice (1.14725ms)
+✔ aborting a native request behind an occupied queue cannot write later (0.961833ms)
+✔ native entry rejects other sessions, incompatible children and forged fields before admission (0.773625ms)
+✔ native callback unknown is fenced rather than misclassified as definitive rejection (1.287666ms)
+✔ lost native prompt receipt can reconcile exact retained message without resending (32.502291ms)
+✔ a duplicate reservation remains rejected after its reconciled record is evicted (1.032792ms)
+✔ transport watermark rejects invalid, duplicate and out-of-order sequences before write (4.903125ms)
+✖ scripted native rounds obtain fresh parent proof after prior settlement through real child transport (0.6665ms)
+✖ real child timeout removes native queued admission before old owner release (37.646541ms)
+✖ real child cancel removes native queued admission before old owner release (34.797875ms)
+✔ draining child of an ordinary agent loses broker and switch at the stop barrier (0.74375ms)
+✔ a child whose exit the parent observed is denied even while its socket lingers (0.070417ms)
+✔ live READY child keeps the ordinary broker and switch semantics (0.114333ms)
+✔ real AgentProcess captures workflow origin before first prompt RPC and keeps it immutable (10.984959ms)
+✔ real completed managed turn cannot erase stale RPC correlation into ordinary fallback (1.019709ms)
+✔ invalid supplied turn correlation refuses while proven live unmanaged turns retain ordinary routing (0.087834ms)
+✔ native tool policy digest participates in process reuse identity while legacy identity stays stable (0.408791ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-CIe5zV/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ DEC-IMPL-004: identity-matching READY process is reused with zero new generations (4.311041ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-isr3WZ/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ DEC-IMPL-004: mismatched IDLE process is shut down through the existing controlled path, then a new generation spawns under the wanted route (1.025709ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-iIdjUm/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ credential path switch never reuses the per-home OAuth child (0.89925ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-9GS1dq/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ trusted native policy is bound to exact-agent process identity and changes require a new generation (1.382166ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-GaVcGy/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ legacy ensureRunning applies the trusted resolver before reuse when native policy is configured (1.006791ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-WwJU5O/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ removing a trusted native policy also requires a fresh process generation (0.973333ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-dU40QJ/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ trusted native policy resolver identity mismatch fails before process creation (0.875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-jp0dFQ/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ route acquisition without an identity closes policy removal instead of reusing the old generation (0.756583ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-W1CefF/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ legacy acquisition rechecks policy removal while a policy-bound route startup is pending (1.297708ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-PA0Ojg/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ concurrent route acquisition converges a STARTUP policy removal through the same generation gate (0.76325ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-LbP8wH/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ process config cannot opt in when the trusted resolver is absent (0.623584ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-B9J1xu/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ DEC-IMPL-004: mismatched BUSY process is never killed and never reused (0.607417ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-5a2TlO/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ shared STARTUP: a second caller with a different route converges after the in-flight startup settles (0.604417ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-zombie-ubAIzM/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ a settled-but-unconverged STARTUP slot fails loud and bounded (no spin) (0.6805ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-mW57aG/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ legacy ensureRunning still spawns via resolveProcessConfig and records the slot route identity (0.602542ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-lGmmRW/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ undefined identity disables the gate (byte-equivalent legacy acquisition) (0.648125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-fail-GNDybs/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ registry-level startup failures reject the gate call with the structured carrier (0.686125ms)
+✔ resolved provider/model are immutable initialize inputs for the process that owns create and resume (4.060833ms)
+✔ target process environment explicitly omits OPENAI_API_KEY (0.473791ms)
+✔ every child strips all proxy variants; only target providerEnv is injected exactly (0.304792ms)
+✔ providerEnv is immutable per AgentProcess lifetime (0.079ms)
+✔ provider/account errors are classified without secret echo and never rewrite the route (2.111875ms)
+✔ failure taxonomy and redaction cover frozen provider-side classes (0.273167ms)
+✔ real turn/end quota error rejects the turn with provider/account attribution and no empty success (2.94875ms)
+✔ all frozen runtime classes traverse the real session.event turn/end shape (13.267583ms)
+✔ turn correlation ignores history/another session but fences two same-session pre-receipt starts (82.466333ms)
+✔ async and sync provider errors share full token redaction and never retain raw payloads (5.493833ms)
+✔ quota signal + full authoritative evidence => exact new class, hop candidate (0.729708ms)
+✔ structured HTTP 429 status also qualifies as the quota signal (0.072834ms)
+✔ B/D matrix: every unsafe flag beats the quota signal => STOP (0.072916ms)
+✔ B (authoritative): captured assistant output stops even without carrier flags (0.044416ms)
+✔ C: 429-shaped outcome_unknown carrier => STOP outcome_unknown (0.041292ms)
+✔ 429 + transport timeout evidence => STOP timeout_without_proven_termination (0.063291ms)
+✔ ambiguous quota (no authoritative bundle, no controlled proofs) => STOP, never initialize/no-admission (0.054083ms)
+✔ each missing authoritative predicate separately breaks the quota class (0.072083ms)
+✔ text-only quota (quota words in message, non-quota structured code) => STOP post-admission (0.050875ms)
+✔ session-boundary quota sync rejection (no receipt, no proof) => STOP fail-closed, never class 3 (0.071167ms)
+✔ explicit initialize-origin quota + never READY + no prompt attempt => existing class 2 (0.053875ms)
+✔ the other three no-admission classes still hop (closed V1 whitelist intact) (0.448334ms)
+✔ A (real process): terminal pre-generation 429 hops glm53 -> luna -> success (5.796125ms)
+✔ B (real process): 429 after partial assistant output STOPs, zero luna acquires (1.055625ms)
+✔ C (real process): quota turn never terminates => outcome_unknown STOP, zero luna acquires (62.448791ms)
+✔ D (controlled carrier): 429 + tool started => STOP, zero luna acquires (0.2185ms)
+✔ journal redaction: quota attempts never journal raw provider bodies or prompts (0.1325ms)
+✔ no next route: exact quota class on a length-1 chain stays terminal (no cycle/restart) (0.094ms)
+✔ budget exhaustion: exact quota class with no remaining deadline STOPs (no refresh) (21.08075ms)
+✔ R2 atomic batch repairs three blocked+pending+cleared fixtures using their own durable evidence (270.577708ms)
+✔ R2 atomic batch refuses missing mandatory field: no source mutation or partial candidate (244.401708ms)
+✔ R2 atomic batch refuses wrong query enum: no source mutation or partial candidate (220.588417ms)
+✔ R2 atomic batch refuses wrong settlement enum: no source mutation or partial candidate (219.737583ms)
+✔ R2 atomic batch refuses wrong action enum: no source mutation or partial candidate (221.050291ms)
+✔ R2 atomic batch refuses missing action timestamp: no source mutation or partial candidate (225.057875ms)
+✔ R2 atomic batch refuses missing exact termination proof: no source mutation or partial candidate (226.920291ms)
+✔ R2 atomic batch refuses outcome evidence has precedence: no source mutation or partial candidate (228.990833ms)
+✔ R2 atomic batch refuses unproven root-quiescence assertion: no source mutation or partial candidate (223.932542ms)
+✔ R2 atomic batch refuses null exit cannot be asserted as child exit: no source mutation or partial candidate (237.703167ms)
+✔ R2 atomic batch refuses unselected malformed record stays invalid: no source mutation or partial candidate (236.660542ms)
+✔ R2 atomic batch refuses duplicate target is refused: no source mutation or partial candidate (234.647167ms)
+✔ R2 atomic batch refuses wrong target identity: no source mutation or partial candidate (224.457542ms)
+✔ R2 CLI: three evidence-backed incident-shaped turns settle individually; unrelated UNKNOWN stays exact (308.30875ms)
+✔ R2 CLI: missing durable exit proof is refused even with explicit owner authorization (176.506208ms)
+✔ R2 CLI: stale preimage refuses without changing source or emitting candidate (193.406083ms)
+✔ R2 CLI: wrong tuple refuses without changing source or emitting candidate (189.668791ms)
+✔ R2 CLI: new evidence kind refuses without changing source or emitting candidate (199.769917ms)
+✔ R2 CLI: owner-writable by group refuses without changing source or emitting candidate (194.325583ms)
+✔ R2 CLI: missing authorization refuses without changing source or emitting candidate (195.288375ms)
+✔ R2 deployed loader rejects incident schema mistake: missing observedAtWallMs (208.243042ms)
+✔ R2 deployed loader rejects incident schema mistake: state instead of queryState (210.942084ms)
+✔ R2 CLI: existing candidate or symlink output is never overwritten (195.032125ms)
+✔ R2 CLI: exact REAP registry cleanup must already be proven (240.695917ms)
+✔ R2 CLI: durable late success cleanup retains outcome and answer digest; repeated candidate is unchanged (266.738792ms)
+✔ R2 CLI: durable exact outcome evidence cannot be downgraded by exit-only recovery (219.37625ms)
+✔ R2 CLI: wrong deployed loader digest refuses without source mutation (195.483334ms)
+✔ R2 CLI: validate uses deployed loader without triggering startup restoration (219.613125ms)
+✔ R2 CLI: single-handle resume preserves other Scheduler caller correlations (242.073708ms)
+✔ private caller opts cross to the final turn without entering the route acquire identity (0.875084ms)
+✔ classification: the four whitelisted proven-no-admission classes hop (0.432291ms)
+✔ classification: everything in the CTR-005 stop set stays put (0.077125ms)
+✔ CTR-002: primary success means zero fallback activity (0.176667ms)
+✔ CTR-003/004: each whitelisted failure hops exactly once, in order, to the next route (0.5545ms)
+✔ CTR-003: multi-hop chains traverse route[0] -> route[1] -> route[2] with no skips (0.253667ms)
+✔ CTR-005: stop-set failures never hop; the original error propagates fail-loud (0.592667ms)
+✔ CTR-003: exhausting the chain fails loud with the last failure class (0.185333ms)
+✔ DEC-IMPL-005: explicit model strict mode = exactly one attempt, zero hops (0.140959ms)
+✔ DEC-IMPL-007: a whitelisted failure with no remaining budget does NOT hop (21.180375ms)
+✔ DEC-IMPL-007: busy_mismatch convergence waits consume the single budget, then stop (215.219625ms)
+✔ CTR-IMPL-003: deliver variant hops on admission failures and resolves on inbox accept (0.561208ms)
+✔ CTR-IMPL-005: onDispatch fires exactly once, right before the first dispatched attempt (0.48175ms)
+✔ CTR-IMPL-006: journal records carry only structural fields — never raw errors (0.426417ms)
+✔ no-override agents pass through the seam with a length-1 chain (legacy default snapshot) (0.274708ms)
+✔ invalid config at snapshot time fails loud with zero attempts and a truthful final block (0.265041ms)
+✔ canonicalRouteIdentity: credentialFile is part of reuse identity and is canonically resolved (0.214417ms)
+✔ scenario 5 runs in a clean child-process environment (29.829041ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-OXyisR/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: feishu:surface-523... -> agent agt_a + session session-before + workspace (agent default)
+✔ #523: feishu agent-turn cross-workspace switch rejects before any Binding/bookmark write (7.325041ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-B06piT/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: mobile:surface-523... -> agent agt_a + session session-before + workspace (agent default)
+✔ #523: mobile agent-turn cross-workspace switch rejects before any Binding/bookmark write (2.200875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-6XA38V/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: custom-channel:surface-5... -> agent agt_a + session session-before + workspace (agent default)
+✔ #523: custom-channel agent-turn cross-workspace switch rejects before any Binding/bookmark write (2.145459ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-bWvkG7/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: mobile:shared... -> agent agt_a + session remember-me + workspace (agent default)
+[router] bookmark: mobile:shared... x agt_a -> session remember-me
+[router] switch: mobile:shared... -> agent agt_b + session main + workspace (agent default)
+[router] bookmark: mobile:shared... x agt_b -> session main
+[router] switch: mobile:shared... -> agent agt_a + session remember-me + workspace (agent default)
+✔ #523: same imported primary path allows different agent IDs and display-name resolution (2.369167ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-tqN0lx/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: feishu:explicit... -> agent agt_a + session main + workspace group-workspace
+✔ #523: explicit current workspace is compared instead of current agent primary (1.876125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-X2CchG/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: custom-channel:explicit-... -> agent agt_a + session main + workspace agt_b
+[router] bookmark: custom-channel:explicit-... x agt_a -> session main
+[router] switch: custom-channel:explicit-... -> agent agt_b + session main + workspace agt_b
+✔ #523: explicit workspace equal to target primary allows the switch (2.506667ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-ViLWUx/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: mobile:no-bypass... -> agent agt_a + session main + workspace (agent default)
+✔ #523: targetSessionId and requested workspace cannot bypass cross-workspace admission (1.653958ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-3ZOKrX/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: feishu:self... -> agent agt_a + session main + workspace another-workspace
+✔ #523: self-switch cannot bypass the guard when current effective workspace differs (1.606916ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-TlgSTz/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: mobile:operator... -> agent agt_a + session saved-session + workspace (agent default)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[router] bookmark: mobile:operator... x agt_a -> session saved-session
+[router] switch: mobile:operator... -> agent agt_b + session main + workspace (agent default)
+✔ #523: operator POST /v1/switch-agent still crosses workspaces on the real Router (22.401375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-router-qNgPom/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:chat-main... -> agent agt_a + session main + workspace (agent default)
+✔ first contact binds the conversation to the Agent Definition default (5.022125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-router-hDk6t3/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:chat-main... -> agent agt_a + session main + workspace (agent default)
+[router] bookmark: feishu:chat-main... x agt_a -> session main
+[router] switch: feishu:chat-main... -> agent agt_b + session main + workspace (agent default)
+✔ switchAgent: A -> B by opaque id, persisted, returns the new Binding (1.978833ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-router-QLLUId/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:chat-main... -> agent agt_a + session main + workspace (agent default)
+[router] bookmark: feishu:chat-main... x agt_a -> session main
+[router] switch: feishu:chat-main... -> agent agt_b + session main + workspace (agent default)
+✔ switchAgent accepts the display name (Router owns agent lookup policy) (1.674083ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-router-A9fMwO/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:chat-main... -> agent agt_a + session main + workspace (agent default)
+✔ switchAgent rejects an unknown Agent and leaves the Binding untouched (1.234125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-router-S7s44T/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:chat-main... -> agent agt_a + session main + workspace (agent default)
+[router] bookmark: feishu:chat-main... x agt_a -> session main
+[router] switch: feishu:chat-main... -> agent agt_b + session normal-1 + workspace (agent default)
+✔ switchAgent honors an explicit targetSessionId (V1: else main) (1.453667ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-router-WE626v/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: feishu:chat-main... -> agent agt_b + session main + workspace (agent default)
+✔ switchAgent creates the Binding when the conversation has none yet (0.964834ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-router-LTOoDY/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:chat-main... -> agent agt_a + session main + workspace (agent default)
+[router] binding created: channelConversation feishu:chat-other... -> agent agt_a + session main + workspace (agent default)
+[router] bookmark: feishu:chat-main... x agt_a -> session main
+[router] switch: feishu:chat-main... -> agent agt_b + session main + workspace (agent default)
+✔ switching one conversation leaves other Bindings untouched (1.610291ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-router-4SQBGF/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:chat-main... -> agent agt_a + session main + workspace (agent default)
+[router] binding created: channelConversation feishu:chat-other... -> agent agt_a + session main + workspace (agent default)
+[router] bookmark: feishu:chat-main... x agt_a -> session main
+[router] switch: feishu:chat-main... -> agent agt_b + session main + workspace (agent default)
+[router] binding store loaded: 2 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-router-4SQBGF/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ restart: a fresh router over the same stores restores the switched Binding (2.189167ms)
+✔ channelConversationIdOf accepts string and {channelConversationId} (0.09975ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-router-ZtYgrb/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation mobile:surface-1... -> agent agt_a + session main + workspace (agent default)
+✔ channelConversationId is the single-owner id format (surface mapping) (0.97275ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-router-hGg7EP/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:chat-main... -> agent agt_a + session main + workspace (agent default)
+[router] bookmark: feishu:chat-main... x agt_a -> session main
+[router] switch: feishu:chat-main... -> agent agt_b + session main + workspace (agent default)
+[router] bookmark: feishu:chat-main... x agt_b -> session main
+[router] switch: feishu:chat-main... -> agent agt_a + session work + workspace (agent default)
+[router] bookmark: feishu:chat-main... x agt_a -> session work
+[router] switch: feishu:chat-main... -> agent agt_b + session main + workspace (agent default)
+[router] bookmark: feishu:chat-main... x agt_b -> session main
+[router] switch: feishu:chat-main... -> agent agt_a + session work + workspace (agent default)
+✔ bookmark: leaving records lastSession; entering restores it (explicit > bookmark > main) (2.666167ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-router-lZ3It3/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:chat-main... -> agent agt_a + session main + workspace (agent default)
+[router] bookmark: feishu:chat-main... x agt_a -> session main
+[router] switch: feishu:chat-main... -> agent agt_c + session main + workspace (agent default)
+[router] bookmark: feishu:chat-main... x agt_c -> session main
+[router] switch: feishu:chat-main... -> agent agt_a + session main + workspace (agent default)
+✔ bookmark: a surface that never visited an Agent falls back to main (1.585042ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-router-QiuUFN/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:chat-main... -> agent agt_a + session main + workspace (agent default)
+[router] switch: feishu:chat-main... -> agent agt_a + session work + workspace (agent default)
+[router] switch: feishu:chat-main... -> agent agt_a (already bound; no-op)
+✔ bookmark: self-switch without explicit session is a no-op (1.04625ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-router-4ixy66/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:chat-main... -> agent agt_a + session main + workspace (agent default)
+[router] binding created: channelConversation mobile:surface-1... -> agent agt_a + session main + workspace (agent default)
+[router] bookmark: mobile:surface-1... x agt_a -> session main
+[router] switch: mobile:surface-1... -> agent agt_b + session main + workspace (agent default)
+[router] bookmark: mobile:surface-1... x agt_b -> session main
+[router] switch: mobile:surface-1... -> agent agt_a + session work + workspace (agent default)
+[router] binding store loaded: 2 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-router-4ixy66/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] bookmark: mobile:surface-1... x agt_a -> session work
+[router] switch: mobile:surface-1... -> agent agt_b + session main + workspace (agent default)
+[router] bookmark: mobile:surface-1... x agt_b -> session main
+[router] switch: mobile:surface-1... -> agent agt_a + session work + workspace (agent default)
+✔ bookmark: per-surface isolation and restart persistence (2.824959ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-router-JLzzkl/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ getBinding returns undefined for an unknown conversation (0.524334ms)
+✔ generic runtime src carries no one-off HR incident knowledge (43.640334ms)
+✔ launchd runtime entry carries no one-off HR incident knowledge (0.459416ms)
+✔ exact legacy tuple decodes without normalization; malformed neighbors still fail closed (43.924292ms)
+✔ writer rejects pending/partial evidence and a prior bad clear with zero persistent/local effect (62.012708ms)
+✔ fence persistence failure rolls back the durable transition and retains the local fence (49.307209ms)
+✔ normal abandonment and exact settlement retain their distinct admission semantics (81.137208ms)
+✔ answer digest survives cold open, another durable write and restart without answer text (77.031208ms)
+✔ CTX exact active ingress context is immutable and bound to actual process/turn identity (4.21225ms)
+✔ FIX2.1 same session: turn B waits for turn A; bindingContext stays A's (1.403459ms)
+✔ CTX queued conversations install only their own context after stale clear (0.794542ms)
+✔ FIX2.2 switch-tool relay during turn A sees exactly A's bindingContext (0.947167ms)
+✔ FIX2.3 different native sessions of one AgentProcess are serialized too (0.892083ms)
+✔ FIX2.4 a failed turn does not wedge the single-flight queue (1.193042ms)
+✔ FIX2.5 unresolved outcome_unknown fences the queue; re-admission after late settlement is explicit (62.544209ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wsbind-jC3O9t/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_AAAA... -> agent agt_test + session main-oc_AAAA + workspace feishu-oc_AAAA
+[router] channelConversation feishu:oc_AAAA... -> binding -> agent agt_test + session main-oc_AAAA (channel=group chat=oc_AAAA sender=ou_sen text="hello")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221430,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221430,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5001) produced a 8B reply
+[router] binding created: channelConversation feishu:oc_BBBB... -> agent agt_test + session main-oc_BBBB + workspace feishu-oc_BBBB
+[router] channelConversation feishu:oc_BBBB... -> binding -> agent agt_test + session main-oc_BBBB (channel=group chat=oc_BBBB sender=ou_sen text="hello")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221430,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221430,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5001) produced a 8B reply
+✔ AC1: same Agent + two Feishu group bindings -> two different, stable, deterministic workspaces (10.04675ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wsbind-636xPG/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_AAAA... -> agent agt_test + session main-oc_AAAA + workspace feishu-oc_AAAA
+[router] channelConversation feishu:oc_AAAA... -> binding -> agent agt_test + session main-oc_AAAA (channel=group chat=oc_AAAA sender=ou_sen text="hello")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221435,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221435,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5002) produced a 8B reply
+[router] binding created: channelConversation feishu:oc_BBBB... -> agent agt_test + session main-oc_BBBB + workspace feishu-oc_BBBB
+[router] channelConversation feishu:oc_BBBB... -> binding -> agent agt_test + session main-oc_BBBB (channel=group chat=oc_BBBB sender=ou_sen text="hello")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221436,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221436,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5002) produced a 8B reply
+[router] binding store loaded: 2 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wsbind-636xPG/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ AC1 stability: bindings survive a control-plane restart with the same workspaceIds (4.922ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wsbind-cjndYN/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_AAAA... -> agent agt_test + session main-oc_AAAA + workspace feishu-oc_AAAA
+[router] channelConversation feishu:oc_AAAA... -> binding -> agent agt_test + session main-oc_AAAA (channel=group chat=oc_AAAA sender=ou_sen text="main turn")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221440,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221440,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5003) produced a 12B reply
+[router] switch: feishu:oc_AAAA... -> agent agt_test + session cron-daily + workspace feishu-oc_AAAA
+[router] channelConversation feishu:oc_AAAA... -> binding -> agent agt_test + session cron-daily (channel=group chat=oc_AAAA sender=ou_sen text="cron turn")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221441,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221441,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5003) produced a 12B reply
+✔ AC2/AC7: one group workspace, main + cron sessions -> different sessionIds, SAME cwd, shared files (4.9725ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wsbind-eBAFKz/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation mobile:surface-1... -> agent agt_secretary + session main + workspace (agent default)
+[router] channelConversation mobile:surface-1... -> binding -> agent agt_secretary + session main (channel=mobile chat=surface-1 sender=mobile text="hi")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221444,"routeChainId":"single-route","agentId":"agt_secretary","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221444,"routeChainId":"single-route","agentId":"agt_secretary","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_secretary (pid 5004) produced a 5B reply
+[router] bookmark: mobile:surface-1... x agt_secretary -> session main
+[router] switch: mobile:surface-1... -> agent agt_invest + session main + workspace (agent default)
+[router] channelConversation mobile:surface-1... -> binding -> agent agt_invest + session main (channel=mobile chat=surface-1 sender=mobile text="invest!")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221446,"routeChainId":"single-route","agentId":"agt_invest","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221446,"routeChainId":"single-route","agentId":"agt_invest","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_invest (pid 5005) produced a 10B reply
+✔ AC3: App switch to Investment Agent -> its DEFAULT workspace, no product logic in the Router (6.028042ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wsbind-awzrtS/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_AAAA... -> agent agt_test + session main-oc_AAAA + workspace feishu-oc_AAAA
+[router] channelConversation feishu:oc_AAAA... -> binding -> agent agt_test + session main-oc_AAAA (channel=group chat=oc_AAAA sender=ou_sen text="freeze cwd in workspace A")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221451,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221451,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5006) produced a 28B reply
+[router] switch: feishu:oc_AAAA... -> agent agt_test + session main-oc_AAAA + workspace ws-explicit-B
+[router] channelConversation feishu:oc_AAAA... -> binding -> agent agt_test + session main-oc_AAAA (channel=group chat=oc_AAAA sender=ou_sen text="now resolves B")
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1794025221452,"sequence":1,"category":"other","agentId":"agt_test","routeRef":null,"transportAttempt":1,"processGeneration":null,"categoryCount":1,"windowCount":1}
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221452,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"unproven","attemptOutcome":"stop:unknown_failure_class"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221452,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"NONE","finalOutcome":"stop:unknown_failure_class","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] ERROR delivery to agt_test failed during execution: SESSION_WORKSPACE_MISMATCH
+[router] switch: feishu:oc_AAAA... -> agent agt_test + session main-oc_AAAA + workspace feishu-oc_AAAA
+[router] channelConversation feishu:oc_AAAA... -> binding -> agent agt_test + session main-oc_AAAA (channel=group chat=oc_AAAA sender=ou_sen text="back on A")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221452,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221452,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5006) produced a 12B reply
+✔ AC4: persisted session cwd A vs resolved workspace B -> SESSION_WORKSPACE_MISMATCH, no mutation (4.954541ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wsbind-t5Jw82/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_AAAA... -> agent agt_test + session main-oc_AAAA + workspace feishu-oc_AAAA
+[router] channelConversation feishu:oc_AAAA... -> binding -> agent agt_test + session main-oc_AAAA (channel=group chat=oc_AAAA sender=ou_sen text="a1")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221456,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221456,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5007) produced a 5B reply
+[router] binding created: channelConversation feishu:oc_BBBB... -> agent agt_test + session main-oc_BBBB + workspace feishu-oc_BBBB
+[router] channelConversation feishu:oc_BBBB... -> binding -> agent agt_test + session main-oc_BBBB (channel=group chat=oc_BBBB sender=ou_sen text="b1")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221456,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221456,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5007) produced a 5B reply
+[router] channelConversation feishu:oc_AAAA... -> binding -> agent agt_test + session main-oc_AAAA (channel=group chat=oc_AAAA sender=ou_sen text="a2")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221457,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221457,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5008) produced a 5B reply
+[router] channelConversation feishu:oc_BBBB... -> binding -> agent agt_test + session main-oc_BBBB (channel=group chat=oc_BBBB sender=ou_sen text="b2")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221457,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221457,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5008) produced a 5B reply
+[router] switch: feishu:oc_AAAA... -> agent agt_test + session main-oc_AAAA + workspace ws-wrong
+[router] channelConversation feishu:oc_AAAA... -> binding -> agent agt_test + session main-oc_AAAA (channel=group chat=oc_AAAA sender=ou_sen text="a3")
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1794025221458,"sequence":1,"category":"other","agentId":"agt_test","routeRef":null,"transportAttempt":1,"processGeneration":null,"categoryCount":1,"windowCount":1}
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221458,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"unproven","attemptOutcome":"stop:unknown_failure_class"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221458,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"NONE","finalOutcome":"stop:unknown_failure_class","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] ERROR delivery to agt_test failed during execution: SESSION_WORKSPACE_MISMATCH
+✔ AC5: process restart -> sessions resume their persisted cwds; wrong resolution rejects (5.591708ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wsbind-xSJ8yi/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_AAAA... -> agent agt_test + session main-oc_AAAA + workspace feishu-oc_AAAA
+[router] channelConversation feishu:oc_AAAA... -> binding -> agent agt_test + session main-oc_AAAA (channel=group chat=oc_AAAA sender=ou_sen text="hi")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221461,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221461,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5009) produced a 5B reply
+[router] binding created: channelConversation feishu:oc_BBBB... -> agent agt_test + session main-oc_BBBB + workspace feishu-oc_BBBB
+[router] channelConversation feishu:oc_BBBB... -> binding -> agent agt_test + session main-oc_BBBB (channel=group chat=oc_BBBB sender=ou_sen text="hi")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221462,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221462,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5009) produced a 5B reply
+✔ AC6: two workspaces -> isolated AGENTS.md / files (3.958417ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wsbind-XisHDo/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding store loaded: 1 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wsbind-XisHDo/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] channelConversation feishu:oc_legacy... -> binding -> agent agt_test + session main (channel=group chat=oc_legacy sender=ou_sen text="still works")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221465,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221465,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5010) produced a 14B reply
+✔ AC8: a legacy store row WITHOUT workspace loads as null and turns in the agent default workspace (3.537958ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wsbind-A5I5B5/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_p2p... -> agent agt_test + session main + workspace (agent default)
+[router] channelConversation feishu:oc_p2p... -> binding -> agent agt_test + session main (channel=p2p chat=oc_p2p sender=ou_x text="legacy ingress (no workspace field)")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221469,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221469,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5011) produced a 38B reply
+✔ AC8 (fresh legacy path): an ingress WITHOUT any workspace field turns in the agent default workspace (3.3135ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wsbind-aUjWF9/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_AAAA... -> agent agt_test + session main-oc_AAAA + workspace feishu-oc_AAAA
+[router] channelConversation feishu:oc_AAAA... -> binding -> agent agt_test + session main-oc_AAAA (channel=group chat=oc_AAAA sender=ou_sen text="for A")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221472,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221472,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5012) produced a 8B reply
+[router] binding created: channelConversation feishu:oc_BBBB... -> agent agt_test + session main-oc_BBBB + workspace feishu-oc_BBBB
+[router] channelConversation feishu:oc_BBBB... -> binding -> agent agt_test + session main-oc_BBBB (channel=group chat=oc_BBBB sender=ou_sen text="for B")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221473,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221473,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5012) produced a 8B reply
+✔ AC9/AC10: same Agent, two bindings with different workspaces -> ONE process, per-binding cwd only (3.997541ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wsbind-OZagJL/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_AAAA... -> agent agt_test + session main-oc_AAAA + workspace feishu-oc_AAAA
+[router] channelConversation feishu:oc_AAAA... -> binding -> agent agt_test + session main-oc_AAAA (channel=group chat=oc_AAAA sender=ou_sen text="seed")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221476,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221476,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5013) produced a 7B reply
+[router] switch: feishu:oc_AAAA... -> agent agt_test + session main-oc_AAAA + workspace feishu-oc_9233xyz
+[router] switch: feishu:oc_AAAA... -> agent agt_test + session main-oc_AAAA + workspace secretary
+[router] switch: feishu:oc_AAAA... -> agent agt_test + session main-oc_AAAA + workspace investment
+✔ AC11: switchAgent rejects invalid workspaceIds structurally and leaves the Binding untouched (4.46375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wsbind-ZrR3WL/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ AC11 (resolve surface): first contact with an invalid workspaceId is rejected before any binding row (0.77275ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wsbind-YrMBdu/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding created: channelConversation feishu:oc_AAAA... -> agent agt_test + session main-oc_AAAA + workspace feishu-oc_AAAA
+[router] channelConversation feishu:oc_AAAA... -> binding -> agent agt_test + session main-oc_AAAA (channel=group chat=oc_AAAA sender=ou_sen text="seed")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221481,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221481,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_test (pid 5014) produced a 7B reply
+[router] bookmark: feishu:oc_AAAA... x agt_test -> session main-oc_AAAA
+[router] switch: feishu:oc_AAAA... -> agent agt_invest + session main + workspace feishu-oc_AAAA
+[router] bookmark: feishu:oc_AAAA... x agt_invest -> session main
+[router] switch: feishu:oc_AAAA... -> agent agt_test + session main-oc_AAAA + workspace (agent default)
+✔ switchAgent: omitted workspace PRESERVES the binding workspace across agent switches (4.019792ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-wsbind-WGrd1Y/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221485,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221485,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_test session main requestId j1... (d-1) in 1ms
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794025221486,"routeChainId":"single-route","agentId":"agt_test","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794025221486,"routeChainId":"single-route","agentId":"agt_test","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_test session fresh-4222e9b4352a4201f7228b7061a5ff2b requestId req-X... (d-2) in 0ms
+✔ deliver: Delivery V0 sessions run in the agent default workspace (no Binding exists) (3.895167ms)
+ℹ tests 626
+ℹ suites 0
+ℹ pass 614
+ℹ fail 10
+ℹ cancelled 0
+ℹ skipped 2
+ℹ todo 0
+ℹ duration_ms 35671.139916
+
+✖ failing tests:
+
+test at packages/agent-router/test/broker-rpc.test.js:322:1
+✖ seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept) (0.491083ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /response was lost/. Input:
+  
+  'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {"state":"STILL_UNKNOWN","operation":"create","reason":"read-back transport failed"}'
+  
+      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/broker-rpc.test.js:330:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {"state":"STILL_UNKNOWN","operation":"create","reason":"read-back transport failed"}',
+    expected: /response was lost/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at packages/agent-router/test/broker-rpc.test.js:334:1
+✖ seam: a structured gateway failure passes through declared codes verbatim at the correct depth (0.155875ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /outcome is unknown/. Input:
+  
+  'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {"state":"STILL_UNKNOWN","operation":"create","reason":"read-back response unusable"}'
+  
+      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/broker-rpc.test.js:340:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {"state":"STILL_UNKNOWN","operation":"create","reason":"read-back response unusable"}',
+    expected: /outcome is unknown/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at packages/agent-router/test/luna-credential-chain.test.js:157:1
+✖ E: valid canonical credential — child initializes on the openai-codex route (1.7235ms)
+  Error: dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout
+      at cliBin (file:///private/tmp/h605-r2/packages/agent-provisioning/src/index.js:76:11)
+      at gates (file:///private/tmp/h605-r2/packages/agent-router/test/luna-credential-chain.test.js:42:46)
+      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/luna-credential-chain.test.js:158:8)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.start (node:internal/test_runner/test:1257:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+
+test at packages/agent-router/test/luna-credential-chain.test.js:169:1
+✖ F: missing credential fails loud on the real chain — never a silent fallback (0.098834ms)
+  Error: dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout
+      at cliBin (file:///private/tmp/h605-r2/packages/agent-provisioning/src/index.js:76:11)
+      at gates (file:///private/tmp/h605-r2/packages/agent-router/test/luna-credential-chain.test.js:42:46)
+      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/luna-credential-chain.test.js:170:8)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at packages/agent-router/test/luna-credential-chain.test.js:186:1
+✖ G: unsafe credential (group/world readable) fails loud on the real chain (0.09325ms)
+  Error: dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout
+      at cliBin (file:///private/tmp/h605-r2/packages/agent-provisioning/src/index.js:76:11)
+      at gates (file:///private/tmp/h605-r2/packages/agent-router/test/luna-credential-chain.test.js:42:46)
+      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/luna-credential-chain.test.js:187:8)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+
+test at packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js:1:1
+✖ packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js (37.034625ms)
+  'test failed'
+
+test at packages/agent-router/test/process-lifecycle/message-origin.test.js:175:1
+✖ R3: a settled or unknown turnExecutionId proves nothing (absent leaf) (0.126125ms)
+  TypeError: Cannot read properties of undefined (reading 'ctx')
+      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/process-lifecycle/message-origin.test.js:180:32)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+
+test at packages/agent-router/test/route-chain/native-goal-composed.test.js:14:1
+✖ scripted native rounds obtain fresh parent proof after prior settlement through real child transport (0.6665ms)
+  AssertionError [ERR_ASSERTION]: paired native build is required; this conformance test must not silently skip
+      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/route-chain/native-goal-composed.test.js:15:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.start (node:internal/test_runner/test:1257:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at packages/agent-router/test/route-chain/native-goal-composed.test.js:74:43
+✖ real child timeout removes native queued admission before old owner release (37.646541ms)
+  Error: agent agt_cancel-source (generation 1) RPC initialize rejected: AGENT_PROCESS_EXITED
+      at AgentProcess.rejectAllPending (file:///private/tmp/h605-r2/packages/agent-router/src/process/rpc-channel.js:358:35)
+      at AgentProcess.onChildExit (file:///private/tmp/h605-r2/packages/agent-router/src/process/spawn.js:143:10)
+      at ChildProcess.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/src/process/spawn.js:77:47)
+      at ChildProcess.wrapper (node:events:639:12)
+      at ChildProcess.emit (node:events:514:20)
+      at ChildProcess._handle.onexit (node:internal/child_process:294:12) {
+    code: 'AGENT_PROCESS_EXITED',
+    agentId: 'agt_cancel-source',
+    processGeneration: 1,
+    method: 'initialize',
+    evidence: { code: 1, signal: null }
+  }
+
+test at packages/agent-router/test/route-chain/native-goal-composed.test.js:74:43
+✖ real child cancel removes native queued admission before old owner release (34.797875ms)
+  Error: agent agt_cancel-source (generation 1) RPC initialize rejected: AGENT_PROCESS_EXITED
+      at AgentProcess.rejectAllPending (file:///private/tmp/h605-r2/packages/agent-router/src/process/rpc-channel.js:358:35)
+      at AgentProcess.onChildExit (file:///private/tmp/h605-r2/packages/agent-router/src/process/spawn.js:143:10)
+      at ChildProcess.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/src/process/spawn.js:77:47)
+      at ChildProcess.wrapper (node:events:639:12)
+      at ChildProcess.emit (node:events:514:20)
+      at ChildProcess._handle.onexit (node:internal/child_process:294:12) {
+    code: 'AGENT_PROCESS_EXITED',
+    agentId: 'agt_cancel-source',
+    processGeneration: 1,
+    method: 'initialize',
+    evidence: { code: 1, signal: null }
+  }

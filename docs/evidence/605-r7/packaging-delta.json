@@ -1,0 +1,16 @@
+{
+  "originalCompatSHA256": "301d4fe9419700eab1833d642efc6b02570c197b09f659713d2aba9bd11dedc6",
+  "unchangedBodySHA256": "b2fbc236b0d8cebc80e681f0217179e0efe0f2e628bf5b2bb87b6a6700cd495d",
+  "target": "packages/scheduler/test/occurrence-model.test.js",
+  "targetLines": 320,
+  "baseImmediateChildren": 21,
+  "candidateImmediateChildren": 21,
+  "testNames": [
+    "R4 arbitrary non-enum history to values decode as unverifiable without inventing admission",
+    "R4 invalid from/final enums retain their raw values; marker is recomputed, never trusted",
+    "R4 structurally unusable records and independently provable corruption still fail loud",
+    "R4 redacted late-settlement linkage is unverifiable while settlement authority stays strict",
+    "R4 JobStore read/restart preserves raw UNKNOWN fences; strict mutation rejects with zero file writes"
+  ],
+  "semanticChange": false
+}

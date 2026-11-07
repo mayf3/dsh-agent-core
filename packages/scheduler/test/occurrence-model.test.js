@@ -8,10 +8,14 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { JobStore } from '../src/store.js'
 import {
   deriveOccurrenceId, deriveRunId, deriveNativeSessionId, computePayloadHash,
   canonicalJSON, canTransition, isTerminalState, isUnresolvedUnknown,
-  buildOccurrenceRecord, applyTransition, rebuildFences, validateOccurrenceRecord,
+  buildOccurrenceRecord, applyTransition, rebuildFences, validateOccurrenceRecord, decodeOccurrenceRecord,
   logicalCoordinates, findOccurrenceByCoords, structuredCollisionError,
 } from '../src/occurrence-model.js'
 
@@ -213,4 +217,104 @@ test('findOccurrenceByCoords locates records by logical coordinates', () => {
   const found = findOccurrenceByCoords([record], logicalCoordinates(record))
   assert.equal(found.occurrenceId, record.occurrenceId)
   assert.equal(findOccurrenceByCoords([record], { jobId: 'job-1', scheduleRevision: 3, effectiveSlot: 778 }), undefined)
+})
+
+// Compatibility read projection and strict writer preservation.
+function unknownRecord() {
+  const record = buildOccurrenceRecord({
+    job: { id: 'compat-job', agentId: 'compat-agent', scheduleRevision: 1, payload: { message: 'test' } },
+    kind: 'natural', nominalScheduledAt: 10, admittedAt: 10, timeoutMs: 100,
+  })
+  applyTransition(record, { to: 'outcome_unknown', at: 20, reason: 'no outcome evidence' })
+  return record
+}
+
+test('R4 arbitrary non-enum history to values decode as unverifiable without inventing admission', () => {
+  for (const value of ['[redacted]', 'unknown-marker', 'damaged-state', '', null, 42, false, {}, []]) {
+    const record = unknownRecord()
+    record.history[0].to = value
+    const before = structuredClone(record)
+    const decoded = decodeOccurrenceRecord(record)
+    assert.deepEqual(decoded.historyVerification, { status: 'unverifiable', outcome: 'UNKNOWN', invalidEnumEntries: [0] })
+    const { historyVerification, ...facts } = decoded
+    assert.deepEqual(facts, before)
+    assert.deepEqual(record, before, 'decoder does not mutate its source')
+    assert.equal(decoded.state, 'outcome_unknown')
+    assert.equal(decoded.executionOutcome, undefined)
+    assert.equal(decoded.lateSettlement, undefined)
+    assert.equal(decoded.terminationSettlement, undefined)
+    assert.equal(decoded.history.some(entry => entry.to === 'admitted'), false)
+    assert.throws(() => validateOccurrenceRecord(decoded), { code: 'OCCURRENCE_STORE_CORRUPT' })
+  }
+})
+
+test('R4 invalid from/final enums retain their raw values; marker is recomputed, never trusted', () => {
+  const record = unknownRecord()
+  record.history[1].from = 'unrecognized-source'
+  record.history[1].to = 'unrecognized-target'
+  record.historyVerification = { status: 'verified' }
+  const decoded = decodeOccurrenceRecord(record)
+  assert.deepEqual(decoded.history, record.history)
+  assert.equal(decoded.historyVerification.status, 'unverifiable')
+  const valid = unknownRecord()
+  valid.historyVerification = decoded.historyVerification
+  assert.equal(decodeOccurrenceRecord(valid).historyVerification, undefined)
+})
+
+test('R4 structurally unusable records and independently provable corruption still fail loud', () => {
+  const mutations = [
+    record => { delete record.ownerAgentId },
+    record => { record.occurrenceId = 'wrong-identity' },
+    record => { record.history = [] },
+    record => { record.history[1] = null },
+    record => { delete record.history[1].from },
+    record => { delete record.history[1].to },
+    record => { record.history[1].at = null },
+    record => { record.history[1].at = 0 },
+    record => { record.history[1].reason = null },
+    record => { record.history[1].from = 'succeeded' }, // Known illegal edge remains illegal.
+    record => { record.lateSettlement = { basis: 'guess' } },
+    record => { record.terminationSettlement = { kind: 'terminated_without_outcome' } },
+  ]
+  for (const mutate of mutations) {
+    const record = unknownRecord()
+    record.history[0].to = 'unknown-token'
+    mutate(record)
+    assert.throws(() => decodeOccurrenceRecord(record), { code: 'OCCURRENCE_STORE_CORRUPT' })
+  }
+})
+
+test('R4 redacted late-settlement linkage is unverifiable while settlement authority stays strict', () => {
+  const record = unknownRecord()
+  applyTransition(record, {
+    to: 'failed', at: 30, endedAt: 30, executionOutcome: 'failed',
+    terminalEvidence: { kind: 'late-settlement', detailRef: 'test-proof' },
+    lateSettlement: { basis: 'operator-reconcile', resolvedTo: 'failed', resolvedAt: 30, evidenceRef: 'test-proof' },
+  })
+  record.history[2].to = 'unknown-token'
+  const decoded = decodeOccurrenceRecord(record)
+  assert.equal(decoded.historyVerification.outcome, 'UNKNOWN')
+  assert.deepEqual(decoded.lateSettlement, record.lateSettlement)
+  assert.deepEqual(decoded.history, record.history)
+  record.lateSettlement.evidenceRef = ''
+  assert.throws(() => decodeOccurrenceRecord(record), /invalid lateSettlement authority/)
+})
+
+test('R4 JobStore read/restart preserves raw UNKNOWN fences; strict mutation rejects with zero file writes', async t => {
+  const root = mkdtempSync(join(tmpdir(), 'scheduler-history-compat-'))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const file = join(root, 'jobs.json')
+  const record = unknownRecord()
+  record.history[0].to = 'unknown-token'
+  const raw = { version: 3, jobs: [], occurrences: [record], fences: rebuildFences([record]) }
+  writeFileSync(file, JSON.stringify(raw))
+  const before = readFileSync(file)
+  const store = new JobStore(file)
+  const doc = await store.loadDoc()
+  assert.equal(doc.occurrences[0].historyVerification.status, 'unverifiable')
+  assert.deepEqual(doc.fences, raw.fences)
+  assert.deepEqual(await new JobStore(file).loadDoc(), doc)
+  await assert.rejects(store.mutateDoc(() => {}), /occurrence authority corrupted/)
+  assert.deepEqual(readFileSync(file), before)
+  assert.deepEqual(await store.loadDoc(), doc)
 })

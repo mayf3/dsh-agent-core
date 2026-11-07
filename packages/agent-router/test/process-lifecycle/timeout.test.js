@@ -100,11 +100,20 @@ test('B06: settling one of multiple unresolved unknowns does not release the oth
     return execution
   })
   assert.equal(fx.proc.activeUnknownFences.size, 2)
+  assert.throws(() => fx.proc.releaseFence(executions[0].handle),
+    { code: 'RECONCILIATION_FENCE_CLEAR_UNPROVEN' })
+  assert.equal(fx.proc.activeUnknownFences.size, 2)
+  fx.store.settleLate(executions[0].handle, {
+    lateOutcome: 'terminated_without_outcome', terminationEvidence: 'exact_queued_removal',
+  })
   fx.proc.releaseFence(executions[0].handle)
   assert.equal(fx.proc.activeUnknownFences.size, 1)
   const writes = prompts(fx).length
   await rejectsWith(fx.proc.turn('main', 'blocked'), error => assert.equal(error.code, 'AGENT_PROCESS_TURN_FENCED'))
   assert.equal(prompts(fx).length, writes)
+  fx.store.settleLate(executions[1].handle, {
+    lateOutcome: 'terminated_without_outcome', terminationEvidence: 'exact_queued_removal',
+  })
   fx.proc.releaseFence(executions[1].handle)
   assert.equal(fx.fence(), false)
 })

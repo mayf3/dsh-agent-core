@@ -1,0 +1,12 @@
+✔ startup facts allow bounded audit append and oldest-prefix ring rollover (1.229875ms)
+✔ startup facts reject unbounded audit count and UTF-8 bytes (0.487334ms)
+✔ startup facts reject audit rewrite, reorder, deletion and unproven full replacement (0.202792ms)
+✔ startup facts reject malformed appended audit and business fact changes or record deletion (2.955292ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 41.568
