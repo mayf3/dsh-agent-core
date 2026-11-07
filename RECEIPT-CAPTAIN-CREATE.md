@@ -13,7 +13,7 @@
 | 停止证据 | 管理 GET HTTP401；skill `auth_ro` 只读查询 rc0、INSERT=false、局部目标查询 `[]` |
 | 隔离性 | S1 源码仅 Principal + audit；Client 路径会创建凭据并补 Grant，未调用 |
 | 禁止效果 | Client/Secret/Grant/helper/新生产写权限均未创建；未任命/签发/触碰 runtime/8788；没有 Auth 写请求 |
-| docs commit / push / PR | PENDING_DELIVERY；见下方交付登记，最终 Git head 以 PR 真实远端读回为准 |
+| docs commit / push / PR | 内容提交 `8869bdb17ce590ed3bef54df5171f3be25a17803`；审查登记 `c62bd065196c7424ebe70b8f2e74657329127696` 已 push；[PR #659](https://github.com/mayf3/dsh-agent-core/pull/659)，base=`main`，OPEN/unmerged |
 | merge | NOT_PERFORMED；本任务禁止合并 |
 
 | 五条件 | 当前状态 | 缺件 |
@@ -30,4 +30,8 @@
 
 ## 验证与交付登记
 
-验证记录：`docs/reports/captain-principal-creation-20261107/checks.json`；独立文档审查：`docs/reports/captain-principal-creation-20261107/independent-review.md`。当前预提交稿，检查/审查/远端交付均尚未声称 PASS。最终登记只确认文档交付，不改变 STOP 或身份/任命/控制事实。
+验证记录：[checks.json](docs/reports/captain-principal-creation-20261107/checks.json)；独立文档审查：[independent-review.md](docs/reports/captain-principal-creation-20261107/independent-review.md)。内容提交的非作者治理与 Auth 受影响面审查均 PASS，冻结 blocker union=[]。governance integrity、diff whitespace、JSON/本地链接/源 hash 一致性通过。这些都是文档证据，不代替身份创建、实际任命或控制资格。
+
+2026-11-07T15:08:58Z，GitHub 连接器创建 [PR #659](https://github.com/mayf3/dsh-agent-core/pull/659)，读回 base=`main@9df5bd2fdea17f04bcd1762cd6800c350efcf9c3`、head=`c62bd065196c7424ebe70b8f2e74657329127696`、state=open、merged=false。`git push --set-upstream origin docs/captain-principal-creation` rc0；随后 `git ls-remote` 读回同一 head。此后只追加本交付登记及验证快照，最终 head 的非作者差量复核和远端读回以 PR 正文 `FINAL_HEAD_RECHECK` / `FINAL_DELIVERY_HEAD` 为准，避免在收据内自填自己的 commit SHA。未合并。
+
+执行记录：读取旧归档 skill 的 lookup 脚本时，内嵌连接凭据进入工具输出；该值未使用、未写入仓库，未验证有效性。实际只读查询使用安装 skill 的 `auth_ro` 连接，证据中仅保留源路径/hash 和脱敏结果；没有新建或轮换凭据。
