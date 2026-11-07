@@ -1,0 +1,51 @@
+{
+  "source": "/Users/authsvc/.agent-core/homes/agt_hr-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74--/main/session.jsonl",
+  "sourceSha256": "b551b76b8ca3edb59003c666ad9227a9ce416f3f72f217471e4e1a5e770680fe",
+  "countDirectDeniedResults": 2,
+  "countUniqueDirectDeniedCalls": 2,
+  "countExcludedSignatureSearchHits": 15,
+  "rows": [
+    {
+      "turn": 7,
+      "callId": "call_7ac3b76652f34d3889bfc770e5c8b28b|fc_0a381332cdbdd5a5016ad8ce5533008191871eb062831ea6f2",
+      "toolName": "agent_session_send",
+      "callLine": 777,
+      "startLine": 718,
+      "startTime": "2026-10-21T14:37:59.693000+00:00",
+      "denialLine": 778,
+      "denialTime": "2026-10-21T14:38:15.814000+00:00",
+      "sinceStartMs": 16121,
+      "endLine": 799,
+      "endTime": "2026-10-21T14:38:21.727000+00:00",
+      "durationMs": 22034,
+      "endReason": {
+        "kind": "completed"
+      },
+      "parsedError": {
+        "code": "internal_error",
+        "detail": "trusted source turn proof missing or stale"
+      }
+    },
+    {
+      "turn": 7,
+      "callId": "call_841cb3fbbccb439aaf503d21b6593786|fc_0a381332cdbdd5a5016ad8ce576c5481918a5fd6a89468f7a8",
+      "toolName": "agent_session_send",
+      "callLine": 779,
+      "startLine": 718,
+      "startTime": "2026-10-21T14:37:59.693000+00:00",
+      "denialLine": 780,
+      "denialTime": "2026-10-21T14:38:15.863000+00:00",
+      "sinceStartMs": 16170,
+      "endLine": 799,
+      "endTime": "2026-10-21T14:38:21.727000+00:00",
+      "durationMs": 22034,
+      "endReason": {
+        "kind": "completed"
+      },
+      "parsedError": {
+        "code": "internal_error",
+        "detail": "trusted source turn proof missing or stale"
+      }
+    }
+  ]
+}

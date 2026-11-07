@@ -1,0 +1,23 @@
+{
+  "reviewer": "independent collaboration agent /root/d13_design_review",
+  "scope": "D14/D13 facts/evidence and source-only repair-gate decision",
+  "reviewTarget": "r2 precommit report projections bound to source 1921f879 and main3a1282b3",
+  "verdict": "REVISE",
+  "FROZEN_BLOCKER_UNION": [
+    "D13-EVD-001"
+  ],
+  "blocker": {
+    "id": "D13-EVD-001",
+    "class": "FALSE_EVIDENCE",
+    "source": "Repository qualified-Evidence rule and user exact-signature requirement",
+    "counterexample": "String matches in grep/forum/read/scheduler tool results were counted as new session_send denials; line7559 did not even contain full denial string",
+    "impact": "17 results/11 denials/7 turns and latency ranges were materially distorted; publication blocked",
+    "minimalClosure": "Match actual tool/call name=agent_session_send by exact callId to exact result denial; rebuild projections/timeline/report; independent delta recheck",
+    "intent": "No inference of author intent"
+  },
+  "followUps": [
+    "Use current accepted Lifecycle V4 C-001/C-005",
+    "Include installed process-registry330-332 subscription propagation in expected-chain evidence"
+  ],
+  "unaffectedEvidence": "D14 four home resolution/package hashes, nine source hashes, archive regular-file comparison and two-option boundary independently verified"
+}

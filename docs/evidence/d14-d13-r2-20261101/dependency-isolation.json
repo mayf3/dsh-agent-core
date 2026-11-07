@@ -1,0 +1,10 @@
+{
+  "method": "copy unique real directories; deduplicate cycles with links internal to task worktree; omit @agent-core bridge; preserve missing dependencies as local dangling links",
+  "root": "/tmp/proddsh-d14-fix/node_modules",
+  "filesCopied": 2696,
+  "internalLinks": 56,
+  "externalLinks": 0,
+  "sourceDanglingLinks": [
+    "/Users/yanfenma/workspace/project/production-dsh-agent-core/node_modules/@larksuite/channel"
+  ]
+}

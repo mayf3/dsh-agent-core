@@ -1,0 +1,377 @@
+{
+  "source": "/Users/authsvc/.agent-core/logs/runtime.err.log",
+  "sha256": "98a3e24be4a868ab690a86377d36ee5e32fc22b47467a18c998cab405f515c14",
+  "lineCount": 100508,
+  "proofSignatureLines": [],
+  "maintenanceMatches": [
+    {
+      "line": 19889,
+      "kind": "non-HR-canary-text",
+      "hr": false
+    },
+    {
+      "line": 19929,
+      "kind": "non-HR-canary-text",
+      "hr": false
+    }
+  ],
+  "hrSpawnGenerationMatches": [
+    {
+      "line": 1718,
+      "timestampPresent": false,
+      "markers": [
+        "spawn"
+      ]
+    },
+    {
+      "line": 1719,
+      "timestampPresent": false,
+      "markers": [
+        "spawn"
+      ]
+    },
+    {
+      "line": 1720,
+      "timestampPresent": false,
+      "markers": [
+        "spawn"
+      ]
+    },
+    {
+      "line": 1721,
+      "timestampPresent": false,
+      "markers": [
+        "spawn"
+      ]
+    },
+    {
+      "line": 1722,
+      "timestampPresent": false,
+      "markers": [
+        "spawn"
+      ]
+    },
+    {
+      "line": 1723,
+      "timestampPresent": false,
+      "markers": [
+        "spawn"
+      ]
+    },
+    {
+      "line": 1724,
+      "timestampPresent": false,
+      "markers": [
+        "spawn"
+      ]
+    },
+    {
+      "line": 1725,
+      "timestampPresent": false,
+      "markers": [
+        "spawn"
+      ]
+    },
+    {
+      "line": 1726,
+      "timestampPresent": false,
+      "markers": [
+        "spawn"
+      ]
+    },
+    {
+      "line": 1727,
+      "timestampPresent": false,
+      "markers": [
+        "spawn"
+      ]
+    },
+    {
+      "line": 1761,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 3319,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 3734,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 3933,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 4080,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 4449,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 8284,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 12204,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 15278,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 17287,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 19044,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 19365,
+      "timestampPresent": false,
+      "markers": [
+        "spawn"
+      ]
+    },
+    {
+      "line": 19366,
+      "timestampPresent": false,
+      "markers": [
+        "spawn"
+      ]
+    },
+    {
+      "line": 19378,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 20218,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 20315,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 20400,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 21978,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 27551,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 27622,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 27833,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 28113,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 28342,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 28814,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 36825,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 38180,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 41040,
+      "timestampPresent": false,
+      "markers": [
+        "generation"
+      ]
+    },
+    {
+      "line": 41041,
+      "timestampPresent": false,
+      "markers": [
+        "generation"
+      ]
+    },
+    {
+      "line": 41483,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 41673,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 41709,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 41936,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 42077,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 45374,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 48469,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 51261,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 52781,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 52786,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 52791,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 52810,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    },
+    {
+      "line": 91972,
+      "timestampPresent": false,
+      "markers": [
+        "ready pid"
+      ]
+    }
+  ]
+}

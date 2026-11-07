@@ -1,0 +1,182 @@
+[
+  {
+    "path": "node_modules/.bin/cordis",
+    "target": "../@deepseek-ai/cordis/bin.js",
+    "inode": 203197948,
+    "mtimeNs": 1792126953307080167
+  },
+  {
+    "path": "node_modules/@agent-core/agent-credential-provisioning",
+    "target": "../../packages/agent-credential-provisioning",
+    "inode": 337514936,
+    "mtimeNs": 1793488893879747094
+  },
+  {
+    "path": "node_modules/@agent-core/agent-definition",
+    "target": "../../packages/agent-definition",
+    "inode": 337514937,
+    "mtimeNs": 1793488893884884020
+  },
+  {
+    "path": "node_modules/@agent-core/agent-identity-capabilities",
+    "target": "../../packages/agent-identity-capabilities",
+    "inode": 337514938,
+    "mtimeNs": 1793488893890083987
+  },
+  {
+    "path": "node_modules/@agent-core/agent-memory",
+    "target": "../../packages/agent-memory",
+    "inode": 337514939,
+    "mtimeNs": 1793488893894331245
+  },
+  {
+    "path": "node_modules/@agent-core/agent-provisioning",
+    "target": "../../packages/agent-provisioning",
+    "inode": 337514940,
+    "mtimeNs": 1793488893899762713
+  },
+  {
+    "path": "node_modules/@agent-core/agent-router",
+    "target": "../../packages/agent-router",
+    "inode": 337514941,
+    "mtimeNs": 1793488893905034181
+  },
+  {
+    "path": "node_modules/@agent-core/agent-switch",
+    "target": "../../packages/agent-switch",
+    "inode": 337514942,
+    "mtimeNs": 1793488893910665733
+  },
+  {
+    "path": "node_modules/@agent-core/broker",
+    "target": "../../packages/broker",
+    "inode": 337514943,
+    "mtimeNs": 1793488893915513741
+  },
+  {
+    "path": "node_modules/@agent-core/bundle-agent-switch",
+    "target": "../../bundle-agent-switch",
+    "inode": 337514944,
+    "mtimeNs": 1793488893923465756
+  },
+  {
+    "path": "node_modules/@agent-core/bundle-broker",
+    "target": "../../bundle-broker",
+    "inode": 337514945,
+    "mtimeNs": 1793488893930164976
+  },
+  {
+    "path": "node_modules/@agent-core/bundle-demo",
+    "target": "../../bundle-demo",
+    "inode": 337514946,
+    "mtimeNs": 1793488893936828321
+  },
+  {
+    "path": "node_modules/@agent-core/bundle-integration",
+    "target": "../../bundle-integration",
+    "inode": 337514947,
+    "mtimeNs": 1793488893943223624
+  },
+  {
+    "path": "node_modules/@agent-core/bundle-memory",
+    "target": "../../bundle-memory",
+    "inode": 337514948,
+    "mtimeNs": 1793488893949402094
+  },
+  {
+    "path": "node_modules/@agent-core/demo-server",
+    "target": "../../packages/demo-server",
+    "inode": 337514949,
+    "mtimeNs": 1793488893953311976
+  },
+  {
+    "path": "node_modules/@agent-core/development-execution",
+    "target": "../../packages/development-execution",
+    "inode": 337514950,
+    "mtimeNs": 1793488893957438108
+  },
+  {
+    "path": "node_modules/@agent-core/execution-history",
+    "target": "../../packages/execution-history",
+    "inode": 337514951,
+    "mtimeNs": 1793488893960919323
+  },
+  {
+    "path": "node_modules/@agent-core/feishu-connector",
+    "target": "../../packages/feishu-connector",
+    "inode": 337514952,
+    "mtimeNs": 1793488893964181245
+  },
+  {
+    "path": "node_modules/@agent-core/fixed-operation",
+    "target": "../../packages/fixed-operation",
+    "inode": 337514953,
+    "mtimeNs": 1793488893968078460
+  },
+  {
+    "path": "node_modules/@agent-core/notification-ingress",
+    "target": "../../packages/notification-ingress",
+    "inode": 337514954,
+    "mtimeNs": 1793488893971251674
+  },
+  {
+    "path": "node_modules/@agent-core/owner-guard",
+    "target": "../../packages/owner-guard",
+    "inode": 337514955,
+    "mtimeNs": 1793488893974990681
+  },
+  {
+    "path": "node_modules/@agent-core/product-api",
+    "target": "../../packages/product-api",
+    "inode": 337514956,
+    "mtimeNs": 1793488893978197062
+  },
+  {
+    "path": "node_modules/@agent-core/production-runtime",
+    "target": "../../packages/production-runtime",
+    "inode": 337514957,
+    "mtimeNs": 1793488893981194484
+  },
+  {
+    "path": "node_modules/@agent-core/scheduler",
+    "target": "../../packages/scheduler",
+    "inode": 337514958,
+    "mtimeNs": 1793488893984950741
+  },
+  {
+    "path": "node_modules/@agent-core/scheduler-router",
+    "target": "../../packages/scheduler-router",
+    "inode": 337514959,
+    "mtimeNs": 1793488893988056454
+  },
+  {
+    "path": "node_modules/@agent-core/session-history",
+    "target": "../../packages/session-history",
+    "inode": 203333763,
+    "mtimeNs": 1792147992174461002
+  },
+  {
+    "path": "node_modules/@agent-core/workflow-execution",
+    "target": "../../packages/workflow-execution",
+    "inode": 337514960,
+    "mtimeNs": 1793488893992976588
+  },
+  {
+    "path": "node_modules/@agent-core/workspace-bootstrap",
+    "target": "../../packages/workspace-bootstrap",
+    "inode": 203333764,
+    "mtimeNs": 1792147992176188100
+  },
+  {
+    "path": "node_modules/@deepseek-ai/dsh-tools",
+    "target": "/Users/yanfenma/workspace/project/dsh-agent-core-pilot-deploy-v1/node_modules/@deepseek-ai/dsh-tools",
+    "inode": 203242921,
+    "mtimeNs": 1792130039739483377
+  },
+  {
+    "path": "node_modules/@larksuite/channel",
+    "target": "/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/night-gpt6-luna-source-closure/packages/feishu-connector/node_modules/@larksuite/channel",
+    "inode": 203242922,
+    "mtimeNs": 1792130039743071653
+  }
+]

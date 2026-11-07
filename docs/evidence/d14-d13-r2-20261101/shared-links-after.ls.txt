@@ -1,0 +1,116 @@
+total 136
+drwxr-xr-x@  27 yanfenma  staff    864 Oct 16 13:53 .
+drwxr-xr-x  372 yanfenma  staff  11904 Oct 29 07:22 ..
+drwxr-xr-x@  11 yanfenma  staff    352 Oct 16 13:53 .agents
+drwxr-xr-x@  16 yanfenma  staff    512 Nov  1 07:18 .git
+-rw-r--r--@   1 yanfenma  staff    154 Oct 16 13:53 .gitignore
+-rw-r--r--@   1 yanfenma  staff   1277 Oct 16 13:53 AGENTS.md
+-rw-r--r--@   1 yanfenma  staff   7883 Oct 16 13:53 README.md
+drwxr-xr-x@   4 yanfenma  staff    128 Oct 16 13:06 bundle-agent-switch
+drwxr-xr-x@   4 yanfenma  staff    128 Oct 16 19:47 bundle-broker
+drwxr-xr-x@   4 yanfenma  staff    128 Oct 16 13:06 bundle-demo
+drwxr-xr-x@   4 yanfenma  staff    128 Oct 16 13:06 bundle-integration
+drwxr-xr-x@   4 yanfenma  staff    128 Oct 16 13:06 bundle-memory
+drwxr-xr-x@  12 yanfenma  staff    384 Oct 16 13:53 deployment-artifacts
+drwxr-xr-x@  17 yanfenma  staff    544 Oct 16 13:53 docs
+drwxr-xr-x@   4 yanfenma  staff    128 Oct 16 13:53 evidence
+drwxr-xr-x@   3 yanfenma  staff     96 Oct 16 13:06 examples
+drwxr-xr-x@  57 yanfenma  staff   1824 Oct 16 13:53 node_modules
+-rw-r--r--@   1 yanfenma  staff  45757 Oct 16 13:53 package-lock.json
+-rw-r--r--@   1 yanfenma  staff   1555 Oct 16 13:53 package.json
+drwxr-xr-x@  24 yanfenma  staff    768 Oct 16 13:53 packages
+drwxr-xr-x@   4 yanfenma  staff    128 Oct 16 13:06 profile-demo
+drwxr-xr-x@   4 yanfenma  staff    128 Oct 16 13:06 profile-integration
+drwxr-xr-x@   4 yanfenma  staff    128 Oct 16 13:06 profile-integration-agent
+drwxr-xr-x@   4 yanfenma  staff    128 Oct 16 13:06 profile-memory
+drwxr-xr-x@   4 yanfenma  staff    128 Oct 16 13:53 profile-production
+drwxr-xr-x@  68 yanfenma  staff   2176 Oct 16 13:53 scripts
+drwxr-xr-x@   3 yanfenma  staff     96 Oct 16 13:53 vendor
+total 72
+drwxr-xr-x@ 57 yanfenma  staff   1824 Oct 16 13:53 .
+drwxr-xr-x@ 27 yanfenma  staff    864 Oct 16 13:53 ..
+drwxr-xr-x@  3 yanfenma  staff     96 Oct 16 13:02 .bin
+-rw-r--r--@  1 yanfenma  staff  33552 Oct 16 13:53 .package-lock.json
+drwxr-xr-x@ 29 yanfenma  staff    928 Nov  1 07:21 @agent-core
+drwxr-xr-x@ 16 yanfenma  staff    512 Oct 16 13:53 @deepseek-ai
+drwxr-xr-x@  3 yanfenma  staff     96 Oct 16 13:02 @koromix
+drwxr-xr-x@  3 yanfenma  staff     96 Oct 16 13:53 @larksuite
+drwxr-xr-x@  3 yanfenma  staff     96 Oct 16 13:02 @larksuiteoapi
+drwxr-xr-x@ 11 yanfenma  staff    352 Oct 16 13:02 @protobufjs
+drwxr-xr-x@  3 yanfenma  staff     96 Oct 16 13:02 @standard-schema
+drwxr-xr-x@  3 yanfenma  staff     96 Oct 16 13:02 @types
+drwxr-xr-x@  6 yanfenma  staff    192 Oct 16 13:02 agent-base
+drwxr-xr-x@ 12 yanfenma  staff    384 Oct 16 13:02 asynckit
+drwxr-xr-x@ 12 yanfenma  staff    384 Oct 16 13:02 axios
+drwxr-xr-x@ 23 yanfenma  staff    736 Oct 16 13:02 call-bind-apply-helpers
+drwxr-xr-x@ 13 yanfenma  staff    416 Oct 16 13:02 call-bound
+drwxr-xr-x@  7 yanfenma  staff    224 Oct 16 13:02 combined-stream
+drwxr-xr-x@  6 yanfenma  staff    192 Oct 16 13:02 croner
+drwxr-xr-x@  6 yanfenma  staff    192 Oct 16 13:02 debug
+drwxr-xr-x@  8 yanfenma  staff    256 Oct 16 13:02 delayed-stream
+drwxr-xr-x@ 15 yanfenma  staff    480 Oct 16 13:02 dunder-proto
+drwxr-xr-x@ 13 yanfenma  staff    416 Oct 16 13:02 es-define-property
+drwxr-xr-x@ 24 yanfenma  staff    768 Oct 16 13:02 es-errors
+drwxr-xr-x@ 18 yanfenma  staff    576 Oct 16 13:02 es-object-atoms
+drwxr-xr-x@ 12 yanfenma  staff    384 Oct 16 13:02 es-set-tostringtag
+drwxr-xr-x@  9 yanfenma  staff    288 Oct 16 13:02 follow-redirects
+drwxr-xr-x@  8 yanfenma  staff    256 Oct 16 13:02 form-data
+drwxr-xr-x@ 12 yanfenma  staff    384 Oct 16 13:02 function-bind
+drwxr-xr-x@ 11 yanfenma  staff    352 Oct 16 13:02 get-intrinsic
+drwxr-xr-x@ 17 yanfenma  staff    544 Oct 16 13:02 get-proto
+drwxr-xr-x@ 14 yanfenma  staff    448 Oct 16 13:02 gopd
+drwxr-xr-x@ 15 yanfenma  staff    480 Oct 16 13:02 has-symbols
+drwxr-xr-x@ 15 yanfenma  staff    480 Oct 16 13:02 has-tostringtag
+drwxr-xr-x@ 12 yanfenma  staff    384 Oct 16 13:02 hasown
+drwxr-xr-x@  5 yanfenma  staff    160 Oct 16 13:02 https-proxy-agent
+drwxr-xr-x@ 16 yanfenma  staff    512 Oct 16 13:02 koffi
+drwxr-xr-x@  6 yanfenma  staff    192 Oct 16 13:02 lodash.identity
+drwxr-xr-x@  6 yanfenma  staff    192 Oct 16 13:02 lodash.merge
+drwxr-xr-x@  6 yanfenma  staff    192 Oct 16 13:02 lodash.pickby
+drwxr-xr-x@  9 yanfenma  staff    288 Oct 16 13:02 long
+drwxr-xr-x@ 35 yanfenma  staff   1120 Oct 16 13:02 math-intrinsics
+drwxr-xr-x@  8 yanfenma  staff    256 Oct 16 13:02 mime-db
+drwxr-xr-x@  7 yanfenma  staff    224 Oct 16 13:02 mime-types
+drwxr-xr-x@  6 yanfenma  staff    192 Oct 16 13:02 ms
+drwxr-xr-x@ 15 yanfenma  staff    480 Oct 16 13:02 object-inspect
+drwxr-xr-x@ 17 yanfenma  staff    544 Oct 16 13:02 protobufjs
+drwxr-xr-x@  7 yanfenma  staff    224 Oct 16 13:02 proxy-from-env
+drwxr-xr-x@ 13 yanfenma  staff    416 Oct 16 13:02 qs
+drwxr-xr-x@  9 yanfenma  staff    288 Oct 16 13:53 sherpa-onnx-darwin-arm64
+drwxr-xr-x@ 21 yanfenma  staff    672 Oct 16 13:53 sherpa-onnx-node
+drwxr-xr-x@ 14 yanfenma  staff    448 Oct 16 13:02 side-channel
+drwxr-xr-x@ 15 yanfenma  staff    480 Oct 16 13:02 side-channel-list
+drwxr-xr-x@ 14 yanfenma  staff    448 Oct 16 13:02 side-channel-map
+drwxr-xr-x@ 14 yanfenma  staff    448 Oct 16 13:02 side-channel-weakmap
+drwxr-xr-x@ 50 yanfenma  staff   1600 Oct 16 13:02 undici-types
+drwxr-xr-x@  9 yanfenma  staff    288 Oct 16 13:02 ws
+total 0
+drwxr-xr-x@ 29 yanfenma  staff   928 Nov  1 07:21 .
+drwxr-xr-x@ 57 yanfenma  staff  1824 Oct 16 13:53 ..
+lrwxr-xr-x@  1 yanfenma  staff    44 Nov  1 07:21 agent-credential-provisioning -> ../../packages/agent-credential-provisioning
+lrwxr-xr-x@  1 yanfenma  staff    31 Nov  1 07:21 agent-definition -> ../../packages/agent-definition
+lrwxr-xr-x@  1 yanfenma  staff    42 Nov  1 07:21 agent-identity-capabilities -> ../../packages/agent-identity-capabilities
+lrwxr-xr-x@  1 yanfenma  staff    27 Nov  1 07:21 agent-memory -> ../../packages/agent-memory
+lrwxr-xr-x@  1 yanfenma  staff    33 Nov  1 07:21 agent-provisioning -> ../../packages/agent-provisioning
+lrwxr-xr-x@  1 yanfenma  staff    27 Nov  1 07:21 agent-router -> ../../packages/agent-router
+lrwxr-xr-x@  1 yanfenma  staff    27 Nov  1 07:21 agent-switch -> ../../packages/agent-switch
+lrwxr-xr-x@  1 yanfenma  staff    21 Nov  1 07:21 broker -> ../../packages/broker
+lrwxr-xr-x@  1 yanfenma  staff    25 Nov  1 07:21 bundle-agent-switch -> ../../bundle-agent-switch
+lrwxr-xr-x@  1 yanfenma  staff    19 Nov  1 07:21 bundle-broker -> ../../bundle-broker
+lrwxr-xr-x@  1 yanfenma  staff    17 Nov  1 07:21 bundle-demo -> ../../bundle-demo
+lrwxr-xr-x@  1 yanfenma  staff    24 Nov  1 07:21 bundle-integration -> ../../bundle-integration
+lrwxr-xr-x@  1 yanfenma  staff    19 Nov  1 07:21 bundle-memory -> ../../bundle-memory
+lrwxr-xr-x@  1 yanfenma  staff    26 Nov  1 07:21 demo-server -> ../../packages/demo-server
+lrwxr-xr-x@  1 yanfenma  staff    36 Nov  1 07:21 development-execution -> ../../packages/development-execution
+lrwxr-xr-x@  1 yanfenma  staff    32 Nov  1 07:21 execution-history -> ../../packages/execution-history
+lrwxr-xr-x@  1 yanfenma  staff    31 Nov  1 07:21 feishu-connector -> ../../packages/feishu-connector
+lrwxr-xr-x@  1 yanfenma  staff    30 Nov  1 07:21 fixed-operation -> ../../packages/fixed-operation
+lrwxr-xr-x@  1 yanfenma  staff    35 Nov  1 07:21 notification-ingress -> ../../packages/notification-ingress
+lrwxr-xr-x@  1 yanfenma  staff    26 Nov  1 07:21 owner-guard -> ../../packages/owner-guard
+lrwxr-xr-x@  1 yanfenma  staff    26 Nov  1 07:21 product-api -> ../../packages/product-api
+lrwxr-xr-x@  1 yanfenma  staff    33 Nov  1 07:21 production-runtime -> ../../packages/production-runtime
+lrwxr-xr-x@  1 yanfenma  staff    24 Nov  1 07:21 scheduler -> ../../packages/scheduler
+lrwxr-xr-x@  1 yanfenma  staff    31 Nov  1 07:21 scheduler-router -> ../../packages/scheduler-router
+lrwxr-xr-x@  1 yanfenma  staff    30 Oct 16 18:53 session-history -> ../../packages/session-history
+lrwxr-xr-x@  1 yanfenma  staff    33 Nov  1 07:21 workflow-execution -> ../../packages/workflow-execution
+lrwxr-xr-x@  1 yanfenma  staff    34 Oct 16 18:53 workspace-bootstrap -> ../../packages/workspace-bootstrap
