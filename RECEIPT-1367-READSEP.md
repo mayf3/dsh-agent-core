@@ -54,3 +54,100 @@ Standing ruling `603-R7-RAW-CLASS-001` exempts original verbatim captures only; 
 Actual diagnostic write side effects were reproduced through mounted traces/attention, then removed on the fresh-reader path with unchanged event-file hashes and explicit incomplete-tail qualification. Shared candidate selection reduces the measured same-round no-work replay count from 6 to 3. Actual mutations retain locked fresh revalidation. Required affected suites, broker samples and prior independent source review passed at the unchanged product candidate. A pushed, open base-main PR now exists. Lock architecture #1366 remains separate; this task does not claim to eliminate every replay or OwnerLock artifact write.
 
 IMPLEMENTATION_STATE=COMPLETE; SOURCE_PR_DELIVERY=COMPLETE; RECEIPT=COMPLETE; MERGE_READY=NOT_APPLICABLE (forbidden); PRODUCTION_OPERATION_ALLOWED=NO. Installation, runtime admission and business acceptance remain NOT_AUTHORIZED/NOT_EXECUTED. The final receipt/history commit coordinates, independent final-HEAD receipt-delta review and exact remote/PR readbacks are terminal sidecar observations in `docs/evidence/1367-readsep/R6-FINAL-REVIEW.md` and `R6-final-readback.json`, avoiding a self-referential commit hash. The sidecars' actual results must be read directly; this receipt does not preclaim their execution or success.
+
+
+## R7 — B654-001 P2 regression repair (2026-11-07)
+
+Current disposition: **SOURCE_FIX_VERIFIED; B654-001 CLOSED by independent affected-delta review**.
+This section continues and qualifies the historical R6 completion above: the
+independent post-R6 review found a concrete P2 regression, and the current user's
+R7 task explicitly authorizes its bounded repair, full reruns and ordinary push
+on `fix/diagnostic-read-separation` to update existing PR #654. Route remains
+schema_version=2, REUSE + BRIEF + DURABLE under the same accepted-in-base WEC/WAE
+Contracts. Entry HEAD is `84b1e612aa31f4caa5a0de0ca39e3abca545bcef`;
+integration/current remote main remains `2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648`.
+
+### Repair and unchanged assertions
+
+The mounted inspector previously spread a missing trace (`null`) into an object
+when the tail was incomplete. That bypassed the route's existing null→404 branch
+and returned malformed 200. The one-line product delta checks `result !== null`
+before attaching `ledgerRead`. Unknown instance/nodeVisit retain the existing
+404/not_found error; known traces and attention retain explicit incomplete-tail
+qualification. No route, projection, ledger, mutation, lock, CAS or UNKNOWN logic
+was changed by R7. #1366 remains separate.
+
+New `diagnostic-missing-trace.test.js` exercises the real mounted ledger and route,
+using only isolated temporary fixtures and rejecting external operations. It adds
+all four reviewer counterexamples (invalid_json/missing_newline × unknown instance/
+unknown visit), the same strict status404 and not_found assertions, two healthy
+controls, event-byte hash preservation, and mutation/repair/append prohibitions.
+The new test bytes are identical in RED and GREEN; the original diagnostic11,
+shutdown assertions and affected suite files remain unchanged.
+
+The original reviewer receipt remains read-only at
+`/private/tmp/h654-review/RECEIPT-654-REVIEW.md`; its SHA and retained-file hashes
+are in [R7 checkpoint](docs/evidence/1367-readsep/r7/checkpoint.json).
+[Independent semantic review](docs/evidence/1367-readsep/r7/SEMANTIC-REVIEW.md)
+records PASS, Blockers=0 and SPEC_GAP=0 against the actual source/test hashes.
+
+### Fresh executed matrix and raw output
+
+Every row below is a fresh R7 execution, not reused R6 evidence. The original
+four failing assertions first reproduced exactly as `200 !== 404`; RED rc1 is the
+mandated reproduction. All subsequent gates returned actual rc0 with zero skips.
+
+| Gate | Actual result | Complete raw stdout/stderr | Expanded argv, runtime, hashes and actual rc |
+|---|---|---|---|
+| Regression RED | 6 tests / 2 pass / 4 fail; rc1 | [RED.txt](docs/evidence/1367-readsep/r7/RED.txt) | [RED.json](docs/evidence/1367-readsep/r7/RED.json) |
+| Regression GREEN | 6 tests / 6 pass / 0 fail; rc0 | [regression.txt](docs/evidence/1367-readsep/r7/regression.txt) | [regression.json](docs/evidence/1367-readsep/r7/regression.json) |
+| Original target8 | 8 tests / 8 pass / 0 fail; rc0 | [target8.txt](docs/evidence/1367-readsep/r7/target8.txt) | [target8.json](docs/evidence/1367-readsep/r7/target8.json) |
+| Original diagnostic11 | 11 tests / 11 pass / 0 fail; rc0 | [diagnostic11.txt](docs/evidence/1367-readsep/r7/diagnostic11.txt) | [diagnostic11.json](docs/evidence/1367-readsep/r7/diagnostic11.json) |
+| Complete observation-cas (original104 + new6) | 110 tests / 110 pass / 0 fail; rc0 | [observation-cas.txt](docs/evidence/1367-readsep/r7/observation-cas.txt) | [observation-cas.json](docs/evidence/1367-readsep/r7/observation-cas.json) |
+| Affected workflow29 files | 316 tests / 316 pass / 0 fail; rc0 | [workflow.txt](docs/evidence/1367-readsep/r7/workflow.txt) | [workflow.json](docs/evidence/1367-readsep/r7/workflow.json) |
+| Affected integration5 files | 29 tests / 29 pass / 0 fail; rc0 | [integration.txt](docs/evidence/1367-readsep/r7/integration.txt) | [integration.json](docs/evidence/1367-readsep/r7/integration.json) |
+| Broker7 files | 80 tests / 80 pass / 0 fail; rc0 | [broker.txt](docs/evidence/1367-readsep/r7/broker.txt) | [broker.json](docs/evidence/1367-readsep/r7/broker.json) |
+| Shutdown/API2 files | 12 tests / 12 pass / 0 fail; rc0 | [shutdown-api.txt](docs/evidence/1367-readsep/r7/shutdown-api.txt) | [shutdown-api.json](docs/evidence/1367-readsep/r7/shutdown-api.json) |
+
+`run.py` preserves explicit file lists, timestamps, actual executable/version,
+source/test SHA256 and raw SHA256. Nine proxy keys are removed only from each
+test child: HTTP_PROXY, HTTPS_PROXY, http_proxy, https_proxy, ALL_PROXY, all_proxy,
+NO_PROXY, no_proxy, NODE_USE_ENV_PROXY. Node v26.7.0 arm64 runs RED/GREEN/8/11/CAS/
+workflow/shutdown-API; the R3 integration/broker recipe uses actual Node v25.6.1
+x64. Host settings and dependencies are unchanged. The full observation-cas13-file
+run is 110/110, comprising every original104 case plus the new6. Workflow uses the
+same29 explicit files; historical stale-quiescence whole-file exclusion remains
+excluded and is not represented as PASS. Full-repository npm test remains outside
+the applicable gate.
+
+The existing structure verifier returned rc0, zero candidate violations and
+28 inherited debt findings at the [unreferenced exact candidate snapshot](docs/evidence/1367-readsep/r7/structure-coordinate.json).
+[Raw structure result](docs/evidence/1367-readsep/r7/structure.stdout) and
+[metadata](docs/evidence/1367-readsep/r7/structure.json) retain its accepted V3
+lifecycle result. Local README's older runner-qualification description is an
+unrelated documented drift; no governance or runner adaptation occurred.
+Whitespace uses the existing standing raw-capture class, with exact new raw paths
+and hashes in [scope](docs/evidence/1367-readsep/r7/whitespace-scope.json); no old
+capture or historical failed rc was edited.
+
+### Delivery evidence boundary
+
+Fresh [remote preflight](docs/evidence/1367-readsep/r7/precommit-remote.stdout)
+returned rc0, with main and feature matching the entry coordinates. Connected
+[PR readback](docs/evidence/1367-readsep/r7/entry-pr.json) confirms existing PR654
+OPEN/unmerged at R6 head; its initial connector parameter-schema rejection was
+before service execution, then the required repository_full_name argument was
+corrected and the actual read succeeded. This setup rejection is preserved; it
+is not a product RED or a failed executed test/remote command.
+
+The authorized next steps are strictly serial commit→independent final-Head
+recheck→ordinary push→fresh remote/PR head equality readback. Their actual results
+and final commit coordinates belong in local terminal sidecars
+`docs/evidence/1367-readsep/r7/FINAL-REVIEW.md` and `final-readback.json` under the
+existing R4/R6 no-self-reference receipt protocol. This committed section does
+not preclaim those later actions; read the terminal sidecars for their actual
+outcomes. New unexpected required gate/delivery failures still stop dependent
+work and are recorded in STOPPED-1367-READSEP.md.
+
+Zero production writes; no merge, deployment, runtime admission or business
+acceptance. Only the existing branch/PR source delivery is authorized.
