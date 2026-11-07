@@ -385,7 +385,7 @@ export async function composeProductionRuntime(options = {}) {
     layout,
   })
 
-  const { invoker, deliver, store, history, schedulerHealth } = await prepareSchedulerRuntime({ ctx, opts, layout, router, definition, feishu, writeEvidence, log })
+  const { invoker, deliver, store, history, schedulerHealth, schedulerAutoReconcile } = await prepareSchedulerRuntime({ ctx, opts, layout, router, definition, feishu, writeEvidence, log })
 
   // Shared trusted Broker configuration is also consumed by principal
   // resolution below; neither value is ever accepted from model arguments.
@@ -487,7 +487,7 @@ export async function composeProductionRuntime(options = {}) {
         // Preserve drain order, attempt every cleanup, and report failure
         // only after the owned Router processes finish their exit path.
         const errors = []
-        for (const stop of [() => workflowExecution.stop(), () => scheduler.stop(), () => ctx.disposeAll()]) {
+        for (const stop of [() => schedulerAutoReconcile.stop(), () => workflowExecution.stop(), () => scheduler.stop(), () => ctx.disposeAll()]) {
           try { await stop() } catch (error) { errors.push(error) }
         }
         if (errors.length > 0) throw new AggregateError(errors, 'production runtime stop failed')
