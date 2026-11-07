@@ -426,6 +426,16 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | [AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3](AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md) | accepted by mayf3 2026-10-15; V2 superseded | exact upstream PR #21 fixes plus local bounded-development routing; no product implementation or production effect | docs-only activation separately approved from #497 CI; effective after final-head review and main merge |
 
 
+## Standing Operational Delegation V1 — 总委托框架
+
+| Spec | Lifecycle | Authority role | Discovery / control binding |
+|---|---|---|---|
+| [AGENT_CORE_STANDING_OPERATIONAL_DELEGATION_V1](AGENT_CORE_STANDING_OPERATIONAL_DELEGATION_V1.md) | proposed conversion of Owner ruling; acceptance transaction pending; unmerged candidate is not active main authority | existing lawful responsibility chains / A-B-C Spec acceptance / conditional Captain and SRA operation framework; implementation none; no operation issued here | [Owner provenance](../reports/standing-delegation-formal-20261107/source-provenance.json), [§8 controls](../reports/standing-delegation-formal-20261107/control-bindings.md), [conversion receipt](../reports/standing-delegation-formal-20261107/conversion-receipt.md) |
+
+本件是总委托框架，下面 SRA V1 是标准发布子机制；两者互补，`supersedes: []`，不替代任何
+既有权威。main 文档激活、Auth 唯一主体、Captain 任命、控制生效和单窗 Mandate 分开核验；
+本地台账/索引/JSON不单独产生签发权。具体控制缺口保留在清单，不声明本轮已适配。
+
 ## Standing Release Authorization V1
 
 | Spec | Lifecycle | Implementation / production authority | Acceptance binding |
