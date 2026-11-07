@@ -49,14 +49,12 @@ function makeFixture({
     log: { log: () => {}, warn: () => {}, error: () => {} },
     fetchDuePage: async () => {
       calls.dueRequests += 1
-      // First page carries the due intent; the short page ends the sweep.
-      return calls.dueRequests === 1
-        ? { ok: true, items: [{
+      // The current activation stays due for both sweep and locked validation.
+      return { ok: true, items: [{
             dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE,
             ownerPrincipalId: OWNER, nextEligibleAt: '2026-09-10T01:00:00Z',
             createdAt: '2026-09-10T00:00:00Z', updatedAt: '2026-09-10T00:30:00Z',
           }] }
-        : { ok: true, items: [] }
     },
     resolvePrincipalToAgent: async () => {
       calls.resolves += 1
@@ -70,7 +68,7 @@ function makeFixture({
     resolveCallerCorrelation: ({ requestId }) => state.correlation({ requestId }),
     readInstanceDetail: async ({ workflowInstanceId }) => {
       calls.probes += 1
-      const read = calls.probes === 1 ? STILL_CURRENT() : state.detail()
+      const read = calls.probes <= 2 ? STILL_CURRENT() : state.detail()
       return read?.ok ? { ...read, body: completeCurrentActivationDetail(read.body, {
         workflowInstanceId, ownerPrincipalId: OWNER,
       }) } : read

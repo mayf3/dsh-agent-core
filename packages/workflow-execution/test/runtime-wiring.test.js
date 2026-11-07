@@ -19,13 +19,17 @@ const VISIT = '0d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e11'
 const INSTANCE = '4d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e55'
 const OWNER = '5d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e66'
 const AGENT = 'agt_target-agent'
+const readyFeed = () => ({ ok: true, result: { items: [{ dispatchIntentId: INTENT, nodeVisitId: VISIT,
+  workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER, nextEligibleAt: '2026-09-09T01:00:00Z',
+  createdAt: '2026-09-09T00:00:00Z', updatedAt: '2026-09-09T00:30:00Z', readinessStatus: 'READY' }] } })
 
 test('Router outcome_unknown preserves its reconciliation handle as active Run linkage with no replay', async () => {
   const root = mkdtempSync(join(tmpdir(), 'wfe-runtime-unknown-'))
   const handle = 'turn:runtime:a1:g1:s1'
   let deliveries = 0
   const gateway = {
-    execute: async request => request.capabilityId === 'workflow_owner_obligation' ? { ok: false, error: { code: 'owner_obligation_not_managed' } } : ({ ok: true, result: { visibility: 'full', detail: {
+    execute: async request => request.capabilityId === 'workflow_dispatch_intents' ? readyFeed()
+      : request.capabilityId === 'workflow_owner_obligation' ? { ok: false, error: { code: 'owner_obligation_not_managed' } } : ({ ok: true, result: { visibility: 'full', detail: {
       instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 1 },
       current_node_visit_id: VISIT,
       current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
@@ -115,6 +119,7 @@ function executionContext() {
   const services = {
     brokerGateway: { execute: async (request, caller) => {
       if (request.capabilityId === 'workflow_owner_obligation') return { ok: false, error: { code: 'owner_obligation_not_managed' } }
+      if (request.capabilityId === 'workflow_dispatch_intents') return readyFeed()
       assert.equal(request.capabilityId, 'workflow_instance_detail')
       assert.equal(caller.agentId, AGENT)
       return { ok: true, result: { visibility: 'full', detail: {
@@ -353,7 +358,8 @@ test('WORKFLOW_STALE_REENTRY_V1 r2 wiring — quiescence-gated redispatch over t
   let turnState = 'pending'
   let deliveries = 0
   const gateway = {
-    execute: async request => request.capabilityId === 'workflow_owner_obligation' ? { ok: false, error: { code: 'owner_obligation_not_managed' } } : ({ ok: true, result: { visibility: 'full', detail: {
+    execute: async request => request.capabilityId === 'workflow_dispatch_intents' ? readyFeed()
+      : request.capabilityId === 'workflow_owner_obligation' ? { ok: false, error: { code: 'owner_obligation_not_managed' } } : ({ ok: true, result: { visibility: 'full', detail: {
       instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 7 },
       current_node_visit_id: VISIT,
       current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
