@@ -1,0 +1,27 @@
+{
+  "name": "old-pr-comment",
+  "argv": [
+    "gh",
+    "pr",
+    "comment",
+    "603",
+    "--repo",
+    "mayf3/dsh-agent-core",
+    "--body-file",
+    "docs/evidence/603-reverify/r7/old-pr-superseded-comment.md"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "started_at": "2026-11-07T05:27:38.956355+00:00",
+  "head": "c87a78b175c5a5da5d661ee2ef8435021bbdceef",
+  "index_tree_before_command": "8835f604c7ce7a1ab23a78f2607d1e4db3008f6e",
+  "environment": "Inherited unless argv explicitly clears keys; no Secret values recorded",
+  "ended_at": "2026-11-07T05:27:40.564257+00:00",
+  "rc": 0,
+  "encoding": "base64 is authoritative verbatim output; text is a UTF-8 display",
+  "stdout_base64": "aHR0cHM6Ly9naXRodWIuY29tL21heWYzL2RzaC1hZ2VudC1jb3JlL3B1bGwvNjAzI2lzc3VlY29tbWVudC02NzAyODA5MTUwCg==",
+  "stdout_sha256": "352d34d8569479d6dedc767c3760a88f14999bb92c8939c6cd949f28e96c1203",
+  "stdout_text": "https://github.com/mayf3/dsh-agent-core/pull/603#issuecomment-6702809150\n",
+  "stderr_base64": "",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_text": ""
+}

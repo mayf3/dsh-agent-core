@@ -1,0 +1,5 @@
+{
+  "path": "/private/tmp/h603-r7-terminal-20261107T052615Z",
+  "scope": "final receipt commit/push/remote readbacks/exact-head review only; outside Git to avoid self-reference",
+  "publication_required": "final receipt must itself be committed and pushed; terminal supplement captures subsequent facts"
+}
