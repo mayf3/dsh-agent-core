@@ -12,7 +12,7 @@ route_stage: AUTHORITY_AUTHORING
 scope:
   - workflow-execution-control
 date: 2026-11-07
-revision: proposal-1
+revision: proposal-2-r4-acceptance-preparation
 candidate_base: 24974c720d634b965943e08bfd0862657b9be0e1
 governed_by:
   - AGENT_CORE_PRODUCT_ARCHITECTURE_V1
@@ -20,8 +20,8 @@ governed_by:
   - AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2
 external_authorities:
   - repository: mayf3/svc-workflow
-    authority_id: SVC_WORKFLOW_EXECUTION_CONTROL_V2
-    revision: d4c510d94f8929f5377989bd69229d611ab49304
+    authority_id: SVC_WORKFLOW_EXECUTION_CONTROL_V3
+    revision: 8da8dbcb70e700d9e35970e8b662b1be2c29afdc
     relation: interoperates_with
 supersedes:
   - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3
@@ -32,11 +32,15 @@ owners:
 
 # AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4
 
-Standalone whole-authority **proposal**, with no implementation or production
-apply authority. This document carries the complete effective WEC V3 contract
-surface; its only product behavior delta is the timing of the two remote
-reads in `CTR-WEC1-008`, completed by `CTR-WEC4-010`. It is not an amendment
-or a clause-only lifecycle replacement. V3's accepted text remains untouched.
+Standalone whole-authority **proposal**. Until the independently reviewed formal
+acceptance transaction, its implementation and production apply authority remain
+`none`. Formal acceptance under Owner ruling ④ and standing delegation §3B must
+set `implementation_authority: contracts`, carrying the existing source authority
+within this complete successor's Contracts; production apply remains `none`.
+This document carries the complete effective WEC V3 contract surface; its only
+product behavior delta is the timing of the two remote reads in `CTR-WEC1-008`,
+completed by `CTR-WEC4-010`. It is not an amendment or a clause-only lifecycle
+replacement. V3's accepted Contracts and historical provenance remain untouched.
 
 A Contract's global identity is `<SPEC_ID>#<CONTRACT_ID>` (SPEC_FORMAT_V0 §4).
 Thus this proposal's `AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4#CTR-WEC1-008`
@@ -112,22 +116,35 @@ versus termination separation and zero authoritative writes without evidence.
 The current Owner Workflows V2, WAE V3, SRE V2 and Recovery Liveness V1 remain
 independent constraints; this proposal supersedes none of them. V3's historical
 Owner Workflows V1 references resolve through the accepted V1→V2 lifecycle
-edge for current context; no predecessor metadata or accepted meaning is edited.
+edge for current context; this preparation changes no predecessor metadata or
+accepted meaning. The separately reviewed acceptance transaction changes only
+V3 lifecycle metadata and its retirement notice, retaining the original body.
 
 The required route is `SUPERSEDE + BRIEF + DURABLE`, `AUTHORITY_AUTHORING`,
-docs-first. R3's user task authorizes writing this proposal and receipt,
-commit/push on `docs/wec1-008-lock-timing-supersede` and a base-main PR only.
-It does not create Product Authority. The receipt persists that mandate and
-R1/R2 stop lineage. SPEC_FORMAT_V0 §§2.7,14.1–14.3 and the local ban on new
-partial supersession require a complete successor and two-phase lifecycle.
+docs-first. The original R3 authoring mandate and R1/R2 stop lineage remain in
+`RECEIPT-1366-SUPERSEDE.md`. The R4 succession continuation authorizes this bounded
+revision, independent semantic review, then the docs-only Owner acceptance
+transaction on PR #655. Owner ruling `owner-20261107-four-pr-rulings` ④ chooses
+the bounded semantics and preserves Contracts source authority; accepted
+`AGENT_CORE_STANDING_OPERATIONAL_DELEGATION_V1` §9 `CTR-SOD-003` (original §3B)
+delegates the formal transaction. Neither the worker nor this task becomes the
+Product Authority. Exact issuer, source selectors/hashes, reviewed candidate and
+final acceptance coordinates belong in the step2 acceptance record. No merge,
+product implementation, or production write is authorized in this R4 task.
+SPEC_FORMAT_V0 §§2.7,14.1–14.3 and the local ban on new partial supersession
+require a complete successor and atomic reciprocal lifecycle transaction.
 
 ### Svc pairing and trust boundary
 
-The read-only companion remains
-`SVC_WORKFLOW_EXECUTION_CONTROL_V2#CTR-SWEC-010`, read at exact Svc main
-`d4c510d94f8929f5377989bd69229d611ab49304` (Git blob
-`add9282ed7db3827fc4bcaf309a44f12669cd9f0`). Its closed DTO, canonical persisted
-provenance, selection, roles and lack of a consumption write are unchanged.
+The approved current read-only companion is
+`SVC_WORKFLOW_EXECUTION_CONTROL_V3#CTR-SWEC-010` at Svc #131 merge
+`8da8dbcb70e700d9e35970e8b662b1be2c29afdc` (Git blob
+`7c6c5d1de1d1f6e1a580521f01fce90f1c2de2b2`), as recorded in `OBS-WEC4-003`.
+Svc V2 is superseded with its reciprocal V3 backlink; V1→V2→V3 history is retained.
+The V3 and predecessor V2 `CTR-SWEC-010` bytes are identical at these approved
+coordinates. Its closed DTO, canonical persisted provenance, selection, roles
+and lack of a consumption write are unchanged. Historical `OBS-WEC4-002`
+retains its original V2 observation; it is not the current companion pointer.
 This proposal changes no Svc store transaction, Domain lock or external Contract;
 Core's file OwnerLock is not a Svc Domain lock. This is not a paired acceptance
 or an audit of the running Svc store. A later implementation must recheck the
@@ -136,11 +153,17 @@ existing authoritative surfaces. If that proof needs a new Svc lock, epoch,
 DTO, CAS, binding or protocol, stop that dependent work and re-PREFLIGHT for
 separate paired authority; this document does not authorize it.
 
-Both `implementation_authority` and `production_apply_authority` are `none`.
-Even future acceptance of this exact document would not authorize code.
-A later implementation task needs accepted implementation-authorizing Contracts
-in its base and a new PREFLIGHT; it cannot rely on acceptance alone or use
-retired V3 to bypass this document's `none` declaration.
+While this preparation is proposed, both authority fields remain `none`.
+The formal accepted version must declare `implementation_authority: contracts`
+and `production_apply_authority: none`, consistently in frontmatter, current
+lifecycle, acceptance requirements and the §12 transaction. Once that accepted
+revision is present in a later implementation base, a separately authorized
+`REUSE` task may implement within these Contracts; it must satisfy every
+applicable evidence gate. It cannot use retired V3 to bypass V4's constraints.
+This docs-only acceptance preparation executes no code or product tests.
+`ACC-WEC4-003`'s actual dual-writer/isolated persistent-store proof remains
+mandatory for implementation conformance and any concurrency-improvement claim;
+static semantic review does not satisfy it. Performance is UNMEASURED.
 
 ## 4. Current State
 
@@ -180,6 +203,24 @@ retired V3 to bypass this document's `none` declaration.
   and zero consumption writes. No cross-service atomic snapshot is promised.
 - Provenance: pinned GitHub source link in the receipt. No DB/runtime access.
 
+### OBS-WEC4-003 — Approved current Svc companion and reciprocal lifecycle
+
+- Subject/source: Svc WEC V3 `CTR-SWEC-010`, V2 retirement and current indexes.
+- Source revision: Svc #131 merge `8da8dbcb70e700d9e35970e8b662b1be2c29afdc`;
+  V3 blob `7c6c5d1de1d1f6e1a580521f01fce90f1c2de2b2`, V2 blob
+  `e528b2f10733f48187ef88a99e696f9df0c5bed3`.
+- Environment/time: reuse of the completed R2 source approval recorded at
+  `2026-11-07T15:46:09.453460+00:00`, inspected locally for this R4 preparation;
+  no fresh Svc runtime or database inspection is claimed.
+- Method/result: R2's fixed source inventory and independent byte comparison
+  establish V3 accepted/contracts/production none, V2 superseded→V3, retained
+  V1→V2→V3 history and both synchronized indexes; V3/V2 `CTR-SWEC-010` bytes match.
+  This closes the historical `d4c510d9` lifecycle conflict without rewriting it.
+- Provenance: Core `5df19f5f5ab0251088c27d9657ace66b9e0a3425`,
+  `SUCCESSION-ORDER-AND-CONFLICTS.md` §2 and
+  `docs/evidence/succession-order/r2/svc-authority.json`; source approval only,
+  not permission for aging/refusal protocols or proof of store conformance.
+
 ## 6. Claims and assumptions
 
 ### CLM-WEC4-001 — The timing change requires whole succession
@@ -209,7 +250,8 @@ retired V3 to bypass this document's `none` declaration.
 
 ### DEC-WEC4-001 — Complete successor with exactly two read-timing replacements
 
-- Decision owner: mayf3 (proposal awaiting formal Owner acceptance).
+- Decision owner: mayf3 (bounded semantics chosen by Owner ruling ④; formal
+  independent review and acceptance transaction remain separate).
 - Decision proposed: replace the complete WEC V3 authority with this standalone
   body; change only the pre-plan/evidence collection timing and its exact
   revalidation/refusal requirements. Keep the remaining inherited clauses
@@ -217,8 +259,10 @@ retired V3 to bypass this document's `none` declaration.
 - Rejected alternatives: `ALT-WEC4-001..004` in §11.
 - Reason: bounded concurrency improvement cannot be called an additive AMEND
   when accepted locked-read obligations are replaced.
-- Owner decision remaining: accept or reject this exact reviewed proposal;
-  no acceptance is presumed.
+- Owner decision remaining: none within ruling ④ and standing §3B's exact scope.
+  The revised semantic candidate still requires non-author review; its real
+  reviewed HEAD and final acceptance transaction must be recorded before merge.
+  This preparation does not claim those steps have already passed.
 
 | V3 surface | Disposition in this complete successor |
 |---|---|
@@ -233,8 +277,9 @@ retired V3 to bypass this document's `none` declaration.
 
 No normative content is deferred to manual merging with V3. All eight inherited
 Contracts, its managed-path delta, data/API obligations and tests appear below.
-The implementation-authority restriction is explicit lifecycle metadata, not
-permission copied from the historical predecessor.
+The proposed `none` and accepted `contracts` declarations are explicit lifecycle
+metadata under Owner ruling ④; they do not widen this successor's Contracts or
+grant production permission.
 
 ## 9. Contracts
 
@@ -646,16 +691,22 @@ proposal. Every mapping below belongs to this V4 identity.
   `CTR-WEC4-009`, `CTR-WEC4-010`.
 - Method: independent exact-head review plus deterministic comparison to V3;
   verify all carried contract/data/API/test spans, replacement-span inverse
-  equality, frontmatter schema, whole-authority transition and phase-1 state.
+  equality, frontmatter schema and the applicable phase-1/phase-2 whole-authority
+  state under §12.
 - Environment: isolated documentation checkout against the authoring base.
 - Required evidence: exact base/head, source and candidate hashes, commands/rc,
-  Contract-to-Acceptance map, affected delta review, untouched V3 bytes, and
-  explicit prospective atomic backlinks under §12.
+  Contract-to-Acceptance map and affected delta review. Phase 1 retains all V3
+  bytes and prospective backlinks; phase 2 binds the reviewed semantic HEAD,
+  Owner authority, reciprocal lifecycle and indexes, unchanged V3 body and
+  independent final-HEAD review. Historical source observations stay intact.
 - Expected result: only the two timing spans and their bounded validation
   obligations change product meaning; complete inherited norms are present,
-  predecessor unchanged, proposal/zero implementation/zero production authority.
+  phase 1 leaves the predecessor unchanged with proposed/none/none; phase 2
+  records accepted/contracts/production none with V3 retired, original body and
+  acceptance provenance retained, and main activation still pending its merge.
 - Failure condition: omitted inherited rule, changed other held-lock segment,
-  AMEND/partial succession, early retirement/acceptance, code or production write,
+  AMEND/partial succession, unauthenticated acceptance or conflicting current
+  lifecycle, code or production write,
   false test/runtime claim or missing reverse coverage.
 
 ### ACC-WEC4-002 — Inherited behavior conformance
@@ -760,7 +811,7 @@ No historical alternative or acceptance record is deleted.
 
 ## 12. Migration, compatibility, and rollback
 
-### Phase 1 — This standalone proposal
+### Phase 1 — Semantic preparation before independent review
 
 V4 remains `proposed`, with `supersedes: [AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3]`
 and `superseded_by: null`. V3 remains `accepted`, its `superseded_by: null`
@@ -768,11 +819,14 @@ and entire bytes unchanged. This matches #642's standalone successor pattern
 and the transition verifier's explicit proposed-successor branch; it is not a
 completed supersession transaction. No current authority pointer is redirected.
 
-### Phase 2 — Future independently reviewed Owner acceptance transaction
+### Phase 2 — Independently reviewed Owner acceptance transaction
 
-Only separately attributable formal Owner/authorized-maintainer acceptance of
-an exact reviewed semantic head may trigger a later docs-only lifecycle commit.
-That commit MUST atomically record these reciprocal whole-Spec edges:
+Owner ruling ④ and standing §3B authorize the original lawful responsibility
+chain to execute formal acceptance after a non-author independent semantic PASS.
+The acceptance executor must bind the actual reviewed semantic commit (not the
+pre-repair proposal head), issuer/source and independent review. A subsequent
+docs-only lifecycle commit MUST atomically record these reciprocal whole-Spec
+edges and consistent current pointers:
 
 ```yaml
 # docs/specs/AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4.md
@@ -780,7 +834,7 @@ status: accepted
 supersedes:
   - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3
 superseded_by: null
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
 
 # docs/specs/AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3.md
@@ -795,8 +849,12 @@ final-head delta review; reference maintenance cannot rewrite other accepted
 Contract meaning. Preserve the V1→V2→V3 historical edges and receipts. Bind issuer,
 time, exact reviewed semantic head/document hash and final accepted-head review.
 There MUST NOT be an active accepted V4 with V3 independently current, or a V3
-backlink pointing to a merely proposed V4. Neither acceptance nor this retirement
-is performed in the current task or PR; merging/accepting remains unauthorized.
+backlink pointing to a merely proposed V4. This semantic preparation performs
+neither acceptance nor retirement. The next reviewed lifecycle commit under R4
+performs that transaction on PR #655; it does not merge the PR. Both acceptance
+and retirement activate as current repository authority only on main merge
+after independent final-HEAD review. Until then main's accepted predecessors
+remain controlling; a branch's accepted-looking status is not active authority.
 
 No ledger/schema migration, backfill, baseline invention, store rewrite, permit
 reset or production activation occurs. Existing events/DTOs remain compatible.
@@ -809,12 +867,12 @@ this proposal needs no runtime rollback because it has no execution permission.
 ## 13. Open questions
 
 ```text
-OPEN_OWNER_DECISIONS = formal acceptance or rejection of this exact proposal
+OPEN_OWNER_DECISIONS = NONE within Owner ruling ④ and standing delegation §3B
 NORMATIVE_TBD = NONE
 UNRESOLVED_AUTHORITY_CONFLICT = NONE (bounded proposal; no active rule changed)
 PARTIAL_SUPERSESSION = NONE
 READY_TO_MARK_ACCEPTED = NO
-IMPLEMENTATION_AUTHORITY = none (including on acceptance of these exact bytes)
+IMPLEMENTATION_AUTHORITY = none while proposed; contracts in the reviewed accepted lifecycle
 PRODUCTION_APPLY_AUTHORITY = none
 IMPLEMENTATION_VALIDATION = NOT_RUN / MECHANISM_NOT_YET_QUALIFIED
 SVC_RUNTIME_OR_STORE_CONFORMANCE = UNKNOWN
@@ -831,7 +889,7 @@ AUTHORITY_ACTION = SUPERSEDE
 SPEC_ID = AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4
 STATUS = proposed
 PRIMARY_PARENT_AUTHORITY = AGENT_CORE_PRODUCT_ARCHITECTURE_V1
-EXTERNAL_AUTHORITIES = SVC_WORKFLOW_EXECUTION_CONTROL_V2 @ d4c510d94f8929f5377989bd69229d611ab49304
+EXTERNAL_AUTHORITIES = SVC_WORKFLOW_EXECUTION_CONTROL_V3 @ 8da8dbcb70e700d9e35970e8b662b1be2c29afdc
 PLAN_LEVEL = BRIEF
 ASSURANCE_LEVEL = DURABLE
 DOCS_FIRST_REQUIRED = YES
