@@ -1,5 +1,10 @@
 # Standing Release Authorization V1 — 待审草案
 
+<!-- BEGIN SRA_FORMAL_AUTHORITY_LINK -->
+> **历史草案来源，保留于 PR #648 HEAD `61b97d326e337057cd1f71c0a6ff0dc37ab72ec2`。**
+> 唯一正式治理载体为 [AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1](docs/specs/AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1.md)，Owner 裁定 `rulings[id=owner-20261107-sra-formalization]` 授权的接受事务已记录；main 生效仍待监管最终 HEAD 审查与合并。下文保留原起草状态，不作为第二个可独立生效模型；任命、控制生效和逐窗签发分别核验。
+<!-- END SRA_FORMAL_AUTHORITY_LINK -->
+
 ```text
 SPEC_ID = STANDING-RELEASE-AUTHORIZATION-V1
 STATUS = PROPOSED_DRAFT_NOT_EFFECTIVE
