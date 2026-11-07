@@ -1,0 +1,31 @@
+{
+  "native_git": {
+    "command": "git ls-remote https://github.com/mayf3/dsh-agent-core.git refs/heads/main refs/heads/docs/standing-release-auth-v1",
+    "start": {
+      "current_time": "2026-11-07 06:51:56 UTC"
+    },
+    "end": {
+      "current_time": "2026-11-07 06:51:57 UTC"
+    },
+    "chunk_id": "c9b571",
+    "wall_time_seconds": 0.720180417,
+    "exit_code": 0,
+    "original_token_count": 15,
+    "output": "f6e332d7568b01c5253618449bfef5839102c851\trefs/heads/main\n"
+  },
+  "gh_api": {
+    "command": "gh api repos/mayf3/dsh-agent-core/git/ref/heads/main --jq '.object.sha'",
+    "start": {
+      "current_time": "2026-11-07 06:51:56 UTC"
+    },
+    "end": {
+      "current_time": "2026-11-07 06:51:56 UTC"
+    },
+    "chunk_id": "bc84c3",
+    "wall_time_seconds": 0.409590791,
+    "exit_code": 0,
+    "original_token_count": 11,
+    "output": "f6e332d7568b01c5253618449bfef5839102c851\n"
+  },
+  "interpretation": "Both rc=0; main matches local parent. Native ref listing returned no docs branch at observation time. This does not verify push permission."
+}
