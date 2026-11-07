@@ -1,0 +1,19 @@
+{
+  "timestamp_utc": "2026-11-07T11:30:10.542395+00:00",
+  "branch": "fix/diagnostic-read-separation",
+  "head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "checked_candidate_tree": "07ff18450ba8099edf7e655fa8bdc4b500154cac",
+  "source_and_historical_evidence_hash_mismatches": [],
+  "scoped_whitespace_rc": 0,
+  "independent_candidate_review": "PASS/0 blockers",
+  "remote_preflight_rc": 128,
+  "latest_remote_state": "UNKNOWN",
+  "commit_push_pr_executed": false,
+  "production_effects": false,
+  "receipt_sha256": "0c84a5f2f76b246f64f63e4c7d4ba551a04868adbec5feae33dbbf4ad074a24f",
+  "brief_sha256": "d946cf125028231b061d445a7256cd4cd08301b9be63c150734da3911b4dd38c",
+  "stop_sha256": "eb2c0a690a64fbdd346f6032e05132c15b227afdab7455de3b531fbdb81803b8",
+  "postfailure_archival_only": true,
+  "next_action": "STOP",
+  "independent_stop_review": "R4-STOP-REVIEW.md; substantive PASS, timestamp/historical wording corrected"
+}

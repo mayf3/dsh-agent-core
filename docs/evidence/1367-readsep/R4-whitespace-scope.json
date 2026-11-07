@@ -1,0 +1,70 @@
+{
+  "timestamp_utc": "2026-11-07T11:24:04.665988+00:00",
+  "base": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "ruling": {
+    "ruling_id": "603-R7-RAW-CLASS-001",
+    "scope": "all later deliveries in this repository; current user R4 expressly applies verbatim raw capture class",
+    "source": "https://github.com/mayf3/dsh-agent-core/blob/0aa7aa1e1d23beb13567228a503ff5d9218966c7/BRIEF-603-REVERIFY.md#L53-L59",
+    "public_reference": "https://github.com/mayf3/dsh-agent-core/pull/603#issuecomment-6702809150"
+  },
+  "pathspec_exclusions": [
+    ":(exclude)docs/evidence/**/*.diff",
+    ":(exclude)docs/evidence/**/*.stderr",
+    ":(exclude)docs/evidence/**/*.stdout",
+    ":(exclude)docs/evidence/**/*.log",
+    ":(exclude)docs/evidence/1367-readsep/RED.txt",
+    ":(exclude)docs/evidence/1367-readsep/R2-RED.txt",
+    ":(exclude)docs/evidence/1367-readsep/R3-diff-check.txt"
+  ],
+  "historical_rc2_paths": [
+    {
+      "path": "docs/evidence/1367-readsep/RED.txt",
+      "sha256": "47cc96534ef8348a8fe0474668664619e79e9ad4d41508b3e7ffc6b28efa2969",
+      "reason": "verbatim Node test stdout/stderr with original metadata"
+    },
+    {
+      "path": "docs/evidence/1367-readsep/R2-RED.txt",
+      "sha256": "981b034021468d252c36f12663b6bdd5663c42a20529e4d6db0306fcb33af0d2",
+      "reason": "verbatim Node test stdout/stderr with original metadata"
+    },
+    {
+      "path": "docs/evidence/1367-readsep/R2-product.diff",
+      "sha256": "7184d5194c6ed379edb42f2625e6cc0ffbe628bd7bc58e916b204ae3af576248",
+      "reason": "verbatim archived git diff; context-only lines contain significant single spaces"
+    },
+    {
+      "path": "docs/evidence/1367-readsep/R3-diff-check.txt",
+      "sha256": "9eb1b4f5b50905443001a59903b4a4b72f1257679a2aade7704b8b5d79935f26",
+      "reason": "verbatim R3 git diff --check stdout; directly echoes the original evidence whitespace and is bound in R3-checkpoint"
+    }
+  ],
+  "capture_suffix_classes": [
+    ".diff",
+    ".stderr",
+    ".stdout",
+    ".log"
+  ],
+  "fully_checked": "all other staged paths including Markdown, JSON, JavaScript, test fixtures, scripts and R2-RED-test.js.txt",
+  "raw_bytes_policy": "preserve unchanged; no cleanup, renaming or .gitattributes",
+  "historical_unscoped_rc": 2,
+  "command": [
+    "git",
+    "diff",
+    "--cached",
+    "--check",
+    "--",
+    ".",
+    ":(exclude)docs/evidence/**/*.diff",
+    ":(exclude)docs/evidence/**/*.stderr",
+    ":(exclude)docs/evidence/**/*.stdout",
+    ":(exclude)docs/evidence/**/*.log",
+    ":(exclude)docs/evidence/1367-readsep/RED.txt",
+    ":(exclude)docs/evidence/1367-readsep/R2-RED.txt",
+    ":(exclude)docs/evidence/1367-readsep/R3-diff-check.txt"
+  ],
+  "initial_r4_scoped_attempt": {
+    "metadata": "R4-whitespace.json",
+    "actual_rc": 2,
+    "classification": "scope implementation omission: R3-diff-check.txt raw stdout was accidentally left checked; same preauthorized raw capture class, no compiled-file finding"
+  }
+}

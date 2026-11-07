@@ -1,0 +1,223 @@
+TAP version 13
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# Subtest: CTR-WEC1-003 gate: no token / bad token / wrong scope / unconfigured seam all fail closed
+ok 1 - CTR-WEC1-003 gate: no token / bad token / wrong scope / unconfigured seam all fail closed
+  ---
+  duration_ms: 93.468875
+  type: 'test'
+  ...
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# Subtest: CTR-WEC1-003 traces: valid query hits the seam; unknown instance 404; bad params 400
+ok 2 - CTR-WEC1-003 traces: valid query hits the seam; unknown instance 404; bad params 400
+  ---
+  duration_ms: 39.992458
+  type: 'test'
+  ...
+# Subtest: CTR-WEC1-006 kicks: valid kick 200 (kicked), never echoes the payload; malformed 400
+ok 3 - CTR-WEC1-006 kicks: valid kick 200 (kicked), never echoes the payload; malformed 400
+  ---
+  duration_ms: 60.652458
+  type: 'test'
+  ...
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# Subtest: owner-assistance wake: closed body + workflow.execute gate + retryable runtime failure
+ok 4 - owner-assistance wake: closed body + workflow.execute gate + retryable runtime failure
+  ---
+  duration_ms: 35.046209
+  type: 'test'
+  ...
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# Subtest: governance child review wake accepts the closed typed phase and paired optional submission proof
+ok 5 - governance child review wake accepts the closed typed phase and paired optional submission proof
+  ---
+  duration_ms: 25.419583
+  type: 'test'
+  ...
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# Subtest: CTR-WEC1-003: access service absent → 503 not_ready (fail-closed, honest)
+ok 6 - CTR-WEC1-003: access service absent → 503 not_ready (fail-closed, honest)
+  ---
+  duration_ms: 11.698125
+  type: 'test'
+  ...
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# Subtest: attention: zero-parameter fleet summary 200; read-only boundary (no kick/wake/trace side calls)
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+ok 7 - attention: zero-parameter fleet summary 200; read-only boundary (no kick/wake/trace side calls)
+  ---
+  duration_ms: 16.972458
+  type: 'test'
+  ...
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# Subtest: attention: same fail-closed gate (no token / wrong scope / unconfigured seam) + closed query
+ok 8 - attention: same fail-closed gate (no token / wrong scope / unconfigured seam) + closed query
+  ---
+  duration_ms: 54.464917
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-cH3HJD/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] disabled; no HTTP server mounted
+# Subtest: composition drains auto-reconcile before workflow, scheduler and owned Router disposal
+ok 9 - composition drains auto-reconcile before workflow, scheduler and owned Router disposal
+  ---
+  duration_ms: 131.635958
+  type: 'test'
+  ...
+# Subtest: runtime stop(): the engine drain stays pending while a poll is in flight, and the runtime is quiescent once it resolves
+ok 10 - runtime stop(): the engine drain stays pending while a poll is in flight, and the runtime is quiescent once it resolves
+  ---
+  duration_ms: 1182.3595
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-SA8nYD/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] disabled; no HTTP server mounted
+# Subtest: runtime stop drains the owned worker after workflowExecution stop rejects
+ok 11 - runtime stop drains the owned worker after workflowExecution stop rejects
+  ---
+  duration_ms: 56.932958
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-qFdM1X/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] disabled; no HTTP server mounted
+# Subtest: runtime stop drains the owned worker after scheduler stop rejects
+ok 12 - runtime stop drains the owned worker after scheduler stop rejects
+  ---
+  duration_ms: 35.254833
+  type: 'test'
+  ...
+# Subtest: plugin disposal waits every cleanup and propagates all failures
+ok 13 - plugin disposal waits every cleanup and propagates all failures
+  ---
+  duration_ms: 1.927667
+  type: 'test'
+  ...
+# Subtest: concurrent plugin disposal callers wait the same owned cleanup
+ok 14 - concurrent plugin disposal callers wait the same owned cleanup
+  ---
+  duration_ms: 1.143459
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-q2vfZi/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] disabled; no HTTP server mounted
+# Subtest: runtime stop never reports clean success after an owned worker shutdown rejects
+ok 15 - runtime stop never reports clean success after an owned worker shutdown rejects
+  ---
+  duration_ms: 34.811375
+  type: 'test'
+  ...
+# Subtest: governance child review wake carries exact evidence instructions and recipient-bound identity
+ok 16 - governance child review wake carries exact evidence instructions and recipient-bound identity
+  ---
+  duration_ms: 4.001417
+  type: 'test'
+  ...
+# Subtest: review redelivery uses reviewWakeId even when the same Owner Principal returns
+ok 17 - review redelivery uses reviewWakeId even when the same Owner Principal returns
+  ---
+  duration_ms: 0.538334
+  type: 'test'
+  ...
+# Subtest: owner assistance wake resolves exact principal and uses stable inter-agent delivery
+ok 18 - owner assistance wake resolves exact principal and uses stable inter-agent delivery
+  ---
+  duration_ms: 0.19175
+  type: 'test'
+  ...
+# Subtest: existing pending/settled caller correlation suppresses duplicate prompt
+ok 19 - existing pending/settled caller correlation suppresses duplicate prompt
+  ---
+  duration_ms: 0.274125
+  type: 'test'
+  ...
+# Subtest: delivery error is accepted only when caller correlation proves admission
+ok 20 - delivery error is accepted only when caller correlation proves admission
+  ---
+  duration_ms: 1.101542
+  type: 'test'
+  ...
+# Subtest: owner principal resolution failure prevents delivery and stays retryable
+ok 21 - owner principal resolution failure prevents delivery and stays retryable
+  ---
+  duration_ms: 0.327625
+  type: 'test'
+  ...
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# Subtest: real gateway resolves late-mounted workflowProgressAccess and records checkpoint
+ok 22 - real gateway resolves late-mounted workflowProgressAccess and records checkpoint
+  ---
+  duration_ms: 155.47225
+  type: 'test'
+  ...
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# Subtest: real gateway rejects untrusted turn and model-carried coordinates
+ok 23 - real gateway rejects untrusted turn and model-carried coordinates
+  ---
+  duration_ms: 105.445833
+  type: 'test'
+  ...
+# Subtest: workflow_progress tool shape exposes no identity/provenance arguments
+ok 24 - workflow_progress tool shape exposes no identity/provenance arguments
+  ---
+  duration_ms: 2.338833
+  type: 'test'
+  ...
+# Subtest: parent-owned workflow origin resolves before delivery receipt and after context cache eviction
+ok 25 - parent-owned workflow origin resolves before delivery receipt and after context cache eviction
+  ---
+  duration_ms: 2.746042
+  type: 'test'
+  ...
+# Subtest: trusted Workflow turn records and reads the current checkpoint
+ok 26 - trusted Workflow turn records and reads the current checkpoint
+  ---
+  duration_ms: 98.142416
+  type: 'test'
+  ...
+# Subtest: ordinary, wrong-agent and conflicting-turn contexts fail closed
+ok 27 - ordinary, wrong-agent and conflicting-turn contexts fail closed
+  ---
+  duration_ms: 66.442042
+  type: 'test'
+  ...
+# Subtest: model-carried workflow coordinates and transcript-sized payloads are rejected
+ok 28 - model-carried workflow coordinates and transcript-sized payloads are rejected
+  ---
+  duration_ms: 65.75875
+  type: 'test'
+  ...
+# Subtest: terminal attempts cannot accept another checkpoint
+ok 29 - terminal attempts cannot accept another checkpoint
+  ---
+  duration_ms: 122.862291
+  type: 'test'
+  ...
+1..29
+# tests 29
+# suites 0
+# pass 29
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10597.859833

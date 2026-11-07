@@ -39,17 +39,16 @@ export function mountWorkflowCapabilityRuntime({ ctx, layout, router, log, opts 
   // trigger (latency only; the poll loop stays the correctness path).
   mountWorkflowProgressRuntime({ ctx, ledger: workflowExecution.ledger, log })
 
+  const inspectProjection = project => workflowExecution.ledger.inspectFresh((attempts, ledgerRead) => {
+    const result = project(attempts)
+    return result !== null && ledgerRead.tailIncomplete ? { ...result, ledgerRead } : result
+  })
   ctx.provide('workflowExecutionAccess', {
-    traces: async ({ workflowInstanceId, nodeVisitId } = {}) => {
-      const attempts = await workflowExecution.ledger.snapshotFresh()
-      return projectExecutionTrace(attempts, { workflowInstanceId, nodeVisitId })
-    },
+    traces: ({ workflowInstanceId, nodeVisitId } = {}) => inspectProjection(
+      attempts => projectExecutionTrace(attempts, { workflowInstanceId, nodeVisitId })),
     // Fleet-level attention summary: the same cross-process-fresh snapshot,
     // selected down to the attention-worthy executionStates. Read-only.
-    attention: async () => {
-      const attempts = await workflowExecution.ledger.snapshotFresh()
-      return projectExecutionAttention(attempts)
-    },
+    attention: () => inspectProjection(projectExecutionAttention),
     kick: (payload) => {
       if (!workflowExecution.enabled) return { ok: false, code: 'poller_unconfigured' }
       void payload // the kick carries no semantics; the poll re-reads svc truth
