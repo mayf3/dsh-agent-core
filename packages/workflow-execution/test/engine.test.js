@@ -50,13 +50,13 @@ function makeDeps({
 } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'wfe-engine-'))
   const ledger = new ExecutionLedger({ dir })
-  const calls = { delivers: [], resolves: [], detailReads: [], instructions: [], dueRequests: [] }
+  const calls = { delivers: [], resolves: [], detailReads: [], instructions: [], dueRequests: [], warnings: [] }
   // Mid-test re-pointable seams (tests reassign fixture.turnState etc. to
   // advance time without rebuilding the engine).
   const mutable = { turnState, detailBody }
   const engine = createWorkflowExecutionEngine({
     ledger,
-    log: { log: () => {}, warn: () => {}, error: () => {} },
+    log: { log: () => {}, warn: message => calls.warnings.push(message), error: () => {} },
     fetchDuePage: async (req) => {
       calls.dueRequests.push(req)
       if (dueError !== undefined && calls.dueRequests.length >= dueErrorOnPage) return { ok: false, ...dueError }
@@ -418,16 +418,37 @@ test('due feed failure: loud no-op pass, zero mutations', async () => {
   }
 })
 
-test('malformed due records are skipped loudly; valid ones still admitted', async () => {
+test('malformed due records are skipped loudly; a later clean sweep admits after fresh validation', async () => {
+  let items = [dueIntent({ nodeVisitId: 'garbage' }), { foo: 1 }, dueIntent()]
   const fixture = makeDeps({
-    dueItems: () => [dueIntent({ nodeVisitId: 'garbage' }), { foo: 1 }, dueIntent()],
+    dueItems: () => items,
   })
   try {
-    const { engine, ledger } = fixture
+    const { engine, ledger, calls } = fixture
     const pass = await engine.pollOnce()
     assert.equal(pass.ok, true)
-    assert.equal(pass.admissions.length, 1, 'only the well-formed record admits')
+    assert.equal(pass.admissions.length, 1, 'only the well-formed record reaches admission')
+    assert.equal(pass.skipped.length, 2)
+    assert.deepEqual(calls.warnings, [
+      'workflow-execution: skipped malformed due record (nodeVisitId is not a UUID)',
+      'workflow-execution: skipped malformed due record (missing field dispatchIntentId)',
+    ])
+    // WEC V4 CTR-WEC4-010 steps 2/4 and refusal: the same malformed,
+    // ambiguous target feed cannot authorize a plan at locked revalidation.
+    assert.equal(pass.admissions[0].action, 'pre_plan_unavailable')
+    assert.equal(ledger.snapshot().length, 0)
+    assert.equal(calls.delivers.length, 0)
+
+    // CTR-WEC4-010 permits a later ordinary sweep to collect fresh facts.
+    items = [dueIntent()]
+    const clean = await engine.pollOnce()
+    assert.equal(clean.ok, true)
+    assert.deepEqual(clean.skipped, [])
+    assert.equal(clean.admissions.length, 1)
+    assert.equal(clean.admissions[0].action, 'admitted')
     assert.equal(ledger.snapshot().length, 1)
+    assert.equal(calls.delivers.length, 1)
+    assert.equal(calls.dueRequests.length, 4, 'both sweeps fetch the feed again for locked validation')
   } finally {
     fixture.cleanup()
   }

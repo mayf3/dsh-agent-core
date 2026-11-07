@@ -44,3 +44,35 @@ node_modules已预链(只验证); Node v26.7.0文件展开运行器(目录参数
 Implementation boundary: capture policy, positive reconciliation/quiescence and Principal resolution under the existing lock; release FIFO and OwnerLock only for detail/evidence collection; reacquire through existing mutate/fresh replay, compare detached relevant predecessor and budget/proof facts, then use existing canonical due feed plus target-Principal detail for fresh dispatch/identity/version validation. Final validation may wait under lock and its timing must be reported. Original completion callback, WAL, delivery, dispatch-time capture and restart checks stay held.
 
 Regression recipe: explicit files from docs/evidence/1367-readsep/r7/{workflow,integration,broker}.json; workflow v26.7.0, integration/broker v25.6.1. Remove HTTP_PROXY, HTTPS_PROXY, http_proxy, https_proxy, ALL_PROXY, all_proxy, NO_PROXY, no_proxy, NODE_USE_ENV_PROXY from test children only. Historical stale-quiescence.test.js is excluded, not passed. No npm-test directory discovery, dependency install, production write or runtime reload.
+
+## R2 continuation — single failed test, 2026-11-08
+
+Owner's current task resumes the R1 failure-stop only to diagnose and correct the
+single `engine.test.js:421` failure, obtain the existing 333-test gate rc0 and
+affected-suite rc0, then commit/push/open an unmerged PR against main and finish
+`RECEIPT-1366-IMPL.md`. Any new unexpected required-gate failure stops delivery.
+No rebase, source expansion, diagnostic-read change or production apply.
+
+Route remains REUSE / BRIEF / DURABLE / IMPLEMENTATION under the same accepted
+WEC4 and PPR Contracts; base b6ddc2a67ba041b8b13ed33d331104cf809d4985,
+R1 head 51149193bc811fff26b2a9afbccad9937e626720. Fresh GitHub compare on R2
+entry reports main identical to base; #655 and #657 are merged in that order.
+The same isolated branch/worktree remains the single write surface.
+
+Diagnosis: R1 raw failure is `engine.test.js:430` (ledger row count 0), while
+`:429` (`admissions.length === 1`) passed. The fixture supplies malformed and
+valid rows with the same dispatch ID on every feed read. WEC4
+`CTR-WEC4-010` steps 2/4 and refusal (Spec lines 563–598) forbid treating that
+malformed/ambiguous canonical read as equality. PPR `CTR-WAE-001` (lines
+679–688) still requires malformed scan rows to be skipped loudly. No product
+or admission-count behavior is changed: update this test to assert both the
+initial refusal with zero plan/delivery and the later ordinary clean sweep's
+fresh successful admission. Independent read-only diagnosis: agent
+`/root/diagnose_counter`, agreement on both authority coordinates and repair.
+
+R1 raw logs and STOPPED receipt remain historical; R2 gate outputs go under
+`docs/evidence/1366-locktiming/r2/` to preserve the original 332/333 rc1.
+Unchanged R1 product/fixture hashes permit explicit rebind of already-passed
+37-test GREEN and two-writer RED evidence; no unchanged mechanism is rerun
+solely for a receipt/test Head change. Independent affected-Contract review and
+final-Head delta check remain required before the delivery is complete.
