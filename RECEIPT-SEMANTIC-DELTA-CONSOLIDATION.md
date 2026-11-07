@@ -1,6 +1,6 @@
 # RECEIPT — SEMANTIC-DELTA-CONSOLIDATION
 
-状态：**R2_DELIVERY_PENDING**。R1 链接检查 rc1 保留为历史事实；当前用户已明确授权本次机械假阳性修正与自动续接，尚未 commit/push/创建 PR。
+状态：**COMPLETED_DOCUMENT_DELIVERY**。R1 链接检查 rc1 保留为历史事实；R2 修正后检查 rc0，评估文档已 commit/push，并创建 [PR #653](https://github.com/mayf3/dsh-agent-core/pull/653)，base main，OPEN / 未合并；本收据随后以仅收据提交归档。不是产品接受、实现或生产完成收据。
 
 - 执行授权：当前用户「R2续派(机械假阳性自动继续)」①修正检查方式并登记坐标/理由，不得改评估正文语义；②链接检查 rc0 后 commit 到 `docs/semantic-delta-consolidation`、push、`gh pr create --base main`，不合并，完成 RECEIPT；零生产写入，失败即停。原 Brief 和 Owner 预授权 V2 §5 的文档边界继续有效。
 - worktree：`/private/tmp/h1377-minimpl`；branch：`docs/semantic-delta-consolidation`；parent / BASE：`2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648`。R2 只读核得 remote main 仍是该 SHA。
@@ -96,13 +96,20 @@ print(json.dumps({"result": "PASS", "scope_files": len(expected),
 | 固定来源 | 独立 reviewer 已实核 22 项 provenance PASS；Svc 固定 revision 全文/blob/hash/摘录与 Owner 选中项 canonical hash 匹配 |
 | scope + hash + 修正后的 Markdown 相对链接 | `python3 /private/tmp/h1377-r2-xkcdliv6/check_documents.py` rc0：七文件、22 项来源、正文 SHA256 和三份原件/快照均通过；8 个新增相对文件链接 PASS，精确跳过上述三份快照内部链接 |
 | whitespace / accepted integrity | R2 `git diff --check`、`git diff --cached --check` 均 rc0；accepted integrity rc0；提交前最终 staged 内容也已实际 rc0，未沿用 R1 未执行结果 |
-| 独立文档初审 | `/root/document_review`，非正文/来源作者，只读 FULL INITIAL_REVIEW PASS；`FROZEN_BLOCKER_UNION=[]`；正文 SHA256 如上，初始 index tree `7e4905eab60d33639bcfa2593b9d2f4e7db14139`，BASE=HEAD=parent。第一次 receipt-only delta 复核 PASS、BLOCKERS=0，reviewed tree `320ffaf44d3f91b46fb5f1182626d0628dff206d`，receipt SHA256 `326a19c1a5de69f09182f7f6361ac5d8f8f0c84ffaeff7b826a585b3d1bdef95`；reviewer 独立运行同一 checker rc0、嵌入脚本字节一致。之后仅登记实际复核/发布事实；最终 Head delta 复核待执行 |
+| 独立文档初审 | `/root/document_review`，非正文/来源作者，只读 FULL INITIAL_REVIEW PASS；`FROZEN_BLOCKER_UNION=[]`；正文 SHA256 如上，初始 index tree `7e4905eab60d33639bcfa2593b9d2f4e7db14139`，BASE=HEAD=parent。第一次 receipt-only delta 复核 PASS、BLOCKERS=0，reviewed tree `320ffaf44d3f91b46fb5f1182626d0628dff206d`，receipt SHA256 `326a19c1a5de69f09182f7f6361ac5d8f8f0c84ffaeff7b826a585b3d1bdef95`；reviewer 独立运行同一 checker rc0、嵌入脚本字节一致。之后仅登记实际复核/发布事实；精确最终 Head delta 结果与远端绑定登记在 PR #653 发布记录，不用初审或此收据的自引用 SHA 冒充最终复核 |
 | 产品测试 / RED-GREEN / observation-cas / 跨服务 E2E | NOT_RUN；本轮无实现，不复跑已通过产品门，不把历史 PASS 当本轮 PASS |
 | structure runner | NOT_RUN；local governance 明示 V3 verifier qualification 待另项任务；本次不适配 runner |
 | 生产读写、部署、Owner/Assistance发送 | NOT_RUN / 零调用；零业务 replay / fence / identity / Grant 写入 |
 
 ## 发布记录
 
-commit / push / base-main PR：PENDING；不合并。若任何后续命令或必需门失败，立即停止并如实登记，不宣称完成。
+- `git commit -m "docs: assess separate responsibility handoff semantic gaps"` rc0：`3ca4afa297e44828d83fc2e31b64a1d27610b4e6`，tree `bcec9861e865f7fb74824e11da7e587366b2439a`，七份文档；正文和五份来源均为 R1 原字节。
+- `git push -u origin docs/semantic-delta-consolidation` rc0，创建同名远端分支，未 force push。
+- `gh pr create --repo mayf3/dsh-agent-core --base main --head docs/semantic-delta-consolidation --title "docs: distinguish independent responsibility handoff semantic gaps" --body-file /private/tmp/h1377-r2-xkcdliv6/pr-body.md` rc0，返回 PR #653。
+- 创建后 `gh pr view 653` 实读：`state=OPEN`，`baseRefName=main`，`headRefName=docs/semantic-delta-consolidation`，`headRefOid=3ca4afa297e44828d83fc2e31b64a1d27610b4e6`，`mergedAt=null`，`autoMergeRequest=null`。没有 merge、auto-merge 或产品激活动作。
+- 本收据的完成记录在后续 receipt-only commit 中持久化；自身最终 commit SHA 不写入自身字节。精确最终 Head、最终远端读回及独立 final-head delta 以 PR #653 发布记录绑定；该变更只归档已经发生的检查/发布事实，不重写评估语义。
+- 原始三份输入与 `STOPPED-SEMANTIC-DELTA-CONSOLIDATION.md` 仍为未跟踪本地输入/历史停点，不误装入 PR。原 #1377 停点保持。
+
+若后续归档、push 或必需复核失败，立即停止并如实登记；不能以此前成功掩盖最终交付失败。
 
 `IMPLEMENTATION_ALLOWED=NO`，`MERGE_READY=NO`，`OPERATION_ALLOWED=NO`。文档发布不接受新语义、不关闭 #1377 或原 MINIMPL 停点；安装/运行时/业务/无人值守结果仍为 NOT_RUN / UNKNOWN。
