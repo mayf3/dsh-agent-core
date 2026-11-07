@@ -1,0 +1,541 @@
+TAP version 13
+# Subtest: ledger: exactly-one-terminal; replay rebuilds state; corrupt line fails loud
+ok 1 - ledger: exactly-one-terminal; replay rebuilds state; corrupt line fails loud
+  ---
+  duration_ms: 59.248
+  type: 'test'
+  ...
+# Subtest: A: success yields SUCCEEDED with candidateSha + changedFiles from git
+ok 2 - A: success yields SUCCEEDED with candidateSha + changedFiles from git
+  ---
+  duration_ms: 1147.966791
+  type: 'test'
+  ...
+# Subtest: A2: exit-0 with no commit => SUCCEEDED with empty change set (no fabricated commit)
+ok 3 - A2: exit-0 with no commit => SUCCEEDED with empty change set (no fabricated commit)
+  ---
+  duration_ms: 644.793167
+  type: 'test'
+  ...
+# Subtest: B: evidenced failure => FAILED + structured failure detail
+ok 4 - B: evidenced failure => FAILED + structured failure detail
+  ---
+  duration_ms: 406.339
+  type: 'test'
+  ...
+# Subtest: C: timeout => terminal FAILED with failureClass timeout (never success)
+ok 5 - C: timeout => terminal FAILED with failureClass timeout (never success)
+  ---
+  duration_ms: 545.391292
+  type: 'test'
+  ...
+# Subtest: D: backend crash (signal) => OUTCOME_UNKNOWN, never fabricated
+ok 6 - D: backend crash (signal) => OUTCOME_UNKNOWN, never fabricated
+  ---
+  duration_ms: 325.81275
+  type: 'test'
+  ...
+# Subtest: D2: spawn error => OUTCOME_UNKNOWN
+ok 7 - D2: spawn error => OUTCOME_UNKNOWN
+  ---
+  duration_ms: 316.639
+  type: 'test'
+  ...
+# Subtest: E: cancel => exactly one CANCELLED; idempotent second cancel; late exit cannot overwrite
+ok 8 - E: cancel => exactly one CANCELLED; idempotent second cancel; late exit cannot overwrite
+  ---
+  duration_ms: 314.245042
+  type: 'test'
+  ...
+# Subtest: B1: worktree capacity — active executions per repo are capped (capacity_exhausted)
+ok 9 - B1: worktree capacity — active executions per repo are capped (capacity_exhausted)
+  ---
+  duration_ms: 500.260917
+  type: 'test'
+  ...
+# Subtest: G: duplicate start with same (caller, dedupeKey) => SAME execution; different key => new
+ok 10 - G: duplicate start with same (caller, dedupeKey) => SAME execution; different key => new
+  ---
+  duration_ms: 612.143375
+  type: 'test'
+  ...
+# Subtest: F: restart — terminal history re-readable; orphan RUNNING => OUTCOME_UNKNOWN; live pid preserved
+ok 11 - F: restart — terminal history re-readable; orphan RUNNING => OUTCOME_UNKNOWN; live pid preserved
+  ---
+  duration_ms: 754.5095
+  type: 'test'
+  ...
+# Subtest: K1: midrun continue is durably persisted and DELIVERED via resume when the run exits (no silent advisory drop)
+ok 12 - K1: midrun continue is durably persisted and DELIVERED via resume when the run exits (no silent advisory drop)
+  ---
+  duration_ms: 503.343542
+  type: 'test'
+  ...
+# Subtest: K2: run exits without a captured session => queued continue marked undelivered, backend never called (honest)
+ok 13 - K2: run exits without a captured session => queued continue marked undelivered, backend never called (honest)
+  ---
+  duration_ms: 490.524917
+  type: 'test'
+  ...
+# Subtest: K3: cancel with queued midrun continues => CANCELLED; queued instruction never delivered afterwards
+ok 14 - K3: cancel with queued midrun continues => CANCELLED; queued instruction never delivered afterwards
+  ---
+  duration_ms: 519.835083
+  type: 'test'
+  ...
+# Subtest: K4: queued continue survives restart — replay exposes it; dead-pid recovery marks it undelivered
+ok 15 - K4: queued continue survives restart — replay exposes it; dead-pid recovery marks it undelivered
+  ---
+  duration_ms: 393.600125
+  type: 'test'
+  ...
+# Subtest: K5: delivery (resume) run pid is persisted — cancel stops the real resume process; ledger carries it
+ok 16 - K5: delivery (resume) run pid is persisted — cancel stops the real resume process; ledger carries it
+  ---
+  duration_ms: 444.086375
+  type: 'test'
+  ...
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [broker-gateway] agent agent-b: no credential bound (fails closed)
+# Subtest: K6: repeated midrun continues deliver FIFO across sequential resume runs, then terminal
+ok 17 - K6: repeated midrun continues deliver FIFO across sequential resume runs, then terminal
+  ---
+  duration_ms: 531.832875
+  type: 'test'
+  ...
+# Subtest: authority: unconfigured / unauthorized repo / unknown baseSha / bad branch / bad backend all refuse
+ok 18 - authority: unconfigured / unauthorized repo / unknown baseSha / bad branch / bad backend all refuse
+  ---
+  duration_ms: 247.853125
+  type: 'test'
+  ...
+# Subtest: authority: worktree HEAD pinned to exact baseSha before backend starts
+ok 19 - authority: worktree HEAD pinned to exact baseSha before backend starts
+  ---
+  duration_ms: 713.76
+  type: 'test'
+  ...
+# Subtest: manifest: development_execute is a closed local multi-op tool; no backend/exec leak; scopes pinned
+ok 20 - manifest: development_execute is a closed local multi-op tool; no backend/exec leak; scopes pinned
+  ---
+  duration_ms: 3.052708
+  type: 'test'
+  ...
+# Subtest: zero-persona sweep: new packages contain no agent/persona literals
+ok 21 - zero-persona sweep: new packages contain no agent/persona literals
+  ---
+  duration_ms: 19.076292
+  type: 'test'
+  ...
+# Subtest: gateway: development_execute without a grant fails CLOSED; with stub auth the start lands in the engine
+ok 22 - gateway: development_execute without a grant fails CLOSED; with stub auth the start lands in the engine
+  ---
+  duration_ms: 662.271625
+  type: 'test'
+  ...
+# Subtest: 1365 Workflow starts and polls with missing backend and history; retired writes refuse, history stays read-only
+ok 23 - 1365 Workflow starts and polls with missing backend and history; retired writes refuse, history stays read-only
+  ---
+  duration_ms: 267.619167
+  type: 'test'
+  ...
+# Subtest: 1365 Workflow starts and polls with corrupt backend with intact history; retired writes refuse, history stays read-only
+ok 24 - 1365 Workflow starts and polls with corrupt backend with intact history; retired writes refuse, history stays read-only
+  ---
+  duration_ms: 330.361666
+  type: 'test'
+  ...
+# Subtest: 1365 Workflow starts and polls with corrupt history; retired writes refuse, history stays read-only
+ok 25 - 1365 Workflow starts and polls with corrupt history; retired writes refuse, history stays read-only
+  ---
+  duration_ms: 288.902458
+  type: 'test'
+  ...
+# Subtest: 1365 Workflow starts and polls with corrupt backend and history; retired writes refuse, history stays read-only
+ok 26 - 1365 Workflow starts and polls with corrupt backend and history; retired writes refuse, history stays read-only
+  ---
+  duration_ms: 225.615584
+  type: 'test'
+  ...
+# Subtest: 1365 default Engine also defers damaged history and ignores damaged backend
+ok 27 - 1365 default Engine also defers damaged history and ignores damaged backend
+  ---
+  duration_ms: 22.607291
+  type: 'test'
+  ...
+# Subtest: DEC-1 start refuses writer_authority_retired by default, with zero side effects
+ok 28 - DEC-1 start refuses writer_authority_retired by default, with zero side effects
+  ---
+  duration_ms: 3.838625
+  type: 'test'
+  ...
+# Subtest: DEC-1 continue refuses writer_authority_retired even on a continuable-looking history
+ok 29 - DEC-1 continue refuses writer_authority_retired even on a continuable-looking history
+  ---
+  duration_ms: 3.165875
+  type: 'test'
+  ...
+# Subtest: DEC-1 cancel refuses writer_authority_retired and never declares terminal state
+ok 30 - DEC-1 cancel refuses writer_authority_retired and never declares terminal state
+  ---
+  duration_ms: 1.003125
+  type: 'test'
+  ...
+# Subtest: DEC-1 restart replay of a non-terminal legacy execution performs ZERO ledger writes
+ok 31 - DEC-1 restart replay of a non-terminal legacy execution performs ZERO ledger writes
+  ---
+  duration_ms: 2.055375
+  type: 'test'
+  ...
+# Subtest: DEC-2 historical terminal receipt stays byte-stable and readable after restart
+ok 32 - DEC-2 historical terminal receipt stays byte-stable and readable after restart
+  ---
+  duration_ms: 3.413916
+  type: 'test'
+  ...
+# Subtest: DEC-2 broker manifest documents the retired writer and keeps reads
+ok 33 - DEC-2 broker manifest documents the retired writer and keeps reads
+  ---
+  duration_ms: 0.402125
+  type: 'test'
+  ...
+# Subtest: explicit opt-out keeps the legacy hermetic machinery testable (never used by production wiring)
+ok 34 - explicit opt-out keeps the legacy hermetic machinery testable (never used by production wiring)
+  ---
+  duration_ms: 944.739
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/compose-dep-root-own-MTifCF/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] disabled; no HTTP server mounted
+# Subtest: composition pins the credentialFile to the runtime deployment root (own root accepted)
+ok 35 - composition pins the credentialFile to the runtime deployment root (own root accepted)
+  ---
+  duration_ms: 225.909416
+  type: 'test'
+  ...
+# Subtest: composition refuses a foreign surface lineage in the deployment-owned catalog (fail closed)
+ok 36 - composition refuses a foreign surface lineage in the deployment-owned catalog (fail closed)
+  ---
+  duration_ms: 26.605958
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-j0omFh/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] listening on http://127.0.0.1:58272 (deliverReady=true storeReady=true)
+# [notification-ingress] ERROR POST /v1/deliver failed: notification-ingress: sessionMode must be one of main | fresh
+# [router] route-chain {"kind":"route_attempt","tsWallMs":1794094570274,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+# [router] route-chain {"kind":"route_chain_final","tsWallMs":1794094570274,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+# [router] deliver accepted: agent agt_production-runtime-test session main requestId req-1... (msg-1) in 92ms
+# Subtest: notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox
+ok 37 - notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox
+  ---
+  duration_ms: 633.348916
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-KobF6e/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] disabled; no HTTP server mounted
+# [router] route-chain {"kind":"route_attempt","tsWallMs":1794094570706,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+# [router] route-chain {"kind":"route_chain_final","tsWallMs":1794094570706,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+# Subtest: scheduler engine consumes a job from the production store through the router seam
+ok 38 - scheduler engine consumes a job from the production store through the router seam
+  ---
+  duration_ms: 456.122083
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-PlJtb9/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] disabled; no HTTP server mounted
+# [router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1794094571092,"sequence":1,"category":"other","agentId":"agt_production-runtime-test","routeRef":null,"transportAttempt":1,"processGeneration":null,"categoryCount":1,"windowCount":1}
+# [router] route-chain {"kind":"route_attempt","tsWallMs":1794094571093,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"unproven","attemptOutcome":"stop:outcome_unknown"}
+# [router] route-chain {"kind":"route_chain_final","tsWallMs":1794094571093,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"NONE","finalOutcome":"stop:outcome_unknown","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+# Subtest: B15 production evidence preserves scheduled outcome_unknown reconciliation data
+ok 39 - B15 production evidence preserves scheduled outcome_unknown reconciliation data
+  ---
+  duration_ms: 400.67525
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-SOyQ00/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] listening on http://127.0.0.1:58282 (deliverReady=true storeReady=true)
+# Subtest: graceful stop closes the HTTP surfaces and writes stopped-able state
+ok 40 - graceful stop closes the HTTP surfaces and writes stopped-able state
+  ---
+  duration_ms: 104.850334
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-ZjEh0t/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] disabled; no HTTP server mounted
+# [router] route-chain {"kind":"route_attempt","tsWallMs":1794094571378,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+# [router] route-chain {"kind":"route_chain_final","tsWallMs":1794094571378,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+# [router] deliver accepted: agent agt_production-runtime-test session fresh-1eb7dfd82f271a47ef697aa829491c92 requestId req-clean... (msg-1) in 4ms
+# Subtest: runtime state carries no demo artifacts anywhere
+ok 41 - runtime state carries no demo artifacts anywhere
+  ---
+  duration_ms: 34.934833
+  type: 'test'
+  ...
+# Subtest: C-WIRE paths: the production layout owns the notification-ingress persistent surface
+ok 42 - C-WIRE paths: the production layout owns the notification-ingress persistent surface
+  ---
+  duration_ms: 2.025208
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-nyLgiz/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] listening on http://127.0.0.1:58284 (deliverReady=true storeReady=true)
+# Subtest: C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths — no credentials, no secret env
+ok 43 - C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths — no credentials, no secret env
+  ---
+  duration_ms: 109.176042
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-Qd9WeF/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] disabled; no HTTP server mounted
+# [router] route-chain {"kind":"route_attempt","tsWallMs":1794094571698,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+# [router] route-chain {"kind":"route_chain_final","tsWallMs":1794094571698,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+# Subtest: C-HIST compose wires the HistoryStore over layout.historyDir into the scheduler and provides the /scheduler/* services
+ok 44 - C-HIST compose wires the HistoryStore over layout.historyDir into the scheduler and provides the /scheduler/* services
+  ---
+  duration_ms: 325.59175
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-rvMx6D/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] disabled; no HTTP server mounted
+# Subtest: C-HIST schedulerAuth opts provide a JWKS verifier; unconfigured stays null
+ok 45 - C-HIST schedulerAuth opts provide a JWKS verifier; unconfigured stays null
+  ---
+  duration_ms: 35.3085
+  type: 'test'
+  ...
+# Subtest: C-HIST R4 ingestion: valid / UNPARSEABLE / OVERSIZE / INVALID_SCHEMA / absent blocks
+ok 46 - C-HIST R4 ingestion: valid / UNPARSEABLE / OVERSIZE / INVALID_SCHEMA / absent blocks
+  ---
+  duration_ms: 1.7825
+  type: 'test'
+  ...
+# Subtest: MOBILE_SESSION_HISTORY_V1: productApi.history crosses the composition contract (default OFF unchanged; explicit enable reaches the module and fails closed)
+ok 47 - MOBILE_SESSION_HISTORY_V1: productApi.history crosses the composition contract (default OFF unchanged; explicit enable reaches the module and fails closed)
+  ---
+  duration_ms: 45.82075
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-ZEjGP6/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] disabled; no HTTP server mounted
+# Subtest: composition drains auto-reconcile before workflow, scheduler and owned Router disposal
+ok 48 - composition drains auto-reconcile before workflow, scheduler and owned Router disposal
+  ---
+  duration_ms: 445.686541
+  type: 'test'
+  ...
+# Subtest: runtime stop(): the engine drain stays pending while a poll is in flight, and the runtime is quiescent once it resolves
+ok 49 - runtime stop(): the engine drain stays pending while a poll is in flight, and the runtime is quiescent once it resolves
+  ---
+  duration_ms: 1198.516125
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-5O4EGj/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] disabled; no HTTP server mounted
+# Subtest: runtime stop drains the owned worker after workflowExecution stop rejects
+ok 50 - runtime stop drains the owned worker after workflowExecution stop rejects
+  ---
+  duration_ms: 73.754625
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-VdVWq4/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] disabled; no HTTP server mounted
+# Subtest: runtime stop drains the owned worker after scheduler stop rejects
+ok 51 - runtime stop drains the owned worker after scheduler stop rejects
+  ---
+  duration_ms: 46.278792
+  type: 'test'
+  ...
+# Subtest: plugin disposal waits every cleanup and propagates all failures
+ok 52 - plugin disposal waits every cleanup and propagates all failures
+  ---
+  duration_ms: 1.375917
+  type: 'test'
+  ...
+# Subtest: concurrent plugin disposal callers wait the same owned cleanup
+ok 53 - concurrent plugin disposal callers wait the same owned cleanup
+  ---
+  duration_ms: 0.885834
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-h58Y4b/bindings/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [product-api] disabled; no HTTP server mounted
+# [notification-ingress] disabled; no HTTP server mounted
+# Subtest: runtime stop never reports clean success after an owned worker shutdown rejects
+ok 54 - runtime stop never reports clean success after an owned worker shutdown rejects
+  ---
+  duration_ms: 82.079
+  type: 'test'
+  ...
+# Subtest: 1367 mounted missing trace retains 404: healthy/unknown_instance
+ok 55 - 1367 mounted missing trace retains 404: healthy/unknown_instance
+  ---
+  duration_ms: 136.075667
+  type: 'test'
+  ...
+# {"tail":"healthy","selector":"unknown_instance","before":"8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c","after":"8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 mounted missing trace retains 404: healthy/unknown_visit
+ok 56 - 1367 mounted missing trace retains 404: healthy/unknown_visit
+  ---
+  duration_ms: 126.618791
+  type: 'test'
+  ...
+# {"tail":"healthy","selector":"unknown_visit","before":"8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c","after":"8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 mounted missing trace retains 404: invalid_json/unknown_instance
+ok 57 - 1367 mounted missing trace retains 404: invalid_json/unknown_instance
+  ---
+  duration_ms: 150.195125
+  type: 'test'
+  ...
+# {"tail":"invalid_json","selector":"unknown_instance","before":"492e170d3405c5c76dfc178af65af11afda3412e9633c485583b457995201fd2","after":"492e170d3405c5c76dfc178af65af11afda3412e9633c485583b457995201fd2","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 mounted missing trace retains 404: invalid_json/unknown_visit
+ok 58 - 1367 mounted missing trace retains 404: invalid_json/unknown_visit
+  ---
+  duration_ms: 151.113375
+  type: 'test'
+  ...
+# {"tail":"invalid_json","selector":"unknown_visit","before":"492e170d3405c5c76dfc178af65af11afda3412e9633c485583b457995201fd2","after":"492e170d3405c5c76dfc178af65af11afda3412e9633c485583b457995201fd2","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 mounted missing trace retains 404: missing_newline/unknown_instance
+ok 59 - 1367 mounted missing trace retains 404: missing_newline/unknown_instance
+  ---
+  duration_ms: 137.737167
+  type: 'test'
+  ...
+# {"tail":"missing_newline","selector":"unknown_instance","before":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","after":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 mounted missing trace retains 404: missing_newline/unknown_visit
+ok 60 - 1367 mounted missing trace retains 404: missing_newline/unknown_visit
+  ---
+  duration_ms: 144.02425
+  type: 'test'
+  ...
+# {"tail":"missing_newline","selector":"unknown_visit","before":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","after":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 traces: invalid_json is reported without event-file repair
+ok 61 - 1367 traces: invalid_json is reported without event-file repair
+  ---
+  duration_ms: 141.976292
+  type: 'test'
+  ...
+# {"surface":"traces","kind":"invalid_json","before":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","after":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","calls":{"mutate":0,"repair":0,"load":1,"lock":1,"append":0}}
+# Subtest: 1367 attention: invalid_json is reported without event-file repair
+ok 62 - 1367 attention: invalid_json is reported without event-file repair
+  ---
+  duration_ms: 129.094916
+  type: 'test'
+  ...
+# {"surface":"attention","kind":"invalid_json","before":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","after":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","calls":{"mutate":0,"repair":0,"load":1,"lock":1,"append":0}}
+# Subtest: 1367 traces: missing_newline is reported without event-file repair
+ok 63 - 1367 traces: missing_newline is reported without event-file repair
+  ---
+  duration_ms: 149.541542
+  type: 'test'
+  ...
+# {"surface":"traces","kind":"missing_newline","before":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","after":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","calls":{"mutate":0,"repair":0,"load":1,"lock":1,"append":0}}
+# Subtest: 1367 attention: missing_newline is reported without event-file repair
+ok 64 - 1367 attention: missing_newline is reported without event-file repair
+  ---
+  duration_ms: 142.696541
+  type: 'test'
+  ...
+# {"surface":"attention","kind":"missing_newline","before":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","after":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","calls":{"mutate":0,"repair":0,"load":1,"lock":1,"append":0}}
+# Subtest: 1367 fresh-reader family: no mutate/repair, current cross-instance prefix, absent file stays absent
+ok 65 - 1367 fresh-reader family: no mutate/repair, current cross-instance prefix, absent file stays absent
+  ---
+  duration_ms: 322.674875
+  type: 'test'
+  ...
+# Subtest: 1367 real mutation still repairs invalid_json under the existing lock
+ok 66 - 1367 real mutation still repairs invalid_json under the existing lock
+  ---
+  duration_ms: 119.372208
+  type: 'test'
+  ...
+# Subtest: 1367 real mutation still repairs missing_newline under the existing lock
+ok 67 - 1367 real mutation still repairs missing_newline under the existing lock
+  ---
+  duration_ms: 120.088625
+  type: 'test'
+  ...
+# Subtest: 1367 non-tail corruption remains fail-loud and unchanged
+ok 68 - 1367 non-tail corruption remains fail-loud and unchanged
+  ---
+  duration_ms: 81.360583
+  type: 'test'
+  ...
+# Subtest: 1367 no-work reconciliation shares four candidate scans: six total replays become three
+ok 69 - 1367 no-work reconciliation shares four candidate scans: six total replays become three
+  ---
+  duration_ms: 142.019334
+  type: 'test'
+  ...
+# {"calls":{"mutate":0,"repair":0,"load":3,"lock":3,"append":0},"examined":0}
+# Subtest: 1367 candidate refresh retains same-pass ACTIVE to terminal stale processing
+ok 70 - 1367 candidate refresh retains same-pass ACTIVE to terminal stale processing
+  ---
+  duration_ms: 167.67575
+  type: 'test'
+  ...
+# Subtest: 1367 tail qualification belongs to the current read and healthy diagnostic shapes stay unchanged
+ok 71 - 1367 tail qualification belongs to the current read and healthy diagnostic shapes stay unchanged
+  ---
+  duration_ms: 164.496375
+  type: 'test'
+  ...
+1..71
+# tests 71
+# suites 0
+# pass 71
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11014.048333

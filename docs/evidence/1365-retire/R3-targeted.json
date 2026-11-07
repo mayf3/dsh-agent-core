@@ -1,0 +1,71 @@
+{
+  "gate": "targeted",
+  "cwd": "/private/tmp/h1365-retire",
+  "command": [
+    "/usr/local/bin/node",
+    "--test",
+    "--test-reporter=tap",
+    "packages/production-runtime/test/workflow-progress-runtime.test.js",
+    "packages/production-runtime/test/workflow-progress-gateway.test.js",
+    "packages/workflow-execution/test/runtime-wiring.test.js",
+    "packages/workflow-execution/test/recovery.test.js"
+  ],
+  "runtime": {
+    "version": "v25.6.1",
+    "execPath": "/usr/local/Cellar/node/25.6.1_1/bin/node",
+    "arch": "x64",
+    "proxyKeysPresent": []
+  },
+  "invocation": [
+    "/usr/local/opt/python@3.14/bin/python3.14",
+    "packages/development-execution/test/run-retirement-gates.py",
+    "targeted"
+  ],
+  "path": "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+  "node_version_command": [
+    "/usr/local/bin/node",
+    "--version"
+  ],
+  "node_version_rc": 0,
+  "node_version_stdout": "v25.6.1\n",
+  "node_binary_sha256": "c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b",
+  "started_utc": "2026-11-07T23:36:23.654937+00:00",
+  "ended_utc": "2026-11-07T23:36:32.947441+00:00",
+  "child_unset_keys": [
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "ALL_PROXY",
+    "all_proxy",
+    "NO_PROXY",
+    "no_proxy",
+    "NODE_USE_ENV_PROXY"
+  ],
+  "parent_env_unchanged": true,
+  "git_head": "b6ddc2a67ba041b8b13ed33d331104cf809d4985",
+  "expected_rc": 0,
+  "actual_rc": 0,
+  "expected_fail": 0,
+  "counts": {
+    "tests": 91,
+    "pass": 91,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "diagnostic_checks": [],
+  "capture_valid": true,
+  "capture_rc": 0,
+  "raw_sha256": "15ce03d360a353524f1ff9552337cc2cac95bf45a8228405d5d719f53240648c",
+  "file_sha256": {
+    "packages/development-execution/src/engine.js": "d281bbc0e2822f8e7748fae32d55aa5da3a0e78eb37286f1e3845b4a6710226a",
+    "packages/production-runtime/src/development-execution-runtime.js": "62a9ac87887bfb4a7246793dea7f451f8094d4250e5573ddf3ccc29f0eef43af",
+    "packages/production-runtime/src/workflow/capability-runtime.js": "53dbddaa6cdbf140da020515c1a2b45beb7712715f3c4c4624ad65708c576ada",
+    "packages/production-runtime/test/workflow-progress-runtime.test.js": "8e3b11babe6dd93c99928324841fa3c8ea273a15fdec0e3e6cc3923788bd3d69",
+    "packages/production-runtime/test/workflow-progress-gateway.test.js": "39514be142448e3032fdfe0c7151e1b3bb51004c2f5756afb77b3ca56df8e576",
+    "packages/workflow-execution/test/runtime-wiring.test.js": "38cf2835782d1d07634aa8752b059f808a2bf2f1ce6d59bf2376994a0672076a",
+    "packages/workflow-execution/test/recovery.test.js": "d3935d778d2f8bfde073a6aace13526dad6ce70380283def5e158da7dab66c9e",
+    "packages/development-execution/test/run-retirement-gates.py": "5589571430f290511c00ddbc397a0f092642fbbd96c20777d4c960589b98a20f"
+  }
+}

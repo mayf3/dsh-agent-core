@@ -1,0 +1,23 @@
+{
+  "R2-GREEN.json": "18afd79a82a4bdf54cea652301172021a3640b5f8ac41538bb5d8df1751162eb",
+  "R2-GREEN.tap": "82a9c86d2764a0e00b4f17196c7e6baea95e24800f874e6b18a71862a46ed505",
+  "R2-RED.json": "b2c0ea34e1dbaf823b4d820269fbdfd0d4a0dce83a7d2a5c919f04e95d1c8d6e",
+  "R2-RED.tap": "68bdad663042f1b4751e8f2440e658a193279697699da3343b7246fcf1822360",
+  "R2-STOP.json": "696f79f45d384388e1936c935e33e27cf6dc54920fb30ebf2513e778fcd39883",
+  "R2-existing.json": "bbb4081af32bc199356699606722e738f709bf3773101cd0cdc045267732c705",
+  "R2-existing.tap": "720a5ff9e4e8d97fbb15fd924c1d1e1fc0b198833cb806fcf137400fae3a63f7",
+  "R3-candidate.json": "31b920e382f68e736a99c2077a78847d2b6c47c3d14d340e08322b2ddcad7e2f",
+  "R3-candidate.patch": "b107269bdaa534dd3fa04c852aac44a3a86b3db6a78c6cc2d9ae777a731dd365",
+  "R3-existing.json": "c1e038aab32a2226945559025e441c7ad5167db9891dfba6457ba885b4567ad4",
+  "R3-existing.tap": "375611eae655da7b9dc24b3658296d95614cddb1410fe87e0b5eecc70259522e",
+  "R3-implementation.json": "e9bda90725022bd5549f052f42f193dc3a707c8cf42f51bbcbe84a6d811dd498",
+  "R3-independent-review.md": "977db0b1b89c0ce9b93e74f1732fc2d66d9867a1aa7e31c4d9ae899e52295b0b",
+  "R3-prepublication-remote.json": "53b807ae66939aa602f0aafed686b1bc83f2ea86ff8fe5b165459c47016320ac",
+  "R3-structure.command.json": "7e82ea2fa1cfc76dff5c8cacd35eac5cfd20d02d5d31ae3e8742605ccc824dfc",
+  "R3-structure.json.txt": "5ab2f5808ab341a11d9b8fd116ffe2cd0e6bebba15dc6591e7762f4d7667e8b9",
+  "R3-structure.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "R3-targeted.json": "6abd3d6769e8b065f95d35a03971c1257b7ec8ee3452deaefc7fcc7f575f02c3",
+  "R3-targeted.tap": "15ce03d360a353524f1ff9552337cc2cac95bf45a8228405d5d719f53240648c",
+  "RED.json": "a605f1093ede02443da63d313ccf144a427fc94c91bbf984f1795ba3d0e486be",
+  "RED.tap": "82b3cfff8f012078eca77864d12284d83dfdd5996b2924f317d84ce12108399b"
+}
