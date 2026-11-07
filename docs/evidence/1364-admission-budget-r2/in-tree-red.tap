@@ -1,0 +1,30 @@
+#1364 observations [{"round":1,"probes":25,"failures":25,"attempts":0,"deliveries":0},{"round":2,"probes":25,"failures":25,"attempts":0,"deliveries":0},{"round":3,"probes":25,"failures":25,"attempts":0,"deliveries":0}]
+✖ #1364 RED/GREEN: 25 stable pre-plan failures cannot starve the healthy 26th intent for three polls (828.779625ms)
+✔ #1364 control: 24 stable pre-plan failures leave the healthy 25th reachable (300.898334ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1182.492542
+
+✖ failing tests:
+
+test at packages/workflow-execution/test/continuation.test.js:64:1
+✖ #1364 RED/GREEN: 25 stable pre-plan failures cannot starve the healthy 26th intent for three polls (828.779625ms)
+  AssertionError [ERR_ASSERTION]: healthy tail must receive exactly one opportunity within three polls
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///private/tmp/h1364-budget/packages/workflow-execution/test/continuation.test.js:77:12)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
