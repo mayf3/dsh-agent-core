@@ -1,0 +1,330 @@
+{
+  "observed_start_utc": "2026-11-07T15:48:45.102326+00:00",
+  "lsof_session_access": {
+    "argv": [
+      "/usr/sbin/lsof",
+      "-nP",
+      "-Fpcafn"
+    ],
+    "start_utc": "2026-11-07T15:48:45.102451+00:00",
+    "end_utc": "2026-11-07T15:48:45.508979+00:00",
+    "rc": 0,
+    "stdout": [
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "42",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-20-01a1b6ae-a37d-7063-a7ed-c30974ca6065.jsonl"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "51",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-43-24-01a1b6ad-c6b6-7f00-a7b9-d5fe23f7aeec.jsonl"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "61",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-31-01a1b6ae-cbf3-70e2-85e0-bc69ef726da5.jsonl"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "69",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-40-01a1b6ae-ee9a-7622-a99d-9b479d42ae92.jsonl"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "32",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-13-01a1b6ae-8542-79e2-9ff1-6c10e387d208.jsonl"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "34",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-43-59-01a1b6ae-4e57-7201-adad-8505428ce432.jsonl"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "53",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-42-33-01a1b6ac-f9ff-7d01-b907-1883e01ef5d2.jsonl"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "61",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-24-01a1b6ae-afd0-7751-a846-6529519ac1ac.jsonl"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "16",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T21-48-56-01a1b644-f994-70e1-b1a7-4063679a6b61.jsonl"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "35",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T21-48-42-01a1b644-c437-77a0-bfa7-695682347ae5.jsonl"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "59",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T21-51-04-01a1b646-ef17-7f00-bb08-754d2411b59a.jsonl"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "76",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/sessions/2026/09/13/rollout-2026-09-13T13-53-38-01a09954-1165-7ae2-a5fb-e6f3b480121a.jsonl"
+      }
+    ],
+    "stderr": ""
+  },
+  "process_metadata": {
+    "argv": [
+      "/bin/ps",
+      "-p",
+      "30709,30817,55249,54845,55169",
+      "-o",
+      "pid,ppid,lstart,comm"
+    ],
+    "start_utc": "2026-11-07T15:48:45.523968+00:00",
+    "end_utc": "2026-11-07T15:48:45.528367+00:00",
+    "rc": 0,
+    "stdout": "  PID  PPID STARTED                      COMM\n30709 54845 Sat Nov  7 23:42:07 2026     codex\n30817 54845 Sat Nov  7 23:42:30 2026     codex\n54845 54625 Sat Nov  7 16:55:08 2026     zcode-cli\n55169     1 Tue Nov  3 20:33:56 2026     /Applications/ChatGPT.app/Contents/MacOS/ChatGPT\n55249 55169 Tue Nov  3 20:34:01 2026     /Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex\n",
+    "stderr": ""
+  },
+  "watcher_loaded_lookup": {
+    "argv": [
+      "/bin/launchctl",
+      "print",
+      "gui/502/com.codex.zcode-hourly-watch"
+    ],
+    "start_utc": "2026-11-07T15:48:45.528400+00:00",
+    "end_utc": "2026-11-07T15:48:45.533496+00:00",
+    "rc": 113,
+    "stdout": "",
+    "stderr": "Bad request.\nCould not find service \"com.codex.zcode-hourly-watch\" in domain for user gui: 502\n"
+  },
+  "filesystem_coverage": [
+    {
+      "argv": [
+        "/usr/bin/find",
+        "/Users/yanfenma/.codex",
+        "-maxdepth",
+        "3",
+        "-type",
+        "d",
+        "-iname",
+        "*preserv*",
+        "-print"
+      ],
+      "start_utc": "2026-11-07T15:48:45.533539+00:00",
+      "end_utc": "2026-11-07T15:48:45.658317+00:00",
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/find",
+        "/Users/yanfenma/Documents/Codex",
+        "-maxdepth",
+        "6",
+        "-type",
+        "d",
+        "-iname",
+        "*preserv*",
+        "-print"
+      ],
+      "start_utc": "2026-11-07T15:48:45.658372+00:00",
+      "end_utc": "2026-11-07T15:48:46.064900+00:00",
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/find",
+        "/Users/yanfenma/Library/Application Support/Codex",
+        "-maxdepth",
+        "4",
+        "-iname",
+        "*preserv*",
+        "-print"
+      ],
+      "observed_at_utc": "2026-11-07T15:49:52.707987+00:00",
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "plugin_appserver_manifest": {
+    "argv": [
+      "/bin/cat",
+      "/Users/yanfenma/.codex/plugins/.plugin-appserver/codex-cli/codex-package.json"
+    ],
+    "start_utc": "2026-11-07T15:48:46.064947+00:00",
+    "end_utc": "2026-11-07T15:48:46.067768+00:00",
+    "rc": 0,
+    "stdout": "{\n  \"layoutVersion\": 1,\n  \"version\": \"0.166.0-alpha.5.1\",\n  \"target\": \"aarch64-apple-darwin\",\n  \"variant\": \"codex\",\n  \"entrypoint\": \"bin/codex\",\n  \"resourcesDir\": \"codex-resources\",\n  \"pathDir\": \"codex-path\"\n}\n",
+    "stderr": ""
+  },
+  "plugin_memory_named_directories": {
+    "argv": [
+      "/usr/bin/find",
+      "/Users/yanfenma/.codex/plugins",
+      "-maxdepth",
+      "5",
+      "-type",
+      "d",
+      "-iname",
+      "*memory*",
+      "-print"
+    ],
+    "start_utc": "2026-11-07T15:48:46.067815+00:00",
+    "end_utc": "2026-11-07T15:48:46.081632+00:00",
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "documents_archival_receipt_names": {
+    "argv": [
+      "/usr/bin/find",
+      "/Users/yanfenma/Documents/Codex",
+      "-maxdepth",
+      "4",
+      "-type",
+      "f",
+      "(",
+      "-iname",
+      "*archiv*",
+      "-o",
+      "-iname",
+      "*preserv*",
+      ")",
+      "-print"
+    ],
+    "start_utc": "2026-11-07T15:48:46.081671+00:00",
+    "end_utc": "2026-11-07T15:48:46.097418+00:00",
+    "rc": 0,
+    "stdout": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/ARCHIVE-INDEPENDENT-VERIFICATION.json\n/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E40-CLOSED-PRE-TX-AND-PRESERVED-PRIMARY-OBSERVATION-20261019.json\n/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/round3-e40-fixed-partial-preservation-exact-single-relay-send.json\n/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E37-FINITE-PRESERVATION-TERMINAL-OBSERVATION-20261018.json\n/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/NEW-APP-B939-FROZEN-ARCHIVE-SAVED-RECORD-OBSERVER-20261019.json\n/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/round2-mcp-native-stop-reader-preservation.json\n/Users/yanfenma/Documents/Codex/2026-10-18/top-n-workspace-205g-81-1g/work/screenshot-archives.json\n/Users/yanfenma/Documents/Codex/2026-10-18/top-n-workspace-205g-81-1g/work/archive-du2.txt\n/Users/yanfenma/Documents/Codex/2026-10-18/top-n-workspace-205g-81-1g/work/archive-du2-errors.txt\n",
+    "stderr": ""
+  },
+  "source_reference_excerpts": [
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/dsh-native-arm64-runtime-v1/owner-requested-final-head-evidence-check.json",
+      "sha256": "cc8897ff8bcde4d29a58305ceeff3a3a9bc8fedacb75a79cc3a44f5288aff8c0",
+      "line_start": 20,
+      "line_end": 23,
+      "excerpt": "  \"original_review_provenance\": {\n    \"path\": \"/Users/yanfenma/.codex/sessions/2026/09/07/rollout-2026-09-07T07-35-42-01a07913-e7c6-7352-94ee-0aefea4bc63a.jsonl\",\n    \"line\": 381,\n    \"message_id\": \"amsg_01a07927-6f94-77a0-a7ba-810ee6c83131\""
+    },
+    {
+      "path": "/Users/yanfenma/.codex-zcode-watch/bin/delivery_guard_cli.py",
+      "sha256": "61e5e5f9b1fc18702d4d15bf039e8b228319b2b6f86ed7bf67be640beeaf1e3b",
+      "line_start": 235,
+      "line_end": 249,
+      "excerpt": "    root=HOME/'.codex/sessions'\n    if not path.is_absolute() or '..' in path.parts or not path.is_relative_to(root) or target not in path.name:return {}\n    try:\n        if any(part.is_symlink() for part in (root,path,*path.parents) if part.is_relative_to(root)):return {}\n        if not path.resolve(strict=True).is_relative_to(root.resolve(strict=True)):return {}\n        before=os.lstat(path)\n        if path.is_symlink():return {}\n        fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW)\n        with os.fdopen(fd,'rb') as source:\n            opened=os.fstat(source.fileno())\n            if (opened.st_dev,opened.st_ino)!=(before.st_dev,before.st_ino):return {}\n            offset=max(0,opened.st_size-2*1024*1024)\n            source.seek(offset);lines=source.read(2*1024*1024).splitlines()\n            if offset:lines=lines[1:]\n        if any(part.is_symlink() for part in (root,path,*path.parents) if part.is_relative_to(root)):return {}"
+    },
+    {
+      "path": "/Users/yanfenma/.codex-zcode-watch/bin/codex_continuation_worker.py",
+      "sha256": "208cd4f796130fdd8d84d5b80ee918a1863c957e7248a0e470f71542e4ff7700",
+      "line_start": 50,
+      "line_end": 59,
+      "excerpt": "def build_command(codex_config: dict[str, Any], session_id: str | None) -> list[str]:\n    command = [\n        codex_config[\"binary\"], \"exec\",\n        \"--json\",\n        \"--approve-for-me\",\n        \"--model\", codex_config[\"model\"],\n        \"-c\", f'model_reasoning_effort=\"{codex_config[\"reasoning_effort\"]}\"',\n        \"-C\", codex_config[\"workspace\"],\n    ]\n    for path in codex_config.get(\"add_dirs\", []):"
+    },
+    {
+      "path": "/Users/yanfenma/.codex-zcode-watch/bin/zcode_hourly_watch.py",
+      "sha256": "c6db5e70df278ad441687f73ea4162c49804d0112cfffddaa4a03463019034bc",
+      "line_start": 356,
+      "line_end": 370,
+      "excerpt": "def launch_codex(config_path: pathlib.Path, config: dict[str, Any], state: dict[str, Any], root: pathlib.Path) -> str:\n    receipt = root / \"receipts\" / f\"codex-worker-{int(time.time())}.json\"\n    command = [\n        sys.executable,\n        str(root / \"bin\" / \"codex_continuation_worker.py\"),\n        \"--config\", str(config_path),\n        \"--receipt\", str(receipt),\n    ]\n    if state.get(\"CODEX_CONTINUATION_SESSION_ID\"):\n        command += [\"--session-id\", state[\"CODEX_CONTINUATION_SESSION_ID\"]]\n    log = (root / \"logs\" / \"worker-launch.log\").open(\"ab\", buffering=0)\n    proc = subprocess.Popen(\n        command,\n        stdin=subprocess.DEVNULL,\n        stdout=log,"
+    }
+  ],
+  "birthtime_summary": {
+    "/Users/yanfenma/.codex/archived_sessions": {
+      "files": 445,
+      "zst_files": 445,
+      "local_birth_hour_counts": {
+        "00": 29,
+        "01": 11,
+        "07": 36,
+        "20": 33,
+        "19": 22,
+        "14": 4,
+        "09": 78,
+        "16": 12,
+        "02": 3,
+        "22": 26,
+        "08": 47,
+        "10": 9,
+        "18": 14,
+        "12": 10,
+        "13": 7,
+        "03": 4,
+        "15": 10,
+        "23": 41,
+        "17": 10,
+        "21": 21,
+        "05": 3,
+        "04": 4,
+        "11": 4,
+        "06": 7
+      },
+      "latest_birth_utc": "2026-10-14T23:57:40.987369+00:00",
+      "latest_mtime_utc": "2026-10-14T23:57:40.987369+00:00",
+      "limitation": "birthtime is metadata, not invocation or historical author proof; local hours Asia/Shanghai"
+    },
+    "/Users/yanfenma/.codex/sessions": {
+      "files": 2319,
+      "zst_files": 839,
+      "local_birth_hour_counts": {
+        "07": 138,
+        "12": 115,
+        "23": 122,
+        "21": 108,
+        "13": 128,
+        "20": 146,
+        "00": 73,
+        "08": 122,
+        "22": 114,
+        "19": 126,
+        "10": 146,
+        "18": 81,
+        "11": 135,
+        "14": 104,
+        "15": 81,
+        "09": 125,
+        "01": 59,
+        "06": 103,
+        "05": 32,
+        "16": 77,
+        "17": 60,
+        "02": 37,
+        "04": 51,
+        "03": 36
+      },
+      "latest_birth_utc": "2026-11-07T15:44:40.121099+00:00",
+      "latest_mtime_utc": "2026-11-07T15:48:45.637334+00:00",
+      "limitation": "birthtime is metadata, not invocation or historical author proof; local hours Asia/Shanghai"
+    }
+  },
+  "observed_end_utc": "2026-11-07T15:48:46.127719+00:00"
+}

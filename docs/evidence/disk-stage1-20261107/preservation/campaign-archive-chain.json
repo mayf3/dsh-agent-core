@@ -1,0 +1,622 @@
+{
+  "observed_at_utc": "2026-11-07T15:54:37.515020+00:00",
+  "scope": "read existing nonsecret artifact receipts/source only; no access to authsvc session bodies or runtime execution",
+  "inventory_receipts": [
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/a100-home-sessions-archive-inventory.json",
+      "sha256": "752641ccf9037c118fd7bb3b2fc5808579598f237c38b9ab07a2bfb2e57cda76",
+      "size_bytes": 115,
+      "schema": "a100-home-sessions-archive-inventory-v1",
+      "archivedAt": "2026-10-30T23:59:23Z",
+      "basis": null,
+      "entries": [],
+      "all_other_fields": {}
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/a101-home-sessions-archive-inventory.json",
+      "sha256": "99b611dd5d89f67a990b1f5d61ef79db79a130a826d45ddce9f342edb0bf2061",
+      "size_bytes": 1703,
+      "schema": "a101-home-sessions-archive-inventory-v1",
+      "archivedAt": "2026-10-30T21:13:11+00:00Z",
+      "basis": "a101 model agents left live sessions/ in homes; home admission refused a102 launch (rename-never-delete convention)",
+      "entries": [
+        {
+          "role": "hr",
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-hr",
+          "movedFrom": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-hr/sessions",
+          "archiveName": "archive-trial-20261027-a101-sessions-22e612b8ec4fd09e",
+          "treeSha256_16": "22e612b8ec4fd09e",
+          "entries": 3
+        },
+        {
+          "role": "pm",
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm",
+          "movedFrom": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm/sessions",
+          "archiveName": "archive-trial-20261027-a101-sessions-9ce0ccb6c6db50ef",
+          "treeSha256_16": "9ce0ccb6c6db50ef",
+          "entries": 3
+        },
+        {
+          "role": "dev",
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev",
+          "movedFrom": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev/sessions",
+          "archiveName": "archive-trial-20261027-a101-sessions-9cf3f8ee3afb1554",
+          "treeSha256_16": "9cf3f8ee3afb1554",
+          "entries": 3
+        },
+        {
+          "role": "cto",
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-cto",
+          "movedFrom": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-cto/sessions",
+          "archiveName": "archive-trial-20261027-a101-sessions-589577106d0f6751",
+          "treeSha256_16": "589577106d0f6751",
+          "entries": 3
+        }
+      ],
+      "all_other_fields": {}
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/a103-home-sessions-archive-inventory.json",
+      "sha256": "d189117382753e2a5aef3707e4b99bfb3bbae70e9ebc6db5d7b7f796cae6f975",
+      "size_bytes": 850,
+      "schema": "a103-home-sessions-archive-inventory-v1",
+      "archivedAt": "2026-10-30T22:22:30+00:00Z",
+      "basis": "a103 model agents left live sessions/ in homes before a104 launch (rename-never-delete convention)",
+      "entries": [
+        {
+          "role": "hr",
+          "archiveName": "archive-trial-20261027-a103-sessions-f00d847d9cad0e6e",
+          "treeSha256_16": "f00d847d9cad0e6e"
+        },
+        {
+          "role": "pm",
+          "archiveName": "archive-trial-20261027-a103-sessions-ae8c66a8b9f823bc",
+          "treeSha256_16": "ae8c66a8b9f823bc"
+        },
+        {
+          "role": "dev",
+          "archiveName": "archive-trial-20261027-a103-sessions-9a9cc600138bc561",
+          "treeSha256_16": "9a9cc600138bc561"
+        },
+        {
+          "role": "cto",
+          "archiveName": "archive-trial-20261027-a103-sessions-b85fa9fc66cbf97b",
+          "treeSha256_16": "b85fa9fc66cbf97b"
+        }
+      ],
+      "all_other_fields": {}
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/a104-home-sessions-archive-inventory.json",
+      "sha256": "84a371de6cd4bd34dc10d9314181b35eb45be7592708ef030ee368f5de03cb03",
+      "size_bytes": 824,
+      "schema": "a104-home-sessions-archive-inventory-v1",
+      "archivedAt": "2026-10-31T06:59:32+00:00Z",
+      "basis": "a104 agents left live sessions/ before a105 launch (rename-never-delete)",
+      "entries": [
+        {
+          "role": "hr",
+          "archiveName": "archive-trial-20261027-a104-sessions-d9fa93f648dd358e",
+          "treeSha256_16": "d9fa93f648dd358e"
+        },
+        {
+          "role": "pm",
+          "archiveName": "archive-trial-20261027-a104-sessions-e44c7a7a0a072f66",
+          "treeSha256_16": "e44c7a7a0a072f66"
+        },
+        {
+          "role": "dev",
+          "archiveName": "archive-trial-20261027-a104-sessions-0b55141b6d308be4",
+          "treeSha256_16": "0b55141b6d308be4"
+        },
+        {
+          "role": "cto",
+          "archiveName": "archive-trial-20261027-a104-sessions-f530dad884df3199",
+          "treeSha256_16": "f530dad884df3199"
+        }
+      ],
+      "all_other_fields": {}
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/a45-home-sessions-archive-inventory.json",
+      "sha256": "b4c927bb54f64ea96e5b3e4ed490f130cb96cab7cd08088925039232f1cb8e2c",
+      "size_bytes": 1088,
+      "schema": "a45-home-sessions-archive-inventory-v1",
+      "archivedAt": "2026-10-30T21:37:14Z",
+      "basis": null,
+      "entries": [
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-cto",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-cto/archive-trial-20261027-a45-sessions-dc042afd45d35f2b"
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev/archive-trial-20261027-a45-sessions-8e0ab8b91a3ad606"
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-hr",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-hr/archive-trial-20261027-a45-sessions-529d42ab0a513089"
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm/archive-trial-20261027-a45-sessions-d763f4ffb44d2194"
+        }
+      ],
+      "all_other_fields": {}
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/a88-home-sessions-archive-inventory.json",
+      "sha256": "1aaba487661b1c97cc224df638d65335a9e7247e4ba9cc0038682dfa64f1a7e3",
+      "size_bytes": 900,
+      "schema": "a88-home-sessions-archive-inventory-v1",
+      "archivedAt": "2026-10-30T08:11:06Z",
+      "basis": null,
+      "entries": [
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-cto",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-cto/archive-trial-20261027-a88-sessions-41126d3c858c7491",
+          "files": 1
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev/archive-trial-20261027-a88-sessions-f918776ec0beaf13",
+          "files": 1
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm/archive-trial-20261027-a88-sessions-928e5134271b580c",
+          "files": 1
+        }
+      ],
+      "all_other_fields": {}
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/a90-home-sessions-archive-inventory.json",
+      "sha256": "f40440c8e76613ddc204994e9c216cf63880ac0fd691e2e30af72ef532d861b5",
+      "size_bytes": 1088,
+      "schema": "a90-home-sessions-archive-inventory-v1",
+      "archivedAt": "2026-10-30T08:46:09Z",
+      "basis": null,
+      "entries": [
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-cto",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-cto/archive-trial-20261027-a90-sessions-14c9a376e2ee5b99"
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev/archive-trial-20261027-a90-sessions-033aed0210c8846e"
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-hr",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-hr/archive-trial-20261027-a90-sessions-af03d09d8a0fdbf6"
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm/archive-trial-20261027-a90-sessions-f0c8c8402570c40f"
+        }
+      ],
+      "all_other_fields": {}
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/a91-home-sessions-archive-inventory.json",
+      "sha256": "5e81e052cc8630a243816fc2a5ad06aea16a7a8c48522d425ae69ba7da91d647",
+      "size_bytes": 1088,
+      "schema": "a91-home-sessions-archive-inventory-v1",
+      "archivedAt": "2026-10-30T09:23:20Z",
+      "basis": null,
+      "entries": [
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-cto",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-cto/archive-trial-20261027-a91-sessions-62526253c6978517"
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev/archive-trial-20261027-a91-sessions-8517df73ce6b2aa5"
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-hr",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-hr/archive-trial-20261027-a91-sessions-7d466b46c6b58628"
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm/archive-trial-20261027-a91-sessions-63ca95b6585f704c"
+        }
+      ],
+      "all_other_fields": {}
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/a93-home-sessions-archive-inventory.json",
+      "sha256": "9c921493f92968b365765019d2fdc116419a17b2ca845383c0d99345f4c4a0c6",
+      "size_bytes": 602,
+      "schema": "a93-home-sessions-archive-inventory-v1",
+      "archivedAt": "2026-10-30T19:12:40Z",
+      "basis": null,
+      "entries": [
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev/archive-trial-20261027-a93-sessions-a98504886718fb48"
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm/archive-trial-20261027-a93-sessions-0ed78f44498f8c4e"
+        }
+      ],
+      "all_other_fields": {}
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/a96-home-sessions-archive-inventory.json",
+      "sha256": "d4287c7926d174ab10aed9179142d7a5a3c245a6b1dae96033673037ab69afd3",
+      "size_bytes": 1088,
+      "schema": "a96-home-sessions-archive-inventory-v1",
+      "archivedAt": "2026-10-30T19:58:19Z",
+      "basis": null,
+      "entries": [
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-cto",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-cto/archive-trial-20261027-a96-sessions-6e21518592d8df8c"
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev/archive-trial-20261027-a96-sessions-8fdc924e5fac493c"
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-hr",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-hr/archive-trial-20261027-a96-sessions-90696198b8f9f974"
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm/archive-trial-20261027-a96-sessions-5e756fc463e0426e"
+        }
+      ],
+      "all_other_fields": {}
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/a97-home-sessions-archive-inventory.json",
+      "sha256": "def4bd8f75ba7d9c913e67e2d1774f54e74c46f1af8435c077527140c48671c3",
+      "size_bytes": 114,
+      "schema": "a97-home-sessions-archive-inventory-v1",
+      "archivedAt": "2026-10-30T20:22:53Z",
+      "basis": null,
+      "entries": [],
+      "all_other_fields": {}
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/a98-home-sessions-archive-inventory.json",
+      "sha256": "f5697a2aa43335d5e361402dfe496bb3bdf1d042c38980abe95055c7b961ba69",
+      "size_bytes": 1088,
+      "schema": "a98-home-sessions-archive-inventory-v1",
+      "archivedAt": "2026-10-30T20:57:54Z",
+      "basis": null,
+      "entries": [
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-cto",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-cto/archive-trial-20261027-a98-sessions-9bc69efcfbde28ec"
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev/archive-trial-20261027-a98-sessions-3280ee7a6ac562c6"
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-hr",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-hr/archive-trial-20261027-a98-sessions-9c61ec696f53171a"
+        },
+        {
+          "home": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm",
+          "archive": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm/archive-trial-20261027-a98-sessions-5a1b9c609c8eb1fc"
+        }
+      ],
+      "all_other_fields": {}
+    }
+  ],
+  "source_excerpts": [
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/a12-home-reuse-preparation/reuse_core.py",
+      "sha256": "e3316c09d181a8d381a769b9a7c0c3d78ffbf4d782885e72700ba5d19165076e",
+      "size_bytes": 15560,
+      "excerpts": [
+        {
+          "line_start": 133,
+          "line_end": 146,
+          "text": "def capture(policy, home_fd, row, archived=False):\n    target = row['archiveName'] if archived else 'sessions'\n    other = 'sessions' if archived else row['archiveName']\n    require(not exists(home_fd, other), 'ACTIVE_OR_ARCHIVE_COLLISION')\n    stub = placeholder(home_fd, policy['uid'], policy['gid'], policy['placeholderSha256'])\n    tree = snapshot(home_fd, row, target)\n    preserved = []\n    for old in row['preservedArchives']:\n        actual = snapshot(home_fd, old, old['archiveName'])\n        require(actual == old['expectedTree'], 'PRESERVED_ARCHIVE_DRIFT')\n        preserved.append(dict(archiveName=old['archiveName'], tree=actual))\n    return dict(role=row['role'], home=row['name'], tree=tree, placeholder=stub, preservedArchives=preserved,\n                oldPath=str(pathlib.Path(policy['root']) / row['name'] / 'sessions'),\n                archivePath=str(pathlib.Path(policy['root']) / row['name'] / row['archiveName']))"
+        },
+        {
+          "line_start": 171,
+          "line_end": 207,
+          "text": "def archive_batch(policy, expected_preflight):\n    fresh = preflight(policy)  # All nine checked before the durable claim or first rename.\n    require(fresh == expected_preflight, 'STALE_PREFLIGHT')\n    with ExitStack() as stack:\n        root_fd, fds = open_homes(policy, stack)\n        package_fd = stack.enter_context(absolute_dir(policy['packageDir']))\n        exclusive_json(package_fd, 'archive-intent.json', dict(at=now(), operation='ARCHIVE_ONCE',\n                       policySha256=fresh['policySha256'], preflightSha256=object_hash(fresh)))\n        journal = os.open('archive-journal.jsonl', os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,\n                          0o600, dir_fd=package_fd)\n        stack.callback(os.close, journal)\n        os.fsync(journal)\n        os.fsync(package_fd)\n        completed = []\n        result = dict(schema='a12-home-reuse-result-v1', startedAt=now(), preflight=fresh,\n                      policySha256=fresh['policySha256'], status='PARTIAL_NO_AUTOMATIC_REPLAY', completed=completed)\n        try:\n            for index, (row, home_fd) in enumerate(zip(policy['homes'], fds)):\n                evidence_checks(policy)\n                no_new_writer(policy, True)\n                binding_check(policy, root_fd, home_fd, row)\n                require(capture(policy, home_fd, row) == fresh['homes'][index], 'PRE_RENAME_DRIFT')\n                append_journal(journal, dict(at=now(), role=row['role'], phase='RENAME_INTENT',\n                                             oldPath=fresh['homes'][index]['oldPath'], archivePath=fresh['homes'][index]['archivePath']))\n                rename_exclusive(home_fd, 'sessions', row['archiveName'])\n                actual = capture(policy, home_fd, row, True)\n                require(actual == fresh['homes'][index], 'POST_RENAME_DRIFT')\n                completed.append(actual)\n                append_journal(journal, dict(at=now(), role=row['role'], phase='RENAMED_VERIFIED', tree=actual['tree']))\n            result['status'] = 'ARCHIVED_COMPLETE'\n        except Exception as error:\n            # No rollback or replay. Error text/paths/content are not echoed.\n            result['failure'] = dict(type=type(error).__name__, code=str(error) if isinstance(error, ValueError) else 'FILESYSTEM_OPERATION_FAILED')\n            append_journal(journal, dict(at=now(), phase='STOPPED_PARTIAL', failure=result['failure']))\n        result['finishedAt'] = now()\n        exclusive_json(package_fd, 'archive-result.json', result)\n        return result"
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/a12-home-reuse-preparation/reuse_fs.py",
+      "sha256": "b00e48a9cd9b570fa7fbb0c28a1ba82d439dcf591a3d9813419223a1965a4524",
+      "size_bytes": 7340,
+      "excerpts": [
+        {
+          "line_start": 128,
+          "line_end": 140,
+          "text": "def rename_exclusive(home_fd, source, destination):\n    # Darwin's atomic no-replace operation; no weaker check-then-rename fallback.\n    libc = ctypes.CDLL(None, use_errno=True)\n    fn = getattr(libc, 'renameatx_np', None)\n    require(fn is not None, 'ATOMIC_EXCLUSIVE_RENAME_UNAVAILABLE')\n    fn.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]\n    fn.restype = ctypes.c_int\n    result = fn(home_fd, component(source).encode(), home_fd,\n                component(destination).encode(), 0x00000004)  # RENAME_EXCL\n    if result != 0:\n        error = ctypes.get_errno()\n        raise OSError(error, os.strerror(error))\n    os.fsync(home_fd)"
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/a16-generic-home-archive-executor/execute_archive.py",
+      "sha256": "a30e0b390b71835721e6a4e77b2e4f552c5d3aa3d0c7c4df1ac40ca2687e1f84",
+      "size_bytes": 32483,
+      "excerpts": [
+        {
+          "line_start": 494,
+          "line_end": 525,
+          "text": "                            require(not reuse_fs.exists(home_fd, 'sessions'), 'ABSENT_SESSION_APPEARED')\n                            require(not reuse_fs.exists(home_fd, active.get('targetArchiveName') or inventory['run']['candidateArchiveName']),\n                                    'ABSENT_HOME_TARGET_COLLISION')\n                            row = {'role': role, 'agentId': home.get('agentId'), 'principalId': home.get('principalId'),\n                                   'homeName': home_name, 'homePath': home['homePath'], 'homePin': home['homePin'],\n                                   'sessionsOutcome': 'ABSENT', 'sourcePath': home['homePath'] + '/sessions',\n                                   'destinationArchiveName': None, 'preTree': None, 'postTree': None,\n                                   'existingArchives': home['existingArchives']}\n                            reuse_fs.append_journal(journal_fd, {'at': now(), 'role': role, 'phase': 'ABSENT_CONFIRMED'})\n                        else:\n                            target = active['targetArchiveName']\n                            require(target == inventory['run']['candidateArchiveName'], 'TARGET_BINDING_MISMATCH')\n                            require(not reuse_fs.exists(home_fd, target), 'ARCHIVE_TARGET_COLLISION')\n                            pre_tree = snapshot_for(home_fd, active['tree'], 'sessions', active['projectKey'])\n                            require(pre_tree == active['tree'], 'PRE_RENAME_TREE_CHANGED')\n                            reuse_fs.append_journal(journal_fd, {'at': now(), 'role': role, 'phase': 'RENAME_INTENT',\n                                                                 'sourceName': 'sessions', 'destinationName': target,\n                                                                 'preTreeSha256': reuse_fs.object_hash(pre_tree)})\n                            reuse_fs.rename_exclusive(home_fd, 'sessions', target)\n                            require(not reuse_fs.exists(home_fd, 'sessions'), 'SOURCE_REMAINS_AFTER_RENAME')\n                            post_tree = snapshot_for(home_fd, active['tree'], target, active['projectKey'])\n                            require(post_tree == pre_tree, 'POST_RENAME_TREE_CHANGED')\n                            row = {'role': role, 'agentId': home.get('agentId'), 'principalId': home.get('principalId'),\n                                   'homeName': home_name, 'homePath': home['homePath'], 'homePin': home['homePin'],\n                                   'sessionsOutcome': 'MOVED', 'sourcePath': home['homePath'] + '/sessions',\n                                   'projectKey': active['projectKey'], 'generationId': target,\n                                   'destinationArchiveName': target, 'destinationPath': home['homePath'] + '/' + target,\n                                   'preTree': pre_tree, 'postTree': post_tree,\n                                   'existingArchives': home['existingArchives']}\n                            reuse_fs.append_journal(journal_fd, {'at': now(), 'role': role, 'phase': 'RENAMED_VERIFIED',\n                                                                 'treeSha256': reuse_fs.object_hash(post_tree)})\n                        moved_rows.append(row)"
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-harness-g6-native-run-20261029-v14/home_run_admission.py",
+      "sha256": "a025b2da36dc92de62dce864284d911ddce0378ed6e2381863cd61f5b2a1a6d8",
+      "size_bytes": 31493,
+      "excerpts": [
+        {
+          "line_start": 64,
+          "line_end": 77,
+          "text": "    st = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)\n    pin_stat(st, pin, directory)\n    return st\n\n\ndef require_no_active_sessions(home_fd):\n    try:\n        os.stat('sessions', dir_fd=home_fd, follow_symlinks=False)\n    except FileNotFoundError:\n        return\n    raise ValueError('ACTIVE_SESSIONS_PATH_PRESENT')\n\n\nRUNTIME_MARKERS_REQUIRED = {'runtime-launch-request.json', 'runtime-supervisor-start.json',"
+        },
+        {
+          "line_start": 190,
+          "line_end": 213,
+          "text": "def check_archive(home_fd, archive):\n    name, tree = archive['name'], archive['tree']\n    demand(isinstance(name, str) and pathlib.PurePosixPath(name).name == name\n           and name.startswith('archive-'), 'ARCHIVE_NAME_SCOPE')\n    archive_fd = os.open(name, DIR_FLAGS, dir_fd=home_fd)\n    try:\n        pin_stat(os.fstat(archive_fd), tree['sessionsPin'], True)\n        demand(sorted(os.listdir(archive_fd)) == [archive['projectKey']], 'ARCHIVE_LAYOUT_PROJECT')\n        project_fd = os.open(archive['projectKey'], DIR_FLAGS, dir_fd=archive_fd)\n        try:\n            pin_stat(os.fstat(project_fd), tree['projectPin'], True)\n            demand(os.listdir(project_fd) == ['main'], 'ARCHIVE_LAYOUT_MAIN')\n            main_fd = os.open('main', DIR_FLAGS, dir_fd=project_fd)\n            try:\n                pin_stat(os.fstat(main_fd), tree['mainPin'], True)\n                demand(os.listdir(main_fd) == ['session.jsonl'], 'ARCHIVE_LAYOUT_FILE')\n                child_pin(main_fd, 'session.jsonl', tree['file']['pin'], False)\n            finally:\n                os.close(main_fd)\n        finally:\n            os.close(project_fd)\n    finally:\n        os.close(archive_fd)\n"
+        },
+        {
+          "line_start": 405,
+          "line_end": 410,
+          "text": "        demand(len(x['archives']) == 3, 'ARCHIVE_SET_COUNT')\n        names = [a['name'] for a in x['archives']]\n        demand(len(set(names)) == 3 and sum(n.startswith('archive-a9-') for n in names) == 1\n               and sum(n.startswith('archive-a10-') for n in names) == 1\n               and sum(n.startswith('archive-a11-') for n in names) == 1, 'ARCHIVE_SET_BINDING')\n    return bindings"
+        },
+        {
+          "line_start": 416,
+          "line_end": 434,
+          "text": "        generation = load_home_generation(config)\n        generation_by_role = {x['role']: x for x in generation['bindings']}\n        root_fd = open_dir(generation['homesRoot'])\n        try:\n            pin_stat(os.fstat(root_fd), generation['rootPin'], True)\n            current = []\n            for row in bindings:\n                home_name = pathlib.PurePosixPath(row['homePath']).name\n                home_fd = os.open(home_name, DIR_FLAGS, dir_fd=root_fd)\n                try:\n                    pin_stat(os.fstat(home_fd), row['homePin'], True)\n                    require_no_active_sessions(home_fd)\n                    for archive in row['archives']:\n                        check_archive(home_fd, archive)\n                    current.append({'role':row['role'], 'agentId':row['agentId'],\n                                    'homePath':row['homePath'], 'uid':os.fstat(home_fd).st_uid,\n                                    'gid':os.fstat(home_fd).st_gid, 'activeSessionsPath':'ABSENT',\n                                    'archiveNames':[x['name'] for x in row['archives']],\n                                    'archiveContents':'NOT_READ',"
+        }
+      ]
+    }
+  ],
+  "mandate_receipts": [
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/a103-once-prepare-authorization.json",
+      "sha256": "f9ce81a9872b227c8cca85aec36229d9047ffd6fe790e55fb2efbe1dda8d3346",
+      "schema": "v14-once-prepare-authorization-v1",
+      "at": "2026-10-30T21:13:22.586626+00:00",
+      "issuer": "resuming independent reviewer session (Root role) under explicit user standing mandate (无人值守推进，真实人类卡点才上报)",
+      "mandateBasis": "a102 consumed its one-shot: launch refused at fresh_home_admission (home_run_admission.py exit 1) because a101 model agents left live sessions/ in hr/pm/dev/cto homes; archived per rename-never-delete convention with receipt a101-home-sessions-archive-inventory.json (4 archives, tree-digest tags); all 9 a9-family homes verified clean; same observation-budget fix as a102 (60min window + 3780s supervisor assert); continuation a103",
+      "status": "AUTHORIZED_ONCE",
+      "runId": "trial-20261027-a103",
+      "runDir": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a103",
+      "maxInvocations": 1,
+      "scope": "ONE prepare+preflight; launch only via separate one-shot mandate after PASS_PRE_SERVICE_NO_DB_MUTATION; no production apply"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/a104-once-prepare-authorization.json",
+      "sha256": "a9e4d92d48e322310e151b0f017712d4a8c2c27dde8b085f6b5cb1af9e47b423",
+      "schema": "v14-once-prepare-authorization-v1",
+      "at": "2026-10-30T22:22:44.417877+00:00",
+      "issuer": "resuming independent reviewer session (Root role) under explicit user standing mandate (无人值守推进，真实人类卡点才上报)",
+      "mandateBasis": "a103 ran its full 60min window gracefully (exit 0) but business froze early: cto escalated HUMAN_REQUIRED after 3x context_validation_failed 422 on intake_bind_supplier because the instructions require workflow_definition_read to obtain the supplier_accept terminal transition id while no role allowlisted the tool (0 actual calls; capability accepted per AGENT_CORE_WORKFLOW_DEFINITION_VERSION_READ_V1). Contract fix: source_owner allowlist += definition_read list_definitions+get_definition_version, contractAmendments documented, test actual_pairs synced, all suites green; a103 sessions archived per convention; continuation a104",
+      "status": "AUTHORIZED_ONCE",
+      "runId": "trial-20261027-a104",
+      "runDir": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a104",
+      "maxInvocations": 1,
+      "scope": "ONE prepare+preflight; launch only via separate one-shot mandate after PASS_PRE_SERVICE_NO_DB_MUTATION; no production apply"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/a105-once-prepare-authorization.json",
+      "sha256": "e9805ac3e1be435cc6f22105fcfc58af472f51f36ace4b7e3b1c5255772fdc40",
+      "schema": "v14-once-prepare-authorization-v1",
+      "at": "2026-10-31T06:59:48.032856+00:00",
+      "issuer": "resuming independent reviewer session (Root role) under PA2 pre-authorization (user approved sandbox a105 launch)",
+      "mandateBasis": "PA2 approved by user (批复). a105 research topic: owner obligation loop-wake behavior — whether the cto loops over ALL OWNER_PENDING obligations after a single wake (a104 leftover kernel mechanism gap), with the improved context/policy. a104 sessions archived (receipt a104-home-sessions-archive-inventory.json); homes clean; PA storage cleanup done (81GB cargo caches removed, evidence intact).",
+      "status": "AUTHORIZED_ONCE",
+      "runId": "trial-20261027-a105",
+      "runDir": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a105",
+      "maxInvocations": 1,
+      "scope": "ONE prepare+preflight; launch only via separate one-shot mandate after PASS_PRE_SERVICE_NO_DB_MUTATION; no production apply"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/a105-one-shot-launch-mandate.json",
+      "sha256": "2da48cf19bd27ca8e7da606f5526a66b340d1004a8329f8678d8adcd96d00a47",
+      "schema": "v14-one-shot-launch-mandate-v1",
+      "at": "2026-10-31T07:00:37.819716+00:00",
+      "issuer": "resuming independent reviewer session (Root role) under PA2 pre-authorization",
+      "mandateBasis": "a105 PREPARED_AND_PREFLIGHTED (PASS_PRE_SERVICE_NO_DB_MUTATION); homes clean; 60min observation window; research focus: owner obligation loop-wake across multiple OWNER_PENDING obligations",
+      "status": "AUTHORIZED_ONCE",
+      "runId": "trial-20261027-a105",
+      "runDir": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a105",
+      "maxInvocations": 1,
+      "scope": "ONE continuous bootstrap+freeze+launch; no production apply; synthetic business only",
+      "argv": [
+        "/opt/homebrew/bin/python3",
+        "-B",
+        "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-harness-g6-native-run-20261029-v14/continuous-run-to-launch.py",
+        "--run-dir",
+        "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a105"
+      ]
+    }
+  ],
+  "executed_archive_provenance": [
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/a12-home-reuse-preparation/operator-command.json",
+      "sha256": "c77291bc939952341b4566fb009e82a3199bfd57e89d0f326d9d1cae9977ae38",
+      "record": {
+        "schema": "a12-fixed-ordinary-uid502-operation",
+        "status": "PREPARED_NOT_EXECUTED",
+        "archiveArgv": [
+          "/usr/bin/python3",
+          "-I",
+          "-B",
+          "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/a12-home-reuse-preparation/home-reuse.py",
+          "archive",
+          "--package-sha256",
+          "156d10b7d13adf376d510f9d16dd3eccfeb9beff09ec9d5bcc4ea77b2c8b946a",
+          "--preflight-sha256",
+          "e84988451c43fd6a60c652fe1202ecc7ae50c737a4d2b8ce5b5f6d321c4c305f"
+        ],
+        "afterActualArchive": "Require actual exit0/ARCHIVED_COMPLETE; SHA256 actual archive-result.json file, then call admit with that actual FILE hash. Do not replay on partial/unknown/existing intent.",
+        "reviewManifest": {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/a12-home-reuse-preparation/manifest.json",
+          "sha256": "156d10b7d13adf376d510f9d16dd3eccfeb9beff09ec9d5bcc4ea77b2c8b946a"
+        },
+        "reviewPreflight": {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/a12-home-reuse-preparation/preflight.json",
+          "sha256": "e84988451c43fd6a60c652fe1202ecc7ae50c737a4d2b8ce5b5f6d321c4c305f"
+        },
+        "expectedNewArchiveName": "archive-a11-sessions-1fdef9c168e5a702",
+        "preservedArchiveNames": [
+          "archive-a9-sessions-6cecc4cd656395e9",
+          "archive-a10-sessions-6b98e07b5dbecd01"
+        ],
+        "expectedAdmissionSchema": "a12-home-reuse-admission-v1",
+        "expectedAdmissionStatus": "READY_FOR_A12_BEFORE_ROLE_SPAWN",
+        "harnessMode": "REUSED_A11_ARCHIVED_FOR_A12"
+      }
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/a12-home-reuse-preparation/root-archive-execution.json",
+      "sha256": "89040347310acfdf4e60b21650f395aa83212d87bf50f586c903bf50afac66e6",
+      "record": {
+        "startedAt": "2026-10-27T14:51:57.100796+00:00",
+        "finishedAt": "2026-10-27T14:51:57.611838+00:00",
+        "argv": [
+          "/usr/bin/python3",
+          "-I",
+          "-B",
+          "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/a12-home-reuse-preparation/home-reuse.py",
+          "archive",
+          "--package-sha256",
+          "156d10b7d13adf376d510f9d16dd3eccfeb9beff09ec9d5bcc4ea77b2c8b946a",
+          "--preflight-sha256",
+          "e84988451c43fd6a60c652fe1202ecc7ae50c737a4d2b8ce5b5f6d321c4c305f"
+        ],
+        "actualExitCode": 0,
+        "stdoutSha256": "3646c7509c18fa44021712923dbdb692f7f8673f7b19cb2b348b206007cab782",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "result": {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/a12-home-reuse-preparation/archive-result.json",
+          "sha256": "4c9e73a8211ad2a79b3a641249151e715ad6ded9c01d978f7c1af95936058982",
+          "status": "ARCHIVED_COMPLETE"
+        }
+      }
+    }
+  ],
+  "executed_archive_result_summary": {
+    "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/a12-home-reuse-preparation/archive-result.json",
+    "sha256": "4c9e73a8211ad2a79b3a641249151e715ad6ded9c01d978f7c1af95936058982",
+    "schema": "a12-home-reuse-result-v1",
+    "status": "ARCHIVED_COMPLETE",
+    "completed": [
+      {
+        "role": "hr",
+        "oldPath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-hr/sessions",
+        "archivePath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-hr/archive-a11-sessions-1fdef9c168e5a702",
+        "tree_file_bytes": 1319557,
+        "preservedArchiveNames": [
+          "archive-a9-sessions-6cecc4cd656395e9",
+          "archive-a10-sessions-6b98e07b5dbecd01"
+        ]
+      },
+      {
+        "role": "pm",
+        "oldPath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm/sessions",
+        "archivePath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-pm/archive-a11-sessions-1fdef9c168e5a702",
+        "tree_file_bytes": 252364,
+        "preservedArchiveNames": [
+          "archive-a9-sessions-6cecc4cd656395e9",
+          "archive-a10-sessions-6b98e07b5dbecd01"
+        ]
+      },
+      {
+        "role": "arch",
+        "oldPath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-arch/sessions",
+        "archivePath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-arch/archive-a11-sessions-1fdef9c168e5a702",
+        "tree_file_bytes": 481528,
+        "preservedArchiveNames": [
+          "archive-a9-sessions-6cecc4cd656395e9",
+          "archive-a10-sessions-6b98e07b5dbecd01"
+        ]
+      },
+      {
+        "role": "dev",
+        "oldPath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev/sessions",
+        "archivePath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-dev/archive-a11-sessions-1fdef9c168e5a702",
+        "tree_file_bytes": 481317,
+        "preservedArchiveNames": [
+          "archive-a9-sessions-6cecc4cd656395e9",
+          "archive-a10-sessions-6b98e07b5dbecd01"
+        ]
+      },
+      {
+        "role": "qa",
+        "oldPath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-qa/sessions",
+        "archivePath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-qa/archive-a11-sessions-1fdef9c168e5a702",
+        "tree_file_bytes": 910628,
+        "preservedArchiveNames": [
+          "archive-a9-sessions-6cecc4cd656395e9",
+          "archive-a10-sessions-6b98e07b5dbecd01"
+        ]
+      },
+      {
+        "role": "itops",
+        "oldPath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-itops/sessions",
+        "archivePath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-itops/archive-a11-sessions-1fdef9c168e5a702",
+        "tree_file_bytes": 1650646,
+        "preservedArchiveNames": [
+          "archive-a9-sessions-6cecc4cd656395e9",
+          "archive-a10-sessions-6b98e07b5dbecd01"
+        ]
+      },
+      {
+        "role": "tester",
+        "oldPath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-tester/sessions",
+        "archivePath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-tester/archive-a11-sessions-1fdef9c168e5a702",
+        "tree_file_bytes": 682126,
+        "preservedArchiveNames": [
+          "archive-a9-sessions-6cecc4cd656395e9",
+          "archive-a10-sessions-6b98e07b5dbecd01"
+        ]
+      },
+      {
+        "role": "security",
+        "oldPath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-security/sessions",
+        "archivePath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-security/archive-a11-sessions-1fdef9c168e5a702",
+        "tree_file_bytes": 639010,
+        "preservedArchiveNames": [
+          "archive-a9-sessions-6cecc4cd656395e9",
+          "archive-a10-sessions-6b98e07b5dbecd01"
+        ]
+      },
+      {
+        "role": "cto",
+        "oldPath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-cto/sessions",
+        "archivePath": "/Users/authsvc/.agent-core/agt_unattended-canary-trial-20261027-a9-cto/archive-a11-sessions-1fdef9c168e5a702",
+        "tree_file_bytes": 893507,
+        "preservedArchiveNames": [
+          "archive-a9-sessions-6cecc4cd656395e9",
+          "archive-a10-sessions-6b98e07b5dbecd01"
+        ]
+      }
+    ],
+    "keys_only": [
+      "completed",
+      "finishedAt",
+      "policySha256",
+      "preflight",
+      "schema",
+      "startedAt",
+      "status"
+    ]
+  },
+  "poll_source": {
+    "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/poll-a101.sh",
+    "sha256": "c32d3f4bdfde2a4d61fa4b723ffb99e80c6311cf6afdd29b98b1787d2a7693d7",
+    "size_bytes": 1110,
+    "method": "existing 50-iteration/120sec pgrep+psql observer; source read only, no script/database execution",
+    "writes_archives": false,
+    "scope": "read source shows no archive/rename/copy operation; polling DB not executed"
+  }
+}

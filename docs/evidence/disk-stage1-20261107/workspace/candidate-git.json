@@ -1,0 +1,205 @@
+[
+  {
+    "path": "/Users/yanfenma/workspace/project/svc-workflow",
+    "observed_at": "2026-11-07T15:47:20.743021+00:00",
+    "identity": {
+      "rc": 0,
+      "stdout": "/Users/yanfenma/workspace/project/svc-workflow\n.git\n88ff8145eb0842b4ce759117caf4b05f9012ebdc\n",
+      "stderr": ""
+    },
+    "branch": {
+      "rc": 0,
+      "stdout": "main\n",
+      "stderr": ""
+    },
+    "status": {
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "origin": {
+      "rc": 0,
+      "stdout": "https://github.com/mayf3/svc-workflow.git\n",
+      "stderr": ""
+    },
+    "last_source_commit": {
+      "rc": 0,
+      "stdout": "88ff8145eb0842b4ce759117caf4b05f9012ebdc 2026-08-30T03:13:50+08:00 MERGE_REPORT(fde28d31): merge feat/fix-return-422 (return 422 invalid_return_references 三层修复) into main\n",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-current-input-implementation",
+    "observed_at": "2026-11-07T15:47:20.836851+00:00",
+    "identity": {
+      "rc": 128,
+      "stdout": "",
+      "stderr": "fatal: not a git repository (or any of the parent directories): .git\n"
+    },
+    "branch": {
+      "rc": 128,
+      "stdout": "",
+      "stderr": "fatal: not a git repository (or any of the parent directories): .git\n"
+    },
+    "status": {
+      "rc": 128,
+      "stdout": "",
+      "stderr": "fatal: not a git repository (or any of the parent directories): .git\n"
+    },
+    "origin": {
+      "rc": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "last_source_commit": {
+      "rc": 128,
+      "stdout": "",
+      "stderr": "fatal: not a git repository (or any of the parent directories): .git\n"
+    }
+  },
+  {
+    "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027",
+    "observed_at": "2026-11-07T15:47:20.896694+00:00",
+    "identity": {
+      "rc": 128,
+      "stdout": "",
+      "stderr": "fatal: not a git repository (or any of the parent directories): .git\n"
+    },
+    "branch": {
+      "rc": 128,
+      "stdout": "",
+      "stderr": "fatal: not a git repository (or any of the parent directories): .git\n"
+    },
+    "status": {
+      "rc": 128,
+      "stdout": "",
+      "stderr": "fatal: not a git repository (or any of the parent directories): .git\n"
+    },
+    "origin": {
+      "rc": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "last_source_commit": {
+      "rc": 128,
+      "stdout": "",
+      "stderr": "fatal: not a git repository (or any of the parent directories): .git\n"
+    }
+  },
+  {
+    "path": "/Users/yanfenma/workspace/worktrees/52bd-svc-workflow-20261101",
+    "observed_at": "2026-11-07T15:47:20.955910+00:00",
+    "identity": {
+      "rc": 0,
+      "stdout": "/Users/yanfenma/workspace/worktrees/52bd-svc-workflow-20261101\n/Users/yanfenma/workspace/project/svc-workflow/.git\n6cd6ae5544f1ab385a897cd86704b6fe84ef676c\n",
+      "stderr": ""
+    },
+    "branch": {
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "status": {
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "origin": {
+      "rc": 0,
+      "stdout": "https://github.com/mayf3/svc-workflow.git\n",
+      "stderr": ""
+    },
+    "last_source_commit": {
+      "rc": 0,
+      "stdout": "6cd6ae5544f1ab385a897cd86704b6fe84ef676c 2026-11-04T18:16:08+08:00 fix: verify definition graph write readback\n",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "/Users/yanfenma/workspace/worktrees/m2-dispatch-intent-20261101",
+    "observed_at": "2026-11-07T15:47:21.029521+00:00",
+    "identity": {
+      "rc": 0,
+      "stdout": "/Users/yanfenma/workspace/worktrees/m2-dispatch-intent-20261101\n/Users/yanfenma/workspace/project/svc-workflow/.git\nd799bf270abe008815764b8ff7d3fa08d0fb9570\n",
+      "stderr": ""
+    },
+    "branch": {
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "status": {
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "origin": {
+      "rc": 0,
+      "stdout": "https://github.com/mayf3/svc-workflow.git\n",
+      "stderr": ""
+    },
+    "last_source_commit": {
+      "rc": 0,
+      "stdout": "d799bf270abe008815764b8ff7d3fa08d0fb9570 2026-09-03T07:36:28+08:00 VISIT_ACTIVATION_IMPL_V1 (TASK_NAME = 可派激活 执行): implement SVC_WORKFLOW_VISIT_ACTIVATION_IMPL_V1 (Slice D phase 1) under accepted V6 + accepted v0.4.0 + accepted Spec (PR #23, f2a11cd) — runtime core for semantic model 3 VISIT_ACTIVATION_V1: (1) migration 0023: semantic_model_version 3 + workflow_instances.semantic_model_version with DB-enforced composite-FK Definition/Instance model equality + immutability trigger, node_type TASK, canonical activation fact families (workflow_activations UNIQUE(node_visit_id) exactly-one + kind-conditional initial_next_eligible_at CHECK, append-only closures + dispatch eligibility events, trigger-immutable like 0006); (2) VISIT_ACTIVATION_V1 graph validator (TASK|TERMINAL, one entry, one primary ADVANCE per TASK forming an acyclic deterministic path to TERMINAL, RETURN to strictly earlier TASK, TERMINATE to TERMINAL non-primary, closed owner set, reachability) wired into draft + publish dispatch; (3) create/transition/cancel/archive/admin-override atomically create/close activations with server-authored initial nextEligibleAt (NOW() in-tx) derived only from resolved canonical principal type; SERVICE/disabled/missing owners fail closed with zero facts; (4) WAKE_DISPATCH_INTENT: POST /workflow-instances/{id}/node-visits/{visitId}/wake with fail-closed GLOBAL_SCHEDULER_READ gate (server-side binding check, no role auto-mapping), binds exact Visit, stale/closed/mismatch/already-due = durable no-op (200 wakeApplied=false + attempt audit, zero state change), applied wake = eligibility fact (previous->server-now, cause WAKE) + one version increment + one Event + receipt atomically, full idempotency replay; (5) GET /internal/v1/dispatch-intents due poll (active DISPATCH_INTENT AND nextEligibleAt<=now, exactly the v0.4.0 §5.7 7-field minimum projection, GLOBAL_SCHEDULER_READ fail-closed incl. Reader-holders 403 scheduler_read_role_required); (6) legacy mutual protection: legacy paths never touch activation tables, v1 revise/revise-and-transition rejected 422 legacy_command_not_supported_for_semantic_model, archive fails closed 409 active_activation_exists, REBUILD_PROJECTION validates activation consistency; (7) EXPECTED_MIGRATION_VERSION 22->23. Tests: tests/28_visit_activation_v1.rs 9/9 (ACC-VAI-001..011 executable matrix) + 14 validator unit tests + full workspace green on run-scoped fresh DB (cargo test --workspace: all suites pass incl. 28_visit_activation_v1 9, 23_global_coordinator 9, 24_coordinator 7, 27_fleet 2/3 with the documented pre-existing env-dependent empty_disposable test failing identically on pristine base efdfb7e — conformance-script env vars required, recorded as baseline per Spec §6); migration tests 0019 value domain updated (1,2)->(1,2,3) per accepted CTR-VAI-001. Boundaries: clean worktree /Users/yanfenma/workspace/worktrees/svc-dispatch-activation-impl (user main checkout untouched); existing surfaces byte-for-meaning unchanged (no dispatchable flag per Owner ruling KEEP_ACCEPTED_V6); no Grant/principal/credential changes; production_apply_authority = none; no deploy, no cutover, no migration applied anywhere outside disposable local test DBs (dropped after runs). NEXT_TASK = 独立代码审计\n",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "/Users/yanfenma/workspace/worktrees/codex-wec-kick-token-renewal-20261028",
+    "observed_at": "2026-11-07T15:47:21.100746+00:00",
+    "identity": {
+      "rc": 0,
+      "stdout": "/Users/yanfenma/workspace/worktrees/codex-wec-kick-token-renewal-20261028\n/Users/yanfenma/workspace/project/svc-workflow/.git\ndcd5fefbf56fe1491fd54a1439a13db5c7191cb8\n",
+      "stderr": ""
+    },
+    "branch": {
+      "rc": 0,
+      "stdout": "codex/wec-kick-token-renewal-authoring-20261028\n",
+      "stderr": ""
+    },
+    "status": {
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "origin": {
+      "rc": 0,
+      "stdout": "https://github.com/mayf3/svc-workflow.git\n",
+      "stderr": ""
+    },
+    "last_source_commit": {
+      "rc": 0,
+      "stdout": "dcd5fefbf56fe1491fd54a1439a13db5c7191cb8 2026-11-04T18:15:56+08:00 feat: enable owner assistance wake independently\n",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "/Users/yanfenma/workspace/github/deepseek-harness.hold-b7-20261001",
+    "observed_at": "2026-11-07T15:47:21.174538+00:00",
+    "identity": {
+      "rc": 0,
+      "stdout": "/Users/yanfenma/workspace/github/deepseek-harness.hold-b7-20261001\n.git\n419ee11c9bd5d01b206c8660762525d151bc4b4b\n",
+      "stderr": ""
+    },
+    "branch": {
+      "rc": 0,
+      "stdout": "master\n",
+      "stderr": ""
+    },
+    "status": {
+      "rc": 0,
+      "stdout": " M .agents/notes/implemented/architecture/2026-07-19-gui-web-client-architecture.i18n.yaml\n M .agents/notes/implemented/architecture/2026-07-19-gui-web-client-architecture.md\n M .agents/notes/implemented/architecture/2026-07-19-gui-web-client-architecture.zh.md\n M .agents/notes/implemented/architecture/2026-07-22-slot-type-chain-implementation.i18n.yaml\n M .agents/notes/implemented/architecture/2026-07-22-slot-type-chain-implementation.md\n M .agents/notes/implemented/architecture/2026-07-22-slot-type-chain-implementation.zh.md\n M .agents/notes/implemented/architecture/2026-07-29-dsh-source-launch-tsx-esm.i18n.yaml\n M .agents/notes/implemented/architecture/2026-07-29-dsh-source-launch-tsx-esm.md\n M .agents/notes/implemented/architecture/2026-07-29-dsh-source-launch-tsx-esm.zh.md\n M .agents/notes/implemented/bug-fix/2026-08-10-session-row-identity-covers-the-preset.i18n.yaml\n M .agents/notes/implemented/bug-fix/2026-08-10-session-row-identity-covers-the-preset.md\n M .agents/notes/implemented/bug-fix/2026-08-10-session-row-identity-covers-the-preset.zh.md\n M .agents/notes/implemented/feature/2026-07-21-log-backed-session-titles.i18n.yaml\n M .agents/notes/implemented/feature/2026-07-21-log-backed-session-titles.md\n M .agents/notes/implemented/feature/2026-07-21-log-backed-session-titles.zh.md\n M .agents/notes/implemented/feature/2026-07-27-web-subagent-conversations.i18n.yaml\n M .agents/notes/implemented/feature/2026-07-27-web-subagent-conversations.md\n M .agents/notes/implemented/feature/2026-07-27-web-subagent-conversations.zh.md\n M .agents/notes/implemented/feature/2026-08-16-workspace-unread-and-tagview-actions.i18n.yaml\n M .agents/notes/implemented/feature/2026-08-16-workspace-unread-and-tagview-actions.md\n M .agents/notes/implemented/feature/2026-08-16-workspace-unread-and-tagview-actions.zh.md\n M .agents/notes/implemented/feature/2026-08-21-workspace-exclusive-groups-and-board.i18n.yaml\n M .agents/notes/implemented/feature/2026-08-21-workspace-exclusive-groups-and-board.md\n M .agents/notes/implemented/feature/2026-08-21-workspace-exclusive-groups-and-board.zh.md\n M .agents/notes/implemented/simplification/2026-08-10-source-run-without-managed-installer.i18n.yaml\n M .agents/notes/implemented/simplification/2026-08-10-source-run-without-managed-installer.md\n M .agents/notes/implemented/simplification/2026-08-10-source-run-without-managed-installer.zh.md\n M apps/cli/reference/README.i18n.yaml\n M apps/cli/reference/README.md\n M apps/cli/reference/README.zh.md\n M apps/cli/tests/source-launch.compat.spec.ts\n M docs/event-producer-consumer.i18n.yaml\n M docs/event-producer-consumer.md\n M docs/event-producer-consumer.zh.md\n M docs/subsystems/persistence.i18n.yaml\n M docs/subsystems/persistence.md\n M docs/subsystems/persistence.zh.md\n M package.json\n M packages/api/remotes/README.i18n.yaml\n M packages/api/remotes/README.md\n M packages/api/remotes/README.zh.md\n M packages/api/remotes/src/agent-lookup.ts\n M packages/api/remotes/src/client/index.ts\n M packages/api/remotes/tests/agent-lookup.spec.ts\n M packages/client/runtime/README.i18n.yaml\n M packages/client/runtime/README.md\n M packages/client/runtime/README.zh.md\n M packages/client/runtime/src/client/contract/store.ts\n M packages/client/runtime/src/client/sessions/manager.ts\n M packages/client/runtime/src/client/slots.ts\n M packages/client/runtime/tests/manager.client.spec.ts\n M packages/client/runtime/tests/projection-store.client.spec.ts\n M packages/client/runtime/tests/sessions-service.client.spec.ts\n M packages/client/runtime/tests/slots-service.client.spec.ts\n M packages/client/runtime/tests/store.client.spec.ts\n M packages/client/ui-primitives/src/Menu.tsx\n M packages/client/ui-primitives/tests/atoms.client.spec.tsx\n M packages/client/ui-renderer/tests/scoped-slots.client.spec.tsx\n M packages/client/ui-settings-plugin-inventory/README.i18n.yaml\n M packages/client/ui-settings-plugin-inventory/README.md\n M packages/client/ui-settings-plugin-inventory/README.zh.md\n M packages/client/ui-settings-plugin-inventory/package.json\n M packages/client/ui-settings-plugin-inventory/src/client/index.ts\n M packages/client/ui-settings-plugin-inventory/src/client/locales.ts\n M packages/client/ui-settings-plugin-inventory/tests/browser-plugin.client.spec.tsx\n M packages/client/ui-settings-plugin-inventory/tests/components.client.spec.tsx\n M packages/client/ui-slots/src/store.ts\n M packages/client/ui-workspace/README.i18n.yaml\n M packages/client/ui-workspace/README.md\n M packages/client/ui-workspace/README.zh.md\n M packages/client/ui-workspace/src/client/WorkspaceBrowser.module.css\n M packages/client/ui-workspace/src/client/WorkspaceBrowser.tsx\n M packages/client/ui-workspace/src/client/locales.ts\n M packages/client/ui-workspace/src/client/rows/Rows.module.css\n M packages/client/ui-workspace/src/client/rows/Rows.tsx\n M packages/client/ui-workspace/src/client/stores.ts\n M packages/client/ui-workspace/src/client/tree.ts\n M packages/client/ui-workspace/tests/browser-styles.client.spec.ts\n M packages/client/ui-workspace/tests/rows.client.spec.tsx\n M packages/client/ui-workspace/tests/stores.client.spec.ts\n M packages/client/ui-workspace/tests/tree.client.spec.ts\n M packages/client/ui-workspace/tests/workspace-browser.client.spec.tsx\n M packages/goal/tool-goal/README.md\n M packages/goal/tool-goal/src/index.ts\n M packages/goal/tool-goal/tests/tool-goal.spec.ts\n M packages/host/apiproxy/README.i18n.yaml\n M packages/host/apiproxy/README.md\n M packages/host/apiproxy/README.zh.md\n M packages/host/apiproxy/src/api-proxy.ts\n M packages/host/apiproxy/src/api/events.ts\n M packages/host/apiproxy/tests/api-proxy-rename.spec.ts\n M packages/host/apiproxy/tests/api-proxy-view.spec.ts\n M packages/host/plugin-inventory/README.i18n.yaml\n M packages/host/plugin-inventory/README.md\n M packages/host/plugin-inventory/README.zh.md\n M packages/host/plugin-inventory/src/index.ts\n M packages/host/plugin-inventory/src/types.ts\n M packages/host/plugin-inventory/tests/inventory.spec.ts\n M packages/session/session-persistence/README.i18n.yaml\n M packages/session/session-persistence/README.md\n M packages/session/session-persistence/README.zh.md\n M packages/session/session-persistence/src/coordinator.ts\n M packages/session/session-persistence/src/index.ts\n M packages/session/session-persistence/tests/persistence.spec.ts\n M packages/session/session-title/README.i18n.yaml\n M packages/session/session-title/README.md\n M packages/session/session-title/README.zh.md\n M packages/session/session-title/src/index.ts\n M packages/session/session-title/tests/rename.spec.ts\n M packages/todo/tool-todo/src/index.ts\n M pnpm-lock.yaml\n M vendor/README.md\n M vendor/cordis/src/events.ts\n",
+      "stderr": ""
+    },
+    "origin": {
+      "rc": 0,
+      "stdout": "https://github.com/deepseek-ai/deepseek-harness\n",
+      "stderr": ""
+    },
+    "last_source_commit": {
+      "rc": 0,
+      "stdout": "419ee11c9bd5d01b206c8660762525d151bc4b4b 2026-08-29T05:19:01+08:00 feat(ui-workspace): filter running tasks\n",
+      "stderr": ""
+    }
+  }
+]

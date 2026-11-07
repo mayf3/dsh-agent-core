@@ -1,0 +1,170 @@
+{
+  "observed_at_utc": "2026-11-07T15:51:54.006771+00:00",
+  "method": "lstat dev+ino dedupe within candidate; compare count of observed names to st_nlink; no symlink following; DB/preimages excluded",
+  "limitations": "all-hardlinks-inside-tree bytes are an upper ceiling before clone/snapshot accounting, NOT guaranteed physical free. Candidate du totals from a multi-root or parent traversal are not additive with regular-entry sum",
+  "rows": [
+    {
+      "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46",
+      "unique_regular_inode_count": 12457,
+      "allocated_unique_regular_bytes": 840724480,
+      "allocated_regular_entry_sum_bytes": 840724480,
+      "externally_hardlinked_inode_count": 0,
+      "externally_hardlinked_allocated_bytes": 0,
+      "all_hardlinks_inside_tree_inode_count": 12457,
+      "all_hardlinks_inside_tree_allocated_bytes": 840724480,
+      "external_hardlink_examples": [],
+      "errors": [
+        {
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/apps/cli/lib",
+          "errno": 13
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/sw-367",
+      "unique_regular_inode_count": 2556,
+      "allocated_unique_regular_bytes": 571609088,
+      "allocated_regular_entry_sum_bytes": 2286891008,
+      "externally_hardlinked_inode_count": 0,
+      "externally_hardlinked_allocated_bytes": 0,
+      "all_hardlinks_inside_tree_inode_count": 2556,
+      "all_hardlinks_inside_tree_allocated_bytes": 571609088,
+      "external_hardlink_examples": [],
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/gcr-svc-target",
+      "unique_regular_inode_count": 2565,
+      "allocated_unique_regular_bytes": 508239872,
+      "allocated_regular_entry_sum_bytes": 3644882944,
+      "externally_hardlinked_inode_count": 0,
+      "externally_hardlinked_allocated_bytes": 0,
+      "all_hardlinks_inside_tree_inode_count": 2565,
+      "all_hardlinks_inside_tree_allocated_bytes": 508239872,
+      "external_hardlink_examples": [],
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/sw-1347-evidence",
+      "unique_regular_inode_count": 1833,
+      "allocated_unique_regular_bytes": 500228096,
+      "allocated_regular_entry_sum_bytes": 1317683200,
+      "externally_hardlinked_inode_count": 0,
+      "externally_hardlinked_allocated_bytes": 0,
+      "all_hardlinks_inside_tree_inode_count": 1833,
+      "all_hardlinks_inside_tree_allocated_bytes": 500228096,
+      "external_hardlink_examples": [],
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/sw-aa-r4-evidence",
+      "unique_regular_inode_count": 1304,
+      "allocated_unique_regular_bytes": 336154624,
+      "allocated_regular_entry_sum_bytes": 3584864256,
+      "externally_hardlinked_inode_count": 0,
+      "externally_hardlinked_allocated_bytes": 0,
+      "all_hardlinks_inside_tree_inode_count": 1304,
+      "all_hardlinks_inside_tree_allocated_bytes": 336154624,
+      "external_hardlink_examples": [],
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/sw-d6-fix",
+      "unique_regular_inode_count": 1308,
+      "allocated_unique_regular_bytes": 333914112,
+      "allocated_regular_entry_sum_bytes": 333914112,
+      "externally_hardlinked_inode_count": 0,
+      "externally_hardlinked_allocated_bytes": 0,
+      "all_hardlinks_inside_tree_inode_count": 1308,
+      "all_hardlinks_inside_tree_allocated_bytes": 333914112,
+      "external_hardlink_examples": [],
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/dsh-548-r2-iwl_bczh",
+      "unique_regular_inode_count": 23203,
+      "allocated_unique_regular_bytes": 323891200,
+      "allocated_regular_entry_sum_bytes": 323891200,
+      "externally_hardlinked_inode_count": 0,
+      "externally_hardlinked_allocated_bytes": 0,
+      "all_hardlinks_inside_tree_inode_count": 23203,
+      "all_hardlinks_inside_tree_allocated_bytes": 323891200,
+      "external_hardlink_examples": [],
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/darwinx64-fix",
+      "unique_regular_inode_count": 20,
+      "allocated_unique_regular_bytes": 270159872,
+      "allocated_regular_entry_sum_bytes": 270159872,
+      "externally_hardlinked_inode_count": 0,
+      "externally_hardlinked_allocated_bytes": 0,
+      "all_hardlinks_inside_tree_inode_count": 20,
+      "all_hardlinks_inside_tree_allocated_bytes": 270159872,
+      "external_hardlink_examples": [],
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/fleet-w6-s04",
+      "unique_regular_inode_count": 1606,
+      "allocated_unique_regular_bytes": 170938368,
+      "allocated_regular_entry_sum_bytes": 170938368,
+      "externally_hardlinked_inode_count": 0,
+      "externally_hardlinked_allocated_bytes": 0,
+      "all_hardlinks_inside_tree_inode_count": 1606,
+      "all_hardlinks_inside_tree_allocated_bytes": 170938368,
+      "external_hardlink_examples": [],
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/dsh-523-impl",
+      "unique_regular_inode_count": 3307,
+      "allocated_unique_regular_bytes": 137609216,
+      "allocated_regular_entry_sum_bytes": 137609216,
+      "externally_hardlinked_inode_count": 0,
+      "externally_hardlinked_allocated_bytes": 0,
+      "all_hardlinks_inside_tree_inode_count": 3307,
+      "all_hardlinks_inside_tree_allocated_bytes": 137609216,
+      "external_hardlink_examples": [],
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/dsh-548-r5-evidence",
+      "unique_regular_inode_count": 7727,
+      "allocated_unique_regular_bytes": 126906368,
+      "allocated_regular_entry_sum_bytes": 126906368,
+      "externally_hardlinked_inode_count": 0,
+      "externally_hardlinked_allocated_bytes": 0,
+      "all_hardlinks_inside_tree_inode_count": 7727,
+      "all_hardlinks_inside_tree_allocated_bytes": 126906368,
+      "external_hardlink_examples": [],
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/dsh-548-r4-evidence",
+      "unique_regular_inode_count": 7725,
+      "allocated_unique_regular_bytes": 126898176,
+      "allocated_regular_entry_sum_bytes": 126898176,
+      "externally_hardlinked_inode_count": 0,
+      "externally_hardlinked_allocated_bytes": 0,
+      "all_hardlinks_inside_tree_inode_count": 7725,
+      "all_hardlinks_inside_tree_allocated_bytes": 126898176,
+      "external_hardlink_examples": [],
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/fleet-v5-candidate",
+      "unique_regular_inode_count": 2811,
+      "allocated_unique_regular_bytes": 126488576,
+      "allocated_regular_entry_sum_bytes": 126488576,
+      "externally_hardlinked_inode_count": 0,
+      "externally_hardlinked_allocated_bytes": 0,
+      "all_hardlinks_inside_tree_inode_count": 2811,
+      "all_hardlinks_inside_tree_allocated_bytes": 126488576,
+      "external_hardlink_examples": [],
+      "errors": []
+    }
+  ],
+  "cross_candidate_same_inode_count": 0,
+  "cross_candidate_examples": []
+}

@@ -1,0 +1,28 @@
+{
+  "observed_at_utc": "2026-11-07T15:50:17.593091+00:00",
+  "rows": [
+    {
+      "path": "/private/tmp/dsh-523-r3-dependencies/original-node_modules-link",
+      "exists": true,
+      "symlink": true,
+      "target": "/tmp/dsh-523-impl/node_modules",
+      "resolved": "/private/tmp/dsh-523-impl/node_modules",
+      "inode": 351103353,
+      "mtime_utc": "2026-11-04T04:51:21.700041+00:00"
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules",
+      "exists": true,
+      "symlink": false,
+      "target": null,
+      "resolved": "/private/tmp/dsh-523-integration/node_modules",
+      "inode": 351356441,
+      "mtime_utc": "2026-11-04T05:23:11.988527+00:00"
+    },
+    {
+      "path": "/private/tmp/dsh-523-r2-dependencies/original-node_modules-link",
+      "error": "[Errno 2] No such file or directory: '/private/tmp/dsh-523-r2-dependencies/original-node_modules-link'",
+      "errno": 2
+    }
+  ]
+}

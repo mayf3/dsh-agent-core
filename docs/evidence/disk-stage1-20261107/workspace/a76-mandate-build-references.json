@@ -1,0 +1,100 @@
+[
+  {
+    "source": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/FINAL_CANONICAL_BUILD_INPUT.json",
+    "sha256": "ca65f183c81becd8c6cf05c2bffe7607b2b4c90a97bca20d0e7a4d3bd43a7a3d",
+    "source_mtime_utc": "2026-10-29T13:00:58.988076+00:00",
+    "matches": [
+      {
+        "line": 6,
+        "token": "build-worktree",
+        "line_sha256": "ee2700cc8b24b5b9a73211c95e35a0528bf3c4476155ab394a3391687d1c538d"
+      },
+      {
+        "line": 7,
+        "token": "build-worktree/target",
+        "line_sha256": "f91b47cfbb04335158cc554c642fd5d0a470072f353ccdec54eafd0bcd310ddd"
+      },
+      {
+        "line": 7,
+        "token": "build-worktree",
+        "line_sha256": "f91b47cfbb04335158cc554c642fd5d0a470072f353ccdec54eafd0bcd310ddd"
+      }
+    ]
+  },
+  {
+    "source": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/svc-source-pin-receipt.json",
+    "sha256": "dbc694f9000f22ddf30fa8fcc81df5c492469776f89833b215bc3f6447a6e4ac",
+    "source_mtime_utc": "2026-10-29T13:00:59.934746+00:00",
+    "matches": [
+      {
+        "line": 8,
+        "token": "build-worktree",
+        "line_sha256": "b9a9dc29a5e3e76f0cf4feadc8eb5aa7d76244ea2bd8402ecd6603a5ed2898aa"
+      },
+      {
+        "line": 23,
+        "token": "build-worktree",
+        "line_sha256": "666a53f07c140409d83df09371dd02aab9e16369a76549e2868bcfeaa7fd1ad4"
+      },
+      {
+        "line": 57,
+        "token": "build-worktree",
+        "line_sha256": "a5eb2de118f20558e42e0f040883c9fccc641d2995ed47834ce793421291421e"
+      },
+      {
+        "line": 58,
+        "token": "build-worktree",
+        "line_sha256": "4e13f09a8328065af3c5ab44c7bfd09c4508221a21af47dc1f6c43f352d78bd7"
+      },
+      {
+        "line": 60,
+        "token": "build-worktree/target",
+        "line_sha256": "165909a8b16a951e94b6ee4af795d73fd554b81c9f0b8c49884c0004452d982f"
+      },
+      {
+        "line": 60,
+        "token": "build-worktree",
+        "line_sha256": "165909a8b16a951e94b6ee4af795d73fd554b81c9f0b8c49884c0004452d982f"
+      }
+    ]
+  },
+  {
+    "source": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/svc-component.json",
+    "sha256": "6a4b23db0954266db49af12add9fe36499667c2b276cb5ca688e5f681b5e46c3",
+    "source_mtime_utc": "2026-10-29T13:01:02.210932+00:00",
+    "matches": [
+      {
+        "line": 15,
+        "token": "build-worktree",
+        "line_sha256": "a5eb2de118f20558e42e0f040883c9fccc641d2995ed47834ce793421291421e"
+      },
+      {
+        "line": 16,
+        "token": "build-worktree",
+        "line_sha256": "4e13f09a8328065af3c5ab44c7bfd09c4508221a21af47dc1f6c43f352d78bd7"
+      },
+      {
+        "line": 18,
+        "token": "build-worktree/target",
+        "line_sha256": "165909a8b16a951e94b6ee4af795d73fd554b81c9f0b8c49884c0004452d982f"
+      },
+      {
+        "line": 18,
+        "token": "build-worktree",
+        "line_sha256": "165909a8b16a951e94b6ee4af795d73fd554b81c9f0b8c49884c0004452d982f"
+      }
+    ]
+  },
+  {
+    "source": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/svc-migrations-manifest.json",
+    "sha256": "43b3acf0fcc7a96a52fdf0f10732b739fa41314c36f85d3753693e7389379eeb",
+    "source_mtime_utc": "2026-10-29T13:00:59.934908+00:00",
+    "matches": [
+      {
+        "line": 7,
+        "token": "build-worktree",
+        "line_sha256": "7ae98381bf89c59c4dc6691f659c8ca14dd5fb4107eaf0e38aed8de8cee41fcd"
+      }
+    ]
+  }
+]

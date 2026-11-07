@@ -1,0 +1,436 @@
+{
+  "observed_at": "2026-11-07T15:54:05.218496+00:00",
+  "schema": "disk-stage1-workspace-reference-matrix-v1",
+  "scope": "13 non-overlapping generated leaf directory candidates; no deletion authorization",
+  "rows": [
+    {
+      "id": "W01",
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-current-input-implementation/target",
+      "du_allocated_bytes": 5584547840,
+      "creator": "Cargo构建，历史build-candidate.receipt.json可归属工具，具体caller/PID未知",
+      "latest_observed_reference": "build-candidate.receipt.json start=2026-10-27T01:50:02Z; final-handoff.json head4eabe824; svc PR90当前MERGED",
+      "references": {
+        "process": "NO_MATCH_IN_VISIBLE_LSOF_SNAPSHOT",
+        "schedule": "NO_LITERAL_MATCH_IN_READABLE_LAUNCHD_CONFIGS; six permission/parse gaps in schedule-references.json",
+        "Workflow": "UNKNOWN: no live Workflow service/state read in this subtask",
+        "Mandate": "UNKNOWN: bounded document lookup is not complete active Mandate census",
+        "PR": "MERGED_SVC_90",
+        "Receipt": "build-candidate.receipt.json start=2026-10-27T01:50:02Z; final-handoff.json head4eabe824; svc PR90当前MERGED",
+        "rollback": "UNKNOWN: no present rollback-owner waiver; production/backup trees excluded",
+        "formal_reference": "candidate/svc-workflow-4eabe824cc4a在target外独立保留；source-test-binding与原report保留"
+      },
+      "retention_basis": "candidate/svc-workflow-4eabe824cc4a在target外独立保留；source-test-binding与原report保留",
+      "recoverability_reason": "Generated Cargo target or pnpm dependency tree with toolchain markers. Rebuild is a conditional hypothesis, not tested acceptance.",
+      "disposition": "CONDITIONAL_HOLD_REFERENCES_AND_REBUILD_UNPROVEN",
+      "physical_release_bytes": "UNKNOWN: parent APFS physical probe binds separately; standalone du is upper bound only",
+      "verification_method": "fresh process+launchd+service Workflow/Mandate+PR/Receipt/rollback owner readback; preserve exact source/lock+essential binary+receipts; isolated rebuild under future mandate; inode/APFS sharing/snapshot analysis then actual df delta only in separately approved later phase",
+      "reference_evidence_class": {
+        "current": "UNKNOWN",
+        "last_observed_historical": "build-candidate.receipt.json start=2026-10-27T01:50:02Z; final-handoff.json head4eabe824; svc PR90当前MERGED",
+        "unknown": [
+          "global last read/use",
+          "live Workflow reference",
+          "complete live Mandate terminal/consumer status",
+          "current rollback ownership waiver",
+          "foreign-UID file descriptor completeness"
+        ]
+      }
+    },
+    {
+      "id": "W02",
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/target-clean-f4a1",
+      "du_allocated_bytes": 5099810816,
+      "creator": "Cargo childPid64152，clean-build.json精确targetDir/source绑定",
+      "latest_observed_reference": "clean-build.json 2026-10-27T11:38:21Z; CURRENT main docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md:255仍引用该artifact",
+      "references": {
+        "process": "NO_MATCH_IN_VISIBLE_LSOF_SNAPSHOT",
+        "schedule": "NO_LITERAL_MATCH_IN_READABLE_LAUNCHD_CONFIGS; six permission/parse gaps in schedule-references.json",
+        "Workflow": "UNKNOWN: no live Workflow service/state read in this subtask",
+        "Mandate": "UNKNOWN: bounded document lookup is not complete active Mandate census",
+        "PR": "UNKNOWN_OR_NOT_APPLICABLE",
+        "Receipt": "clean-build.json 2026-10-27T11:38:21Z; CURRENT main docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md:255仍引用该artifact",
+        "rollback": "UNKNOWN: no present rollback-owner waiver; production/backup trees excluded",
+        "formal_reference": "candidate-build-binding引用target/debug binary；target外candidate/svc-workflow-f4a1ed85与原receipt保留"
+      },
+      "retention_basis": "candidate-build-binding引用target/debug binary；target外candidate/svc-workflow-f4a1ed85与原receipt保留",
+      "recoverability_reason": "Generated Cargo target or pnpm dependency tree with toolchain markers. Rebuild is a conditional hypothesis, not tested acceptance.",
+      "disposition": "CONDITIONAL_HOLD_REFERENCES_AND_REBUILD_UNPROVEN",
+      "physical_release_bytes": "UNKNOWN: parent APFS physical probe binds separately; standalone du is upper bound only",
+      "verification_method": "fresh process+launchd+service Workflow/Mandate+PR/Receipt/rollback owner readback; preserve exact source/lock+essential binary+receipts; isolated rebuild under future mandate; inode/APFS sharing/snapshot analysis then actual df delta only in separately approved later phase",
+      "reference_evidence_class": {
+        "current": "current readable main report still references artifact",
+        "last_observed_historical": "clean-build.json 2026-10-27T11:38:21Z; CURRENT main docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md:255仍引用该artifact",
+        "unknown": [
+          "global last read/use",
+          "live Workflow reference",
+          "complete live Mandate terminal/consumer status",
+          "current rollback ownership waiver",
+          "foreign-UID file descriptor completeness"
+        ]
+      }
+    },
+    {
+      "id": "W03",
+      "path": "/Users/yanfenma/workspace/github/deepseek-harness.hold-b7-20261001/node_modules",
+      "du_allocated_bytes": 4408676352,
+      "creator": "pnpm标记存在；创建进程/copy方式UNKNOWN",
+      "latest_observed_reference": "本次git读取：hold-b7 HEAD419ee11c，tracked约百项修改；当前worktree registry仍登记；literal文档检索无命中≠无引用",
+      "references": {
+        "process": "NO_MATCH_IN_VISIBLE_LSOF_SNAPSHOT",
+        "schedule": "NO_LITERAL_MATCH_IN_READABLE_LAUNCHD_CONFIGS; six permission/parse gaps in schedule-references.json",
+        "Workflow": "UNKNOWN: no live Workflow service/state read in this subtask",
+        "Mandate": "UNKNOWN: bounded document lookup is not complete active Mandate census",
+        "PR": "UNKNOWN_OR_NOT_APPLICABLE",
+        "Receipt": "本次git读取：hold-b7 HEAD419ee11c，tracked约百项修改；当前worktree registry仍登记；literal文档检索无命中≠无引用",
+        "rollback": "UNKNOWN: no present rollback-owner waiver; production/backup trees excluded",
+        "formal_reference": "保留所有源码/lockfile/修改；dependency手工改动与重建能力未验证"
+      },
+      "retention_basis": "保留所有源码/lockfile/修改；dependency手工改动与重建能力未验证",
+      "recoverability_reason": "Generated Cargo target or pnpm dependency tree with toolchain markers. Rebuild is a conditional hypothesis, not tested acceptance.",
+      "disposition": "CONDITIONAL_HOLD_REFERENCES_AND_REBUILD_UNPROVEN",
+      "physical_release_bytes": "UNKNOWN: parent APFS physical probe binds separately; standalone du is upper bound only",
+      "verification_method": "fresh process+launchd+service Workflow/Mandate+PR/Receipt/rollback owner readback; preserve exact source/lock+essential binary+receipts; isolated rebuild under future mandate; inode/APFS sharing/snapshot analysis then actual df delta only in separately approved later phase",
+      "reference_evidence_class": {
+        "current": "current git worktree registry",
+        "last_observed_historical": "UNKNOWN: no direct last-use event found; see metadata and current registry; birth/mtime is not use",
+        "unknown": [
+          "global last read/use",
+          "live Workflow reference",
+          "complete live Mandate terminal/consumer status",
+          "current rollback ownership waiver",
+          "foreign-UID file descriptor completeness"
+        ]
+      }
+    },
+    {
+      "id": "W04",
+      "path": "/Users/yanfenma/workspace/project/svc-workflow/target",
+      "du_allocated_bytes": 4156641280,
+      "creator": "Cargo标记存在；具体创建进程UNKNOWN",
+      "latest_observed_reference": "本次svc-workflow git worktree registry登记main@88ff8145；target创建2026-11-01不等于最后引用",
+      "references": {
+        "process": "NO_MATCH_IN_VISIBLE_LSOF_SNAPSHOT",
+        "schedule": "NO_LITERAL_MATCH_IN_READABLE_LAUNCHD_CONFIGS; six permission/parse gaps in schedule-references.json",
+        "Workflow": "UNKNOWN: no live Workflow service/state read in this subtask",
+        "Mandate": "UNKNOWN: bounded document lookup is not complete active Mandate census",
+        "PR": "UNKNOWN_OR_NOT_APPLICABLE",
+        "Receipt": "本次svc-workflow git worktree registry登记main@88ff8145；target创建2026-11-01不等于最后引用",
+        "rollback": "UNKNOWN: no present rollback-owner waiver; production/backup trees excluded",
+        "formal_reference": "保留源码/lockfile/已登记checkout；未核生产reader/rollback责任链"
+      },
+      "retention_basis": "保留源码/lockfile/已登记checkout；未核生产reader/rollback责任链",
+      "recoverability_reason": "Generated Cargo target or pnpm dependency tree with toolchain markers. Rebuild is a conditional hypothesis, not tested acceptance.",
+      "disposition": "CONDITIONAL_HOLD_REFERENCES_AND_REBUILD_UNPROVEN",
+      "physical_release_bytes": "UNKNOWN: parent APFS physical probe binds separately; standalone du is upper bound only",
+      "verification_method": "fresh process+launchd+service Workflow/Mandate+PR/Receipt/rollback owner readback; preserve exact source/lock+essential binary+receipts; isolated rebuild under future mandate; inode/APFS sharing/snapshot analysis then actual df delta only in separately approved later phase",
+      "reference_evidence_class": {
+        "current": "current git worktree registry",
+        "last_observed_historical": "UNKNOWN: no direct last-use event found; see metadata and current registry; birth/mtime is not use",
+        "unknown": [
+          "global last read/use",
+          "live Workflow reference",
+          "complete live Mandate terminal/consumer status",
+          "current rollback ownership waiver",
+          "foreign-UID file descriptor completeness"
+        ]
+      }
+    },
+    {
+      "id": "W05",
+      "path": "/Users/yanfenma/workspace/worktrees/52bd-svc-workflow-20261101/target",
+      "du_allocated_bytes": 2780295168,
+      "creator": "Cargo标记存在；具体创建进程UNKNOWN",
+      "latest_observed_reference": "本次svc-workflow registry仍登记detached worktree@6cd6ae55；源码最后commit2026-11-04（不是target最后使用证明）",
+      "references": {
+        "process": "NO_MATCH_IN_VISIBLE_LSOF_SNAPSHOT",
+        "schedule": "NO_LITERAL_MATCH_IN_READABLE_LAUNCHD_CONFIGS; six permission/parse gaps in schedule-references.json",
+        "Workflow": "UNKNOWN: no live Workflow service/state read in this subtask",
+        "Mandate": "UNKNOWN: bounded document lookup is not complete active Mandate census",
+        "PR": "UNKNOWN_OR_NOT_APPLICABLE",
+        "Receipt": "本次svc-workflow registry仍登记detached worktree@6cd6ae55；源码最后commit2026-11-04（不是target最后使用证明）",
+        "rollback": "UNKNOWN: no present rollback-owner waiver; production/backup trees excluded",
+        "formal_reference": "保留已登记worktree与测试/发布trace；执行态UNKNOWN"
+      },
+      "retention_basis": "保留已登记worktree与测试/发布trace；执行态UNKNOWN",
+      "recoverability_reason": "Generated Cargo target or pnpm dependency tree with toolchain markers. Rebuild is a conditional hypothesis, not tested acceptance.",
+      "disposition": "CONDITIONAL_HOLD_REFERENCES_AND_REBUILD_UNPROVEN",
+      "physical_release_bytes": "UNKNOWN: parent APFS physical probe binds separately; standalone du is upper bound only",
+      "verification_method": "fresh process+launchd+service Workflow/Mandate+PR/Receipt/rollback owner readback; preserve exact source/lock+essential binary+receipts; isolated rebuild under future mandate; inode/APFS sharing/snapshot analysis then actual df delta only in separately approved later phase",
+      "reference_evidence_class": {
+        "current": "current git worktree registry",
+        "last_observed_historical": "UNKNOWN: no direct last-use event found; see metadata and current registry; birth/mtime is not use",
+        "unknown": [
+          "global last read/use",
+          "live Workflow reference",
+          "complete live Mandate terminal/consumer status",
+          "current rollback ownership waiver",
+          "foreign-UID file descriptor completeness"
+        ]
+      }
+    },
+    {
+      "id": "W06",
+      "path": "/Users/yanfenma/workspace/worktrees/m2-dispatch-intent-20261101/target",
+      "du_allocated_bytes": 2339676160,
+      "creator": "Cargo标记存在；具体创建进程UNKNOWN",
+      "latest_observed_reference": "本次svc-workflow registry仍登记detached worktree@d799bf27；target出生2026-11-02（不是最后使用）",
+      "references": {
+        "process": "NO_MATCH_IN_VISIBLE_LSOF_SNAPSHOT",
+        "schedule": "NO_LITERAL_MATCH_IN_READABLE_LAUNCHD_CONFIGS; six permission/parse gaps in schedule-references.json",
+        "Workflow": "UNKNOWN: no live Workflow service/state read in this subtask",
+        "Mandate": "UNKNOWN: bounded document lookup is not complete active Mandate census",
+        "PR": "UNKNOWN_OR_NOT_APPLICABLE",
+        "Receipt": "本次svc-workflow registry仍登记detached worktree@d799bf27；target出生2026-11-02（不是最后使用）",
+        "rollback": "UNKNOWN: no present rollback-owner waiver; production/backup trees excluded",
+        "formal_reference": "保留已登记worktree与锁定输入；执行态UNKNOWN"
+      },
+      "retention_basis": "保留已登记worktree与锁定输入；执行态UNKNOWN",
+      "recoverability_reason": "Generated Cargo target or pnpm dependency tree with toolchain markers. Rebuild is a conditional hypothesis, not tested acceptance.",
+      "disposition": "CONDITIONAL_HOLD_REFERENCES_AND_REBUILD_UNPROVEN",
+      "physical_release_bytes": "UNKNOWN: parent APFS physical probe binds separately; standalone du is upper bound only",
+      "verification_method": "fresh process+launchd+service Workflow/Mandate+PR/Receipt/rollback owner readback; preserve exact source/lock+essential binary+receipts; isolated rebuild under future mandate; inode/APFS sharing/snapshot analysis then actual df delta only in separately approved later phase",
+      "reference_evidence_class": {
+        "current": "current git worktree registry",
+        "last_observed_historical": "UNKNOWN: no direct last-use event found; see metadata and current registry; birth/mtime is not use",
+        "unknown": [
+          "global last read/use",
+          "live Workflow reference",
+          "complete live Mandate terminal/consumer status",
+          "current rollback ownership waiver",
+          "foreign-UID file descriptor completeness"
+        ]
+      }
+    },
+    {
+      "id": "W07",
+      "path": "/Users/yanfenma/workspace/worktrees/codex-wec-kick-token-renewal-20261028/target",
+      "du_allocated_bytes": 1745575936,
+      "creator": "Cargo标记存在；具体创建进程UNKNOWN",
+      "latest_observed_reference": "本次registry登记branch codex/wec-kick-token-renewal-authoring-20261028@dcd5fefb；PR91 MERGED head a381993与当前不同",
+      "references": {
+        "process": "NO_MATCH_IN_VISIBLE_LSOF_SNAPSHOT",
+        "schedule": "NO_LITERAL_MATCH_IN_READABLE_LAUNCHD_CONFIGS; six permission/parse gaps in schedule-references.json",
+        "Workflow": "UNKNOWN: no live Workflow service/state read in this subtask",
+        "Mandate": "UNKNOWN: bounded document lookup is not complete active Mandate census",
+        "PR": "MERGED_SVC_91_HEAD_DRIFT",
+        "Receipt": "本次registry登记branch codex/wec-kick-token-renewal-authoring-20261028@dcd5fefb；PR91 MERGED head a381993与当前不同",
+        "rollback": "UNKNOWN: no present rollback-owner waiver; production/backup trees excluded",
+        "formal_reference": "保留后续source delta与历史调查docs/investigations/2026-10-28-owner-wake-token-lifecycle.md:10（artifact copy）；不能据PR合并丢target"
+      },
+      "retention_basis": "保留后续source delta与历史调查docs/investigations/2026-10-28-owner-wake-token-lifecycle.md:10（artifact copy）；不能据PR合并丢target",
+      "recoverability_reason": "Generated Cargo target or pnpm dependency tree with toolchain markers. Rebuild is a conditional hypothesis, not tested acceptance.",
+      "disposition": "CONDITIONAL_HOLD_REFERENCES_AND_REBUILD_UNPROVEN",
+      "physical_release_bytes": "UNKNOWN: parent APFS physical probe binds separately; standalone du is upper bound only",
+      "verification_method": "fresh process+launchd+service Workflow/Mandate+PR/Receipt/rollback owner readback; preserve exact source/lock+essential binary+receipts; isolated rebuild under future mandate; inode/APFS sharing/snapshot analysis then actual df delta only in separately approved later phase",
+      "reference_evidence_class": {
+        "current": "current git worktree registry",
+        "last_observed_historical": "本次registry登记branch codex/wec-kick-token-renewal-authoring-20261028@dcd5fefb；PR91 MERGED head a381993与当前不同",
+        "unknown": [
+          "global last read/use",
+          "live Workflow reference",
+          "complete live Mandate terminal/consumer status",
+          "current rollback ownership waiver",
+          "foreign-UID file descriptor completeness"
+        ]
+      }
+    },
+    {
+      "id": "W08",
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/build-worktree/target",
+      "du_allocated_bytes": 2702909440,
+      "creator": "Cargo标记存在；task a76构建输入可归属，caller/PID未知",
+      "latest_observed_reference": "a76/svc-component.json:18、svc-source-pin-receipt.json:60、FINAL_CANONICAL_BUILD_INPUT.json:7精确target path；后续a105 mandate族存在",
+      "references": {
+        "process": "NO_MATCH_IN_VISIBLE_LSOF_SNAPSHOT",
+        "schedule": "NO_LITERAL_MATCH_IN_READABLE_LAUNCHD_CONFIGS; six permission/parse gaps in schedule-references.json",
+        "Workflow": "UNKNOWN: no live Workflow service/state read in this subtask",
+        "Mandate": "A76_MANDATE_FAMILY_PRESENT_TERMINAL_UNKNOWN",
+        "PR": "MERGED_SVC_106_RELATED_TASK",
+        "Receipt": "a76/svc-component.json:18、svc-source-pin-receipt.json:60、FINAL_CANONICAL_BUILD_INPUT.json:7精确target path；后续a105 mandate族存在",
+        "rollback": "UNKNOWN: no present rollback-owner waiver; production/backup trees excluded",
+        "formal_reference": "历史正式source/binary/closure引用仍在；只候选生成缓存，原mandate/source/独立binary不动"
+      },
+      "retention_basis": "历史正式source/binary/closure引用仍在；只候选生成缓存，原mandate/source/独立binary不动",
+      "recoverability_reason": "Generated Cargo target or pnpm dependency tree with toolchain markers. Rebuild is a conditional hypothesis, not tested acceptance.",
+      "disposition": "CONDITIONAL_HOLD_REFERENCES_AND_REBUILD_UNPROVEN",
+      "physical_release_bytes": "UNKNOWN: parent APFS physical probe binds separately; standalone du is upper bound only",
+      "verification_method": "fresh process+launchd+service Workflow/Mandate+PR/Receipt/rollback owner readback; preserve exact source/lock+essential binary+receipts; isolated rebuild under future mandate; inode/APFS sharing/snapshot analysis then actual df delta only in separately approved later phase",
+      "reference_evidence_class": {
+        "current": "UNKNOWN",
+        "last_observed_historical": "a76/svc-component.json:18、svc-source-pin-receipt.json:60、FINAL_CANONICAL_BUILD_INPUT.json:7精确target path；后续a105 mandate族存在",
+        "unknown": [
+          "global last read/use",
+          "live Workflow reference",
+          "complete live Mandate terminal/consumer status",
+          "current rollback ownership waiver",
+          "foreign-UID file descriptor completeness"
+        ]
+      }
+    },
+    {
+      "id": "W09",
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/helper-crate/target",
+      "du_allocated_bytes": 1510404096,
+      "creator": "Cargo标记存在；具体creator/PID未知",
+      "latest_observed_reference": "a76 helper源码Cargo.toml/Cargo.lock仍在；同task a105 mandate族存在；target最后直接引用UNKNOWN",
+      "references": {
+        "process": "NO_MATCH_IN_VISIBLE_LSOF_SNAPSHOT",
+        "schedule": "NO_LITERAL_MATCH_IN_READABLE_LAUNCHD_CONFIGS; six permission/parse gaps in schedule-references.json",
+        "Workflow": "UNKNOWN: no live Workflow service/state read in this subtask",
+        "Mandate": "A76_MANDATE_FAMILY_PRESENT_TERMINAL_UNKNOWN",
+        "PR": "MERGED_SVC_106_RELATED_TASK",
+        "Receipt": "a76 helper源码Cargo.toml/Cargo.lock仍在；同task a105 mandate族存在；target最后直接引用UNKNOWN",
+        "rollback": "UNKNOWN: no present rollback-owner waiver; production/backup trees excluded",
+        "formal_reference": "需调用者证明helper可重建、消费者已终止/替代；mandate状态未知"
+      },
+      "retention_basis": "需调用者证明helper可重建、消费者已终止/替代；mandate状态未知",
+      "recoverability_reason": "Generated Cargo target or pnpm dependency tree with toolchain markers. Rebuild is a conditional hypothesis, not tested acceptance.",
+      "disposition": "CONDITIONAL_HOLD_REFERENCES_AND_REBUILD_UNPROVEN",
+      "physical_release_bytes": "UNKNOWN: parent APFS physical probe binds separately; standalone du is upper bound only",
+      "verification_method": "fresh process+launchd+service Workflow/Mandate+PR/Receipt/rollback owner readback; preserve exact source/lock+essential binary+receipts; isolated rebuild under future mandate; inode/APFS sharing/snapshot analysis then actual df delta only in separately approved later phase",
+      "reference_evidence_class": {
+        "current": "UNKNOWN",
+        "last_observed_historical": "UNKNOWN: no direct last-use event found; see metadata and current registry; birth/mtime is not use",
+        "unknown": [
+          "global last read/use",
+          "live Workflow reference",
+          "complete live Mandate terminal/consumer status",
+          "current rollback ownership waiver",
+          "foreign-UID file descriptor completeness"
+        ]
+      }
+    },
+    {
+      "id": "W10",
+      "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+svc-workflow/ac-1301-7cd-revise-fix/target",
+      "du_allocated_bytes": 4494675968,
+      "creator": "Cargo标记存在；具体creator/PID未知",
+      "latest_observed_reference": "svc PR85当前OPEN，head e068dd0621068201dc1794133a7952b933e18dfe与当前worktree精确一致；本次registry仍登记",
+      "references": {
+        "process": "NO_MATCH_IN_VISIBLE_LSOF_SNAPSHOT",
+        "schedule": "NO_LITERAL_MATCH_IN_READABLE_LAUNCHD_CONFIGS; six permission/parse gaps in schedule-references.json",
+        "Workflow": "UNKNOWN: no live Workflow service/state read in this subtask",
+        "Mandate": "UNKNOWN: bounded document lookup is not complete active Mandate census",
+        "PR": "OPEN_EXACT_HEAD_SVC_85",
+        "Receipt": "svc PR85当前OPEN，head e068dd0621068201dc1794133a7952b933e18dfe与当前worktree精确一致；本次registry仍登记",
+        "rollback": "UNKNOWN: no present rollback-owner waiver; production/backup trees excluded",
+        "formal_reference": "HOLD_OPEN_PR；保持在审候选的构建回放能力"
+      },
+      "retention_basis": "HOLD_OPEN_PR；保持在审候选的构建回放能力",
+      "recoverability_reason": "Generated Cargo target or pnpm dependency tree with toolchain markers. Rebuild is a conditional hypothesis, not tested acceptance.",
+      "disposition": "HOLD_OPEN_PR",
+      "physical_release_bytes": "UNKNOWN: parent APFS physical probe binds separately; standalone du is upper bound only",
+      "verification_method": "fresh process+launchd+service Workflow/Mandate+PR/Receipt/rollback owner readback; preserve exact source/lock+essential binary+receipts; isolated rebuild under future mandate; inode/APFS sharing/snapshot analysis then actual df delta only in separately approved later phase",
+      "reference_evidence_class": {
+        "current": "PR85 OPEN exact-head plus current git registry",
+        "last_observed_historical": "UNKNOWN: no direct last-use event found; see metadata and current registry; birth/mtime is not use",
+        "unknown": [
+          "global last read/use",
+          "live Workflow reference",
+          "complete live Mandate terminal/consumer status",
+          "current rollback ownership waiver",
+          "foreign-UID file descriptor completeness"
+        ]
+      }
+    },
+    {
+      "id": "W11",
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules",
+      "du_allocated_bytes": 1420910592,
+      "creator": "pnpm标记存在；creator/copy方式UNKNOWN",
+      "latest_observed_reference": "a45/native-policy-real-tool-dispatch-smoke.mjs:7引用native-runtime-candidate；mtime2026-10-28T03:30:15Z仅文件坐标",
+      "references": {
+        "process": "NO_MATCH_IN_VISIBLE_LSOF_SNAPSHOT",
+        "schedule": "NO_LITERAL_MATCH_IN_READABLE_LAUNCHD_CONFIGS; six permission/parse gaps in schedule-references.json",
+        "Workflow": "UNKNOWN: no live Workflow service/state read in this subtask",
+        "Mandate": "UNKNOWN: bounded document lookup is not complete active Mandate census",
+        "PR": "UNKNOWN_OR_NOT_APPLICABLE",
+        "Receipt": "a45/native-policy-real-tool-dispatch-smoke.mjs:7引用native-runtime-candidate；mtime2026-10-28T03:30:15Z仅文件坐标",
+        "rollback": "UNKNOWN: no present rollback-owner waiver; production/backup trees excluded",
+        "formal_reference": "保留task smoke脚本/trace/source/lock；独立reinstall未执行"
+      },
+      "retention_basis": "保留task smoke脚本/trace/source/lock；独立reinstall未执行",
+      "recoverability_reason": "Generated Cargo target or pnpm dependency tree with toolchain markers. Rebuild is a conditional hypothesis, not tested acceptance.",
+      "disposition": "CONDITIONAL_HOLD_REFERENCES_AND_REBUILD_UNPROVEN",
+      "physical_release_bytes": "UNKNOWN: parent APFS physical probe binds separately; standalone du is upper bound only",
+      "verification_method": "fresh process+launchd+service Workflow/Mandate+PR/Receipt/rollback owner readback; preserve exact source/lock+essential binary+receipts; isolated rebuild under future mandate; inode/APFS sharing/snapshot analysis then actual df delta only in separately approved later phase",
+      "reference_evidence_class": {
+        "current": "UNKNOWN",
+        "last_observed_historical": "a45/native-policy-real-tool-dispatch-smoke.mjs:7引用native-runtime-candidate；mtime2026-10-28T03:30:15Z仅文件坐标",
+        "unknown": [
+          "global last read/use",
+          "live Workflow reference",
+          "complete live Mandate terminal/consumer status",
+          "current rollback ownership waiver",
+          "foreign-UID file descriptor completeness"
+        ]
+      }
+    },
+    {
+      "id": "W12",
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules",
+      "du_allocated_bytes": 1420910592,
+      "creator": "pnpm标记存在；creator/copy方式UNKNOWN",
+      "latest_observed_reference": "本次literal引用检索范围内无report；package.json/pnpm-lock.yaml仍在；真正最后消费者UNKNOWN",
+      "references": {
+        "process": "NO_MATCH_IN_VISIBLE_LSOF_SNAPSHOT",
+        "schedule": "NO_LITERAL_MATCH_IN_READABLE_LAUNCHD_CONFIGS; six permission/parse gaps in schedule-references.json",
+        "Workflow": "UNKNOWN: no live Workflow service/state read in this subtask",
+        "Mandate": "UNKNOWN: bounded document lookup is not complete active Mandate census",
+        "PR": "UNKNOWN_OR_NOT_APPLICABLE",
+        "Receipt": "本次literal引用检索范围内无report；package.json/pnpm-lock.yaml仍在；真正最后消费者UNKNOWN",
+        "rollback": "UNKNOWN: no present rollback-owner waiver; production/backup trees excluded",
+        "formal_reference": "没有terminal/retention证明，HOLD_UNKNOWN_REFERENCES；独立reinstall未执行"
+      },
+      "retention_basis": "没有terminal/retention证明，HOLD_UNKNOWN_REFERENCES；独立reinstall未执行",
+      "recoverability_reason": "Generated Cargo target or pnpm dependency tree with toolchain markers. Rebuild is a conditional hypothesis, not tested acceptance.",
+      "disposition": "CONDITIONAL_HOLD_REFERENCES_AND_REBUILD_UNPROVEN",
+      "physical_release_bytes": "UNKNOWN: parent APFS physical probe binds separately; standalone du is upper bound only",
+      "verification_method": "fresh process+launchd+service Workflow/Mandate+PR/Receipt/rollback owner readback; preserve exact source/lock+essential binary+receipts; isolated rebuild under future mandate; inode/APFS sharing/snapshot analysis then actual df delta only in separately approved later phase",
+      "reference_evidence_class": {
+        "current": "UNKNOWN",
+        "last_observed_historical": "UNKNOWN: no direct last-use event found; see metadata and current registry; birth/mtime is not use",
+        "unknown": [
+          "global last read/use",
+          "live Workflow reference",
+          "complete live Mandate terminal/consumer status",
+          "current rollback ownership waiver",
+          "foreign-UID file descriptor completeness"
+        ]
+      }
+    },
+    {
+      "id": "W13",
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules",
+      "du_allocated_bytes": 1420910592,
+      "creator": "pnpm标记存在；creator/copy方式UNKNOWN",
+      "latest_observed_reference": "a29/STAGING-REPORT-004.md:17及A29-NATIVE-RUNTIME-CANDIDATE-MANIFEST.json:30/1034；报告mtime2026-10-27T22:10:36Z",
+      "references": {
+        "process": "NO_MATCH_IN_VISIBLE_LSOF_SNAPSHOT",
+        "schedule": "NO_LITERAL_MATCH_IN_READABLE_LAUNCHD_CONFIGS; six permission/parse gaps in schedule-references.json",
+        "Workflow": "UNKNOWN: no live Workflow service/state read in this subtask",
+        "Mandate": "UNKNOWN: bounded document lookup is not complete active Mandate census",
+        "PR": "UNKNOWN_OR_NOT_APPLICABLE",
+        "Receipt": "a29/STAGING-REPORT-004.md:17及A29-NATIVE-RUNTIME-CANDIDATE-MANIFEST.json:30/1034；报告mtime2026-10-27T22:10:36Z",
+        "rollback": "UNKNOWN: no present rollback-owner waiver; production/backup trees excluded",
+        "formal_reference": "历史candidate manifest引用，保留原报告/manifest/source/lock；独立reinstall未执行"
+      },
+      "retention_basis": "历史candidate manifest引用，保留原报告/manifest/source/lock；独立reinstall未执行",
+      "recoverability_reason": "Generated Cargo target or pnpm dependency tree with toolchain markers. Rebuild is a conditional hypothesis, not tested acceptance.",
+      "disposition": "CONDITIONAL_HOLD_REFERENCES_AND_REBUILD_UNPROVEN",
+      "physical_release_bytes": "UNKNOWN: parent APFS physical probe binds separately; standalone du is upper bound only",
+      "verification_method": "fresh process+launchd+service Workflow/Mandate+PR/Receipt/rollback owner readback; preserve exact source/lock+essential binary+receipts; isolated rebuild under future mandate; inode/APFS sharing/snapshot analysis then actual df delta only in separately approved later phase",
+      "reference_evidence_class": {
+        "current": "UNKNOWN",
+        "last_observed_historical": "a29/STAGING-REPORT-004.md:17及A29-NATIVE-RUNTIME-CANDIDATE-MANIFEST.json:30/1034；报告mtime2026-10-27T22:10:36Z",
+        "unknown": [
+          "global last read/use",
+          "live Workflow reference",
+          "complete live Mandate terminal/consumer status",
+          "current rollback ownership waiver",
+          "foreign-UID file descriptor completeness"
+        ]
+      }
+    }
+  ]
+}

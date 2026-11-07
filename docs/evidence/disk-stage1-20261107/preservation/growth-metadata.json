@@ -1,0 +1,1251 @@
+{
+  "method": "two lstat-only metadata sweeps 15 seconds apart; no sqlite connection, no file content read; native concurrent activity not triggered by collector",
+  "sample_a": {
+    "started_at_utc": "2026-11-07T15:52:00.443250+00:00",
+    "ended_at_utc": "2026-11-07T15:52:00.687495+00:00",
+    "groups": {
+      "top-level-sqlite-and-index": {
+        "files": 24,
+        "logical_bytes": 3740437472,
+        "allocated_bytes": 3752521728
+      },
+      "log": {
+        "files": 2,
+        "logical_bytes": 3692,
+        "allocated_bytes": 8192
+      },
+      "sqlite": {
+        "files": 7,
+        "logical_bytes": 11993536,
+        "allocated_bytes": 13422592
+      },
+      "sessions": {
+        "files": 2319,
+        "logical_bytes": 5580459906,
+        "allocated_bytes": 5594112000
+      },
+      "archived_sessions": {
+        "files": 445,
+        "logical_bytes": 350718671,
+        "allocated_bytes": 351625216
+      }
+    },
+    "errors": []
+  },
+  "sample_b": {
+    "started_at_utc": "2026-11-07T15:52:16.101015+00:00",
+    "ended_at_utc": "2026-11-07T15:52:16.391554+00:00",
+    "groups": {
+      "top-level-sqlite-and-index": {
+        "files": 24,
+        "logical_bytes": 3740437472,
+        "allocated_bytes": 3752521728
+      },
+      "log": {
+        "files": 2,
+        "logical_bytes": 3692,
+        "allocated_bytes": 8192
+      },
+      "sqlite": {
+        "files": 7,
+        "logical_bytes": 11993536,
+        "allocated_bytes": 13422592
+      },
+      "sessions": {
+        "files": 2319,
+        "logical_bytes": 5580566619,
+        "allocated_bytes": 5594112000
+      },
+      "archived_sessions": {
+        "files": 445,
+        "logical_bytes": 350718671,
+        "allocated_bytes": 351625216
+      }
+    },
+    "errors": []
+  },
+  "top_level_sqlite_and_index_metadata_a": {
+    "/Users/yanfenma/.codex/logs_2.sqlite-wal": {
+      "dev": 16777229,
+      "inode": 357037315,
+      "size_bytes": 31571592,
+      "allocated_bytes": 32509952,
+      "mtime_ns": 1794066691067350008,
+      "birthtime": 1794017715.9615588,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/memories_v2_1.sqlite-wal": {
+      "dev": 16777229,
+      "inode": 359376360,
+      "size_bytes": 0,
+      "allocated_bytes": 0,
+      "mtime_ns": 1794066151890798751,
+      "birthtime": 1794066151.8907988,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/thread_history_1.sqlite-wal": {
+      "dev": 16777229,
+      "inode": 359340072,
+      "size_bytes": 4181832,
+      "allocated_bytes": 4198400,
+      "mtime_ns": 1794066720337820701,
+      "birthtime": 1794063423.1866152,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/memories_1.sqlite-shm": {
+      "dev": 16777229,
+      "inode": 359376359,
+      "size_bytes": 32768,
+      "allocated_bytes": 32768,
+      "mtime_ns": 1794066151882915097,
+      "birthtime": 1794066151.8828568,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/logs_2.sqlite-shm": {
+      "dev": 16777229,
+      "inode": 357037316,
+      "size_bytes": 65536,
+      "allocated_bytes": 65536,
+      "mtime_ns": 1794041268982348900,
+      "birthtime": 1794017715.9617093,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/memories_1.sqlite-wal": {
+      "dev": 16777229,
+      "inode": 359376358,
+      "size_bytes": 0,
+      "allocated_bytes": 0,
+      "mtime_ns": 1794066151882807805,
+      "birthtime": 1794066151.8828077,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/thread_history_1.sqlite-shm": {
+      "dev": 16777229,
+      "inode": 359340073,
+      "size_bytes": 32768,
+      "allocated_bytes": 32768,
+      "mtime_ns": 1794065445974580330,
+      "birthtime": 1794063423.1866825,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/memories_v2_1.sqlite-shm": {
+      "dev": 16777229,
+      "inode": 359376361,
+      "size_bytes": 32768,
+      "allocated_bytes": 32768,
+      "mtime_ns": 1794066151890916876,
+      "birthtime": 1794066151.8908486,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/queue_1.sqlite-shm": {
+      "dev": 16777229,
+      "inode": 227745123,
+      "size_bytes": 32768,
+      "allocated_bytes": 32768,
+      "mtime_ns": 1793709242165782499,
+      "birthtime": 1792672424.42717,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/queue_1.sqlite-wal": {
+      "dev": 16777229,
+      "inode": 227745122,
+      "size_bytes": 4132392,
+      "allocated_bytes": 4198400,
+      "mtime_ns": 1793546320907835929,
+      "birthtime": 1792672424.4271185,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/queue_1.sqlite": {
+      "dev": 16777229,
+      "inode": 39257550,
+      "size_bytes": 3969024,
+      "allocated_bytes": 4259840,
+      "mtime_ns": 1793709231054013420,
+      "birthtime": 1786881678.991173,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/logs_2.sqlite": {
+      "dev": 16777229,
+      "inode": 413968,
+      "size_bytes": 74813440,
+      "allocated_bytes": 74813440,
+      "mtime_ns": 1794066151896120770,
+      "birthtime": 1777127820.044866,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/.sqlite-maintenance.lock": {
+      "dev": 16777229,
+      "inode": 146126982,
+      "size_bytes": 0,
+      "allocated_bytes": 0,
+      "mtime_ns": 1791274817961613310,
+      "birthtime": 1791274817.9616134,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/memories_1.sqlite": {
+      "dev": 16777229,
+      "inode": 413973,
+      "size_bytes": 1495040,
+      "allocated_bytes": 2162688,
+      "mtime_ns": 1794064496828579175,
+      "birthtime": 1781822077.857065,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/session_index.jsonl": {
+      "dev": 16777229,
+      "inode": 415003,
+      "size_bytes": 41000,
+      "allocated_bytes": 45056,
+      "mtime_ns": 1793633973306375780,
+      "birthtime": 1779410194.2735174,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/memories_v2_1.sqlite": {
+      "dev": 16777229,
+      "inode": 189817386,
+      "size_bytes": 167936,
+      "allocated_bytes": 196608,
+      "mtime_ns": 1793634908290911297,
+      "birthtime": 1791731649.3951035,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/session_index.jsonl.lock": {
+      "dev": 16777229,
+      "inode": 344854778,
+      "size_bytes": 0,
+      "allocated_bytes": 0,
+      "mtime_ns": 1793582545627213842,
+      "birthtime": 1793582545.627214,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/state_5.sqlite": {
+      "dev": 16777229,
+      "inode": 415373,
+      "size_bytes": 22564864,
+      "allocated_bytes": 23347200,
+      "mtime_ns": 1794066670425994688,
+      "birthtime": 1774189238.035039,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/thread_history_1.sqlite": {
+      "dev": 16777229,
+      "inode": 44043631,
+      "size_bytes": 3592933376,
+      "allocated_bytes": 3601149952,
+      "mtime_ns": 1794066651088520008,
+      "birthtime": 1787323115.0389833,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/goals_1.sqlite-shm": {
+      "dev": 16777229,
+      "inode": 359355712,
+      "size_bytes": 32768,
+      "allocated_bytes": 32768,
+      "mtime_ns": 1794066151881492592,
+      "birthtime": 1794064515.285106,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/state_5.sqlite-wal": {
+      "dev": 16777229,
+      "inode": 359334528,
+      "size_bytes": 4202432,
+      "allocated_bytes": 5246976,
+      "mtime_ns": 1794066720337968493,
+      "birthtime": 1794063222.6195147,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/goals_1.sqlite-wal": {
+      "dev": 16777229,
+      "inode": 359355711,
+      "size_bytes": 0,
+      "allocated_bytes": 0,
+      "mtime_ns": 1794064515285050331,
+      "birthtime": 1794064515.2850504,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/goals_1.sqlite": {
+      "dev": 16777229,
+      "inode": 413960,
+      "size_bytes": 102400,
+      "allocated_bytes": 131072,
+      "mtime_ns": 1792850626073702105,
+      "birthtime": 1779612201.9849176,
+      "nlink": 1
+    },
+    "/Users/yanfenma/.codex/state_5.sqlite-shm": {
+      "dev": 16777229,
+      "inode": 359334529,
+      "size_bytes": 32768,
+      "allocated_bytes": 32768,
+      "mtime_ns": 1794063222619745538,
+      "birthtime": 1794063222.6195915,
+      "nlink": 1
+    }
+  },
+  "changed_files": [
+    {
+      "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-42-33-01a1b6ac-f9ff-7d01-b907-1883e01ef5d2.jsonl",
+      "before": {
+        "dev": 16777229,
+        "inode": 359376381,
+        "size_bytes": 1374218,
+        "allocated_bytes": 2101248,
+        "mtime_ns": 1794066719391544909,
+        "birthtime": 1794066154.0198898,
+        "nlink": 1
+      },
+      "after": {
+        "dev": 16777229,
+        "inode": 359376381,
+        "size_bytes": 1415093,
+        "allocated_bytes": 2101248,
+        "mtime_ns": 1794066736095854047,
+        "birthtime": 1794066154.0198898,
+        "nlink": 1
+      },
+      "logical_delta_bytes": 40875,
+      "allocation_delta_bytes": 0
+    },
+    {
+      "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-43-24-01a1b6ad-c6b6-7f00-a7b9-d5fe23f7aeec.jsonl",
+      "before": {
+        "dev": 16777229,
+        "inode": 359376901,
+        "size_bytes": 1186671,
+        "allocated_bytes": 2101248,
+        "mtime_ns": 1794066718676946297,
+        "birthtime": 1794066210.3507743,
+        "nlink": 1
+      },
+      "after": {
+        "dev": 16777229,
+        "inode": 359376901,
+        "size_bytes": 1190420,
+        "allocated_bytes": 2101248,
+        "mtime_ns": 1794066721113826537,
+        "birthtime": 1794066210.3507743,
+        "nlink": 1
+      },
+      "logical_delta_bytes": 3749,
+      "allocation_delta_bytes": 0
+    },
+    {
+      "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-43-59-01a1b6ae-4e57-7201-adad-8505428ce432.jsonl",
+      "before": {
+        "dev": 16777229,
+        "inode": 359377180,
+        "size_bytes": 1302293,
+        "allocated_bytes": 2134016,
+        "mtime_ns": 1794066720337466783,
+        "birthtime": 1794066239.091356,
+        "nlink": 1
+      },
+      "after": {
+        "dev": 16777229,
+        "inode": 359377180,
+        "size_bytes": 1311927,
+        "allocated_bytes": 2134016,
+        "mtime_ns": 1794066735659010451,
+        "birthtime": 1794066239.091356,
+        "nlink": 1
+      },
+      "logical_delta_bytes": 9634,
+      "allocation_delta_bytes": 0
+    },
+    {
+      "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-13-01a1b6ae-8542-79e2-9ff1-6c10e387d208.jsonl",
+      "before": {
+        "dev": 16777229,
+        "inode": 359377355,
+        "size_bytes": 1239484,
+        "allocated_bytes": 2138112,
+        "mtime_ns": 1794066713430664788,
+        "birthtime": 1794066253.156813,
+        "nlink": 1
+      },
+      "after": {
+        "dev": 16777229,
+        "inode": 359377355,
+        "size_bytes": 1259331,
+        "allocated_bytes": 2138112,
+        "mtime_ns": 1794066734682355339,
+        "birthtime": 1794066253.156813,
+        "nlink": 1
+      },
+      "logical_delta_bytes": 19847,
+      "allocation_delta_bytes": 0
+    },
+    {
+      "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-20-01a1b6ae-a37d-7063-a7ed-c30974ca6065.jsonl",
+      "before": {
+        "dev": 16777229,
+        "inode": 359377374,
+        "size_bytes": 1177835,
+        "allocated_bytes": 2121728,
+        "mtime_ns": 1794066712504336486,
+        "birthtime": 1794066260.8884916,
+        "nlink": 1
+      },
+      "after": {
+        "dev": 16777229,
+        "inode": 359377374,
+        "size_bytes": 1196430,
+        "allocated_bytes": 2121728,
+        "mtime_ns": 1794066735315741654,
+        "birthtime": 1794066260.8884916,
+        "nlink": 1
+      },
+      "logical_delta_bytes": 18595,
+      "allocation_delta_bytes": 0
+    },
+    {
+      "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-24-01a1b6ae-afd0-7751-a846-6529519ac1ac.jsonl",
+      "before": {
+        "dev": 16777229,
+        "inode": 359377380,
+        "size_bytes": 1093849,
+        "allocated_bytes": 2138112,
+        "mtime_ns": 1794066718877286738,
+        "birthtime": 1794066264.0488873,
+        "nlink": 1
+      },
+      "after": {
+        "dev": 16777229,
+        "inode": 359377380,
+        "size_bytes": 1107862,
+        "allocated_bytes": 2138112,
+        "mtime_ns": 1794066730352659514,
+        "birthtime": 1794066264.0488873,
+        "nlink": 1
+      },
+      "logical_delta_bytes": 14013,
+      "allocation_delta_bytes": 0
+    },
+    {
+      "path": "/Users/yanfenma/.codex/state_5.sqlite-wal",
+      "before": {
+        "dev": 16777229,
+        "inode": 359334528,
+        "size_bytes": 4202432,
+        "allocated_bytes": 5246976,
+        "mtime_ns": 1794066720337968493,
+        "birthtime": 1794063222.6195147,
+        "nlink": 1
+      },
+      "after": {
+        "dev": 16777229,
+        "inode": 359334528,
+        "size_bytes": 4202432,
+        "allocated_bytes": 5246976,
+        "mtime_ns": 1794066735992247835,
+        "birthtime": 1794063222.6195147,
+        "nlink": 1
+      },
+      "logical_delta_bytes": 0,
+      "allocation_delta_bytes": 0
+    },
+    {
+      "path": "/Users/yanfenma/.codex/thread_history_1.sqlite-wal",
+      "before": {
+        "dev": 16777229,
+        "inode": 359340072,
+        "size_bytes": 4181832,
+        "allocated_bytes": 4198400,
+        "mtime_ns": 1794066720337820701,
+        "birthtime": 1794063423.1866152,
+        "nlink": 1
+      },
+      "after": {
+        "dev": 16777229,
+        "inode": 359340072,
+        "size_bytes": 4181832,
+        "allocated_bytes": 4198400,
+        "mtime_ns": 1794066736096222799,
+        "birthtime": 1794063423.1866152,
+        "nlink": 1
+      },
+      "logical_delta_bytes": 0,
+      "allocation_delta_bytes": 0
+    }
+  ],
+  "logical_delta_total_bytes": 106713,
+  "allocation_delta_total_bytes": 0,
+  "lsof_metadata": {
+    "rc": 0,
+    "stderr": "",
+    "rows": [
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/goals_1.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/memories_1.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/thread_history_1.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "10",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "11",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite-wal"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "12",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "13",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "14",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite-wal"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "15",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "16",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite-wal"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "17",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "18",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/goals_1.sqlite"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "19",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/goals_1.sqlite-wal"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "20",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/goals_1.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "21",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/memories_1.sqlite"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "22",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/memories_1.sqlite-wal"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "23",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/memories_1.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "24",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "25",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite-wal"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "26",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "27",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "28",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite-wal"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "29",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "30",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "31",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite-wal"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "33",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/thread_history_1.sqlite"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "35",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/thread_history_1.sqlite-wal"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "37",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/thread_history_1.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "43",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/goals_1.sqlite"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "44",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/thread_history_1.sqlite"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "47",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/thread_history_1.sqlite-wal"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "50",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/goals_1.sqlite-wal"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "60",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "64",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "65",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite-wal"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "78",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "80",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite-wal"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "fd": "81",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite-wal"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/goals_1.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/memories_1.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/thread_history_1.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "10",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "11",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite-wal"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "12",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "13",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "14",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite-wal"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "15",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "16",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite-wal"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "17",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "18",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/goals_1.sqlite"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "19",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/goals_1.sqlite-wal"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "20",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/goals_1.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "21",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/memories_1.sqlite"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "22",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/memories_1.sqlite-wal"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "23",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/memories_1.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "24",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "25",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite-wal"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "26",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "27",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "28",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite-wal"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "29",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "30",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "31",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite-wal"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "41",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/thread_history_1.sqlite"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "43",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/thread_history_1.sqlite-wal"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "46",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/goals_1.sqlite-wal"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "52",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/thread_history_1.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "54",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/thread_history_1.sqlite"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "55",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/thread_history_1.sqlite-wal"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "56",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/goals_1.sqlite"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "59",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "60",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite-wal"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "68",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "fd": "74",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/state_5.sqlite-wal"
+      },
+      {
+        "pid": "55169",
+        "command": "ChatGPT",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/sqlite/codex.db-shm"
+      },
+      {
+        "pid": "55169",
+        "command": "ChatGPT",
+        "fd": "111",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/sqlite/codex.db"
+      },
+      {
+        "pid": "55169",
+        "command": "ChatGPT",
+        "fd": "112",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/sqlite/codex.db-wal"
+      },
+      {
+        "pid": "55169",
+        "command": "ChatGPT",
+        "fd": "113",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/sqlite/codex.db-shm"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite-shm"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite-shm"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "10",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "12",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "15",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite-shm"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "22",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "24",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "25",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite-wal"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "26",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite-shm"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "30",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite-wal"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "40",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "42",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/.sqlite-maintenance.lock"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "49",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "92",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "fd": "99",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite"
+      },
+      {
+        "pid": "93906",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite-shm"
+      },
+      {
+        "pid": "93906",
+        "command": "codex",
+        "fd": "txt",
+        "access": " ",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite-shm"
+      },
+      {
+        "pid": "93906",
+        "command": "codex",
+        "fd": "10",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite-wal"
+      },
+      {
+        "pid": "93906",
+        "command": "codex",
+        "fd": "11",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite-shm"
+      },
+      {
+        "pid": "93906",
+        "command": "codex",
+        "fd": "12",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite"
+      },
+      {
+        "pid": "93906",
+        "command": "codex",
+        "fd": "13",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/logs_2.sqlite"
+      },
+      {
+        "pid": "93906",
+        "command": "codex",
+        "fd": "24",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite"
+      },
+      {
+        "pid": "93906",
+        "command": "codex",
+        "fd": "25",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite-wal"
+      },
+      {
+        "pid": "93906",
+        "command": "codex",
+        "fd": "26",
+        "access": "u",
+        "path": "/Users/yanfenma/.codex/queue_1.sqlite-shm"
+      }
+    ],
+    "observation_between_samples": true
+  },
+  "limitation": "WAL truncation/checkpoint can move bytes without business lifecycle change; open readwrite FD alone is not completed write nor creation audit. Aggregate includes sessions still active during collection."
+}
