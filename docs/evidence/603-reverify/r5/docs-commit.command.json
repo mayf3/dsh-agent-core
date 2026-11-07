@@ -1,0 +1,21 @@
+{
+  "name": "docs-commit",
+  "argv": [
+    "git",
+    "commit",
+    "-m",
+    "docs: package PR603 revalidation evidence with verbatim exemptions"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "started_at": "2026-11-07T05:10:13.702051+00:00",
+  "head": "87735ecee0e0ebfaa575f889785d7c5037ab9145",
+  "checked_index_tree": "2f6d479cc93f885005ff743785a6b5a75909c0c0",
+  "capture_directory": "/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/h603-r5-delivery-s_p58p7g",
+  "scope": "R5 final index or docs commit; no production effects",
+  "ended_at": "2026-11-07T05:10:14.877051+00:00",
+  "rc": 0,
+  "sha256": {
+    "stdout": "58b61e956899ef7ffc0c5fe2acdc018641b073ad5fcf188eaed85759ae84ebd2",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

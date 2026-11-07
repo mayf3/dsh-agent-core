@@ -1,0 +1,8 @@
+{
+  "index_tree_checked": "568d2d06754322a13fb4a84a7a1ebc29b8bb7f3a",
+  "command": "prepublication-cached-check.command.json",
+  "command_sha256": "824b1ec8aaa047aef6603b7fa15072f835ca724816230398887e576bdf39a028",
+  "rc": 0,
+  "staging_since_check": "NONE at binding creation; reviewer read-only",
+  "historical_raw_sha256_check": "156 existing evidence files match R7 initial snapshot"
+}

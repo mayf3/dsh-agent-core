@@ -1,18 +1,5 @@
-# STOPPED-603-REVERIFY — R5 续行中
+# STOPPED-603-REVERIFY — R6 stop explicitly disposed by R7
 
-R4 原打包停止点已由 Owner R5 精确 verbatim whitespace 豁免处置，旧停止原文完整保存在 `docs/evidence/603-reverify/r5/prior-STOPPED-603-REVERIFY.md`，不改写原 rc2。
+R7 user ruling 603-R7-RAW-CLASS-001 authorizes class-based raw whitespace exclusions and continuation of R6 B scheme. Historical R6 required-gate rc2 remains unchanged; original stop and receipt are preserved under docs/evidence/603-reverify/r7/prior-*.md. No automatic replay preceded authorization.
 
-```text
-STATUS = RESUMED_BY_OWNER_R5
-TASK_DONE = NO
-SOURCE_HEAD = 87735ecee0e0ebfaa575f889785d7c5037ab9145
-BRANCH = ac-ctr-s4-reverify
-CACHED_DIFF_CHECK = PASS rc0 (Owner exact verbatim exemptions)
-DOCS_COMMIT = PENDING
-PR_HEAD_OPERATION = PENDING (preflight: --head unsupported)
-STOP_ON_FAILURE = YES
-MERGE = NOT_ATTEMPTED
-PRODUCTION_WRITES = 0
-```
-
-R5 现态、八门表和全部豁免坐标见 [RECEIPT](RECEIPT-603-REVERIFY.md)。此续行记录不表示任务完成。
+CURRENT_STATE=PACKAGING_PASSED_DELIVERY_PENDING; no active blocker after the explicit disposition. New commands/gates retain fail-stop. See RECEIPT-603-REVERIFY.md for actual delivery state; this file grants no execution or product authority.

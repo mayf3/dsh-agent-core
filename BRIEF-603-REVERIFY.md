@@ -39,3 +39,21 @@ Owner 明确授权补全环境清单：所有剩余测试子进程逐一使用�
 Owner 本轮明确保留 R4 的 843/843 rc0、原 13 项全过、D-009 独审、源码 `87735ece` 已 push 和 PR603 正文已更新的事实。沿用 #642 同类裁定：verbatim `.diff` 归档的单空格空上下文行、push stderr 原始行尾空格以字节保真优先，豁免 whitespace 检查；精确坐标与理由入收据，其余 staged 文件全量过检。R4 失败门 stdout 对上述字节的逐字回显亦保留原文并单列坐标；不得修剪 raw 日志、不得新增 `.gitattributes`、不得改写 R4 原 rc2。
 
 依次：①按精确豁免重跑 cached-diff-check；②证据与收据 docs commit 并独立 final-HEAD delta 复核；③执行 Owner 指定 `gh pr edit 603 --head ac-ctr-s4-reverify`，目标为 PR 头指向整合分支、旧分支留档；④push 与 PR 终读回（head SHA、state）；⑤完成八门总表、豁免坐标和 PR 回执。不合并，失败即停。此授权不包含强推或覆盖历史 head、关闭旧 PR、另建 PR、部署、安装或生产写入。若指定命令/平台不支持改 head，不伪称成功、不擅自替换操作；保留真实结果并停止依赖交付，只补事实收据。
+
+## R6 监管修正 B 方案授权（2026-11-07；替代 R5 第③④步）
+
+本轮用户明确裁定：`gh pr edit` 无 `--head`、禁止强推、禁止向旧分支合并而重带死 D-009 条文；三条路均排除。按 B 方案，以 `ac-ctr-s4-reverify`、base `main` 新建 PR，标题精确为 `fix(scheduler): CTR-S4 integration re-verified on V3 main`；正文须含阶段 A 18 commits 三分类、八门总表、843/843 rc0、结构 rc0、零写负测、D-009 独审、九键处置、收据坐标与 **supersedes #603 integration** 声明。新 PR 创建成功后，在 #603 评论附新链接、评估/收据、依据及可重开声明，再 `gh pr close 603`（非生产操作；不删除分支）。完成根收据并记录新 PR head SHA/state 与 #603 处置坐标。新 PR 独立产品审查由监管另派，本轮不自行合并或代替该审查。
+
+沿用 `REUSE / EXEC_PLAN / DURABLE`；本次为 `PREFLIGHT`、`ROUTE_STAGE=OPERATION` 的非生产 PR 生命周期与 docs/evidence 打包。`AUTHORITY_ACCEPTED_IN_BASE=YES`，不修改任何产品 Contract。执行者为本用户授权的 Codex；唯一写面 `/private/tmp/h603-reverify`、分支 `ac-ctr-s4-reverify`。起始 HEAD=`f1b1466b2645ec861c80bcb934db410ff544e6ca`、implementation base=`1ff1e81cbd74a51761dab46a5fcee532c41fe4ed`、fresh main=`bc69bff131c50af7357d39045b6d3084e5fd6fca`。R5 进程已退出，保留其最终停止事实、rc1 及原始附录，见 `docs/evidence/603-reverify/r6/initial-state.json` 与 prior 记录。
+
+发布证据的必要前置及收尾允许仅对整合分支做 docs commit 和普通 fast-forward push；不强推、不改旧分支、不合并新 PR、不修改 main、不运行 installer、零生产写入、不重放 UNKNOWN。测试/产品字节不变，R4 843 项动态门、R5 精确豁免门与独审复用，不伪称重跑；新 docs delta 做精确 whitespace/历史字节绑定及独立 final-HEAD delta 检查。后续 main `bc69bff1` 的相关静态影响审查可复用，未跑其合并树动态门的限制须原样保留。
+
+`DONE_WHEN`：新 PR OPEN 且 head 为已推送整合分支；#603 有可验证评论坐标且 CLOSED/unmerged；收据包含八门、两 PR 真读回、精确 SHA/时间/证据；最终 docs delta 可复核。`MERGE_READY=NO`；`PRODUCTION_OPERATION_ALLOWED=NO`；仅上述非生产 PR/docs 操作 `OPERATION_ALLOWED=YES`。`603-R5-PR-001` 是被本用户修正授权消解的旧操作依赖，不重试不受支持命令。任一新 required-gate/命令失败、head/base 相关漂移或权威冲突立即停止依赖交付，只保存事实收据；无自动修复、重试或替代路径。Secret 值不入日志；GitHub/git 输出按原始字节哈希并在 JSON 中可逆保存。
+
+## R7 通用监管裁定与续行授权（2026-11-07）
+
+ISSUER=本轮用户（监管）；RULING_ID=603-R7-RAW-CLASS-001；适用本仓全部后续交付。verbatim 机器原始捕获件按类豁免 whitespace：`git diff --cached --check -- . ':(exclude)docs/evidence/**/*.diff' ':(exclude)docs/evidence/**/*.stderr' ':(exclude)docs/evidence/**/*.stdout' ':(exclude)docs/evidence/**/*.log'`。上述原始捕获件的固有空白属于内容，字节保真优先；收据、`.md`、`.json`、`.mjs`、脚本等编成件仍全量过检。此项替代逐文件豁免流程，不改历史失败记录、不修剪原文、不增加 .gitattributes。收据及阶段 A 台账环境配方同时记录本裁定，机器配方见 `docs/evidence/603-reverify/r7/environment-recipe.json`。
+
+沿用 R6 B：类豁免打包门 rc0 后，证据+收据 docs commit、普通 fast-forward push；`gh pr create` 自 `ac-ctr-s4-reverify` 到 `main`（沿用 R6 精确标题，正文含阶段 A 摘要、八门与 supersedes #603 integration）；#603 评论新链接及可重开声明后 close（不删分支）；完成收据及独立 final-HEAD delta。新 PR 不合并，产品独审仍监管另派。失败即停，既有 R6 打包依赖 603-R6-GATE-001 由本显式裁定与续行授权处置；原 rc2 永久保留。
+
+路由继续 REUSE / EXEC_PLAN / DURABLE / PREFLIGHT / OPERATION，仅非生产 PR/docs。唯一写面 `/private/tmp/h603-reverify`，branch=`ac-ctr-s4-reverify`，起始 HEAD=`f1b1466b2645ec861c80bcb934db410ff544e6ca`。产品/测试/accepted authority 不变，复用 R4 动态证据，review only affected docs delta；不强推、不改旧 head、不写 main、不生产操作。DONE_WHEN=新 PR OPEN 且最终 head 真读回、#603 评论可核验且 CLOSED/unmerged、完成收据含裁定坐标/八门/精确 SHA/时间/证据，最终 docs 可复核。任一新命令或 required gate 失败、相关漂移、权威冲突即停止依赖交付，仅保存事实。最终收据提交后的 commit/push/readback 与独立 SHA 复核属于提交外终态补证，明确区分已入 Git 的操作证据与本机终态补证，不做自引用哈希。
