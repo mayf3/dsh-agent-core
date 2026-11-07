@@ -1,6 +1,13 @@
 ---
 spec_id: CODE_STRUCTURE_GUARDRAILS_V3
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_date: 2026-11-07
+accepted_recorded_at: 2026-11-07T03:20:10.813730Z
+accepted_reviewed_semantic_head: 7f36750bf08d308cd7f648153e24c0b0e528e4c6
+acceptance_authority: https://github.com/mayf3/dsh-agent-core/pull/642#issuecomment-6701500077
+acceptance_ruling_id: owner-20261107-642-643-1377
+acceptance_final_head_review: PENDING_REGULATOR
 spec_kind: invariant
 authority_level: repository_local_rule
 rule_kind: repository-local binding rule
@@ -18,6 +25,14 @@ superseded_by: null
 owners: [mayf3]
 date: 2026-11-07
 ---
+<!-- BEGIN PHASE2_CURRENT -->
+> **Current lifecycle: accepted by Owner mayf3, 2026-11-07; activation pending
+> main merge and the regulator's independent final-HEAD review.** The title and
+> preparation-time statements in §§0, 11–14 below are historical Phase1 records.
+> They do not override this accepted lifecycle or claim that Phase2 was already
+> performed when those records were authored. Both carried normative blocks and
+> every reviewed obligation remain byte-identical to the accepted semantic head.
+<!-- END PHASE2_CURRENT -->
 
 # Code Structure Guardrails V3 — standalone whole-authority successor proposal
 
@@ -420,3 +435,39 @@ evidence additions, outside the validated source tree. They do not claim a
 second gate execution, independent final-head review, Owner acceptance,
 predecessor retirement, runtime conformance or merge readiness. Independent
 review of the resulting PR head is reserved for the regulator.
+<!-- BEGIN PHASE2_ACCEPTANCE -->
+
+## 15. Owner-accepted Phase2 lifecycle record — 2026-11-07
+
+Owner: `mayf3`. Exact accepted reviewed semantic head:
+`7f36750bf08d308cd7f648153e24c0b0e528e4c6`. Authority transcription:
+https://github.com/mayf3/dsh-agent-core/pull/642#issuecomment-6701500077
+Registry ruling: `rulings[id=owner-20261107-642-643-1377]`.
+The comment was transcribed at `2026-11-07T03:13:36Z`; the original Owner ruling
+is dated 2026-11-07, without a separately verified original signature time.
+This lifecycle record was applied at `2026-11-07T03:20:10.813730Z`.
+The external registry coordinate is supplied by the mandate and transcription;
+this worker does not claim an independent read of that external registry.
+
+Accepted scope is the complete inherited V2 policy, the complete effective
+TE_V1 exact-transition exception, and whole-authority succession. The ordinary
+500-line cap, fixed baseline, registry, anti-evasion, fail-closed behavior,
+one-time exact blob constraint and visible split debt remain unchanged.
+
+In this same atomic lifecycle tree:
+
+- `.agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md` has native
+  `LIFECYCLE = SUPERSEDED` and `SUPERSEDED_BY = CODE_STRUCTURE_GUARDRAILS_V3`.
+- `docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md` has raw
+  `status: superseded` and `superseded_by: CODE_STRUCTURE_GUARDRAILS_V3`.
+- V3's `supersedes` contains both complete predecessor IDs, providing the
+  reciprocal links. Predecessor bodies and original acceptance history remain
+  unchanged. The V1-to-V2 historical edge remains unchanged.
+
+Final accepted candidate HEAD is the commit containing this atomic tree,
+identified in `RECEIPT-642-PHASE2.md`; final independent review remains
+`PENDING_REGULATOR` and must bind that final delivery HEAD before merge.
+Acceptance on this branch is not activation on main. This worker does not merge.
+Verifier adaptation and PR #603 revalidation remain separate post-main tasks;
+this record authorizes no product implementation or production writes.
+<!-- END PHASE2_ACCEPTANCE -->

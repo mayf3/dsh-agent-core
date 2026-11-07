@@ -95,7 +95,7 @@ runtime change, credential change, or real HR dispatch.
 
 | Spec ID | Status in this branch | Kind | Scope | Supersedes on acceptance |
 |---|---|---|---|---|
-| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3` | accepted 2026-10-15; current after main merge (2.0.0-rc.1, fixed 6301662e; docs-only, separate from #497 CI) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` |
+| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3` | accepted 2026-10-15; explicit rc.3 update accepted 2026-11-07 under §14 (source c1fad897; PR #642 comment-6701500077; final review/main activation pending); historical rc.1 pin retained | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` |
 | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` | superseded by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3`; historical acceptance 2026-09-05 retained | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1` |
 | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1` | superseded (by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2`) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` |
 | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` | superseded (by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1`) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` |
@@ -103,11 +103,24 @@ runtime change, credential change, or real HR dispatch.
 
 Other existing Specs remain at their stable filenames and keep their current lifecycle until explicitly reviewed.
 
+## Structure policy whole-authority succession
+
+| Authority | Lifecycle in this branch | Effect |
+|---|---|---|
+| [CODE_STRUCTURE_GUARDRAILS_V3](../../.agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md) | accepted by Owner 2026-11-07; exact reviewed semantics `7f36750b`; PR #642 comment-6701500077, ruling `owner-20261107-642-643-1377` | whole successor to V2 and TE_V1, reciprocal native links; active only after independent final-HEAD review and main merge |
+| [CODE_STRUCTURE_GUARDRAILS_V2](../../.agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md) | superseded by V3 in the same lifecycle transaction | preserved historical policy and V1 predecessor link |
+| [CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1](CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md) | superseded by V3 in the same lifecycle transaction | complete effective exception absorbed; exact tuple, visible debt and history preserved |
+
+The existing verifier still requires the V2/TE predecessor lifecycle. Its V3
+adaptation and #603 revalidation are separately authorized post-main tasks.
+No new Current Decision is created; the Decision index has no structure-policy
+entry. This index and the local README point to the native structural authority.
+
 ## Structure verifier implementation authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| [CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1](CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md) | accepted under Owner delegation; effective on main merge | contracts after accepted in implementation base; production apply none | verifier CLI coordinates, byte-preserving V1 registry validation, computed visible baseline-debt output, affected-surface candidate gating, fail-closed configuration, and regression acceptance for local `CODE_STRUCTURE_GUARDRAILS_V2` |
+| [CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1](CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md) | accepted under Owner delegation; effective on main merge | contracts after accepted in implementation base; production apply none | verifier CLI coordinates, byte-preserving V1 registry validation, computed visible baseline-debt output, affected-surface candidate gating, fail-closed configuration, and regression acceptance for historical local `CODE_STRUCTURE_GUARDRAILS_V2`, wholly inherited by accepted V3; existing runner adaptation pending a separate post-main task |
 
 ## Agent primary Workspace authority
 

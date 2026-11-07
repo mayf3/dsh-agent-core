@@ -7,11 +7,11 @@
   "distribution_manifest_sha256": "3ce456bec3af4ee6c9f725cf8d587ed1a3e70812574633fda9bddc06016a0841",
   "adoption": {
     "mode": "vendored",
-    "status": "proposed",
+    "status": "accepted",
     "prepared_by": "Codex under Owner task 2026-11-07",
     "prepared_at": "2026-11-06T23:45:23Z",
-    "accepted_by": null,
-    "accepted_at": null
+    "accepted_by": "mayf3",
+    "accepted_at": "2026-11-07T03:20:10.813730Z"
   },
   "files": [
     {
