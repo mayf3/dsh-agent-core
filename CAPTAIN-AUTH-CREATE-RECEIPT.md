@@ -116,6 +116,6 @@ Auth 当前架构 [MINIMAL_AUTH_FOUNDATION_V2](/Users/yanfenma/workspace/project
 | 任命 / 控制生效 / 生产发布 | 本次未任命 / `NOT_VERIFIED` / `FORBIDDEN`。 |
 | 停止记录 | [STOPPED-CAPTAIN-AUTH-CREATE.md](STOPPED-CAPTAIN-AUTH-CREATE.md)。 |
 | 可复核证据 | observations 中的 source/blob/SHA256、Owner 原文快照、文件 metadata 和单次 health 观察。未保存 Secret、token、credential verifier 或受保护业务行。 |
-| 独立核验 | `/root/auth_contract_audit` 完成生产声明源码/dist/权威只读核验；`/root/captain_authority_audit` 完成 Owner/accepted Core authority 核验。文档 candidate 的独立 exact-HEAD 评审和最终差量复核另见本目录评审文件（生成后绑定实际 HEAD）。 |
+| 独立核验 | `/root/auth_contract_audit` 完成生产声明源码/dist/权威只读核验；`/root/captain_authority_audit` 对初始 candidate `364151fda95aec7dab77f8f15adffb7a4b4f0fcc` 独立审查 PASS，0 blockers / 0 Spec gaps；见 [原审查记录](docs/reports/captain-auth-create-20261108/independent-review.md) 和 [实际验证](docs/reports/captain-auth-create-20261108/validation.md)。最终回执差量及 HEAD 绑定于 PR 交付记录。 |
 
 交付目标为已提交、已推送的 `docs/captain-auth-create` 和以 main 为 base 的未合并 PR。最终 commit/PR 以 Git 对象和 PR 实际读回为准；文档审查不等于创建、任命或生产验收。
