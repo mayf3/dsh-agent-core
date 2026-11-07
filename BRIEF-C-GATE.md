@@ -48,3 +48,28 @@ output digest in V3 Validation, corrected current Brief, independent affected
 delta review, commit and push to the same open PR. Stop on a failed required
 gate, authority conflict, unexpected writer/ref drift, or any product-source or
 production effect. No new acceptance, verifier implementation or merge follows.
+
+## R2 execution checkpoint — 2026-11-07
+
+The explicit `BRIEF-C-GATE-R2.md` resumption repaired both V2 fixture insertions
+to target the closing native metadata fence. No validation assertion was
+relaxed. The full gate executed once in this resumption and returned actual rc0;
+24 negative controls, 8 exception-scope controls and 11 strict/legacy controls
+all report PASS. Raw stdout, empty stderr and actual exit code are archived in
+`docs/reports/rc3-chain-20261107/C-R2-native-*`.
+
+Validated source commit: `4a3dce83d0af0bcd1c8467155ba86514734ec870`, whose tree is
+exactly `2a19579ff57d8015cda9891898dbbf2945a09194` from the gate. Stdout SHA-256:
+`2b752f69e31872e0c03920cab8f73f05e85d1db6792345aa19623ef4f3295416`.
+V2 base metadata remains native and directly sourced; the separately derived
+carried-policy observation is explicitly labeled, never fabricated as YAML.
+The V3 Validation section and current Brief corrections are factual evidence
+additions after the validated source snapshot, with no normative delta.
+
+The C-gate evidence blocker is closed for publication to the same unmerged PR.
+Independent affected/final-head review remains pending and is assigned separately
+by the regulator under the latest task; it is not claimed as completed here.
+The earlier failed `C-native-result.json` and `STOPPED-RC3-CHAIN.md` remain
+untracked and preserved. No acceptance, retirement, product-source or production
+write is performed. Push success is established only by the later actual push
+and `gh pr view 642 --json headRefOid` readback, not by this checkpoint text.

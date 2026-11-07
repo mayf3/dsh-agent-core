@@ -390,3 +390,33 @@ must not be relabeled as one another or as runtime/production conformance.
 If a required gate fails, stop subsequent chain writes and record the actual
 failure in `STOPPED-RC3-CHAIN.md`. Successful preparation ends at one unmerged PR;
 it does not continue into acceptance, retirement, implementation or operation.
+
+## 14. Validation observation — C gate R2
+
+The native proposal gate `scripts/governance/validate_v3_succession.py` executed
+at `2026-11-07T01:03:34.441598+00:00` against source tree
+`2a19579ff57d8015cda9891898dbbf2945a09194`, now reachable through source commit
+`4a3dce83d0af0bcd1c8467155ba86514734ec870`:
+
+```sh
+python3 scripts/governance/validate_v3_succession.py --base 230de798e340cc6c157e6b21822f0b1fda77e51e --head 2a19579ff57d8015cda9891898dbbf2945a09194
+```
+
+Actual exit code: **0**. Unmodified stdout is archived at
+`docs/reports/rc3-chain-20261107/C-R2-native-result.json`, SHA-256
+`2b752f69e31872e0c03920cab8f73f05e85d1db6792345aa19623ef4f3295416`.
+All 24 negative controls, 8 exception-scope controls and 11 strict/legacy controls
+report PASS; stderr is empty. The report binds each inspected file's Git blob
+and SHA-256, native metadata provenance, and the in-memory Phase 2 simulation.
+
+V2's base metadata comes from its real native fenced block at the fixed base;
+it is not YAML and is not derived from the carried policy. The V3 carried-policy
+observation is separately labeled `derived-from-carried-policy` and is never
+used as V2 base metadata. R2 changes only fixture construction and reporting;
+all inspection assertions and this proposal's normative text remain unchanged.
+
+This section and the accompanying receipt/Brief updates are later factual
+evidence additions, outside the validated source tree. They do not claim a
+second gate execution, independent final-head review, Owner acceptance,
+predecessor retirement, runtime conformance or merge readiness. Independent
+review of the resulting PR head is reserved for the regulator.
