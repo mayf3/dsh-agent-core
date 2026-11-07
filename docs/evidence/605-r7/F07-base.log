@@ -1,0 +1,18 @@
+✖ R3: a settled or unknown turnExecutionId proves nothing (absent leaf) (0.505167ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 39.618125
+
+✖ failing tests:
+
+test at packages/agent-router/test/process-lifecycle/message-origin.test.js:175:1
+✖ R3: a settled or unknown turnExecutionId proves nothing (absent leaf) (0.505167ms)
+  TypeError: Cannot read properties of undefined (reading 'ctx')
+      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/process-lifecycle/message-origin.test.js:180:32)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)

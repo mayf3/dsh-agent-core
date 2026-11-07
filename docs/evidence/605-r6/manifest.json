@@ -1,0 +1,77 @@
+[
+  {
+    "path": "docs/evidence/605-r6/facts-readback.json",
+    "bytes": 4194,
+    "sha256": "7654851255c3829e6c6b00f799242d6e0af00c4bd7b60d9a3842988d5f3c339d"
+  },
+  {
+    "path": "docs/evidence/605-r6/full-router.log",
+    "bytes": 194452,
+    "sha256": "ac1b00609c56c1df3f611e07a75d7e5a6e694445ee2b34c6875c589a0dc5abdd"
+  },
+  {
+    "path": "docs/evidence/605-r6/gates.json",
+    "bytes": 10804,
+    "sha256": "b51d8b872c1ef9493f28be63964bc30e5ba5caa733238bc1f48046a8ccb84b58"
+  },
+  {
+    "path": "docs/evidence/605-r6/helper-bounds.log",
+    "bytes": 486,
+    "sha256": "3827929ff1b84bd5ae33434d0b4dfc9f974d41975109d76dcac832c0ab5ae5f9"
+  },
+  {
+    "path": "docs/evidence/605-r6/independent-review.txt",
+    "bytes": 857,
+    "sha256": "c66aee0f11d565bf229e740305f3d4161e07c33beda2c99d5eea66ae456ea5e7"
+  },
+  {
+    "path": "docs/evidence/605-r6/initial-files.json",
+    "bytes": 2940,
+    "sha256": "d02b7228fb6b5f1334e8d02bccc9d7e6dd1db2488f1f28d1eb927ac54b216c5d"
+  },
+  {
+    "path": "docs/evidence/605-r6/matrix-cold-start.log",
+    "bytes": 295,
+    "sha256": "4662bd43ffe7755284fbf5de1afe02a81ed642f585463e7ced5b4d22d9310bf7"
+  },
+  {
+    "path": "docs/evidence/605-r6/matrix-isolation.log",
+    "bytes": 246,
+    "sha256": "a397b7dfa4d8ba98e0577d23f2d1046d93e4e14e7ab8e1b9f467aedda8d4df43"
+  },
+  {
+    "path": "docs/evidence/605-r6/matrix-negative-persistence.log",
+    "bytes": 245,
+    "sha256": "a6f20fe6a9628ff6ca99fd2fe906f65ba595bee9451ba3296decbdf9c194052b"
+  },
+  {
+    "path": "docs/evidence/605-r6/matrix-no-replay.log",
+    "bytes": 245,
+    "sha256": "42a8916beb3d7ae4c49221bac3db609b5157e77cc2c9356140bc374f27047eb3"
+  },
+  {
+    "path": "docs/evidence/605-r6/matrix-restart.log",
+    "bytes": 225,
+    "sha256": "25f8bde647800074376a8e6fcdbb8b11f9aaae44cd3cd7cfb320705c8430ab85"
+  },
+  {
+    "path": "docs/evidence/605-r6/matrix-rollback.log",
+    "bytes": 258,
+    "sha256": "d969668c46a9410b639fd2bf0d3f887c15b6c65cf7f32f257751f9571d3c5f16"
+  },
+  {
+    "path": "docs/evidence/605-r6/r5-matrix-decode.log",
+    "bytes": 427,
+    "sha256": "9c5647ef604c8fcc09df66f5f00e2885258437581a962e97cad4ec9ee22a0bc3"
+  },
+  {
+    "path": "docs/evidence/605-r6/r5-targeted.log",
+    "bytes": 5876,
+    "sha256": "c35f5c6498e94c31427c890c1e76d2e9a02bd6acef7a8fb6f15f018b5ffe39e0"
+  },
+  {
+    "path": "docs/evidence/605-r6/run-gate.py",
+    "bytes": 2119,
+    "sha256": "210d367f66ff2548c0b59f72c92eb3481c8f0bc8325f20b67c37212fc7ed955a"
+  }
+]

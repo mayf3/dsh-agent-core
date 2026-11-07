@@ -1,0 +1,59 @@
+COMMAND: ["node", "--test", "--test-concurrency=1", "packages/agent-router/test/runtime-hygiene/recovery-compat.test.js", "packages/agent-router/test/process-lifecycle/timeout.test.js", "packages/agent-router/test/process-lifecycle/unknown-fence-repair.test.js", "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js", "packages/agent-router/test/process-lifecycle/unknown-fence-no-replay.test.js", "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js", "packages/scheduler/test/history-compat.test.js", "packages/scheduler/test/occurrence.test.js", "packages/scheduler/test/store.test.js", "packages/scheduler/test/termination-only.test.js"]
+✔ declaration unblocks admission for one agent; historical fence query and other agents unchanged (1.532625ms)
+✔ declaration is idempotent per declarationId and does not restamp (0.180333ms)
+✔ a NEW unknown after a declaration fences the agent again; a further declaration abandons only it (0.244084ms)
+✔ abandonment persists across restarts; late old results stay isolated; no-replay keeps correlation (106.342ms)
+✔ declaration validation: arguments and admission readiness fail loud (0.208042ms)
+✔ durable validator rejects a malformed abandonment marker and accepts the closed shape (52.165708ms)
+✔ review r4130766501 regression: retrying a COMPLETED declaration never adopts a later unknown turn (0.449834ms)
+✔ scope binding survives restart: retry after reopen still cannot adopt a later unknown (72.160917ms)
+✔ partial-write recovery: retry completes exactly the registered original scope (55.173125ms)
+✔ a declarationId bound to another agent fails loud and never restamps (0.718542ms)
+✔ marker-only reconstruction: a store with no registry file still binds retries to the marker scope (72.83525ms)
+✔ empty-scope declaration registers its (empty) operation: later turns are never adopted (0.320041ms)
+✔ durable validator rejects a malformed scope registry fail-closed (51.520333ms)
+✔ rollback/reupgrade regression: the scope registry survives an old-binary rewrite of the recovery file (94.214208ms)
+✔ entry-gate projection: stuck fences without durable exit evidence are reported; observed exits are not (37.815834ms)
+✔ owner risk acceptance stamps an explicit audit decision and fabricates no exit evidence (0.807834ms)
+✔ declaration scope matches the admission blocker: settled records with an active fence are abandonable (79.371ms)
+✔ V3 parsed terminal and child exit remain uncommitted together when durable settlement fails (62.105417ms)
+✔ V3 over-cap durable record keeps startup business admission fail closed (18.889625ms)
+✔ V3 unavailable durable path keeps startup business admission fail closed (0.39725ms)
+✔ V3 restored durable fence blocks the real outer entry with closed structured diagnostics (39.382ms)
+✔ V3 invalid durable store blocks the real outer entry before route execution (0.450875ms)
+✔ V3 old-generation cleanup cannot clear a newer generation fence (0.358667ms)
+✔ PROMPT_RECEIPT_NEVER_REPLIES (turn path): receipt unknown stays fenced until hard-deadline REAP (111.284ms)
+✔ DELIVER_TIMEOUT_USES_PROMPT_RECEIPT_FIELD: the config field is the binding receipt deadline (183.209917ms)
+✔ DELIVER_CANNOT_BYPASS_UNKNOWN_FENCE: a second deliver while unknown is not_admitted with write delta 0 (186.484959ms)
+✔ B06: settling one of multiple unresolved unknowns does not release the others (2.311833ms)
+✔ UNKNOWN_REJECTS_QUEUED_TURNS: B/C write delta 0; A late_completed (74.532291ms)
+✔ crash-orphaned UNKNOWN stays fenced across restarts; no gate replays or settles it (44.218375ms)
+✔ admin abandonment unblocks admission only; the UNKNOWN record is never settled or erased (82.030916ms)
+✔ restart-quiescence evidence without an authenticated context settles nothing (fail-closed) (0.511417ms)
+✔ UNKNOWN_FENCE_SELF_LOCK_REPAIRED: idle before the same-batch turn/end settles late and releases the fence without any new admission (87.213583ms)
+✔ RECEIPT_CORRELATION_MISSING: terminal present but receipt never correlated — pending, no fake release (80.791958ms)
+✔ LATER_TURN_STARTED: a later turn/start after the terminal never settles the old turn (83.250875ms)
+✔ MULTI_UNKNOWN_ISOLATED: releasing one fence never releases another (C-016) (3.49125ms)
+✔ CHILD_EXIT_SETTLES_TERMINATED_WITHOUT_OUTCOME: fence released, no new admission needed (122.798625ms)
+✔ RELEASE_SENDS_NOTHING_NEW: deliver-mode late settlement produces no second business prompt and no duplicate delivery (153.966625ms)
+✔ classifyUnknownFence covers the six bounded, secret-free categories (1.148792ms)
+✔ exact legacy tuple decodes without normalization; malformed neighbors still fail closed (45.338791ms)
+✔ writer rejects pending/partial evidence and a prior bad clear with zero persistent/local effect (57.251583ms)
+✔ fence persistence failure rolls back the durable transition and retains the local fence (48.426416ms)
+✔ normal abandonment and exact settlement retain their distinct admission semantics (83.396417ms)
+✔ answer digest survives cold open, another durable write and restart without answer text (77.03375ms)
+✔ R4 arbitrary non-enum history to values decode as unverifiable without inventing admission (1.969333ms)
+✔ R4 invalid from/final enums retain their raw values; marker is recomputed, never trusted (0.142667ms)
+✔ R4 structurally unusable records and independently provable corruption still fail loud (0.494459ms)
+✔ R4 redacted late-settlement linkage is unverifiable while settlement authority stays strict (0.132625ms)
+✔ R4 JobStore read/restart preserves raw UNKNOWN fences; strict mutation rejects with zero file writes (12.825417ms)
+ℹ tests 48
+ℹ suites 0
+ℹ pass 48
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2661.232041
+
+rc=0

@@ -1,0 +1,28 @@
+✖ seam: a structured gateway failure passes through declared codes verbatim at the correct depth (0.88725ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 47.20975
+
+✖ failing tests:
+
+test at packages/agent-router/test/broker-rpc.test.js:334:1
+✖ seam: a structured gateway failure passes through declared codes verbatim at the correct depth (0.88725ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /outcome is unknown/. Input:
+  
+  'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {"state":"STILL_UNKNOWN","operation":"create","reason":"read-back response unusable"}'
+  
+      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/broker-rpc.test.js:340:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {"state":"STILL_UNKNOWN","operation":"create","reason":"read-back response unusable"}',
+    expected: /outcome is unknown/,
+    operator: 'match',
+    diff: 'simple'
+  }

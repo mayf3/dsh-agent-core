@@ -1,0 +1,111 @@
+✔ invoker: happy path maps turn reply into the scheduler outcome envelope (0.803833ms)
+✔ invoker: post-dispatch failure without termination proof is outcome_unknown (0.118041ms)
+✔ invoker: exact terminal failure proof remains ordinary error (0.066292ms)
+✔ invoker: unrecognized termination evidence cannot downgrade unknown to failed (0.060625ms)
+✔ invoker: occurrence/run/request correlation reaches AgentProcess (0.083666ms)
+✔ C-008 same requestId/payload enqueues once; different payload conflicts pre-start (0.082291ms)
+✔ B15 invoker preserves outcome_unknown handle/deadline/evidence (0.095709ms)
+✔ invoker: definition validation rejects an unknown agent as error outcome (0.061292ms)
+✔ invoker: an aborted signal is recorded on the call log (0.368833ms)
+✔ invoker: turn poll gets a margin over the scheduler timeout so the scheduler race wins (0.083083ms)
+✔ chatIdFromDeliveryTo: accepts chat: prefix and bare chat id, rejects others (0.182375ms)
+✔ deliver: announce maps job.delivery.to onto the feishu.reply seam (0.1205ms)
+✔ deliver: SCHEDULER_SUCCESS_CARD_ELIGIBLE — a terminal ok announce carries EXACTLY the narrow presentation intent (0.055167ms)
+✔ deliver: successful silent delivery sends with NO opts (generic proactive stays on the plain-text plan) (0.036917ms)
+✔ deliver: error and outcome_unknown announces send with NO opts (stay on the plain-text plan) (0.060875ms)
+✔ deliver: non-feishu channel throws -> scheduler marks not-delivered (0.077084ms)
+✔ deliver: feishu.reply failure propagates -> not-delivered (0.041375ms)
+✔ invoker: a DISABLED agent is rejected BEFORE the chain seam (runnable-agent semantics) (0.0485ms)
+✔ CTR-IMPL-002: the bridge calls ONLY the published runTurnWithRouteChain seam (no ensureRunning) (0.044042ms)
+✔ DEC-IMPL-005: an explicit request.model selects STRICT_CHAIN_MODE; absent model inherits the agent chain (0.041334ms)
+✔ CTR-IMPL-005: onStart fires EXACTLY once at the first dispatched attempt and drives `started` (0.050875ms)
+✔ CTR-IMPL-005: a pre-start rejection (no attempt ever dispatched) keeps started:false (0.04825ms)
+✔ D1 formula floor, crossover, default and safe-integer boundaries (0.561375ms)
+ℹ ACC-527D1-001 {"timeoutSeconds":"absent","budget":{"defaultMs":180000}}
+ℹ ACC-527D1-001 {"timeoutSeconds":1,"budget":{"defaultMs":120000}}
+ℹ ACC-527D1-001 {"timeoutSeconds":600,"budget":{"defaultMs":120000}}
+ℹ ACC-527D1-001 {"timeoutSeconds":2399,"budget":{"defaultMs":120000}}
+ℹ ACC-527D1-001 {"timeoutSeconds":2400,"budget":{"defaultMs":120000}}
+ℹ ACC-527D1-001 {"timeoutSeconds":2401,"budget":{"defaultMs":120050}}
+ℹ ACC-527D1-001 {"timeoutSeconds":3600,"budget":{"defaultMs":180000}}
+ℹ ACC-527D1-001 {"timeoutSeconds":7200,"budget":{"defaultMs":360000}}
+✔ D1 per-job > static > env > legacy > formula; interactive default stays 30000 (0.882334ms)
+ℹ ACC-527D1-002 {"env":{"DSH_AGENT_PROMPT_RECEIPT_TIMEOUT_MS":"120000","DSH_AGENT_DELIVER_TIMEOUT":"70000"},"overrides":{"agt_fx":{"promptReceiptTimeoutMs":80000}},"payload":{"receiptTimeoutSeconds":90},"source":"job","resolvedMs":90000,"config":{"initializeTimeoutMs":90000,"promptReceiptTimeoutMs":80000,"turnTimeoutMs":300000,"shutdownGraceMs":30000}}
+ℹ ACC-527D1-002 {"env":{"DSH_AGENT_PROMPT_RECEIPT_TIMEOUT_MS":"120000"},"overrides":{"agt_fx":{"promptReceiptTimeoutMs":80000}},"payload":{},"source":"static","resolvedMs":80000,"config":{"initializeTimeoutMs":90000,"promptReceiptTimeoutMs":80000,"turnTimeoutMs":300000,"shutdownGraceMs":30000}}
+ℹ ACC-527D1-002 {"env":{"DSH_AGENT_PROMPT_RECEIPT_TIMEOUT_MS":"120000","DSH_AGENT_DELIVER_TIMEOUT":"70000"},"overrides":{},"payload":{},"source":"env","resolvedMs":120000,"config":{"initializeTimeoutMs":90000,"promptReceiptTimeoutMs":120000,"turnTimeoutMs":300000,"shutdownGraceMs":30000}}
+ℹ ACC-527D1-002 {"env":{"DSH_AGENT_DELIVER_TIMEOUT":"70000"},"overrides":{},"payload":{},"source":"legacy","resolvedMs":70000,"config":{"initializeTimeoutMs":90000,"promptReceiptTimeoutMs":70000,"turnTimeoutMs":300000,"shutdownGraceMs":30000}}
+ℹ ACC-527D1-002 {"env":{},"overrides":{},"payload":{},"source":"formula","resolvedMs":180000,"config":{"initializeTimeoutMs":90000,"promptReceiptTimeoutMs":30000,"turnTimeoutMs":300000,"shutdownGraceMs":30000}}
+ℹ ACC-527D1-002 {"env":{},"overrides":{},"payload":{"receiptTimeoutSeconds":1},"source":"job","resolvedMs":1000,"config":{"initializeTimeoutMs":90000,"promptReceiptTimeoutMs":30000,"turnTimeoutMs":300000,"shutdownGraceMs":30000}}
+ℹ ACC-527D1-001 {"caller":"non-Scheduler","resolvedMs":30000}
+✔ D1 deployment is captured at configuration boundary and never hot-read or mutated (0.365042ms)
+ℹ ACC-527D1-002 {"before":{"initializeTimeoutMs":90000,"promptReceiptTimeoutMs":80000,"turnTimeoutMs":300000,"shutdownGraceMs":30000},"after":{"initializeTimeoutMs":90000,"promptReceiptTimeoutMs":80000,"turnTimeoutMs":300000,"shutdownGraceMs":30000},"changedInputs":{"env":{"DSH_AGENT_PROMPT_RECEIPT_TIMEOUT_MS":"1"},"overrides":{"agt_fx":{"promptReceiptTimeoutMs":2}}},"frozen":true}
+ℹ ACC-527D1-003 {"deployment":"0","rejection":"agent-router: DSH_AGENT_PROMPT_RECEIPT_TIMEOUT_MS must be a positive safe integer (got \"0\")","spawns":0}
+ℹ ACC-527D1-003 {"deployment":"0","rejection":"AgentProcess: deadline promptReceiptTimeoutMs must be a positive safe integer (got 0) — validated fail-loud before spawn","spawns":0}
+ℹ ACC-527D1-003 {"deployment":"-1","rejection":"agent-router: DSH_AGENT_PROMPT_RECEIPT_TIMEOUT_MS must be a positive safe integer (got \"-1\")","spawns":0}
+ℹ ACC-527D1-003 {"deployment":"-1","rejection":"AgentProcess: deadline promptReceiptTimeoutMs must be a positive safe integer (got -1) — validated fail-loud before spawn","spawns":0}
+ℹ ACC-527D1-003 {"deployment":"1.5","rejection":"agent-router: DSH_AGENT_PROMPT_RECEIPT_TIMEOUT_MS must be a positive safe integer (got \"1.5\")","spawns":0}
+ℹ ACC-527D1-003 {"deployment":"1.5","rejection":"AgentProcess: deadline promptReceiptTimeoutMs must be a positive safe integer (got 1.5) — validated fail-loud before spawn","spawns":0}
+ℹ ACC-527D1-003 {"deployment":"NaN","rejection":"agent-router: DSH_AGENT_PROMPT_RECEIPT_TIMEOUT_MS must be a positive safe integer (got \"NaN\")","spawns":0}
+ℹ ACC-527D1-003 {"deployment":"NaN","rejection":"AgentProcess: deadline promptReceiptTimeoutMs must be a positive safe integer (got null) — validated fail-loud before spawn","spawns":0}
+ℹ ACC-527D1-003 {"deployment":"Infinity","rejection":"agent-router: DSH_AGENT_PROMPT_RECEIPT_TIMEOUT_MS must be a positive safe integer (got \"Infinity\")","spawns":0}
+ℹ ACC-527D1-003 {"deployment":"Infinity","rejection":"AgentProcess: deadline promptReceiptTimeoutMs must be a positive safe integer (got null) — validated fail-loud before spawn","spawns":0}
+ℹ ACC-527D1-003 {"deployment":"9007199254740992","rejection":"agent-router: DSH_AGENT_PROMPT_RECEIPT_TIMEOUT_MS must be a positive safe integer (got \"9007199254740992\")","spawns":0}
+ℹ ACC-527D1-003 {"deployment":"9007199254740992","rejection":"AgentProcess: deadline promptReceiptTimeoutMs must be a positive safe integer (got 9007199254740992) — validated fail-loud before spawn","spawns":0}
+[scheduler] WARN dropping corrupt job invalid-old-job: job.payload.receiptTimeoutSeconds must be a positive safe integer
+✔ D1 invalid new fields fail before create/update persistence and old-definition dispatch (115.44825ms)
+ℹ ACC-527D1-003 {"boundary":"create","invalid":"0","type":"number","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"update","invalid":"0","type":"number","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"old-definition dispatch","invalid":"0","type":"number","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"create","invalid":"-1","type":"number","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"update","invalid":"-1","type":"number","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"old-definition dispatch","invalid":"-1","type":"number","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"create","invalid":"1.5","type":"number","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"update","invalid":"1.5","type":"number","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"old-definition dispatch","invalid":"1.5","type":"number","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"create","invalid":"90","type":"string","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"update","invalid":"90","type":"string","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"old-definition dispatch","invalid":"90","type":"string","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"create","invalid":"null","type":"object","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"update","invalid":"null","type":"object","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"old-definition dispatch","invalid":"null","type":"object","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"create","invalid":"NaN","type":"number","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"update","invalid":"NaN","type":"number","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"old-definition dispatch","invalid":"NaN","type":"number","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"create","invalid":"Infinity","type":"number","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"update","invalid":"Infinity","type":"number","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"old-definition dispatch","invalid":"Infinity","type":"number","rejection":"job.payload.receiptTimeoutSeconds must be a positive safe integer","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"create","invalid":"9007199254740991","type":"number","rejection":"job payload receipt milliseconds exceed safe integer range","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"update","invalid":"9007199254740991","type":"number","rejection":"job payload receipt milliseconds exceed safe integer range","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"old-definition dispatch","invalid":"9007199254740991","type":"number","rejection":"job payload receipt milliseconds exceed safe integer range","persistenceWrites":0,"dispatches":0,"beforeSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1","afterSha256":"b747766156362a518354e5980feb42aeb987ece147b31c5550468152dce9d1c1"}
+ℹ ACC-527D1-003 {"boundary":"load corrupt old definition","dispatches":0,"beforeSha256":"9d312eaadd4bc56842f04e72114ae4b2bf4fb15e3559ab22d5089241a1cdc2d2","afterSha256":"9d312eaadd4bc56842f04e72114ae4b2bf4fb15e3559ab22d5089241a1cdc2d2"}
+✔ D1 Scheduler freezes the selected budget into the real invocation request (128.015458ms)
+ℹ ACC-527D1-002 {"boundary":"real Scheduler request","request":{"occurrenceId":"occ:fb60af1e44d72a14","runId":"run:occ:fb60af1e44d72a14","receiptBudget":{"defaultMs":360000,"overrideMs":91000},"timeoutMs":7200000}}
+✔ D1 cold receipt at 34.5s succeeds through bridge and real AgentProcess; no cross-job/interactive leak (5.79325ms)
+ℹ ACC-527D1-004 {"phase":"safe preparation retry / original admission deadline","retryTrace":[{"phase":"acquire","requestId":"occ-one","generation":1,"deadlineMono":890952985},{"phase":"prepare","generation":1,"deadlineMono":890952985},{"phase":"log","line":"delivery-failure {\"kind\":\"delivery_failure\",\"tsWallMs\":1794025713356,\"sequence\":1,\"category\":\"transport_death\",\"agentId\":\"agt_fx\",\"routeRef\":\"fixture\",\"transportAttempt\":1,\"processGeneration\":1,\"categoryCount\":1,\"windowCount\":1}"},{"phase":"retry_wait","delay":250},{"phase":"acquire","requestId":"occ-one","generation":2,"deadlineMono":890952985},{"phase":"prepare","generation":2,"deadlineMono":890952985}],"firstExit":{"code":0,"signal":null},"firstCounters":{"spawnAttempts":1,"promptWriteAttempts":0,"rpcResponseWriteAttempts":0,"gracefulShutdownWriteAttempts":1,"killSignals":0,"replayAdmissions":0,"shutdownInvocations":1},"promptRpcDeadlineMono":887503235}
+ℹ ACC-527D1-004 {"phase":"prompt write","clock":"virtual process.hrtime.bigint","startMono":887323235,"promptReceiptDeadlineMono":887503235,"turnDeadlineMono":890923235}
+ℹ ACC-527D1-004 {"phase":"receipt arrives","elapsedMs":34750,"receiptMono":887357735,"receiptDelayAfterPromptMs":34500,"settledBeforeReceipt":false,"promptReceiptDeadlineMono":887503235}
+ℹ ACC-527D1-002 {"sameProcess":true,"job":"two","payload":{"receiptTimeoutSeconds":90},"startMono":887357735,"promptReceiptDeadlineMono":887447735,"resolvedMs":90000}
+ℹ ACC-527D1-002 {"sameProcess":true,"job":"three","payload":{},"startMono":887357735,"promptReceiptDeadlineMono":887537735,"resolvedMs":180000}
+ℹ ACC-527D1-002 {"before":{"initializeTimeoutMs":600,"promptReceiptTimeoutMs":250,"turnTimeoutMs":3600000,"shutdownGraceMs":200},"after":{"initializeTimeoutMs":600,"promptReceiptTimeoutMs":250,"turnTimeoutMs":3600000,"shutdownGraceMs":200},"interactiveReceiptMs":250,"counters":{"spawnAttempts":1,"promptWriteAttempts":4,"rpcResponseWriteAttempts":0,"gracefulShutdownWriteAttempts":0,"killSignals":0,"replayAdmissions":0,"explicitNewRequestExecutions":4}}
+✔ D1 longer receipt never extends earlier active-turn deadline; no receipt stays UNKNOWN/fenced (1.318208ms)
+ℹ ACC-527D1-004 {"phase":"earlier turn deadline","startMono":887322989,"promptReceiptDeadlineMono":887502989,"turnDeadlineMono":887356989,"injectedElapsedMs":34001}
+ℹ ACC-527D1-004 {"phase":"no receipt / blocked subsequent request","elapsedMs":34001,"reconciliation":{"state":"pending","snapshot":{"handle":"turn:932edb6d-622c-4a72-8f3a-3e055b629783:a1:g1:s1","turnExecutionId":"turn:932edb6d-622c-4a72-8f3a-3e055b629783:a1:g1:s1","runtimeEpoch":"932edb6d-622c-4a72-8f3a-3e055b629783","agentId":"agt_fx","processGeneration":1,"callerCorrelation":{"occurrenceId":"occ-one","runId":"run-one","requestId":"occ-one"},"ingressCorrelation":null,"sessionId":"cron-one","eventWatermarkSeq":0,"promptRequestId":"req-1-2","messageId":null,"state":"pending","initialOutcome":"outcome_unknown","initialSource":"prompt_receipt_timeout","outcome":null,"lateOutcome":null,"outcomeEvidence":null,"terminationEvidence":null,"errorClass":null,"cancelRequested":false,"cancelRequestedAtWallMs":null,"settledAtWallMs":null,"updatedAt":1794025713360,"deadlineAtWallMs":1794025747359,"hardDeadlineAt":1794025747359,"recoveryState":"pending_unknown","missingEvidence":["exact_terminal","exact_turn_idle","child_real_exit"],"reapClaim":null,"attemptedActions":[{"action":"coordinator_scheduled","result":"started","observedAtWallMs":1794025713360,"reasonCode":"outcome_unknown"}],"shutdownRequestedAt":null,"exitObservedAt":null,"settlementResult":null,"failureReason":null,"nextSafeAction":"await_late_evidence","fenceState":"active","finalAssistantOutput":null,"audit":[]}},"fence":"turn:932edb6d-622c-4a72-8f3a-3e055b629783:a1:g1:s1","counters":{"spawnAttempts":1,"promptWriteAttempts":1,"rpcResponseWriteAttempts":0,"gracefulShutdownWriteAttempts":0,"killSignals":0,"replayAdmissions":0,"explicitNewRequestExecutions":1,"originalPromptReplayWrites":0,"originalAnswerResends":0,"historicalSideEffectReplays":0,"rejectedRequestAutoAdmissions":0,"shutdownInvocations":0}}
+✔ CONTAINMENT: a post-dispatch not_admitted fence rejection is a deterministic pre-start error, never outcome_unknown (0.666542ms)
+✔ TERMINAL_PROOF: an authoritative terminal RPC error envelope settles as error even without a terminationEvidence kind (0.365042ms)
+✔ TERMINATION_ONLY: outcome_unknown + trusted router readback (child_real_exit) stays outcome_unknown and stamps the proof (0.145792ms)
+✔ RQ-009 bridge carries restart quiescence proof while business outcome stays unknown (0.090125ms)
+✔ FAIL_CLOSED: outcome_unknown with a live (pending) router disposition stays outcome_unknown (0.078792ms)
+✔ FAIL_CLOSED: outcome_unknown without a correlation readback surface stays outcome_unknown (0.078291ms)
+✔ SCOPE: a settled router business outcome (late_completed) is NOT consumed by the termination readback (0.078ms)
+✔ FAIL_CLOSED: a bare post-dispatch error without any envelope still stays outcome_unknown (0.061917ms)
+✔ terminal provider failure skips a round and next natural slot succeeds (retry absent) (584.915708ms)
+✔ terminal provider failure skips a round and next natural slot succeeds (retry disabled) (590.690167ms)
+✔ missing termination proof remains unknown and blocks only its job without replay (504.048292ms)
+ℹ tests 40
+ℹ suites 0
+ℹ pass 40
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2118.293209
