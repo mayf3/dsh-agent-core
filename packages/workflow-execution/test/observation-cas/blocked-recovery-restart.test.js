@@ -27,12 +27,13 @@ async function fixture() {
   const dir = mkdtempSync(join(tmpdir(), 'ekr-b2-process-'))
   const router = new TurnReconciliationStore({ runtimeEpoch: 'b2-loopback-router',
     persistenceFile: join(dir, 'router-reconciliation.json') })
-  const state = { recovered: false, loseAck: false, requests: [], deliveries: [] }
+  const state = { recovered: false, loseAck: false, worldDrift: false, detailUnavailable: false, requests: [], deliveries: [] }
   let accepted
   const acceptance = new Promise(resolve => { accepted = resolve })
   const server = createServer(async (req, res) => {
     try {
-      const status = req.url === '/resolve' && !state.recovered ? 503 : 200
+      const status = req.url === '/resolve' && !state.recovered
+        || req.url === '/detail' && state.detailUnavailable ? 503 : 200
       state.requests.push({ path: req.url, status, principalId: req.headers['x-principal-id'],
         agentId: req.headers['x-agent-id'], workflowInstanceId: req.headers['x-workflow-id'] })
       if (req.url === '/deliver') {
@@ -52,9 +53,11 @@ async function fixture() {
         res.end(JSON.stringify({ ok: true, sessionId: 'main', reconciliationHandle: handle, messageId: 'b2-original-message' }))
       } else {
         res.writeHead(status, { 'content-type': 'application/json' })
+        const world = detail(7).body
+        if (state.worldDrift) world.detail.current_node_visit_id = 'ad5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e77'
         res.end(JSON.stringify(req.url === '/resolve'
           ? status === 200 ? { ok: true, agentId: AGENT } : { error: 'injected_resolution_503' }
-          : detail(7).body))
+          : status === 200 ? world : { error: 'injected_detail_503' }))
       }
     } catch (error) {
       res.writeHead(500, { 'content-type': 'application/json' })
@@ -139,6 +142,15 @@ function sameIdentity(actual, initial) {
   assert.equal(actual.recoveryCheck.businessOutcome, 'UNKNOWN')
 }
 
+function unchangedTerminal(fx, actual) {
+  assert.equal(count(fx.dir, 'reconciled'), 1, 'only the first terminal verdict is appended')
+  assert.equal(actual.terminalSnapshot.attempt.phase, 'reconciled')
+  assert.ok(actual.polls > actual.terminalSnapshot.polls, 'later polls observe the terminal attempt')
+  assert.deepEqual(actual.attempt, actual.terminalSnapshot.attempt, 'later polls cannot mutate the terminal projection')
+  assert.equal(bytes(join(fx.dir, 'attempts.jsonl')), actual.terminalSnapshot.ledgerBytes,
+    'later polls cannot append reconciled or obligation-release events')
+}
+
 function assertAutomaticAudit(dir, initial) {
   const authorized = events(dir).filter(event => event.kind === 'recovery_authorized')
   assert.ok(authorized.length >= 1)
@@ -213,6 +225,7 @@ for (const point of ['before-wal', 'after-wal']) {
       assert.equal(count(fx.dir, 'delivery_started'), 1)
       assert.equal(fx.state.deliveries.length, point === 'before-wal' ? 1 : 0)
       if (point === 'after-wal') {
+        unchangedTerminal(fx, actual)
         assert.ok(actual.polls >= 4)
         assert.equal(count(fx.dir, 'run_delivered'), 0)
         assert.equal(actual.correlation.state, 'never_existed', 'false negative cannot override durable WAL')
@@ -251,6 +264,7 @@ test('B2 real SIGKILL after Router acceptance with HTTP ACK lost: restart preser
     assert.equal(actual.correlation.snapshot.fenceState, 'active')
     assert.equal(actual.correlation.snapshot.outcome, null)
     assert.equal(actual.correlation.snapshot.terminationEvidence, null)
+    unchangedTerminal(fx, actual)
     assert.equal(actual.routerBytes, loaded.routerBytes, 'poll/correlation reads cannot write Router outcome or fence')
     assert.ok(bytes(join(fx.dir, 'attempts.jsonl')).startsWith(prefix))
     assertAutomaticAudit(fx.dir, initial.attempt)
@@ -288,5 +302,73 @@ test('B2 real processes: automatic consumer racing explicit manual recovery admi
     assert.equal(count(fx.dir, 'run_delivered'), 1)
     receipt(t, 'B2-automatic-manual-real-process-race', fx, initial,
       { autoResult, manualResult }, { childExits: [[0, null], [0, null]] })
+  } finally { await fx.cleanup() }
+})
+
+test('B2 real SIGKILL after world-drift refusal: two restarts consume the durable read-only duty without terminal appends', { timeout: 15_000 }, async t => {
+  const fx = await fixture()
+  try {
+    const initial = await seed(fx)
+    fx.state.recovered = true
+    fx.state.worldDrift = true
+    const crashed = fx.start('crash-after-refusal')
+    const boundary = await crashed.waitFor('crash-ready')
+    assert.equal(boundary.point, 'recoveryRefused')
+    sameIdentity(boundary.attempt, initial.attempt)
+    assert.equal(boundary.attempt.state, 'NEEDS_REVIEW')
+    assert.equal(boundary.attempt.phase, 'recovery_refused')
+    const duty = boundary.attempt.recoveryCheck.refusalSchedule
+    assert.equal(duty.consumer, 'workflow_execution_due_poller')
+    assert.equal(duty.ruleRef, 'accepted:AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1#CTR-EKRWAE-007')
+    assert.equal(duty.intervalMs, 160)
+    assert.ok(Number.isSafeInteger(duty.firstCheckAtMs))
+    const terminalBytes = bytes(join(fx.dir, 'attempts.jsonl'))
+    const routerBytes = bytes(join(fx.dir, 'router-reconciliation.json'))
+    crashed.child.kill('SIGKILL')
+    assert.deepEqual(await crashed.exit, [null, 'SIGKILL'])
+
+    const observations = []
+    for (const unavailable of [true, false]) {
+      fx.state.detailUnavailable = unavailable
+      // The second restart sees the original world again. A fresh readable
+      // world is an observation, never permission to reopen the old refusal.
+      fx.state.worldDrift = false
+      const priorRequests = fx.state.requests.length
+      const restarted = fx.start('observe-refusal')
+      const loaded = await restarted.waitFor('ready')
+      const actual = await restarted.waitFor('refusal-observed')
+      assert.deepEqual(await restarted.exit, [0, null])
+      assert.deepEqual(actual.errors, [])
+      sameIdentity(actual.attempt, initial.attempt)
+      assert.deepEqual(actual.attempt, boundary.attempt)
+      assert.equal(actual.terminalRecovery.outcome, 'NO_OP_TERMINAL')
+      assert.ok(actual.recoveryResults.length >= 2, 'the existing poller consumes later cadence slots, not just startup')
+      for (const check of actual.recoveryResults) {
+        assert.equal(check.outcome, 'REFUSAL_RESPONSIBILITY_PENDING')
+        assert.equal(check.attemptId, initial.attempt.attemptId)
+        assert.equal(check.observation.source, 'target_agent_instance_detail')
+        assert.equal(check.observation.result, unavailable ? 'unavailable' : 'world_observed')
+        assert.ok(Number.isSafeInteger(check.nextCheckAtMs))
+        assert.ok(check.nextCheckAtMs > duty.firstCheckAtMs)
+        assert.equal((check.nextCheckAtMs - duty.firstCheckAtMs) % duty.intervalMs, 0)
+      }
+      assert.ok(fx.state.requests.slice(priorRequests).filter(request => request.path === '/detail').length >= 2)
+      assert.ok(fx.state.requests.slice(priorRequests).filter(request => request.path === '/detail')
+        .every(request => request.status === (unavailable ? 503 : 200)
+          && request.agentId === AGENT && request.workflowInstanceId === INSTANCE))
+      assert.equal(bytes(join(fx.dir, 'attempts.jsonl')), terminalBytes, 'every terminal event byte remains immutable')
+      assert.equal(actual.routerBytes, loaded.routerBytes)
+      assert.equal(actual.routerBytes, routerBytes, 'read-only obligations cannot change Router outcome/fence')
+      assert.equal(fx.state.deliveries.length, 0)
+      assert.equal(count(fx.dir, 'attempt_planned'), 1)
+      assert.equal(count(fx.dir, 'recovery_refused'), 1)
+      assert.equal(count(fx.dir, 'recovery_authorized'), 0)
+      assert.equal(count(fx.dir, 'delivery_started'), 0)
+      assert.equal(count(fx.dir, 'run_delivered'), 0)
+      observations.push({ unavailable, loaded, actual, childExit: [0, null] })
+    }
+    receipt(t, 'B2-world-drift-refusal-SIGKILL-read-only-duty-restarts', fx, initial,
+      observations, { boundary, crashedExit: [null, 'SIGKILL'], terminalBytes, routerBytes,
+        responsibilityDisposition: 'retained by original automatic consumer; no handoff, closure or business success claimed' })
   } finally { await fx.cleanup() }
 })

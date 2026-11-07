@@ -1,7 +1,8 @@
-import { recoveryIdentity, matchesRecoveryTrigger, RECOVERY_RULE } from './automatic-ledger.js'
+import { recoveryIdentity, matchesRecoveryTrigger, RECOVERY_RULE, REFUSAL_RULE } from './automatic-ledger.js'
+import { createRefusalConsumer } from './refusal.js'
 
 /** Existing reconciler consumer only: no queue/timer, and no second admission path. */
-export function createAutomaticRecovery({ ledger, recover, clock, config }) {
+export function createAutomaticRecovery({ ledger, recover, clock, config, readInstanceDetail, resolvePrincipalToAgent }) {
   const budget = config.maxRecoveryChecksPerPoll ?? 25
   const delayMs = config.recoveryRetryDelayMs ?? 30_000
   const maxDelayMs = config.recoveryMaxDelayMs ?? 300_000
@@ -13,6 +14,7 @@ export function createAutomaticRecovery({ ledger, recover, clock, config }) {
     throw new TypeError('workflow-execution: invalid recovery delay range')
   }
   const enabled = () => config.automaticRecoveryEnabled === true
+  const refusals = createRefusalConsumer({ ledger, clock, enabled, budget, readInstanceDetail, resolvePrincipalToAgent })
 
   async function reconcile() {
     if (!enabled()) return []
@@ -28,7 +30,7 @@ export function createAutomaticRecovery({ ledger, recover, clock, config }) {
         triggerId: `${attempt.attemptId}:${attempt.generation ?? 1}:${(attempt.recoveryCheck?.revision ?? 0) + 1}`,
       }))
     }
-    return results
+    return [...results, ...await refusals.reconcile()]
   }
 
   function eligible(attempt, context) {
@@ -50,5 +52,16 @@ export function createAutomaticRecovery({ ledger, recover, clock, config }) {
     return { ...ids, kind: 'automatic', ruleRef: RECOVERY_RULE, triggerId: context.triggerId,
       attemptId: expectedAttemptId, generation: expectedGeneration, gateEvidence }
   }
-  return { reconcile, eligible, checkpoint, audit, enabled }
+
+  // Persist while ACTIVE, before the original refusal. B2 has no terminal
+  // append exception: the recurring obligation is immutable after refusal.
+  function retainRefusal(record, attempt, context) {
+    const firstCheckAtMs = clock() + delayMs
+    return record.recoveryChecked({ ...recoveryIdentity(attempt), ruleRef: RECOVERY_RULE,
+      triggerId: context.triggerId, failures: attempt.recoveryCheck.failures,
+      nextCheckAtMs: firstCheckAtMs, result: 'world_drift_refusal_pending',
+      refusalSchedule: { firstCheckAtMs, intervalMs: maxDelayMs,
+        consumer: 'workflow_execution_due_poller', ruleRef: REFUSAL_RULE } })
+  }
+  return { reconcile, eligible, checkpoint, audit, enabled, retainRefusal }
 }

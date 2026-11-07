@@ -77,10 +77,12 @@ export async function recordReconciled(ledger, io, { nodeVisitId, expectedAttemp
     }
     const stale = staleObservation(current, observation)
     if (stale) return stale
-    if (current.state !== 'ACTIVE') io.terminalGuard(current, { kind: 'reconciled', nodeVisitId })
+    // A competing writer may have settled this ACTIVE observation already.
+    // Reject its changed phase before attempting any terminal write.
     if (current.phase !== expectedPhase) {
       return { committed: false, attempt: { ...current }, cause: 'attempt_changed' }
     }
+    if (current.state !== 'ACTIVE') io.terminalGuard(current, { kind: 'reconciled', nodeVisitId })
     const record = io.recordForActive(nodeVisitId, (event) => {
       event.kind = 'reconciled'
       event.verdict = verdict

@@ -1,6 +1,7 @@
 import { staleObservation, validateObservationIdentity } from '../attempt-identity.js'
 
 export const RECOVERY_RULE = 'accepted:AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1#CTR-EKRWAE-005'
+export const REFUSAL_RULE = 'accepted:AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1#CTR-EKRWAE-007'
 const IDS = ['workflowInstanceId', 'nodeVisitId', 'dispatchIntentId', 'ownerPrincipalId']
 
 export function recoveryIdentity(attempt) {
@@ -26,6 +27,16 @@ function validateCheck(current, event) {
     || typeof event.triggerId !== 'string' || event.triggerId === '' || event.ruleRef !== RECOVERY_RULE) {
     throw new Error('workflow-execution: invalid automatic recovery responsibility')
   }
+  if (event.refusalSchedule !== undefined) {
+    const schedule = event.refusalSchedule
+    if (schedule?.ruleRef !== REFUSAL_RULE || schedule.consumer !== 'workflow_execution_due_poller'
+      || schedule.firstCheckAtMs !== event.nextCheckAtMs
+      || !Number.isSafeInteger(schedule.intervalMs) || schedule.intervalMs < 1
+      || !Number.isSafeInteger(schedule.firstCheckAtMs + schedule.intervalMs)
+      || event.result !== 'world_drift_refusal_pending') {
+      throw new Error('workflow-execution: invalid refusal read obligation')
+    }
+  }
 }
 
 export function applyRecoveryCheck(current, event) {
@@ -33,7 +44,8 @@ export function applyRecoveryCheck(current, event) {
   current.recoveryCheck = { revision: event.expectedRecoveryRevision + 1,
     nextCheckAtMs: event.nextCheckAtMs, failures: event.failures, lastResult: event.result,
     triggerId: event.triggerId, ruleRef: event.ruleRef,
-    consumer: 'workflow_execution_due_poller', businessOutcome: 'UNKNOWN' }
+    consumer: 'workflow_execution_due_poller', businessOutcome: 'UNKNOWN',
+    ...(event.refusalSchedule === undefined ? {} : { refusalSchedule: { ...event.refusalSchedule } }) }
 }
 
 /** Called ONLY from the scope-bound record port under FIFO/OwnerLock. */

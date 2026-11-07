@@ -47,7 +47,7 @@ export function createRecoveryOperation({
   config = {},
 }) {
   const automaticCalls = new WeakSet()
-  const automatic = createAutomaticRecovery({ ledger, clock, config, recover: (args, context) => {
+  const automatic = createAutomaticRecovery({ ledger, clock, config, readInstanceDetail, resolvePrincipalToAgent, recover: (args, context) => {
     automaticCalls.add(context)
     return recoverAttempt(args, context)
   } })
@@ -72,6 +72,11 @@ export function createRecoveryOperation({
         if (auto) await automatic.checkpoint(record, attempt, context)
         let gateEvidence = { ledger: 'pre_admission_resolution_failure', originalExecution: 'never_started', tools: 'never_dispatched' }
         const audit = () => auto ? automatic.audit(attempt, context, gateEvidence) : undefined
+        async function refuse(refused) {
+          if (auto) await automatic.retainRefusal(record, getAttempt(), context)
+          await record.recoveryRefused(authorityRef, refused, audit())
+          return { outcome: 'RECOVERY_REFUSED', refused, nodeVisitId, attemptId: attempt.attemptId }
+        }
         async function dispatch() {
           // E4 — ledger-side shape + delivery-domain evidence.
           if (attempt.phase !== 'resolution_blocked' || attempt.deliveryStartedAtMs !== undefined || attempt.delivered !== undefined) {
@@ -134,12 +139,10 @@ export function createRecoveryOperation({
           if (settle === undefined || settle.kind === 'unavailable') {
             const refused = probe.ok ? 'instance_state_unavailable' : `instance_state_unavailable:${probe.code}`
             if (auto) return { outcome: 'RECOVERY_INAPPLICABLE', evidenceClass: refused, nodeVisitId, attemptId: attempt.attemptId }
-            await record.recoveryRefused(authorityRef, refused, audit())
-            return { outcome: 'RECOVERY_REFUSED', refused, nodeVisitId, attemptId: attempt.attemptId }
+            return refuse(refused)
           }
           if (settle.kind === 'settled') {
-            await record.recoveryRefused(authorityRef, settle.reason, audit())
-            return { outcome: 'RECOVERY_REFUSED', refused: settle.reason, nodeVisitId, attemptId: attempt.attemptId }
+            return refuse(settle.reason)
           }
           // E5 — assignee identity: the visit's assignee is immutable on
           // svc-workflow rows, and when the wire carries it we compare it
@@ -147,12 +150,10 @@ export function createRecoveryOperation({
           const assignee = findAssigneeOnDetail(probe.body?.detail)
           if (assignee !== undefined && assignee !== attempt.ownerPrincipalId.toLowerCase()) {
             const refused = `assignee_no_longer_current:${assignee}`
-            await record.recoveryRefused(authorityRef, refused, audit())
-            return { outcome: 'RECOVERY_REFUSED', refused, nodeVisitId, attemptId: attempt.attemptId }
+            return refuse(refused)
           }
           if (auto && probe.body?.detail?.instance?.is_terminal === true) {
-            await record.recoveryRefused(authorityRef, 'instance_terminal', audit())
-            return { outcome: 'RECOVERY_REFUSED', refused: 'instance_terminal', nodeVisitId, attemptId: attempt.attemptId }
+            return refuse('instance_terminal')
           }
           if (auto && !detailMatchesActivation(probe.body, attempt)) {
             return { outcome: 'RECOVERY_INAPPLICABLE', evidenceClass: 'activation_identity_unverified', nodeVisitId, attemptId: attempt.attemptId }
