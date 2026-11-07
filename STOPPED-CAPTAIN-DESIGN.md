@@ -1,6 +1,6 @@
 # STOPPED-CAPTAIN-DESIGN
 
-> 当前状态：R2 停点已由 R3b 处置；文档出版待完成。下列 R1/R2 STOP 状态为历史记录。
+> 当前状态：R2 停点已由 R3b 处置；PR #649 已创建且未合并。下列 R1/R2 STOP 状态为历史记录。
 
 ```text
 CURRENT_STATE = R2B_STOP_DISPOSED_BY_R3B
@@ -199,3 +199,13 @@ COMMIT / PUSH / PR_AT_THIS_WRITE = NOT_YET / NOT_YET / NOT_YET
 PRODUCTION_READS / PRODUCTION_WRITES = NONE / NONE
 OPERATION_ALLOWED_NOW = NO
 ```
+
+## R3b 出版状态读回
+
+[PR #649](https://github.com/mayf3/dsh-agent-core/pull/649) 已创建，首次 push 和创建均 raw_rc=0，
+读回 OPEN、mergedAt=null、head=`8bb66baf4a850c9c6c6de23fe89ed579549932ba`。
+R2b 机械停点已处置；原 R1/R2 失败及上述 disposition 时点的 PENDING 状态是历史记录。
+另线 SRA PR #648 已入 main=`55f442c74414dc723306a6d8e0cdba73d78eb8da`，
+不再以初始来源快照描述当前生命周期。完整坐标、局限与后续最终 HEAD 回执位置见
+[RECEIPT §6](RECEIPT-CAPTAIN-DESIGN.md#6-r3b-pr-出版回执)。本任务没有合并、任命、
+激活、签发、生产读取或生产写入。

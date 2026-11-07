@@ -2,7 +2,7 @@
 
 ```text
 TASK = BRIEF-CAPTAIN-DESIGN
-DELIVERY_STATE = DOCS_CANDIDATE_PRE_PUBLICATION
+DELIVERY_STATE = DOCS_PR_PUBLISHED
 AUTHOR = /root (Codex under this attributable Owner task)
 SPEC_GOVERNANCE_MODE = PREFLIGHT
 TARGET_REPOSITORY = mayf3/dsh-agent-core
@@ -67,7 +67,7 @@ EVIDENCE_NEEDED 为 Owner 精确记录、本仓相关 accepted authorities、SRA
 ```text
 DOCS_COVERAGE = 7_OF_7
 REAL_PRINCIPAL_BINDINGS = UNKNOWN_NOT_CREATED
-SRA_ACCEPTANCE = NOT_PERFORMED
+SRA_ACCEPTANCE_BY_THIS_TASK = NOT_PERFORMED
 CAPTAIN_APPOINTMENT = NOT_PERFORMED
 DELEGATION_ACTIVATION = NOT_PERFORMED
 W7_ISSUANCE = NOT_PERFORMED
@@ -116,3 +116,54 @@ R1 围栏假阳性与 R2 apply_patch 上下文不匹配是两个不同事件；�
 Git 空白作受影响复核；原 checks.json 的时间边界和字节保持不变。
 
 本节写入时尚未 commit/push/创建 PR；实际出版坐标将在 PR 成功读回后追加。
+
+## 6. R3b PR 出版回执
+
+[PR #649](https://github.com/mayf3/dsh-agent-core/pull/649) 已由 `gh pr create --base main`
+创建，实际 raw_rc=0；首次 push raw_rc=0。独立只读 reviewer
+`/root/captain_r3b_review` 对文档提交 `8bb66baf4a850c9c6c6de23fe89ed579549932ba`
+和 base `f6e332d7568b01c5253618449bfef5839102c851` 返回 AUTHOR_INDEPENDENCE=PASS、
+BLOCKERS=0、SPEC_GAPS=0、DOCS_PUBLICATION_READY=YES；MERGE/IMPLEMENTATION/OPERATION 均 NO。
+方案、回执、STOPPED、checks.json 及完整报告目录均在该提交中，共12份允许文档。
+R3b 新增字节检查 [r3b-delta-checks.json](docs/reports/captain-design-20261107/r3b-delta-checks.json)
+实际 raw_rc=0；此前 [checks.json](docs/reports/captain-design-20261107/checks.json) 原件不改，
+方案正文 SHA256 仍为 `bff562271cd15af449c1c0542a1386b340956a9db48fbd1a16a972e0948faa7a`。
+
+出版真实 command/rc/stdout/stderr/UTC、commit 过程、PR 读回和有界 Base 影响保存在
+[publication-r3b.json](docs/reports/captain-design-20261107/publication-r3b.json)。
+该证据的 PR 读回为 OPEN、mergedAt=null、base=main、head=上述文档提交；
+它记录首次出版，不预填之后的回执提交 SHA。最终回执 commit、第二次 push、远端相等、
+独立最终 HEAD 差量结论与工作区状态在 PR body 持久回执中绑定，避免文件自引用未来 HEAD。
+
+### SRA/main 前移的事实边界
+
+首次来源快照与方案正文记录的是 `main@f6e332d...`、SRA 草案 `61b97d326e337057cd1f71c0a6ff0dc37ab72ec2`。
+另线随后完成正式化和 Owner mayf3 授权的接受事务（SRA head
+`459c7de7a98a96c43cbea34cc315cc9a49ddbe12`），PR #648 已于
+`2026-11-07T07:31:39Z` 合并，当前 main=`55f442c74414dc723306a6d8e0cdba73d78eb8da`。
+唯一正式权威为 main 的 `docs/specs/AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1.md`；
+该事务的接受权威为 Owner 裁定，事务执行者不是接受权威。独审核对六节在还原格式层级与
+链接搬移后逐字相等。本轮没有合并 #648 或执行其接受事务。
+
+因此，方案 §0/Q5、先前 STOP/source-provenance 中的“尚未接受/PR648 open”等是带原始坐标的
+历史观察，不能当作本次出版时的最新 SRA 生命周期。这里补充 fresh 读回，不为更新时间
+重写方案语义或历史证据。本方案仍供后续核定，不因 SRA main 接受而产生具体 principal、
+Captain 任命、控制资格、生效登记、逐单签发或生产权限；这些在本任务仍未执行/未知。
+
+独审过程中一次误猜非必需文件名的 `cat` 返回 rc1；该文件不在交付清单，未运行验证器、
+没有写入，也不属于所需检查结果。完整原命令和合并输出中的真实错误保留在 publication
+证据中，没有伪称单独 stderr 已捕获或把该调用报 PASS。随后按真实提交清单完成独审，
+不新增文件作为 gate。新 main 对象本地尚无的只读可用性观察也如实登记；远端事实由成功的
+GitHub API 读回取得。所有实际交付检查、commit、push、PR create/readback 均已返回 rc0。
+
+```text
+PR = https://github.com/mayf3/dsh-agent-core/pull/649
+PR_STATE_AT_READBACK = OPEN
+MERGED_AT = null
+DOCS_COMMIT = 8bb66baf4a850c9c6c6de23fe89ed579549932ba
+CURRENT_BASE_HEAD_AT_PUBLICATION = 55f442c74414dc723306a6d8e0cdba73d78eb8da
+R2B_STOP_STATUS = DISPOSED_BY_R3B
+PRODUCTION_READS / PRODUCTION_WRITES = NONE / NONE
+CAPTAIN_APPOINTMENT / DELEGATION_ACTIVATION / W7_ISSUANCE = NOT_PERFORMED / NOT_PERFORMED / NOT_PERFORMED
+MERGE_ALLOWED / IMPLEMENTATION_ALLOWED / OPERATION_ALLOWED = NO / NO / NO
+```
