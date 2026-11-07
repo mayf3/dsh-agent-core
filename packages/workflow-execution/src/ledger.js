@@ -2,6 +2,7 @@ import { continuePlannedOwnerResume, mutateWithRecord, recordProgressCheckpoint,
 import { beginAttemptIfAbsent } from './ledger-admission.js'
 import { recordRecoveryCheck } from './recovery/automatic-ledger.js'
 import { recordReadback, listReadbackCandidates } from './recovery/readback-ledger.js'
+import { staleCandidates, runEndedCandidates } from './terminal-attempt-operations.js'
 /**
  * @agent-core/workflow-execution/src/ledger.js — the execution ledger store
  * (WORKFLOW_AGENT_EXECUTION_V2; whole-authority successor of V1).
@@ -160,10 +161,12 @@ export class ExecutionLedger {
     this.attempts = new Map()
     if (!existsSync(this.eventsFile)) {
       this.loaded = true
-      return
+      return { tailIncomplete: false }
     }
     const raw = this.#readAllBytes()
     const endsWithNewline = raw.length === 0 || raw[raw.length - 1] === 0x0a
+    const read = endsWithNewline ? { tailIncomplete: false }
+      : { tailIncomplete: true, tailKind: 'missing_newline' }
     const lines = raw.toString('utf8').split('\n')
     for (const [index, line] of lines.entries()) {
       if (line === '') continue
@@ -176,6 +179,7 @@ export class ExecutionLedger {
           throw new Error(`workflow-execution: corrupt ledger record at line ${index + 1}`, { cause: error })
         }
         this.log.warn?.('workflow-execution: skipped torn tail line in attempts.jsonl')
+        read.tailKind = 'invalid_json'
         if (repairTornTail) this.#truncateTornTail(raw)
         continue
       }
@@ -196,6 +200,7 @@ export class ExecutionLedger {
       if (completeTail) this.#appendAndSync('\n')
     }
     this.loaded = true
+    return read
   }
 
   #readAllBytes() {
@@ -418,9 +423,7 @@ export class ExecutionLedger {
 
   /** Cross-process-fresh ACTIVE snapshot for one reconciliation pass. */
   async listActiveFresh() {
-    return this.mutate(() => [...this.attempts.values()]
-      .filter((attempt) => attempt.state === 'ACTIVE')
-      .map((attempt) => ({ ...attempt })))
+    return this.inspectFresh(attempts => attempts.filter(attempt => attempt.state === 'ACTIVE'))
   }
 
   /**
@@ -432,15 +435,7 @@ export class ExecutionLedger {
    * listActiveFresh.
    */
   async listStaleCandidatesFresh(thresholdMs, nowMs = this.clock()) {
-    if (!Number.isInteger(thresholdMs) || thresholdMs < 1) {
-      throw new TypeError('workflow-execution: listStaleCandidatesFresh requires a positive integer thresholdMs')
-    }
-    return this.mutate(() => [...this.attempts.values()]
-      .filter((attempt) => attempt.delivered !== undefined
-        && attempt.retryReason !== 'owner_assistance_resolved'
-        && nowMs - attempt.delivered.atMs >= thresholdMs
-        && ((attempt.state === 'ACTIVE' && attempt.phase === 'run_delivered') || (attempt.state === 'NEEDS_REVIEW' && attempt.judgment === 'run_ended_no_submission')))
-      .map((attempt) => ({ ...attempt })))
+    return this.inspectFresh(attempts => staleCandidates(attempts, thresholdMs, nowMs))
   }
 
 
@@ -454,16 +449,7 @@ export class ExecutionLedger {
    * outcome_unknown NEVER appears here).
    */
   async listRunEndedCandidatesFresh(retryDelayMs, nowMs = this.clock()) {
-    if (!Number.isInteger(retryDelayMs) || retryDelayMs < 1) {
-      throw new TypeError('workflow-execution: listRunEndedCandidatesFresh requires a positive integer retryDelayMs')
-    }
-    return this.mutate(() => [...this.attempts.values()]
-      .filter((attempt) => attempt.state === 'NEEDS_REVIEW'
-        && attempt.retryReason !== 'owner_assistance_resolved'
-        && attempt.judgment === 'run_ended_no_submission'
-        && Number.isInteger(attempt.reconciledAtMs)
-        && nowMs - attempt.reconciledAtMs >= retryDelayMs)
-      .map((attempt) => ({ ...attempt })))
+    return this.inspectFresh(attempts => runEndedCandidates(attempts, retryDelayMs, nowMs))
   }
 
   snapshot() {
@@ -476,8 +462,8 @@ export class ExecutionLedger {
    * the same exclusion interval, so a live sender cannot cross the fence. */
   async inspectFresh(inspect) {
     const run = this._queue.then(() => this.lock.runExclusive(() => {
-      this.load()
-      return inspect(this.snapshot())
+      const read = this.load()
+      return inspect(this.snapshot(), read)
     }))
     this._queue = run.then(() => {}, () => {})
     return run
@@ -487,9 +473,9 @@ export class ExecutionLedger {
    * WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-003: cross-process-fresh read
    * view for the trace projection — replays the file under the existing
    * lock (same discipline as listActiveFresh) and returns the whole
-   * projection. Read-only in intent; the lock is the freshness seam.
+   * projection without event-file repair; the lock is the freshness seam.
    */
   async snapshotFresh() {
-    return this.mutate(() => [...this.attempts.values()].map((a) => ({ ...a })))
+    return this.inspectFresh(attempts => attempts)
   }
 }
