@@ -1,0 +1,57 @@
+{
+  "observed_at_utc": "2026-11-07T10:25:02.395103+00:00",
+  "method": "gh api immutable GitHub contents read; local registry JSON selected read; no production access",
+  "svc": {
+    "repository": "mayf3/svc-workflow",
+    "revision": "d4c510d94f8929f5377989bd69229d611ab49304",
+    "path": "docs/specs/SVC_WORKFLOW_EXECUTION_CONTROL_V3.md",
+    "blob": "7c6c5d1de1d1f6e1a580521f01fce90f1c2de2b2",
+    "sha256": "7c605ac8658c09b72e792f268ff163f2d4c2cf69162bf4e5870c3fdf00700201",
+    "url": "https://github.com/mayf3/svc-workflow/blob/d4c510d94f8929f5377989bd69229d611ab49304/docs/specs/SVC_WORKFLOW_EXECUTION_CONTROL_V3.md",
+    "excerpts": [
+      {
+        "first_line": 1,
+        "last_line": 18,
+        "text": "---\nspec_id: SVC_WORKFLOW_EXECUTION_CONTROL_V3\ntitle: Accepted whole-authority successor to SVC_WORKFLOW_EXECUTION_CONTROL_V2 (outbox three-channel independence P0-B)\nstatus: accepted\nspec_kind: implementation\nauthority_level: governing_spec\nimplementation_authority: contracts\nproduction_apply_authority: none\nrepo: mayf3/svc-workflow\nscope:\n  - svc-owned-execution-control\ndate: 2026-11-03\nrevision: 1\ncandidate_base: 4ea514bb5822af044961983defbb25f75f876af0\ngoverned_by:\n  - SVC_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1\npaired_authority: AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1\nexternal_authorities: []"
+      },
+      {
+        "first_line": 365,
+        "last_line": 395,
+        "text": "## 5. CTR-SWEC-004 — execution-escalation ingress\n\n`POST /internal/v1/workflow-instances/{workflowInstanceId}/execution-escalations`\n\nGate mirrors wake exactly: `workflow.execute` scope + direct token +\nserver-side `GLOBAL_SCHEDULER_READ` binding; denied attempts get the same\ndurable security audit.\n\nBody: `{ nodeVisitId, reason, attemptCount, lastAttemptId?, dispatchIntentId? }`\nwith `reason ∈ ('ATTEMPTS_EXHAUSTED','STALE_LOOP_EXHAUSTED')`.\n\nTransaction (one tx, mirroring assistance write discipline):\n\n1. Acquire command receipt (`SYSTEM_EXECUTION_ESCALATION` command type).\n2. Lock instance; visit must be the CURRENT visit; instance not\n   cancelled/archived/terminal.\n3. An open case on the visit ⇒ 200 replay `{escalated: false,\n   assistanceCaseId: <existing>}` (idempotent).\n4. Else insert the assistance case as OWNER_PENDING\n   (`requested_by = caller`, request payload = `{message, supportingPayload:\n   {reason, attemptCount, lastAttemptId, dispatchIntentId, source:\n   'execution_policy'}}`) and emit `ASSISTANCE_REQUESTED` using the policy's\n   synthetic request receipt. The version bump makes the engine's stale probe\n   mechanically see `progressed`. The system MUST NOT auto-escalate this case;\n   the Domain Owner uses the existing assistance resolve/escalate commands to\n   either solve it or explicitly move it to HUMAN_REQUIRED.\n5. Queue a `FORUM_EVENT` outbox row `event_key =\n   assistance_requested:<caseId>` with `eventType=owner_attention_requested`\n   so the owner-attention fact is visible on the canonical thread.\n\nResponse: `{escalated, assistanceCaseId, workflowStateVersion, eventSequence}`."
+      },
+      {
+        "first_line": 603,
+        "last_line": 696,
+        "text": "## 13. CTR-SWEC-010 — Owner-resolved workflow execution evidence\n\nThis read-only companion preserves CTR-VAI-009's exact seven-field due DTO.\nAgent Core consumes it under CTR-WEC1-008; no Core product-api endpoint is\ncreated by this Contract.\n\n```text\nGET /internal/v1/dispatch-intents/{dispatchIntentId}/owner-assistance-resume-evidence\nquery: previousAttemptId=<opaque attempt ID string>&preDeliveryWorkflowStateVersion=<integer>\nscope: workflow.read + direct token + enabled GLOBAL_SCHEDULER_READ binding\n200 {\"evidence\": null | {\n  \"dispatchIntentId\": UUID, \"workflowInstanceId\": UUID, \"nodeVisitId\": UUID,\n  \"ownerPrincipalId\": UUID, \"activationState\": \"ACTIVE\", \"workflowStateVersion\": integer,\n  \"assistanceCaseId\": UUID, \"requestEventSequence\": integer,\n  \"resolutionEventSequence\": integer, \"requesterPrincipalId\": UUID,\n  \"resolverPrincipalId\": UUID, \"ingress\": \"assignee\" | \"execution_policy\",\n  \"reason\": null | \"ATTEMPTS_EXHAUSTED\" | \"STALE_LOOP_EXHAUSTED\",\n  \"lastAttemptId\": null | opaque attempt ID string\n}}\n```\n\nThe request and response are closed shapes. `dispatchIntentId` is the exact\npath UUID; `previousAttemptId` is the non-empty opaque Core attempt ID\n(currently `wfeat-*`), not a UUID. Versions and sequences are integers on the\nsvc workflow-state-version scale. `reason` and `lastAttemptId` are present\nand null for `ingress: assignee`; for `execution_policy` both are non-null,\nthe reason is one of the two enumerated policy reasons, and `lastAttemptId`\nis the persisted policy value, never an echo of the query parameter.\n\nOnly the enabled scheduler caller above may query one exact current active\ndispatch intent. Svc derives all identities and provenance from persisted\nrows in a consistent read; callers supply no requester/resolver identity.\nIt returns at most the earliest qualifying case by\n`(resolutionEventSequence, assistanceCaseId)`, or `{\"evidence\":null}` when no\ncase qualifies. Existing authentication/validation/storage error semantics\nremain errors, not permission-bearing evidence. No Assistance message,\nsupporting payload, credential or audit body is returned.\n\nThe activation MUST still be ACTIVE for the current nonterminal instance,\ncurrent visit and current assignee; the returned `ownerPrincipalId` is that\nassignee, not the resolving Domain Owner. The case belongs to that exact\ninstance/visit and remains `RESOLVED`. An open OWNER_PENDING or HUMAN_REQUIRED\ncase still excludes the visit under CTR-SWEC-006. Changed activation, visit or\nassignee cannot be authorized by an old case.\n\nThe request/resolution joins MUST use the case's persisted\n`request_command_id` / `resolution_command_id`, completed successful command\nreceipts of types `REQUEST_WORKFLOW_ASSISTANCE` /\n`RESOLVE_WORKFLOW_ASSISTANCE`, and exact workflow event types\n`ASSISTANCE_REQUESTED` / `ASSISTANCE_RESOLVED`. Each event must match the\ncommand ID, workflow instance, source/target visit and exact\n`event_data.assistanceCaseId`; its actor must match both the receipt Principal\nand the case's requested/resolved Principal. Request new status is\nOWNER_PENDING and resolution new status is RESOLVED. Missing, conflicting or\nambiguous provenance fails closed. The successful resolution command is the\nexisting explicit action checked by svc against the exact Domain's Owner\nauthority at resolution; a timestamp or a claimed role is not a substitute.\nNo rule requires resolver and executor to be different Principals.\n\nBoth ingress paths use those exact joins; classify them from persisted\nserver-generated provenance, never solely from free supporting JSON:\n\n- `assignee`: the ordinary request command and event attest the authenticated\n  requester equals the current activation/visit assignee. `reason` and\n  `lastAttemptId` MUST be null; the ordinary API persists no authoritative\n  attempt binding, and neither caller payload nor the query's\n  `previousAttemptId` may be echoed as one.\n- `execution_policy`: the existing system ingress has a completed\n  `SYSTEM_EXECUTION_ESCALATION` receipt. Its same-actor synthetic request\n  receipt is linked by the exact existing\n  `policy-req:<system-command-id>` idempotency key, has the server-generated\n  `{\"source\":\"execution_policy\"}` receipt body, and both receipts resolve\n  to the exact case (the system receipt's `assistanceCaseId` matches).\n  The case's persisted `supportingPayload.source` is `execution_policy`,\n  its reason is `ATTEMPTS_EXHAUSTED` or `STALE_LOOP_EXHAUSTED`, its non-null\n  `lastAttemptId` exactly equals query `previousAttemptId`, and its\n  `dispatchIntentId` exactly equals the path ID. Missing legacy policy\n  bindings do not qualify. The system requester need not equal the assignee;\n  it is not relabeled as executor. Free ordinary payload fields cannot\n  manufacture this policy provenance.\n\nEach joined event MUST satisfy\n`event_sequence == new_workflow_state_version`, preserving the existing\nevent writer's shared monotonic scale. Both sequences are strictly after\nthe supplied preceding attempt baseline, with\n`baseline < requestEventSequence < resolutionEventSequence <= workflowStateVersion`.\nThe route does not invent or verify Core's baseline: Core supplies its\ndurably recorded pre-delivery fact and remains responsible for the exact\npreceding attempt and assignee match. Wall-clock order alone never qualifies.\nAfter Core records the returned current version as its new pre-delivery\nbaseline, all already-resolved old markers are at or below that baseline;\nneither replay nor selecting another old case can authorize another run.\nCore's one-append single-case consumption fence remains authoritative for\ngeneration admission; this read creates no consumption record or second"
+      }
+    ]
+  },
+  "owner_records": [
+    {
+      "source": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json",
+      "selector": "$.rulings[id=owner-20261107-preauth-v2]",
+      "canonical_sha256": "087461a2a7424088b258940393ef4f9ad5939e59d0a1e420dfc57efd2829c006",
+      "selected_items": [
+        {
+          "index": 4,
+          "text": "授权失败处理: 普通缺陷/测试失败/installer未资格/构建不兼容/缺证→原责任链自行补齐重验; 缺证禁依赖操作但不把已授权修复停成WAITING_OWNER; 仅未授权语义变化/危险迁移/扩权/无法安全回退/超发布策略重大风险才找Owner"
+        }
+      ]
+    },
+    {
+      "source": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json",
+      "selector": "$.rulings[id=owner-20261107-642-643-1377]",
+      "canonical_sha256": "cc27ab3eb5609a4dcb1f212c64f3c25930ef27e392cc4d36306be838eb1486b5",
+      "selected_items": [
+        {
+          "index": 2,
+          "text": "#643保留proposed不激活: 文档审查PASS≠接受或实施许可; 原责任链核实WEC V3封闭枚举变更的合法整权继任路线+Svc配对接受需求→一次完整差量审查; 不阻#1377"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "New Svc successor and acceptance coordinates UNKNOWN",
+    "No source implementation or service behavior tested"
+  ]
+}
