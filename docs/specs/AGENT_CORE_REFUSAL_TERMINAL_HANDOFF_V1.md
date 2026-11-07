@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_REFUSAL_TERMINAL_HANDOFF_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: none
@@ -26,7 +26,33 @@ external_authorities:
 supersedes: []
 superseded_by: null
 owners: [mayf3]
+accepted_by: mayf3
+accepted_date: 2026-11-08
+accepted_at: 2026-11-07T16:36:05.203423+00:00
+accepted_reviewed_head: a8dc8b810140339cb2cb00f99baa2fd9a731d38c
+accepted_reviewed_spec_sha256: 27e2b0b539abcb18de4676e1a1212948c110b0154e66f07750397f30d60151d8
+independent_review_result: PASS
+independent_review_receipt: docs/reports/succession-r4-step4/acceptance-transaction.md
+acceptance_authority: Owner mayf3 four-PR ruling ③ and standing delegation original §3B
+acceptance_authority_source: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json
+acceptance_authority_selector: $.rulings[id=owner-20261107-four-pr-rulings]
+acceptance_authority_canonical_sha256: 677bfe608a67d67f8f9092d817fff0e4f4d040f1bc6e0a0184a69315bc54d7b7
+acceptance_scope: bounded refusal-terminal proposal semantics only
+acceptance_restriction: no new protocol implementation before owning Core whole successors and paired Svc formal acceptance in their main branches
+acceptance_transaction_executor: /root under user-delegated standing section 3B; records Owner decision only
+activation_boundary: main merge after ordered PR 655 and PR 657 and independent final-HEAD review; no implementation authority
 ---
+
+<!-- R4_RTH_LIMITED_ACCEPTANCE_LIFECYCLE -->
+> **当前：Owner mayf3 已限定接受本独立提案语义，事务已记录；尚未合 main。**
+> 非作者语义独审 HEAD `a8dc8b810140339cb2cb00f99baa2fd9a731d38c` PASS，0 blockers。
+> `implementation_authority: none`、`production_apply_authority: none`、`supersedes: []` 保留。
+> 本NEW语义接受不实施新reason、B2 terminal元数据或历史/closed/discrepancy-only协议；
+> 仍须面向届时有效WEC4/PPR完成owning Core整权继任与Svc配套正式接受，进入各实施base后另行路由。
+> 当前引用的main激活依赖监管按#655→#657→#658合入及独立最终HEAD复核；worker不合PR。
+> 下文proposed/不接受/READY_TO_MARK_ACCEPTED=NO等保留已审提案时点，当前限定生命周期以本说明及frontmatter为准。
+> 不重开attempt、不冒充assignee、不推断业务完成；产品/运行/业务验收NOT_RUN。
+<!-- END R4_RTH_LIMITED_ACCEPTANCE_LIFECYCLE -->
 
 # AGENT_CORE_REFUSAL_TERMINAL_HANDOFF_V1
 

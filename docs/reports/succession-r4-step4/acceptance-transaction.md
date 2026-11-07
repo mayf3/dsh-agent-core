@@ -21,3 +21,14 @@ Spec SHA256 `27e2b0b539abcb18de4676e1a1212948c110b0154e66f07750397f30d60151d8`�
 独审/接受commit/final review/push在本准备时尚未执行，不预报PASS。产品/运行/业务测试NOT_RUN，
 生产写0。本轮曾撤销的本地整合写入见本地R4receipt，不声称文件系统全程零源码写入；
 当前提交/推送差量必须且实测仅Markdown。DONE_WHEN=限定接受事务commit/push/readback/停顿。
+
+## 已执行限定接受事务
+
+非作者 `/root/r4_step1_final_review` 独审真实语义HEAD
+`a8dc8b810140339cb2cb00f99baa2fd9a731d38c` PASS，0 blockers/0 Spec gaps；
+RTH SHA256 `27e2b0b539abcb18de4676e1a1212948c110b0154e66f07750397f30d60151d8`。
+十三份carry依赖文档与步3逐字相同，六Contracts/旧OBS/历史§3.2保持，diff check rc0。
+本提交仅记录Owner限定语义accepted及当前生命周期说明/索引；implementation none、production
+none、supersedes[]不变，future Core/Svc门不解除。最终接受HEAD由本Git对象、本地
+R4receipt、独立final-HEAD审查及push读回绑定，提交时不预报后续结果。main激活仍待
+监管按#655→#657→#658合并；MERGE=NONE，无协议实现或生产写，运行/业务NOT_RUN。
