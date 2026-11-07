@@ -49,7 +49,7 @@ function buildEngine(ledger, { gatePage1, timeline, disposeRouterBeforeDeliver }
         timeline.push('fetch_page1_released')
         return { ok: true, items: [dueIntent()] }
       }
-      return { ok: true, items: [] }
+      return { ok: true, items: [dueIntent()] }
     },
     resolvePrincipalToAgent: async () => {
       timeline.push('resolve')

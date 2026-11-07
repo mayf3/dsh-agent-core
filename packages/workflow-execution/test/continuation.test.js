@@ -16,7 +16,7 @@
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -101,10 +101,11 @@ test('#1364 bounded rotation passes 250 abnormal heads across pages and returns 
       const result = await fixture.engine.pollOnce()
       assert.equal(result.ok, true)
       assert.equal(result.pages, 3, 'discovery remains exhaustive even when probe budget is spent')
-      assert.ok(fixture.calls.probes.length - before <= 50, 'finite admission-scan budget S')
+      assert.ok(result.admissionBudget.scanned <= 50, 'finite admission-scan budget S')
       assert.ok(result.admissionBudget.failed <= 25, 'finite failure budget F')
       assert.ok(result.admissionBudget.created <= 25, 'separate actual-mint budget A')
-      assert.equal(result.admissionBudget.scanned, fixture.calls.probes.length - before)
+      assert.equal(result.admissionBudget.scanned + result.admissionBudget.created,
+        fixture.calls.probes.length - before, 'each mint also revalidates policy under the reacquired lock')
     }
     assert.equal(fixture.calls.deliveries.length, 2, `healthy tail reached within ${bound} polls`)
     assert.equal(fixture.ledger.snapshot().length, 2)
@@ -157,7 +158,8 @@ test('#1364 unknown post-mint exception halts probes but preserves exhaustive di
     assert.equal(result.pages, 3)
     assert.equal(result.admissionBudget.unknown, 1)
     assert.equal(result.admissionBudget.created, 0, 'missing return is not fabricated created evidence')
-    assert.equal(fixture.calls.probes.length, 1, 'unknown mint stops further admission probes')
+    assert.equal(fixture.calls.probes.length, 2, 'one capture and one final policy recheck; unknown mint stops further candidates')
+    assert.equal(result.admissionBudget.scanned, 1)
     assert.equal(fixture.calls.deliveries.length, 1)
     assert.equal(fixture.ledger.snapshot().length, 1)
     fixture.ledger.beginAttemptIfAbsent = begin
@@ -207,7 +209,7 @@ function makeIntents(start, count) {
 }
 
 function pageEngine({
-  pages, // array of item-arrays served in order
+  pages, // canonical pages addressed by the exact cursor, including validation reads
   resolve = () => ({ ok: true, agentId: AGENT }),
   deliver = () => ({ ok: true, sessionId: 'main', reconciliationHandle: `turn:${Math.random()}` }),
   config = {},
@@ -215,13 +217,15 @@ function pageEngine({
 }) {
   const dir = mkdtempSync(join(tmpdir(), 'wfe-continuation-'))
   const ledger = ledgerOverride ?? new ExecutionLedger({ dir })
-  const calls = { dueRequests: [], delivers: [] }
+  const calls = { dueRequests: [], sweepRequests: [], delivers: [] }
   const engine = createWorkflowExecutionEngine({
     ledger,
     log: { log: () => {}, warn: () => {}, error: () => {} },
     fetchDuePage: async (req) => {
       calls.dueRequests.push({ ...req })
-      const idx = calls.dueRequests.length - 1
+      if (!existsSync(join(ledger.dir, 'attempts.lock'))) calls.sweepRequests.push({ ...req })
+      const idx = req.afterDispatchIntentId === undefined ? 0
+        : pages.findIndex(page => page.at(-1)?.dispatchIntentId === req.afterDispatchIntentId) + 1
       const page = pages[idx]
       if (page === undefined) throw new Error(`unexpected page request #${idx + 1}`)
       return { ok: true, items: page }
@@ -254,15 +258,16 @@ test('full-page handoff: cursor is the EXACT last-item strings; short page ends 
     const result = await fixture.engine.pollOnce()
     assert.equal(result.ok, true)
     assert.equal(result.pages, 2)
-    assert.equal(fixture.calls.dueRequests.length, 2)
+    assert.equal(fixture.calls.sweepRequests.length, 2)
+    assert.equal(fixture.calls.dueRequests.length, 182, 'two sweep requests plus 100 one-page and 40 two-page validations')
     // First request: NO cursor (both-or-neither => neither).
-    assert.equal(fixture.calls.dueRequests[0].afterNextEligibleAt, undefined)
-    assert.equal(fixture.calls.dueRequests[0].afterDispatchIntentId, undefined)
-    assert.equal(fixture.calls.dueRequests[0].limit, DUE_PAGE_LIMIT)
+    assert.equal(fixture.calls.sweepRequests[0].afterNextEligibleAt, undefined)
+    assert.equal(fixture.calls.sweepRequests[0].afterDispatchIntentId, undefined)
+    assert.equal(fixture.calls.sweepRequests[0].limit, DUE_PAGE_LIMIT)
     // Second request: cursor = EXACT strings of page 1's last item.
     const last = page1[page1.length - 1]
-    assert.equal(fixture.calls.dueRequests[1].afterNextEligibleAt, last.nextEligibleAt, 'byte-exact nextEligibleAt round-trip')
-    assert.equal(fixture.calls.dueRequests[1].afterDispatchIntentId, last.dispatchIntentId, 'byte-exact dispatchIntentId round-trip')
+    assert.equal(fixture.calls.sweepRequests[1].afterNextEligibleAt, last.nextEligibleAt, 'byte-exact nextEligibleAt round-trip')
+    assert.equal(fixture.calls.sweepRequests[1].afterDispatchIntentId, last.dispatchIntentId, 'byte-exact dispatchIntentId round-trip')
     // Every admitted attempt is unique across the whole sweep.
     const admitted = result.admissions.filter((a) => a.action === 'admitted')
     assert.equal(admitted.length, DUE_PAGE_LIMIT + 40)
@@ -282,7 +287,8 @@ test('NO finite page cap: >100 FULL pages are consumed to exhaustion (B-O1 guard
     const result = await fixture.engine.pollOnce()
     assert.equal(result.ok, true)
     assert.equal(result.pages, 106, 'swept 105 full pages + the terminal short page — no page budget')
-    assert.equal(fixture.calls.dueRequests.length, 106)
+    assert.equal(fixture.calls.sweepRequests.length, 106)
+    assert.equal(fixture.calls.dueRequests.length, 107, 'the single mint performs one additional canonical validation')
     assert.equal(result.admissions.filter((a) => a.action === 'admitted').length, 1, 'bound counts only NEW attempts')
   } finally {
     fixture.cleanup()

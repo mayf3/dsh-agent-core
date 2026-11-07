@@ -61,7 +61,8 @@ function makeDeps({
       calls.dueRequests.push(req)
       if (dueError !== undefined && calls.dueRequests.length >= dueErrorOnPage) return { ok: false, ...dueError }
       if (duePages !== undefined) {
-        const idx = calls.dueRequests.length - 1
+        const idx = req.afterDispatchIntentId === undefined ? 0
+          : duePages.findIndex(page => page.at(-1)?.dispatchIntentId === req.afterDispatchIntentId) + 1
         return { ok: true, items: duePages[idx] ?? [] }
       }
       return { ok: true, items: typeof dueItems === 'function' ? dueItems() : dueItems }
@@ -137,12 +138,11 @@ test('happy chain: due intent -> one attempt -> assignee Run with provenance -> 
     assert.equal(attempt.delivered.agentId, AGENT)
     assert.equal(attempt.delivered.reconciliationHandle, 'turn:handle-1')
 
-    // Run in flight -> stays ACTIVE, no settle probe spent on it. The ONE
-    // the two exact reads are the pre-plan baseline and the existing
-    // best-effort post-delivery stale baseline.
+    // A running Run adds no settle probe: reads are unlocked pre-plan,
+    // locked final validation and the post-delivery stale baseline.
     const reconcileRunning = await engine.reconcileOnce()
     assert.equal(reconcileRunning.running, 1)
-    assert.equal(calls.detailReads.length, 2, 'no settle probe on a running run; pre-plan and dispatch baseline reads remain')
+    assert.equal(calls.detailReads.length, 3, 'running reconciliation adds no read after pre-plan, final validation and dispatch baseline')
     assert.equal(ledger.get(VISIT).state, 'ACTIVE')
 
     // Run settled + business state moved past our visit -> SETTLED.
@@ -183,7 +183,7 @@ test('cross-process reconcile cannot terminalize another poller during planned-t
   const entered = new Promise((resolve) => { resolutionEntered = resolve })
   const release = new Promise((resolve) => { releaseResolution = resolve })
   const common = {
-    fetchDuePage: async () => ({ ok: true, items: [] }),
+    fetchDuePage: async () => ({ ok: true, items: [dueIntent()] }),
     deliverRun: async () => ({ ok: true, sessionId: 'main', reconciliationHandle: 'turn:race' }),
     getTurnReconciliation: () => ({ state: 'pending' }),
     readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: {
@@ -193,12 +193,14 @@ test('cross-process reconcile cannot terminalize another poller during planned-t
     } } }),
     log: { log: () => {}, warn: () => {}, error: () => {} },
   }
+  let resolutions = 0
   const admitting = createWorkflowExecutionEngine({
     ...common,
     ledger: new ExecutionLedger({ dir }),
     resolvePrincipalToAgent: async () => {
-      resolutionEntered()
-      await release
+      // Park the original completion callback after attempt_planned; the
+      // separate pre-plan collection interval is deliberately unlocked in V4.
+      if (++resolutions === 2) { resolutionEntered(); await release }
       return { ok: true, agentId: AGENT }
     },
   })
