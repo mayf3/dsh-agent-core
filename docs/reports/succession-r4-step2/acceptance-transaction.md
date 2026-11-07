@@ -37,3 +37,18 @@ PRODUCT_TESTS/DUAL_WRITER_PERSISTENT_STORE=NOT_RUN；PERFORMANCE=UNMEASURED；
 SVC_RUNTIME_OR_STORE_CONFORMANCE=UNKNOWN；MERGE=NONE；产品/生产写入=0。
 双 writer 实测仍是实现/效果签结硬门，文档审查不能替代。DONE_WHEN 是本步接受
 事务交付；遇具体权威冲突、范围扩张、证据门失败或网络重试耗尽，停止依赖动作。
+
+## 已执行的接受事务
+
+准备段落是上述语义候选时点的记录，原文保留。非作者 `/root/r4_step1_final_review`
+独审 `176161f0651847d20a012fb797389b438e11a593`（parent `a61ba45f…`）
+PASS / 0 blockers / 0 Spec gaps。Spec SHA256 为上述 `5dadb98c…`，§9全段
+SHA256 `0479f8910b4b26e393a7a57a42971f301a4673376c8ffbf39e786fca4d95b3b5`，
+与原提案逐字相同；历史 OBS、前驱、索引和旧回执在语义阶段不变；diff check rc0。
+审查允许仅文档堆叠准备后续事务，不能把未合分支当 main 活跃权威。
+
+本提交记录 mayf3 的 accepted/contracts/production none，整体退休 WEC3 并双向回链，
+同步两个当前索引。`accepted_reviewed_head` 是上述真实独审 commit；最终接受 HEAD
+由本 Git 对象与本地 `RECEIPT-SUCCESSION-R4.md`/推送读回绑定，不伪造自引用 SHA。
+独立最终 HEAD 差量复核、push、PR读回在提交后执行，当前不预报成功。
+本提交不合并，main仍WEC3直到#655合入；产品实测和双writer证明仍NOT_RUN。

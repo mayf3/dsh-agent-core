@@ -1,10 +1,10 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4
-title: Proposed whole-authority WEC successor with bounded unlocked-read timing
-status: proposed
+title: Accepted whole-authority WEC successor with bounded unlocked-read timing
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
 repo: mayf3/dsh-agent-core
 authority_action: SUPERSEDE
@@ -12,7 +12,7 @@ route_stage: AUTHORITY_AUTHORING
 scope:
   - workflow-execution-control
 date: 2026-11-07
-revision: proposal-2-r4-acceptance-preparation
+revision: accepted-r4
 candidate_base: 24974c720d634b965943e08bfd0862657b9be0e1
 governed_by:
   - AGENT_CORE_PRODUCT_ARCHITECTURE_V1
@@ -28,19 +28,32 @@ supersedes:
 superseded_by: null
 owners:
   - mayf3
+accepted_by: mayf3
+accepted_date: 2026-11-08
+accepted_at: 2026-11-07T16:16:09.553028+00:00
+accepted_reviewed_head: 176161f0651847d20a012fb797389b438e11a593
+accepted_reviewed_spec_sha256: 5dadb98c80d43950d1664238dc71f3083ac88bdfe41cf6e9e9920708ad5f7141
+independent_review_result: PASS
+independent_review_receipt: docs/reports/succession-r4-step2/acceptance-transaction.md
+acceptance_authority: Owner mayf3 four-PR ruling ④ and standing delegation original §3B
+acceptance_authority_source: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json
+acceptance_authority_selector: $.rulings[id=owner-20261107-four-pr-rulings]
+acceptance_authority_canonical_sha256: 677bfe608a67d67f8f9092d817fff0e4f4d040f1bc6e0a0184a69315bc54d7b7
+acceptance_transaction_executor: /root under user-delegated standing section 3B; records Owner decision only
+activation_boundary: main merge after independent final-HEAD review; until then main predecessor remains controlling
 ---
 
 # AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4
 
-Standalone whole-authority **proposal**. Until the independently reviewed formal
-acceptance transaction, its implementation and production apply authority remain
-`none`. Formal acceptance under Owner ruling ④ and standing delegation §3B must
-set `implementation_authority: contracts`, carrying the existing source authority
-within this complete successor's Contracts; production apply remains `none`.
-This document carries the complete effective WEC V3 contract surface; its only
-product behavior delta is the timing of the two remote reads in `CTR-WEC1-008`,
-completed by `CTR-WEC4-010`. It is not an amendment or a clause-only lifecycle
-replacement. V3's accepted Contracts and historical provenance remain untouched.
+Standalone whole-authority **accepted transaction**, recorded for Owner mayf3 under
+ruling ④ and standing delegation §3B after independent semantic PASS at
+`176161f0651847d20a012fb797389b438e11a593`. Its implementation authority is
+`contracts`; production apply remains `none`. WEC V3 is retired with reciprocal
+links in this same transaction. This branch is not main activation: until PR #655
+is merged after independent final-HEAD review, main's predecessor remains controlling.
+The complete WEC V3 contract surface is carried; the only product behavior delta
+is the two remote-read timings in `CTR-WEC1-008`, completed by `CTR-WEC4-010`.
+V3's Contracts and historical acceptance provenance remain untouched.
 
 A Contract's global identity is `<SPEC_ID>#<CONTRACT_ID>` (SPEC_FORMAT_V0 §4).
 Thus this proposal's `AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4#CTR-WEC1-008`
@@ -153,10 +166,9 @@ existing authoritative surfaces. If that proof needs a new Svc lock, epoch,
 DTO, CAS, binding or protocol, stop that dependent work and re-PREFLIGHT for
 separate paired authority; this document does not authorize it.
 
-While this preparation is proposed, both authority fields remain `none`.
-The formal accepted version must declare `implementation_authority: contracts`
-and `production_apply_authority: none`, consistently in frontmatter, current
-lifecycle, acceptance requirements and the §12 transaction. Once that accepted
+The reviewed semantic preparation was proposed/none/none. This formal accepted
+transaction declares `implementation_authority: contracts` and
+`production_apply_authority: none`, consistently with the §12 lifecycle. Once that accepted
 revision is present in a later implementation base, a separately authorized
 `REUSE` task may implement within these Contracts; it must satisfy every
 applicable evidence gate. It cannot use retired V3 to bypass V4's constraints.
@@ -813,7 +825,7 @@ No historical alternative or acceptance record is deleted.
 
 ### Phase 1 — Semantic preparation before independent review
 
-V4 remains `proposed`, with `supersedes: [AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3]`
+At reviewed semantic HEAD `176161f0651847d20a012fb797389b438e11a593`, V4 remained `proposed`, with `supersedes: [AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3]`
 and `superseded_by: null`. V3 remains `accepted`, its `superseded_by: null`
 and entire bytes unchanged. This matches #642's standalone successor pattern
 and the transition verifier's explicit proposed-successor branch; it is not a
@@ -849,9 +861,8 @@ final-head delta review; reference maintenance cannot rewrite other accepted
 Contract meaning. Preserve the V1→V2→V3 historical edges and receipts. Bind issuer,
 time, exact reviewed semantic head/document hash and final accepted-head review.
 There MUST NOT be an active accepted V4 with V3 independently current, or a V3
-backlink pointing to a merely proposed V4. This semantic preparation performs
-neither acceptance nor retirement. The next reviewed lifecycle commit under R4
-performs that transaction on PR #655; it does not merge the PR. Both acceptance
+backlink pointing to a merely proposed V4. This R4 lifecycle commit records
+acceptance and retirement on PR #655; it does not merge the PR. Both acceptance
 and retirement activate as current repository authority only on main merge
 after independent final-HEAD review. Until then main's accepted predecessors
 remain controlling; a branch's accepted-looking status is not active authority.
@@ -871,8 +882,8 @@ OPEN_OWNER_DECISIONS = NONE within Owner ruling ④ and standing delegation §3B
 NORMATIVE_TBD = NONE
 UNRESOLVED_AUTHORITY_CONFLICT = NONE (bounded proposal; no active rule changed)
 PARTIAL_SUPERSESSION = NONE
-READY_TO_MARK_ACCEPTED = NO
-IMPLEMENTATION_AUTHORITY = none while proposed; contracts in the reviewed accepted lifecycle
+ACCEPTANCE_TRANSACTION = RECORDED; MAIN_ACTIVATION = PENDING_MERGE
+IMPLEMENTATION_AUTHORITY = contracts; effective only after accepted revision enters the implementation base
 PRODUCTION_APPLY_AUTHORITY = none
 IMPLEMENTATION_VALIDATION = NOT_RUN / MECHANISM_NOT_YET_QUALIFIED
 SVC_RUNTIME_OR_STORE_CONFORMANCE = UNKNOWN
@@ -887,7 +898,7 @@ permission to assume equality. No runtime/performance PASS is implied.
 SPEC_GOVERNANCE_MODE = AUTHOR
 AUTHORITY_ACTION = SUPERSEDE
 SPEC_ID = AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4
-STATUS = proposed
+STATUS = accepted
 PRIMARY_PARENT_AUTHORITY = AGENT_CORE_PRODUCT_ARCHITECTURE_V1
 EXTERNAL_AUTHORITIES = SVC_WORKFLOW_EXECUTION_CONTROL_V3 @ 8da8dbcb70e700d9e35970e8b662b1be2c29afdc
 PLAN_LEVEL = BRIEF
