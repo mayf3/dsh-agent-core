@@ -1,0 +1,190 @@
+{
+  "schema_version": 2,
+  "SPEC_GOVERNANCE_MODE": "REVIEW",
+  "REVIEW_KIND": "AFFECTED_CONTRACT",
+  "REPOSITORY": "mayf3/dsh-agent-core",
+  "REVIEWER_ID": "/root/independent_spec_review",
+  "AUTHOR_ID": "/root",
+  "AUTHOR_INDEPENDENCE": "PASS",
+  "INDEPENDENCE_BASIS": "Reviewer authored no candidate semantic delta and performed no repository mutation. Only this external receipt is written.",
+  "ASSURANCE_LEVEL": "DURABLE",
+  "INITIAL_REVIEW_TARGET_HEAD": "6a8535db1a62647b16133f5c29d490490568e672",
+  "REVIEW_TARGET_HEAD": "61ad4281acc17650a05639341453266609f9edca",
+  "BASE_HEAD": "20e60dd72a42a0ef69e0acb8516b15c1893ffb01",
+  "CURRENT_BASE_HEAD": "20e60dd72a42a0ef69e0acb8516b15c1893ffb01",
+  "CURRENT_BASE_BASIS": "Local origin/main readback only; no fresh remote or production observation by reviewer.",
+  "OBSERVED_AT_UTC": "2026-10-30T22:05:56.039874+00:00",
+  "REVIEW_SCOPE": "DELTA",
+  "SCOPE_REASON": "One bounded repair pass for frozen R1/R2 and F1 plus directly dependent manifest/receipt integrity. Unchanged source captures, tarball and diagnostic programs/results are rebound through an exact Git delta impact check rather than rerun.",
+  "BASE_IMPACT": "NONE",
+  "IMPACT_EVIDENCE": [
+    "Exact old-to-new delta has six documentation/evidence paths: proposal, investigation, manifest and three new check receipts. No product source, fixture, dependency, source capture or diagnostic program/result changed.",
+    "Initial review receipt archived byte-for-byte under checks/independent-review-r1.json; all previous source/probe checks remain applicable only at their originally recorded coordinates and diagnostic scope.",
+    "Spec frontmatter independently revalidated with the active JSON Schema, all thirteen required logical sections inspected, stable primitive identities and six Contract-to-Acceptance mappings reviewed."
+  ],
+  "SPEC_REVIEW": "ACCEPT",
+  "SPEC_REVIEW_LIMIT": "Recommendation for the repaired bounded proposal content and evidence-only delivery. This is not Owner acceptance, activation, implementation authority in base, source conformance or completion of #1249.",
+  "SOURCE_VERDICT": "NO_OPEN_BLOCKER_FOR_BOUNDED_EVIDENCE_AND_PROPOSED_SPEC_CONTENT",
+  "AUTHORITY_REVIEW": "PASS",
+  "PRIMITIVE_BOUNDARY_REVIEW": "PASS",
+  "CONTRACT_REVIEW": "PASS",
+  "ACCEPTANCE_COVERAGE_REVIEW": "PASS",
+  "ACCEPTANCE_COVERAGE_LIMIT": "Every proposed Contract now has explicit named Acceptance methods/evidence/expected result/failure conditions; none of the unexecuted product acceptance tests is certified as passing.",
+  "MANDATE_SCOPE_REVIEW": "PASS",
+  "EVIDENCE_REVIEWABILITY": "PASS",
+  "BLOCKERS": [],
+  "FROZEN_BLOCKER_UNION": [
+    {
+      "id": "R1",
+      "status": "CLOSED",
+      "closure_head": "61ad4281acc17650a05639341453266609f9edca",
+      "evidence": "Frontmatter has all required fields; implementation_authority=contracts, status=proposed, owning actor and architecture parent named. JSON Schema returned zero errors. Section 3 limits authority to Core integration, states no external authority established and requires external owning-repository governance and mandate. Section 13 retains implementation/merge/operation NO."
+    },
+    {
+      "id": "R2",
+      "status": "CLOSED",
+      "closure_head": "61ad4281acc17650a05639341453266609f9edca",
+      "evidence": "All thirteen logical sections exist in order. STATE-001, OBS-001/002, CLM-001/002, EVD-001 and DEC-001/002 are explicit and coordinate/limitation bound. Six Acceptance rows name all six Contracts with environment, method, expected result and rejection criteria. Unknown source/runtime/fleet and external authority remain explicit gaps."
+    }
+  ],
+  "RESOLVED_FOLLOW_UPS": [
+    {
+      "id": "F1",
+      "status": "CLOSED",
+      "evidence": "Investigation replaces stale README line attribution with the actual user AGENTS stricter task instruction and explains accepted local V3 bounded atomic permission. Proposal section 3 repeats this distinction. Delivery Resilience exclusion is cited by frontmatter, which is accurate."
+    }
+  ],
+  "SPEC_GAPS": [
+    {
+      "id": "SG1",
+      "kind": "SPEC_GAP",
+      "load_bearing": true,
+      "dependency": "LOAD_BEARING",
+      "affected_action": "Implement or claim the user-requested #1249 replay compatibility repair",
+      "missing_decision": "Owning-repository accepted read/restore compatibility obligation and its validation/fallback semantics for the actual reproducing source candidate.",
+      "authority_inventory_searched": "AUTHORITY_INVENTORY above",
+      "reachable_counterexample": "Current source reader accepts wrapped v2 but degrades raw flat v2; the incident prose expects flat v2 and reported a fatal wrapped-v2 failure. Choosing normalization direction or changing failure policy solely to fit that prose would create a new long-lived decision with no applicable accepted Contract.",
+      "impact": "Product implementation and repair acceptance remain disallowed, even though current-source diagnostic evidence is reviewable.",
+      "minimum_closure": "Obtain attributable Core integration authority acceptance at an exact reviewed commit and authority-branch merge under the user docs-first constraint; resolve reproducing source binding before repair claims, establish external owning-repository authority before external source changes, then re-PREFLIGHT implementation.",
+      "avoidance": "Evidence-only investigation and existing canonical-event-fix reuse planning can continue without product implementation or production reads.",
+      "affected_readiness": [
+        "IMPLEMENTATION_ALLOWED",
+        "PRODUCT_REPAIR_READY"
+      ],
+      "readiness": {
+        "IMPLEMENTATION_ALLOWED": "NO",
+        "PRODUCT_REPAIR_READY": "NO"
+      }
+    }
+  ],
+  "FOLLOW_UPS": [],
+  "TOOLING_DEBT": [],
+  "FORMAT_CHECK": {
+    "method": "PyYAML.safe_load frontmatter; jsonschema.Draft202012Validator(active spec-frontmatter.schema.json).iter_errors; independent semantic logical-section/ID/coverage inspection",
+    "errors": [],
+    "spec_sha256": "e46684b4665345a39d7d92df01fc08044455db0f07be0612fd5e6784a2a351cc",
+    "required_logical_sections": 13,
+    "contract_count": 6,
+    "acceptance_count": 6,
+    "coverage": {
+      "CTR-001": [
+        "ACC-001"
+      ],
+      "CTR-002": [
+        "ACC-002"
+      ],
+      "CTR-003": [
+        "ACC-003"
+      ],
+      "CTR-004": [
+        "ACC-004"
+      ],
+      "CTR-005": [
+        "ACC-004"
+      ],
+      "CTR-006": [
+        "ACC-005",
+        "ACC-006"
+      ]
+    },
+    "archived_proposal_format_receipt_matches_spec_hash": true
+  },
+  "HASH_CHECKS": {
+    "manifest_entries": 55,
+    "manifest_mismatches": 0,
+    "uncovered_evidence_files": 0,
+    "initial_receipt_preserved_byte_for_byte": true,
+    "initial_receipt_sha256": "dce5fb7d7e7d90cc8abd90dbefc7866ed519bda65637512bca6d1f5b195e778e",
+    "source_probe_rerun": "NOT_RUN_IN_DELTA_REVIEW; unchanged bytes and original bounded results retained, not newly labeled runtime proof."
+  },
+  "OTHER_INDEPENDENT_CHECKS": [
+    {
+      "name": "whitespace",
+      "argv": [
+        "git",
+        "diff",
+        "--check",
+        "20e60dd72a42a0ef69e0acb8516b15c1893ffb01",
+        "61ad4281acc17650a05639341453266609f9edca"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "governance_integrity",
+      "argv": [
+        "python3",
+        "-B",
+        ".agents/tools/verify_governance.py",
+        "--target",
+        ".",
+        "--require-accepted"
+      ],
+      "rc": 0,
+      "stdout": "vendored governance bytes match governance.lock.json and adoption is accepted\n",
+      "stderr": ""
+    },
+    {
+      "name": "structure",
+      "argv": [
+        "node",
+        "scripts/verify-code-structure.mjs",
+        "--base",
+        "20e60dd72a42a0ef69e0acb8516b15c1893ffb01",
+        "--head",
+        "61ad4281acc17650a05639341453266609f9edca",
+        "--json"
+      ],
+      "rc": 0,
+      "stdout": {
+        "candidate_result": "CANDIDATE_DELTA_PASS_WITH_BASELINE_DEBT",
+        "summary": {
+          "exit_code": 0,
+          "in_scope_files": 852,
+          "candidate_violations": 0,
+          "baseline_debt": 34,
+          "resolved_debt": 0
+        }
+      },
+      "stderr": ""
+    }
+  ],
+  "READINESS_INTERPRETATION": "Zero open proposal-governance blockers does not close the load-bearing accepted-authority/source-binding gap. Proposal remains proposed, actual failing conversion UNKNOWN, acceptance actor has not accepted, external source authority has not been established. These correctly keep dependent readiness false.",
+  "SPEC_ACCEPTANCE_READY": "NO",
+  "EVIDENCE_DELIVERY_READY": "YES",
+  "PRODUCT_REPAIR_READY": "NO",
+  "IMPLEMENTATION_ALLOWED": "NO",
+  "MERGE_READY": "NO",
+  "OPERATION_ALLOWED": "NO",
+  "CONVERGENCE_EXIT": "NOT_APPLICABLE",
+  "NEXT_ACTION": "RE_PREFLIGHT",
+  "NEXT_REAL_ACTION": "Persist this review as evidence-only branch/issue delivery, then obtain owning-authority decisions and bounded source-binding facts before any product implementation. Do not rerun unchanged repairs or read production/session/credentials to force closure.",
+  "LIMITATIONS": [
+    "The actual failing 023rb loaded artifact and first wrapped-v2-to-invalid conversion remain UNKNOWN; no incident root cause is disproved by current-source compatibility.",
+    "The archived 1,940-file count was not independently inventoried; no fleet resume, installation, runtime loading or self-healing outcome is verified.",
+    "No affected product-suite PASS, new release artifact or source repair is delivered by this candidate.",
+    "No production/service/process/session/credential/config read or write, UNKNOWN replay, restart, deploy, merge or message to other people was performed by this reviewer."
+  ],
+  "FINAL_NOTE": "The user-requested repair, RED-to-GREEN cycle, complete pinned plugin/runtime closure, persistent restart verification, installation and fleet/business outcome remain incomplete. Review is a recommendation only."
+}

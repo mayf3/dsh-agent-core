@@ -1,0 +1,30 @@
+[
+  {
+    "argv": [
+      "/opt/homebrew/bin/python3",
+      "/private/tmp/dsh-ac1249-probe/prepare-source.py"
+    ],
+    "cwd": "/private/tmp/dsh-ac1249-probe",
+    "environment": {
+      "PATH": "/opt/homebrew/bin:/usr/bin:/bin",
+      "HOME": "/private/tmp/dsh-ac1249-probe/empty-home",
+      "DSH_HOME": "/private/tmp/dsh-ac1249-probe/empty-dsh-home",
+      "TMPDIR": "/private/tmp/dsh-ac1249-probe"
+    },
+    "rc": 0
+  },
+  {
+    "argv": [
+      "/opt/homebrew/bin/node",
+      "/private/tmp/dsh-ac1249-probe/compare-replay.mjs"
+    ],
+    "cwd": "/private/tmp/dsh-ac1249-probe",
+    "environment": {
+      "PATH": "/opt/homebrew/bin:/usr/bin:/bin",
+      "HOME": "/private/tmp/dsh-ac1249-probe/empty-home",
+      "DSH_HOME": "/private/tmp/dsh-ac1249-probe/empty-dsh-home",
+      "TMPDIR": "/private/tmp/dsh-ac1249-probe"
+    },
+    "rc": 0
+  }
+]

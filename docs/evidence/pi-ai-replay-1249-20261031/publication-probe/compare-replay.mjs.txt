@@ -1,0 +1,51 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import { stripTypeScriptTypes } from 'node:module';
+import { pathToFileURL } from 'node:url';
+
+const root='/private/tmp/dsh-ac1249-probe';
+const llmPath=fs.realpathSync(path.join(root,'published/package/node_modules/@deepseek-ai/dsh-llm/lib/index.js'));
+const { LlmError }=await import(pathToFileURL(llmPath));
+const bundle=fs.readFileSync(path.join(root,'published/package/lib/index.js'),'utf8');
+const publishedSection=bundle.split('//#region lib/types/replay.js\n')[1].split('//#endregion')[0];
+const published=new Function('LlmError',publishedSection+'\nreturn { readReplayState, toPiAssistant, toPiReplayState };')(LlmError);
+const rawGit=fs.readFileSync(path.join(root,'harness-replay.rc7.ts'),'utf8');
+const gitBody=stripTypeScriptTypes(rawGit.replace(/^import .*\n/gm,'')).replace(/\bexport\s+/g,'');
+const git=new Function('LlmError',gitBody+'\nreturn { readReplayState, toPiAssistant, toPiReplayState };')(LlmError);
+const migrationBody=stripTypeScriptTypes(fs.readFileSync(path.join(root,'codex-migration.v0.2.5.ts'),'utf8')).replace(/\bexport\s+/g,'');
+const migration=new Function(migrationBody+'\nreturn { migrateLegacyOpenAICodexReplayState, migrateReplayHistory };')();
+const response={kind:'pi-ai',version:2,api:'openai-codex-responses',provider:'openai-codex',model:'synthetic-model',responseId:'synthetic-response-id',stopReason:'toolUse'};
+const blocks=[{type:'reasoning',thinkingSignature:'synthetic-encrypted-thinking',redacted:true},{type:'text',textSignature:'synthetic-text-signature'},{type:'tool-call',thoughtSignature:'synthetic-tool-signature'}];
+const content=[{type:'reasoning',text:'synthetic reasoning'},{type:'text',text:'synthetic text'},{type:'tool-call',id:'synthetic-call',name:'synthetic_tool',arguments:'{"x":1}'}];
+const flatV1={...response,version:1,blocks};
+const cases=[['wrapper-v2-empty',{response,blocks:[]},[]],['wrapper-v2-signed',{response,blocks},content],['flat-v1',{...flatV1},content],['flat-v2',{...response,blocks},content],['migrated-flat-v1',migration.migrateLegacyOpenAICodexReplayState(flatV1),content],['mismatch',{response,blocks:[]},content]];
+const results=[];
+for(const [name,state,body] of cases){
+  const message={role:'assistant',content:body,source:{kind:'model',provider:response.provider,model:response.model,replayState:state}};
+  const diagnostics={published:[],git:[]};
+  const outputPublished=published.toPiAssistant(message,x=>diagnostics.published.push(x));
+  const outputGit=git.toPiAssistant(message,x=>diagnostics.git.push(x));
+  assert.deepEqual(outputPublished,outputGit);
+  assert.deepEqual(diagnostics.published,diagnostics.git);
+  let publishedRead,gitRead;
+  for(const [label,api] of [['published',published],['git',git]]){
+    let outcome;
+    try{outcome={accepted:true,value:api.readReplayState(state)};}catch(error){outcome={accepted:false,code:error.code,message:error.message};}
+    if(label==='published')publishedRead=outcome;else gitRead=outcome;
+  }
+  assert.deepEqual(publishedRead,gitRead);
+  results.push({name,publishedAndGitEqual:true,readReplayState:publishedRead,assistantApi:outputPublished.api,degradation:diagnostics.published});
+}
+const native=published.toPiAssistant({role:'assistant',content,source:{kind:'model',provider:response.provider,model:response.model,replayState:{response,blocks}}});
+assert.deepEqual(published.toPiReplayState(native),git.toPiReplayState(native));
+const input={messages:[{role:'assistant',content,source:{kind:'model',provider:response.provider,model:response.model,replayState:flatV1}}]};
+const preimage=JSON.stringify(input);
+const migrated=migration.migrateReplayHistory(input);
+assert.equal(JSON.stringify(input),preimage);
+assert.notEqual(migrated,input);
+assert.notEqual(migrated.messages[0],input.messages[0]);
+assert.deepEqual(migrated.messages[0].source.replayState,{response,blocks});
+const report={status:'PASS',method:'Execute exact replay region extracted from integrity-verified published bundle, compare with Node type-stripped git rc.7 replay.ts, and execute exact pinned plugin migration snippet. All extraction artifacts are under /tmp; no product edits.',results,writerProjectionEqual:true,actualPinnedMigrationInputUnchanged:true,actualPinnedMigrationCreatesNewMessage:true};
+fs.writeFileSync(path.join(root,'replay-comparison.json'),JSON.stringify(report,null,2)+'\n');
+console.log(JSON.stringify(report,null,2));

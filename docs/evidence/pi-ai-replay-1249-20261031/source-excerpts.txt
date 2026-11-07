@@ -1,0 +1,323 @@
+harness c211b445593fa5639075dc690801a3a3005ca0dd:packages/llm/llm-pi-ai/src/replay.ts SHA256=dc5203bc43e707f5f469d35272a533631c4dbf4adc57332e7acbdd7d33345e8a
+106:   throw new LlmError(`invalid pi-ai replay state: ${message}`, 'INVALID_REPLAY_STATE')
+107: }
+108:
+109: /** Validate the durable adapter-private envelope before it reaches pi-ai. */
+110: function readReplayState(value: unknown): PiAiReplayState {
+111:   if (typeof value !== 'object' || value === null || Array.isArray(value)) return invalidReplay('expected a replay envelope')
+112:   const envelope = value as Record<string, unknown>
+113:   const rawResponse = envelope['response']
+114:   if (typeof rawResponse !== 'object' || rawResponse === null || Array.isArray(rawResponse)) return invalidReplay('expected a response object')
+115:   const response = rawResponse as Record<string, unknown>
+116:   if (response['kind'] !== 'pi-ai') return invalidReplay('unknown state kind')
+117:   if (response['version'] !== 2) return invalidReplay(`unsupported version ${String(response['version'])}`)
+118:   for (const key of ['api', 'provider', 'model'] as const) {
+119:     if (typeof response[key] !== 'string' || response[key].length === 0) return invalidReplay(`${key} must be a non-empty string`)
+120:   }
+121:   if (!['stop', 'length', 'toolUse', 'error', 'aborted'].includes(String(response['stopReason']))) {
+122:     return invalidReplay('unknown stopReason')
+123:   }
+124:   if (response['responseModel'] !== undefined && typeof response['responseModel'] !== 'string') return invalidReplay('responseModel must be a string')
+125:   if (response['responseId'] !== undefined && typeof response['responseId'] !== 'string') return invalidReplay('responseId must be a string')
+126:   const blocks = envelope['blocks']
+127:   if (!Array.isArray(blocks)) return invalidReplay('blocks must be an array')
+128:   for (const [index, value] of blocks.entries()) {
+129:     if (typeof value !== 'object' || value === null || Array.isArray(value)) return invalidReplay(`block ${index} must be an object`)
+130:     const block = value as Record<string, unknown>
+131:     if (!['text', 'reasoning', 'tool-call'].includes(String(block['type']))) return invalidReplay(`block ${index} has an unknown type`)
+132:     for (const signature of ['textSignature', 'thinkingSignature', 'thoughtSignature'] as const) {
+133:       if (block[signature] !== undefined && typeof block[signature] !== 'string') return invalidReplay(`block ${index} ${signature} must be a string`)
+134:     }
+135:     if (block['redacted'] !== undefined && typeof block['redacted'] !== 'boolean') return invalidReplay(`block ${index} redacted must be boolean`)
+136:   }
+137:   return {
+138:     response: response as unknown as PiAiReplayResponse,
+139:     blocks: blocks as PiAiReplayBlock[],
+140:   }
+141: }
+142:
+143: /** Convert provider-neutral blocks without trusting them as same-model replay. */
+175:   }
+176: }
+177:
+178: /** Recombine durable Harness content with validated pi-ai replay metadata. */
+179: function replayedAssistant(message: Message, source: ModelMessageSource, rawState: unknown): AssistantMessage {
+180:   const state = readReplayState(rawState)
+181:   if (state.response.provider !== source.provider) return invalidReplay('provider does not match assistant source')
+182:   if (state.response.model !== source.model) return invalidReplay('model does not match assistant source')
+183:   if (state.blocks.length !== message.content.length) return invalidReplay('block count does not match assistant content')
+184:   const content: AssistantMessage['content'] = message.content.map((block, index) => {
+185:     const replay = state.blocks[index]
+186:     if (replay === undefined || replay.type !== block.type) return invalidReplay(`block ${index} does not match assistant content`)
+187:     switch (block.type) {
+188:       case 'text': return {
+189:         type: 'text',
+190:         text: block.text,
+191:         ...replay.type === 'text' && replay.textSignature !== undefined ? { textSignature: replay.textSignature } : {},
+192:       }
+193:       case 'reasoning': return {
+194:         type: 'thinking',
+195:         thinking: block.text,
+196:         ...replay.type === 'reasoning' && replay.thinkingSignature !== undefined ? { thinkingSignature: replay.thinkingSignature } : {},
+197:         ...replay.type === 'reasoning' && replay.redacted !== undefined ? { redacted: replay.redacted } : {},
+198:       }
+199:       case 'tool-call': return {
+200:         type: 'toolCall',
+201:         id: block.id,
+202:         name: block.name,
+203:         arguments: parseArguments(block.arguments),
+204:         ...replay.type === 'tool-call' && replay.thoughtSignature !== undefined ? { thoughtSignature: replay.thoughtSignature } : {},
+205:       }
+206:       /* v8 ignore next -- readReplayState rejects unknown replay tags, so an equal plugin-added Harness tag cannot reach this switch */
+207:       default: return invalidReplay(`block ${index} has an unsupported Harness type`)
+208:     }
+209:   })
+210:   return {
+211:     role: 'assistant',
+212:     content,
+213:     api: state.response.api,
+214:     provider: state.response.provider,
+215:     model: state.response.model,
+216:     ...state.response.responseModel === undefined ? {} : { responseModel: state.response.responseModel },
+217:     ...state.response.responseId === undefined ? {} : { responseId: state.response.responseId },
+218:     usage: emptyPiUsage(),
+219:     stopReason: state.response.stopReason,
+220:     timestamp: 0,
+221:   }
+222: }
+223:
+224: /**
+225:  * Convert one durable Harness assistant message into pi-ai history.
+226:  *
+227:  * Durable content is the authoritative record; replay metadata only restores
+228:  * native fidelity (ids, signatures). A replay state this build cannot use —
+229:  * another adapter's kind, another version, a malformed value, or metadata that
+230:  * no longer matches the content — therefore degrades the one message to
+231:  * provider-neutral history instead of failing the request.
+232:  * @param message - assistant content with required source and optional adapter-owned replay metadata.
+233:  * @param onDegrade - called with the diagnostic reason when an unusable replay
+234:  *   state falls back to provider-neutral conversion.
+235:  * @returns a native pi-ai assistant message reconstructed from durable content.
+236:  */
+237: export function toPiAssistant(message: Message, onDegrade?: (reason: string) => void): AssistantMessage {
+238:   const source = message.source
+239:   if (source.kind !== 'model' || source.replayState === undefined) return foreignAssistant(message)
+240:   try {
+241:     return replayedAssistant(message, source, source.replayState)
+242:   } catch (error: unknown) {
+243:     /* v8 ignore next -- replayedAssistant throws only INVALID_REPLAY_STATE LlmErrors today; the
+244:        guard keeps a future non-replay failure loud instead of silently degrading it */
+245:     if (!(error instanceof LlmError) || error.code !== 'INVALID_REPLAY_STATE') throw error
+246:     onDegrade?.(error.message)
+247:     return foreignAssistant(message)
+248:   }
+249: }
+codex025 e3e54e206f7c829503c7e6eed378643ba0416792:src/adapter.ts SHA256=b652118d8d6cf70874f4d7f9bee63eb2b361497382a3005b052861ad458d5c78
+25: function record(value: unknown): Record<string, unknown> | undefined {
+26:   return typeof value === 'object' && value !== null && !Array.isArray(value)
+27:     ? value as Record<string, unknown>
+28:     : undefined
+29: }
+30:
+31: /** Lift the pre-rc.7 pi-ai replay shape into the current envelope on read. */
+32: export function migrateLegacyOpenAICodexReplayState(value: unknown): unknown {
+33:   const legacy = record(value)
+34:   if (legacy?.['kind'] !== 'pi-ai' || legacy['version'] !== 1 || !Array.isArray(legacy['blocks'])) return value
+35:   const {
+36:     blocks,
+37:     kind: _kind,
+38:     version: _version,
+39:     ...response
+40:   } = legacy
+41:   return {
+42:     response: { ...response, kind: 'pi-ai', version: 2 },
+43:     blocks,
+44:   }
+45: }
+46:
+47: function migrateReplayHistory(options: GenerateOptions): GenerateOptions {
+48:   let changed = false
+49:   const messages = options.messages.map(message => {
+50:     if (message.source.kind !== 'model' || message.source.replayState === undefined) return message
+51:     const replayState = migrateLegacyOpenAICodexReplayState(message.source.replayState)
+52:     if (replayState === message.source.replayState) return message
+53:     changed = true
+54:     return {
+55:       ...message,
+56:       source: { ...message.source, replayState },
+57:     }
+58:   })
+59:   return changed ? { ...options, messages } : options
+60: }
+130: /** Preserve Harness call purpose until the generic pi-ai adapter reaches the provider. */
+131: class OpenAICodexAdapter extends PiAiAdapter {
+132:   constructor(
+133:     options: ConstructorParameters<typeof PiAiAdapter>[0],
+134:     private readonly responses: OpenAICodexResponseRuntime,
+135:     private readonly visibleModelIds?: () => readonly string[],
+136:   ) {
+137:     super(options)
+138:   }
+139:
+140:   override async listModels(provider: string) {
+141:     const models = await super.listModels(provider)
+142:     const visibleModelIds = this.visibleModelIds?.()
+143:     if (visibleModelIds === undefined) return models
+144:     const visible = new Set(visibleModelIds)
+145:     return models.filter(model => visible.has(model.id))
+146:   }
+147:
+148:   override async *stream(options: GenerateOptions): AsyncIterable<StreamChunk> {
+149:     const release = options.purpose === 'compaction'
+150:       ? this.responses.enterCompaction(options.sessionId === undefined ? undefined : String(options.sessionId))
+151:       : undefined
+152:     try {
+153:       for await (const chunk of super.stream(migrateReplayHistory(options))) yield chunk
+154:     } finally {
+155:       release?.()
+156:     }
+157:   }
+codex025 e3e54e206f7c829503c7e6eed378643ba0416792:src/search-event.ts SHA256=fdfd6f066ab6c44e62fe3da0637b45175f39ecfbad9252c5e1ae56187f276f7d
+1: /** Durable request event owned by the OpenAI Codex search provider. */
+2:
+3: import type { Context } from '@deepseek-ai/cordis'
+4: import { KNOWN_SESSION_EVENT_TYPES } from '@deepseek-ai/dsh-session'
+5: import type {} from '@deepseek-ai/dsh-agent'
+6: import type { OpenAICodexSearchRequestRecord } from './search.ts'
+7:
+8: /** Dedicated log event written before an OpenAI Codex search dispatch. */
+9: export const OPENAI_CODEX_SEARCH_MODEL_REQUEST_EVENT = 'web/openai-codex-search-llm-request'
+10:
+11: declare module '@deepseek-ai/dsh-session/types' {
+12:   interface SessionEventMap {
+13:     /** Exact secret-free OpenAI Codex standalone-search request. */
+14:     'web/openai-codex-search-llm-request': OpenAICodexSearchRequestRecord
+15:   }
+16: }
+17:
+18: /**
+19:  * Register the plugin-owned event in the running Harness vocabulary. The
+20:  * public DSH build exports its known-event collection as read-only because
+21:  * core code must not mutate it accidentally; the runtime value is the Set
+22:  * deliberately consulted on every persistence read. Registration remains for
+23:  * the process lifetime so sessions written before an HMR cycle stay readable.
+24:  */
+25: export function installOpenAICodexSearchEvent(): void {
+26:   if (!(KNOWN_SESSION_EVENT_TYPES instanceof Set)) {
+27:     throw new Error('dsh-openai-codex: this Harness build does not expose an extensible session event vocabulary')
+28:   }
+29:   KNOWN_SESSION_EVENT_TYPES.add(OPENAI_CODEX_SEARCH_MODEL_REQUEST_EVENT)
+30: }
+31:
+32: /**
+33:  * Append one resolved request to the initiating agent's session. Searches
+34:  * outside an agent turn have no owning session and therefore produce no log.
+35:  * @param ctx - plugin context carrying the optional active-agent service.
+36:  * @param request - exact request after defaults, excluding credentials.
+37:  */
+38: export function recordOpenAICodexSearchRequest(
+39:   ctx: Context,
+40:   request: OpenAICodexSearchRequestRecord,
+41: ): void {
+42:   ctx.get('agents')?.currentInitiator()?.session.append(
+43:     OPENAI_CODEX_SEARCH_MODEL_REQUEST_EVENT,
+44:     request,
+45:   )
+46: }
+harness c211b445593fa5639075dc690801a3a3005ca0dd:packages/core/session/src/surface.ts SHA256=85570bb2dfa0aaf1c9dbe9af525a4f53e8ffd9be78222bed588f7f88f1777bb8
+95:     // ../../../../.agents/notes/implemented/simplification/2026-07-20-unwrap-injected-content-envelopes.md
+96:     case 'user/message': {
+97:       return event.data
+98:     }
+99:     case 'assistant/message': {
+100:       // Skip an empty-content assistant/message: it exists only to host a
+101:       // max-tokens step's usage and must not inject a content-less assistant
+102:       // turn into the provider transcript.
+103:       if (event.data.message.content.length === 0) return null
+104:       return event.data.message
+105:     }
+106:     case 'tool/result': {
+107:       return event.data.message
+harness c211b445593fa5639075dc690801a3a3005ca0dd:packages/llm/llm/src/index.ts SHA256=71c03b10d948a2dc2403db5c544ee9a2d6db7a45eb0b97d2b0bb2f733507526f
+822:   /** Remove replay state whose historical route is owned by another adapter. */
+823:   private forAdapter(options: GenerateOptions, adapter: LlmAdapter): GenerateOptions {
+824:     const messages: Message[] = options.messages.map((message) => {
+825:       const source = message.source
+826:       if (message.role !== 'assistant' || source.kind !== 'model' || source.replayState === undefined) return message
+827:       if (this.adapters.get(source.provider)?.adapter === adapter) return message
+828:       return freezeMessage({
+829:         ...message,
+830:         source: { kind: 'model', provider: source.provider, model: source.model },
+831:       })
+832:     })
+833:     if (messages.every((message, index) => message === options.messages[index])) return options
+834:     const filtered = { ...options, messages }
+835:     return Object.isFrozen(options) ? deepFreeze(filtered) : filtered
+836:   }
+837:
+838:   /**
+harness c211b445593fa5639075dc690801a3a3005ca0dd:packages/llm/llm-pi-ai/src/context.ts SHA256=73057d53a313b2a879fc1906709b1525302fc14d66155035c645426ba445fa54
+97: }
+98:
+99: function textOnlyContext(options: GenerateOptions, onReplayDegrade?: (reason: string) => void): PiContext {
+100:   const toolNames = new Map<CallId, string>()
+101:   const messages: PiMessage[] = []
+102:   for (const message of options.messages) {
+103:     if (contentHasImage(message.content)) {
+104:       throw new LlmError('pi-ai image conversion requires the durable attachment service', 'UNSUPPORTED_CONTENT')
+105:     }
+106:     if (message.role === 'system') {
+107:       messages.push({ role: 'user', content: flattenText(message), timestamp: 0 })
+108:       continue
+109:     }
+110:     if (message.role === 'assistant') {
+111:       const assistant = toPiAssistant(message, onReplayDegrade)
+112:       for (const block of assistant.content) if (block.type === 'toolCall') toolNames.set(CallId(block.id), block.name)
+113:       messages.push(assistant)
+114:       continue
+190:     if (message.role === 'system') {
+191:       // pi-ai has a single systemPrompt slot; in-history system messages are
+192:       // folded into user messages to preserve order (rare in practice — the
+193:       // harness sends the system prompt via options.system).
+194:       messages.push({ role: 'user', content: flattenText(message), timestamp: 0 })
+195:       continue
+196:     }
+197:     if (message.role === 'assistant') {
+198:       const assistant = toPiAssistant(message, onReplayDegrade)
+199:       for (const block of assistant.content) {
+200:         if (block.type === 'toolCall') toolNames.set(CallId(block.id), block.name)
+201:       }
+202:       messages.push(assistant)
+203:       continue
+204:     }
+harness c211b445593fa5639075dc690801a3a3005ca0dd:packages/core/session/src/known-event-types.ts SHA256=079ec6d40de5db38a8b4b6507f6636949b99ef12ac64dde47d8a43362c05e815
+60:   'tool/call',
+61:   'tool/code-dispatch',
+62:   'tool/code-dispatch-start',
+63:   'tool/result',
+64:   'turn/end',
+65:   'turn/start',
+66:   'user/message',
+67:   'web/deepseek-search-llm-request',
+68:   'web/openai-codex-search-llm-request',
+69: ])
+harness c211b445593fa5639075dc690801a3a3005ca0dd:packages/session/session-persistence/src/coordinator.ts SHA256=80f044b43da1224e0e97208d27d0451f29f8acb579a43389af398eb36f98c096
+1054:    * change how the rest of the log must be interpreted, so silently skipping
+1055:    * it would reconstruct a wrong session (the envelope contract on
+1056:    * `SessionEvent.ignorable`). Runs on NORMALIZED events — after
+1057:    * `snapshotStoredEvents`/`adoptStoredEvents` has upgraded the legacy shapes
+1058:    * this build still reads and rejected the ones it does not, so those keep
+1059:    * their specific diagnostics.
+1060:    */
+1061:   private assertEventsSupported(meta: SessionHeader, events: readonly SessionEvent[]): void {
+1062:     for (const event of events) {
+1063:       if (KNOWN_SESSION_EVENT_TYPES.has(event.type) || event.ignorable === true) continue
+1064:       throw this.unsupported(meta, `session "${meta.id}" contains event type "${event.type}" (seq ${event.seq}) unknown to this harness and not marked ignorable; refusing to interpret the log — it was likely written by a newer harness`)
+1065:     }
+1066:   }
+1067:
+1068:   /** Build a format refusal that points at the raw artifact when the backend has one. */
+1069:   private unsupported(meta: SessionHeader, reason: string): SessionFormatUnsupportedError {
+1070:     const location = this.backend.locate?.(meta)
+1071:     return new SessionFormatUnsupportedError(
+1072:       location === undefined ? reason : `${reason} (raw log: ${location.path})`,

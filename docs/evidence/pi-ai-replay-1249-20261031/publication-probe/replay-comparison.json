@@ -1,0 +1,149 @@
+{
+  "status": "PASS",
+  "method": "Execute exact replay region extracted from integrity-verified published bundle, compare with Node type-stripped git rc.7 replay.ts, and execute exact pinned plugin migration snippet. All extraction artifacts are under /tmp; no product edits.",
+  "results": [
+    {
+      "name": "wrapper-v2-empty",
+      "publishedAndGitEqual": true,
+      "readReplayState": {
+        "accepted": true,
+        "value": {
+          "response": {
+            "kind": "pi-ai",
+            "version": 2,
+            "api": "openai-codex-responses",
+            "provider": "openai-codex",
+            "model": "synthetic-model",
+            "responseId": "synthetic-response-id",
+            "stopReason": "toolUse"
+          },
+          "blocks": []
+        }
+      },
+      "assistantApi": "openai-codex-responses",
+      "degradation": []
+    },
+    {
+      "name": "wrapper-v2-signed",
+      "publishedAndGitEqual": true,
+      "readReplayState": {
+        "accepted": true,
+        "value": {
+          "response": {
+            "kind": "pi-ai",
+            "version": 2,
+            "api": "openai-codex-responses",
+            "provider": "openai-codex",
+            "model": "synthetic-model",
+            "responseId": "synthetic-response-id",
+            "stopReason": "toolUse"
+          },
+          "blocks": [
+            {
+              "type": "reasoning",
+              "thinkingSignature": "synthetic-encrypted-thinking",
+              "redacted": true
+            },
+            {
+              "type": "text",
+              "textSignature": "synthetic-text-signature"
+            },
+            {
+              "type": "tool-call",
+              "thoughtSignature": "synthetic-tool-signature"
+            }
+          ]
+        }
+      },
+      "assistantApi": "openai-codex-responses",
+      "degradation": []
+    },
+    {
+      "name": "flat-v1",
+      "publishedAndGitEqual": true,
+      "readReplayState": {
+        "accepted": false,
+        "code": "INVALID_REPLAY_STATE",
+        "message": "invalid pi-ai replay state: expected a response object"
+      },
+      "assistantApi": "dsh-foreign",
+      "degradation": [
+        "invalid pi-ai replay state: expected a response object"
+      ]
+    },
+    {
+      "name": "flat-v2",
+      "publishedAndGitEqual": true,
+      "readReplayState": {
+        "accepted": false,
+        "code": "INVALID_REPLAY_STATE",
+        "message": "invalid pi-ai replay state: expected a response object"
+      },
+      "assistantApi": "dsh-foreign",
+      "degradation": [
+        "invalid pi-ai replay state: expected a response object"
+      ]
+    },
+    {
+      "name": "migrated-flat-v1",
+      "publishedAndGitEqual": true,
+      "readReplayState": {
+        "accepted": true,
+        "value": {
+          "response": {
+            "api": "openai-codex-responses",
+            "provider": "openai-codex",
+            "model": "synthetic-model",
+            "responseId": "synthetic-response-id",
+            "stopReason": "toolUse",
+            "kind": "pi-ai",
+            "version": 2
+          },
+          "blocks": [
+            {
+              "type": "reasoning",
+              "thinkingSignature": "synthetic-encrypted-thinking",
+              "redacted": true
+            },
+            {
+              "type": "text",
+              "textSignature": "synthetic-text-signature"
+            },
+            {
+              "type": "tool-call",
+              "thoughtSignature": "synthetic-tool-signature"
+            }
+          ]
+        }
+      },
+      "assistantApi": "openai-codex-responses",
+      "degradation": []
+    },
+    {
+      "name": "mismatch",
+      "publishedAndGitEqual": true,
+      "readReplayState": {
+        "accepted": true,
+        "value": {
+          "response": {
+            "kind": "pi-ai",
+            "version": 2,
+            "api": "openai-codex-responses",
+            "provider": "openai-codex",
+            "model": "synthetic-model",
+            "responseId": "synthetic-response-id",
+            "stopReason": "toolUse"
+          },
+          "blocks": []
+        }
+      },
+      "assistantApi": "dsh-foreign",
+      "degradation": [
+        "invalid pi-ai replay state: block count does not match assistant content"
+      ]
+    }
+  ],
+  "writerProjectionEqual": true,
+  "actualPinnedMigrationInputUnchanged": true,
+  "actualPinnedMigrationCreatesNewMessage": true
+}

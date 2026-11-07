@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "/opt/homebrew/bin/node",
+    "/private/tmp/dsh-ac1249-probe/probe.mjs"
+  ],
+  "cwd": "/private/tmp/dsh-ac1249-probe",
+  "environment": {
+    "PATH": "/opt/homebrew/bin:/usr/bin:/bin",
+    "HOME": "/private/tmp/dsh-ac1249-probe/empty-home",
+    "DSH_HOME": "/private/tmp/dsh-ac1249-probe/empty-dsh-home",
+    "TMPDIR": "/private/tmp/dsh-ac1249-probe"
+  },
+  "peerClosure": "/Users/yanfenma/workspace/github/dsh-codex/node_modules/.pnpm/@deepseek-ai+dsh-llm-pi-ai@file+..+..+..+..+..+tmp+dsh-pkgs+deepseek-ai-dsh-llm-pi-ai-0_2c70caba38fee6eb29220e2caa65e82d/node_modules",
+  "rc": 0
+}
