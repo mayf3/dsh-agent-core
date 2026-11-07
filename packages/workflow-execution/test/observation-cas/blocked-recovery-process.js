@@ -12,8 +12,14 @@ if (process.env.EKR_BLOCKED_RECOVERY_CHILD === '1') {
   const ledger = new ExecutionLedger({ dir })
   const routerFile = join(dir, 'router-reconciliation.json')
   const router = new TurnReconciliationStore({ runtimeEpoch: `b2-child-${process.pid}`, persistenceFile: routerFile })
-  const correlations = []
-  let polls = 0, watcher, finishing = false
+  const correlations = [], recoveryResults = []
+  const trackedMutation = ledger.mutateWithRecord.bind(ledger)
+  ledger.mutateWithRecord = async (...args) => {
+    const result = await trackedMutation(...args)
+    if (result?.outcome === 'REFUSAL_RESPONSIBILITY_PENDING') recoveryResults.push(result)
+    return result
+  }
+  let polls = 0, watcher, finishing = false, terminalSnapshot
   const send = (stage, fields = {}) => new Promise((resolve, reject) => {
     process.send({ stage, ...fields }, error => error ? reject(error) : resolve())
   })
@@ -22,7 +28,8 @@ if (process.env.EKR_BLOCKED_RECOVERY_CHILD === '1') {
   // SAME OwnerLock at the exact boundary until the parent actually SIGKILLs
   // this process; throwing an exception would not model process failure.
   const faultRecord = mode === 'crash-before-wal' ? 'recoveryAuthorized'
-    : mode === 'crash-after-wal' ? 'deliveryStarted' : undefined
+    : mode === 'crash-after-wal' ? 'deliveryStarted'
+      : mode === 'crash-after-refusal' ? 'recoveryRefused' : undefined
   if (faultRecord) {
     const mutateWithRecord = ledger.mutateWithRecord.bind(ledger)
     ledger.mutateWithRecord = (nodeVisitId, callback) => mutateWithRecord(nodeVisitId, (record, getAttempt) => {
@@ -40,7 +47,15 @@ if (process.env.EKR_BLOCKED_RECOVERY_CHILD === '1') {
     ledger,
     config: { automaticRecoveryEnabled: true, recoveryRetryDelayMs: 80,
       recoveryMaxDelayMs: 160, maxRecoveryChecksPerPoll: 25 },
-    fetchDuePage: async () => { polls += 1; return { ok: true, items: [] } },
+    fetchDuePage: async () => {
+      polls += 1
+      const attempt = ledger.get(VISIT)
+      if (mode === 'observe' && terminalSnapshot === undefined && attempt?.state === 'NEEDS_REVIEW') {
+        terminalSnapshot = { attempt: structuredClone(attempt), polls,
+          ledgerBytes: readFileSync(join(dir, 'attempts.jsonl'), 'utf8') }
+      }
+      return { ok: true, items: [] }
+    },
     resolvePrincipalToAgent: async principalId => {
       const response = await fetch(`${endpoint}/resolve`, { headers: { 'x-principal-id': principalId } })
       return response.ok ? response.json() : { ok: false, code: `http_${response.status}` }
@@ -72,9 +87,11 @@ if (process.env.EKR_BLOCKED_RECOVERY_CHILD === '1') {
     finishing = true
     clearInterval(watcher)
     await engine.stop()
+    const terminalRecovery = stage === 'refusal-observed'
+      ? await engine.recoverAttempt({ nodeVisitId: VISIT, authorityRef: 'B2_PROCESS_READ_ONLY_CHECK' }) : undefined
     const attempt = ledger.get(VISIT)
     const correlation = attempt ? router.resolveCallerCorrelation({ requestId: attempt.attemptId }) : undefined
-    await send(stage, { ...fields, attempt, errors, polls, correlations, correlation,
+    await send(stage, { ...fields, attempt, errors, polls, correlations, correlation, recoveryResults, terminalRecovery, terminalSnapshot,
       routerBytes: readFileSync(routerFile, 'utf8') })
     process.disconnect()
   }
@@ -100,7 +117,9 @@ if (process.env.EKR_BLOCKED_RECOVERY_CHILD === '1') {
         engine.start({ intervalMs: 20 })
         watcher = setInterval(() => {
           const attempt = ledger.get(VISIT)
-          if (mode === 'observe') {
+          if (mode === 'observe-refusal') {
+            if (recoveryResults.length >= 2) void finish('refusal-observed')
+          } else if (mode === 'observe') {
             if (polls >= 4) void finish('observed')
           } else if (attempt?.phase === 'run_delivered') {
             void finish('admitted')
