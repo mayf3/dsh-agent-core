@@ -72,11 +72,15 @@ export class DevelopmentExecutionEngine {
     this.clock = clock
     this.log = log
     this.timeoutMs = timeoutMs
-    this.backend = backend ?? createCodexBackendFromConfig(this.backendFile)
-    this.ledger = new ExecutionLedger({ dir: this.ledgerDir, clock })
-    this.executions = ExecutionLedger.replay(join(this.ledgerDir, 'executions.jsonl'))
     this.supervised = new Map() // executionId -> {childDone, timer}
-    if (!this.writerAuthorityRetired) this.#recoverOrphans()
+    // CTR-DEC-001/002: retired writes refuse without touching backend/history.
+    // Only the hermetic opt-out initializes mutable writer machinery.
+    if (!this.writerAuthorityRetired) {
+      this.backend = backend ?? createCodexBackendFromConfig(this.backendFile)
+      this.ledger = new ExecutionLedger({ dir: this.ledgerDir, clock })
+      this.executions = ExecutionLedger.replay(join(this.ledgerDir, 'executions.jsonl'))
+      this.#recoverOrphans()
+    }
   }
 
   /** CTR-DEC-001: refuse every writer operation before any other effect. */
@@ -104,7 +108,10 @@ export class DevelopmentExecutionEngine {
   }
 
   #execution(executionId) {
-    const execution = this.executions.get(executionId)
+    const executions = this.writerAuthorityRetired
+      ? ExecutionLedger.replay(join(this.ledgerDir, 'executions.jsonl'))
+      : this.executions
+    const execution = executions.get(executionId)
     if (execution === undefined) throw err('execution_not_found', `no execution ${executionId}`)
     return execution
   }

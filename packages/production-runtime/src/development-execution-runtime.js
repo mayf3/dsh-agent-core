@@ -16,29 +16,31 @@ export function mountDevelopmentExecutionRuntime({ ctx, layout, log = { log: () 
   if (ctx === undefined || layout?.developmentExecutionDir === undefined) {
     throw new TypeError('development-execution-runtime: ctx and layout.developmentExecutionDir are required')
   }
-  const engine = new DevelopmentExecutionEngine({
+  let engine
+  const getEngine = () => engine ??= new DevelopmentExecutionEngine({
     devDir: layout.developmentExecutionDir,
     log: { log: (...a) => log.log('[development-execution]', ...a) },
   })
   const handlers = {
     development_execute: {
       start: async (args, context) => {
-        const r = await engine.start({
+        const r = await getEngine().start({
           repo: args.repo, baseSha: args.baseSha, task: args.task,
           branch: args.branch, constraints: args.constraints, dedupeKey: args.dedupe_key,
         }, context.callerAgentId)
         return { ok: true, result: r }
       },
-      status: async (args) => ({ ok: true, result: engine.status(args.executionId) }),
+      status: async (args) => ({ ok: true, result: getEngine().status(args.executionId) }),
       continue: async (args, context) => {
-        const r = await engine.continue({ executionId: args.executionId, instruction: args.instruction }, context.callerAgentId)
+        const r = await getEngine().continue({ executionId: args.executionId, instruction: args.instruction }, context.callerAgentId)
         return { ok: true, result: r }
       },
-      cancel: async (args) => ({ ok: true, result: engine.cancel(args.executionId) }),
-      result: async (args) => ({ ok: true, result: engine.result(args.executionId) }),
+      cancel: async (args) => ({ ok: true, result: getEngine().cancel(args.executionId) }),
+      result: async (args) => ({ ok: true, result: getEngine().result(args.executionId) }),
     },
   }
-  ctx.provide('developmentExecutionAccess', { handlers, engine })
+  const access = { handlers, get engine() { return getEngine() } }
+  ctx.provide('developmentExecutionAccess', access)
   log.log('development-execution surface mounted (shared, backend-abstracted)')
-  return { engine, handlers }
+  return access
 }
