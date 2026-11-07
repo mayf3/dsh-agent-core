@@ -1,0 +1,19 @@
+{
+  "command": [
+    "/usr/local/bin/node",
+    "scripts/verify-code-structure.mjs",
+    "--base",
+    "b6ddc2a67ba041b8b13ed33d331104cf809d4985",
+    "--head",
+    "91662c3cab497518cc875447f6641b5b2f56aa4d",
+    "--json"
+  ],
+  "cwd": "/private/tmp/h1365-retire",
+  "started_utc": "2026-11-07T23:37:28.866850+00:00",
+  "ended_utc": "2026-11-07T23:37:30.683345+00:00",
+  "actual_rc": 0,
+  "stdout_sha256": "5ab2f5808ab341a11d9b8fd116ffe2cd0e6bebba15dc6591e7762f4d7667e8b9",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "node_version": "v25.6.1\n",
+  "ref_updated": false
+}

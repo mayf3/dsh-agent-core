@@ -1,0 +1,77 @@
+{
+  "gate": "RED",
+  "cwd": "/private/tmp/h1365-retire",
+  "command": [
+    "/opt/homebrew/bin/node",
+    "--test",
+    "--test-reporter=tap",
+    "packages/production-runtime/test/development-retirement.test.js"
+  ],
+  "runtime": {
+    "version": "v26.7.0",
+    "execPath": "/opt/homebrew/Cellar/node/26.7.0/bin/node",
+    "arch": "arm64",
+    "proxyKeysPresent": []
+  },
+  "started_utc": "2026-11-07T23:30:22.621348+00:00",
+  "ended_utc": "2026-11-07T23:30:22.929475+00:00",
+  "child_unset_keys": [
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "ALL_PROXY",
+    "all_proxy",
+    "NO_PROXY",
+    "no_proxy",
+    "NODE_USE_ENV_PROXY"
+  ],
+  "parent_env_unchanged": true,
+  "git_head": "b6ddc2a67ba041b8b13ed33d331104cf809d4985",
+  "expected_rc": 1,
+  "actual_rc": 1,
+  "expected_fail": 5,
+  "counts": {
+    "tests": 5,
+    "pass": 0,
+    "fail": 5,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "diagnostic_checks": [
+    {
+      "test": 1,
+      "name": "1365 Workflow starts and polls with missing backend and history; retired writes refuse, history stays read-only",
+      "diagnostic_matched": true
+    },
+    {
+      "test": 2,
+      "name": "1365 Workflow starts and polls with corrupt backend with intact history; retired writes refuse, history stays read-only",
+      "diagnostic_matched": true
+    },
+    {
+      "test": 3,
+      "name": "1365 Workflow starts and polls with corrupt history; retired writes refuse, history stays read-only",
+      "diagnostic_matched": true
+    },
+    {
+      "test": 4,
+      "name": "1365 Workflow starts and polls with corrupt backend and history; retired writes refuse, history stays read-only",
+      "diagnostic_matched": true
+    },
+    {
+      "test": 5,
+      "name": "1365 default Engine also defers damaged history and ignores damaged backend",
+      "diagnostic_matched": true
+    }
+  ],
+  "capture_valid": true,
+  "raw_sha256": "68bdad663042f1b4751e8f2440e658a193279697699da3343b7246fcf1822360",
+  "file_sha256": {
+    "packages/development-execution/src/engine.js": "65d2965cdb14067cc770eb4cb8b1b3aff32f578e60c026c1e75e6fb8e2107dbe",
+    "packages/production-runtime/src/development-execution-runtime.js": "66a6c6ea9dbce25088a694098c91db724dbd2d9342a923c767bb05050ba4b849",
+    "packages/production-runtime/src/workflow/capability-runtime.js": "53dbddaa6cdbf140da020515c1a2b45beb7712715f3c4c4624ad65708c576ada",
+    "packages/production-runtime/test/development-retirement.test.js": "db37c6deaafa6f174de067ed92224aeceb25a3a062c10f1859035972a0515648",
+    "scripts/run-1365-retire-gates.py": "93d39729f0d027f6f47287e33aa044f51535150b3fc32377c0f41765c5885044"
+  }
+}

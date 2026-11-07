@@ -1,0 +1,40 @@
+{
+  "status": "STOPPED_REQUIRED_GATE_FAILURE",
+  "observed_at_utc": "2026-11-07T23:33:14.370395+00:00",
+  "worktree": "/private/tmp/h1365-retire",
+  "branch": "fix/retire-executor-decouple",
+  "head": "b6ddc2a67ba041b8b13ed33d331104cf809d4985",
+  "current_base_head": "e8d6d333743f812945d47b96ace61b817f35f9cf",
+  "phase": "R2 existing file-expanded suite; child_rc=1 capture_rc=1",
+  "gates": {
+    "R2_RED": "expected child rc1/fail5 + exact diagnostic5/5, capture rc0",
+    "R2_GREEN": "child/capture rc0, pass5/fail0",
+    "existing": "child/capture rc1, tests71/pass57/fail14/cancelled0/skipped0",
+    "structure": "NOT_RUN",
+    "final_semantic_review": "NOT_RUN",
+    "commit_push_pr": "NOT_RUN"
+  },
+  "root_cause_observed": "14 failures all AGENT_MODEL_OVERRIDE_INVALID: NODE_RUNTIME_VERSION: runtime_version_mismatch; compose pins v25.6.1; capture actual v26.7.0",
+  "source_diff_stat": " packages/development-execution/src/engine.js           | 17 ++++++++++++-----\n .../src/development-execution-runtime.js               | 18 ++++++++++--------\n 2 files changed, 22 insertions(+), 13 deletions(-)\n",
+  "source_sha256": {
+    "packages/development-execution/src/engine.js": "d281bbc0e2822f8e7748fae32d55aa5da3a0e78eb37286f1e3845b4a6710226a",
+    "packages/production-runtime/src/development-execution-runtime.js": "62a9ac87887bfb4a7246793dea7f451f8094d4250e5573ddf3ccc29f0eef43af",
+    "packages/production-runtime/src/workflow/capability-runtime.js": "53dbddaa6cdbf140da020515c1a2b45beb7712715f3c4c4624ad65708c576ada",
+    "packages/development-execution/test/development-retirement.test.js": "ca3fa6c78d1a4583f2b5798a899e026683204a203af2a807f15ca7f974968c8b",
+    "packages/development-execution/test/run-retirement-gates.py": "ece661c02609a08bd96d893eb3351ad7fe5da3f07f12f230f80cdeaa18acbd87"
+  },
+  "evidence_sha256": {
+    "RED.tap": "82b3cfff8f012078eca77864d12284d83dfdd5996b2924f317d84ce12108399b",
+    "RED.json": "a605f1093ede02443da63d313ccf144a427fc94c91bbf984f1795ba3d0e486be",
+    "R2-RED.tap": "68bdad663042f1b4751e8f2440e658a193279697699da3343b7246fcf1822360",
+    "R2-RED.json": "b2c0ea34e1dbaf823b4d820269fbdfd0d4a0dce83a7d2a5c919f04e95d1c8d6e",
+    "R2-GREEN.tap": "82a9c86d2764a0e00b4f17196c7e6baea95e24800f874e6b18a71862a46ed505",
+    "R2-GREEN.json": "18afd79a82a4bdf54cea652301172021a3640b5f8ac41538bb5d8df1751162eb",
+    "R2-existing.tap": "720a5ff9e4e8d97fbb15fd924c1d1e1fc0b198833cb806fcf137400fae3a63f7",
+    "R2-existing.json": "bbb4081af32bc199356699606722e738f709bf3773101cd0cdc045267732c705"
+  },
+  "independent_stop_verifier": "/root/independent_review; read-only, did not author source/test/harness; no test re-execution",
+  "production_operations": "NONE",
+  "rebase_merge": "NONE",
+  "next_action": "STOP; preserve candidate. On explicit continuation, qualify real v25.6.1 suite runtime and evidence capture; do not bypass/version-spoof guard or weaken tests."
+}

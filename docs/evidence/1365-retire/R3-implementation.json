@@ -1,0 +1,37 @@
+{
+  "source_commit": "739fdd3434626b9b215fe1b1557689dfc1eea61b",
+  "source_tree": "474a2dc0e647492bf5d4ceade39c69b69202947c",
+  "validation_commit": "91662c3cab497518cc875447f6641b5b2f56aa4d",
+  "validation_tree": "474a2dc0e647492bf5d4ceade39c69b69202947c",
+  "entire_tree_equal": true,
+  "parent": "b6ddc2a67ba041b8b13ed33d331104cf809d4985",
+  "commands": [
+    {
+      "command": [
+        "git",
+        "add",
+        "--",
+        "packages/development-execution/src/engine.js",
+        "packages/production-runtime/src/development-execution-runtime.js",
+        "packages/development-execution/test/development-retirement.test.js",
+        "packages/development-execution/test/run-retirement-gates.py"
+      ],
+      "started_utc": "2026-11-07T23:40:07.729817+00:00",
+      "actual_rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "commit",
+        "-m",
+        "fix: decouple retired development executor from Workflow startup"
+      ],
+      "started_utc": "2026-11-07T23:40:07.746881+00:00",
+      "actual_rc": 0,
+      "stdout": "[fix/retire-executor-decouple 739fdd34] fix: decouple retired development executor from Workflow startup\n 4 files changed, 268 insertions(+), 13 deletions(-)\n create mode 100644 packages/development-execution/test/development-retirement.test.js\n create mode 100644 packages/development-execution/test/run-retirement-gates.py\n",
+      "stderr": ""
+    }
+  ]
+}

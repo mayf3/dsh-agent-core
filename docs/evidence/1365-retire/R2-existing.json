@@ -1,0 +1,65 @@
+{
+  "gate": "existing",
+  "cwd": "/private/tmp/h1365-retire",
+  "command": [
+    "/opt/homebrew/bin/node",
+    "--test",
+    "--test-reporter=tap",
+    "packages/development-execution/test/development-execution.test.js",
+    "packages/development-execution/test/development-retirement.test.js",
+    "packages/development-execution/test/retirement.test.js",
+    "packages/production-runtime/test/compose.test.js",
+    "packages/production-runtime/test/compose-deployment-root.test.js",
+    "packages/production-runtime/test/workflow-execution-shutdown.test.js",
+    "packages/workflow-execution/test/observation-cas/diagnostic-read.test.js",
+    "packages/workflow-execution/test/observation-cas/diagnostic-missing-trace.test.js"
+  ],
+  "runtime": {
+    "version": "v26.7.0",
+    "execPath": "/opt/homebrew/Cellar/node/26.7.0/bin/node",
+    "arch": "arm64",
+    "proxyKeysPresent": []
+  },
+  "started_utc": "2026-11-07T23:31:31.931151+00:00",
+  "ended_utc": "2026-11-07T23:31:44.504346+00:00",
+  "child_unset_keys": [
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "ALL_PROXY",
+    "all_proxy",
+    "NO_PROXY",
+    "no_proxy",
+    "NODE_USE_ENV_PROXY"
+  ],
+  "parent_env_unchanged": true,
+  "git_head": "b6ddc2a67ba041b8b13ed33d331104cf809d4985",
+  "expected_rc": 0,
+  "actual_rc": 1,
+  "expected_fail": 0,
+  "counts": {
+    "tests": 71,
+    "pass": 57,
+    "fail": 14,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "diagnostic_checks": [],
+  "capture_valid": false,
+  "raw_sha256": "720a5ff9e4e8d97fbb15fd924c1d1e1fc0b198833cb806fcf137400fae3a63f7",
+  "file_sha256": {
+    "packages/development-execution/src/engine.js": "d281bbc0e2822f8e7748fae32d55aa5da3a0e78eb37286f1e3845b4a6710226a",
+    "packages/production-runtime/src/development-execution-runtime.js": "62a9ac87887bfb4a7246793dea7f451f8094d4250e5573ddf3ccc29f0eef43af",
+    "packages/production-runtime/src/workflow/capability-runtime.js": "53dbddaa6cdbf140da020515c1a2b45beb7712715f3c4c4624ad65708c576ada",
+    "packages/development-execution/test/development-execution.test.js": "c469293ed2f47b48093e735b3ce8447de3126fb5025c48bacade8339220b2c36",
+    "packages/development-execution/test/development-retirement.test.js": "ca3fa6c78d1a4583f2b5798a899e026683204a203af2a807f15ca7f974968c8b",
+    "packages/development-execution/test/retirement.test.js": "58e18e4e928175bd3c0d5aef06c16c9c1be27445bfa7feb56310b448d0d47dec",
+    "packages/production-runtime/test/compose.test.js": "6ee6f1dbb8f6c175269481066b4b698ad159456c4b1253dffcbac43b20b97e37",
+    "packages/production-runtime/test/compose-deployment-root.test.js": "30060fbbb7b68a0fce9b2d2496ff98ebbd40d60a2c925826dc86eabd3ae89f85",
+    "packages/production-runtime/test/workflow-execution-shutdown.test.js": "203c818496c86a6c0a1aa19c8837d5c803eb769a6a8363ce6f7e8c1fcd2187a0",
+    "packages/workflow-execution/test/observation-cas/diagnostic-read.test.js": "4b29cb5577be6f836becb6ad016216e5d4c189051146368fd6554fbb7f216580",
+    "packages/workflow-execution/test/observation-cas/diagnostic-missing-trace.test.js": "72e23f26b5adde0a8351db9fd4c684b80d4b347a0db7105e096b4abc15f8bebb",
+    "packages/development-execution/test/run-retirement-gates.py": "ece661c02609a08bd96d893eb3351ad7fe5da3f07f12f230f80cdeaa18acbd87"
+  }
+}

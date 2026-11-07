@@ -1,0 +1,79 @@
+{
+  "gate": "existing",
+  "cwd": "/private/tmp/h1365-retire",
+  "command": [
+    "/usr/local/bin/node",
+    "--test",
+    "--test-reporter=tap",
+    "packages/development-execution/test/development-execution.test.js",
+    "packages/development-execution/test/development-retirement.test.js",
+    "packages/development-execution/test/retirement.test.js",
+    "packages/production-runtime/test/compose.test.js",
+    "packages/production-runtime/test/compose-deployment-root.test.js",
+    "packages/production-runtime/test/workflow-execution-shutdown.test.js",
+    "packages/workflow-execution/test/observation-cas/diagnostic-read.test.js",
+    "packages/workflow-execution/test/observation-cas/diagnostic-missing-trace.test.js"
+  ],
+  "runtime": {
+    "version": "v25.6.1",
+    "execPath": "/usr/local/Cellar/node/25.6.1_1/bin/node",
+    "arch": "x64",
+    "proxyKeysPresent": []
+  },
+  "invocation": [
+    "/usr/local/opt/python@3.14/bin/python3.14",
+    "packages/development-execution/test/run-retirement-gates.py",
+    "existing"
+  ],
+  "path": "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+  "node_version_command": [
+    "/usr/local/bin/node",
+    "--version"
+  ],
+  "node_version_rc": 0,
+  "node_version_stdout": "v25.6.1\n",
+  "node_binary_sha256": "c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b",
+  "started_utc": "2026-11-07T23:36:08.968131+00:00",
+  "ended_utc": "2026-11-07T23:36:20.247217+00:00",
+  "child_unset_keys": [
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "ALL_PROXY",
+    "all_proxy",
+    "NO_PROXY",
+    "no_proxy",
+    "NODE_USE_ENV_PROXY"
+  ],
+  "parent_env_unchanged": true,
+  "git_head": "b6ddc2a67ba041b8b13ed33d331104cf809d4985",
+  "expected_rc": 0,
+  "actual_rc": 0,
+  "expected_fail": 0,
+  "counts": {
+    "tests": 71,
+    "pass": 71,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "diagnostic_checks": [],
+  "capture_valid": true,
+  "capture_rc": 0,
+  "raw_sha256": "375611eae655da7b9dc24b3658296d95614cddb1410fe87e0b5eecc70259522e",
+  "file_sha256": {
+    "packages/development-execution/src/engine.js": "d281bbc0e2822f8e7748fae32d55aa5da3a0e78eb37286f1e3845b4a6710226a",
+    "packages/production-runtime/src/development-execution-runtime.js": "62a9ac87887bfb4a7246793dea7f451f8094d4250e5573ddf3ccc29f0eef43af",
+    "packages/production-runtime/src/workflow/capability-runtime.js": "53dbddaa6cdbf140da020515c1a2b45beb7712715f3c4c4624ad65708c576ada",
+    "packages/development-execution/test/development-execution.test.js": "c469293ed2f47b48093e735b3ce8447de3126fb5025c48bacade8339220b2c36",
+    "packages/development-execution/test/development-retirement.test.js": "ca3fa6c78d1a4583f2b5798a899e026683204a203af2a807f15ca7f974968c8b",
+    "packages/development-execution/test/retirement.test.js": "58e18e4e928175bd3c0d5aef06c16c9c1be27445bfa7feb56310b448d0d47dec",
+    "packages/production-runtime/test/compose.test.js": "6ee6f1dbb8f6c175269481066b4b698ad159456c4b1253dffcbac43b20b97e37",
+    "packages/production-runtime/test/compose-deployment-root.test.js": "30060fbbb7b68a0fce9b2d2496ff98ebbd40d60a2c925826dc86eabd3ae89f85",
+    "packages/production-runtime/test/workflow-execution-shutdown.test.js": "203c818496c86a6c0a1aa19c8837d5c803eb769a6a8363ce6f7e8c1fcd2187a0",
+    "packages/workflow-execution/test/observation-cas/diagnostic-read.test.js": "4b29cb5577be6f836becb6ad016216e5d4c189051146368fd6554fbb7f216580",
+    "packages/workflow-execution/test/observation-cas/diagnostic-missing-trace.test.js": "72e23f26b5adde0a8351db9fd4c684b80d4b347a0db7105e096b4abc15f8bebb",
+    "packages/development-execution/test/run-retirement-gates.py": "5589571430f290511c00ddbc397a0f092642fbbd96c20777d4c960589b98a20f"
+  }
+}
