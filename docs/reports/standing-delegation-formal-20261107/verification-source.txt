@@ -1,0 +1,52 @@
+import hashlib,json,pathlib,re,runpy,subprocess,sys,urllib.parse
+import yaml,jsonschema
+R=pathlib.Path('/private/tmp/h-delegation-formal'); D=R/'docs/reports/standing-delegation-formal-20261107'
+P=R/'docs/specs/AGENT_CORE_STANDING_OPERATIONAL_DELEGATION_V1.md'; BASE='24974c720d634b965943e08bfd0862657b9be0e1'
+sha=lambda b:hashlib.sha256(b).hexdigest()
+readfm=lambda t:yaml.safe_load(t.split('---',2)[1])
+text=P.read_text(); meta=readfm(text); ruling=json.loads((D/'owner-ruling.json').read_text()); prov=json.loads((D/'source-provenance.json').read_text())
+assert sha(json.dumps(ruling,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode())==prov['ruling_canonical_sha256']==meta['semantic_source_canonical_sha256']
+assert sha((D/'owner-ruling.json').read_bytes())==prov['snapshot_sha256']
+items=[]
+for i,item in enumerate(ruling['items']):
+ n=f'{i+1:03d}'; match=re.findall(rf'<!-- BEGIN SOD_SOURCE_{n} -->\n(.*?)\n<!-- END SOD_SOURCE_{n} -->',text,re.S)
+ assert match==[item],('original item changed',i)
+ assert sha(item.encode())==prov['item_utf8_sha256'][i]['sha256'];items.append({'id':f'CTR-SOD-{n}','utf8_sha256':sha(item.encode()),'byte_equal':True})
+expected=['Goal','Scope and non-goals','Authority and dependencies','Current State','Observations','Claims and assumptions','Evidence relations','Decisions','Contracts','Acceptance','Alternatives and disposition','Migration, compatibility, and rollback','Open questions']
+assert re.findall(r'^## \d+\. (.+)$',text,re.M)==expected
+jsonschema.validate(meta,json.loads((R/'.agents/schemas/spec-frontmatter.schema.json').read_text()))
+assert meta['spec_id']=='AGENT_CORE_STANDING_OPERATIONAL_DELEGATION_V1' and meta['status'] in ['proposed','accepted']
+assert meta['implementation_authority']=='none' and meta['supersedes']==[] and meta['superseded_by'] is None
+contracts=re.findall(r'^### (CTR-SOD-\d{3}) —',text,re.M); assert len(contracts)==len(set(contracts))==8
+acc=re.findall(r'^\| (ACC-SOD-\d{3}) [^|]+\| (CTR-SOD-\d{3}) \|',text,re.M)
+assert acc==[(f'ACC-SOD-{i:03d}',f'CTR-SOD-{i:03d}')for i in range(1,9)]
+links=[]
+for f in [P,D/'control-bindings.md',D/'conversion-receipt.md']:
+ for target in re.findall(r'\[[^\]]+\]\(([^)]+)\)',f.read_text()):
+  if re.match(r'^https?://|^#',target):continue
+  local=urllib.parse.unquote(target.split('#')[0]);assert (f.parent/local).exists(),(str(f),target)
+  links.append({'source':str(f.relative_to(R)),'target':target})
+for v in prov['authority_inventory']:
+ assert sha((R/v['path']).read_bytes())==v['sha256'],('authority/control changed',v['path'])
+ assert subprocess.check_output(['git','show',BASE+':'+v['path']],cwd=R)==(R/v['path']).read_bytes()
+sra=readfm((R/'docs/specs/AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1.md').read_text())
+transition=runpy.run_path(str(R/'.agents/tools/validate_spec_transition.py'))['validate_transition']
+if meta['status']=='proposed': before=[sra]
+else:
+ assert re.fullmatch('[0-9a-f]{40}',meta['accepted_reviewed_head'])
+ reviewed=subprocess.check_output(['git','show',meta['accepted_reviewed_head']+':'+str(P.relative_to(R))],cwd=R,text=True)
+ oldmeta=readfm(reviewed);assert oldmeta['status']=='proposed'
+ assert text.split('## 1. Goal',1)[1]==reviewed.split('## 1. Goal',1)[1], 'normative body changed after review'
+ review=D/'independent-review.md';assert sha(review.read_bytes())==meta['independent_review_receipt_sha256']
+ assert meta['accepted_by']=='mayf3' and meta['acceptance_transaction_executor'].startswith('/root ')
+ before=[sra,oldmeta]
+errors=transition(before,[sra,meta]);assert errors==[],errors
+changes=subprocess.check_output(['git','diff','--name-only',BASE],cwd=R,text=True).splitlines()+subprocess.check_output(['git','ls-files','--others','--exclude-standard'],cwd=R,text=True).splitlines()
+allowed=lambda s:s in ['BRIEF-DELEGATION-FORMAL.md','RECEIPT-DELEGATION-FORMAL.md','docs/specs/README.md',str(P.relative_to(R))] or s.startswith(str(D.relative_to(R))+'/')
+assert all(allowed(f)for f in changes),changes
+idx=(R/'docs/specs/README.md').read_text(); baseline_idx=subprocess.check_output(['git','show',BASE+':docs/specs/README.md'],cwd=R,text=True)
+added=idx.split('## Standing Operational Delegation V1 — 总委托框架\n',1);assert len(added)==2
+prefix,rest=added; oldtail=rest.split('## Standing Release Authorization V1',1)[1]
+assert prefix+'## Standing Release Authorization V1'+oldtail==baseline_idx,'existing index entry changed'
+report={'result':'PASS','status':meta['status'],'ruling_canonical_sha256':prov['ruling_canonical_sha256'],'eight_original_items':items,'required_sections':expected,'frontmatter_schema':'PASS','contract_acceptance_coverage':'8/8','scoped_lifecycle_transition':'PASS; SRA retained, no supersession','unchanged_authority_control_files':len(prov['authority_inventory']),'unchanged_existing_index_entries':True,'local_links_verified':len(links),'docs_only_scope':'PASS','runtime_negative_tests':'NOT_EXECUTED','control_effectiveness':'NOT_VERIFIED'}
+print(json.dumps(report,ensure_ascii=False,indent=2))

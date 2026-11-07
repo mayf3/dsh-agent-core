@@ -1,0 +1,122 @@
+TAP version 13
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# Subtest: CTR-WEC1-003 gate: no token / bad token / wrong scope / unconfigured seam all fail closed
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+ok 1 - CTR-WEC1-003 gate: no token / bad token / wrong scope / unconfigured seam all fail closed
+  ---
+  duration_ms: 37.125084
+  type: 'test'
+  ...
+# Subtest: CTR-WEC1-003 traces: valid query hits the seam; unknown instance 404; bad params 400
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+ok 2 - CTR-WEC1-003 traces: valid query hits the seam; unknown instance 404; bad params 400
+  ---
+  duration_ms: 14.8375
+  type: 'test'
+  ...
+# Subtest: CTR-WEC1-006 kicks: valid kick 200 (kicked), never echoes the payload; malformed 400
+ok 3 - CTR-WEC1-006 kicks: valid kick 200 (kicked), never echoes the payload; malformed 400
+  ---
+  duration_ms: 14.819416
+  type: 'test'
+  ...
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# Subtest: owner-assistance wake: closed body + workflow.execute gate + retryable runtime failure
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+ok 4 - owner-assistance wake: closed body + workflow.execute gate + retryable runtime failure
+  ---
+  duration_ms: 26.998917
+  type: 'test'
+  ...
+# Subtest: governance child review wake accepts the closed typed phase and paired optional submission proof
+ok 5 - governance child review wake accepts the closed typed phase and paired optional submission proof
+  ---
+  duration_ms: 14.894
+  type: 'test'
+  ...
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# Subtest: CTR-WEC1-003: access service absent → 503 not_ready (fail-closed, honest)
+ok 6 - CTR-WEC1-003: access service absent → 503 not_ready (fail-closed, honest)
+  ---
+  duration_ms: 12.112375
+  type: 'test'
+  ...
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# Subtest: attention: zero-parameter fleet summary 200; read-only boundary (no kick/wake/trace side calls)
+ok 7 - attention: zero-parameter fleet summary 200; read-only boundary (no kick/wake/trace side calls)
+  ---
+  duration_ms: 12.673334
+  type: 'test'
+  ...
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# Subtest: attention: same fail-closed gate (no token / wrong scope / unconfigured seam) + closed query
+ok 8 - attention: same fail-closed gate (no token / wrong scope / unconfigured seam) + closed query
+  ---
+  duration_ms: 48.7245
+  type: 'test'
+  ...
+# === T42-FIXED RESULT ===
+# {
+#   "timeline": [
+#     "fetch_page1_parked",
+#     "fetch_page1_released",
+#     "resolve",
+#     "resolve",
+#     "deliver_ok",
+#     "STOP_DRAINED"
+#   ],
+#   "lateDeliveries": []
+# }
+# Subtest: T42-fixed: stop() awaits the bounded drain — no delivery after the awaited stop
+ok 9 - T42-fixed: stop() awaits the bounded drain — no delivery after the awaited stop
+  ---
+  duration_ms: 84.447125
+  type: 'test'
+  ...
+# === T67-FIXED RESULT ===
+# {
+#   "timeline": [
+#     "fetch_page1_parked",
+#     "fetch_page1_released",
+#     "resolve",
+#     "resolve",
+#     "deliver_ok",
+#     "writeEvidence_stopped",
+#     "log_stopped_cleanly",
+#     "process_exit_0"
+#   ],
+#   "runDelivered": 1,
+#   "lateI0": 0
+# }
+# Subtest: T42+T67-fixed: result surface after drain is truthful — ledger carries zero post-stop facts
+ok 10 - T42+T67-fixed: result surface after drain is truthful — ledger carries zero post-stop facts
+  ---
+  duration_ms: 79.697166
+  type: 'test'
+  ...
+# Subtest: T42-r2 A: busy ticks keep the drain attribution — stop() waits for the REAL poll
+ok 11 - T42-r2 A: busy ticks keep the drain attribution — stop() waits for the REAL poll
+  ---
+  duration_ms: 131.397
+  type: 'test'
+  ...
+# Subtest: T42-r2 B: startup catch-up reconcile is drain-owned — stop() awaits it
+ok 12 - T42-r2 B: startup catch-up reconcile is drain-owned — stop() awaits it
+  ---
+  duration_ms: 89.196833
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 431.437958

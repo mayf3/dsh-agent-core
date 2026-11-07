@@ -1,0 +1,25 @@
+{
+  "observed_at": "2026-11-07T15:54:50.986354+00:00",
+  "technical_sources": [
+    {
+      "url": "https://support.apple.com/en-gb/guide/security/seca6147599e/web",
+      "claim": "APFS supports copy-on-write, shared space, cloning and snapshots; technical context only, not this host measurement"
+    },
+    {
+      "url": "https://learn.chatgpt.com/docs/app-server",
+      "claim": "thread/archive and unarchive describe moving logs; no evidence this host nightly job executed or local TTL approved"
+    }
+  ],
+  "local_system_sources": [
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/attr.h",
+      "sha256": "683f9671f37898c1d381fed80b0d7bf0313887aa9b3fa98b3a39ba9b3b333b88",
+      "relevant": "ATTR_CMNEXT_PRIVATESIZE, CLONEID, EXT_FLAGS, CLONE_REFCNT; FSOPT_ATTR_CMN_EXTENDED; returned masks checked"
+    },
+    {
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/share/man/man2/getattrlist.2",
+      "sha256": "b1398933bf3178aa2783a241b2aabcdbaa4dd118278f6c06e2a08221bb1305f5",
+      "relevant": "ATTR_CMNEXT_PRIVATESIZE, CLONEID, EXT_FLAGS, CLONE_REFCNT; FSOPT_ATTR_CMN_EXTENDED; returned masks checked"
+    }
+  ]
+}

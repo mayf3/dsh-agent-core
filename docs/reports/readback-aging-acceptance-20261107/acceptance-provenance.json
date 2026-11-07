@@ -1,0 +1,23 @@
+{
+  "observed_at": "2026-11-07T12:58:48.337170Z",
+  "repository": "mayf3/dsh-agent-core",
+  "worktree": "/private/tmp/h643-accept",
+  "reviewed_pr_head": "7b5d79c3961625aaade6f3b383b18b2968e82f6c",
+  "pr_head_ref": "refs/heads/docs/readback-aging-handoff-amend",
+  "authoring_base": "3c1bcf98bc40a2c34cca24f241c87d1b12cea216",
+  "current_main_at_preflight": "24974c720d634b965943e08bfd0862657b9be0e1",
+  "owner_source": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json",
+  "ruling_selector": "$.rulings[id=owner-20261107-five-decisions]",
+  "item_selector": "$.rulings[id=owner-20261107-five-decisions].items[2]",
+  "canonical_algorithm": "UTF-8 json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':')), no trailing newline",
+  "ruling_canonical_sha256": "95290062529cf24c31d3c7f6c748a22e5e369d14458cf623f562eee5c90cedc8",
+  "item_canonical_sha256": "ffeea11b8bd8b57815eb8fc8c9d0ec32e3528386b04d506d71fd8313e067bba1",
+  "original_proposal_sha256": "3ac3478f4e9f71c0fd27276ffd568b3d5f44c135c47d4113f1f64be989d243ad",
+  "accepted_spec_sha256_at_write": "c9f01d33499e20665f5102960381848dd8a4f539e050f30d6b44539c52ccf39e",
+  "acceptance_scope": "仅限提案语义",
+  "acceptance_restriction": "WEC/Svc配套权威正式接受前不得实施新reason或用于生产",
+  "pr_transcript_comment_id": 6707205612,
+  "prior_semantic_review_head": "d8fc43ad0fb6cb462bab847416f0371ca92a9b58",
+  "prior_semantic_review_receipt": "RECEIPT-1376-AMEND.md",
+  "prior_review_reuse": "Prior bounded semantic review retained; this transaction requires independent lifecycle delta and final-HEAD readback only."
+}

@@ -1,0 +1,2 @@
+24318028	/Users/authsvc/.agent-core
+24318028	/Users/authsvc

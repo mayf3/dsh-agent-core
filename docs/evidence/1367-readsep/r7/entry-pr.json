@@ -1,0 +1,84 @@
+{
+  "recorded_at_utc": "2026-11-07 12:10:47 UTC",
+  "provenance": "GitHub connector read-only get_pr_info result; initial schema rejection occurred before service execution, then corrected required repository_full_name key",
+  "initial_schema_rejection": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Parameters failed connector schema validation: repository_full_name [required]: Missing required property; repository_full_name [required]: Missing required property"
+      }
+    ],
+    "structuredContent": {
+      "error": "Parameters failed connector schema validation: repository_full_name [required]: Missing required property; repository_full_name [required]: Missing required property",
+      "error_code": "INVALID_ARGUMENT",
+      "error_data": {
+        "reason": "INVALID_PARAMETERS",
+        "clamp_errors": [
+          {
+            "path": [
+              "repository_full_name"
+            ],
+            "message": "Missing required property",
+            "keyword": "required"
+          },
+          {
+            "path": [
+              "repository_full_name"
+            ],
+            "message": "Missing required property",
+            "keyword": "required"
+          }
+        ],
+        "clamp_rewrites": []
+      }
+    },
+    "isError": true
+  },
+  "valid_readback": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "url": "https://github.com/mayf3/dsh-agent-core/pull/654",
+      "number": 654,
+      "state": "open",
+      "merged": false,
+      "mergeable": true,
+      "draft": false,
+      "body": "Fixes mayf3/agent-control#1367 (LEDGER-D04).\n\nMounted `traces`/`attention` and fresh ledger readers previously entered `mutate`, so reading a torn event tail could truncate it or append a missing newline. Fresh readers now use the existing FIFO/OwnerLock and replay without repair; diagnostic responses explicitly qualify an incomplete tail. Actual mutation retains fresh locked replay, tail repair, identity/generation/phase validation and UNKNOWN fences.\n\nReconciliation derives candidates from one shared snapshot, with conditional refresh after phase changes. The measured no-work replay count falls from 6 to 3; busy phases may refresh. Lock architecture (#1366) is outside this change.\n\nValidation reuses the original coordinate-bound observations and independent reviews; R6 performs mechanical delivery only:\n\n- Corrected RED: 9 tests / 3 pass / 6 intended failures, rc1. Focused GREEN: 11/11 rc0, unchanged diagnostic event-file hashes, mutate/repair/append=0, explicit incomplete-tail qualification.\n- Existing workflow: 316/316 rc0; inherited stale-quiescence whole-file exclusion remains excluded.\n- R3 integration: 29/29 rc0; broker samples: 80/80 rc0. Actual Node v25.6.1, nine proxy keys unset only in test children; no host-setting changes.\n- Structure: rc0, 0 candidate violations, 28 inherited debt findings. Corrected R4 authored/compiled whitespace scope: rc0. Original raw captures, failed rc values and the `603-R7-RAW-CLASS-001` exemption recipe are preserved.\n- Independent R4 candidate review PASS at tree `07ff18450ba8099edf7e655fa8bdc4b500154cac`. R6 commit `ed31db7cfa068ac8128c127382efd98986abff4b` has exactly that tree and the unchanged base `2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648`.\n\nR5 remote reads both succeeded; its PR-list evidence wrapper failed before `gh` because concurrent metadata `git write-tree` calls contended for `index.lock`. R6 uses strictly serial commands with no parallel wrappers, no concurrent child Git process and no lock removal. Actual delivery observations and preserved R1-R5 history are completed in `RECEIPT-1367-READSEP.md` after PR creation/readback.\n\nRoute: REUSE / BRIEF / DURABLE under accepted-in-base WEC V3 and WAE V3 Contracts. Source/offline mechanism delivery only. No merge, deployment, production write, runtime admission or business acceptance is authorized or claimed.\n",
+      "title": "fix(workflow): separate diagnostic reads from ledger repair",
+      "base": "main",
+      "base_sha": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "head": "fix/diagnostic-read-separation",
+      "head_sha": "84b1e612aa31f4caa5a0de0ca39e3abca545bcef",
+      "head_repo_id": 1334326230,
+      "head_repo_full_name": "mayf3/dsh-agent-core",
+      "merge_commit_sha": "cafb8adc458ddb4adda389b1394e685b93bdd0f5",
+      "user": {
+        "login": "mayf3",
+        "name": "mayf3",
+        "email": null,
+        "avatar_url": "https://avatars.githubusercontent.com/u/5518571?v=4",
+        "id": 5518571
+      },
+      "requested_reviewers": null,
+      "requested_team_reviewers": null,
+      "diff": null,
+      "comments": null,
+      "created_at": "2026-11-07T11:39:56Z",
+      "updated_at": "2026-11-07T11:45:25Z",
+      "closed_at": null,
+      "merged_at": null,
+      "commits": 2,
+      "changed_files": 72,
+      "additions": 6071,
+      "deletions": 44,
+      "display_url": "https://github.com/mayf3/dsh-agent-core/pull/654",
+      "display_title": "fix(workflow): separate diagnostic reads from ledger repair"
+    },
+    "isError": false
+  }
+}

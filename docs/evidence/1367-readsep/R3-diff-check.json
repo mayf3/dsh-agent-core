@@ -1,0 +1,13 @@
+{
+  "command": [
+    "git",
+    "diff",
+    "--check",
+    "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+    "7ad8f3c03a02d7499be6c5bbebc87848609a52d7"
+  ],
+  "actual_rc": 2,
+  "expected_rc": 0,
+  "timestamp_utc": "2026-11-07T11:16:25.927191+00:00",
+  "raw_sha256": "9eb1b4f5b50905443001a59903b4a4b72f1257679a2aade7704b8b5d79935f26"
+}

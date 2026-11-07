@@ -1,0 +1,30 @@
+{
+  "observed_at_utc": "2026-11-07T15:49:30.355358+00:00",
+  "archive_receipt": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/ARCHIVE-INDEPENDENT-VERIFICATION.json",
+    "sha256": "44cb7fe7297075abf6eddb60073cb7a8a31fad61c65d67d20f79bd65bb054366",
+    "size_bytes": 500,
+    "top_level_keys": [
+      "observed_at",
+      "archive",
+      "archive_sha256",
+      "file_count",
+      "manifest_entry_counts",
+      "errors",
+      "result",
+      "scope"
+    ],
+    "safe_scalars": {
+      "observed_at": "2026-10-18T00:16:05.140064+00:00"
+    },
+    "contents_not_exported": true,
+    "archive_path": "/Users/yanfenma/workspace/project/pilot1156-review-20261018/native-conversation-20261018.source-addendum.fixed.tar.gz",
+    "scope": "Read-only tar validation; no extraction, loading or grants",
+    "result": "PASS"
+  },
+  "historical_formal_reference_target": {
+    "path": "/Users/yanfenma/.codex/sessions/2026/09/07/rollout-2026-09-07T07-35-42-01a07913-e7c6-7352-94ee-0aefea4bc63a.jsonl",
+    "status": "NOT_FOUND",
+    "errno": 2
+  }
+}

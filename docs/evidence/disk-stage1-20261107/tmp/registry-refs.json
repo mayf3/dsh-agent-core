@@ -1,0 +1,25 @@
+{
+  "observed_at_utc": "2026-11-07T15:47:36.159389+00:00",
+  "source_mtime_utc": "2026-11-07T15:42:37.427875+00:00",
+  "method": "exact candidate basename selected leaf excerpts and record metadata only, not raw registry",
+  "hits": [
+    {
+      "path": "/private/tmp/sw-367",
+      "source": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json",
+      "pointer": "/history/255/note",
+      "excerpt": "ts, dispatch-intent circuit breaker after repeated identical no-progress; coupled 403 global_read_role_required minimal fix if intertwined). Working clone /tmp/sw-367 @ 3b81d8f (includes #108 amendment on main). codex danger-full-access for local PG tests, log /tmp/dispatch-367-r1.log, PR open-only. Zero production writes; real stuck-instance data remediation deferred to authorized post-fix execution.",
+      "record_metadata": {
+        "id": 256
+      }
+    },
+    {
+      "path": "/private/tmp/sw-367",
+      "source": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json",
+      "pointer": "/history/273/note",
+      "excerpt": "chema handoff). Minimal change: reuse creation-admission condition for schema read authorization. Domain-owner management surface unchanged. Working clone /tmp/sw-367 (main current). codex pid, log /tmp/dispatch-633-r1.log, PR open-only. C-group triage recorded: #801/#681 gated on original maintainer; #567 parked by design; #547 in progress on another line; #709/#1248 pending review.",
+      "record_metadata": {
+        "id": 274
+      }
+    }
+  ]
+}

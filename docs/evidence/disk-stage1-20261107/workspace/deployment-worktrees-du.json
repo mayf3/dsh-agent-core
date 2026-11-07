@@ -1,0 +1,15 @@
+{
+  "command": [
+    "du",
+    "-x",
+    "-k",
+    "-d",
+    "1",
+    "/Users/yanfenma/workspace/deployment-worktrees"
+  ],
+  "started_at": "2026-11-07T15:46:21.433222+00:00",
+  "ended_at": "2026-11-07T15:46:22.604680+00:00",
+  "rc": 0,
+  "stdout": "49040\t/Users/yanfenma/workspace/deployment-worktrees/workflow-transition-final-f4bc431\n1184132\t/Users/yanfenma/workspace/deployment-worktrees/c11r3-candidate-scratch\n30036\t/Users/yanfenma/workspace/deployment-worktrees/c11r3-prod-delivery-15cdfc33\n7608\t/Users/yanfenma/workspace/deployment-worktrees/workflow-transition-deployment-audit.6yk9Xg\n7608\t/Users/yanfenma/workspace/deployment-worktrees/workflow-transition-artifact-audit.xNrGJ5\n36\t/Users/yanfenma/workspace/deployment-worktrees/artifact-build-f4bc431\n30024\t/Users/yanfenma/workspace/deployment-worktrees/c11r3-staging-04bae91c\n21096\t/Users/yanfenma/workspace/deployment-worktrees/c11r4-r3-prod-delivery-fa4510be\n1329596\t/Users/yanfenma/workspace/deployment-worktrees\n",
+  "stderr": ""
+}

@@ -1,0 +1,386 @@
+{
+  "observed_at": "2026-11-07T15:54:50.982858+00:00",
+  "byte_unit": "all integer bytes; GiB=1073741824, GB=1000000000",
+  "apfs_container": {
+    "capacity": 994610155520,
+    "free_before": 184928215040,
+    "free_after": 184933830656,
+    "used_before": 809681940480,
+    "volume_inuse_sum_before": 809475256320,
+    "container_unattributed_metadata_overhead": 206684160,
+    "volumes_before": [
+      {
+        "name": "Macintosh HD",
+        "roles": [
+          "System"
+        ],
+        "bytes": 12639158272
+      },
+      {
+        "name": "Preboot",
+        "roles": [
+          "Preboot"
+        ],
+        "bytes": 9085718528
+      },
+      {
+        "name": "Recovery",
+        "roles": [
+          "Recovery"
+        ],
+        "bytes": 1639956480
+      },
+      {
+        "name": "Update",
+        "roles": [
+          "Update"
+        ],
+        "bytes": 2375680
+      },
+      {
+        "name": "Macintosh HD - Data",
+        "roles": [
+          "Data"
+        ],
+        "bytes": 767850934272
+      },
+      {
+        "name": "VM",
+        "roles": [
+          "VM"
+        ],
+        "bytes": 18257113088
+      }
+    ]
+  },
+  "data": {
+    "df_used_before": 767850934272,
+    "df_used_after": 767845322752,
+    "du_visible_allocation": 749962634240,
+    "df_minus_du_before": 17888300032,
+    "df_minus_du_after": 17882688512,
+    "container_minus_du_before": 59719306240,
+    "non_data_plus_container_overhead": 41831006208
+  },
+  "top_level_data": [
+    {
+      "path": "/System/Volumes/Data/Users",
+      "bytes": 589689663488
+    },
+    {
+      "path": "/System/Volumes/Data/private",
+      "bytes": 65394405376
+    },
+    {
+      "path": "/System/Volumes/Data/Applications",
+      "bytes": 34878230528
+    },
+    {
+      "path": "/System/Volumes/Data/usr",
+      "bytes": 33711013888
+    },
+    {
+      "path": "/System/Volumes/Data/opt",
+      "bytes": 15383318528
+    },
+    {
+      "path": "/System/Volumes/Data/System",
+      "bytes": 6510419968
+    },
+    {
+      "path": "/System/Volumes/Data/Library",
+      "bytes": 4170248192
+    },
+    {
+      "path": "/System/Volumes/Data/Previous Content",
+      "bytes": 213864448
+    },
+    {
+      "path": "/System/Volumes/Data/.PreviousSystemInformation",
+      "bytes": 10199040
+    },
+    {
+      "path": "/System/Volumes/Data/MobileSoftwareUpdate",
+      "bytes": 737280
+    },
+    {
+      "path": "/System/Volumes/Data/Volumes",
+      "bytes": 524288
+    },
+    {
+      "path": "/System/Volumes/Data/home",
+      "bytes": 1024
+    },
+    {
+      "path": "/System/Volumes/Data/sw",
+      "bytes": 0
+    },
+    {
+      "path": "/System/Volumes/Data/.adobeTemp",
+      "bytes": 0
+    },
+    {
+      "path": "/System/Volumes/Data/mnt",
+      "bytes": 0
+    },
+    {
+      "path": "/System/Volumes/Data/.TemporaryItems",
+      "bytes": 0
+    },
+    {
+      "path": "/System/Volumes/Data/cores",
+      "bytes": 0
+    },
+    {
+      "path": "/System/Volumes/Data/pkg",
+      "bytes": 0
+    },
+    {
+      "path": "/System/Volumes/Data/.exclave",
+      "bytes": 0
+    }
+  ],
+  "home_top25": [
+    {
+      "path": "/Users/yanfenma",
+      "bytes": 563535020032
+    },
+    {
+      "path": "/Users/yanfenma/workspace",
+      "bytes": 266902986752
+    },
+    {
+      "path": "/Users/yanfenma/Library",
+      "bytes": 98984726528
+    },
+    {
+      "path": "/Users/yanfenma/Documents",
+      "bytes": 79032590336
+    },
+    {
+      "path": "/Users/yanfenma/.openclaw",
+      "bytes": 19377766400
+    },
+    {
+      "path": "/Users/yanfenma/.codex",
+      "bytes": 14753525760
+    },
+    {
+      "path": "/Users/yanfenma/Pictures",
+      "bytes": 10799521792
+    },
+    {
+      "path": "/Users/yanfenma/.zcode",
+      "bytes": 8387379200
+    },
+    {
+      "path": "/Users/yanfenma/.cache",
+      "bytes": 7134040064
+    },
+    {
+      "path": "/Users/yanfenma/b7-archive",
+      "bytes": 5496721408
+    },
+    {
+      "path": "/Users/yanfenma/Downloads",
+      "bytes": 3911094272
+    },
+    {
+      "path": "/Users/yanfenma/.local",
+      "bytes": 3737432064
+    },
+    {
+      "path": "/Users/yanfenma/Music",
+      "bytes": 3689267200
+    },
+    {
+      "path": "/Users/yanfenma/dev",
+      "bytes": 3612946432
+    },
+    {
+      "path": "/Users/yanfenma/.rustup",
+      "bytes": 3228499968
+    },
+    {
+      "path": "/Users/yanfenma/.workbuddy",
+      "bytes": 3119276032
+    },
+    {
+      "path": "/Users/yanfenma/.npm",
+      "bytes": 2660147200
+    },
+    {
+      "path": "/Users/yanfenma/Movies",
+      "bytes": 2286202880
+    },
+    {
+      "path": "/Users/yanfenma/.vscode",
+      "bytes": 2057396224
+    },
+    {
+      "path": "/Users/yanfenma/.agent-core",
+      "bytes": 1856581632
+    },
+    {
+      "path": "/Users/yanfenma/local-ai-arm64",
+      "bytes": 1846239232
+    },
+    {
+      "path": "/Users/yanfenma/.openclaw.backup",
+      "bytes": 1785180160
+    },
+    {
+      "path": "/Users/yanfenma/WorkBuddy",
+      "bytes": 1466937344
+    },
+    {
+      "path": "/Users/yanfenma/.pnpm-store",
+      "bytes": 1390796800
+    },
+    {
+      "path": "/Users/yanfenma/.dsh",
+      "bytes": 1276354560
+    },
+    {
+      "path": "/Users/yanfenma/.venvs",
+      "bytes": 1186627584
+    }
+  ],
+  "external": {
+    "filesystem": "ExFAT",
+    "du": [
+      {
+        "path": "/Volumes/My PSSD",
+        "bytes": 102343114752
+      },
+      {
+        "path": "/Volumes/My PSSD/models",
+        "bytes": 99547611136
+      },
+      {
+        "path": "/Volumes/My PSSD/cache",
+        "bytes": 2599419904
+      },
+      {
+        "path": "/Volumes/My PSSD/.Spotlight-V100",
+        "bytes": 137363456
+      },
+      {
+        "path": "/Volumes/My PSSD/AESTool_V2.0",
+        "bytes": 55574528
+      },
+      {
+        "path": "/Volumes/My PSSD/.fseventsd",
+        "bytes": 1572864
+      }
+    ],
+    "df_before": "see df-before.stdout.txt",
+    "df_after": "see df-after.stdout.txt",
+    "not_in_apfs_container": true,
+    "reconciliation": "UNKNOWN: external df changed during window and du is a later interval; no attribution to this audit"
+  },
+  "protected_capacity": {
+    "libexec": [
+      {
+        "path": "/usr/local/libexec",
+        "bytes": 6181789696
+      },
+      {
+        "path": "/usr/local/libexec/agent-core",
+        "bytes": 1754648576
+      },
+      {
+        "path": "/usr/local/libexec/agent-core.failed-gate-20261102-v2",
+        "bytes": 1036496896
+      },
+      {
+        "path": "/usr/local/libexec/agent-core.failed-gate-20261102",
+        "bytes": 1031933952
+      },
+      {
+        "path": "/usr/local/libexec/agent-core.candidate-quarantine-20261105-0305",
+        "bytes": 954400768
+      },
+      {
+        "path": "/usr/local/libexec/agent-deployd",
+        "bytes": 232701952
+      },
+      {
+        "path": "/usr/local/libexec/agent-deploy-system",
+        "bytes": 111939584
+      },
+      {
+        "path": "/usr/local/libexec/agent-core.bak-20261105-065323",
+        "bytes": 104898560
+      },
+      {
+        "path": "/usr/local/libexec/agent-core.bak-20261105-065951",
+        "bytes": 104898560
+      },
+      {
+        "path": "/usr/local/libexec/agent-core.bak-20261105-063009",
+        "bytes": 104882176
+      },
+      {
+        "path": "/usr/local/libexec/agent-core.bak-20261105-063639",
+        "bytes": 104861696
+      },
+      {
+        "path": "/usr/local/libexec/agent-core.bak-20261105-064520",
+        "bytes": 104861696
+      },
+      {
+        "path": "/usr/local/libexec/agent-core.bak-20261105-062306",
+        "bytes": 104861696
+      },
+      {
+        "path": "/usr/local/libexec/agent-core.bak-20261106-075814",
+        "bytes": 85450752
+      },
+      {
+        "path": "/usr/local/libexec/agent-core.bak-20261106-080439",
+        "bytes": 85450752
+      },
+      {
+        "path": "/usr/local/libexec/agent-core.bak-20261105-073646",
+        "bytes": 85450752
+      },
+      {
+        "path": "/usr/local/libexec/agent-core.bak-20261105-075119",
+        "bytes": 85450752
+      },
+      {
+        "path": "/usr/local/libexec/agent-core.bak-20261106-081212",
+        "bytes": 85450752
+      },
+      {
+        "path": "/usr/local/libexec/b7-fixed-leaf-retention-107-stop-completion-20261018",
+        "bytes": 868352
+      },
+      {
+        "path": "/usr/local/libexec/b7-fixed-leaf-retention-20261018",
+        "bytes": 856064
+      },
+      {
+        "path": "/usr/local/libexec/b7-e38-terminal-binding-readonly-20261019",
+        "bytes": 241664
+      }
+    ],
+    "authsvc": [
+      {
+        "path": "/Users/authsvc/.agent-core",
+        "bytes": 24901660672
+      },
+      {
+        "path": "/Users/authsvc",
+        "bytes": 24901660672
+      }
+    ]
+  },
+  "permission_limit": "du errors complete in corresponding stderr; all values visible only, not safe-to-delete lower bounds",
+  "root_view": {
+    "du_root_bytes": 1516186564608,
+    "du_root_rc": 1,
+    "warning": "Empirical -x / traverses Data via /System and firmlink aliases; root view is not a disjoint physical bill. See path-aliases.json."
+  }
+}

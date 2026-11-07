@@ -1,0 +1,120 @@
+[
+  {
+    "candidate": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules",
+    "owner_uid": 502,
+    "owner_gid": 20,
+    "birthtime_utc": "2026-10-28T03:08:22.540367+00:00",
+    "mtime_utc": "2026-10-28T03:08:34.619538+00:00",
+    "source_manifest_exists": {
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/package.json": true,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/pnpm-lock.yaml": true
+    },
+    "references": [
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-policy-real-tool-dispatch-smoke.mjs",
+        "line": 7,
+        "matched_token": "native-runtime-candidate",
+        "line_sha256": "36f46dc7f86e32e36ba722c5090b5a6ba8d896650e5600bda79953e20ae4d346",
+        "file_sha256": "d70b030e53cf4bf0beddb322e9b5cd7d9e110e50f73615a1fed0d90d5d3e823f",
+        "file_mtime_utc": "2026-10-28T03:30:15.361073+00:00"
+      }
+    ]
+  },
+  {
+    "candidate": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules",
+    "owner_uid": 502,
+    "owner_gid": 20,
+    "birthtime_utc": "2026-10-28T03:08:34.619538+00:00",
+    "mtime_utc": "2026-10-28T03:08:34.619538+00:00",
+    "source_manifest_exists": {
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/package.json": true,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/pnpm-lock.yaml": true
+    },
+    "references": []
+  },
+  {
+    "candidate": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules",
+    "owner_uid": 502,
+    "owner_gid": 20,
+    "birthtime_utc": "2026-10-27T20:47:30.089721+00:00",
+    "mtime_utc": "2026-10-27T20:47:45.583637+00:00",
+    "source_manifest_exists": {
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/package.json": true,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/pnpm-lock.yaml": true
+    },
+    "references": [
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/STAGING-REPORT-003.md",
+        "line": 7,
+        "matched_token": "native-runtime-candidate",
+        "line_sha256": "faa0ba724a34bad432549afbc42cb86dae882e792cc9bcd9a379e4482aafbedf",
+        "file_sha256": "36cf10c777dd8c676c3399d6a6db78cd3677261a453e8a172c7736c9825913cf",
+        "file_mtime_utc": "2026-10-27T20:51:22.987685+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/STAGING-REPORT-003.md",
+        "line": 17,
+        "matched_token": "native-runtime-candidate",
+        "line_sha256": "8dadd053a7e16e4dbd3111acecc926d0cebe8f8c78554bbada000559fc3dd03a",
+        "file_sha256": "36cf10c777dd8c676c3399d6a6db78cd3677261a453e8a172c7736c9825913cf",
+        "file_mtime_utc": "2026-10-27T20:51:22.987685+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/STAGING-REPORT-003.md",
+        "line": 54,
+        "matched_token": "native-runtime-candidate",
+        "line_sha256": "49917034f1ef9c62beb2d4285e2c4b1637383968313a1e1cc8732049390706e3",
+        "file_sha256": "36cf10c777dd8c676c3399d6a6db78cd3677261a453e8a172c7736c9825913cf",
+        "file_mtime_utc": "2026-10-27T20:51:22.987685+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/STAGING-REPORT-004.md",
+        "line": 17,
+        "matched_token": "native-runtime-candidate",
+        "line_sha256": "2488d9fa54780ae4a03d7c5329965cd8448f2cfd465e592dcfc2d1da9b88210a",
+        "file_sha256": "200d655882494253aeee49634d14e7a42de7d91985ac67fbd225c9d6711435ad",
+        "file_mtime_utc": "2026-10-27T22:10:36.617936+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/A29-NATIVE-RUNTIME-CANDIDATE-MANIFEST.json",
+        "line": 2,
+        "matched_token": "native-runtime-candidate",
+        "line_sha256": "ca48fc04eb4072ed3679457aa229a1fd660669422ef4cd3949b5b5ce391b3989",
+        "file_sha256": "49a0bf355b103dc7b2013d6ecb77e09c2833c845b65cc7934e7ef129c0766cfa",
+        "file_mtime_utc": "2026-10-27T22:10:21.589984+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/A29-NATIVE-RUNTIME-CANDIDATE-MANIFEST.json",
+        "line": 4,
+        "matched_token": "native-runtime-candidate",
+        "line_sha256": "49917034f1ef9c62beb2d4285e2c4b1637383968313a1e1cc8732049390706e3",
+        "file_sha256": "49a0bf355b103dc7b2013d6ecb77e09c2833c845b65cc7934e7ef129c0766cfa",
+        "file_mtime_utc": "2026-10-27T22:10:21.589984+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/A29-NATIVE-RUNTIME-CANDIDATE-MANIFEST.json",
+        "line": 30,
+        "matched_token": "native-runtime-candidate",
+        "line_sha256": "f1c02ba44bbff1726faedf8a361ca82e6d4b26737427eb15d8cdc14d8496480d",
+        "file_sha256": "49a0bf355b103dc7b2013d6ecb77e09c2833c845b65cc7934e7ef129c0766cfa",
+        "file_mtime_utc": "2026-10-27T22:10:21.589984+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/A29-NATIVE-RUNTIME-CANDIDATE-MANIFEST.json",
+        "line": 1034,
+        "matched_token": "native-runtime-candidate",
+        "line_sha256": "356f87670d5dac7a9951d03fe633aa072acc2a00df8e52f4cb982b5d26631bf4",
+        "file_sha256": "49a0bf355b103dc7b2013d6ecb77e09c2833c845b65cc7934e7ef129c0766cfa",
+        "file_mtime_utc": "2026-10-27T22:10:21.589984+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-probe.mjs",
+        "line": 9,
+        "matched_token": "native-runtime-candidate",
+        "line_sha256": "076faa5a6dbaf303d50f4c97ae458453a1e69ddea223d40365b41cde2857a238",
+        "file_sha256": "41ea262f17062fa1922b6b70afb24cd93548e365664ab41fcc41af43181e290b",
+        "file_mtime_utc": "2026-10-27T20:49:28.115437+00:00"
+      }
+    ]
+  }
+]

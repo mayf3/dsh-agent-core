@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "git",
+    "ls-remote",
+    "origin",
+    "refs/heads/main",
+    "refs/heads/fix/diagnostic-read-separation"
+  ],
+  "started_at_utc": "2026-11-07T11:26:49.873092+00:00",
+  "finished_at_utc": "2026-11-07T11:27:52.255456+00:00",
+  "pre": {
+    "head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+    "branch": "fix/diagnostic-read-separation",
+    "worktree": "/private/tmp/h1367-readsep",
+    "index_tree": "07ff18450ba8099edf7e655fa8bdc4b500154cac"
+  },
+  "actual_rc": 128,
+  "post_head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "ac3ee3f85aea23b1d99c328f409e2771ac2a3a2604901fa61f9ef86ad823fd50"
+}

@@ -1,0 +1,29 @@
+{
+  "argv": [
+    "git",
+    "diff",
+    "--cached",
+    "--check",
+    "--",
+    ".",
+    ":(exclude)docs/evidence/**/*.diff",
+    ":(exclude)docs/evidence/**/*.stderr",
+    ":(exclude)docs/evidence/**/*.stdout",
+    ":(exclude)docs/evidence/**/*.log",
+    ":(exclude)docs/evidence/1367-readsep/RED.txt",
+    ":(exclude)docs/evidence/1367-readsep/R2-RED.txt",
+    ":(exclude)docs/evidence/1367-readsep/R3-diff-check.txt"
+  ],
+  "started_at_utc": "2026-11-07T11:25:37.073171+00:00",
+  "finished_at_utc": "2026-11-07T11:25:37.092739+00:00",
+  "pre": {
+    "head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+    "branch": "fix/diagnostic-read-separation",
+    "worktree": "/private/tmp/h1367-readsep",
+    "index_tree": "055eef8beb0d12ec0e626d9c672c1074fb7c25f8"
+  },
+  "actual_rc": 0,
+  "post_head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

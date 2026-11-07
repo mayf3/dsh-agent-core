@@ -1,0 +1,430 @@
+{
+  "observed_at_utc": "2026-11-07T15:47:05.668573+00:00",
+  "results": [
+    {
+      "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46",
+      "repo_observations": [],
+      "cross_repo_refs": [
+        {
+          "repo": "/Users/yanfenma/workspace/project/svc-workflow",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        },
+        {
+          "repo": "/Users/yanfenma/workspace/github/deepseek-harness",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/sw-367",
+      "repo_observations": [
+        {
+          "command": [
+            "git",
+            "--no-optional-locks",
+            "-C",
+            "/private/tmp/sw-367",
+            "rev-parse",
+            "HEAD"
+          ],
+          "rc": 128,
+          "stdout": "",
+          "stderr": "fatal: not a git repository (or any of the parent directories): .git\n"
+        },
+        {
+          "command": [
+            "git",
+            "--no-optional-locks",
+            "-C",
+            "/private/tmp/sw-367",
+            "branch",
+            "--show-current"
+          ],
+          "rc": 128,
+          "stdout": "",
+          "stderr": "fatal: not a git repository (or any of the parent directories): .git\n"
+        },
+        {
+          "command": [
+            "git",
+            "--no-optional-locks",
+            "-C",
+            "/private/tmp/sw-367",
+            "status",
+            "--porcelain",
+            "--untracked-files=no"
+          ],
+          "rc": 128,
+          "stdout": "",
+          "stderr": "fatal: not a git repository (or any of the parent directories): .git\n"
+        },
+        {
+          "command": [
+            "git",
+            "--no-optional-locks",
+            "-C",
+            "/private/tmp/sw-367",
+            "log",
+            "-1",
+            "--format=%H %cI %s"
+          ],
+          "rc": 128,
+          "stdout": "",
+          "stderr": "fatal: not a git repository (or any of the parent directories): .git\n"
+        }
+      ],
+      "cross_repo_refs": [
+        {
+          "repo": "/Users/yanfenma/workspace/project/svc-workflow",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        },
+        {
+          "repo": "/Users/yanfenma/workspace/github/deepseek-harness",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/gcr-svc-target",
+      "repo_observations": [],
+      "cross_repo_refs": [
+        {
+          "repo": "/Users/yanfenma/workspace/project/svc-workflow",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        },
+        {
+          "repo": "/Users/yanfenma/workspace/github/deepseek-harness",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/sw-1347-evidence",
+      "repo_observations": [],
+      "cross_repo_refs": [
+        {
+          "repo": "/Users/yanfenma/workspace/project/svc-workflow",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        },
+        {
+          "repo": "/Users/yanfenma/workspace/github/deepseek-harness",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/sw-aa-r4-evidence",
+      "repo_observations": [],
+      "cross_repo_refs": [
+        {
+          "repo": "/Users/yanfenma/workspace/project/svc-workflow",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        },
+        {
+          "repo": "/Users/yanfenma/workspace/github/deepseek-harness",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/sw-d6-fix",
+      "repo_observations": [],
+      "cross_repo_refs": [
+        {
+          "repo": "/Users/yanfenma/workspace/project/svc-workflow",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        },
+        {
+          "repo": "/Users/yanfenma/workspace/github/deepseek-harness",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/dsh-548-r2-iwl_bczh",
+      "repo_observations": [],
+      "cross_repo_refs": [
+        {
+          "repo": "/Users/yanfenma/workspace/project/svc-workflow",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        },
+        {
+          "repo": "/Users/yanfenma/workspace/github/deepseek-harness",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/darwinx64-fix",
+      "repo_observations": [],
+      "cross_repo_refs": [
+        {
+          "repo": "/Users/yanfenma/workspace/project/svc-workflow",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        },
+        {
+          "repo": "/Users/yanfenma/workspace/github/deepseek-harness",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/fleet-w6-s04",
+      "repo_observations": [],
+      "cross_repo_refs": [
+        {
+          "repo": "/Users/yanfenma/workspace/project/svc-workflow",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        },
+        {
+          "repo": "/Users/yanfenma/workspace/github/deepseek-harness",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/dsh-523-impl",
+      "repo_observations": [
+        {
+          "command": [
+            "git",
+            "--no-optional-locks",
+            "-C",
+            "/private/tmp/dsh-523-impl",
+            "rev-parse",
+            "HEAD"
+          ],
+          "rc": 0,
+          "stdout": "ecff3b50195ff6f8649ff7896ac7a3f1a1b3bdd5\n",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "git",
+            "--no-optional-locks",
+            "-C",
+            "/private/tmp/dsh-523-impl",
+            "branch",
+            "--show-current"
+          ],
+          "rc": 0,
+          "stdout": "issue523/agent-turn-switch-guard-20261103\n",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "git",
+            "--no-optional-locks",
+            "-C",
+            "/private/tmp/dsh-523-impl",
+            "status",
+            "--porcelain",
+            "--untracked-files=no"
+          ],
+          "rc": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "git",
+            "--no-optional-locks",
+            "-C",
+            "/private/tmp/dsh-523-impl",
+            "log",
+            "-1",
+            "--format=%H %cI %s"
+          ],
+          "rc": 0,
+          "stdout": "ecff3b50195ff6f8649ff7896ac7a3f1a1b3bdd5 2026-11-03T07:53:12+08:00 fix(router): guard agent-turn cross-workspace switches (#523)\n",
+          "stderr": ""
+        }
+      ],
+      "cross_repo_refs": [
+        {
+          "repo": "/Users/yanfenma/workspace/project/svc-workflow",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        },
+        {
+          "repo": "/Users/yanfenma/workspace/github/deepseek-harness",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/dsh-548-r5-evidence",
+      "repo_observations": [],
+      "cross_repo_refs": [
+        {
+          "repo": "/Users/yanfenma/workspace/project/svc-workflow",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        },
+        {
+          "repo": "/Users/yanfenma/workspace/github/deepseek-harness",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/dsh-548-r4-evidence",
+      "repo_observations": [],
+      "cross_repo_refs": [
+        {
+          "repo": "/Users/yanfenma/workspace/project/svc-workflow",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        },
+        {
+          "repo": "/Users/yanfenma/workspace/github/deepseek-harness",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/fleet-v5-candidate",
+      "repo_observations": [
+        {
+          "command": [
+            "git",
+            "--no-optional-locks",
+            "-C",
+            "/private/tmp/fleet-v5-candidate",
+            "rev-parse",
+            "HEAD"
+          ],
+          "rc": 0,
+          "stdout": "f6e332d7568b01c5253618449bfef5839102c851\n",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "git",
+            "--no-optional-locks",
+            "-C",
+            "/private/tmp/fleet-v5-candidate",
+            "branch",
+            "--show-current"
+          ],
+          "rc": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "git",
+            "--no-optional-locks",
+            "-C",
+            "/private/tmp/fleet-v5-candidate",
+            "status",
+            "--porcelain",
+            "--untracked-files=no"
+          ],
+          "rc": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "git",
+            "--no-optional-locks",
+            "-C",
+            "/private/tmp/fleet-v5-candidate",
+            "log",
+            "-1",
+            "--format=%H %cI %s"
+          ],
+          "rc": 0,
+          "stdout": "f6e332d7568b01c5253618449bfef5839102c851 2026-11-07T13:44:04+08:00 Merge pull request #647 from mayf3/ac-ctr-s4-reverify\n",
+          "stderr": ""
+        }
+      ],
+      "cross_repo_refs": [
+        {
+          "repo": "/Users/yanfenma/workspace/project/svc-workflow",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        },
+        {
+          "repo": "/Users/yanfenma/workspace/github/deepseek-harness",
+          "rc": 1,
+          "hits": [],
+          "hit_count": 0,
+          "stderr": ""
+        }
+      ]
+    }
+  ]
+}

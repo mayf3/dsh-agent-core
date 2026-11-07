@@ -1,0 +1,67 @@
+{
+  "observed_at": "2026-11-07T15:50:50.600924+00:00",
+  "read_only": true,
+  "method": "lstat + getattrlist FSOPT_NOFOLLOW|PACK_INVAL_ATTRS|ATTR_CMN_EXTENDED (0x29), CMNEXT 0x1308",
+  "files": [
+    {
+      "path": "/private/tmp/dsh-548-r2-iwl_bczh/master.tar",
+      "dev": 16777229,
+      "inode": 350680984,
+      "nlink": 1,
+      "logical_bytes": 57241600,
+      "allocated_bytes": 57241600,
+      "mtime_utc": "2026-11-04T01:51:35.775815+00:00",
+      "birthtime_utc": "2026-11-04T01:51:35.771527+00:00",
+      "stat_flags": 0,
+      "attr": {
+        "status": "OK",
+        "returned_fork_mask": "0x1308",
+        "length": 52,
+        "private_bytes": 57241600,
+        "clone_id": 350680984,
+        "extended_flags": 0,
+        "clone_refcount": 1
+      }
+    },
+    {
+      "path": "/private/tmp/dsh-548-r4-evidence/base.tar",
+      "dev": 16777229,
+      "inode": 350823711,
+      "nlink": 1,
+      "logical_bytes": 57241600,
+      "allocated_bytes": 57241600,
+      "mtime_utc": "2026-11-04T02:20:11.136798+00:00",
+      "birthtime_utc": "2026-11-04T02:20:11.131048+00:00",
+      "stat_flags": 0,
+      "attr": {
+        "status": "OK",
+        "returned_fork_mask": "0x1308",
+        "length": 52,
+        "private_bytes": 57241600,
+        "clone_id": 350823711,
+        "extended_flags": 0,
+        "clone_refcount": 1
+      }
+    },
+    {
+      "path": "/private/tmp/dsh-548-r5-evidence/base.tar",
+      "dev": 16777229,
+      "inode": 350836414,
+      "nlink": 1,
+      "logical_bytes": 57241600,
+      "allocated_bytes": 57241600,
+      "mtime_utc": "2026-11-04T02:35:32.230004+00:00",
+      "birthtime_utc": "2026-11-04T02:35:31.971483+00:00",
+      "stat_flags": 0,
+      "attr": {
+        "status": "OK",
+        "returned_fork_mask": "0x1308",
+        "length": 52,
+        "private_bytes": 57241600,
+        "clone_id": 350836414,
+        "extended_flags": 0,
+        "clone_refcount": 1
+      }
+    }
+  ]
+}
