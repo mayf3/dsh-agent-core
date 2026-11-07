@@ -1,6 +1,24 @@
 ---
 spec_id: AGENT_CORE_READBACK_AGING_HANDOFF_V1
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_date: 2026-11-07
+accepted_at: 2026-11-07T12:58:48.337170Z
+accepted_reviewed_head: 7b5d79c3961625aaade6f3b383b18b2968e82f6c
+acceptance_authority: Owner mayf3 ruling owner-20261107-five-decisions items[2]
+acceptance_authority_source: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json
+acceptance_authority_selector: $.rulings[id=owner-20261107-five-decisions]
+acceptance_authority_item_selector: $.rulings[id=owner-20261107-five-decisions].items[2]
+acceptance_authority_canonical_sha256: 95290062529cf24c31d3c7f6c748a22e5e369d14458cf623f562eee5c90cedc8
+acceptance_authority_item_canonical_sha256: ffeea11b8bd8b57815eb8fc8c9d0ec32e3528386b04d506d71fd8313e067bba1
+acceptance_authority_snapshot: docs/reports/readback-aging-acceptance-20261107/owner-ruling.json
+acceptance_transcript_comment: https://github.com/mayf3/dsh-agent-core/pull/643#issuecomment-6707205612
+acceptance_transcript_comment_id: 6707205612
+acceptance_scope: 仅限提案语义
+acceptance_restriction: WEC/Svc配套权威正式接受前不得实施新reason或用于生产
+acceptance_transaction_executor: /root (transaction executor only; Owner mayf3 is the acceptance authority)
+acceptance_final_head_review: PENDING_REGULATOR
+activation_boundary: main merge after regulator independent final-HEAD review
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: none
@@ -24,6 +42,17 @@ owners: [mayf3]
 ---
 
 # AGENT_CORE_READBACK_AGING_HANDOFF_V1
+
+<!-- BEGIN RBAH_ACCEPTANCE_LIFECYCLE -->
+> **当前生命周期：Owner mayf3 已正式接受本提案语义；接受事务已记录，待监管独立最终 HEAD 审查及合并。**
+> 接受限定：**仅限提案语义；WEC/Svc配套权威正式接受前不得实施新reason或用于生产**。
+> 接受权威为 Owner 裁定 `rulings[id=owner-20261107-five-decisions] / items[2]`；
+> [PR 转录评论 6707205612](https://github.com/mayf3/dsh-agent-core/pull/643#issuecomment-6707205612) 与
+> [接受事务收据](../reports/readback-aging-acceptance-20261107/acceptance-transaction.md) 绑定受审 HEAD `7b5d79c3961625aaade6f3b383b18b2968e82f6c`。
+> 下文 proposed、READY_TO_MARK_ACCEPTED=NO 及原起草接受依赖等描述保留其原起草时点含义；当前限定接受以 frontmatter 和本说明为准。
+> 本事务没有关闭 §3.1 的 WEC 封闭枚举合法 lifecycle 与 Svc 精确配对接受门，未裁定或实施新的 accepted-ID 例外。
+> `implementation_authority: none`、`production_apply_authority: none` 保持不变；worker 仅执行接受事务，不合并、不实施、不写生产。
+<!-- END RBAH_ACCEPTANCE_LIFECYCLE -->
 
 ## 1. Goal
 
