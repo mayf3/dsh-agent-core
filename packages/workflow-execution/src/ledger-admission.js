@@ -4,6 +4,58 @@ import { ownerResumeEligible, recordDeliveryCompletion } from './owner-assistanc
 import { ownerResumePlanIsValid } from './ledger-events.js'
 const STALE_NO_PROGRESS_JUDGMENT = 'stale_no_progress'
 
+/** Probe work is bounded independently of NEW attempts (CTR-WAE-001b).
+ * IDs only defer probes until the current static feed has had an opportunity;
+ * they never authorize admission/recovery. Nothing persists across restart.
+ * Full keyset discovery remains exhaustive; an incomplete sweep commits no IDs.
+ */
+export function createAdmissionBudget(maxAdmissions) {
+  if (!Number.isSafeInteger(maxAdmissions) || maxAdmissions < 0) {
+    throw new TypeError('workflow-execution: maxAdmissionsPerPoll must be a nonnegative safe integer')
+  }
+  const maxFailures = Math.max(1, maxAdmissions)
+  const maxScans = maxFailures * 2
+  let visited = new Set()
+  return {
+    begin() {
+      const working = new Set(visited)
+      const seen = new Set()
+      const stats = { scanned: 0, failed: 0, created: 0, unknown: 0, deferred: 0, rotated: 0 }
+      return {
+        stats,
+        take(nodeVisitId) {
+          seen.add(nodeVisitId)
+          if (working.has(nodeVisitId)) {
+            stats.rotated += 1
+            return false
+          }
+          if (stats.scanned >= maxScans || stats.failed >= maxFailures
+            || stats.created >= maxAdmissions || stats.unknown > 0) {
+            stats.deferred += 1
+            return false
+          }
+          working.add(nodeVisitId)
+          stats.scanned += 1
+          return true
+        },
+        recordCreated: result => { if (result.created) stats.created += 1 },
+        recordResult(action) {
+          if (['pre_plan_unavailable', 'blocked', 'needs_review'].includes(action)) stats.failed += 1
+        },
+        recordUnknown() {
+          // A throw can follow a durable mint. Stop further probes this sweep;
+          // never classify an unreturned ledger outcome as created:false.
+          stats.unknown += 1
+          stats.failed += 1
+        },
+        finish() {
+          visited = stats.deferred === 0 ? new Set() : new Set([...working].filter(id => seen.has(id)))
+        },
+      }
+    },
+  }
+}
+
 /**
  * The atomic one-attempt-per-NodeVisit fence. Creates the attempt (and
  * appends attempt_planned) only for a new visit or a terminal stale attempt
