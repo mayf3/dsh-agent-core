@@ -1,0 +1,519 @@
+diff --git a/packages/production-runtime/src/compose.js b/packages/production-runtime/src/compose.js
+index 04a5cdbe..400f993f 100644
+--- a/packages/production-runtime/src/compose.js
++++ b/packages/production-runtime/src/compose.js
+@@ -385,7 +385,7 @@ export async function composeProductionRuntime(options = {}) {
+     layout,
+   })
+ 
+-  const { invoker, deliver, store, history, schedulerHealth } = await prepareSchedulerRuntime({ ctx, opts, layout, router, definition, feishu, writeEvidence, log })
++  const { invoker, deliver, store, history, schedulerHealth, schedulerAutoReconcile } = await prepareSchedulerRuntime({ ctx, opts, layout, router, definition, feishu, writeEvidence, log })
+ 
+   // Shared trusted Broker configuration is also consumed by principal
+   // resolution below; neither value is ever accepted from model arguments.
+@@ -487,7 +487,7 @@ export async function composeProductionRuntime(options = {}) {
+         // Preserve drain order, attempt every cleanup, and report failure
+         // only after the owned Router processes finish their exit path.
+         const errors = []
+-        for (const stop of [() => workflowExecution.stop(), () => scheduler.stop(), () => ctx.disposeAll()]) {
++        for (const stop of [() => schedulerAutoReconcile.stop(), () => workflowExecution.stop(), () => scheduler.stop(), () => ctx.disposeAll()]) {
+           try { await stop() } catch (error) { errors.push(error) }
+         }
+         if (errors.length > 0) throw new AggregateError(errors, 'production runtime stop failed')
+diff --git a/packages/production-runtime/src/scheduler/auto-reconcile-runtime.js b/packages/production-runtime/src/scheduler/auto-reconcile-runtime.js
+index 38220ed6..6f5ba4c4 100644
+--- a/packages/production-runtime/src/scheduler/auto-reconcile-runtime.js
++++ b/packages/production-runtime/src/scheduler/auto-reconcile-runtime.js
+@@ -17,63 +17,71 @@
+  *     evidence source ⇒ no settlements, never "no evidence ⇒ failed").
+  */
+ 
+-import { readFileSync } from 'node:fs'
+ import { createRouterRecoveryEvidenceLookup } from '../../../scheduler/src/auto-reconcile.js'
+ import { planAutoReconcilePass, autoReconcileOccurrences, AUTO_RECONCILE_DEFAULT_ACTOR_ID } from '../../../scheduler/src/index.js'
+ 
+ const DEFAULT_INTERVAL_MS = 15 * 60 * 1000
+ 
+-function readJobsDocSnapshot(jobsStoreFile) {
+-  const doc = JSON.parse(readFileSync(jobsStoreFile, 'utf8'))
+-  return {
+-    jobs: Array.isArray(doc?.jobs) ? doc.jobs : [],
+-    occurrences: Array.isArray(doc?.occurrences) ? doc.occurrences : [],
+-  }
+-}
+-
+ /**
+- * Mount the auto-reconcile pass loop. Returns `{ enabled, stop() }`.
++ * Stop rejects new/queued work, then drains an admitted commit and its receipt.
++ * Evidence and all business-state decisions remain owned by the current policy.
+  */
+-export function mountSchedulerAutoReconcileRuntime({ layout, store, router, log, enabled, intervalMs, clock = () => Date.now() } = {}) {
+-  const envEnabled = process.env.AGENT_CORE_FENCE_AUTO_RECONCILE
+-  const isEnabled = enabled ?? envEnabled === 'on'
+-  const periodMs = Number.isFinite(intervalMs) && intervalMs >= 60_000
+-    ? intervalMs
+-    : Number(process.env.AGENT_CORE_FENCE_AUTO_RECONCILE_INTERVAL_MS) || DEFAULT_INTERVAL_MS
+-  if (!isEnabled) {
+-    log?.log?.('fence-auto-reconcile: DISABLED (AGENT_CORE_FENCE_AUTO_RECONCILE !== "on") — outcome_unknown fences stay on the human disposition path')
+-    return { enabled: false, stop() {} }
+-  }
+-  let running = false
++export function mountSchedulerAutoReconcileRuntime({
++  store, router, log, enabled, intervalMs, clock = () => Date.now(),
++  setIntervalFn = setInterval, clearIntervalFn = clearInterval,
++} = {}) {
++  const configured = () => enabled === undefined
++    ? process.env.AGENT_CORE_FENCE_AUTO_RECONCILE === 'on' : enabled === true
++  const requestedPeriod = intervalMs ?? Number(process.env.AGENT_CORE_FENCE_AUTO_RECONCILE_INTERVAL_MS)
++  const periodMs = Number.isFinite(requestedPeriod) && requestedPeriod >= 60_000
++    ? requestedPeriod : DEFAULT_INTERVAL_MS
++  let stopped = false
+   let timer = null
+-  const tick = async () => {
+-    if (running) return
+-    running = true
++  let inFlight = null
++  const readEvidence = createRouterRecoveryEvidenceLookup(router, clock)
++  // The same lookup is called again inside the existing store mutation lock.
++  const evidenceLookup = record => !stopped && configured() && readEvidence
++    ? readEvidence(record) : null
++  const pass = async () => {
+     try {
+-      const evidenceLookup = createRouterRecoveryEvidenceLookup(router, clock)
+-      if (evidenceLookup === null) return
+-      const doc = readJobsDocSnapshot(layout.jobsStore)
++      const doc = await store.loadDoc({ force: true })
++      if (stopped || !configured()) return
+       const plan = planAutoReconcilePass(doc, evidenceLookup, { clock })
+       if (plan.targets.length === 0) return
+       log?.log?.(`fence-auto-reconcile: settling ${plan.targets.length} occurrence(s) by frozen evidence policy`)
+-      const { results, fencesRemaining } = await autoReconcileOccurrences(
++      const value = await autoReconcileOccurrences(
+         store, { settlements: plan.targets, actorId: AUTO_RECONCILE_DEFAULT_ACTOR_ID, evidenceLookup, clock },
+       )
++      const { results, fencesRemaining } = value
+       const settled = results.filter((entry) => entry.outcome === 'settled').length
+       const receiptFailures = results.filter((entry) => typeof entry.receipt === 'string' && entry.receipt !== 'ok').length
+       log?.log?.(`fence-auto-reconcile: settled=${settled} errors=${results.length - settled} receiptFailures=${receiptFailures} fencesRemaining=${fencesRemaining}`)
++      if (receiptFailures > 0) log?.error?.(`fence-auto-reconcile: ${receiptFailures} receipt append failure(s); authoritative settlements remain committed`)
++      return value
+     } catch (error) {
+       log?.error?.(`fence-auto-reconcile pass failed (fail-closed, retry next tick): ${error?.message ?? error}`)
+-    } finally {
+-      running = false
+     }
+   }
+-  timer = setInterval(tick, periodMs)
+-  timer.unref?.()
+-  log?.log?.(`fence-auto-reconcile: ENABLED — every ${Math.round(periodMs / 1000)}s (evidence-gated, AGENT_DELIVERY_RESILIENCE_D009_ALIGNMENT_V1 CTR-S1..S5)`)
++  const tick = () => {
++    if (stopped) return Promise.reject(Object.assign(new Error('fence-auto-reconcile runtime stopped'), { code: 'AUTO_RECONCILE_STOPPED' }))
++    if (!configured() || readEvidence === null) return Promise.resolve()
++    if (inFlight) return inFlight
++    inFlight = pass().finally(() => { inFlight = null })
++    return inFlight
++  }
++  if (configured()) {
++    timer = setIntervalFn(() => { void tick().catch(() => {}) }, periodMs)
++    timer?.unref?.()
++    log?.log?.(`fence-auto-reconcile: ENABLED — every ${Math.round(periodMs / 1000)}s (evidence-gated, AGENT_DELIVERY_RESILIENCE_D009_ALIGNMENT_V1 CTR-S1..S5)`)
++  } else log?.log?.('fence-auto-reconcile: DISABLED (AGENT_CORE_FENCE_AUTO_RECONCILE !== "on") — outcome_unknown fences stay on the human disposition path')
+   return {
+-    enabled: true,
+-    stop() { if (timer !== null) clearInterval(timer); timer = null },
++    get enabled() { return !stopped && configured() },
++    async stop() {
++      stopped = true
++      if (timer !== null) clearIntervalFn(timer)
++      timer = null
++      await inFlight
++    },
+     tick,
+   }
+ }
+diff --git a/packages/production-runtime/src/scheduler/composition-runtime.js b/packages/production-runtime/src/scheduler/composition-runtime.js
+index 4cd20072..21d72b5a 100644
+--- a/packages/production-runtime/src/scheduler/composition-runtime.js
++++ b/packages/production-runtime/src/scheduler/composition-runtime.js
+@@ -41,7 +41,7 @@ export async function prepareSchedulerRuntime({ ctx, opts, layout, router, defin
+   // through the same store mutation path as the operator CLI with a machine
+   // receipt actor. The transport-watchdog / fence-janitor external stopgaps
+   // retire per CTR-X1/X2 once this is enabled and production-verified.
+-  mountSchedulerAutoReconcileRuntime({ layout, store, router, log })
++  const schedulerAutoReconcile = mountSchedulerAutoReconcileRuntime({ store, router, log })
+ 
+-  return { invoker, deliver, store, history, schedulerHealth }
++  return { invoker, deliver, store, history, schedulerHealth, schedulerAutoReconcile }
+ }
+diff --git a/packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js b/packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js
+index 9b9576a9..29d16b97 100644
+--- a/packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js
++++ b/packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js
+@@ -1,12 +1,16 @@
+ import test from 'node:test'
+ import assert from 'node:assert/strict'
+-import { mkdtempSync, rmSync } from 'node:fs'
++import { mkdtempSync, rmSync, readFileSync, existsSync } from 'node:fs'
+ import { tmpdir } from 'node:os'
+ import { join } from 'node:path'
+ 
+ import { createObservedSchedulerInvoker } from '../../src/scheduler-invoker.js'
+ import { createRetainedPostdeployCanary, POSTDEPLOY_CANARY_AGENT_ID, POSTDEPLOY_CANARY_MARKER, postdeployCanaryMessage } from '../../src/scheduler/deployment-canary-control.js'
+ import { JobStore, Scheduler } from '../../../scheduler/src/index.js'
++import { TurnReconciliationStore } from '../../../agent-router/src/reconciliation/store.js'
++import { buildOccurrenceRecord, applyTransition, rebuildFences } from '../../../scheduler/src/occurrence-model.js'
++import { autoReconcileOccurrences, createRouterRecoveryEvidenceLookup } from '../../../scheduler/src/auto-reconcile.js'
++import { mountSchedulerAutoReconcileRuntime } from '../../src/scheduler/auto-reconcile-runtime.js'
+ 
+ test('reserved generation-bound canary is a mechanical no-op and never reaches Router', async () => {
+   const sourceSha = 'a'.repeat(40)
+@@ -52,3 +56,268 @@ test('reserved canary passes the real Scheduler admission and completes with zer
+   assert.equal(run.state, 'succeeded')
+   assert.deepEqual(calls, [])
+ })
++
++const autoJob = {
++  id: 'runtime-auto-job', name: 'isolated auto reconciliation', agentId: 'agt_fixture', enabled: true,
++  scheduleRevision: 1, revisionActivatedAtMs: 1_000, createdAtMs: 1_000, updatedAtMs: 1_000,
++  schedule: { kind: 'every', everyMs: 60_000 }, payload: { kind: 'agentTurn', message: 'fixture' },
++  delivery: { mode: 'none' }, deleteAfterRun: false, state: {},
++}
++
++function autoUnknown(nominalScheduledAt = 2_000) {
++  const record = buildOccurrenceRecord({ job: autoJob, kind: 'natural', nominalScheduledAt,
++    admittedAt: 3_000, timeoutMs: 60_000 })
++  applyTransition(record, { to: 'outcome_unknown', at: 4_000, reason: 'fixture deadline' })
++  return record
++}
++
++function recoveryRouter(record, outcome = 'late_completed') {
++  const registry = new TurnReconciliationStore({ runtimeEpoch: 'runtime-auto-epoch' })
++  const handle = registry.mintTurnExecution({ agentId: record.ownerAgentId, processGeneration: 1,
++    sessionId: `cron-run-${record.occurrenceId}`, callerCorrelation: {
++      occurrenceId: record.occurrenceId, runId: record.runId, requestId: record.requestId,
++    } })
++  registry.markOutcomeUnknown(handle, { source: 'turn_deadline_exceeded', deadlineAtWallMs: 4_000 })
++  if (outcome !== null) registry.settleLate(handle, {
++    lateOutcome: outcome, terminationEvidence: 'child_real_exit', exitObserved: true,
++    outcomeEvidence: outcome === 'late_completed' ? 'exact_turn_end_success'
++      : outcome === 'late_failed' ? 'exact_turn_end_failure' : null,
++  })
++  return { registry, handle, router: {
++    resolveCallerCorrelation: coordinates => registry.resolveCallerCorrelation(coordinates),
++    reconciliationRuntimeStatus: () => ({ generationId: registry.runtimeEpoch }),
++  } }
++}
++
++function deferred() {
++  let resolve
++  const promise = new Promise(done => { resolve = done })
++  return { promise, resolve }
++}
++
++async function autoRuntimeRig(t, outcome = 'late_completed') {
++  const root = mkdtempSync(join(tmpdir(), 'ctr-s4-runtime-'))
++  const clock = () => 10_000
++  const store = new JobStore(join(root, 'jobs.json'), { runLogPath: join(root, 'runs.jsonl'), clock })
++  const record = autoUnknown(), recovery = recoveryRouter(record, outcome)
++  await store.mutateDoc(doc => {
++    doc.jobs = [structuredClone(autoJob)]
++    doc.occurrences = [record]
++    doc.fences = rebuildFences(doc.occurrences)
++  })
++  const timers = [], messages = [], errors = [], runtimes = [], unblock = []
++  const mount = (extra = {}) => {
++    const runtime = mountSchedulerAutoReconcileRuntime({ store, router: recovery.router, clock,
++      log: { log: row => messages.push(row), error: row => errors.push(row) },
++      setIntervalFn: (callback, periodMs) => {
++        const timer = { callback, periodMs, cleared: false, unref() {} }
++        timers.push(timer)
++        return timer
++      },
++      clearIntervalFn: timer => { timer.cleared = true }, ...extra,
++    })
++    runtimes.push(runtime)
++    return runtime
++  }
++  t.after(async () => {
++    for (const release of unblock) release()
++    await Promise.all(runtimes.map(runtime => runtime.stop()))
++    rmSync(root, { recursive: true, force: true })
++  })
++  const bytes = () => ({ jobs: readFileSync(store.filePath, 'utf8'),
++    runs: existsSync(store.runLogPath) ? readFileSync(store.runLogPath, 'utf8') : null })
++  return { store, record, ...recovery, clock, timers, messages, errors, unblock, mount, bytes }
++}
++
++test('CTR-S4 default OFF requires exactly on and performs no store or Router IO or timer scheduling', async t => {
++  const prior = process.env.AGENT_CORE_FENCE_AUTO_RECONCILE
++  t.after(() => prior === undefined ? delete process.env.AGENT_CORE_FENCE_AUTO_RECONCILE
++    : process.env.AGENT_CORE_FENCE_AUTO_RECONCILE = prior)
++  const f = await autoRuntimeRig(t), before = f.bytes()
++  f.store.loadDoc = async () => assert.fail('disabled mount must not read the store')
++  f.router.resolveCallerCorrelation = () => assert.fail('disabled mount must not query Router')
++  for (const value of [undefined, 'off', 'true', '1', 'ON']) {
++    if (value === undefined) delete process.env.AGENT_CORE_FENCE_AUTO_RECONCILE
++    else process.env.AGENT_CORE_FENCE_AUTO_RECONCILE = value
++    const runtime = f.mount()
++    assert.equal(runtime.enabled, false)
++    await runtime.tick()
++    await runtime.stop()
++    await assert.rejects(runtime.tick(), { code: 'AUTO_RECONCILE_STOPPED' })
++  }
++  assert.equal(f.timers.length, 0)
++  assert.deepEqual(f.bytes(), before)
++})
++
++test('CTR-S4 interval rejects subminute and invalid periods and preserves the allowed minimum', async t => {
++  const f = await autoRuntimeRig(t)
++  for (const [intervalMs, expected] of [[0, 900_000], [-1, 900_000], [59_999, 900_000],
++    [Number.NaN, 900_000], [Number.POSITIVE_INFINITY, 900_000], [60_000, 60_000]]) {
++    const runtime = f.mount({ enabled: true, intervalMs })
++    assert.equal(f.timers.at(-1).periodMs, expected)
++    await runtime.stop()
++    assert.equal(f.timers.at(-1).cleared, true)
++  }
++})
++
++test('CTR-S4 timer and manual ticks share one in-flight pass and one mutation', async t => {
++  const f = await autoRuntimeRig(t), started = deferred(), resume = deferred()
++  f.unblock.push(resume.resolve)
++  const load = f.store.loadDoc.bind(f.store), mutate = f.store.mutateDoc.bind(f.store)
++  let reads = 0, mutations = 0
++  f.store.loadDoc = async options => { reads += 1; started.resolve(); await resume.promise; return load(options) }
++  f.store.mutateDoc = (...args) => { mutations += 1; return mutate(...args) }
++  const runtime = f.mount({ enabled: true }), pass = runtime.tick()
++  await started.promise
++  assert.equal(runtime.tick(), pass)
++  f.timers[0].callback()
++  assert.equal(runtime.tick(), pass)
++  assert.equal(reads, 1)
++  resume.resolve()
++  const result = await pass
++  assert.equal(result.results[0].resolvedTo, 'succeeded')
++  assert.equal(mutations, 1)
++})
++
++test('CTR-S4 dynamic OFF while queued rechecks configuration under the mutation lock with zero byte changes', async t => {
++  const prior = process.env.AGENT_CORE_FENCE_AUTO_RECONCILE
++  t.after(() => prior === undefined ? delete process.env.AGENT_CORE_FENCE_AUTO_RECONCILE
++    : process.env.AGENT_CORE_FENCE_AUTO_RECONCILE = prior)
++  process.env.AGENT_CORE_FENCE_AUTO_RECONCILE = 'on'
++  const f = await autoRuntimeRig(t), before = f.bytes(), queued = deferred(), resume = deferred()
++  f.unblock.push(resume.resolve)
++  const mutate = f.store.mutateDoc.bind(f.store)
++  f.store.mutateDoc = async fn => { queued.resolve(); await resume.promise; return mutate(fn) }
++  const runtime = f.mount(), pass = runtime.tick()
++  await queued.promise
++  process.env.AGENT_CORE_FENCE_AUTO_RECONCILE = 'off'
++  resume.resolve()
++  const result = await pass
++  assert.equal(result.results[0].outcome, 'skipped')
++  assert.deepEqual(f.bytes(), before)
++})
++
++test('CTR-S4 stop drains queued nonwriting work and rejects future ticks and captured timer callbacks', async t => {
++  const f = await autoRuntimeRig(t), before = f.bytes(), queued = deferred(), resume = deferred()
++  f.unblock.push(resume.resolve)
++  const mutate = f.store.mutateDoc.bind(f.store)
++  f.store.mutateDoc = async fn => { queued.resolve(); await resume.promise; return mutate(fn) }
++  const runtime = f.mount({ enabled: true }), pass = runtime.tick()
++  await queued.promise
++  let drained = false
++  const stopping = runtime.stop().then(() => { drained = true })
++  assert.equal(runtime.enabled, false)
++  assert.equal(f.timers[0].cleared, true)
++  await assert.rejects(runtime.tick(), { code: 'AUTO_RECONCILE_STOPPED' })
++  f.timers[0].callback()
++  await new Promise(resolve => setImmediate(resolve))
++  assert.equal(drained, false)
++  resume.resolve()
++  const [result] = await Promise.all([pass, stopping])
++  assert.equal(result.results[0].outcome, 'skipped')
++  assert.equal(drained, true)
++  assert.deepEqual(f.bytes(), before)
++})
++
++test('CTR-S4 stop waits for an already committed settlement receipt before returning', async t => {
++  const f = await autoRuntimeRig(t), receiptStarted = deferred(), resume = deferred()
++  f.unblock.push(resume.resolve)
++  const append = f.store.appendRunEvent.bind(f.store)
++  f.store.appendRunEvent = async event => { receiptStarted.resolve(); await resume.promise; return append(event) }
++  const runtime = f.mount({ enabled: true }), pass = runtime.tick()
++  await receiptStarted.promise
++  assert.equal((await f.store.loadDoc({ force: true })).occurrences[0].state, 'succeeded')
++  let drained = false
++  const stopping = runtime.stop().then(() => { drained = true })
++  await Promise.resolve()
++  assert.equal(drained, false)
++  resume.resolve()
++  await Promise.all([pass, stopping])
++  assert.equal(drained, true)
++  const event = JSON.parse(f.bytes().runs.trim().split('\n').at(-1))
++  assert.equal(event.action, 'late_settlement')
++  assert.equal(event.operatorIdentity.actorId, 'system:fence-auto-reconcile')
++})
++
++test('CTR-S4 receipt append failure remains visible while the authoritative settlement stays committed', async t => {
++  const f = await autoRuntimeRig(t)
++  f.store.appendRunEvent = async () => ({ ok: false, error: 'fixture receipt disk unavailable' })
++  const runtime = f.mount({ enabled: true }), result = await runtime.tick()
++  assert.equal(result.results[0].receipt, 'failed')
++  assert.equal((await f.store.loadDoc({ force: true })).occurrences[0].state, 'succeeded')
++  assert.ok(f.messages.some(row => row.includes('receiptFailures=1')))
++  assert.ok(f.errors.some(row => row.includes('receipt append failure')))
++})
++
++test('CTR-S4 current Router three-state evidence preserves termination-only UNKNOWN and never readmits', async t => {
++  for (const [outcome, expected] of [['late_completed', 'succeeded'], ['late_failed', 'failed'],
++    ['terminated_without_outcome', 'outcome_unknown']]) await t.test(outcome, async st => {
++    const f = await autoRuntimeRig(st, outcome)
++    const lookup = createRouterRecoveryEvidenceLookup(f.router, f.clock)
++    assert.equal(lookup(f.record).snapshot.turnExecutionId, f.handle)
++    const runtime = f.mount({ enabled: true }), result = await runtime.tick()
++    assert.equal(result.results[0].resolvedTo, outcome === 'terminated_without_outcome' ? outcome : expected)
++    const doc = await f.store.loadDoc({ force: true }), [record] = doc.occurrences
++    assert.equal(record.state, expected)
++    assert.deepEqual(record.history.slice(0, f.record.history.length), f.record.history)
++    assert.equal(doc.occurrences.length, 1)
++    assert.deepEqual(doc.fences, {})
++    if (outcome === 'terminated_without_outcome') {
++      assert.equal(record.executionOutcome, undefined)
++      assert.equal(record.lateSettlement, undefined)
++      assert.equal(record.terminationSettlement.kind, 'terminated_without_outcome')
++      assert.equal(record.terminationSettlement.actorId, 'system:fence-auto-reconcile')
++    } else assert.equal(record.executionOutcome, expected)
++    const before = f.bytes()
++    await runtime.tick()
++    assert.deepEqual(f.bytes(), before)
++    assert.equal(f.registry.records.size, 1)
++  })
++})
++
++test('CTR-S4 pending and missing current Router evidence preserve UNKNOWN bytes and its fence', async t => {
++  const f = await autoRuntimeRig(t, null), before = f.bytes()
++  const runtime = f.mount({ enabled: true })
++  await runtime.tick()
++  assert.deepEqual(f.bytes(), before)
++  f.router.resolveCallerCorrelation = () => ({ state: 'never_existed' })
++  await runtime.tick()
++  assert.deepEqual(f.bytes(), before)
++})
++
++test('CTR-S4 late business evidence appends to a historical termination projection without another admission', async t => {
++  for (const [outcome, expected] of [['late_completed', 'succeeded'], ['late_failed', 'failed']]) {
++    const f = await autoRuntimeRig(t, outcome)
++    // Independent fixture for an existing Scheduler termination projection.
++    // This does not rewrite a settled Router record or claim it settles twice.
++    const historical = recoveryRouter(f.record, 'terminated_without_outcome')
++    await autoReconcileOccurrences(f.store, { settlements: [{ occurrenceId: f.record.occurrenceId,
++      runId: f.record.runId, resolvedTo: 'terminated_without_outcome' }],
++      evidenceLookup: createRouterRecoveryEvidenceLookup(historical.router, f.clock), clock: f.clock })
++    const prior = (await f.store.loadDoc({ force: true })).occurrences[0]
++    const runtime = f.mount({ enabled: true })
++    await runtime.tick()
++    const doc = await f.store.loadDoc({ force: true }), [record] = doc.occurrences
++    assert.equal(record.state, expected)
++    assert.equal(record.lateSettlement.resolvedTo, expected)
++    assert.deepEqual(record.terminationSettlement, prior.terminationSettlement)
++    assert.deepEqual(record.history.slice(0, prior.history.length), prior.history)
++    assert.equal(doc.occurrences.length, 1)
++  }
++})
++
++test('CTR-S4 clearing one contribution retains the aggregate fence for another unresolved UNKNOWN', async t => {
++  const f = await autoRuntimeRig(t, 'terminated_without_outcome'), other = autoUnknown(2_001)
++  await f.store.mutateDoc(doc => {
++    doc.occurrences.push(other)
++    doc.fences = rebuildFences(doc.occurrences)
++  })
++  const runtime = f.mount({ enabled: true })
++  await runtime.tick()
++  const doc = await f.store.loadDoc({ force: true })
++  assert.equal(doc.occurrences[0].state, 'outcome_unknown')
++  assert.equal(doc.occurrences[0].terminationSettlement.fenceAfter, true)
++  assert.deepEqual(doc.occurrences[1], other)
++  assert.ok(doc.fences[autoJob.id])
++  assert.equal(doc.occurrences.length, 2)
++})
+diff --git a/packages/production-runtime/test/workflow-execution-shutdown.test.js b/packages/production-runtime/test/workflow-execution-shutdown.test.js
+index b2f6a085..5561c03c 100644
+--- a/packages/production-runtime/test/workflow-execution-shutdown.test.js
++++ b/packages/production-runtime/test/workflow-execution-shutdown.test.js
+@@ -27,6 +27,63 @@ import { AGT_ID, FakeProc, seedRuntime } from './compose-fixture.js'
+ const silentLog = { log() {}, warn() {}, error() {} }
+ const POLLER = 'agt_workflow-poller'
+ 
++test('composition drains auto-reconcile before workflow, scheduler and owned Router disposal', async (t) => {
++  const previous = process.env.AGENT_CORE_FENCE_AUTO_RECONCILE
++  process.env.AGENT_CORE_FENCE_AUTO_RECONCILE = 'on'
++  t.after(() => {
++    if (previous === undefined) delete process.env.AGENT_CORE_FENCE_AUTO_RECONCILE
++    else process.env.AGENT_CORE_FENCE_AUTO_RECONCILE = previous
++  })
++  const originalInterval = globalThis.setInterval
++  let callback
++  t.mock.method(globalThis, 'setInterval', (fn, period, ...args) => {
++    if (period === 15 * 60 * 1000) callback = fn
++    return originalInterval(fn, period, ...args)
++  })
++  const { layout } = await seedRuntime(t)
++  const runtime = await composeProductionRuntime({
++    layout, globalRoute: { provider: 'oc-go', model: 'deepseek-v4-flash' },
++    productApi: { enabled: false, port: 0 }, notificationIngress: { enabled: false, port: 0 },
++    processFactory: opts => new FakeProc(opts), log: silentLog,
++  })
++  const worker = await runtime.router.ensureRunning(AGT_ID)
++  assert.equal(typeof callback, 'function')
++  let releaseRead, signalRead
++  const readGate = new Promise(resolve => { releaseRead = resolve })
++  const readStarted = new Promise(resolve => { signalRead = resolve })
++  const loadDoc = runtime.store.loadDoc.bind(runtime.store)
++  let reads = 0
++  runtime.store.loadDoc = async (...args) => {
++    reads += 1
++    signalRead()
++    await readGate
++    return loadDoc(...args)
++  }
++  const order = []
++  for (const [object, stage] of [[runtime.workflowExecution, 'workflow'], [runtime.scheduler, 'scheduler'], [worker, 'Router']]) {
++    const key = stage === 'Router' ? 'shutdown' : 'stop'
++    const original = object[key].bind(object)
++    object[key] = async (...args) => { order.push(stage); return original(...args) }
++  }
++  callback()
++  await readStarted
++  let stopped = false
++  const stopping = runtime.stop().then(() => { stopped = true })
++  try {
++    await new Promise(resolve => setImmediate(resolve))
++    assert.equal(stopped, false)
++    assert.deepEqual(order, [], 'the mounted pass must drain before downstream teardown')
++  } finally {
++    releaseRead()
++    await stopping
++  }
++  assert.deepEqual(order, ['workflow', 'scheduler', 'Router'])
++  const readsAtStop = reads
++  callback()
++  await new Promise(resolve => setImmediate(resolve))
++  assert.equal(reads, readsAtStop, 'a captured interval callback cannot read after composition stop')
++})
++
+ async function settledWithin(promise, ms) {
+   let settled = false
+   const mark = promise.then(() => { settled = true }, () => { settled = true })
+diff --git a/scripts/trusted-cp-deploy-install.sh b/scripts/trusted-cp-deploy-install.sh
+index ef505320..356899a8 100644
+--- a/scripts/trusted-cp-deploy-install.sh
++++ b/scripts/trusted-cp-deploy-install.sh
+@@ -624,7 +624,7 @@ if ! command -v node >/dev/null 2>&1; then
+ fi
+ PACKAGE_COPY_HELPER="$REPO_SRC/scripts/lib/trusted-app-package-copy.mjs"
+ [ -f "$PACKAGE_COPY_HELPER" ] || { echo "ERROR: package-copy helper missing: $PACKAGE_COPY_HELPER" >&2; exit 2; }
+-APP_SCRIPTS_WHITELIST="agent-core-resident.mjs demo-home.mjs agentcore-cron.mjs dsh-agent-spawn-helper.c trusted-cp-deploy-install.sh agent-core-backup-ops.sh trusted-cp-hardening-v1-verify.mjs production-runtime.mjs production-runtime-launchd.mjs production-runtime-v1-verify.mjs production-agent-provision.mjs"
++APP_SCRIPTS_WHITELIST="agent-core-resident.mjs demo-home.mjs agentcore-cron.mjs scheduler-watchdog.mjs dsh-agent-spawn-helper.c trusted-cp-deploy-install.sh agent-core-backup-ops.sh trusted-cp-hardening-v1-verify.mjs production-runtime.mjs production-runtime-launchd.mjs production-runtime-v1-verify.mjs production-agent-provision.mjs"
+ PRESCAN_STAGING="$(mktemp -d /tmp/trusted-cp-prescan-XXXXXX)"
+ mkdir -p "$PRESCAN_STAGING/app/scripts" "$PRESCAN_STAGING/app/packages"
+ cp "$REPO_SRC/package.json" "$PRESCAN_STAGING/app/package.json"

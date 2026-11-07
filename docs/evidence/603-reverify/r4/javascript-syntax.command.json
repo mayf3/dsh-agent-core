@@ -1,0 +1,58 @@
+{
+  "name": "javascript-syntax",
+  "argv": [
+    "env",
+    "-u",
+    "HTTP_PROXY",
+    "-u",
+    "HTTPS_PROXY",
+    "-u",
+    "http_proxy",
+    "-u",
+    "https_proxy",
+    "-u",
+    "ALL_PROXY",
+    "-u",
+    "all_proxy",
+    "-u",
+    "NO_PROXY",
+    "-u",
+    "no_proxy",
+    "-u",
+    "NODE_USE_ENV_PROXY",
+    "PATH=/usr/local/bin:/Users/yanfenma/.qoder/entry:/opt/homebrew/Caskroom/codex/0.164.0/codex-path:/opt/homebrew/bin:/Users/yanfenma/bin:/Users/yanfenma/.local/bin:/Users/yanfenma/.bun/bin:/Users/yanfenma/.opencode/bin:/opt/homebrew/opt/openjdk/bin:/opt/homebrew/opt/openjdk/bin:/opt/homebrew/bin:/Users/yanfenma/.local/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/opt/homebrew/bin:/Users/yanfenma/.codex/tmp/arg0-macos/codex-arg0aqq3xJ:/opt/homebrew/Caskroom/codex/0.164.0/codex-path:/Users/yanfenma/bin:/Users/yanfenma/.local/bin:/Users/yanfenma/Library/pnpm:/Users/yanfenma/.bun/bin:/Users/yanfenma/.opencode/bin:/opt/homebrew/opt/openjdk/bin:/Users/yanfenma/.cargo/bin:/Applications/ZCode.app/Contents/Resources/tools/bfs:/Applications/ZCode.app/Contents/Resources/tools/ripgrep:/Applications/ZCode.app/Contents/Resources/tools/ugrep",
+    "EKR_SOURCE_SHA=0f25ce5270c0964476184af509c5857acbdf1527",
+    "EKR_TEST_SOURCE_SHA=0f25ce5270c0964476184af509c5857acbdf1527",
+    "python3",
+    "-c",
+    "import subprocess; files=[\"packages/production-runtime/src/compose.js\",\"packages/production-runtime/src/scheduler/auto-reconcile-runtime.js\",\"packages/production-runtime/src/scheduler/composition-runtime.js\",\"packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js\",\"packages/production-runtime/test/workflow-execution-shutdown.test.js\"]; [(subprocess.run([\"node\",\"--check\",p],check=True),print(p+\": rc0\",flush=True)) for p in files]"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "verification_snapshot": "0f25ce5270c0964476184af509c5857acbdf1527",
+  "source_binding": "Unchanged product and test bytes from R2 snapshot; R4 documents and evidence separately bound",
+  "started_at": "2026-11-07T04:54:24.045954+00:00",
+  "environment": {
+    "unset_keys": [
+      "HTTP_PROXY",
+      "HTTPS_PROXY",
+      "http_proxy",
+      "https_proxy",
+      "ALL_PROXY",
+      "all_proxy",
+      "NO_PROXY",
+      "no_proxy",
+      "NODE_USE_ENV_PROXY"
+    ],
+    "node_path": "/usr/local/bin/node",
+    "EKR_SOURCE_SHA": "0f25ce5270c0964476184af509c5857acbdf1527",
+    "EKR_TEST_SOURCE_SHA": "0f25ce5270c0964476184af509c5857acbdf1527"
+  },
+  "ended_at": "2026-11-07T04:54:24.625930+00:00",
+  "rc": 0,
+  "stdout": "javascript-syntax.stdout.log",
+  "stderr": "javascript-syntax.stderr.log",
+  "sha256": {
+    "stdout": "eb39a9b46a774df4ff03b6fcb037c071de1ce7a34228ae5c943f8babe3a424d2",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

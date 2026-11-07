@@ -1,0 +1,21 @@
+✔ direct evidence GET uses fixed route, exact query, and trusted workflow.read bearer token (3.645666ms)
+▶ transport, token, non-200, and malformed envelope fail closed
+  ✔ token unavailable (0.980833ms)
+  ✔ transport failure (0.237167ms)
+  ✔ service failure (0.16625ms)
+  ✔ extra response field (0.094958ms)
+✔ transport, token, non-200, and malformed envelope fail closed (2.301292ms)
+✔ governance child review wake carries exact evidence instructions and recipient-bound identity (3.203625ms)
+✔ review redelivery uses reviewWakeId even when the same Owner Principal returns (0.350417ms)
+✔ owner assistance wake resolves exact principal and uses stable inter-agent delivery (0.148792ms)
+✔ existing pending/settled caller correlation suppresses duplicate prompt (0.118084ms)
+✔ delivery error is accepted only when caller correlation proves admission (0.645458ms)
+✔ owner principal resolution failure prevents delivery and stays retryable (0.413042ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 206.5485

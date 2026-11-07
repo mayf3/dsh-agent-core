@@ -1,0 +1,209 @@
+✖ notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox (21.524166ms)
+✖ scheduler engine consumes a job from the production store through the router seam (10.984291ms)
+✖ B15 production evidence preserves scheduled outcome_unknown reconciliation data (13.664ms)
+✖ graceful stop closes the HTTP surfaces and writes stopped-able state (14.266792ms)
+✖ runtime state carries no demo artifacts anywhere (9.583375ms)
+✔ C-WIRE paths: the production layout owns the notification-ingress persistent surface (5.976417ms)
+✖ C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths — no credentials, no secret env (11.047917ms)
+✖ C-HIST compose wires the HistoryStore over layout.historyDir into the scheduler and provides the /scheduler/* services (1.794959ms)
+✖ C-HIST schedulerAuth opts provide a JWKS verifier; unconfigured stays null (10.9815ms)
+✔ C-HIST R4 ingestion: valid / UNPARSEABLE / OVERSIZE / INVALID_SCHEMA / absent blocks (6.668042ms)
+✖ MOBILE_SESSION_HISTORY_V1: productApi.history crosses the composition contract (default OFF unchanged; explicit enable reaches the module and fails closed) (13.539875ms)
+✔ reserved generation-bound canary is a mechanical no-op and never reaches Router (2.887125ms)
+✔ reserved identity with a non-matching generation fails closed through ordinary validation (0.766208ms)
+✔ reserved canary passes the real Scheduler admission and completes with zero downstream calls (160.926542ms)
+✔ CTR-S4 default OFF requires exactly on and performs no store or Router IO or timer scheduling (22.034375ms)
+✔ CTR-S4 interval rejects subminute and invalid periods and preserves the allowed minimum (20.019ms)
+✔ CTR-S4 timer and manual ticks share one in-flight pass and one mutation (74.343416ms)
+✔ CTR-S4 dynamic OFF while queued rechecks configuration under the mutation lock with zero byte changes (47.842958ms)
+✔ CTR-S4 stop drains queued nonwriting work and rejects future ticks and captured timer callbacks (40.471833ms)
+✔ CTR-S4 stop waits for an already committed settlement receipt before returning (40.03025ms)
+✔ CTR-S4 receipt append failure remains visible while the authoritative settlement stays committed (34.853959ms)
+▶ CTR-S4 current Router three-state evidence preserves termination-only UNKNOWN and never readmits
+  ✔ late_completed (39.1115ms)
+  ✔ late_failed (35.937875ms)
+  ✔ terminated_without_outcome (39.752625ms)
+✔ CTR-S4 current Router three-state evidence preserves termination-only UNKNOWN and never readmits (115.358ms)
+✔ CTR-S4 pending and missing current Router evidence preserve UNKNOWN bytes and its fence (17.149833ms)
+✔ CTR-S4 V2 load without trusted evidence is pure and preserves the store hash and all files (17.887209ms)
+ℹ V2 missing-evidence SHA256 before=10cb327a7c7b62afc2dbbb71e868daece061cd36a9df6e768427017dadf039df after=10cb327a7c7b62afc2dbbb71e868daece061cd36a9df6e768427017dadf039df; mutations=0; upgrades=0
+✔ CTR-S4 malformed load returns UNKNOWN without normalizing or writing its bytes (18.946917ms)
+▶ CTR-S4 OFF and stop during a pure read drain without a mutation
+  ✔ OFF (16.579792ms)
+  ✔ stop (17.141333ms)
+✔ CTR-S4 OFF and stop during a pure read drain without a mutation (34.525167ms)
+✔ CTR-S4 late business evidence appends to a historical termination projection without another admission (111.698916ms)
+✔ CTR-S4 clearing one contribution retains the aggregate fence for another unresolved UNKNOWN (53.8985ms)
+✖ composition drains auto-reconcile before workflow, scheduler and owned Router disposal (18.687625ms)
+✔ runtime stop(): the engine drain stays pending while a poll is in flight, and the runtime is quiescent once it resolves (1201.886125ms)
+✖ runtime stop drains the owned worker after workflowExecution stop rejects (3.759958ms)
+✖ runtime stop drains the owned worker after scheduler stop rejects (2.581583ms)
+✔ plugin disposal waits every cleanup and propagates all failures (1.673ms)
+✔ concurrent plugin disposal callers wait the same owned cleanup (1.07675ms)
+✖ runtime stop never reports clean success after an owned worker shutdown rejects (1.769083ms)
+ℹ tests 40
+ℹ suites 0
+ℹ pass 27
+ℹ fail 13
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10511.528
+
+✖ failing tests:
+
+test at packages/production-runtime/test/compose.test.js:47:1
+✖ notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox (21.524166ms)
+  Error: production-runtime: invalid agent model overrides: NO_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h603-reverify/packages/production-runtime/test/compose.test.js:51:25)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }
+
+test at packages/production-runtime/test/compose.test.js:109:1
+✖ scheduler engine consumes a job from the production store through the router seam (10.984291ms)
+  Error: production-runtime: invalid agent model overrides: NO_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h603-reverify/packages/production-runtime/test/compose.test.js:112:25)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }
+
+test at packages/production-runtime/test/compose.test.js:153:1
+✖ B15 production evidence preserves scheduled outcome_unknown reconciliation data (13.664ms)
+  Error: production-runtime: invalid agent model overrides: NO_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h603-reverify/packages/production-runtime/test/compose.test.js:155:25)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }
+
+test at packages/production-runtime/test/compose.test.js:196:1
+✖ graceful stop closes the HTTP surfaces and writes stopped-able state (14.266792ms)
+  Error: production-runtime: invalid agent model overrides: NO_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h603-reverify/packages/production-runtime/test/compose.test.js:198:25)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }
+
+test at packages/production-runtime/test/compose.test.js:214:1
+✖ runtime state carries no demo artifacts anywhere (9.583375ms)
+  Error: production-runtime: invalid agent model overrides: NO_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h603-reverify/packages/production-runtime/test/compose.test.js:216:25)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }
+
+test at packages/production-runtime/test/compose.test.js:245:1
+✖ C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths — no credentials, no secret env (11.047917ms)
+  Error: production-runtime: invalid agent model overrides: NO_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h603-reverify/packages/production-runtime/test/compose.test.js:248:25)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }
+
+test at packages/production-runtime/test/compose.test.js:299:1
+✖ C-HIST compose wires the HistoryStore over layout.historyDir into the scheduler and provides the /scheduler/* services (1.794959ms)
+  Error: production-runtime: invalid agent model overrides: NO_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h603-reverify/packages/production-runtime/test/compose.test.js:313:25)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }
+
+test at packages/production-runtime/test/compose.test.js:359:1
+✖ C-HIST schedulerAuth opts provide a JWKS verifier; unconfigured stays null (10.9815ms)
+  Error: production-runtime: invalid agent model overrides: NO_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h603-reverify/packages/production-runtime/test/compose.test.js:361:25)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }
+
+test at packages/production-runtime/test/compose.test.js:419:1
+✖ MOBILE_SESSION_HISTORY_V1: productApi.history crosses the composition contract (default OFF unchanged; explicit enable reaches the module and fails closed) (13.539875ms)
+  Error: production-runtime: invalid agent model overrides: NO_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h603-reverify/packages/production-runtime/test/compose.test.js:444:23)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }
+
+test at packages/production-runtime/test/workflow-execution-shutdown.test.js:30:1
+✖ composition drains auto-reconcile before workflow, scheduler and owned Router disposal (18.687625ms)
+  Error: production-runtime: invalid agent model overrides: NO_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h603-reverify/packages/production-runtime/test/workflow-execution-shutdown.test.js:44:25)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }
+
+test at packages/production-runtime/test/workflow-execution-shutdown.test.js:166:3
+✖ runtime stop drains the owned worker after workflowExecution stop rejects (3.759958ms)
+  Error: production-runtime: invalid agent model overrides: NO_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h603-reverify/packages/production-runtime/test/workflow-execution-shutdown.test.js:168:27)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }
+
+test at packages/production-runtime/test/workflow-execution-shutdown.test.js:166:3
+✖ runtime stop drains the owned worker after scheduler stop rejects (2.581583ms)
+  Error: production-runtime: invalid agent model overrides: NO_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h603-reverify/packages/production-runtime/test/workflow-execution-shutdown.test.js:168:27)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }
+
+test at packages/production-runtime/test/workflow-execution-shutdown.test.js:257:1
+✖ runtime stop never reports clean success after an owned worker shutdown rejects (1.769083ms)
+  Error: production-runtime: invalid agent model overrides: NO_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h603-reverify/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h603-reverify/packages/production-runtime/test/workflow-execution-shutdown.test.js:259:25)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }

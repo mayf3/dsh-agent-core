@@ -1,0 +1,7 @@
+{
+  "observed_at": "2026-11-07T04:48:22.991Z",
+  "sha": "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed",
+  "message": "Merge pull request #645 from mayf3/chore/verifier-post-retirement-adapt\n\nfix(governance): qualify structure verifier after V3 retirement",
+  "url": "https://github.com/mayf3/dsh-agent-core/commit/1ff1e81cbd74a51761dab46a5fcee532c41fe4ed",
+  "isError": false
+}

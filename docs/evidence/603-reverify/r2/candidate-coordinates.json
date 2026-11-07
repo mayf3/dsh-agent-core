@@ -1,0 +1,50 @@
+{
+  "observed_at": "2026-11-07T04:28:38.109697+00:00",
+  "worktree": "/private/tmp/h603-reverify",
+  "branch": "ac-ctr-s4-reverify",
+  "parent_head": "91e224bc079f26cef285cba6da0872cb640ed330",
+  "base_head": "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed",
+  "verification_snapshot": "0f25ce5270c0964476184af509c5857acbdf1527",
+  "verification_tree": "63534a3f954004da8967cd1284df8915d11d5603",
+  "snapshot_role": "unreferenced commit object required by verifier, not a branch/delivery commit",
+  "diff_sha256": "a66f5396f2568e0e1f1989cbef7b7558124e38505f4134272e574b3a9c32cfa8",
+  "files": {
+    "BRIEF-603-REVERIFY.md": {
+      "sha256": "520cdec7e5b5fbaf79d1431631eb29df5a15c4c96f0d65f7a8c3a1df73d4c65e",
+      "blob": "6a62678cc38cb1ad2744d8857b6e593e70abd824",
+      "lines": 24
+    },
+    "packages/production-runtime/src/compose.js": {
+      "sha256": "5767d595754b8dd457fb55bbfa76ba39b29162c4e61433cdaf398f18406d4df7",
+      "blob": "400f993f2a95f9c5c772adce359f74d7b45930a8",
+      "lines": 500
+    },
+    "packages/production-runtime/src/scheduler/auto-reconcile-runtime.js": {
+      "sha256": "568ce16199b42abdc1b763f9c08ff7a681b032455c9f1e84be16b48ca238f207",
+      "blob": "3183257f02e48348eda263044fd9558ece9d4889",
+      "lines": 94
+    },
+    "packages/production-runtime/src/scheduler/composition-runtime.js": {
+      "sha256": "e966a414b0a21d6f864ea24f5c7836011525ba790d2a7114797f9b3d6e849c6a",
+      "blob": "21d72b5a982c73270e3a2019f5964cfde4215e37",
+      "lines": 47
+    },
+    "packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js": {
+      "sha256": "a05c08c5f7f7ddf9df4495cce34e26e7dc1ff70b641ca47e8f455bdff4b90ae4",
+      "blob": "c9e39c59cf0a0640f392c93cfb3a4a51c2bbe94d",
+      "lines": 383
+    },
+    "packages/production-runtime/test/workflow-execution-shutdown.test.js": {
+      "sha256": "203c818496c86a6c0a1aa19c8837d5c803eb769a6a8363ce6f7e8c1fcd2187a0",
+      "blob": "44432921f3961b2c0ddee3b8d71e5d93cef89ed4",
+      "lines": 279
+    },
+    "scripts/trusted-cp-deploy-install.sh": {
+      "sha256": "dba2f136af78b6d89bf58d1b9ab0c15259efa3bf4f4d4f904e9494fd11d7741e",
+      "blob": "356899a8ec0726f245790379429f97dfc6ea3bfb",
+      "lines": 1315
+    }
+  },
+  "node": "v26.7.0",
+  "npm": "11.19.0"
+}

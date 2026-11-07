@@ -1,0 +1,28 @@
+{
+  "name": "structure",
+  "argv": [
+    "node",
+    "scripts/verify-code-structure.mjs",
+    "--base",
+    "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed",
+    "--head",
+    "0f25ce5270c0964476184af509c5857acbdf1527",
+    "--json"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "verification_snapshot": "0f25ce5270c0964476184af509c5857acbdf1527",
+  "verification_tree": "63534a3f954004da8967cd1284df8915d11d5603",
+  "environment": {
+    "EKR_SOURCE_SHA": "0f25ce5270c0964476184af509c5857acbdf1527",
+    "EKR_TEST_SOURCE_SHA": "0f25ce5270c0964476184af509c5857acbdf1527"
+  },
+  "started_at": "2026-11-07T04:28:54.188552+00:00",
+  "ended_at": "2026-11-07T04:28:54.971534+00:00",
+  "rc": 0,
+  "stdout": "structure.stdout.log",
+  "stderr": "structure.stderr.log",
+  "sha256": {
+    "stdout": "0a57b28a5f641d4f698300ef08ad7dfefebd30642bcf4026615a2a8355800b3c",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

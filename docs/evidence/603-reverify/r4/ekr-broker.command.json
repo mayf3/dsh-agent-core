@@ -1,0 +1,59 @@
+{
+  "name": "ekr-broker",
+  "argv": [
+    "env",
+    "-u",
+    "HTTP_PROXY",
+    "-u",
+    "HTTPS_PROXY",
+    "-u",
+    "http_proxy",
+    "-u",
+    "https_proxy",
+    "-u",
+    "ALL_PROXY",
+    "-u",
+    "all_proxy",
+    "-u",
+    "NO_PROXY",
+    "-u",
+    "no_proxy",
+    "-u",
+    "NODE_USE_ENV_PROXY",
+    "PATH=/usr/local/bin:/Users/yanfenma/.qoder/entry:/opt/homebrew/Caskroom/codex/0.164.0/codex-path:/opt/homebrew/bin:/Users/yanfenma/bin:/Users/yanfenma/.local/bin:/Users/yanfenma/.bun/bin:/Users/yanfenma/.opencode/bin:/opt/homebrew/opt/openjdk/bin:/opt/homebrew/opt/openjdk/bin:/opt/homebrew/bin:/Users/yanfenma/.local/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/opt/homebrew/bin:/Users/yanfenma/.codex/tmp/arg0-macos/codex-arg0aqq3xJ:/opt/homebrew/Caskroom/codex/0.164.0/codex-path:/Users/yanfenma/bin:/Users/yanfenma/.local/bin:/Users/yanfenma/Library/pnpm:/Users/yanfenma/.bun/bin:/Users/yanfenma/.opencode/bin:/opt/homebrew/opt/openjdk/bin:/Users/yanfenma/.cargo/bin:/Applications/ZCode.app/Contents/Resources/tools/bfs:/Applications/ZCode.app/Contents/Resources/tools/ripgrep:/Applications/ZCode.app/Contents/Resources/tools/ugrep",
+    "EKR_SOURCE_SHA=0f25ce5270c0964476184af509c5857acbdf1527",
+    "EKR_TEST_SOURCE_SHA=0f25ce5270c0964476184af509c5857acbdf1527",
+    "node",
+    "--test",
+    "packages/broker/test/capabilities/workflow-execution/owner-obligation-attempt.test.js",
+    "packages/broker/test/capabilities/workflow-execution/owner-obligation.test.js"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "verification_snapshot": "0f25ce5270c0964476184af509c5857acbdf1527",
+  "source_binding": "Unchanged product and test bytes from R2 snapshot; R4 documents and evidence separately bound",
+  "started_at": "2026-11-07T04:53:36.062622+00:00",
+  "environment": {
+    "unset_keys": [
+      "HTTP_PROXY",
+      "HTTPS_PROXY",
+      "http_proxy",
+      "https_proxy",
+      "ALL_PROXY",
+      "all_proxy",
+      "NO_PROXY",
+      "no_proxy",
+      "NODE_USE_ENV_PROXY"
+    ],
+    "node_path": "/usr/local/bin/node",
+    "EKR_SOURCE_SHA": "0f25ce5270c0964476184af509c5857acbdf1527",
+    "EKR_TEST_SOURCE_SHA": "0f25ce5270c0964476184af509c5857acbdf1527"
+  },
+  "ended_at": "2026-11-07T04:53:37.751074+00:00",
+  "rc": 0,
+  "stdout": "ekr-broker.stdout.log",
+  "stderr": "ekr-broker.stderr.log",
+  "sha256": {
+    "stdout": "5d902b4cd39f1e92b476686a66c27eb112a020efb2f87919d5877fcaeb08e312",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}
