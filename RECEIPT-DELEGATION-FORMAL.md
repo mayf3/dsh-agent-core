@@ -1,5 +1,7 @@
 # RECEIPT — 常设授权总裁定 V1 正式化与控制绑定
 
+R2 续接结果见文末「R2 日期比较修复与交付续接」；下文 R1 首次交付记录保持原样。
+
 记录时间：`2026-11-07T15:10:46.252306+00:00`。PR [#660](https://github.com/mayf3/dsh-agent-core/pull/660)，base `main`，
 branch `docs/standing-delegation-v1`，原始读回 `OPEN` / `mergedAt=null`。
 本收据时点的远端/接受HEAD为 `0b61ef6911421a43aef77d6620b72cb72dbb6556`；下方保留真实首次交付链。
@@ -86,3 +88,53 @@ G01实际消费/负向资格；有权 Captain 满足全部门后才按单签发�
 main激活等待监管独立决定与合并；当前任务明确不合并。实际Auth/任命/G01控制资格仍由
 清单中的原责任链补齐，缺证不得签发/启动依赖的危险动作，其他无冲突授权工作不冻结。
 后续重复审批次数与无下一合法动作等待责任按原§8继续记录，不以本RECEIPT冒称业务验收。
+
+## R2 日期比较修复与交付续接
+
+用户 2026-11-07 明确续接 R1 已知问题；授权与停止边界已追加到原
+[Brief](BRIEF-DELEGATION-FORMAL.md)。R1 终审失败原文完整纳入
+[STOPPED-DELEGATION-FORMAL.md](STOPPED-DELEGATION-FORMAL.md)，作为历史记录保留，
+不是本次续接后仍在生效的执行停点。其 SHA256 为
+`88dea1506b01cc56e545179367a31c2c0e8e577e60ab1ebf690ced2a29764835`。
+
+R1 问题在审查者自有脚本：`yaml.safe_load` 将未加引号的 `accepted_at` 解析为
+`datetime`，直接与 ISO 字符串比较触发 `AssertionError`。R2 对 frontmatter 做
+`json.loads(json.dumps(fm, default=str))`；期望值从原 ISO 时刻构建 datetime
+后采用同一规范化，处理空格与 `T` 的表示差异。只改这两处日期表示处理，其余
+原断言逐字保留，没有改 Spec（包括正文、frontmatter）或索引任何字节。
+
+非作者 `/root/r2_review` 在干净隔离工作面
+`/private/tmp/h-delegation-formal-r2-audit`，精确 HEAD
+`cd98bf1ab73c5abd3b598aa4d71c217127a7a2d0`，独立重跑结果：
+
+```text
+FINAL_HEAD_DELTA_RECHECK = PASS
+REVIEW_RESULT = PASS
+R2_PYTHON_CHILD_RAW_RC = 0
+R2_DIFF_CHECK_RAW_RC = 0
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
+FROZEN_BLOCKER_UNION = []
+```
+
+[独立终审 PASS 原文](docs/reports/standing-delegation-formal-20261107/r2/independent-review.md)、
+[逐子进程 stdout/stderr/rc](docs/reports/standing-delegation-formal-20261107/r2/independent-audit.jsonl)、
+[修复脚本](docs/reports/standing-delegation-formal-20261107/r2/final-head-delta.py)
+均与本收据一起版本化。R1 的整壳 rc0 不代表 Python 成功；其子进程精确 rc 仍为
+`UNKNOWN_NOT_SEPARATELY_CAPTURED`，原 FAIL 不回填为 PASS。R2 两个必需检查
+分别捕获真实 rc=0 和空 stderr。
+
+准备期间一次 `apply_patch` 因多余上下文匹配失败被原子拒绝，未改文件；正确的
+两行 metadata 补丁随后成功。这是准备工具事件，不是终审/提交/push/PR 门，
+不计入必需检查 PASS，也不声称本轮所有工具均成功。必需门保持失败即停。
+
+本 R2 提交承接原未推送收据提交 `cd98bf1a`，只新增审计工具/证据、历史 STOP 和
+本收据/Brief 续接记录。新的最终 HEAD 由 commit 后读回，再由非作者审查本次证据
+差量；push 后 PR #660 自动收入两提交。精确最终 SHA、最终差量 PASS 原文、
+push rc 和本地=远端分支=PR HEAD 的读回在
+[PR #660 最终交付回执](https://github.com/mayf3/dsh-agent-core/pull/660) 持久绑定，
+这些未来效果不在本提交中预填为已发生。完整 R2 native 执行链位于
+`/private/tmp/delegation-formal-r2-20261107/chain.jsonl`，提交前前缀同时版本化。
+
+PR 维持 OPEN、不合并。总框架 main 激活与实际控制生效保持各自边界：
+`CONTROL_EFFECTIVE=NOT_VERIFIED`、运行负向 `NOT_EXECUTED`；没有产品源码变更、
+生产写入、身份/Grant 创建、任命或窗口签发。
