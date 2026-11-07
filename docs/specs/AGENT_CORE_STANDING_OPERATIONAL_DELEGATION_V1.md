@@ -1,6 +1,26 @@
 ---
 spec_id: AGENT_CORE_STANDING_OPERATIONAL_DELEGATION_V1
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_date: 2026-11-07
+accepted_at: 2026-11-07T15:08:54.867556+00:00
+accepted_reviewed_head: 3f5fb8088e7822ec5bc26d641a07847b34553a50
+independent_review_result: PASS
+independent_review_receipt: docs/reports/standing-delegation-formal-20261107/independent-review.md
+independent_review_receipt_sha256: 32286d908375b9da83913ac70bdd3b26dd45f68dcf1a3e64e9a81edc3700bad1
+acceptance_authority: Owner mayf3 ruling owner-20261107-standing-delegation, original eight sections
+acceptance_authority_source: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json
+acceptance_authority_selector: $.rulings[id=owner-20261107-standing-delegation]
+acceptance_authority_canonical_sha256: 01cc059c2bf0e0493588f00032ca06eb73e3a0a13cb33f4078996fdccb79dad3
+acceptance_transaction_executor: /root (format conversion and acceptance transaction executor only)
+acceptance_authority_basis: >-
+  Owner mayf3 made the original eight-section standing ruling and authorized its
+  formal record and control binding under section 8 and BRIEF-DELEGATION-FORMAL.
+  The nonauthor reviewer passed the exact proposed head bound above. The worker
+  records the Owner acceptance and does not accept through a self-issued role
+  or future Captain identity. No personal Owner review of this converted exact
+  head is claimed. The final acceptance commit is bound by its Git object and
+  independent final-head review/readback in the delivery RECEIPT and PR.
 spec_kind: invariant
 authority_level: governing_spec
 implementation_authority: none
@@ -33,9 +53,11 @@ activation_boundary: main merge after independent final-HEAD review; operational
 # Agent Core Standing Operational Delegation V1
 
 <!-- BEGIN SOD_LIFECYCLE -->
-> 当前为 proposed 格式转换，等待非作者独立审查和 Owner 授权接受事务。
-> 接受权威是 Owner mayf3 的八节裁定本尊，转换作者 `/root` 只是事务执行者。
-> main 激活、Auth 主体建立、Captain 任命、控制生效和单窗签发是分别核验的事实；本轮只有文档。
+> **Owner mayf3 授权的正式接受事务已记录；本分支未合 main，不代表实际控制生效。**
+> reviewed proposed HEAD 为 `3f5fb8088e7822ec5bc26d641a07847b34553a50`；非作者独审原文及接受依据见
+> [接受事务](../reports/standing-delegation-formal-20261107/acceptance-transaction.md)。
+> 接受权威是 Owner 八节裁定本尊；`/root` 仅执行转换和记录事务，不是自授的维护者或 Captain。
+> main 激活、Auth 主体建立、Captain 任命、控制生效、单窗签发和实际业务结果分别核验。
 <!-- END SOD_LIFECYCLE -->
 
 ## 1. Goal
