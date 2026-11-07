@@ -1,0 +1,100 @@
+{
+  "observed_at_utc": "2026-11-07T12:58:52.877453+00:00",
+  "repository": "mayf3/dsh-agent-core",
+  "worktree": "/private/tmp/h-refusal-proposal",
+  "base_head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "owner_records": [
+    {
+      "source": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json",
+      "selector": "$.rulings[id=owner-20261107-five-decisions]",
+      "canonical_serialization": "UTF-8 JSON ensure_ascii=False, sort_keys=True, separators=(comma,colon)",
+      "canonical_sha256": "95290062529cf24c31d3c7f6c748a22e5e369d14458cf623f562eee5c90cedc8",
+      "selected_items": [
+        {
+          "index": 1,
+          "text": "②两缺口边界确认(PR#653评估采纳): aging与refused-terminal为两独立提案共用机制; 按此起草/推进"
+        },
+        {
+          "index": 2,
+          "text": "③#643 aging提案正式接受——**限定: 仅限提案语义; WEC/Svc配套权威正式接受前不得实施新reason或用于生产**(实施闸门保留)"
+        }
+      ]
+    },
+    {
+      "source": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json",
+      "selector": "$.rulings[id=owner-20261107-preauth-v2]",
+      "canonical_serialization": "UTF-8 JSON ensure_ascii=False, sort_keys=True, separators=(comma,colon)",
+      "canonical_sha256": "087461a2a7424088b258940393ef4f9ad5939e59d0a1e420dfc57efd2829c006",
+      "selected_items": [
+        {
+          "index": 4,
+          "text": "授权失败处理: 普通缺陷/测试失败/installer未资格/构建不兼容/缺证→原责任链自行补齐重验; 缺证禁依赖操作但不把已授权修复停成WAITING_OWNER; 仅未授权语义变化/危险迁移/扩权/无法安全回退/超发布策略重大风险才找Owner"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1.md",
+      "blob": "232b890c1b8f01c9d2fbcd9a1f6b8acfb401a816",
+      "sha256": "a939403cbd83bf9636d2f55e439dddcbbfc3eb74c578db8d4e348d513323a481"
+    },
+    {
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3.md",
+      "blob": "f7623521fd031f661ecc74fe61cf9ec52e69ba13",
+      "sha256": "03469e9f53ccf53f23de3a552270a4bb82f1922b6979108fe01083488c3335d4"
+    },
+    {
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3.md",
+      "blob": "ffa4defa97973b8c25240c2a4e7191dc6fee4167",
+      "sha256": "c5d39e390026807b9e471a6875f5e0e9d15432f21a3d177733bf422fc751a1e6"
+    },
+    {
+      "revision": "7b5d79c3961625aaade6f3b383b18b2968e82f6c",
+      "path": "docs/specs/AGENT_CORE_READBACK_AGING_HANDOFF_V1.md",
+      "blob": "b28b77bb88d7bdc963e989738177ce3d68aba39f",
+      "sha256": "3ac3478f4e9f71c0fd27276ffd568b3d5f44c135c47d4113f1f64be989d243ad"
+    },
+    {
+      "revision": "4928f5022a2385b571eba4d9d2967d216c78c2f8",
+      "path": "CONVERGENCE-ANALYSIS-1377.md",
+      "blob": "725422c81050068e70f61c71dada902d2311a195",
+      "sha256": "54b1f7203ed55dadc23d5f512126cd266f401533ac49d38eb91c00a7003902a7"
+    },
+    {
+      "revision": "f3c833737195180a54b8eb6cd95758500fc6c010",
+      "path": "SEMANTIC-DELTA-CONSOLIDATION.md",
+      "blob": "aefe90a08084d5a865e5669617ef8514ca317d7a",
+      "sha256": "281eb6b0543af493cf86faa2cba07907191d18abb10ba07e45c3d51b25abbc69"
+    },
+    {
+      "revision": "f3c833737195180a54b8eb6cd95758500fc6c010",
+      "path": "docs/reports/semantic-delta-consolidation-20261107/STOPPED-1377-MINIMPL.md",
+      "blob": "b86d7ff18aab046e29d039927bfc19afe5293883",
+      "sha256": "9b3acc663678399e54bc930f507953c3eca6defa47f148933d65a5f06a025821"
+    }
+  ],
+  "local_inputs": [
+    {
+      "path": "BRIEF-REFUSAL-PROPOSAL.md",
+      "sha256": "eac7da6ed1b5727cd090a32de3b3394f825422d031174924c5b69fe00cba50b5"
+    },
+    {
+      "path": "/private/tmp/h1377-minimpl/STOPPED-1377-MINIMPL.md",
+      "sha256": "9b3acc663678399e54bc930f507953c3eca6defa47f148933d65a5f06a025821",
+      "published_snapshot": {
+        "revision": "f3c833737195180a54b8eb6cd95758500fc6c010",
+        "path": "docs/reports/semantic-delta-consolidation-20261107/STOPPED-1377-MINIMPL.md",
+        "blob": "b86d7ff18aab046e29d039927bfc19afe5293883",
+        "sha256": "9b3acc663678399e54bc930f507953c3eca6defa47f148933d65a5f06a025821"
+      }
+    }
+  ],
+  "limits": [
+    "Owner selected items authorize this authoring and preserve separate acceptance gates.",
+    "No new Core or Svc successor accepted; no implementation, installation, runtime or business proof."
+  ]
+}
