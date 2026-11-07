@@ -27,6 +27,63 @@ import { AGT_ID, FakeProc, seedRuntime } from './compose-fixture.js'
 const silentLog = { log() {}, warn() {}, error() {} }
 const POLLER = 'agt_workflow-poller'
 
+test('composition drains auto-reconcile before workflow, scheduler and owned Router disposal', async (t) => {
+  const previous = process.env.AGENT_CORE_FENCE_AUTO_RECONCILE
+  process.env.AGENT_CORE_FENCE_AUTO_RECONCILE = 'on'
+  t.after(() => {
+    if (previous === undefined) delete process.env.AGENT_CORE_FENCE_AUTO_RECONCILE
+    else process.env.AGENT_CORE_FENCE_AUTO_RECONCILE = previous
+  })
+  const originalInterval = globalThis.setInterval
+  let callback
+  t.mock.method(globalThis, 'setInterval', (fn, period, ...args) => {
+    if (period === 15 * 60 * 1000) callback = fn
+    return originalInterval(fn, period, ...args)
+  })
+  const { layout } = await seedRuntime(t)
+  const runtime = await composeProductionRuntime({
+    layout, globalRoute: { provider: 'oc-go', model: 'deepseek-v4-flash' },
+    productApi: { enabled: false, port: 0 }, notificationIngress: { enabled: false, port: 0 },
+    processFactory: opts => new FakeProc(opts), log: silentLog,
+  })
+  const worker = await runtime.router.ensureRunning(AGT_ID)
+  assert.equal(typeof callback, 'function')
+  let releaseRead, signalRead
+  const readGate = new Promise(resolve => { releaseRead = resolve })
+  const readStarted = new Promise(resolve => { signalRead = resolve })
+  const loadDoc = runtime.store._readDocRaw.bind(runtime.store)
+  let reads = 0
+  runtime.store._readDocRaw = async (...args) => {
+    reads += 1
+    signalRead()
+    await readGate
+    return loadDoc(...args)
+  }
+  const order = []
+  for (const [object, stage] of [[runtime.workflowExecution, 'workflow'], [runtime.scheduler, 'scheduler'], [worker, 'Router']]) {
+    const key = stage === 'Router' ? 'shutdown' : 'stop'
+    const original = object[key].bind(object)
+    object[key] = async (...args) => { order.push(stage); return original(...args) }
+  }
+  callback()
+  await readStarted
+  let stopped = false
+  const stopping = runtime.stop().then(() => { stopped = true })
+  try {
+    await new Promise(resolve => setImmediate(resolve))
+    assert.equal(stopped, false)
+    assert.deepEqual(order, [], 'the mounted pass must drain before downstream teardown')
+  } finally {
+    releaseRead()
+    await stopping
+  }
+  assert.deepEqual(order, ['workflow', 'scheduler', 'Router'])
+  const readsAtStop = reads
+  callback()
+  await new Promise(resolve => setImmediate(resolve))
+  assert.equal(reads, readsAtStop, 'a captured interval callback cannot read after composition stop')
+})
+
 async function settledWithin(promise, ms) {
   let settled = false
   const mark = promise.then(() => { settled = true }, () => { settled = true })

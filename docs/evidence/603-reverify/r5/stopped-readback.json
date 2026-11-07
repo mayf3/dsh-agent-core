@@ -1,0 +1,89 @@
+{
+  "observed_at": "2026-11-07T05:12:39.424207+00:00",
+  "head": "f1b1466b2645ec861c80bcb934db410ff544e6ca",
+  "tree": "2f6d479cc93f885005ff743785a6b5a75909c0c0",
+  "branch": "ac-ctr-s4-reverify",
+  "stage": "STOPPED_AFTER_PR_COMMAND_RC1",
+  "task_done": false,
+  "docs_pushed": false,
+  "pr_head": "ac-ctr-s4-runtime-prep",
+  "pr_head_sha": "815ac7c94b1775eec3aa57f19ca8a3842f592217",
+  "pr_state": "open",
+  "pr_merged": false,
+  "post_failure_scope": "facts receipt and read-only reconciliation only",
+  "unstaged_tracked_paths": [
+    "RECEIPT-603-REVERIFY.md",
+    "STOPPED-603-REVERIFY.md"
+  ],
+  "staged_paths": [],
+  "post_commit_local_appendices": [
+    {
+      "path": "docs/evidence/603-reverify/r5/FAILED.json",
+      "sha256": "3367a9e3517de395a44de9370be55a8391a08d4d94af570a0a77dc98a9e0998f"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r5/docs-commit-readback.json",
+      "sha256": "21a9259fe20a14bbf945ce9cb233332196e8ac1c80b1483da162bcace8adeb40"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r5/docs-commit.command.json",
+      "sha256": "573372cb2f502baa750e004e67b4ec31cdbf13a425c4d86ee6b80d87e4ea7d94"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r5/docs-commit.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r5/docs-commit.stdout.log",
+      "sha256": "58b61e956899ef7ffc0c5fe2acdc018641b073ad5fcf188eaed85759ae84ebd2"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r5/final-index-check.command.json",
+      "sha256": "9ff6655666ed723d664d7da3677b1c27881ea51ea4fd91d99ecbf3c094a3be7f"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r5/final-index-check.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r5/final-index-check.stdout.log",
+      "sha256": "be7360a1a27657dc1ec830f499b1187741a30a3bb03862937162e24bd6d04259"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r5/independent-final-head-review.md",
+      "sha256": "ef735f09b689353827ccad528c8b2c630031af947badc218feba5780db47e9ed"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r5/pr-final-readback.json",
+      "sha256": "082d2a5f3a38de5d46cc03b1132931b3c437e97dfa9dc11b04e1e8e15d2e94f3"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r5/pr-head-edit.command.json",
+      "sha256": "3367a9e3517de395a44de9370be55a8391a08d4d94af570a0a77dc98a9e0998f"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r5/pr-head-edit.stderr.log",
+      "sha256": "a4e28b07a297c1b81e133e4578fced34747ced89694b8606c8bafa6314533ebd"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r5/pr-head-edit.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r5/remote-final-readback.command.json",
+      "sha256": "9cc48f8927eab3492fe923a466426c67c55e63d0da0c10909be5e86cbf70b08b"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r5/remote-final-readback.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r5/remote-final-readback.stdout.log",
+      "sha256": "fec430a57bef719f80cd9220b90f958415afb7018b6c21233719d15d9ee39f9e"
+    }
+  ],
+  "root_receipt_sha256": {
+    "RECEIPT-603-REVERIFY.md": "26acefa43a240c21bb72655164f3cdbc9814f4162ccd5f3338c5c5420fdfcbe4",
+    "STOPPED-603-REVERIFY.md": "e426501fbefa5c355be46532fa0664cb040bee2a8850d9abc5be315cab893256"
+  }
+}

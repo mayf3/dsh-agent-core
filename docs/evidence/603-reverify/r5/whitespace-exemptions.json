@@ -1,0 +1,97 @@
+{
+  "authority": "Owner R5 task 2026-11-07, reusing PR642 verbatim archive ruling",
+  "scope": "this one docs packaging operation only; no .gitattributes/config/product changes",
+  "entries": [
+    {
+      "path": "docs/evidence/603-reverify/r2/candidate-working.diff",
+      "lines": [
+        22,
+        25,
+        44,
+        48,
+        50,
+        166,
+        182,
+        190,
+        528
+      ],
+      "sha256": "a66f5396f2568e0e1f1989cbef7b7558124e38505f4134272e574b3a9c32cfa8",
+      "reason": "patch 空白上下文行原文为单个 ASCII 空格；修剪会改变 verbatim patch"
+    },
+    {
+      "path": "docs/evidence/603-reverify/reviewed-product.diff",
+      "lines": [
+        8,
+        11,
+        30,
+        34,
+        36,
+        144
+      ],
+      "sha256": "1c65a0b85be434886c45514b180de860837f5bdd1a0f1147b13d5ba422a42947",
+      "reason": "复查 patch 空白上下文行原文为单个 ASCII 空格"
+    },
+    {
+      "path": "docs/evidence/603-reverify/stopped-working.diff",
+      "lines": [
+        8,
+        11,
+        30,
+        34,
+        36,
+        144,
+        159,
+        167,
+        446
+      ],
+      "sha256": "97b6ab2023001868f229bf5040f279744a28bd8ac1a35244c4090de388e073cf",
+      "reason": "停止时 patch 空白上下文行原文为单个 ASCII 空格"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r4/push-source.stderr.log",
+      "lines": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "sha256": "6622d36e1de003446521051b4b7b79960fd70b4c08604246f9c86bf25860d255",
+      "reason": "Git remote push stderr 原始行尾空格；原文与既有 command hash 必须一致"
+    },
+    {
+      "path": "docs/evidence/603-reverify/r4/cached-diff-check.stdout.log",
+      "lines": [
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        18,
+        20,
+        22,
+        24,
+        26,
+        28,
+        30,
+        32,
+        34,
+        36,
+        38,
+        40,
+        42,
+        44,
+        46,
+        48,
+        50,
+        52,
+        54,
+        56
+      ],
+      "sha256": "1869434ca6810f4bd274f05eaa49a40623f38132017eb9b31e38f61de4862e33",
+      "reason": "R4 失败门 raw stdout 对上述 patch/push 豁免字节逐字回显；同源保真豁免，不改原 rc2"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "observed_at": "2026-11-07T04:57:34.478939+00:00",
+  "implementation_commit": "87735ecee0e0ebfaa575f889785d7c5037ab9145",
+  "implementation_tree": "d05d1ba63fe2e056e66f838a62811687be2d7925",
+  "implementation_base": "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed",
+  "current_base_head": "bc69bff131c50af7357d39045b6d3084e5fd6fca",
+  "verification_snapshot": "0f25ce5270c0964476184af509c5857acbdf1527",
+  "authorities": {
+    "docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md": {
+      "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed": "f260b482564a561cf97f1b94676b048f67bd2f90",
+      "87735ecee0e0ebfaa575f889785d7c5037ab9145": "f260b482564a561cf97f1b94676b048f67bd2f90",
+      "bc69bff131c50af7357d39045b6d3084e5fd6fca": "f260b482564a561cf97f1b94676b048f67bd2f90"
+    },
+    "docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V3.md": {
+      "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed": "fd4ee0df516fd1cda800e586dd05cab8bfc355eb",
+      "87735ecee0e0ebfaa575f889785d7c5037ab9145": "fd4ee0df516fd1cda800e586dd05cab8bfc355eb",
+      "bc69bff131c50af7357d39045b6d3084e5fd6fca": "fd4ee0df516fd1cda800e586dd05cab8bfc355eb"
+    },
+    "docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V3.md": {
+      "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed": "89e15887a5a98a9a4b4162731852866bbcf0dca6",
+      "87735ecee0e0ebfaa575f889785d7c5037ab9145": "89e15887a5a98a9a4b4162731852866bbcf0dca6",
+      "bc69bff131c50af7357d39045b6d3084e5fd6fca": "89e15887a5a98a9a4b4162731852866bbcf0dca6"
+    },
+    "docs/specs/AGENT_DELIVERY_RESILIENCE_V1.md": {
+      "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed": "31bef901262980c2056546ddc122eda6ce92eab8",
+      "87735ecee0e0ebfaa575f889785d7c5037ab9145": "31bef901262980c2056546ddc122eda6ce92eab8",
+      "bc69bff131c50af7357d39045b6d3084e5fd6fca": "31bef901262980c2056546ddc122eda6ce92eab8"
+    },
+    "docs/specs/AGENT_DELIVERY_RESILIENCE_D009_ALIGNMENT_V1.md": {
+      "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed": "00924a3a83cf0a5fa28c8a15f8c2267726071fcf",
+      "87735ecee0e0ebfaa575f889785d7c5037ab9145": "00924a3a83cf0a5fa28c8a15f8c2267726071fcf",
+      "bc69bff131c50af7357d39045b6d3084e5fd6fca": "00924a3a83cf0a5fa28c8a15f8c2267726071fcf"
+    },
+    "docs/specs/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1.md": {
+      "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed": "27cfdb7b8ead2c42a6f3a1b7f5646ac199610b9e",
+      "87735ecee0e0ebfaa575f889785d7c5037ab9145": "27cfdb7b8ead2c42a6f3a1b7f5646ac199610b9e",
+      "bc69bff131c50af7357d39045b6d3084e5fd6fca": "27cfdb7b8ead2c42a6f3a1b7f5646ac199610b9e"
+    },
+    ".agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md": {
+      "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed": "1a9914a39d63aacf41b93329c7548d423643850c",
+      "87735ecee0e0ebfaa575f889785d7c5037ab9145": "1a9914a39d63aacf41b93329c7548d423643850c",
+      "bc69bff131c50af7357d39045b6d3084e5fd6fca": "1a9914a39d63aacf41b93329c7548d423643850c"
+    },
+    "docs/specs/CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md": {
+      "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed": "76a21d47a480c7551b93617e2fc2c7916f40e6f1",
+      "87735ecee0e0ebfaa575f889785d7c5037ab9145": "76a21d47a480c7551b93617e2fc2c7916f40e6f1",
+      "bc69bff131c50af7357d39045b6d3084e5fd6fca": "76a21d47a480c7551b93617e2fc2c7916f40e6f1"
+    }
+  }
+}

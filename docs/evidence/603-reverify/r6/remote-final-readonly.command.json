@@ -1,0 +1,22 @@
+{
+  "name": "remote-final-readonly",
+  "argv": [
+    "git",
+    "ls-remote",
+    "origin",
+    "refs/heads/main",
+    "refs/heads/ac-ctr-s4-reverify",
+    "refs/heads/ac-ctr-s4-runtime-prep"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "purpose": "Post-failure read-only reconciliation only; no delivery continuation",
+  "started_at": "2026-11-07T05:17:13.603744+00:00",
+  "rc": 0,
+  "ended_at": "2026-11-07T05:17:14.817621+00:00",
+  "stdout_base64": "ODc3MzVlY2VlMGUwZWJmYWE1NzVmODg5Nzg1ZDdjNTAzN2FiOTE0NQlyZWZzL2hlYWRzL2FjLWN0ci1zNC1yZXZlcmlmeQo4MTVhYzdjOTRiMTc3NWVlYzNhYTU3ZjE5Y2E4YTM4NDJmNTkyMjE3CXJlZnMvaGVhZHMvYWMtY3RyLXM0LXJ1bnRpbWUtcHJlcApiYzY5YmZmMTMxYzUwYWY3MzU3ZDM5MDQ1YjZkMzA4NGU1ZmQ2ZmNhCXJlZnMvaGVhZHMvbWFpbgo=",
+  "stdout_sha256": "fec430a57bef719f80cd9220b90f958415afb7018b6c21233719d15d9ee39f9e",
+  "stdout_text": "87735ecee0e0ebfaa575f889785d7c5037ab9145\trefs/heads/ac-ctr-s4-reverify\n815ac7c94b1775eec3aa57f19ca8a3842f592217\trefs/heads/ac-ctr-s4-runtime-prep\nbc69bff131c50af7357d39045b6d3084e5fd6fca\trefs/heads/main\n",
+  "stderr_base64": "",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_text": ""
+}

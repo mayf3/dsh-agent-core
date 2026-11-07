@@ -1,0 +1,18 @@
+bd8f74c4d8311e9093ec73ffa959b81ca2c25109 feat(production-runtime): supervision-unit env seam mounts the native conversation facade
+09c7e8b42758b74e74999b4efc18c1ea5a1fb03a fix(production-runtime): seam carries the T48 history env passthrough (AC1159 user-runtime surface parity)
+c0ec3c275dda5fa0ef3302a7d95c2b622aa73ca2 TEMP DIAGNOSTIC (AC1159): bounded stderr line on the two send-stop branches
+c50484b5bb4a9ae7c5aa8d7c080af35ff2fbd96f fix(broker): drop duplicated forumModeratorAgentIds block in bundle-broker cordis patch
+4114c55e7a393904756b47b1967d786fd4a72e1c Revert "TEMP DIAGNOSTIC (AC1159): bounded stderr line on the two send-stop branches"
+f9e02f879a03ad5757dba1826e9934043d899ddf fix(product-api): history listener bind failure must not kill the runtime
+e9a61deea1a01790d11a665e3e2fb5186ab6c5fc test(product-api): regression coverage for history listener bind resilience
+1921f8795e2212506a7a833bc79b84c17ba50ea1 fix(broker): surface structured service error details in failure lines (#84 D2)
+5049c6cdeb88a00bd4de4b77f700cf185414ad5d docs: record Owner D-009 termination-only settlement amendment
+67d2bb08e6ec56a3bd2067266fda3be3b7635eec fix(deploy): include scheduler watchdog in trusted app scripts
+32f12a0717d5ca7ef07dbc63677213dd92c2a634 docs: preserve CTR-S4 preparation evidence and semantic stop
+792127d5764ac61a3f67dea61ac88494d39a82b2 fix(scheduler): keep missing registry evidence unknown
+06fc0737ca83386daef343efeb421f4243407805 docs: bind CTR-S4 partial repair evidence and semantic stop
+8dfd2854aaa0c1286394b5a5bc8c2511b536b5e4 fix(scheduler): close CTR-S4 exact evidence and lifecycle wiring
+3b61dd1b1e8925b8d78e1eba2f33d03c6317e03f docs: preserve CTR-S4 r3 repair evidence and pinned-payload stop
+4c24a9d56b03a7eb10594d7ac54e27e1908fe731 fix(scheduler): refresh reviewed occurrence decoder payload pin
+e8b086e82af317e6a2771d3569fad3756496a15a chore(structure): register bounded CTR-S4 snapshot debt
+815ac7c94b1775eec3aa57f19ca8a3842f592217 docs(scheduler): accept D-009 ruling and finalize CTR-S4 source packet

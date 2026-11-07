@@ -1,0 +1,32 @@
+{
+  "name": "new-pr-create",
+  "argv": [
+    "gh",
+    "pr",
+    "create",
+    "--repo",
+    "mayf3/dsh-agent-core",
+    "--head",
+    "ac-ctr-s4-reverify",
+    "--base",
+    "main",
+    "--title",
+    "fix(scheduler): CTR-S4 integration re-verified on V3 main",
+    "--body-file",
+    "docs/evidence/603-reverify/r7/new-pr-body.md"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "started_at": "2026-11-07T05:27:04.215886+00:00",
+  "head": "c87a78b175c5a5da5d661ee2ef8435021bbdceef",
+  "index_tree_before_command": "8835f604c7ce7a1ab23a78f2607d1e4db3008f6e",
+  "environment": "Inherited unless argv explicitly clears keys; no Secret values recorded",
+  "ended_at": "2026-11-07T05:27:06.943173+00:00",
+  "rc": 0,
+  "encoding": "base64 is authoritative verbatim output; text is a UTF-8 display",
+  "stdout_base64": "aHR0cHM6Ly9naXRodWIuY29tL21heWYzL2RzaC1hZ2VudC1jb3JlL3B1bGwvNjQ3Cg==",
+  "stdout_sha256": "67c665f92f25641c077efc5f1f101e19432dd6a4bfdfeac12d6f95601868deac",
+  "stdout_text": "https://github.com/mayf3/dsh-agent-core/pull/647\n",
+  "stderr_base64": "",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_text": ""
+}
