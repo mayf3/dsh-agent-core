@@ -24,6 +24,166 @@ import { ExecutionLedger, attemptIdFor } from '../src/ledger.js'
 import { createWorkflowExecutionEngine, DUE_PAGE_LIMIT } from '../src/engine.js'
 import { completeCurrentActivationDetail } from '../test-support/current-activation-detail.js'
 
+// #1364: real engine + durable ledger; only external policy/detail/Router I/O is synthetic.
+function budgetFixture(badCount, { healthyCount = 1, config = {}, deliveryOk = true } = {}) {
+  const dir = mkdtempSync(join(tmpdir(), 'wfe-budget-'))
+  const items = makeIntents(1, badCount + healthyCount)
+  const bad = new Set(items.slice(0, badCount).map(item => item.nodeVisitId))
+  const calls = { probes: [], deliveries: [], pages: [] }
+  const ledger = new ExecutionLedger({ dir, resolveManagedAttempt: async intent => {
+    calls.probes.push(intent.nodeVisitId)
+    return bad.has(intent.nodeVisitId) ? undefined : false
+  } })
+  const engine = createWorkflowExecutionEngine({
+    ledger, config,
+    fetchDuePage: async request => {
+      calls.pages.push(request)
+      if (calls.pageErrorAfter !== undefined && request.afterDispatchIntentId !== undefined) {
+        return { ok: false, code: 'synthetic_read_error' }
+      }
+      const start = request.afterDispatchIntentId === undefined ? 0
+        : items.findIndex(item => item.dispatchIntentId === request.afterDispatchIntentId) + 1
+      return { ok: true, items: items.slice(start, start + request.limit) }
+    },
+    resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
+    deliverRun: async request => {
+      assert.equal(bad.has(request.messageOrigin.nodeVisitId), false, 'unavailable policy is never delivered')
+      assert.equal(ledger.get(request.messageOrigin.nodeVisitId).phase, 'delivery_started', 'WAL precedes delivery')
+      calls.deliveries.push(request)
+      return deliveryOk ? { ok: true, sessionId: 'main', reconciliationHandle: `turn:${request.requestId}` }
+        : { ok: false, code: 'synthetic_rejection' }
+    },
+    getTurnReconciliation: () => ({ state: 'pending' }),
+    readInstanceDetail: async ({ workflowInstanceId }) => ({ ok: true, body: completeCurrentActivationDetail({
+      visibility: 'full', detail: {
+        instance: { workflow_state_version: 1 },
+        current_node_visit_id: items.find(item => item.workflowInstanceId === workflowInstanceId)?.nodeVisitId,
+      },
+    }, { workflowInstanceId, ownerPrincipalId: OWNER }) }),
+  })
+  return { engine, ledger, items, calls, restorePolicy: nodeVisitId => bad.delete(nodeVisitId),
+    cleanup: () => rmSync(dir, { recursive: true, force: true }) }
+}
+
+test('#1364 RED/GREEN: 25 stable pre-plan failures cannot starve the healthy 26th intent for three polls', async () => {
+  const fixture = budgetFixture(25)
+  try {
+    const rounds = []
+    for (let round = 1; round <= 3; round += 1) {
+      const before = fixture.calls.probes.length
+      const result = await fixture.engine.pollOnce()
+      assert.equal(result.ok, true)
+      rounds.push({ round, probes: fixture.calls.probes.length - before,
+        failures: result.admissions.filter(item => item.action === 'pre_plan_unavailable').length,
+        attempts: fixture.ledger.snapshot().length, deliveries: fixture.calls.deliveries.length })
+    }
+    console.log(`#1364 observations ${JSON.stringify(rounds)}`)
+    assert.equal(fixture.calls.deliveries.length, 1, 'healthy tail must receive exactly one opportunity within three polls')
+    assert.equal(fixture.ledger.snapshot().length, 1, 'failed pre-plans mint no attempts')
+  } finally { fixture.cleanup() }
+})
+
+test('#1364 control: 24 stable pre-plan failures leave the healthy 25th reachable', async () => {
+  const fixture = budgetFixture(24)
+  try {
+    await fixture.engine.pollOnce()
+    assert.equal(fixture.calls.deliveries.length, 1)
+    assert.equal(fixture.ledger.snapshot().length, 1)
+  } finally { fixture.cleanup() }
+})
+
+test('#1364 bounded rotation passes 250 abnormal heads across pages and returns to repaired heads', async () => {
+  const fixture = budgetFixture(250, { healthyCount: 2 })
+  try {
+    const bound = Math.ceil(fixture.items.length / 25)
+    for (let round = 1; round <= bound; round += 1) {
+      const before = fixture.calls.probes.length
+      const result = await fixture.engine.pollOnce()
+      assert.equal(result.ok, true)
+      assert.equal(result.pages, 3, 'discovery remains exhaustive even when probe budget is spent')
+      assert.ok(fixture.calls.probes.length - before <= 50, 'finite admission-scan budget S')
+      assert.ok(result.admissionBudget.failed <= 25, 'finite failure budget F')
+      assert.ok(result.admissionBudget.created <= 25, 'separate actual-mint budget A')
+      assert.equal(result.admissionBudget.scanned, fixture.calls.probes.length - before)
+    }
+    assert.equal(fixture.calls.deliveries.length, 2, `healthy tail reached within ${bound} polls`)
+    assert.equal(fixture.ledger.snapshot().length, 2)
+    const firstHead = fixture.items[0]
+    fixture.restorePolicy(firstHead.nodeVisitId)
+    await fixture.engine.pollOnce()
+    assert.ok(fixture.ledger.get(firstHead.nodeVisitId), 'a completed cycle must revisit a repaired head')
+    assert.equal(fixture.calls.deliveries.length, 3, 'already admitted tail is never delivered again')
+  } finally { fixture.cleanup() }
+})
+
+test('#1364 scan cap also bounds already-attempted ledger probes; refusals are not new attempts', async () => {
+  const fixture = budgetFixture(0, { healthyCount: 8, config: { maxAdmissionsPerPoll: 2 } })
+  try {
+    for (let round = 0; round < 4; round += 1) {
+      const result = await fixture.engine.pollOnce()
+      assert.equal(result.admissionBudget.created, 2)
+    }
+    assert.equal(fixture.calls.deliveries.length, 8)
+    const before = fixture.calls.probes.length
+    const replay = await fixture.engine.pollOnce()
+    assert.equal(replay.admissionBudget.scanned, 4)
+    assert.equal(fixture.calls.probes.length - before, 4)
+    assert.equal(replay.admissionBudget.created, 0)
+    assert.equal(replay.admissionBudget.failed, 0)
+    assert.equal(fixture.calls.deliveries.length, 8)
+  } finally { fixture.cleanup() }
+})
+
+test('#1364 minted delivery failures still consume the actual new-attempt budget', async () => {
+  const fixture = budgetFixture(0, { healthyCount: 6, config: { maxAdmissionsPerPoll: 2 }, deliveryOk: false })
+  try {
+    const result = await fixture.engine.pollOnce()
+    assert.deepEqual(result.admissions.map(item => item.action), ['needs_review', 'needs_review'])
+    assert.equal(result.admissionBudget.created, 2)
+    assert.equal(result.admissionBudget.failed, 2)
+    assert.equal(fixture.ledger.snapshot().length, 2)
+  } finally { fixture.cleanup() }
+})
+
+test('#1364 unknown post-mint exception halts probes but preserves exhaustive discovery and the fence', async () => {
+  const fixture = budgetFixture(0, { healthyCount: 201, config: { maxAdmissionsPerPoll: 2 } })
+  const begin = fixture.ledger.beginAttemptIfAbsent.bind(fixture.ledger)
+  fixture.ledger.beginAttemptIfAbsent = async (...args) => {
+    await begin(...args)
+    throw new Error('synthetic failure after mint and delivery')
+  }
+  try {
+    const result = await fixture.engine.pollOnce()
+    assert.equal(result.pages, 3)
+    assert.equal(result.admissionBudget.unknown, 1)
+    assert.equal(result.admissionBudget.created, 0, 'missing return is not fabricated created evidence')
+    assert.equal(fixture.calls.probes.length, 1, 'unknown mint stops further admission probes')
+    assert.equal(fixture.calls.deliveries.length, 1)
+    assert.equal(fixture.ledger.snapshot().length, 1)
+    fixture.ledger.beginAttemptIfAbsent = begin
+    await fixture.engine.pollOnce()
+    const requests = fixture.calls.deliveries.map(item => item.requestId)
+    assert.equal(new Set(requests).size, requests.length, 'UNKNOWN is never replayed')
+  } finally { fixture.cleanup() }
+})
+
+test('#1364 incomplete discovery commits no probe rotation; the next sweep retries from page one', async () => {
+  const fixture = budgetFixture(100)
+  try {
+    fixture.calls.pageErrorAfter = 1
+    const failed = await fixture.engine.pollOnce()
+    assert.equal(failed.ok, false)
+    assert.equal(failed.code, 'synthetic_read_error')
+    const before = fixture.calls.probes.length
+    fixture.calls.pageErrorAfter = undefined
+    const result = await fixture.engine.pollOnce()
+    assert.equal(result.ok, true)
+    assert.equal(fixture.calls.probes[before], fixture.items[0].nodeVisitId)
+    assert.equal(result.admissionBudget.rotated, 0, 'partial sweep did not commit the cycle')
+    assert.equal(fixture.calls.pages[2].afterDispatchIntentId, undefined)
+  } finally { fixture.cleanup() }
+})
+
 const INSTANCE = '4d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e55'
 const OWNER = '5d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e66'
 const AGENT = 'agt_target-agent'
