@@ -1,0 +1,9 @@
+# Independent R4 staged-candidate review
+
+Reviewer `/root/r4_review`, independent and read-only; parent persists the delivered message. PASS / BLOCKERS=0 / SPEC_GAPS=0 at staged tree `07ff18450ba8099edf7e655fa8bdc4b500154cac`, branch HEAD/base `2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648`.
+
+Reviewer independently executed the same scoped `git diff --cached --check`: rc0, stdout0/stderr0; staged index matched worktree at this snapshot. Six source/test plus26 original evidence hashes match R3-checkpoint. Initial R4 rc2 and corrected rc0 raw hashes match metadata. Relative to R3 structure candidate `7ad8f3c03a02d7499be6c5bbebc87848609a52d7`,21 changed paths are solely task Markdown and docs/evidence. No source/test/authority/registry/runner/lock changes. Structure runner lines20–21,105–108 excludes docs and checks code extensions in packages/src|test, scripts/examples; R4 docs do not alter the prior structure result's in-scope files or dependencies. Reuse valid; no fresh structure run claimed.
+
+PR draft accurately describes bounded behavior, original Node/runtime coordinates, actual rc results, class exemption and no merge/production. Four exact historical offending raw paths plus canonical capture suffix classes preserve original bytes; compiled artifacts stay checked. Packaging receipt kept commit/push/PR pending. This initial PASS authorized the next bounded step subject to the mandate, not completion or acceptance.
+
+Subsequent remote preflight failed rc128 at2026-11-07T11:27:52.255456Z. Reviewer independently confirmed the local capture: stdout empty, curl18/expected-flush stderr, post-HEAD unchanged. This is not a whitespace-class exemption and activates the current failure-stop for commit/push/PR. No reviewer remote retry, writes or product tests. The candidate PASS remains historical; final delivery did not occur.

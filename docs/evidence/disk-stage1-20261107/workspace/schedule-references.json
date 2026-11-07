@@ -1,0 +1,541 @@
+{
+  "observed_at": "2026-11-07T15:45:03.682072+00:00",
+  "rows": [
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.agent-core.capability-host.plist",
+      "label": "com.agent-core.capability-host",
+      "program": "/Users/yanfenma/workspace/project/agent-core/tools/capability-host/target/release/capability-host",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".ProgramArguments[0]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/agent-core/tools/capability-host/target/release/capability-host"
+          ]
+        },
+        {
+          "key": ".WorkingDirectory",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/agent-core"
+          ]
+        },
+        {
+          "key": ".StandardOutPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/agent-core/logs/capability-host.stdout.log"
+          ]
+        },
+        {
+          "key": ".StandardErrorPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/agent-core/logs/capability-host.stderr.log"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.yanfenma.podcast-workbench-v2.plist",
+      "label": "com.yanfenma.podcast-workbench-v2",
+      "program": "/opt/homebrew/bin/python3",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".ProgramArguments[1]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/boke/podcast-workbench-v2/backend/server.py"
+          ]
+        },
+        {
+          "key": ".WorkingDirectory",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/boke/podcast-workbench-v2"
+          ]
+        },
+        {
+          "key": ".StandardOutPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/boke/podcast-workbench-v2/var/service.log"
+          ]
+        },
+        {
+          "key": ".StandardErrorPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/boke/podcast-workbench-v2/var/service-error.log"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.mayf3.dot-read-mcp.v1.plist",
+      "label": "com.mayf3.dot-read-mcp.v1",
+      "program": "/opt/homebrew/bin/node",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".ProgramArguments[1]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/dot-read-mcp/src/server.mjs"
+          ]
+        },
+        {
+          "key": ".WorkingDirectory",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/dot-read-mcp"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.yanfenma.podcast-workbench-v2-8792.plist",
+      "label": "com.yanfenma.podcast-workbench-v2-8792",
+      "program": "/opt/homebrew/bin/python3",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".ProgramArguments[1]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/boke/podcast-workbench-v2/backend/server.py"
+          ]
+        },
+        {
+          "key": ".WorkingDirectory",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/boke/podcast-workbench-v2"
+          ]
+        },
+        {
+          "key": ".StandardOutPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/boke/podcast-workbench-v2/var/service-8792.log"
+          ]
+        },
+        {
+          "key": ".StandardErrorPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/boke/podcast-workbench-v2/var/service-8792-error.log"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.llmwiki.local.plist",
+      "label": "com.llmwiki.local",
+      "program": "/Users/yanfenma/workspace/project/llm-wiki/scripts/serve-web.sh",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".ProgramArguments[0]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/llm-wiki/scripts/serve-web.sh"
+          ]
+        },
+        {
+          "key": ".WorkingDirectory",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/llm-wiki"
+          ]
+        },
+        {
+          "key": ".StandardOutPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/llm-wiki/logs/llmwiki.out.log"
+          ]
+        },
+        {
+          "key": ".StandardErrorPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/llm-wiki/logs/llmwiki.err.log"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.article-review-canary.plist",
+      "label": "com.article-review-canary",
+      "program": "/usr/local/bin/node",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".ProgramArguments[1]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/deploy/article-review-canary/node_modules/tsx/dist/cli.mjs"
+          ]
+        },
+        {
+          "key": ".ProgramArguments[2]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/deploy/article-review-canary/src/server/index.ts"
+          ]
+        },
+        {
+          "key": ".WorkingDirectory",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/deploy/article-review-canary"
+          ]
+        },
+        {
+          "key": ".EnvironmentVariables.DB_PATH",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/runtime/article-review-canary/articles.db"
+          ]
+        },
+        {
+          "key": ".EnvironmentVariables.ARTICLES_PATH",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/runtime/article-review-canary/projects"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.agent-core.feishu-connector.plist",
+      "label": "com.agent-core.feishu-connector",
+      "program": "/Users/yanfenma/workspace/project/agent-core/node_modules/.bin/tsx",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".ProgramArguments[0]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/agent-core/node_modules/.bin/tsx"
+          ]
+        },
+        {
+          "key": ".WorkingDirectory",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/agent-core"
+          ]
+        },
+        {
+          "key": ".StandardOutPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/agent-core/logs/feishu-connector.log"
+          ]
+        },
+        {
+          "key": ".StandardErrorPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/agent-core/logs/feishu-connector.err.log"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.yanfenma.podcast-workbench-ai-v1.plist",
+      "label": "com.yanfenma.podcast-workbench-ai-v1",
+      "program": "/opt/homebrew/bin/python3",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".ProgramArguments[1]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/boke/podcast-workbench-ai-v1/backend/server.py"
+          ]
+        },
+        {
+          "key": ".StandardErrorPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/boke/podcast-workbench-ai-v1/var/service-error.log"
+          ]
+        },
+        {
+          "key": ".StandardOutPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/boke/podcast-workbench-ai-v1/var/service.log"
+          ]
+        },
+        {
+          "key": ".WorkingDirectory",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/boke/podcast-workbench-ai-v1"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.agent-core.coding-harness.plist",
+      "label": "com.agent-core.coding-harness",
+      "program": "/Users/yanfenma/workspace/project/agent-core/tools/coding-harness/target/release/coding-harness",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".ProgramArguments[0]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/agent-core/tools/coding-harness/target/release/coding-harness"
+          ]
+        },
+        {
+          "key": ".WorkingDirectory",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/agent-core"
+          ]
+        },
+        {
+          "key": ".StandardOutPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/agent-core/logs/coding-harness.stdout.log"
+          ]
+        },
+        {
+          "key": ".StandardErrorPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/agent-core/logs/coding-harness.stderr.log"
+          ]
+        },
+        {
+          "key": ".EnvironmentVariables.CODING_CONFIG",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/agent-workspaces/calculator-harness"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.dsh.web.plist",
+      "label": "com.dsh.web",
+      "program": "/bin/bash",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".WorkingDirectory",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/github/deepseek-harness"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.mayf3.sixpack-watchdog.plist",
+      "label": "com.mayf3.sixpack-watchdog",
+      "program": "/bin/bash",
+      "schedule": 600,
+      "runAtLoad": false,
+      "hits": [
+        {
+          "key": ".ProgramArguments[1]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/sixpack-forge/nightly-1/bin/watchdog-wrapper.sh"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.mayf3.chatgpt-local-controller.plist",
+      "label": "com.mayf3.chatgpt-local-controller",
+      "program": "/usr/bin/python3",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".ProgramArguments[1]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/agent-control/controller.py"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.xiaomusic.secure.plist",
+      "label": "com.xiaomusic.secure",
+      "program": "/bin/bash",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".WorkingDirectory",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/baby/xiaoai"
+          ]
+        },
+        {
+          "key": ".StandardOutPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/baby/xiaoai/logs/secure_launchd_stdout.log"
+          ]
+        },
+        {
+          "key": ".StandardErrorPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/baby/xiaoai/logs/secure_launchd_stderr.log"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.agent-core.kernel.plist",
+      "label": "com.agent-core.kernel",
+      "program": "/Users/yanfenma/workspace/project/agent-core/target/release/agent-core-kernel",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".ProgramArguments[0]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/agent-core/target/release/agent-core-kernel"
+          ]
+        },
+        {
+          "key": ".StandardErrorPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/agent-core/logs/kernel.err.log"
+          ]
+        },
+        {
+          "key": ".StandardOutPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/agent-core/logs/kernel.log"
+          ]
+        },
+        {
+          "key": ".WorkingDirectory",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/agent-core"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.auth-service.plist",
+      "label": "com.auth-service",
+      "program": "/usr/local/bin/node",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".ProgramArguments[1]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/dist/src/server.js"
+          ]
+        },
+        {
+          "key": ".ProgramArguments[2]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/dist/src/server.js"
+          ]
+        },
+        {
+          "key": ".ProgramArguments[3]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/production-auth-service-session-trace-v2-r2-4e68f83ee4d3/dist/src/server.js"
+          ]
+        },
+        {
+          "key": ".WorkingDirectory",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.dsh.web.plist",
+      "label": "com.dsh.web",
+      "program": "/bin/bash",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".WorkingDirectory",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/github/deepseek-harness"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Library/LaunchDaemons/local.codex-remote.cloudcli.plist",
+      "label": "local.codex-remote.cloudcli",
+      "program": "/opt/homebrew/bin/node",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".EnvironmentVariables.DATABASE_PATH",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/codex-remote/.runtime/cloudcli/auth.db"
+          ]
+        },
+        {
+          "key": ".EnvironmentVariables.WORKSPACES_ROOT",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project"
+          ]
+        },
+        {
+          "key": ".ProgramArguments[1]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/codex-remote/cloudcli/node_modules/@cloudcli-ai/cloudcli/dist-server/server/index.js"
+          ]
+        },
+        {
+          "key": ".StandardErrorPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/codex-remote/.runtime/cloudcli/server-error.log"
+          ]
+        },
+        {
+          "key": ".StandardOutPath",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/codex-remote/.runtime/cloudcli/server.log"
+          ]
+        },
+        {
+          "key": ".WorkingDirectory",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/project/codex-remote/cloudcli"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.mayf3.zcode-dashboard.plist",
+      "label": "com.mayf3.zcode-dashboard",
+      "program": "/usr/bin/python3",
+      "schedule": null,
+      "runAtLoad": true,
+      "hits": [
+        {
+          "key": ".ProgramArguments[1]",
+          "workspace_path_mentions": [
+            "/Users/yanfenma/workspace/agent-control/zcode-dashboard.py"
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/ai.openclaw.gateway.plist",
+      "error": "[Errno 13] Permission denied: '/Users/yanfenma/Library/LaunchAgents/ai.openclaw.gateway.plist'"
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.openclaw.forum-scheduler.plist",
+      "error": "[Errno 13] Permission denied: '/Library/LaunchDaemons/com.openclaw.forum-scheduler.plist'"
+    },
+    {
+      "path": "/Library/LaunchDaemons/zcode.fda-check.plist",
+      "error": "unexpected key at line 12"
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.openclaw.gateway.plist",
+      "error": "[Errno 13] Permission denied: '/Library/LaunchDaemons/com.openclaw.gateway.plist'"
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.openclaw.workflow-dispatcher.plist",
+      "error": "[Errno 13] Permission denied: '/Library/LaunchDaemons/com.openclaw.workflow-dispatcher.plist'"
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.openclaw.host-exec-runner.plist",
+      "error": "[Errno 13] Permission denied: '/Library/LaunchDaemons/com.openclaw.host-exec-runner.plist'"
+    }
+  ]
+}

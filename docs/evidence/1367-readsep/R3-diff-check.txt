@@ -1,0 +1,56 @@
+docs/evidence/1367-readsep/R2-RED.txt:30: trailing whitespace.
++  
+docs/evidence/1367-readsep/R2-RED.txt:33: trailing whitespace.
++  
+docs/evidence/1367-readsep/R2-RED.txt:49: trailing whitespace.
++  
+docs/evidence/1367-readsep/R2-RED.txt:52: trailing whitespace.
++  
+docs/evidence/1367-readsep/R2-RED.txt:68: trailing whitespace.
++  
+docs/evidence/1367-readsep/R2-RED.txt:71: trailing whitespace.
++  
+docs/evidence/1367-readsep/R2-RED.txt:87: trailing whitespace.
++  
+docs/evidence/1367-readsep/R2-RED.txt:90: trailing whitespace.
++  
+docs/evidence/1367-readsep/R2-RED.txt:106: trailing whitespace.
++  
+docs/evidence/1367-readsep/R2-RED.txt:112: trailing whitespace.
++  
+docs/evidence/1367-readsep/R2-RED.txt:127: trailing whitespace.
++  
+docs/evidence/1367-readsep/R2-RED.txt:129: trailing whitespace.
++  
+docs/evidence/1367-readsep/R2-product.diff:8: trailing whitespace.
++ 
+docs/evidence/1367-readsep/R2-product.diff:141: trailing whitespace.
++ 
+docs/evidence/1367-readsep/R2-product.diff:144: trailing whitespace.
++ 
+docs/evidence/1367-readsep/R2-product.diff:152: trailing whitespace.
++ 
+docs/evidence/1367-readsep/R2-product.diff:169: trailing whitespace.
++ 
+docs/evidence/1367-readsep/R2-product.diff:170: trailing whitespace.
++ 
+docs/evidence/1367-readsep/R2-product.diff:187: trailing whitespace.
++ 
+docs/evidence/1367-readsep/R2-product.diff:218: trailing whitespace.
++ 
+docs/evidence/1367-readsep/RED.txt:29: trailing whitespace.
++  
+docs/evidence/1367-readsep/RED.txt:32: trailing whitespace.
++  
+docs/evidence/1367-readsep/RED.txt:48: trailing whitespace.
++  
+docs/evidence/1367-readsep/RED.txt:51: trailing whitespace.
++  
+docs/evidence/1367-readsep/RED.txt:67: trailing whitespace.
++  
+docs/evidence/1367-readsep/RED.txt:70: trailing whitespace.
++  
+docs/evidence/1367-readsep/RED.txt:86: trailing whitespace.
++  
+docs/evidence/1367-readsep/RED.txt:89: trailing whitespace.
++  

@@ -1,0 +1,187 @@
+{
+  "source_path": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json",
+  "selector": "$.rulings[id=owner-20261107-standing-delegation]",
+  "source_record_ts": "2026-11-07 22:56",
+  "observed_at_utc": "2026-11-07T15:03:30.507148+00:00",
+  "source_file_sha256_at_observation": "41e1ee699969f9110dd8e54b02ca4c863ee31c5af3425ec9cf328c29b3ddc63a",
+  "canonicalization": "UTF-8 json.dumps(record, ensure_ascii=False, sort_keys=True, separators=(',', ':')); no trailing newline",
+  "ruling_canonical_sha256": "01cc059c2bf0e0493588f00032ca06eb73e3a0a13cb33f4078996fdccb79dad3",
+  "snapshot_path": "docs/reports/standing-delegation-formal-20261107/owner-ruling.json",
+  "snapshot_sha256": "f25dc4c88742cfc35c0c9d3a357fd592e58f08159cb94d8250a36b01e76d2a37",
+  "item_utf8_sha256": [
+    {
+      "item_index": 0,
+      "contract_id": "CTR-SOD-001",
+      "sha256": "589e4a5e34ad7853a037a6735cf87588cb342e76cb4afba8d13bc70dedb275e0"
+    },
+    {
+      "item_index": 1,
+      "contract_id": "CTR-SOD-002",
+      "sha256": "739ad9e66fae70feebe79248e47201e31902b1002d94a5f4fb49c05bf0084c6b"
+    },
+    {
+      "item_index": 2,
+      "contract_id": "CTR-SOD-003",
+      "sha256": "8cd34ee589846034f3fe44c33baa5b4338e0ef95788e1d95b9d7d9bf67eeffd6"
+    },
+    {
+      "item_index": 3,
+      "contract_id": "CTR-SOD-004",
+      "sha256": "3220289a78e76fd92861d23620293d1d8f7064f5a37e41894ddfe79b29b3ac88"
+    },
+    {
+      "item_index": 4,
+      "contract_id": "CTR-SOD-005",
+      "sha256": "e4f75e7bb08c3757b9957a0164f95b146e7867c2d53023e28c02b51c3147c2dd"
+    },
+    {
+      "item_index": 5,
+      "contract_id": "CTR-SOD-006",
+      "sha256": "ad52162d35b52e5af21d00121453562d608478f7a813900d46914899640d29d8"
+    },
+    {
+      "item_index": 6,
+      "contract_id": "CTR-SOD-007",
+      "sha256": "cb1f23b6f0fce4f6dedd4259f4d0579f609a578a0908bdc5f322400b2a852682"
+    },
+    {
+      "item_index": 7,
+      "contract_id": "CTR-SOD-008",
+      "sha256": "d2bda60b26e5d63412ea61a538a72fb09315c27431dd02800d52b08307c9ce48"
+    }
+  ],
+  "repository": "mayf3/dsh-agent-core",
+  "worktree": "/private/tmp/h-delegation-formal",
+  "branch": "docs/standing-delegation-v1",
+  "authoring_base": "24974c720d634b965943e08bfd0862657b9be0e1",
+  "current_base_head_at_preflight": "9df5bd2fdea17f04bcd1762cd6800c350efcf9c3",
+  "authority_inventory": [
+    {
+      "path": "AGENTS.md",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "f068abfda1c7f461755dc1b05828bfb4f7163ae2",
+      "sha256": "4cb49c5f6bbb6e0389505c9eb4efefbe7a7f128710731da9ff2ebbf4f5c61f9a"
+    },
+    {
+      "path": ".agents/README.md",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "e3493fbf67f4cb2641c7990478d7c008c1dd9ca5",
+      "sha256": "18d2ee74877c9871b7a086bbc8ec02ae8219146c61e6ecfc4f33038b881c98e2"
+    },
+    {
+      "path": ".agents/local/README.md",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "c2b6e9ea255e436c602f0e5ae04dd3108da91956",
+      "sha256": "ebd1a2f0a39ebfd17b6a17035ad63ff35c59f5e7384ebc3597687b3c3fac8d5a"
+    },
+    {
+      "path": ".agents/governance.lock.json",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "59a9da8bcd6a567a71ec3096b6066bf69c5b9d52",
+      "sha256": "0cb6acb6e7839ee2b6d0312653e6c5efc680512a36bf44a842db3aa79dc5a8b5"
+    },
+    {
+      "path": ".agents/protocol/SPEC_FORMAT_V0.md",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "26d90d7866161b0bd784165d2ca513531c9bfd54",
+      "sha256": "027b7600e240d33602e3e75ece381e82d097fdf3d5aa6f907fe46ccfff249ec4"
+    },
+    {
+      "path": "docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "f260b482564a561cf97f1b94676b048f67bd2f90",
+      "sha256": "c8d2627086cb202dcf0e70d9e0d0a9aeb174ea1d74b0b9cfd54339d28c33fe9b"
+    },
+    {
+      "path": "docs/decisions/README.md",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "c4708e25e36dce2f91436352bfc00ba08e999b32",
+      "sha256": "0a64bf62cedac37ba8f39d6f81b90f2d7a117ee64c8f427e73537590e271fd0e"
+    },
+    {
+      "path": "docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "0c3f6f6005794edec2faf666e4fb035a9c87b009",
+      "sha256": "fcc3603d8f1ab7b1ab10eda7088a56fb2e5095792336311d63a92f74fba6e160"
+    },
+    {
+      "path": "docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V3.md",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "fd4ee0df516fd1cda800e586dd05cab8bfc355eb",
+      "sha256": "1c37687e473df7ce977e5cc571f74d9a6dc0470f3aca95a599d4c9066e52321f"
+    },
+    {
+      "path": "docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "482fd3931da0bb7a9a2d233ac41c1daa0b9e8085",
+      "sha256": "1264d680f0b425be4f7abace4a7f263a5f0f347bb6c08ac721ba57a8fa1494f1"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1.md",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "750504f2d9c27202543a70c6e68d3aba1001928e",
+      "sha256": "a0b5959ce5a3ef0007c86b486670598216f11c3c62eaac70693dbc7f3cfb3427"
+    },
+    {
+      "path": "docs/specs/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1.md",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "af655bb5801ca5af956003c8a7fabc2b27b4b6de",
+      "sha256": "c46b84ef91637a88929dd0f297bfb794ca80ee6b2719f495f90d0034aaa84e25"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2.md",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "0c2d4940633268775e92f34191ae0bdc5d547d19",
+      "sha256": "c2e26f825dc8cfbf9e2cd03acae885a2dd12781220046600414f80c2c9c2cddf"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_AGENT_PRINCIPAL_REVERSE_RESOLUTION_V1.md",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "457b2b71efa25309d64cb8ba5633d79ba5cb44b1",
+      "sha256": "e7cc44cf95fb278f3e1f518a2fd49e0d259b780f35ed0dd2b551298f679c53f7"
+    },
+    {
+      "path": "scripts/fleet-window/window-executor-v5.sh",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "19d563b091613457cbe91af399654bccb26e1868",
+      "sha256": "e59a3ac8e5fcf3afd6a7dee47b6ad53c2c20f0a80240f22a31d2be3c5c2cdf8f"
+    },
+    {
+      "path": "scripts/fleet-window/window_helper.py",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "ceb659fe7615da6dacb1fcded7903b382a9452a1",
+      "sha256": "956b7559287068a1516a21c665de411f3992b6b6cbb8d8011458441c14619047"
+    },
+    {
+      "path": "scripts/fleet-window/window_helper_core.py",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "3160e002c508c271cfe7ea1cbcbe64f975b84248",
+      "sha256": "655ef82e19e294c6519b285b6ec13b7679cbd8dd3c3b5f82e594612b8e1e73ac"
+    },
+    {
+      "path": "packages/production-runtime/src/identity/capability-runtime.js",
+      "commit": "24974c720d634b965943e08bfd0862657b9be0e1",
+      "blob": "8294582b96a23db59a57c917a5c47a2abab6f923",
+      "sha256": "e6cf39b3e4fdf2da7e1a80e5a03acc1e87fccf58bdae5b30b7cf66fbbf6d4e59"
+    }
+  ],
+  "base_movement": {
+    "method": "git diff --name-status authoring_base current_base_head_at_preflight; git show remote:docs/specs/AGENT_CORE_READBACK_AGING_HANDOFF_V1.md",
+    "result": "remote adds #643 docs-only acceptance; does not modify this task authority inventory or index; no candidate conflict",
+    "preserved_limit": "#643 acceptance is proposal semantics only; WEC/Svc paired authority prerequisites unchanged; no implementation/new reason/production from this formalization"
+  },
+  "acceptance_authority": "Owner mayf3, original eight-section ruling; worker is transaction executor only",
+  "precedents": [
+    {
+      "pr": 648,
+      "merge_commit": "55f442c74414dc723306a6d8e0cdba73d78eb8da",
+      "source": "docs/reports/sra-v1-formalization-20261107/acceptance-transaction.md"
+    },
+    {
+      "pr": 643,
+      "merge_commit": "9df5bd2fdea17f04bcd1762cd6800c350efcf9c3",
+      "reviewed_head": "7b5d79c3961625aaade6f3b383b18b2968e82f6c",
+      "owner_transcript": "https://github.com/mayf3/dsh-agent-core/pull/643#issuecomment-6707205612"
+    }
+  ]
+}

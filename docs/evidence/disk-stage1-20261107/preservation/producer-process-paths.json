@@ -1,0 +1,76 @@
+{
+  "observed_at_utc": "2026-11-07T15:52:20.884256+00:00",
+  "method": "libproc.proc_pidpath + stat metadata only, no program execution",
+  "processes": [
+    {
+      "pid": 30709,
+      "return_value": 46,
+      "errno": 0,
+      "path": "/opt/homebrew/Caskroom/codex/0.164.0/bin/codex",
+      "file_metadata": {
+        "dev": 16777229,
+        "inode": 252977658,
+        "size_bytes": 260293200,
+        "allocated_bytes": 260296704,
+        "mtime_ns": 1792728314861911500,
+        "birthtime": 1792728314.8619115
+      }
+    },
+    {
+      "pid": 30817,
+      "return_value": 46,
+      "errno": 0,
+      "path": "/opt/homebrew/Caskroom/codex/0.164.0/bin/codex",
+      "file_metadata": {
+        "dev": 16777229,
+        "inode": 252977658,
+        "size_bytes": 260293200,
+        "allocated_bytes": 260296704,
+        "mtime_ns": 1792728314861911500,
+        "birthtime": 1792728314.8619115
+      }
+    },
+    {
+      "pid": 55249,
+      "return_value": 88,
+      "errno": 0,
+      "path": "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+      "file_metadata": {
+        "dev": 16777229,
+        "inode": 348070440,
+        "size_bytes": 267754128,
+        "allocated_bytes": 267755520,
+        "mtime_ns": 1793485405000000000,
+        "birthtime": 1793485405.0
+      }
+    },
+    {
+      "pid": 55169,
+      "return_value": 48,
+      "errno": 0,
+      "path": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT",
+      "file_metadata": {
+        "dev": 16777229,
+        "inode": 348070403,
+        "size_bytes": 71008,
+        "allocated_bytes": 73728,
+        "mtime_ns": 1793667913687702490,
+        "birthtime": 1793485853.0
+      }
+    },
+    {
+      "pid": 54845,
+      "return_value": 88,
+      "errno": 0,
+      "path": "/Applications/ZCode.app/Contents/Frameworks/ZCode Helper.app/Contents/MacOS/ZCode Helper",
+      "file_metadata": {
+        "dev": 16777229,
+        "inode": 348932197,
+        "size_bytes": 221440,
+        "allocated_bytes": 225280,
+        "mtime_ns": 1793601746000000000,
+        "birthtime": 1793601746.0
+      }
+    }
+  ]
+}

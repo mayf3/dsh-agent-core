@@ -1,0 +1,58 @@
+{
+  "gate": "integration",
+  "cwd": "/private/tmp/h1367-readsep",
+  "source_parent": "84b1e612aa31f4caa5a0de0ca39e3abca545bcef",
+  "integration_base": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "command": [
+    "/usr/local/bin/node",
+    "--test",
+    "--test-reporter=tap",
+    "packages/product-api/test/workflow-execution-api.test.js",
+    "packages/production-runtime/test/workflow-execution-shutdown.test.js",
+    "packages/production-runtime/test/workflow-owner-assistance-wake.test.js",
+    "packages/production-runtime/test/workflow-progress-gateway.test.js",
+    "packages/production-runtime/test/workflow-progress-runtime.test.js"
+  ],
+  "environment_recipe": "env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u all_proxy -u NO_PROXY -u no_proxy -u NODE_USE_ENV_PROXY /usr/local/bin/node --test --test-reporter=tap packages/product-api/test/workflow-execution-api.test.js packages/production-runtime/test/workflow-execution-shutdown.test.js packages/production-runtime/test/workflow-owner-assistance-wake.test.js packages/production-runtime/test/workflow-progress-gateway.test.js packages/production-runtime/test/workflow-progress-runtime.test.js",
+  "unset_keys": [
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "ALL_PROXY",
+    "all_proxy",
+    "NO_PROXY",
+    "no_proxy",
+    "NODE_USE_ENV_PROXY"
+  ],
+  "environment_scope": "test child only; parent unchanged",
+  "node_runtime": {
+    "execPath": "/usr/local/Cellar/node/25.6.1_1/bin/node",
+    "version": "v25.6.1",
+    "arch": "x64",
+    "proxyKeysPresent": []
+  },
+  "started_at_utc": "2026-11-07T12:09:44.375433+00:00",
+  "completed_at_utc": "2026-11-07T12:09:55.194825+00:00",
+  "expected_rc": 0,
+  "actual_rc": 0,
+  "counts": {
+    "tests": 29,
+    "pass": 29,
+    "fail": 0,
+    "skipped": 0
+  },
+  "raw_sha256": "0e5416886c4a5917eb8fc260aec387d64223a9f92419c3a6f8465780ff597356",
+  "file_sha256": {
+    "packages/production-runtime/src/workflow/capability-runtime.js": "53dbddaa6cdbf140da020515c1a2b45beb7712715f3c4c4624ad65708c576ada",
+    "packages/workflow-execution/src/ledger.js": "7999048f35828027660b580763dd8b42a48b644dc01366f9fe6cfb0e903ed2a2",
+    "packages/workflow-execution/src/engine.js": "d9dfaf86dd5b52d351f4bdf44b971f68a89be8f86c5586c71fbd59dda63a7dd4",
+    "packages/workflow-execution/test/observation-cas/diagnostic-read.test.js": "4b29cb5577be6f836becb6ad016216e5d4c189051146368fd6554fbb7f216580",
+    "packages/workflow-execution/test/observation-cas/diagnostic-missing-trace.test.js": "72e23f26b5adde0a8351db9fd4c684b80d4b347a0db7105e096b4abc15f8bebb",
+    "packages/product-api/test/workflow-execution-api.test.js": "9152d63f74dd28385cf7f385540e732bdfc08eb53d7b2399d4d8bb1e8102ee43",
+    "packages/production-runtime/test/workflow-execution-shutdown.test.js": "203c818496c86a6c0a1aa19c8837d5c803eb769a6a8363ce6f7e8c1fcd2187a0",
+    "packages/production-runtime/test/workflow-owner-assistance-wake.test.js": "8492701b5d5eb6244b47ed155e581fc161a99dd3663ad48dc34b6a5934d3a7f8",
+    "packages/production-runtime/test/workflow-progress-gateway.test.js": "39514be142448e3032fdfe0c7151e1b3bb51004c2f5756afb77b3ca56df8e576",
+    "packages/production-runtime/test/workflow-progress-runtime.test.js": "8e3b11babe6dd93c99928324841fa3c8ea273a15fdec0e3e6cc3923788bd3d69"
+  }
+}

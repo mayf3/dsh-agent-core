@@ -1,0 +1,50 @@
+{
+  "timestamp_utc": "2026-11-07T11:09:50.949491+00:00",
+  "head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "branch": "fix/diagnostic-read-separation",
+  "worktree": "/private/tmp/h1367-readsep",
+  "current_remote_refs": [
+    "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648\trefs/heads/main"
+  ],
+  "source_file_sha256": {
+    "packages/workflow-execution/src/ledger.js": "7999048f35828027660b580763dd8b42a48b644dc01366f9fe6cfb0e903ed2a2",
+    "packages/workflow-execution/src/engine.js": "d9dfaf86dd5b52d351f4bdf44b971f68a89be8f86c5586c71fbd59dda63a7dd4",
+    "packages/workflow-execution/src/terminal-attempt-operations.js": "bd748f9a7a099ab68223ee1d9bb7888c5843c3e9608ce2768dab849aeaec1cb5",
+    "packages/production-runtime/src/workflow/capability-runtime.js": "a0c71765c4c863d68b21dd66bccf83a4a328869206a16adbbedd06033ee26e51",
+    "packages/workflow-execution/test/shutdown-contract.test.js": "0213313107d4fc54d04b715a02188565df6d358ae22e81961875660c31c28f49",
+    "packages/workflow-execution/test/observation-cas/diagnostic-read.test.js": "4b29cb5577be6f836becb6ad016216e5d4c189051146368fd6554fbb7f216580"
+  },
+  "recognized_proxy_keys_present": [
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "ALL_PROXY",
+    "NO_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "all_proxy",
+    "no_proxy"
+  ],
+  "node_version": "v26.7.0",
+  "required_compose_node_version": "v25.6.1",
+  "diff_check_rc": 0,
+  "red_fixture_reconstructed_hash_match": true,
+  "product_diff_sha256": "7184d5194c6ed379edb42f2625e6cc0ffbe628bd7bc58e916b204ae3af576248",
+  "r1_red_sha256": "47cc96534ef8348a8fe0474668664619e79e9ad4d41508b3e7ffc6b28efa2969",
+  "r1_metadata_sha256": "7bfe48c9ade7c37223c34ecf1d7a74bf52ee3df49620bd77a634bc703e43b1b3",
+  "execution_stopped_after": "R2-integration rc1; no broker, structure, commit, push or PR",
+  "all_evidence_sha256": {
+    "R2-GREEN.json": "52baaf5fd98d0691473b48fcddd4e2cd1b55d9b347ee355d8021ba6a5036042b",
+    "R2-GREEN.txt": "72f31722195b7c0297a80e2398d7ee565519305cb566c363ae10cb0bf123ce4a",
+    "R2-RED-test.js.txt": "78fbf975307a07d0884483cce1854cd2f97f372d83825b5c3de4df379fac4afd",
+    "R2-RED.json": "5a8b81d70071acf006ae6799fde597092ee19c3afe220236820aae8a5cc81317",
+    "R2-RED.txt": "981b034021468d252c36f12663b6bdd5663c42a20529e4d6db0306fcb33af0d2",
+    "R2-diff-check.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "R2-integration.json": "ae661daf169cdfff933e6d7caae6e167713416a205b79650e0af1f6d63024035",
+    "R2-integration.txt": "fc16bd94076991110df74545aabe2aa5fd8550496c635a98ee417463c99e8a67",
+    "R2-product.diff": "7184d5194c6ed379edb42f2625e6cc0ffbe628bd7bc58e916b204ae3af576248",
+    "R2-workflow.json": "2dd135fdd048067caa54ab84688740b923b08fdddd088ec5dd942e7f5488363a",
+    "R2-workflow.txt": "ebb945300d4fb68aa222eb1ae627409909925c453ade079bb1822f239b495561",
+    "RED.json": "7bfe48c9ade7c37223c34ecf1d7a74bf52ee3df49620bd77a634bc703e43b1b3",
+    "RED.txt": "47cc96534ef8348a8fe0474668664619e79e9ad4d41508b3e7ffc6b28efa2969"
+  }
+}

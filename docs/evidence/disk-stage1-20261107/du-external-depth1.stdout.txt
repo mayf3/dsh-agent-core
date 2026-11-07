@@ -1,0 +1,6 @@
+54272	/Volumes/My PSSD/AESTool_V2.0
+134144	/Volumes/My PSSD/.Spotlight-V100
+1536	/Volumes/My PSSD/.fseventsd
+97214464	/Volumes/My PSSD/models
+2538496	/Volumes/My PSSD/cache
+99944448	/Volumes/My PSSD

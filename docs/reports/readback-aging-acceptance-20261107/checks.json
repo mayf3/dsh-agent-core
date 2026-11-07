@@ -1,0 +1,132 @@
+{
+  "evaluated_at": "2026-11-07T12:59:42.957693+00:00",
+  "reviewed_pr_head": "7b5d79c3961625aaade6f3b383b18b2968e82f6c",
+  "scope": "Acceptance lifecycle delta only; no product/runtime execution",
+  "result": "PASS",
+  "observations": [
+    {
+      "check": "frontmatter_schema",
+      "result": "PASS",
+      "details": "Draft202012Validator; accepted_by=mayf3; implementation/production authority remain none"
+    },
+    {
+      "check": "existing_frontmatter_unchanged",
+      "result": "PASS",
+      "details": "All original fields except status unchanged; acceptance restriction exact"
+    },
+    {
+      "check": "proposal_reconstruction",
+      "result": "PASS",
+      "details": {
+        "original_proposal_sha256": "3ac3478f4e9f71c0fd27276ffd568b3d5f44c135c47d4113f1f64be989d243ad",
+        "original_body_sha256": "44881af1f81b2667bd4c650d09cd5b8d927175593831970731299600773d11fd",
+        "reconstructed_entire_proposal_byte_identical": true
+      }
+    },
+    {
+      "check": "coverage_preserved",
+      "result": "PASS",
+      "details": "13 logical sections / 6 Contracts / 7 acceptance definitions unchanged"
+    },
+    {
+      "check": "scoped_lifecycle_transition",
+      "result": "PASS",
+      "details": {
+        "argv": [
+          "python3",
+          ".agents/tools/validate_spec_transition.py",
+          "--base",
+          "/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/h643-accept-transition-3vjlwwyo/base.json",
+          "--candidate",
+          "/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/h643-accept-transition-3vjlwwyo/candidate.json"
+        ],
+        "rc": 0,
+        "stdout": "Spec transition is a valid whole-authority lifecycle state\n",
+        "stderr": ""
+      }
+    },
+    {
+      "check": "candidate_pinned_vendored_integrity",
+      "result": "PASS",
+      "details": {
+        "argv": [
+          "python3",
+          ".agents/tools/verify_governance.py",
+          "--target",
+          "."
+        ],
+        "rc": 0,
+        "stdout": "vendored governance bytes match governance.lock.json\n",
+        "stderr": ""
+      }
+    },
+    {
+      "check": "diff_whitespace",
+      "result": "PASS",
+      "details": {
+        "argv": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "rc": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "check": "product_and_parent_authority_zero_diff",
+      "result": "PASS",
+      "details": {
+        "argv": [
+          "git",
+          "diff",
+          "--exit-code",
+          "7b5d79c3961625aaade6f3b383b18b2968e82f6c",
+          "--",
+          "packages",
+          "scripts",
+          ".agents",
+          "docs/decisions",
+          "docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md"
+        ],
+        "rc": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "check": "original_delivery_preserved",
+      "result": "PASS",
+      "details": {
+        "original_other_five_files_unchanged": [
+          "BRIEF-1376-AMEND-AUTHOR.md",
+          "BRIEF-1376-WAIT-BUDGET.md",
+          "RECEIPT-1376-AMEND.md",
+          "RECEIPT-1376-BUDGET.md",
+          "STOPPED-1376-BUDGET.md"
+        ]
+      }
+    },
+    {
+      "check": "owner_and_transcript_bindings",
+      "result": "PASS",
+      "details": {
+        "ruling_direct_source_equal": true,
+        "ruling_and_item_canonical_hashes_match": true,
+        "transcript_body_sha256": "9959a0d79a6ee516b268819753033c2e676f828720336055270c49529ae55e42"
+      }
+    }
+  ],
+  "not_run": [
+    "product tests",
+    "cross-service E2E",
+    "production verification",
+    "old code-structure runner pending V3 qualification"
+  ],
+  "pending": [
+    "independent lifecycle delta review",
+    "independent final commit HEAD recheck",
+    "actual push and remote HEAD readback"
+  ]
+}

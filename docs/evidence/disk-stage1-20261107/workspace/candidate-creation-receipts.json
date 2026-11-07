@@ -1,0 +1,85 @@
+[
+  {
+    "source": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-current-input-implementation/build-candidate.receipt.json",
+    "sha256": "ea153eadbb34b50fc66fb61b2dae2761493a7e4eca30b7604ea95a349266b35d",
+    "source_mtime_utc": "2026-10-27T01:50:18.165675+00:00",
+    "selected_fields": {
+      "cwd": "/Users/yanfenma/workspace/worktrees/codex-workflow-current-input-impl-20261027",
+      "start": "2026-10-27T01:50:02.687287+00:00",
+      "end": "2026-10-27T01:50:18.165263+00:00",
+      "exit_code": 0,
+      "command_tool_class": "cargo",
+      "command_mentions_target": false
+    }
+  },
+  {
+    "source": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-current-input-implementation/final-handoff.json",
+    "sha256": "4978ab1ac5d1e5b307e05a4d37c9e927002b50b2ac7d643bcff2bf6b601324cb",
+    "source_mtime_utc": "2026-10-27T01:56:25.758175+00:00",
+    "selected_fields": {
+      "evaluated_at": "2026-10-27T01:56:25.757625+00:00",
+      "repository": "mayf3/svc-workflow",
+      "worktree": "/Users/yanfenma/workspace/worktrees/codex-workflow-current-input-impl-20261027",
+      "branch": "codex/workflow-current-input-impl-20261027",
+      "base": "52fcb13e63ac7c6696f2c3353ab5a09302cf2014",
+      "head": "4eabe824cc4a36bd4c8ac6584adb0aa5a56cd266",
+      "pull_request": "https://github.com/mayf3/svc-workflow/pull/90",
+      "merged": false,
+      "implementation_state": "COMPLETE_SERVICE_SLICE",
+      "verification_state": "PARTIAL_FOR_FULL_INTEGRATION",
+      "command_tool_class": "UNKNOWN",
+      "command_mentions_target": false
+    }
+  },
+  {
+    "source": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/clean-build.json",
+    "sha256": "7822e9096e86de7bdc6656a00a54251730ce318066e047dfba0b72a4b22357b7",
+    "source_mtime_utc": "2026-10-27T11:38:46.452845+00:00",
+    "selected_fields": {
+      "name": "clean-build",
+      "startedAt": "2026-10-27T11:38:21.103090+00:00",
+      "finishedAt": "2026-10-27T11:38:46.396719+00:00",
+      "cwd": "/Users/yanfenma/workspace/worktrees/codex-workflow-svc-combined-20261027",
+      "childPid": 64152,
+      "actualExitCode": 0,
+      "targetDir": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/target-clean-f4a1",
+      "sourceHead": "f4a1ed85e96936155e551eea6ac8b209ef360cda",
+      "tree": "7bd5879354b71541ca47166072d197effeaae23e",
+      "clean": true,
+      "command_tool_class": "cargo",
+      "command_mentions_target": false
+    }
+  },
+  {
+    "source": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/candidate-build-binding.json",
+    "sha256": "8bb368b713dcf5894c69e13c77bac09ce28d4b63686ba42c84c59c277690c98c",
+    "source_mtime_utc": "2026-10-27T11:39:20.801230+00:00",
+    "selected_fields": {
+      "recordedAt": "2026-10-27T11:39:20.684983+00:00",
+      "head": "f4a1ed85e96936155e551eea6ac8b209ef360cda",
+      "tree": "7bd5879354b71541ca47166072d197effeaae23e",
+      "worktreeClean": true,
+      "testedSourceManifestMatchesAll": 363,
+      "profile": "debug/dev unoptimized + debuginfo; source clean, fresh task target; not release profile",
+      "command_tool_class": "UNKNOWN",
+      "command_mentions_target": false
+    }
+  },
+  {
+    "source": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/final-execution-report.json",
+    "sha256": "d40735ebff2c256897cb036d185fe6c4a44a9f1f960ad95c6e046d45f82f6471",
+    "source_mtime_utc": "2026-10-27T11:40:56.843842+00:00",
+    "selected_fields": {
+      "schema": "svc-combined-execution-report-v1",
+      "recordedAt": "2026-10-27T11:40:56.812457+00:00",
+      "result": "PASS_SCOPED_EXECUTED_TESTS_AND_CLEAN_BUILD",
+      "repository": "mayf3/svc-workflow",
+      "worktree": "/Users/yanfenma/workspace/worktrees/codex-workflow-svc-combined-20261027",
+      "branch": "codex/workflow-svc-combined-20261027",
+      "head": "f4a1ed85e96936155e551eea6ac8b209ef360cda",
+      "tree": "7bd5879354b71541ca47166072d197effeaae23e",
+      "command_tool_class": "UNKNOWN",
+      "command_mentions_target": false
+    }
+  }
+]

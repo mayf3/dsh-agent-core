@@ -1,0 +1,11 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "packages/workflow-execution/test/observation-cas/diagnostic-read.test.js"
+  ],
+  "source": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "expected_rc": 1,
+  "actual_rc": 1,
+  "expected": "pre-fix defect reproduction"
+}

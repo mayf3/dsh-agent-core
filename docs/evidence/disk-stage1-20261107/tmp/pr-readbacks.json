@@ -1,0 +1,69 @@
+[
+  {
+    "command": [
+      "gh",
+      "pr",
+      "list",
+      "--repo",
+      "mayf3/dsh-agent-core",
+      "--state",
+      "all",
+      "--head",
+      "issue523/agent-turn-switch-guard-20261103",
+      "--json",
+      "number,url,state,mergedAt,updatedAt,headRefName,headRefOid"
+    ],
+    "rc": 0,
+    "stdout": "[{\"headRefName\":\"issue523/agent-turn-switch-guard-20261103\",\"headRefOid\":\"ecff3b50195ff6f8649ff7896ac7a3f1a1b3bdd5\",\"mergedAt\":\"2026-11-03T00:03:10Z\",\"number\":607,\"state\":\"MERGED\",\"updatedAt\":\"2026-11-04T00:19:24Z\",\"url\":\"https://github.com/mayf3/dsh-agent-core/pull/607\"}]\n",
+    "stderr": "",
+    "observed_at_utc": "2026-11-07T15:48:25.289394+00:00"
+  },
+  {
+    "command": [
+      "gh",
+      "pr",
+      "view",
+      "630",
+      "--repo",
+      "mayf3/dsh-agent-core",
+      "--json",
+      "number,url,state,mergedAt,updatedAt,headRefName,headRefOid"
+    ],
+    "rc": 0,
+    "stdout": "{\"headRefName\":\"chore/fleet-w6-s04-20261106\",\"headRefOid\":\"e111c16cbe641bd4d73069d445fbc1f4f4bb1f32\",\"mergedAt\":\"2026-11-06T00:12:18Z\",\"number\":630,\"state\":\"MERGED\",\"updatedAt\":\"2026-11-06T00:12:18Z\",\"url\":\"https://github.com/mayf3/dsh-agent-core/pull/630\"}\n",
+    "stderr": "",
+    "observed_at_utc": "2026-11-07T15:48:25.977320+00:00"
+  },
+  {
+    "command": [
+      "gh",
+      "pr",
+      "view",
+      "548",
+      "--repo",
+      "mayf3/dsh-agent-core",
+      "--json",
+      "number,url,state,mergedAt,updatedAt,headRefName,headRefOid"
+    ],
+    "rc": 1,
+    "stdout": "",
+    "stderr": "GraphQL: Could not resolve to a PullRequest with the number of 548. (repository.pullRequest)\n",
+    "observed_at_utc": "2026-11-07T15:48:26.556229+00:00"
+  },
+  {
+    "command": [
+      "gh",
+      "pr",
+      "view",
+      "115",
+      "--repo",
+      "mayf3/svc-workflow",
+      "--json",
+      "number,url,state,mergedAt,updatedAt,headRefName,headRefOid"
+    ],
+    "rc": 0,
+    "stdout": "{\"headRefName\":\"ac-d6d11-impl\",\"headRefOid\":\"22419bfc2712752164e5122addcef2b4f82822f9\",\"mergedAt\":\"2026-11-01T03:50:54Z\",\"number\":115,\"state\":\"MERGED\",\"updatedAt\":\"2026-11-04T00:20:14Z\",\"url\":\"https://github.com/mayf3/svc-workflow/pull/115\"}\n",
+    "stderr": "",
+    "observed_at_utc": "2026-11-07T15:50:55.977087+00:00"
+  }
+]

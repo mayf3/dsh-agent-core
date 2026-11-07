@@ -1,0 +1,23 @@
+[
+  {
+    "source": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-current-input-implementation/candidate-binary-receipt.json",
+    "source_sha256": "aaba661a29a022badfc484a25671901f5624c06e8dcfcfa0b122cfc5b3bf13f2",
+    "binary": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-current-input-implementation/candidate/svc-workflow-4eabe824cc4a",
+    "head": "4eabe824cc4a36bd4c8ac6584adb0aa5a56cd266",
+    "binary_sha256": "7a26fc4e21a86d4fa5a84c44a392d3c2a9d724e9822266a9f980f81a19dfbce3"
+  },
+  {
+    "source": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/candidate-build-binding.json",
+    "source_sha256": "8bb368b713dcf5894c69e13c77bac09ce28d4b63686ba42c84c59c277690c98c",
+    "binary": {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/candidate/svc-workflow-f4a1ed85",
+      "sha256": "cb60bda02e467bd548ac55e90bcc75d46d49225f93da614b0c89fb2dd87c11ce",
+      "bytes": 75517424,
+      "targetPath": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/target-clean-f4a1/debug/svc-workflow",
+      "targetHashMatches": true,
+      "embeddedGitShaLiteralFound": true
+    },
+    "head": "f4a1ed85e96936155e551eea6ac8b209ef360cda",
+    "binary_sha256": null
+  }
+]

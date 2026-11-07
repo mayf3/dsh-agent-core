@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: 1367 mounted missing trace retains 404: healthy/unknown_instance
+ok 1 - 1367 mounted missing trace retains 404: healthy/unknown_instance
+  ---
+  duration_ms: 78.085959
+  type: 'test'
+  ...
+# {"tail":"healthy","selector":"unknown_instance","before":"8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c","after":"8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 mounted missing trace retains 404: healthy/unknown_visit
+ok 2 - 1367 mounted missing trace retains 404: healthy/unknown_visit
+  ---
+  duration_ms: 39.557959
+  type: 'test'
+  ...
+# {"tail":"healthy","selector":"unknown_visit","before":"8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c","after":"8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 mounted missing trace retains 404: invalid_json/unknown_instance
+ok 3 - 1367 mounted missing trace retains 404: invalid_json/unknown_instance
+  ---
+  duration_ms: 43.875125
+  type: 'test'
+  ...
+# {"tail":"invalid_json","selector":"unknown_instance","before":"492e170d3405c5c76dfc178af65af11afda3412e9633c485583b457995201fd2","after":"492e170d3405c5c76dfc178af65af11afda3412e9633c485583b457995201fd2","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 mounted missing trace retains 404: invalid_json/unknown_visit
+ok 4 - 1367 mounted missing trace retains 404: invalid_json/unknown_visit
+  ---
+  duration_ms: 42.041041
+  type: 'test'
+  ...
+# {"tail":"invalid_json","selector":"unknown_visit","before":"492e170d3405c5c76dfc178af65af11afda3412e9633c485583b457995201fd2","after":"492e170d3405c5c76dfc178af65af11afda3412e9633c485583b457995201fd2","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 mounted missing trace retains 404: missing_newline/unknown_instance
+ok 5 - 1367 mounted missing trace retains 404: missing_newline/unknown_instance
+  ---
+  duration_ms: 43.971208
+  type: 'test'
+  ...
+# {"tail":"missing_newline","selector":"unknown_instance","before":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","after":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 mounted missing trace retains 404: missing_newline/unknown_visit
+ok 6 - 1367 mounted missing trace retains 404: missing_newline/unknown_visit
+  ---
+  duration_ms: 45.763541
+  type: 'test'
+  ...
+# {"tail":"missing_newline","selector":"unknown_visit","before":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","after":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 344.068416

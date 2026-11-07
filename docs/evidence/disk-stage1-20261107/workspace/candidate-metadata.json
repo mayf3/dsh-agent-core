@@ -1,0 +1,387 @@
+[
+  {
+    "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-current-input-implementation/target",
+    "owner_uid": 502,
+    "owner_gid": 20,
+    "device": 16777229,
+    "inode": 273405139,
+    "birthtime_utc": "2026-10-27T01:17:40.070406+00:00",
+    "mtime_utc": "2026-10-27T01:18:19.888469+00:00",
+    "top_level_markers": [
+      ".rustc_info.json",
+      "CACHEDIR.TAG",
+      "tmp",
+      "debug"
+    ],
+    "source_manifest_exists": {
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-current-input-implementation/Cargo.toml": false,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-current-input-implementation/Cargo.lock": false,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-current-input-implementation/package.json": false,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-current-input-implementation/pnpm-lock.yaml": false,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-current-input-implementation/package-lock.json": false
+    },
+    "parent_direct_reports": [
+      "delivery-manifest.json",
+      "candidate-version-runtime-v2.log",
+      "candidate-version-runtime-v3.log",
+      "regression-query.receipt.json",
+      "candidate-version-runtime-v4.log",
+      "red-combined.receipt.json",
+      "red-http.log",
+      "baseline-submissions.receipt.json",
+      "baseline-submissions.log",
+      "green-http-1.receipt.json",
+      "regression-submissions.log",
+      "development-preflight.json",
+      "candidate-version-attempt1.json",
+      "push-candidate.log",
+      "expanded-http-1.receipt.json",
+      "quality-checks.json",
+      "regression-submissions.receipt.json",
+      "candidate-migrations-manifest.json",
+      "progress.md",
+      "regression-query.log",
+      "regression-lib.receipt.json",
+      "final-http.receipt.json",
+      "final-handoff.json",
+      "final-http-stable-jwks.receipt.json",
+      "baseline-query.log",
+      "final-http.log",
+      "final-http-with-raw.receipt.json",
+      "push-candidate.receipt.json",
+      "expanded-http-2.receipt.json",
+      "implementation-plan.md",
+      "candidate-version-runtime.log",
+      "build-candidate.log",
+      "run-config.json",
+      "source-test-binding.json",
+      "final-http-stable-jwks.log",
+      "expanded-http-1.log",
+      "red-null-entry.log",
+      "regression-model3.log",
+      "expanded-http-2.log",
+      "tested-source-manifest.json",
+      "red-combined.log",
+      "red-http.receipt.json",
+      "build-candidate.receipt.json",
+      "candidate-version-attempt2.json",
+      "green-http-1.log",
+      "candidate-binary-receipt.json",
+      "regression-model3.receipt.json",
+      "red-null-entry.receipt.json",
+      "green-http-2.log",
+      "final-http-with-raw.log",
+      "tested-source-manifest-v2.json",
+      "candidate-version-attempt3.json",
+      "regression-lib.log",
+      "baseline-query.receipt.json",
+      "green-http-2.receipt.json"
+    ]
+  },
+  {
+    "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/target-clean-f4a1",
+    "owner_uid": 502,
+    "owner_gid": 20,
+    "device": 16777229,
+    "inode": 277941521,
+    "birthtime_utc": "2026-10-27T11:33:19.864558+00:00",
+    "mtime_utc": "2026-10-27T11:34:22.134271+00:00",
+    "top_level_markers": [
+      ".rustc_info.json",
+      "CACHEDIR.TAG",
+      "tmp",
+      "debug"
+    ],
+    "source_manifest_exists": {
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/Cargo.toml": false,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/Cargo.lock": false,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/package.json": false,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/pnpm-lock.yaml": false,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/package-lock.json": false
+    },
+    "parent_direct_reports": [
+      "cti-http-manifest.json",
+      "query-regression.log",
+      "database-precheck.log",
+      "FINAL_REPORT.md",
+      "database-create.log",
+      "database-final-readback.json",
+      "submission-regression.json",
+      "database-precheck.json",
+      "execution-scope.json",
+      "acceptance-binding-40.log",
+      "database-create.json",
+      "root-mechanical-integration-review.json",
+      "final-execution-report.json",
+      "model3-activation.log",
+      "database-final-readback.log",
+      "acceptance-binding-40.json",
+      "model3-activation.json",
+      "library.json",
+      "submission-regression.log",
+      "clean-build.json",
+      "library.log",
+      "candidate-build-binding.json",
+      "publication-admission.json",
+      "tested-source-manifest.json",
+      "query-regression.json",
+      "current-input-25.log",
+      "downgrade-evidence-reuse.json",
+      "publication-admission.log",
+      "clean-build.log",
+      "preflight.json",
+      "current-input-25.json"
+    ]
+  },
+  {
+    "path": "/Users/yanfenma/workspace/github/deepseek-harness.hold-b7-20261001/node_modules",
+    "owner_uid": 502,
+    "owner_gid": 20,
+    "device": 16777229,
+    "inode": 35993583,
+    "birthtime_utc": "2026-08-14T13:02:49.389433+00:00",
+    "mtime_utc": "2026-08-29T13:47:54.400761+00:00",
+    "top_level_markers": [
+      ".pnpm",
+      ".modules.yaml"
+    ],
+    "source_manifest_exists": {
+      "/Users/yanfenma/workspace/github/deepseek-harness.hold-b7-20261001/Cargo.toml": false,
+      "/Users/yanfenma/workspace/github/deepseek-harness.hold-b7-20261001/Cargo.lock": false,
+      "/Users/yanfenma/workspace/github/deepseek-harness.hold-b7-20261001/package.json": true,
+      "/Users/yanfenma/workspace/github/deepseek-harness.hold-b7-20261001/pnpm-lock.yaml": true,
+      "/Users/yanfenma/workspace/github/deepseek-harness.hold-b7-20261001/package-lock.json": false
+    },
+    "parent_direct_reports": [
+      "README.zh.md",
+      ".jscpd.json",
+      "BRAND_GUIDELINES.md",
+      "knip.json",
+      "tsconfig.base.json",
+      "tsconfig.base.client.json",
+      "CONTRIBUTING.zh.md",
+      ".oxlintrc.json",
+      "tsconfig.client.json",
+      "THIRD_PARTY_NOTICES.md",
+      "BENCHMARK.md",
+      "README.md",
+      "package.json",
+      "CONTRIBUTING.md",
+      "tsconfig.json",
+      "AGENTS.md",
+      "tsconfig.host.json",
+      "BRAND_GUIDELINES.zh.md",
+      ".oxlintrc.staged.json",
+      "CLAUDE.md"
+    ]
+  },
+  {
+    "path": "/Users/yanfenma/workspace/project/svc-workflow/target",
+    "owner_uid": 502,
+    "owner_gid": 20,
+    "device": 16777229,
+    "inode": 339337822,
+    "birthtime_utc": "2026-11-01T01:33:49.512843+00:00",
+    "mtime_utc": "2026-11-01T01:34:25.562244+00:00",
+    "top_level_markers": [
+      ".rustc_info.json",
+      "CACHEDIR.TAG",
+      "tmp",
+      "debug"
+    ],
+    "source_manifest_exists": {
+      "/Users/yanfenma/workspace/project/svc-workflow/Cargo.toml": true,
+      "/Users/yanfenma/workspace/project/svc-workflow/Cargo.lock": true,
+      "/Users/yanfenma/workspace/project/svc-workflow/package.json": true,
+      "/Users/yanfenma/workspace/project/svc-workflow/pnpm-lock.yaml": false,
+      "/Users/yanfenma/workspace/project/svc-workflow/package-lock.json": true
+    },
+    "parent_direct_reports": [
+      "tsconfig.sdk.json",
+      "workflow_trusted_fleet_successor_plan_v2.json",
+      "workflow_trusted_fleet_successor_plan_v3.json",
+      "WORKFLOW_AGENT_DOMAIN_DISCOVERY_INVESTIGATION_V1_REPORT.md",
+      "README.md",
+      "PRODUCT-BOUNDARY.md",
+      "package-lock.json",
+      "package.json"
+    ]
+  },
+  {
+    "path": "/Users/yanfenma/workspace/worktrees/52bd-svc-workflow-20261101/target",
+    "owner_uid": 502,
+    "owner_gid": 20,
+    "device": 16777229,
+    "inode": 341884349,
+    "birthtime_utc": "2026-11-01T09:05:49.333223+00:00",
+    "mtime_utc": "2026-11-01T09:10:16.121264+00:00",
+    "top_level_markers": [
+      ".rustc_info.json",
+      "CACHEDIR.TAG",
+      "tmp",
+      "debug"
+    ],
+    "source_manifest_exists": {
+      "/Users/yanfenma/workspace/worktrees/52bd-svc-workflow-20261101/Cargo.toml": true,
+      "/Users/yanfenma/workspace/worktrees/52bd-svc-workflow-20261101/Cargo.lock": true,
+      "/Users/yanfenma/workspace/worktrees/52bd-svc-workflow-20261101/package.json": true,
+      "/Users/yanfenma/workspace/worktrees/52bd-svc-workflow-20261101/pnpm-lock.yaml": false,
+      "/Users/yanfenma/workspace/worktrees/52bd-svc-workflow-20261101/package-lock.json": true
+    },
+    "parent_direct_reports": [
+      "tsconfig.sdk.json",
+      "WORKFLOW_AGENT_DOMAIN_DISCOVERY_INVESTIGATION_V1_REPORT.md",
+      "README.md",
+      "PRODUCT-BOUNDARY.md",
+      "package-lock.json",
+      "package.json"
+    ]
+  },
+  {
+    "path": "/Users/yanfenma/workspace/worktrees/m2-dispatch-intent-20261101/target",
+    "owner_uid": 502,
+    "owner_gid": 20,
+    "device": 16777229,
+    "inode": 345943277,
+    "birthtime_utc": "2026-11-02T06:28:14.939280+00:00",
+    "mtime_utc": "2026-11-02T06:29:10.703117+00:00",
+    "top_level_markers": [
+      ".rustc_info.json",
+      "CACHEDIR.TAG",
+      "tmp",
+      "debug"
+    ],
+    "source_manifest_exists": {
+      "/Users/yanfenma/workspace/worktrees/m2-dispatch-intent-20261101/Cargo.toml": true,
+      "/Users/yanfenma/workspace/worktrees/m2-dispatch-intent-20261101/Cargo.lock": true,
+      "/Users/yanfenma/workspace/worktrees/m2-dispatch-intent-20261101/package.json": true,
+      "/Users/yanfenma/workspace/worktrees/m2-dispatch-intent-20261101/pnpm-lock.yaml": false,
+      "/Users/yanfenma/workspace/worktrees/m2-dispatch-intent-20261101/package-lock.json": true
+    },
+    "parent_direct_reports": [
+      "tsconfig.sdk.json",
+      "WORKFLOW_AGENT_DOMAIN_DISCOVERY_INVESTIGATION_V1_REPORT.md",
+      "README.md",
+      "PRODUCT-BOUNDARY.md",
+      "package-lock.json",
+      "package.json",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "path": "/Users/yanfenma/workspace/worktrees/codex-wec-kick-token-renewal-20261028/target",
+    "owner_uid": 502,
+    "owner_gid": 20,
+    "device": 16777229,
+    "inode": 349069952,
+    "birthtime_utc": "2026-11-03T15:08:30.946599+00:00",
+    "mtime_utc": "2026-11-03T15:10:14.664181+00:00",
+    "top_level_markers": [
+      ".rustc_info.json",
+      "CACHEDIR.TAG",
+      "debug"
+    ],
+    "source_manifest_exists": {
+      "/Users/yanfenma/workspace/worktrees/codex-wec-kick-token-renewal-20261028/Cargo.toml": true,
+      "/Users/yanfenma/workspace/worktrees/codex-wec-kick-token-renewal-20261028/Cargo.lock": true,
+      "/Users/yanfenma/workspace/worktrees/codex-wec-kick-token-renewal-20261028/package.json": true,
+      "/Users/yanfenma/workspace/worktrees/codex-wec-kick-token-renewal-20261028/pnpm-lock.yaml": false,
+      "/Users/yanfenma/workspace/worktrees/codex-wec-kick-token-renewal-20261028/package-lock.json": true
+    },
+    "parent_direct_reports": [
+      "tsconfig.sdk.json",
+      "WORKFLOW_AGENT_DOMAIN_DISCOVERY_INVESTIGATION_V1_REPORT.md",
+      "README.md",
+      "PRODUCT-BOUNDARY.md",
+      "package-lock.json",
+      "package.json",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/build-worktree/target",
+    "owner_uid": 502,
+    "owner_gid": 20,
+    "device": 16777229,
+    "inode": 318587661,
+    "birthtime_utc": "2026-10-29T12:51:36.549296+00:00",
+    "mtime_utc": "2026-10-29T12:52:19.120687+00:00",
+    "top_level_markers": [
+      ".rustc_info.json",
+      "CACHEDIR.TAG",
+      "debug"
+    ],
+    "source_manifest_exists": {
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/build-worktree/Cargo.toml": true,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/build-worktree/Cargo.lock": true,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/build-worktree/package.json": true,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/build-worktree/pnpm-lock.yaml": false,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/build-worktree/package-lock.json": true
+    },
+    "parent_direct_reports": [
+      "tsconfig.sdk.json",
+      "WORKFLOW_AGENT_DOMAIN_DISCOVERY_INVESTIGATION_V1_REPORT.md",
+      "README.md",
+      "PRODUCT-BOUNDARY.md",
+      "package-lock.json",
+      "package.json",
+      "AGENTS.md"
+    ]
+  },
+  {
+    "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/helper-crate/target",
+    "owner_uid": 502,
+    "owner_gid": 20,
+    "device": 16777229,
+    "inode": 319458706,
+    "birthtime_utc": "2026-10-29T13:54:11.316078+00:00",
+    "mtime_utc": "2026-10-29T13:54:42.956829+00:00",
+    "top_level_markers": [
+      ".rustc_info.json",
+      "CACHEDIR.TAG",
+      "debug"
+    ],
+    "source_manifest_exists": {
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/helper-crate/Cargo.toml": true,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/helper-crate/Cargo.lock": true,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/helper-crate/package.json": false,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/helper-crate/pnpm-lock.yaml": false,
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/helper-crate/package-lock.json": false
+    },
+    "parent_direct_reports": []
+  },
+  {
+    "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+svc-workflow/ac-1301-7cd-revise-fix/target",
+    "owner_uid": 502,
+    "owner_gid": 20,
+    "device": 16777229,
+    "inode": 271393242,
+    "birthtime_utc": "2026-10-26T15:00:16.060494+00:00",
+    "mtime_utc": "2026-10-26T15:06:23.655998+00:00",
+    "top_level_markers": [
+      ".rustc_info.json",
+      "CACHEDIR.TAG",
+      "release",
+      "tmp",
+      "debug"
+    ],
+    "source_manifest_exists": {
+      "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+svc-workflow/ac-1301-7cd-revise-fix/Cargo.toml": true,
+      "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+svc-workflow/ac-1301-7cd-revise-fix/Cargo.lock": true,
+      "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+svc-workflow/ac-1301-7cd-revise-fix/package.json": true,
+      "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+svc-workflow/ac-1301-7cd-revise-fix/pnpm-lock.yaml": false,
+      "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+svc-workflow/ac-1301-7cd-revise-fix/package-lock.json": true
+    },
+    "parent_direct_reports": [
+      "tsconfig.sdk.json",
+      "workflow_trusted_fleet_successor_plan_v2.json",
+      "WORKFLOW_AGENT_DOMAIN_DISCOVERY_INVESTIGATION_V1_REPORT.md",
+      "README.md",
+      "PRODUCT-BOUNDARY.md",
+      "package-lock.json",
+      "package.json",
+      "AGENTS.md",
+      "workflow_trusted_fleet_successor_plan_v1.json"
+    ]
+  }
+]

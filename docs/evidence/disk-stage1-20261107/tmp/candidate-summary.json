@@ -1,0 +1,149 @@
+{
+  "observed_at_utc": "2026-11-07T15:53:18.172381+00:00",
+  "rows": [
+    {
+      "path": "/private/tmp/sw-367/target",
+      "allocated_kib": 558212,
+      "allocated_bytes_ceiling": 571609088,
+      "creator": "Rust/Cargo build products; actual historical creating process UNKNOWN",
+      "last_observed_reference": "DISPATCH-REGISTRY /history/273/note references parent /tmp/sw-367; no current exact target consumer observed",
+      "retention_basis": "Rebuild requires retained source/compiler/lock proof; current .git incomplete; formal release UNKNOWN",
+      "reclaim_reason": "conditional generated/redundant material review; not deletion authorization",
+      "physical_release_bytes": {
+        "lower": 0,
+        "upper": 571609088,
+        "status": "UNKNOWN_EXCLUSIVE_ALLOCATION_AND_RETENTION"
+      },
+      "verification_method": "Fresh lsof/cwd/schedules/Workflow/Mandate/PR/Receipt/rollback and formal pin release; verify retained source/rebuild; dev+ino hardlink dedupe; getattrlist private/clone; snapshot accounting; stage3 only",
+      "current_reclaimability": "NOT_PROVEN_SAFE"
+    },
+    {
+      "path": "/private/tmp/gcr-svc-target",
+      "allocated_kib": 496328,
+      "allocated_bytes_ceiling": 508239872,
+      "creator": "Rust/Cargo build products from .o shape; creating actor UNKNOWN",
+      "last_observed_reference": "UNKNOWN: no exact basename match in scanned tracked Core/Svc/Harness docs, readable launch plists or current crontab",
+      "retention_basis": "Source/receipt/Workflow owner and recovery proof UNKNOWN",
+      "reclaim_reason": "conditional generated/redundant material review; not deletion authorization",
+      "physical_release_bytes": {
+        "lower": 0,
+        "upper": 508239872,
+        "status": "UNKNOWN_EXCLUSIVE_ALLOCATION_AND_RETENTION"
+      },
+      "verification_method": "Fresh lsof/cwd/schedules/Workflow/Mandate/PR/Receipt/rollback and formal pin release; verify retained source/rebuild; dev+ino hardlink dedupe; getattrlist private/clone; snapshot accounting; stage3 only",
+      "current_reclaimability": "NOT_PROVEN_SAFE"
+    },
+    {
+      "path": "/private/tmp/sw-1347-evidence/target-candidate",
+      "allocated_kib": 488500,
+      "allocated_bytes_ceiling": 500224000,
+      "creator": "Rust/Cargo build products; parent delivery.json identifies ac-d6d11-impl / 22419bfc and svc PR115",
+      "last_observed_reference": "Parent delivery.json verified_at 2026-11-01T03:42:23.445349Z; live PR115 MERGED 2026-11-01T03:50:54Z",
+      "retention_basis": "PR merge does not release original test evidence; preserve pgdata/delivery artifact; release of build outputs UNKNOWN",
+      "reclaim_reason": "conditional generated/redundant material review; not deletion authorization",
+      "physical_release_bytes": {
+        "lower": 0,
+        "upper": 500224000,
+        "status": "UNKNOWN_EXCLUSIVE_ALLOCATION_AND_RETENTION"
+      },
+      "verification_method": "Fresh lsof/cwd/schedules/Workflow/Mandate/PR/Receipt/rollback and formal pin release; verify retained source/rebuild; dev+ino hardlink dedupe; getattrlist private/clone; snapshot accounting; stage3 only",
+      "current_reclaimability": "NOT_PROVEN_SAFE"
+    },
+    {
+      "path": "/private/tmp/sw-aa-r4-evidence/target",
+      "allocated_kib": 328276,
+      "allocated_bytes_ceiling": 336154624,
+      "creator": "Rust/Cargo build products; actual creating actor UNKNOWN",
+      "last_observed_reference": "UNKNOWN: no exact basename reference in scoped documentation/schedule readbacks",
+      "retention_basis": "Parent has pgdata/dumps/red/frozen-overlay evidence; target-only disposal still requires source/replayable build proof",
+      "reclaim_reason": "conditional generated/redundant material review; not deletion authorization",
+      "physical_release_bytes": {
+        "lower": 0,
+        "upper": 336154624,
+        "status": "UNKNOWN_EXCLUSIVE_ALLOCATION_AND_RETENTION"
+      },
+      "verification_method": "Fresh lsof/cwd/schedules/Workflow/Mandate/PR/Receipt/rollback and formal pin release; verify retained source/rebuild; dev+ino hardlink dedupe; getattrlist private/clone; snapshot accounting; stage3 only",
+      "current_reclaimability": "NOT_PROVEN_SAFE"
+    },
+    {
+      "path": "/private/tmp/sw-d6-fix/target",
+      "allocated_kib": 326088,
+      "allocated_bytes_ceiling": 333914112,
+      "creator": "Rust/Cargo build products; actual creating actor UNKNOWN",
+      "last_observed_reference": "UNKNOWN: no exact basename reference in scoped documentation/schedule readbacks",
+      "retention_basis": "Source is incomplete/unknown in parent; preserve until recovered source and closure evidence",
+      "reclaim_reason": "conditional generated/redundant material review; not deletion authorization",
+      "physical_release_bytes": {
+        "lower": 0,
+        "upper": 333914112,
+        "status": "UNKNOWN_EXCLUSIVE_ALLOCATION_AND_RETENTION"
+      },
+      "verification_method": "Fresh lsof/cwd/schedules/Workflow/Mandate/PR/Receipt/rollback and formal pin release; verify retained source/rebuild; dev+ino hardlink dedupe; getattrlist private/clone; snapshot accounting; stage3 only",
+      "current_reclaimability": "NOT_PROVEN_SAFE"
+    },
+    {
+      "path": "/private/tmp/darwinx64-fix",
+      "allocated_kib": 263828,
+      "allocated_bytes_ceiling": 270159872,
+      "creator": "19 versioned Darwin x64 npm tarballs + package-name list; actual creating actor UNKNOWN",
+      "last_observed_reference": "UNKNOWN: scoped exact basename searches found no reference; no visible open handle",
+      "retention_basis": "Need current W7/frozen archive dependency and content-integrity/re-download proof before GC",
+      "reclaim_reason": "conditional generated/redundant material review; not deletion authorization",
+      "physical_release_bytes": {
+        "lower": 0,
+        "upper": 270159872,
+        "status": "UNKNOWN_EXCLUSIVE_ALLOCATION_AND_RETENTION"
+      },
+      "verification_method": "Fresh lsof/cwd/schedules/Workflow/Mandate/PR/Receipt/rollback and formal pin release; verify retained source/rebuild; dev+ino hardlink dedupe; getattrlist private/clone; snapshot accounting; stage3 only",
+      "current_reclaimability": "NOT_PROVEN_SAFE"
+    },
+    {
+      "path": "/private/tmp/dsh-548-r2-iwl_bczh",
+      "allocated_kib": 319108,
+      "allocated_bytes_ceiling": 326766592,
+      "creator": "setup.py:15-25 git archive -> tar extraction from local Harness source, plus run.py probe fixtures",
+      "last_observed_reference": "/private/tmp/dsh-548-r5-evidence/run.py:13-14 still references R2 fixtures and original probe path",
+      "retention_basis": "Historical probe/preservation evidence; retain until governing receipt and full archive replacement approved",
+      "reclaim_reason": "conditional generated/redundant material review; not deletion authorization",
+      "physical_release_bytes": {
+        "lower": 0,
+        "upper": 326766592,
+        "status": "UNKNOWN_EXCLUSIVE_ALLOCATION_AND_RETENTION"
+      },
+      "verification_method": "Fresh lsof/cwd/schedules/Workflow/Mandate/PR/Receipt/rollback and formal pin release; verify retained source/rebuild; dev+ino hardlink dedupe; getattrlist private/clone; snapshot accounting; stage3 only",
+      "current_reclaimability": "NOT_PROVEN_SAFE"
+    },
+    {
+      "path": "/private/tmp/dsh-548-r5-evidence",
+      "allocated_kib": 124868,
+      "allocated_bytes_ceiling": 127864832,
+      "creator": "run.py snapshot function tarfile/git archive; exact historic invocation actor UNKNOWN",
+      "last_observed_reference": "Own preservation.log latest mtime 2026-11-04T02:36:49Z is output metadata, not last-reference proof; script references R2/R4 retained originals",
+      "retention_basis": "Cross-attempt evidence, no release/pin expiry found",
+      "reclaim_reason": "conditional generated/redundant material review; not deletion authorization",
+      "physical_release_bytes": {
+        "lower": 0,
+        "upper": 127864832,
+        "status": "UNKNOWN_EXCLUSIVE_ALLOCATION_AND_RETENTION"
+      },
+      "verification_method": "Fresh lsof/cwd/schedules/Workflow/Mandate/PR/Receipt/rollback and formal pin release; verify retained source/rebuild; dev+ino hardlink dedupe; getattrlist private/clone; snapshot accounting; stage3 only",
+      "current_reclaimability": "NOT_PROVEN_SAFE"
+    },
+    {
+      "path": "/private/tmp/dsh-548-r4-evidence",
+      "allocated_kib": 124860,
+      "allocated_bytes_ceiling": 127856640,
+      "creator": "Snapshot/archive test evidence; exact creating actor UNKNOWN",
+      "last_observed_reference": "/private/tmp/dsh-548-r5-evidence/run.py:89 reads R4 original-hashes.json",
+      "retention_basis": "Required R5 historical evidence input; no release found",
+      "reclaim_reason": "conditional generated/redundant material review; not deletion authorization",
+      "physical_release_bytes": {
+        "lower": 0,
+        "upper": 127856640,
+        "status": "UNKNOWN_EXCLUSIVE_ALLOCATION_AND_RETENTION"
+      },
+      "verification_method": "Fresh lsof/cwd/schedules/Workflow/Mandate/PR/Receipt/rollback and formal pin release; verify retained source/rebuild; dev+ino hardlink dedupe; getattrlist private/clone; snapshot accounting; stage3 only",
+      "current_reclaimability": "NOT_PROVEN_SAFE"
+    }
+  ]
+}

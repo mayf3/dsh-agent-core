@@ -1,0 +1,4 @@
+Actual node --version: v25.6.1
+{"execPath":"/usr/local/Cellar/node/25.6.1_1/bin/node","version":"v25.6.1","arch":"x64","proxyKeysPresent":[]}
+Unset keys: HTTP_PROXY, HTTPS_PROXY, http_proxy, https_proxy, ALL_PROXY, all_proxy, NO_PROXY, no_proxy, NODE_USE_ENV_PROXY
+Parent proxy settings unchanged; no values recorded.
