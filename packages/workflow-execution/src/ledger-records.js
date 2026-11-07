@@ -241,10 +241,11 @@ export async function mutateWithRecord(ledger, io, nodeVisitId, fn) {
       return call(...args)
     }
     const record = {
-      recoveryAuthorized: guard((authorityRef) => io.recordRecoveryAuthorized(nodeVisitId, authorityRef)),
+      recoveryAuthorized: guard((authorityRef, audit) => io.recordRecoveryAuthorized(nodeVisitId, authorityRef, audit)),
+      recoveryChecked: guard((fields) => io.recordRecoveryCheck(nodeVisitId, fields)),
       resolutionBlocked: guard((code) => io.recordResolutionBlocked(nodeVisitId, code)),
       deliveryStarted: guard(() => io.recordDeliveryStarted(nodeVisitId)),
-      recoveryRefused: guard((authorityRef, refused) => io.recordRecoveryRefused(nodeVisitId, authorityRef, refused)),
+      recoveryRefused: guard((authorityRef, refused, audit) => io.recordRecoveryRefused(nodeVisitId, authorityRef, refused, audit)),
       runDelivered: guard((fields) => io.recordRunDelivered(nodeVisitId, fields)),
       deliveryFailed: guard((reason) => io.recordDeliveryFailed(nodeVisitId, reason)),
     }

@@ -29,7 +29,7 @@ export const DUE_PAGE_LIMIT = 100
  * Injected seams: ledger, keyset due feed, exact Principal resolution, Router
  * delivery/reconciliation/correlation, and target-Agent instance detail reads.
  * Optional escalation is idempotent via the ledger; controlled recovery is
- * authorityRef-gated and never invoked by polling. No lifecycle mutation seam.
+ * authorityRef-gated or internally authorized by the blocked consumer. No lifecycle mutation seam.
  * config: maxAdmissionsPerPoll, staleNoProgressThresholdMs, retryDelayMs.
  */
 export function createWorkflowExecutionEngine({
@@ -209,7 +209,7 @@ export function createWorkflowExecutionEngine({
       .map(attempt => ({ ...reconcileDeliveryEvidence(attempt, resolveCallerCorrelation), observedAtMs: clock() })))
   }
 
-  /** Reconcile ACTIVE attempts; skip resolution_blocked. Only positive business evidence permits stale re-entry. */
+  /** Reconcile ACTIVE attempts; blocked recovery uses the shared safe gate. */
   async function reconcileOnce() {
     const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [], staleObservations: [] }
     for (const attempt of await ledger.listActiveFresh()) {
@@ -302,6 +302,7 @@ export function createWorkflowExecutionEngine({
     }
     // Re-read terminal delivery_unverified too: late original receipts remain
     // discoverable on every existing startup/poll, with no terminal writes.
+    summary.recoveries = await reconcileBlocked()
     summary.readbacks = await readbacks.reconcile()
     summary.deliveryReconciliation = await reconcileDeliveries()
     return summary
@@ -422,7 +423,8 @@ export function createWorkflowExecutionEngine({
   }
 
   // CTR-WAE-013: explicit control-plane recovery over the same injected seams.
-  const { recoverAttempt } = createRecoveryOperation({
+  const { recoverAttempt, reconcileBlocked } = createRecoveryOperation({
+    clock, config,
     ledger,
     resolvePrincipalToAgent,
     deliverRun,
