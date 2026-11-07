@@ -1,6 +1,6 @@
 ---
 spec_id: CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -14,7 +14,7 @@ governed_by:
   - CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1
 external_authorities: []
 supersedes: []
-superseded_by: null
+superseded_by: CODE_STRUCTURE_GUARDRAILS_V3
 owners: [mayf3]
 date: 2026-11-06
 ---

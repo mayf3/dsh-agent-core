@@ -197,3 +197,44 @@ no pre-merge record by itself establishes active adoption.
 No unresolved question grants implementation or production authority. Future
 executor-level duplicate suppression and measured delivery improvements are not
 prerequisites of current HR recovery or this bounded governance repair.
+<!-- BEGIN PHASE2_READOPTION -->
+
+## 14. Explicit rc.3 distribution update acceptance — 2026-11-07
+
+This is the explicit later-update record permitted by CTR-AD3-001's final
+sentence, under the unchanged adoption Contracts and source/local-review/main
+activation procedure. The original rc.1 source pin and 2026-10-15 acceptance
+above remain historical records of that adoption; they are not rewritten or
+represented as acceptance of rc.3. No new routing or product Contract is added.
+
+Owner mayf3's current acceptance is bound to reviewed semantic head
+`7f36750bf08d308cd7f648153e24c0b0e528e4c6`, including exact preparation commit
+`b8333ef43d3e3433d5276cb8af49be7c949a18c8`.
+Authority: https://github.com/mayf3/dsh-agent-core/pull/642#issuecomment-6701500077
+Registry ruling: `rulings[id=owner-20261107-642-643-1377]`.
+The original ruling is dated 2026-11-07. The comment timestamp
+`2026-11-07T03:13:36Z` is the regulatory transcription time; this accepted lock
+record was applied at `2026-11-07T03:20:10.813730Z`. The external registry ID is supplied by
+the mandate/transcription, not an independently inspected local registry.
+
+| Coordinate | Exact value |
+|---|---|
+| Source repository | `mayf3/agent-development-governance` |
+| Source commit | `c1fad8976e50e96adb27a4c7e2dd4f97bf2e899e` |
+| Distribution/version | `development-governance-v0` / `2.0.0-rc.3` |
+| Manifest SHA-256 | `3ce456bec3af4ee6c9f725cf8d587ed1a3e70812574633fda9bddc06016a0841` |
+| Prepared lock SHA-256 at b8333ef4 | `2c79ab4da7245dc1875e98300af6d2fefd75245d1be06ad3d3e9d9f86b30ad6c` |
+| Accepted lock SHA-256 | `0cb6acb6e7839ee2b6d0312653e6c5efc680512a36bf44a842db3aa79dc5a8b5` |
+| Lock lifecycle | `accepted`; actor `mayf3`; acceptance recording time above |
+| Preparation metadata and managed files | preserved exactly from b8333ef4 |
+
+Acceptance changes only lock `adoption.status`, `accepted_by`, `accepted_at`.
+The 25 managed-file hashes/sizes, source pin and manifest digest are unchanged.
+Raw verifier/manifest parity, complete five-record governing adoption lifecycle,
+exact structural native lifecycle and source-preservation evidence are archived
+in `docs/reports/642-phase2-20261107/` and `RECEIPT-642-PHASE2.md`.
+Final-HEAD independent review is `PENDING_REGULATOR`; authority activation still
+requires that review and main merge. Neither a proposed lock nor this unmerged
+accepted update is represented as currently activated main authority. Product
+implementation, deployment, production access and runtime acceptance remain none.
+<!-- END PHASE2_READOPTION -->
