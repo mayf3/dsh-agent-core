@@ -1,0 +1,22 @@
+{
+  "observed_date": "2026-11-07",
+  "method": "GitHub connector fetch_file at pinned PR heads",
+  "sources": [
+    {
+      "key": "analysis650",
+      "url": "https://github.com/mayf3/dsh-agent-core/blob/4928f5022a2385b571eba4d9d2967d216c78c2f8/CONVERGENCE-ANALYSIS-1377.md",
+      "git_blob": "725422c81050068e70f61c71dada902d2311a195"
+    },
+    {
+      "key": "pattern643",
+      "url": "https://github.com/mayf3/dsh-agent-core/blob/7b5d79c3961625aaade6f3b383b18b2968e82f6c/docs/specs/AGENT_CORE_READBACK_AGING_HANDOFF_V1.md",
+      "git_blob": "b28b77bb88d7bdc963e989738177ce3d68aba39f"
+    },
+    {
+      "key": "route653",
+      "url": "https://github.com/mayf3/dsh-agent-core/blob/f3c833737195180a54b8eb6cd95758500fc6c010/SEMANTIC-DELTA-CONSOLIDATION.md",
+      "git_blob": "aefe90a08084d5a865e5669617ef8514ca317d7a"
+    }
+  ],
+  "not_authority": "Source evidence and format patterns only; no product acceptance inferred."
+}
