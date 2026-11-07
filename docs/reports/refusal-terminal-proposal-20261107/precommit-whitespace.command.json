@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "diff",
+    "--cached",
+    "--check"
+  ],
+  "started_at_utc": "2026-11-07T13:11:03.445940+00:00",
+  "finished_at_utc": "2026-11-07T13:11:03.458962+00:00",
+  "cwd": "/private/tmp/h-refusal-proposal",
+  "rc": 0,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
