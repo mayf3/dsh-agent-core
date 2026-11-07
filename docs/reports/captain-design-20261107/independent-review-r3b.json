@@ -1,0 +1,34 @@
+{
+  "recorded_at_utc": "2026-11-07T07:30:05.099408+00:00",
+  "reviewer": "/root/captain_r3b_review",
+  "reviewer_role": "independent internal read-only docs reviewer; no production verifier/Captain appointment",
+  "review_stage": "initial resumed-candidate review before commit; not final-Head review",
+  "base_head": "f6e332d7568b01c5253618449bfef5839102c851",
+  "scope": "non-authoritative Captain design proposal, BRIEF seven requirements, accepted authority consistency, R1/R2 observations and static evidence",
+  "reviewed_sha256": {
+    "CAPTAIN-DESIGN-PROPOSAL.md": "bff562271cd15af449c1c0542a1386b340956a9db48fbd1a16a972e0948faa7a",
+    "docs/reports/captain-design-20261107/checks.json": "50697af39ddb5e9ee3dc4b256b82b829d6feac1c7c06662a973a17e20c3c2d16",
+    "docs/reports/captain-design-20261107/static-checks.md": "e1362f2d7f18eab0dc9ef04b36d63aac753cb22be9a2d61dac14d375665a1d32",
+    "docs/reports/captain-design-20261107/control-probe-result.json": "cf3661d782bb52058a65b95085cdf207d326f51dd093dd3135e15d427e40ff8c"
+  },
+  "authorities_read": [
+    "Architecture security-domain amendment",
+    "D-008 section 22",
+    "Hardening Program 0.1/2.1",
+    "Credential Metadata sections 1/2",
+    "DCP acceptance and no production apply",
+    "current validator source"
+  ],
+  "blockers": [],
+  "spec_gaps": [],
+  "findings": [
+    "BRIEF 7/7 covered; four principals recommended, none appointed",
+    "SRA PR648 remains proposed input",
+    "Future N01-N08 qualification remains test definition only; old validator observations are separate",
+    "R2 checks raw_rc=0 precedes later STOPPED/receipt changes; affected delta checks still required"
+  ],
+  "implementation_allowed": false,
+  "merge_allowed": false,
+  "operation_allowed": false,
+  "next_required_review": "Independent exact committed Head review and receipt-only final-Head delta review"
+}
