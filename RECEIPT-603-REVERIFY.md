@@ -107,3 +107,6 @@ R7 类豁免门已真实执行 rc0，stdout/stderr 均为空（SHA256 均为 `e3
 Git已发布的最后提交为c87a78b1，内含R7裁定、台账配方、prepublication门与发布前收据；其后的commit/push/create/comment/close/只读终态证据及本完成停止收据均为本地未提交事实，不冒称已在远端。终态补证预留目录`/private/tmp/h603-r7-terminal-20261107T052615Z`仅有准备脚本，最终receipt commit/push未执行。后续沿现有#647与c87a78b1接续即可，零生产写入，不合并。
 
 独立 [停止事实终审](docs/evidence/603-reverify/r7/independent-stop-review.md) PASS仅证明本停止记录准确，不代表交付完成；OPEN_BLOCKERS=1，NEW_BLOCKERS=0，NEXT_ACTION=STOP。三份新增失败`.log`按现有ignore规则留在本地，后续获授权归档时需纳入精确文件清单，当前不stage。
+
+## 监管机械收尾（supervisor completion）— 2026-11-07
+R7 终态捕获的 index 锁冲突（git rc128，worker 自身并行排程所致）由监管机械完成：终收据+R7 终态证据已 commit `47d065e0` 并 push（c87a78b1..47d065e0）。TASK_DONE 由 NO 翻转为 YES（以本节+远端读回为准）。PR #647 head 已携带全部交付物。八门总表见上文，未合并。
