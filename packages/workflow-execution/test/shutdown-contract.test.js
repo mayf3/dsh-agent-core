@@ -186,7 +186,7 @@ test('T42-r2 B: startup catch-up reconcile is drain-owned — stop() awaits it',
   let listCalls = 0
   const ledger = new Proxy(real, {
     get(target, prop, receiver) {
-      if (prop === 'listActiveFresh') {
+      if (prop === 'snapshotFresh') {
         return async (...args) => {
           listCalls += 1
           if (listCalls === 1) await reconcileParked

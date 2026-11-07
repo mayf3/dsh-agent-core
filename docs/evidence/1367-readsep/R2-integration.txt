@@ -1,0 +1,102 @@
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ CTR-WEC1-003 gate: no token / bad token / wrong scope / unconfigured seam all fail closed (37.677417ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ CTR-WEC1-003 traces: valid query hits the seam; unknown instance 404; bad params 400 (14.209917ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ CTR-WEC1-006 kicks: valid kick 200 (kicked), never echoes the payload; malformed 400 (15.78225ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ owner-assistance wake: closed body + workflow.execute gate + retryable runtime failure (28.717625ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ governance child review wake accepts the closed typed phase and paired optional submission proof (15.078666ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ CTR-WEC1-003: access service absent → 503 not_ready (fail-closed, honest) (13.204583ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ attention: zero-parameter fleet summary 200; read-only boundary (no kick/wake/trace side calls) (13.693958ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ attention: same fail-closed gate (no token / wrong scope / unconfigured seam) + closed query (51.526875ms)
+✖ composition drains auto-reconcile before workflow, scheduler and owned Router disposal (23.158417ms)
+✔ runtime stop(): the engine drain stays pending while a poll is in flight, and the runtime is quiescent once it resolves (1179.698083ms)
+✖ runtime stop drains the owned worker after workflowExecution stop rejects (2.07875ms)
+✖ runtime stop drains the owned worker after scheduler stop rejects (1.89675ms)
+✔ plugin disposal waits every cleanup and propagates all failures (0.631125ms)
+✔ concurrent plugin disposal callers wait the same owned cleanup (0.4095ms)
+✖ runtime stop never reports clean success after an owned worker shutdown rejects (0.894084ms)
+✔ governance child review wake carries exact evidence instructions and recipient-bound identity (1.046458ms)
+✔ review redelivery uses reviewWakeId even when the same Owner Principal returns (0.176084ms)
+✔ owner assistance wake resolves exact principal and uses stable inter-agent delivery (0.113042ms)
+✔ existing pending/settled caller correlation suppresses duplicate prompt (0.064667ms)
+✔ delivery error is accepted only when caller correlation proves admission (0.087875ms)
+✔ owner principal resolution failure prevents delivery and stays retryable (0.056542ms)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+✔ real gateway resolves late-mounted workflowProgressAccess and records checkpoint (114.519334ms)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+✔ real gateway rejects untrusted turn and model-carried coordinates (102.934083ms)
+✔ workflow_progress tool shape exposes no identity/provenance arguments (0.955209ms)
+✔ parent-owned workflow origin resolves before delivery receipt and after context cache eviction (1.617375ms)
+✔ trusted Workflow turn records and reads the current checkpoint (80.109208ms)
+✔ ordinary, wrong-agent and conflicting-turn contexts fail closed (92.689ms)
+✔ model-carried workflow coordinates and transcript-sized payloads are rejected (95.100958ms)
+✔ terminal attempts cannot accept another checkpoint (62.270084ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 25
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10185.483625
+
+✖ failing tests:
+
+test at packages/production-runtime/test/workflow-execution-shutdown.test.js:30:1
+✖ composition drains auto-reconcile before workflow, scheduler and owned Router disposal (23.158417ms)
+  Error: production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h1367-readsep/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h1367-readsep/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h1367-readsep/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h1367-readsep/packages/production-runtime/test/workflow-execution-shutdown.test.js:44:25)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }
+
+test at packages/production-runtime/test/workflow-execution-shutdown.test.js:166:3
+✖ runtime stop drains the owned worker after workflowExecution stop rejects (2.07875ms)
+  Error: production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h1367-readsep/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h1367-readsep/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h1367-readsep/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h1367-readsep/packages/production-runtime/test/workflow-execution-shutdown.test.js:168:27)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }
+
+test at packages/production-runtime/test/workflow-execution-shutdown.test.js:166:3
+✖ runtime stop drains the owned worker after scheduler stop rejects (1.89675ms)
+  Error: production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h1367-readsep/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h1367-readsep/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h1367-readsep/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h1367-readsep/packages/production-runtime/test/workflow-execution-shutdown.test.js:168:27)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }
+
+test at packages/production-runtime/test/workflow-execution-shutdown.test.js:257:1
+✖ runtime stop never reports clean success after an owned worker shutdown rejects (0.894084ms)
+  Error: production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present
+      at invalidProxyRuntime (file:///private/tmp/h1367-readsep/packages/production-runtime/src/compose.js:87:5)
+      at assertTargetProxyRuntime (file:///private/tmp/h1367-readsep/packages/production-runtime/src/compose.js:94:40)
+      at composeProductionRuntime (file:///private/tmp/h1367-readsep/packages/production-runtime/src/compose.js:144:3)
+      at TestContext.<anonymous> (file:///private/tmp/h1367-readsep/packages/production-runtime/test/workflow-execution-shutdown.test.js:259:25)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  }

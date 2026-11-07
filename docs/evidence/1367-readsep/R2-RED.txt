@@ -1,0 +1,139 @@
+✖ 1367 traces: invalid_json is reported without event-file repair (73.389167ms)
+ℹ {"surface":"traces","kind":"invalid_json","before":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","after":"8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c","calls":{"mutate":1,"repair":1,"load":1,"lock":1,"append":0}}
+✖ 1367 attention: invalid_json is reported without event-file repair (45.269166ms)
+ℹ {"surface":"attention","kind":"invalid_json","before":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","after":"8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c","calls":{"mutate":1,"repair":1,"load":1,"lock":1,"append":0}}
+✖ 1367 traces: missing_newline is reported without event-file repair (48.796625ms)
+ℹ {"surface":"traces","kind":"missing_newline","before":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","after":"8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c","calls":{"mutate":1,"repair":1,"load":1,"lock":1,"append":1}}
+✖ 1367 attention: missing_newline is reported without event-file repair (49.104042ms)
+ℹ {"surface":"attention","kind":"missing_newline","before":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","after":"8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c","calls":{"mutate":1,"repair":1,"load":1,"lock":1,"append":1}}
+✖ 1367 fresh-reader family: no mutate/repair, current cross-instance prefix, absent file stays absent (109.006417ms)
+✔ 1367 real mutation still repairs invalid_json under the existing lock (52.581958ms)
+✔ 1367 real mutation still repairs missing_newline under the existing lock (47.273791ms)
+✔ 1367 non-tail corruption remains fail-loud and unchanged (41.069791ms)
+✖ 1367 no-work reconciliation shares four candidate scans: six total replays become three (90.726208ms)
+ℹ {"source":"2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648","calls":{"mutate":4,"repair":4,"load":6,"lock":6,"append":0},"examined":0}
+ℹ tests 9
+ℹ suites 0
+ℹ pass 3
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 613.811458
+
+✖ failing tests:
+
+test at packages/workflow-execution/test/observation-cas/diagnostic-read.test.js:49:5
+✖ 1367 traces: invalid_json is reported without event-file repair (73.389167ms)
+  AssertionError [ERR_ASSERTION]: diagnostic must leave attempts.jsonl hash unchanged
+  + actual - expected
+  
+  + '8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c'
+  - 'a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b'
+  
+      at TestContext.<anonymous> (file:///private/tmp/h1367-readsep/packages/workflow-execution/test/observation-cas/diagnostic-read.test.js:60:16)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c',
+    expected: 'a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/workflow-execution/test/observation-cas/diagnostic-read.test.js:49:5
+✖ 1367 attention: invalid_json is reported without event-file repair (45.269166ms)
+  AssertionError [ERR_ASSERTION]: diagnostic must leave attempts.jsonl hash unchanged
+  + actual - expected
+  
+  + '8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c'
+  - 'a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b'
+  
+      at TestContext.<anonymous> (file:///private/tmp/h1367-readsep/packages/workflow-execution/test/observation-cas/diagnostic-read.test.js:60:16)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c',
+    expected: 'a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/workflow-execution/test/observation-cas/diagnostic-read.test.js:49:5
+✖ 1367 traces: missing_newline is reported without event-file repair (48.796625ms)
+  AssertionError [ERR_ASSERTION]: diagnostic must leave attempts.jsonl hash unchanged
+  + actual - expected
+  
+  + '8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c'
+  - '57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e'
+  
+      at TestContext.<anonymous> (file:///private/tmp/h1367-readsep/packages/workflow-execution/test/observation-cas/diagnostic-read.test.js:60:16)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c',
+    expected: '57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/workflow-execution/test/observation-cas/diagnostic-read.test.js:49:5
+✖ 1367 attention: missing_newline is reported without event-file repair (49.104042ms)
+  AssertionError [ERR_ASSERTION]: diagnostic must leave attempts.jsonl hash unchanged
+  + actual - expected
+  
+  + '8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c'
+  - '57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e'
+  
+      at TestContext.<anonymous> (file:///private/tmp/h1367-readsep/packages/workflow-execution/test/observation-cas/diagnostic-read.test.js:60:16)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c',
+    expected: '57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/workflow-execution/test/observation-cas/diagnostic-read.test.js:69:1
+✖ 1367 fresh-reader family: no mutate/repair, current cross-instance prefix, absent file stays absent (109.006417ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + undefined
+  - {
+  -   tailIncomplete: true,
+  -   tailKind: 'invalid_json'
+  - }
+  
+      at TestContext.<anonymous> (file:///private/tmp/h1367-readsep/packages/workflow-execution/test/observation-cas/diagnostic-read.test.js:84:12)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: { tailIncomplete: true, tailKind: 'invalid_json' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at packages/workflow-execution/test/observation-cas/diagnostic-read.test.js:124:1
+✖ 1367 no-work reconciliation shares four candidate scans: six total replays become three (90.726208ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  6 !== 3
+  
+      at TestContext.<anonymous> (file:///private/tmp/h1367-readsep/packages/workflow-execution/test/observation-cas/diagnostic-read.test.js:135:12)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 6,
+    expected: 3,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
