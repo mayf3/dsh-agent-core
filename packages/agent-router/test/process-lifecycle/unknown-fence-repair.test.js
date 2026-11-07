@@ -134,11 +134,19 @@ test('MULTI_UNKNOWN_ISOLATED: releasing one fence never releases another (C-016)
     assert.equal(error.fencedBy, handleA)
   })
   // Settlement of A removes ONLY A's fence.
+  assert.throws(() => fx.proc.releaseFence(handleA), { code: 'RECONCILIATION_FENCE_CLEAR_UNPROVEN' })
+  assert.equal(fx.proc.activeUnknownFences.size, 2)
+  fx.store.settleLate(handleA, {
+    lateOutcome: 'terminated_without_outcome', terminationEvidence: 'exact_queued_removal',
+  })
   fx.proc.releaseFence(handleA)
   assert.equal(fx.fence(), handleB, 'the other unknown remains fenced')
   await rejectsWith(fx.proc.turn('main', 'still-blocked'), error => {
     assert.equal(error.code, 'AGENT_PROCESS_TURN_FENCED')
     assert.equal(error.fencedBy, handleB)
+  })
+  fx.store.settleLate(handleB, {
+    lateOutcome: 'terminated_without_outcome', terminationEvidence: 'exact_queued_removal',
   })
   fx.proc.releaseFence(handleB)
   assert.equal(fx.fence(), false, 'last release opens admission')
