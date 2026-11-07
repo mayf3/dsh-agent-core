@@ -32,24 +32,14 @@ scope:
 governed_by:
   - AGENT_CORE_PRODUCT_ARCHITECTURE_V1
   - SCHEDULER_OCCURRENCE_OUTCOME_V3
-  - AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V1
-  - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4
-
+  - AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1
+  - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3
+  - AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3
 external_authorities: []
 supersedes: []
 superseded_by: null
 owners: [mayf3]
 ---
-
-<!-- R4_RBAH_CURRENT_DEPENDENCIES -->
-> Current dependency pointers migrate to the exact WEC4/PPR acceptance transactions after
-> #655 then #657 main merge. Historical §3.2, all six Contracts, acceptance provenance,
-> implementation none / production none and WEC/Svc companion gates remain unchanged.
-> Source copied from main `bb67ce5ae53908c299e751d3904793b9f4d08240`;
-> historical receipt remains available at
-> https://github.com/mayf3/dsh-agent-core/blob/bb67ce5ae53908c299e751d3904793b9f4d08240/docs/reports/readback-aging-acceptance-20261107/acceptance-transaction.md .
-> This document pointer migration does not implement or activate aging/refusal protocols.
-<!-- END R4_RBAH_CURRENT_DEPENDENCIES -->
 
 # AGENT_CORE_READBACK_AGING_HANDOFF_V1
 

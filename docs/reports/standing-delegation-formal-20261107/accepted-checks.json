@@ -1,0 +1,71 @@
+{
+  "result": "PASS",
+  "status": "accepted",
+  "ruling_canonical_sha256": "01cc059c2bf0e0493588f00032ca06eb73e3a0a13cb33f4078996fdccb79dad3",
+  "eight_original_items": [
+    {
+      "id": "CTR-SOD-001",
+      "utf8_sha256": "589e4a5e34ad7853a037a6735cf87588cb342e76cb4afba8d13bc70dedb275e0",
+      "byte_equal": true
+    },
+    {
+      "id": "CTR-SOD-002",
+      "utf8_sha256": "739ad9e66fae70feebe79248e47201e31902b1002d94a5f4fb49c05bf0084c6b",
+      "byte_equal": true
+    },
+    {
+      "id": "CTR-SOD-003",
+      "utf8_sha256": "8cd34ee589846034f3fe44c33baa5b4338e0ef95788e1d95b9d7d9bf67eeffd6",
+      "byte_equal": true
+    },
+    {
+      "id": "CTR-SOD-004",
+      "utf8_sha256": "3220289a78e76fd92861d23620293d1d8f7064f5a37e41894ddfe79b29b3ac88",
+      "byte_equal": true
+    },
+    {
+      "id": "CTR-SOD-005",
+      "utf8_sha256": "e4f75e7bb08c3757b9957a0164f95b146e7867c2d53023e28c02b51c3147c2dd",
+      "byte_equal": true
+    },
+    {
+      "id": "CTR-SOD-006",
+      "utf8_sha256": "ad52162d35b52e5af21d00121453562d608478f7a813900d46914899640d29d8",
+      "byte_equal": true
+    },
+    {
+      "id": "CTR-SOD-007",
+      "utf8_sha256": "cb1f23b6f0fce4f6dedd4259f4d0579f609a578a0908bdc5f322400b2a852682",
+      "byte_equal": true
+    },
+    {
+      "id": "CTR-SOD-008",
+      "utf8_sha256": "d2bda60b26e5d63412ea61a538a72fb09315c27431dd02800d52b08307c9ce48",
+      "byte_equal": true
+    }
+  ],
+  "required_sections": [
+    "Goal",
+    "Scope and non-goals",
+    "Authority and dependencies",
+    "Current State",
+    "Observations",
+    "Claims and assumptions",
+    "Evidence relations",
+    "Decisions",
+    "Contracts",
+    "Acceptance",
+    "Alternatives and disposition",
+    "Migration, compatibility, and rollback",
+    "Open questions"
+  ],
+  "frontmatter_schema": "PASS",
+  "contract_acceptance_coverage": "8/8",
+  "scoped_lifecycle_transition": "PASS; SRA retained, no supersession",
+  "unchanged_authority_control_files": 18,
+  "unchanged_existing_index_entries": true,
+  "local_links_verified": 15,
+  "docs_only_scope": "PASS",
+  "runtime_negative_tests": "NOT_EXECUTED",
+  "control_effectiveness": "NOT_VERIFIED"
+}
