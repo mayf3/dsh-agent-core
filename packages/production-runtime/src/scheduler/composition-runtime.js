@@ -41,7 +41,7 @@ export async function prepareSchedulerRuntime({ ctx, opts, layout, router, defin
   // through the same store mutation path as the operator CLI with a machine
   // receipt actor. The transport-watchdog / fence-janitor external stopgaps
   // retire per CTR-X1/X2 once this is enabled and production-verified.
-  mountSchedulerAutoReconcileRuntime({ layout, store, router, log })
+  const schedulerAutoReconcile = mountSchedulerAutoReconcileRuntime({ store, router, log })
 
-  return { invoker, deliver, store, history, schedulerHealth }
+  return { invoker, deliver, store, history, schedulerHealth, schedulerAutoReconcile }
 }
