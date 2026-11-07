@@ -1,7 +1,8 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4
 title: Accepted whole-authority WEC successor with bounded unlocked-read timing
-status: accepted
+status: superseded
+superseded_by: AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V5
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts

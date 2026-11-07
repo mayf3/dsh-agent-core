@@ -1,6 +1,17 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V5
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_date: 2026-11-08
+accepted_at: 2026-11-08T00:00:00Z
+acceptance_authority: Owner mayf3 ruling owner-20261108-three-unified items[1]
+acceptance_authority_source: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json
+acceptance_authority_selector: $.rulings[id=owner-20261108-three-unified].items[1]
+acceptance_authority_canonical_sha256: 00f1fb2995d5f83a3bb9f50f442754fadb13f46274c2f1cbafd5f90253d5b218
+acceptance_reviewed_head: e6e326986febeaaef7e51a632d0862fa7fc9099e
+acceptance_qualifier: >-
+  Implementation of new reason RECOVERY_REFUSAL_TERMINAL gated on Svc paired
+  authority formal acceptance; production use gated on deployment authorization.
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: none
