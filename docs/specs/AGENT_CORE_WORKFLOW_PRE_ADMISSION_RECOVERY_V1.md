@@ -18,7 +18,7 @@ governed_by:
   - SCHEDULER_OCCURRENCE_OUTCOME_V3
   - AGENT_DELIVERY_RESILIENCE_D009_ALIGNMENT_V1
   - AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2
-  - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3
+  - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4
 external_authorities: []
 supersedes:
   - AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3
@@ -29,9 +29,10 @@ owners: [mayf3]
 
 # AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V1
 
-**PROPOSED / 零实施权 / 零生产权。** Owner 裁定④只授权起草、审查与文档 PR；
-本轮不接受、不合并、不改变任何现行权威。即使未来仅接受这些原字节，
-`implementation_authority: none` 也不自动变成 `contracts`。
+**PROPOSED / 本准备零实施权 / 零生产权。** 原始立项裁定④的历史边界保留；
+Owner 四 PR 裁定②与常设授权原 §3B 已决定本版有界语义及正式接受委托。
+本语义准备仍 proposed/none，须非作者独审后另作接受事务，将实施权统一为 `contracts`、
+production none。未合 main 的接受分支不压过现行 main 权威；本轮不实施、不合并。
 
 ## 1. Goal
 
@@ -65,7 +66,11 @@ Owner/stale 计划去掉来源字段伪装普通计划。是否另扩其范围�
 `rulings[id=owner-20261107-five-decisions].items[3]`（④，2026-11-07 20:54）：
 “planned恢复合同立项: docs-first起草走审查(接受仍需Owner)”。选中裁定、来源与实测哈希在
 [source observations](../reports/planned-recovery-proposal-20261107/source-observations.json)。
-Task/ruling 授予本轮文档操作，不使拟议长期行为生效。
+以上是原始立项授权，保留历史出处。当前 R4 用户续派授权本版精确语义修订、独审及
+随后 #657 正式接受事务；Owner `owner-20261107-four-pr-rulings` ②决定 ordinary planned
+有界首次 admission 并保留正式 Contracts 实施权，`owner-20261107-standing-delegation`
+原 §3B 委托现有合法责任链执行。来源 selector/hash 见本步接受记录与步2既有记录。
+Owner 为决定及接受权威，worker 只记录受托事务；Task 不使长期行为自动生效。
 
 `SUPERSEDE / BRIEF / CONTROLLED / AUTHORITY_AUTHORING`。这里 CONTROLLED 是
 恢复授权与持久准入语义的后果分类，不表示本轮执行生产操作。依 SPEC_FORMAT_V0 §14，
@@ -79,9 +84,16 @@ Workflows V1 引用按 accepted Owner Workflows V2 及 local README 的现行关
 
 ### 3.2 Preserved dependencies and Svc boundary
 
-WEC V3 CTR-WEC1-008 的 Owner-plan restart 例外完整保留，包括相同 baseline/version、
-正面 correlation、same ID、失败 reconciled 与零二次 permit。其七字段 due DTO、closed
+本接受候选的 WEC 组合指向步2已审接受事务中的
+`AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4` @`1e064916fc0cf423a3b917cfbcc11a97d56921e9`。
+该事务尚未合 main；本候选的当前权威激活依赖 #655 先合 main，届时复核精确 merge/条款。
+这不是宣称 WEC4 已为 main 有效权威；R4 所读 main `bb67ce5a…` 的 WEC3 仍控制当前行为。
+WEC4 CTR-WEC1-008 的 Owner-plan restart 例外完整保留，包括相同 baseline/version、
+正面 correlation、same ID、失败 reconciled 与零二次 permit。七字段 due DTO、closed
 policy DTO、两种 exhaustion reason 以及 resume permit 全部不改。
+WEC4 CTR-WEC4-010 仅将指定 pre-plan/Owner-resume 两类远端 collection 移出 admission
+lock，并要求重新获取原锁、fresh replay 和新鲜权威事实终检；它不解锁本 PPR 恢复 gate，
+不扩大 ordinary planned/Owner/stale 资格，不改变任何 durable 写入或首次 admission 顺序。
 SRE stale 谓词、代数/预算、quiescence 和 D-009 的 UNKNOWN/termination 三分不改。
 Scheduler 只是既有恢复消费者，不把 Workflow request 当 Scheduler occurrence 重投。
 
@@ -134,6 +146,12 @@ basis=OBS-PPR-001..004、EVD-PPR-001。main 新读数
   accepted_reviewed_head=`7b5d79c3961625aaade6f3b383b18b2968e82f6c`；只接受提案语义。
   对比 authoring base，两个 predecessor、WEC/SRE/D-009 和治理原字节不变。
 
+- `OBS-PPR-007`：本 R4 准备在本地读取步2已审接受事务
+  `1e064916fc0cf423a3b917cfbcc11a97d56921e9` 的 WEC4 文件与接受记录：
+  accepted/contracts/production none，reviewed semantic HEAD `176161f0651847d20a012fb797389b438e11a593`。
+  本候选携带该事务的精确文档字节以便顺序合并；#655 尚未合 main，激活依赖未完成。
+  方法为固定 Git 对象/本地 carried 文件比较，无新 Svc/运行态访问，不能据此授权产品实施。
+
 ## 6. Claims and assumptions
 
 - `CLM-PPR-001 (SUPPORTED)`：改变明确排除及 WAE eligible-shaped 意义须整份后继，
@@ -144,8 +162,10 @@ basis=OBS-PPR-001..004、EVD-PPR-001。main 新读数
 - `CLM-PPR-003 (OPEN_ASSUMPTION for future runtime only)`：依赖最终可用且既有调度公平，
   合规实现能自动再次处理或可靠升级。本合同只承诺有条件的活性；永久不可用时不承诺业务完成。
   合格 writer 的实际生产来源、installed binding 与新 DTO 消费能力本轮 UNKNOWN。
-- `CLM-PPR-004 (SUPPORTED)`：Owner ④只授予文档立项/审查，未接受本合同；③的独立提案
-  语义接受也不授予本路径实施权。依据 EVD-PPR-003。
+- `CLM-PPR-004 (SUPPORTED, historical authoring mandate)`：原始 Owner ④只授予文档
+  立项/审查，未执行本合同正式接受；当时③的独立提案语义接受也不授予本路径实施权。
+  依据 EVD-PPR-003。当前 Owner 四 PR 裁定②与常设 §3B 的作用见 §3.1，
+  不回写旧观察、不以新委托冒称旧候选已完成接受。
 
 ## 7. Evidence relations
 
@@ -155,13 +175,15 @@ basis=OBS-PPR-001..004、EVD-PPR-001。main 新读数
 | EVD-PPR-002 | OBS-PPR-002/003 → CLM-PPR-002 / SUPPORTS | #650、#1377 拆分、#644 固定坐标；保留 planned 缺口及 blocked 已交付范围；不复制历史 PASS |
 | EVD-PPR-003 | OBS-PPR-005 → CLM-PPR-004 / SUPPORTS | source observations 的选择器/原文/canonical hash；只证明 authoring mandate，不表示新合同接受 |
 | EVD-PPR-004 | OBS-PPR-006 → STATE-PPR-001、CLM-PPR-004 / SUPPORTS | fresh main 精确坐标与字段；#643 接受不解除本提案或配套实现闸门，无运行时验证 |
+| EVD-PPR-005 | OBS-PPR-007 → §3.2/§8 的顺序组合 / SUPPORTS | 步2精确接受事务足以绑定候选文档依赖；不证明 main 激活、产品实现或双 writer 验收 |
 
 ## 8. Proposed decisions and exact semantic delta
 
-`DEC-PPR-001 (PROPOSED, owner=mayf3)`：采用两个 predecessor 的完整合并后继；
+下列有界语义已由 Owner 四 PR 裁定②决定，正式候选接受仍须独审与 lifecycle 事务。
+`DEC-PPR-001 (PROPOSED lifecycle, owner=mayf3)`：采用两个 predecessor 的完整合并后继；
 新增 ordinary planned 的有界首次 admission，整份替代而不新建 parallel recovery path。
 
-`DEC-PPR-002 (PROPOSED, owner=mayf3)`：零投递证明以合格原 writer 的完整 WAL 机制与
+`DEC-PPR-002 (PROPOSED lifecycle, owner=mayf3)`：零投递证明以合格原 writer 的完整 WAL 机制与
 可信持久来源为主，fresh Router correlation 为只能否决的次级门。没有可证明的原始来源时
 宁可拒绝；不补造证明。既有合法交接不足时保留责任，不扩大系统 Assistance。
 
@@ -182,7 +204,7 @@ basis=OBS-PPR-001..004、EVD-PPR-001。main 新读数
 | Liveness CTR-EKRWAE-001 的 B2-only 首次 admission 句、CTR-EKRWAE-005 的 blocked-only trigger；WAE CTR-WAE-003/006/009/013 及相关测试 | 只有本版 ordinary planned 合格类按新六约束扩入。进入普通 terminal reconciliation 前先试新 gate；过不了 gate 按 CTR-PPR-003 分类，禁止宽泛自动 retry；原无授权零写、UNKNOWN/delivery fences不变 |
 | WAE CTR-WAE-011 历史 planned-only、Liveness ACC-EKRWAE-005 | 缺原始合格 WAL/来源的历史 planned-only **继续拒绝**；只移除把有可信新证明的 ordinary planned 也一律拒绝的解释；不能改写历史测试使其伪成正例 |
 | WAE CTR-WAE-012 的 WRITE-AHEAD primary/Router secondary；WEC CTR-WEC1-008 的原 pre-plan baseline | 完整保留；新增 plan provenance 不削弱旧 delivery_started 主 fence；晚到 baseline、当前 never_existed 不能补证原 plan |
-| WEC V3、SRE V2、D-008/D-009/alignment、Owner Workflows V2 | RETAIN；不 whole-supersede，不加 reason/permit/grant，不扩 stale/Owner restart；零受保护状态越权写 |
+| WEC4 步2事务（依赖 #655 先合 main）、SRE V2、D-008/D-009/alignment、Owner Workflows V2 | RETAIN；只迁移 current WEC 依赖，不 whole-supersede；WEC4 仅两指定 collection 外移，PPR 恢复 gate 仍持原锁/fresh；不加 reason/permit/grant，不扩 stale/Owner restart；零受保护状态越权写 |
 
 ## 9. Contracts
 
@@ -230,8 +252,9 @@ transition。权限/映射失效只拒绝、保责或依法 re-block，不修身
 requestId=attemptId，原 generation/dispatch-time 与 preDelivery baseline 不变。
 attempt generation、Router processGeneration、runtime epoch 各自校验，禁止互换。
 同 FIFO/OwnerLock 中 fresh replay/CAS 并重验 exact ACTIVE phase、同 world、同 baseline/version、
-有效授权与 CTR-PPR-005 原证明；锁外旧观察不得覆盖后续状态。原锁/远程最终校验边界保持，
-不借本提案接受 #655 的未合并锁时序变化或假定跨服务原子性。
+有效授权与 CTR-PPR-005 原证明；锁外旧观察不得覆盖后续状态。原锁/远程最终校验边界保持；
+WEC4 的两类 collection 时序按 §3.2 的顺序依赖适用，不把其例外扩为本恢复 gate 解锁，
+也不假定跨服务原子性。
 
 原 writer 必须可证明**所有**发送路径都先 durable delivery_started 后 invocation，且原 plan
 的可信来源绑定该 writer/规则；完整重放中无任何 delivery-domain 记录，fresh exact Router/
@@ -316,8 +339,10 @@ ledger 解析未知或损坏对象必须 fail closed，不能因忽略字段退�
 #644 blocked 已交付类 MUST 继续走原 gate/顺序/审计/失败消费者，不重做、不降低标准。
 WEC Owner-resume 与 SRE stale 另按其 accepted 全部条件运行；普通计划/交接 resolve 不能
 消耗或创造它们的 permit，不修改原预算或 baseline。B1/B4 读回与 #650 refusal closure 不随带改变。
-后续仅有本提案语义接受仍不能实现：须另具 implementation-authorizing accepted authority、
-包含它的 base、合法任务与必要兼容证据；生产安装启用另循正式 mandate/发布权限。
+正式接受事务必须以 `implementation_authority: contracts` 承接本完整后继的源码实施权，
+production none；该 accepted revision 进入实施 base 后，另一个合法 REUSE 任务才可按全部
+Contracts 与必要兼容证据实施。当前 proposed 准备不授权实施；生产安装启用另循正式
+mandate/发布权限。
 
 ## 10. Acceptance
 
@@ -330,12 +355,15 @@ protected-state 前后、gate/actor 来源、真实调用与 admission 数、rea
 
 - Contracts: 全部 inherited CTR-WAE-001/001b..013、CTR-EKRWAE-001..007、CTR-PPR-001..006。
 - Method: 独立 exact-head 语义审查；附录与固定来源逐字比对；frontmatter/schema、两 predecessor
-  proposed transition、local link、范围和 reverse coverage 检查。
+  对应阶段的 proposed/accepted 原子 transition、local link、范围和 reverse coverage 检查。
 - Environment: 本隔离文档 worktree，authoring base 与 current main impact 分列。
 - Required evidence: 原件/候选哈希、精确 HEAD/tree、命令 rc、冻结 blocker union、final delta；
-  两 predecessor 原字节不变，未来 lifecycle 说明完整。
-- Expected result: 完整有效义务保留、唯一 ordinary planned 差量清楚、proposed/零实施权。
-- Failure condition: 遗漏规则/验收、新 partial succession、提前接受/退休、源码或生产写、虚报运行。
+  准备阶段两 predecessor 原字节不变；接受阶段绑定真实 reviewed semantic HEAD、Owner
+  来源与非作者审查、双前驱退休/回链和载体迁移，原正文/历史字节保全，最终 HEAD 独立复核。
+- Expected result: 完整有效义务保留、唯一 ordinary planned 差量清楚；准备时 proposed/none，
+  正式接受时 accepted/contracts/production none；main 激活依赖顺序 merge，零运行结果冒报。
+- Failure condition: 遗漏规则/验收、新 partial succession、无合法依据接受/退休、平行 current、
+  源码或生产写、虚报运行。
 
 ### ACC-PPR-002 — Inherited conformance and blocked regression
 
@@ -417,11 +445,12 @@ protected-state 前后、gate/actor 来源、真实调用与 admission 数、rea
 
 ## 12. Migration, compatibility, and rollback
 
-**本轮只提案。** 两 predecessor 原字节、accepted 状态和 `superseded_by:null` 保持不变；
-本文件 `supersedes` 是非生效的 whole replacement intent，不重定向 current pointer。
-未来 Owner 若接受，必须另有独立 final-head review 的 docs-only 原子事务，同时：
+**本语义准备仍 proposed。** 两 predecessor 原字节、accepted 状态和 `superseded_by:null`
+保持不变；本文件 `supersedes` 尚不激活、不重定向 current pointer。Owner 四 PR 裁定②与
+常设 §3B 已授权精确语义的独审及随后 docs-only 接受事务。非作者语义 PASS 后，另一个
+绑定真实 reviewed HEAD、并有独立 final-head review 的 lifecycle commit 必须同时：
 
-1. 将本候选标 accepted，仍 `implementation_authority:none`、production none；精确绑定
+1. 将本候选标 accepted，统一 `implementation_authority:contracts`、production none；精确绑定
    Owner/委托、reviewed semantic SHA/document hash、final accepted SHA 和真实 main merge。
 2. 将 WAE V3 与 Liveness V1 **同时**标 superseded，并各自 `superseded_by` 指向本文；
    原有更早 predecessor 历史链接、接受记录和正文保留。
@@ -431,7 +460,10 @@ protected-state 前后、gate/actor 来源、真实调用与 admission 数、rea
    若发现其他独立接受/后继与本候选冲突，停依赖接受并 RE_PREFLIGHT，不能默选新旧。
 
 不能出现本候选 active 与两个 predecessor 仍独立 current，或 accepted predecessor 指向
-仅 proposed 本文。没有实施授权的接受不能夹带源码；将来授实施权也是 Owner 的独立权威事务。
+仅 proposed 本文。正式 Contracts 实施权来自 Owner 已决定范围的合法接受，
+不夹带源码或生产写入；后续实施仍须 accepted revision 在其 base、合法任务及全部验收门。
+本分支接受记录不代表 main 生效；须 #655 先合 main，再由监管核验/合并 #657，保留真实
+merge/最终 HEAD 坐标。本文不自行合并任何 PR。
 
 本轮无事件迁移、backfill、版本重采冒充 baseline、生产配置/装载或控制变化。
 未来 rollout 必须先资格 writer/reader、再 producer/消费，新分支默认 OFF；旧 legacy 记录
@@ -442,7 +474,7 @@ protected-state 前后、gate/actor 来源、真实调用与 admission 数、rea
 
 | Question / owner | Current disposition |
 |---|---|
-| Owner 是否接受本版初始 ordinary planned 有界解禁及双 whole successor | REQUIRED，当前仅立项；本任务不接受 |
+| 本版初始 ordinary planned 有界解禁及双 whole successor | Owner 四 PR 裁定②+常设 §3B 已决定并授权事务；本准备待非作者独审及随后正式 lifecycle 接受，不重复请求已决定语义 |
 | 是否另覆盖 stale/后继 generation 的 planned | 本版明确不覆盖；如需另起范围/权威审查，不作为本版隐含许可 |
 | 实际原 writer/loaded WAL 资格与新 DTO 消费兼容 | UNKNOWN，未来实现验收门；证据缺失强制拒绝，不是规范 TBD |
 | Svc 是否需要新配对面 | 本版未请求新协议。若现有 seam 不足或要求系统化/历史对象 handoff，则 Owner 与 Svc 权威维护者另行决定并绑定 accepted ID/main SHA；当前新配对坐标 UNKNOWN，不推定已完成 |
@@ -461,7 +493,7 @@ DOCS_FIRST_REQUIRED = YES
 STATUS = proposed
 IMPLEMENTATION_AUTHORITY = none
 PRODUCTION_APPLY_AUTHORITY = none
-OPEN_OWNER_DECISIONS = exact proposal acceptance; any future scope extension is separate
+OPEN_OWNER_DECISIONS = NONE within Owner ruling ② and standing §3B; future scope extension separate
 NORMATIVE_TBD = NONE
 UNRESOLVED_AUTHORITY_CONFLICT = NONE (explicit proposed delta only; no active rule changed)
 PARTIAL_SUPERSESSION = NONE (existing SRE effects carried; no new clause exception)
@@ -472,9 +504,9 @@ IMPLEMENTATION_ALLOWED = NO
 MERGE_READY = NO
 OPERATION_ALLOWED = NO
 NEXT_ACTION = REVIEW
-DONE_WHEN = proposed complete successor + receipt + independent review + docs commit/push + open base-main PR
+DONE_WHEN = exact reviewed semantic candidate + separate atomic acceptance/retirement transaction + final review + push/readback/pause; no PR merge
 EXPANSION_TRIGGER = required gate failure; authority conflict beyond declared delta; non-doc or production need
-FAILURE_ACTION = STOP and write STOPPED-PLANNED-PROPOSAL.md
+FAILURE_ACTION = STOP dependent action and append current R4/STOPPED-SUCCESSION-ORDER receipt
 ```
 
 附录仅承接现行规范与其来源语境；当前提案权限由前述 13 节明确控制。
