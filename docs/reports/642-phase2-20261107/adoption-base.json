@@ -1,0 +1,134 @@
+[
+  {
+    "spec_id": "AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1",
+    "status": "superseded",
+    "superseded_by": "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0"
+  },
+  {
+    "spec_id": "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0",
+    "status": "superseded",
+    "superseded_by": "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1",
+    "spec_kind": "invariant",
+    "authority_level": "governing_spec",
+    "implementation_authority": "none",
+    "scope": [
+      "mayf3/dsh-agent-core"
+    ],
+    "governed_by": [],
+    "external_authorities": [
+      {
+        "repository": "mayf3/agent-development-governance",
+        "authority_id": "AGENT_DEVELOPMENT_GOVERNANCE_BOOTSTRAP_V0",
+        "revision": "46f78c3f00d768d99a4c8c2da975b124bce042f9",
+        "relation": "constrained_by"
+      }
+    ],
+    "supersedes": [
+      "AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1"
+    ],
+    "owners": [
+      "mayf3"
+    ]
+  },
+  {
+    "spec_id": "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1",
+    "status": "superseded",
+    "spec_kind": "invariant",
+    "authority_level": "governing_spec",
+    "implementation_authority": "none",
+    "accepted_date": "2026-09-04",
+    "accepted_by": "mayf3",
+    "accepted_at": "2026-09-04T15:11:51Z",
+    "accepted_reviewed_spec_commit": "9b42fc0dfeeede6213a825687e79dda860e404d5",
+    "acceptance_review_verdict": "PASS",
+    "acceptance_authority_basis": "Owner-issued Execution Mandate GOVERNANCE_V1_0_1_CONSUMER_ADOPTION_TO_MAIN_V1 (OWNER_DECISION = ADOPT_GOVERNANCE_V1_0_1) pre-authorized acceptance after one independent proposed-Head review (REVISE, 1 blocker: illegal V2 supersedes edge to the never-effective proposed ADOPTION_V2), the minimal amendment 9b42fc0dfeeede6213a825687e79dda860e404d5 (proposed V2 deleted; this Spec amended in place to pin v1.0.1), and ONE exact-Head re-audit (ACCEPT, BLOCKERS = 0, BASE_IMPACT = BOUNDED). Reviewed content unchanged by lifecycle finalization.",
+    "scope": [
+      "mayf3/dsh-agent-core development governance adoption",
+      "shared vendored governance integrity and local activation lifecycle"
+    ],
+    "governed_by": [],
+    "external_authorities": [
+      {
+        "repository": "mayf3/agent-development-governance",
+        "authority_id": "AGENT_DEVELOPMENT_GOVERNANCE_V1",
+        "revision": "3de35f8617616dda4c717233899d6a93a634d5d8",
+        "relation": "constrained_by"
+      }
+    ],
+    "supersedes": [
+      "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0"
+    ],
+    "superseded_by": "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2",
+    "owners": [
+      "mayf3"
+    ]
+  },
+  {
+    "spec_id": "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2",
+    "status": "superseded",
+    "spec_kind": "invariant",
+    "authority_level": "governing_spec",
+    "implementation_authority": "none",
+    "accepted_date": "2026-09-05",
+    "accepted_by": "mayf3",
+    "accepted_at": "2026-09-05T00:21:28Z",
+    "accepted_reviewed_spec_commit": "8eed354656e9de249f7dfab3f9b0610132ebb167",
+    "acceptance_review_verdict": "PASS",
+    "acceptance_authority_basis": "Owner-issued Master Goal GOVERNANCE_TRANSITION_CHAIN_CONFORMANCE_RECONCILIATION_V1 (OWNER_DECISION = FORWARD_RECONCILE_WITHOUT_AUTOMATIC_ROLLBACK) pre-authorized the full lifecycle after the upstream v1.0.3 publication (PR #13; independent implementation audit ACCEPT comment 5547708677; exact-Head release review ACCEPT comment 5547784462), one independent proposed-Head review of this candidate (ACCEPT, BLOCKERS = 0, BASE_IMPACT = NONE, comment 5548006704), and the non-waivable raw full-graph transition gate executed at this acceptance Head. Reviewed content unchanged by lifecycle finalization except the two reviewer-authorized SPEC_GAP record corrections and the authorized lifecycle fields.",
+    "scope": [
+      "mayf3/dsh-agent-core development governance adoption",
+      "shared vendored governance integrity and local activation lifecycle"
+    ],
+    "governed_by": [],
+    "external_authorities": [
+      {
+        "repository": "mayf3/agent-development-governance",
+        "authority_id": "AGENT_DEVELOPMENT_GOVERNANCE_V1",
+        "revision": "0d61433339ef563f82307b70120d9fcee168cdab",
+        "relation": "constrained_by"
+      }
+    ],
+    "supersedes": [
+      "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1"
+    ],
+    "superseded_by": "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3",
+    "owners": [
+      "mayf3"
+    ]
+  },
+  {
+    "spec_id": "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3",
+    "status": "accepted",
+    "accepted_date": "2026-10-15",
+    "accepted_by": "mayf3",
+    "accepted_at": "2026-10-15T12:03:07.950464Z",
+    "accepted_reviewed_spec_commit": "44da63d21987bf7115435f0767e7851b9022836a",
+    "acceptance_review_verdict": "NO_SEMANTIC_BLOCKER_FOUND_IN_EXISTING_V3_PROPOSAL",
+    "acceptance_review_receipt_sha256": "9c1450a75e024a85a5be0670cf2d31a7e17c1f166c7a7d7f18fd2a27cd00fdee",
+    "acceptance_authority_basis": "Owner mayf3 explicitly approved in the current Codex task on 2026-10-15: \"批准。接受 MCP #5，将 DSH 文档治理激活与 #497 的 CI 改造分开， 完成最终校验后合入两仓 main。生产加载和新增权限仍另批， EP49 和旧 UNKNOWN 不重发。\" This is current docs-only acceptance of the independently reviewed V3 proposal at 44da63d2 and its four-file activation plan. It does not reuse or overwrite PR #497's historical five-check approval. The independent reviewer /root/governance_adoption_review authored no candidate changes. Exact final-head delta review and main readback are retained in the activation PR; activation occurs only at merge.",
+    "spec_kind": "invariant",
+    "authority_level": "governing_spec",
+    "implementation_authority": "none",
+    "scope": [
+      "mayf3/dsh-agent-core bounded governance adoption",
+      "local ordinary-development routing",
+      "exact vendor integrity and activation lifecycle"
+    ],
+    "governed_by": [],
+    "external_authorities": [
+      {
+        "repository": "mayf3/agent-development-governance",
+        "authority_id": "AGENT_DEVELOPMENT_GOVERNANCE_V1",
+        "revision": "6301662e18adaed88e4412394ad9bdb959d92355",
+        "relation": "constrained_by"
+      }
+    ],
+    "supersedes": [
+      "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2"
+    ],
+    "superseded_by": null,
+    "owners": [
+      "mayf3"
+    ]
+  }
+]

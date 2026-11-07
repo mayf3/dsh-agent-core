@@ -1,0 +1,13 @@
+{
+  "command": [
+    "python3",
+    "scripts/governance/validate_v3_succession.py",
+    "--base",
+    "230de798e340cc6c157e6b21822f0b1fda77e51e",
+    "--head",
+    "7f36750bf08d308cd7f648153e24c0b0e528e4c6"
+  ],
+  "exit_code": 0,
+  "observed_at": "2026-11-07T03:19:00.541090+00:00",
+  "head": "245d361a229513abb0fb09ba6a73ddcae11ab559"
+}

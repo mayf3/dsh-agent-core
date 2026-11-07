@@ -1,0 +1,50 @@
+{
+  "command": [
+    "git",
+    "diff",
+    "--cached",
+    "--check",
+    "--",
+    ".",
+    ":(exclude)docs/reports/642-phase2-20261107/atomic-lifecycle.diff"
+  ],
+  "exit_code": 0,
+  "observed_at": "2026-11-07T03:28:33.038319+00:00",
+  "head": "2e67e98a7295dc78d18dad51bf673a0c3be9d009",
+  "index_tree_at_invocation": "cfc4be54c27e4a41800ef533c2f66c9d2835c663",
+  "checked_paths": [
+    "RECEIPT-642-PHASE2.md",
+    "docs/reports/642-phase2-20261107/C-proposal.command.json",
+    "docs/reports/642-phase2-20261107/C-proposal.stderr",
+    "docs/reports/642-phase2-20261107/C-proposal.stdout",
+    "docs/reports/642-phase2-20261107/R2-resumption.json",
+    "docs/reports/642-phase2-20261107/adoption-base.json",
+    "docs/reports/642-phase2-20261107/adoption-candidate.json",
+    "docs/reports/642-phase2-20261107/adoption-export-provenance.json",
+    "docs/reports/642-phase2-20261107/adoption-transition.command.json",
+    "docs/reports/642-phase2-20261107/adoption-transition.stderr",
+    "docs/reports/642-phase2-20261107/adoption-transition.stdout",
+    "docs/reports/642-phase2-20261107/coordinates.json",
+    "docs/reports/642-phase2-20261107/diff-check.command.json",
+    "docs/reports/642-phase2-20261107/diff-check.stderr",
+    "docs/reports/642-phase2-20261107/diff-check.stdout",
+    "docs/reports/642-phase2-20261107/distribution-manifest.json",
+    "docs/reports/642-phase2-20261107/governance-accepted.command.json",
+    "docs/reports/642-phase2-20261107/governance-accepted.stderr",
+    "docs/reports/642-phase2-20261107/governance-accepted.stdout",
+    "docs/reports/642-phase2-20261107/manifest-parity.json",
+    "docs/reports/642-phase2-20261107/owner-comment-6701500077.json",
+    "docs/reports/642-phase2-20261107/phase2-native.command.json",
+    "docs/reports/642-phase2-20261107/phase2-native.stderr",
+    "docs/reports/642-phase2-20261107/phase2-native.stdout",
+    "docs/reports/642-phase2-20261107/preservation.json",
+    "docs/reports/642-phase2-20261107/structure-tool-increment.command.json",
+    "docs/reports/642-phase2-20261107/structure-tool-increment.stderr",
+    "docs/reports/642-phase2-20261107/structure-tool-increment.stdout"
+  ],
+  "excluded_paths": [
+    "docs/reports/642-phase2-20261107/atomic-lifecycle.diff"
+  ],
+  "scope": "every other staged path, no other exclusions",
+  "archive_note": "these command artifacts and their receipt hashes are added after this invocation; identical command is required again on complete final index before commit"
+}

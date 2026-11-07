@@ -1,0 +1,13 @@
+{
+  "command": [
+    "python3",
+    "scripts/governance/validate_v3_phase2.py",
+    "--base",
+    "7f36750bf08d308cd7f648153e24c0b0e528e4c6",
+    "--head",
+    "c3a0197cb67c1fdc14af9a3184e46e8d9976e209"
+  ],
+  "exit_code": 0,
+  "observed_at": "2026-11-07T03:20:46.144449+00:00",
+  "candidate_tree": "c3a0197cb67c1fdc14af9a3184e46e8d9976e209"
+}
