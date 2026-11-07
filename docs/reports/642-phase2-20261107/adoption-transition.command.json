@@ -1,0 +1,13 @@
+{
+  "command": [
+    "python3",
+    ".agents/tools/validate_spec_transition.py",
+    "--base",
+    "docs/reports/642-phase2-20261107/adoption-base.json",
+    "--candidate",
+    "docs/reports/642-phase2-20261107/adoption-candidate.json"
+  ],
+  "exit_code": 0,
+  "observed_at": "2026-11-07T03:20:46.456959+00:00",
+  "candidate_tree": "c3a0197cb67c1fdc14af9a3184e46e8d9976e209"
+}

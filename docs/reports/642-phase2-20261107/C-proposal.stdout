@@ -1,0 +1,522 @@
+{
+  "schema_version": 1,
+  "gate": "C_NATIVE_LOCAL_RULE",
+  "result": "PASS",
+  "exit_code": 0,
+  "observed_at": "2026-11-07T03:19:00.304100+00:00",
+  "environment": {
+    "python": "3.14.7",
+    "pyyaml": "6.0.3",
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "git": "git version 2.50.1 (Apple Git-155)"
+  },
+  "base_commit": "230de798e340cc6c157e6b21822f0b1fda77e51e",
+  "after_B_commit": "21ac77eabf67008d0612e9c688931b25911d0c8c",
+  "reviewed_parent": "74523bc95e62d6b476af3cff007d88483927ed41",
+  "candidate_tree": "26338d07d975fb70c40fffd211c23d23d53058be",
+  "command": [
+    "python3",
+    "scripts/governance/validate_v3_succession.py",
+    "--base",
+    "230de798e340cc6c157e6b21822f0b1fda77e51e",
+    "--head",
+    "26338d07d975fb70c40fffd211c23d23d53058be"
+  ],
+  "files": {
+    ".agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md": {
+      "blob": "f3cea29603385bc5c8eda6d0b6f423f9ee58daef",
+      "sha256": "15cb71d19f8621e4acc230831f9e2b52cabacaf34b37be4ba9dbd454f33872e6"
+    },
+    "docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md": {
+      "blob": "1a7cd389b7972944f5b08cb583a8de3044b17b51",
+      "sha256": "89ef981a6f98aefe09bf8fd7d7bd183f1f8c0bca826674577f0d6d862139f81d"
+    },
+    ".agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md": {
+      "blob": "db276b2afc5329e72e7fdc9a7a4c9d983cf39b8d",
+      "sha256": "40bd14c6e061fdfa7f28b3e1378c8052a414809af72fc9002b0b95395e780b6c"
+    },
+    "scripts/governance/validate_v3_succession.py": {
+      "blob": "c8a4ce670a91bf537b2a92536e085ef30a28bda0",
+      "sha256": "c47f422de0a18f7b89fd46dbdf165e3a88487c28fd736d812d94c1d0afcc51f2"
+    },
+    ".agents/tools/validate_spec_transition.py": {
+      "blob": "d4745caf1bd1515dcb0daa496ab74d7b48f6b823",
+      "sha256": "5be5fae2ab02b87d1fc138e5da21f91f973b512e2198bcf5149a4ae03331b53e"
+    }
+  },
+  "source_policy_sha256": "34a8d8d8fe23c12f82a8ab302faca2d0df668084abd8ac8b110d3ab878cc65e7",
+  "source_exception_contracts_sha256": "6a57bd485b76eabe0c3656fb85c6ce09968dcd12e09064036475545beb8e8b87",
+  "V2_provenance": {
+    "base_record": {
+      "origin": "native-fenced-metadata",
+      "source_commit": "230de798e340cc6c157e6b21822f0b1fda77e51e",
+      "source_path": ".agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md",
+      "source_blob": "f3cea29603385bc5c8eda6d0b6f423f9ee58daef",
+      "yaml_frontmatter": false,
+      "derived_from_carried_policy": false
+    },
+    "carried_policy": {
+      "origin": "derived-from-carried-policy",
+      "source_tree": "26338d07d975fb70c40fffd211c23d23d53058be",
+      "source_path": ".agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md",
+      "marker": "CARRIED_V2_POLICY",
+      "used_as_base_metadata": false
+    }
+  },
+  "actual_proposal": {
+    "V2_native": {
+      "RULE_ID": "CODE_STRUCTURE_GUARDRAILS_V2",
+      "RULE_KIND": "repository-local binding rule (carried by .agents/local/, not a docs/specs authority)",
+      "LIFECYCLE": "ACCEPTED",
+      "EFFECTIVE_RULE": "CODE_STRUCTURE_GUARDRAILS_V2 upon this accepted transaction merging into main",
+      "SUPERSEDES": "CODE_STRUCTURE_GUARDRAILS_V1 (effective upon merge into main)",
+      "IMPLEMENTATION_CONTRACTS": "CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1",
+      "ENFORCEMENT": "machine verifier (scripts/verify-code-structure.mjs) + manual review",
+      "BASELINE_COMMIT": "d506f81105e8aa05177a01b817ebe11dcc076ba5 (unchanged from V1)",
+      "ACCEPTANCE_ACTORS": "mayf3 or an explicitly authorized maintainer recorded in the acceptance PR",
+      "REGISTRY_APPROVAL_ACTORS": "[mayf3] (a different actor requires an accepted rule change; prose alone cannot extend this list)"
+    },
+    "TE_raw": {
+      "spec_id": "CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1",
+      "status": "accepted",
+      "spec_kind": "implementation",
+      "authority_level": "governing_spec",
+      "implementation_authority": "contracts",
+      "production_apply_authority": "none",
+      "scope": [
+        "mayf3/dsh-agent-core/scripts/verify-code-structure.mjs",
+        "focused structure-verifier regression tests",
+        "one exact scripts/trusted-cp-deploy-install.sh transition"
+      ],
+      "governed_by": [
+        "CODE_STRUCTURE_GUARDRAILS_V2",
+        "CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1"
+      ],
+      "external_authorities": [],
+      "supersedes": [],
+      "superseded_by": null,
+      "owners": [
+        "mayf3"
+      ],
+      "date": "2026-11-06"
+    },
+    "V3_raw": {
+      "spec_id": "CODE_STRUCTURE_GUARDRAILS_V3",
+      "status": "proposed",
+      "spec_kind": "invariant",
+      "authority_level": "repository_local_rule",
+      "rule_kind": "repository-local binding rule",
+      "implementation_authority": "none",
+      "production_apply_authority": "none",
+      "scope": [
+        "mayf3/dsh-agent-core repository-local structural policy",
+        "the previously accepted exact installer transition and visible split debt"
+      ],
+      "governed_by": [],
+      "external_authorities": [],
+      "supersedes": [
+        "CODE_STRUCTURE_GUARDRAILS_V2",
+        "CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1"
+      ],
+      "superseded_by": null,
+      "owners": [
+        "mayf3"
+      ],
+      "date": "2026-11-07"
+    }
+  },
+  "simulated_acceptance_only": {
+    "result": "PASS",
+    "V2_native": {
+      "RULE_ID": "CODE_STRUCTURE_GUARDRAILS_V2",
+      "RULE_KIND": "repository-local binding rule (carried by .agents/local/, not a docs/specs authority)",
+      "LIFECYCLE": "SUPERSEDED",
+      "EFFECTIVE_RULE": "CODE_STRUCTURE_GUARDRAILS_V2 upon this accepted transaction merging into main",
+      "SUPERSEDES": "CODE_STRUCTURE_GUARDRAILS_V1 (effective upon merge into main)",
+      "IMPLEMENTATION_CONTRACTS": "CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1",
+      "ENFORCEMENT": "machine verifier (scripts/verify-code-structure.mjs) + manual review",
+      "BASELINE_COMMIT": "d506f81105e8aa05177a01b817ebe11dcc076ba5 (unchanged from V1)",
+      "ACCEPTANCE_ACTORS": "mayf3 or an explicitly authorized maintainer recorded in the acceptance PR",
+      "REGISTRY_APPROVAL_ACTORS": "[mayf3] (a different actor requires an accepted rule change; prose alone cannot extend this list)",
+      "SUPERSEDED_BY": "CODE_STRUCTURE_GUARDRAILS_V3"
+    },
+    "TE_raw": {
+      "spec_id": "CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1",
+      "status": "superseded",
+      "spec_kind": "implementation",
+      "authority_level": "governing_spec",
+      "implementation_authority": "contracts",
+      "production_apply_authority": "none",
+      "scope": [
+        "mayf3/dsh-agent-core/scripts/verify-code-structure.mjs",
+        "focused structure-verifier regression tests",
+        "one exact scripts/trusted-cp-deploy-install.sh transition"
+      ],
+      "governed_by": [
+        "CODE_STRUCTURE_GUARDRAILS_V2",
+        "CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1"
+      ],
+      "external_authorities": [],
+      "supersedes": [],
+      "superseded_by": "CODE_STRUCTURE_GUARDRAILS_V3",
+      "owners": [
+        "mayf3"
+      ],
+      "date": "2026-11-06"
+    },
+    "V3_raw": {
+      "spec_id": "CODE_STRUCTURE_GUARDRAILS_V3",
+      "status": "accepted",
+      "spec_kind": "invariant",
+      "authority_level": "repository_local_rule",
+      "rule_kind": "repository-local binding rule",
+      "implementation_authority": "none",
+      "production_apply_authority": "none",
+      "scope": [
+        "mayf3/dsh-agent-core repository-local structural policy",
+        "the previously accepted exact installer transition and visible split debt"
+      ],
+      "governed_by": [],
+      "external_authorities": [],
+      "supersedes": [
+        "CODE_STRUCTURE_GUARDRAILS_V2",
+        "CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1"
+      ],
+      "superseded_by": null,
+      "owners": [
+        "mayf3"
+      ],
+      "date": "2026-11-07"
+    },
+    "writes": 0
+  },
+  "exception_objects": {
+    "record": {
+      "path": "scripts/trusted-cp-deploy-install.sh",
+      "baseBlob": "ef5053201e6af88b1edbcdfc33e845f872183b2b",
+      "headBlob": "356899a8ec0726f245790379429f97dfc6ea3bfb"
+    },
+    "tree_refs": [
+      "230de798e340cc6c157e6b21822f0b1fda77e51e",
+      "67d2bb08e6ec56a3bd2067266fda3be3b7635eec"
+    ],
+    "tree_entries": [
+      "100644 blob ef5053201e6af88b1edbcdfc33e845f872183b2b\tscripts/trusted-cp-deploy-install.sh",
+      "100644 blob 356899a8ec0726f245790379429f97dfc6ea3bfb\tscripts/trusted-cp-deploy-install.sh"
+    ],
+    "physical_lines": [
+      1315,
+      1315
+    ],
+    "bytes": [
+      76444,
+      76467
+    ],
+    "sha256": [
+      "99cc67c971406cd1fc287f2e50b85012bf3123e9532ff0890f925fa8f6edad8c",
+      "dba2f136af78b6d89bf58d1b9ab0c15259efa3bf4f4d4f904e9494fd11d7741e"
+    ],
+    "exact_token_insertion": true
+  },
+  "negative_controls": [
+    {
+      "case": "V2_body_mutation",
+      "phase": "proposal",
+      "expected_error": "V2 bytes changed",
+      "observed_errors": [
+        "V2 bytes changed"
+      ]
+    },
+    {
+      "case": "V2_clause_changed_in_V3",
+      "phase": "proposal",
+      "expected_error": "V2 complete policy carry drift",
+      "observed_errors": [
+        "V2 complete policy carry drift"
+      ]
+    },
+    {
+      "case": "V2_clause_omitted",
+      "phase": "proposal",
+      "expected_error": "V2 complete policy carry drift",
+      "observed_errors": [
+        "V2 complete policy carry drift"
+      ]
+    },
+    {
+      "case": "TE_body_mutation",
+      "phase": "proposal",
+      "expected_error": "TE bytes changed after B",
+      "observed_errors": [
+        "TE bytes changed after B"
+      ]
+    },
+    {
+      "case": "base_blob_changed",
+      "phase": "proposal",
+      "expected_error": "TE complete contract carry drift",
+      "observed_errors": [
+        "TE complete contract carry drift",
+        "exception must be the single exact blob pair"
+      ]
+    },
+    {
+      "case": "head_blob_changed",
+      "phase": "proposal",
+      "expected_error": "TE complete contract carry drift",
+      "observed_errors": [
+        "TE complete contract carry drift",
+        "exception must be the single exact blob pair"
+      ]
+    },
+    {
+      "case": "exception_record_path_alias",
+      "phase": "proposal",
+      "expected_error": "single exact blob pair",
+      "observed_errors": [
+        "TE complete contract carry drift",
+        "exception must be the single exact blob pair"
+      ]
+    },
+    {
+      "case": "duplicate_exception",
+      "phase": "proposal",
+      "expected_error": "single exact blob pair",
+      "observed_errors": [
+        "TE complete contract carry drift",
+        "exception must be the single exact blob pair"
+      ]
+    },
+    {
+      "case": "missing_TE_edge",
+      "phase": "proposal",
+      "expected_error": "exact whole predecessor set",
+      "observed_errors": [
+        "exact whole predecessor set"
+      ]
+    },
+    {
+      "case": "partial_edge",
+      "phase": "proposal",
+      "expected_error": "invalid whole-authority ID",
+      "observed_errors": [
+        "exact whole predecessor set",
+        "FORMAT_CORRECTION_CANDIDATE: native V3.supersedes contains an invalid whole-authority ID; requires registered historical format correction to []"
+      ]
+    },
+    {
+      "case": "premature_V2_backlink",
+      "phase": "proposal",
+      "expected_error": "V2 premature backlink",
+      "observed_errors": [
+        "V2 premature backlink",
+        "V2 bytes changed"
+      ]
+    },
+    {
+      "case": "premature_TE_backlink",
+      "phase": "proposal",
+      "expected_error": "TE premature retirement/backlink",
+      "observed_errors": [
+        "raw TE.superseded_by must be null while active",
+        "TE premature retirement/backlink",
+        "TE bytes changed after B"
+      ]
+    },
+    {
+      "case": "premature_V2_retirement",
+      "phase": "proposal",
+      "expected_error": "V2 premature retirement",
+      "observed_errors": [
+        "V2 premature retirement",
+        "V2 bytes changed"
+      ]
+    },
+    {
+      "case": "premature_V3_acceptance",
+      "phase": "proposal",
+      "expected_error": "proposal must stay proposed",
+      "observed_errors": [
+        "proposal must stay proposed"
+      ]
+    },
+    {
+      "case": "legacy_active_V3_ID",
+      "phase": "proposal",
+      "expected_error": "strict _V<number>",
+      "observed_errors": [
+        "V3 identity",
+        "native V3.spec_id must be a strict _V<number> ID while active"
+      ]
+    },
+    {
+      "case": "invented_governing_spec",
+      "phase": "proposal",
+      "expected_error": "V3 metadata: authority_level",
+      "observed_errors": [
+        "V3 metadata: authority_level"
+      ]
+    },
+    {
+      "case": "missing_V2",
+      "phase": "proposal",
+      "expected_error": "missing authority",
+      "observed_errors": [
+        "missing authority: .agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md"
+      ]
+    },
+    {
+      "case": "missing_TE",
+      "phase": "proposal",
+      "expected_error": "missing authority",
+      "observed_errors": [
+        "missing authority: docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md"
+      ]
+    },
+    {
+      "case": "V2_acceptance_backlink_missing",
+      "phase": "simulated_acceptance",
+      "expected_error": "V2 reciprocal backlink missing/wrong",
+      "observed_errors": [
+        "V2 reciprocal backlink missing/wrong"
+      ]
+    },
+    {
+      "case": "V2_acceptance_backlink_wrong",
+      "phase": "simulated_acceptance",
+      "expected_error": "V2 reciprocal backlink missing/wrong",
+      "observed_errors": [
+        "V2 reciprocal backlink missing/wrong"
+      ]
+    },
+    {
+      "case": "TE_acceptance_backlink_missing",
+      "phase": "simulated_acceptance",
+      "expected_error": "TE reciprocal backlink missing/wrong",
+      "observed_errors": [
+        "raw TE.superseded_by must name a strict successor",
+        "TE reciprocal backlink missing/wrong"
+      ]
+    },
+    {
+      "case": "TE_acceptance_backlink_wrong",
+      "phase": "simulated_acceptance",
+      "expected_error": "TE reciprocal backlink missing/wrong",
+      "observed_errors": [
+        "TE reciprocal backlink missing/wrong"
+      ]
+    },
+    {
+      "case": "TE_not_atomically_retired",
+      "phase": "simulated_acceptance",
+      "expected_error": "TE not retired atomically",
+      "observed_errors": [
+        "raw TE.superseded_by must be null while active",
+        "TE not retired atomically"
+      ]
+    },
+    {
+      "case": "V2_not_atomically_retired",
+      "phase": "simulated_acceptance",
+      "expected_error": "V2 not retired atomically",
+      "observed_errors": [
+        "V2 not retired atomically"
+      ]
+    }
+  ],
+  "exception_scope_negative_controls": [
+    {
+      "case": "alternate_path",
+      "expected_rejection_observed": true
+    },
+    {
+      "case": "base_blob_identity_changed",
+      "expected_rejection_observed": true
+    },
+    {
+      "case": "head_blob_identity_changed",
+      "expected_rejection_observed": true
+    },
+    {
+      "case": "file_mode_changed",
+      "expected_rejection_observed": true
+    },
+    {
+      "case": "same_length_content_edit",
+      "expected_rejection_observed": true
+    },
+    {
+      "case": "additional_line",
+      "expected_rejection_observed": true
+    },
+    {
+      "case": "future_edit_from_new_base",
+      "expected_rejection_observed": true
+    },
+    {
+      "case": "unknown_record_field",
+      "expected_rejection_observed": true
+    }
+  ],
+  "strict_legacy_controls": [
+    {
+      "case": "V2_strict",
+      "expected_result_observed": true
+    },
+    {
+      "case": "TE_strict_despite_internal_V3",
+      "expected_result_observed": true
+    },
+    {
+      "case": "V3_strict",
+      "expected_result_observed": true
+    },
+    {
+      "case": "legacy_recognized",
+      "expected_result_observed": true
+    },
+    {
+      "case": "active_legacy_rejected",
+      "expected_result_observed": true
+    },
+    {
+      "case": "existing_legacy_atomic_retirement",
+      "expected_result_observed": true
+    },
+    {
+      "case": "new_legacy_rejected",
+      "expected_result_observed": true
+    },
+    {
+      "case": "invented_retired_legacy_rejected",
+      "expected_result_observed": true
+    },
+    {
+      "case": "fragment_rejected",
+      "expected_result_observed": true
+    },
+    {
+      "case": "lowercase_rejected",
+      "expected_result_observed": true
+    },
+    {
+      "case": "object_reference_rejected",
+      "expected_result_observed": true
+    }
+  ],
+  "control_summary": {
+    "negative_controls": {
+      "result": "PASS",
+      "executed": 24
+    },
+    "exception_scope": {
+      "result": "PASS",
+      "executed": 8
+    },
+    "strict_legacy": {
+      "result": "PASS",
+      "executed": 11
+    }
+  },
+  "limits": "Native proposal source/lifecycle gate and explicitly simulated Phase 2 backlinks. Not governing-Spec-only full-transition certification, actual Owner acceptance/retirement, structure-verifier runtime regression, runtime or production conformance. Later Validation/Brief/receipt additions require independent delta recheck; receipt hash is not self-referential."
+}

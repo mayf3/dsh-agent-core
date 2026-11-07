@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "task": "BRIEF-C-GATE-R2",
+  "result": "C_GATE_PASS_PUBLICATION_PREPARED",
+  "recorded_at": "2026-11-07T01:05:26.415928+00:00",
+  "repository": "mayf3/dsh-agent-core",
+  "worktree": "/private/tmp/rc3-chain",
+  "branch": "docs/v3-succession-final",
+  "original_parent": "74523bc95e62d6b476af3cff007d88483927ed41",
+  "base_commit": "230de798e340cc6c157e6b21822f0b1fda77e51e",
+  "fresh_remote_main": "3c1bcf98bc40a2c34cca24f241c87d1b12cea216",
+  "validated_source_commit": "4a3dce83d0af0bcd1c8467155ba86514734ec870",
+  "validated_source_tree": "2a19579ff57d8015cda9891898dbbf2945a09194",
+  "source_commit_tree_matches_executed_tree": true,
+  "command": [
+    "python3",
+    "scripts/governance/validate_v3_succession.py",
+    "--base",
+    "230de798e340cc6c157e6b21822f0b1fda77e51e",
+    "--head",
+    "2a19579ff57d8015cda9891898dbbf2945a09194"
+  ],
+  "actual_exit_code": 0,
+  "raw_outputs": {
+    "C-R2-native-result.json": {
+      "path": "docs/reports/rc3-chain-20261107/C-R2-native-result.json",
+      "sha256": "2b752f69e31872e0c03920cab8f73f05e85d1db6792345aa19623ef4f3295416",
+      "bytes": 17082
+    },
+    "C-R2-native-stderr.txt": {
+      "path": "docs/reports/rc3-chain-20261107/C-R2-native-stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "C-R2-native-exit-code.txt": {
+      "path": "docs/reports/rc3-chain-20261107/C-R2-native-exit-code.txt",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    }
+  },
+  "controls": {
+    "negative_controls": {
+      "result": "PASS",
+      "executed": 24
+    },
+    "exception_scope": {
+      "result": "PASS",
+      "executed": 8
+    },
+    "strict_legacy": {
+      "result": "PASS",
+      "executed": 11
+    }
+  },
+  "V2_provenance": {
+    "base_record": {
+      "origin": "native-fenced-metadata",
+      "source_commit": "230de798e340cc6c157e6b21822f0b1fda77e51e",
+      "source_path": ".agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md",
+      "source_blob": "f3cea29603385bc5c8eda6d0b6f423f9ee58daef",
+      "yaml_frontmatter": false,
+      "derived_from_carried_policy": false
+    },
+    "carried_policy": {
+      "origin": "derived-from-carried-policy",
+      "source_tree": "2a19579ff57d8015cda9891898dbbf2945a09194",
+      "source_path": ".agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md",
+      "marker": "CARRIED_V2_POLICY",
+      "used_as_base_metadata": false
+    }
+  },
+  "repair": {
+    "fixture_changes": "two native V2 closing-fence insertion sites; TE stays in real YAML frontmatter",
+    "assertion_preservation": {
+      "result": "PASS",
+      "method": "AST equality against original staged script blob",
+      "original_blob": "f6fa76bd87750c434bd2b6eb8902c19eeeb49dcd",
+      "unchanged_functions": [
+        "inspect",
+        "exact_transition",
+        "exception_controls",
+        "format_controls"
+      ],
+      "original_source_archive": {
+        "path": "docs/reports/rc3-chain-20261107/C-R2-prior-gate-source.txt",
+        "sha256": "c8b6c2d808e8aeb6d4de0b41e765d8e78db952a94a4b2aecbff269ebd7dd2de9",
+        "purpose": "make the original uncommitted staged source reviewable by its measured hash"
+      }
+    }
+  },
+  "source_preservation": {
+    "V2_TE": "byte-identical to original parent",
+    "V3": "source bytes preserved as exact prefix; Validation observation appended after gate",
+    "A_B": "existing commits and evidence unchanged",
+    "packages": "no diff"
+  },
+  "post_gate_delta": "raw outputs, receipt, factual Brief checkpoints and V3 Validation observation only; no second gate execution claimed",
+  "reproduction": [
+    "git checkout --detach 4a3dce83d0af0bcd1c8467155ba86514734ec870",
+    "python3 scripts/governance/validate_v3_succession.py --base 230de798e340cc6c157e6b21822f0b1fda77e51e --head 4a3dce83d0af0bcd1c8467155ba86514734ec870"
+  ],
+  "prior_failure": {
+    "output_path": "docs/reports/rc3-chain-20261107/C-native-result.json",
+    "sha256": "6a7a1637cfca674ec92cb35d73bc92194d9cd56cf59026b65cf4b48d18e0f8f6",
+    "tracked": false,
+    "stop_record": "STOPPED-RC3-CHAIN.md",
+    "stop_record_tracked": false,
+    "preserved": true
+  },
+  "independent_review": "PENDING_REGULATOR_ARRANGEMENT; local static support is not formal review",
+  "publication": "git push and gh pr view 642 readback occur after evidence commit; actual receipt reported separately",
+  "merge": "NOT_AUTHORIZED_NOT_ATTEMPTED",
+  "actual_acceptance_retirement": "NONE",
+  "production_writes": "NONE"
+}

@@ -1,0 +1,12 @@
+{
+  "base_commit": "7f36750bf08d308cd7f648153e24c0b0e528e4c6",
+  "candidate_tree": "c3a0197cb67c1fdc14af9a3184e46e8d9976e209",
+  "paths": [
+    "docs/specs/AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1.md",
+    "docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0.md",
+    "docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1.md",
+    "docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2.md",
+    "docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md"
+  ],
+  "method": "full raw frontmatter with timestamp coercion disabled; no normalization; native structural authorities excluded from governing-Spec-only graph"
+}
