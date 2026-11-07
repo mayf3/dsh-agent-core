@@ -1,6 +1,31 @@
 ---
 spec_id: AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_date: 2026-11-07
+accepted_at: 2026-11-07T07:26:44.290920Z
+accepted_reviewed_head: 8fdd5e9dc4f9cf525188d6ac19f986e0191e9604
+independent_review_result: PASS
+independent_review_receipt: docs/reports/sra-v1-formalization-20261107/independent-review.md
+independent_review_receipt_sha256: 617d3179d9ff8b87a263db1ef2a9156695d5433a9ed0ff2d2b16f7e7faca9a63
+acceptance_authority: Owner mayf3 ruling owner-20261107-sra-formalization items[0]
+acceptance_authority_source: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json
+acceptance_authority_selector: $.rulings[id=owner-20261107-sra-formalization]
+acceptance_authority_canonical_sha256: f6ace2b1e1621da830421e57a9b886faac75de8f4bf7a895d0ecf0832438a129
+acceptance_semantic_source_pr: https://github.com/mayf3/dsh-agent-core/pull/648
+acceptance_semantic_source_head: 61b97d326e337057cd1f71c0a6ff0dc37ab72ec2
+acceptance_transaction_executor: /root (format conversion and transaction executor only)
+acceptance_authority_basis: >-
+  Owner mayf3 approved the six-section semantics at PR 648 head 61b97d32
+  and explicitly authorized this responsibility chain to perform the first
+  formalization/acceptance transaction. The independent nonauthor review
+  passed exact proposed head 8fdd5e9dc4f9cf525188d6ac19f986e0191e9604 with semantic
+  delta NONE. The worker records this Owner acceptance; the worker and future
+  Captain are not the acceptance authority. The acceptance commit is bound
+  by its Git object and exact FINAL_ACCEPTED_HEAD in PR 648. No personal
+  Owner review of the converted exact head is claimed.
+acceptance_final_head_review: PENDING_REGULATOR
+activation_boundary: main merge after independent final-HEAD review by regulator
 spec_kind: invariant
 authority_level: governing_spec
 implementation_authority: none
@@ -35,6 +60,12 @@ formalization_ruling_canonical_sha256: f6ace2b1e1621da830421e57a9b886faac75de8f4
 ---
 
 # Agent Core Standing Release Authorization V1
+
+<!-- BEGIN SRA_ACCEPTANCE_LIFECYCLE -->
+> **当前生命周期：Owner mayf3 授权正式接受事务已记录；main 生效待监管独立最终 HEAD 审查 PASS 后合并。**
+> 接受权威是上述 Owner 裁定；转换作者/事务 worker 不是接受权威。接受 reviewed HEAD 为 `8fdd5e9dc4f9cf525188d6ac19f986e0191e9604`，独审原文及事务绑定见 [接受收据](../reports/sra-v1-formalization-20261107/acceptance-transaction.md)。
+> 原文保全的 proposed/ACCEPTED=NO 等起草时点标记是历史记录；本事务不任命 Captain、不证明控制生效、不签发 W7 或任何窗口，不做生产操作。
+<!-- END SRA_ACCEPTANCE_LIFECYCLE -->
 
 > 格式载体转换；语义来源为 PR #648 的 `61b97d326e337057cd1f71c0a6ff0dc37ab72ec2`。
 > 下文十三个无编号逻辑章节满足 SPEC_FORMAT_V0；所有 `§1` 至 `§6` 均指 Contracts 中保留的原六节。
