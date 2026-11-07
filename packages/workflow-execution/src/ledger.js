@@ -1,5 +1,6 @@
 import { continuePlannedOwnerResume, mutateWithRecord, recordProgressCheckpoint, recordReconciled, recordStaleSuperseded, recordEscalationRequested, recordDeliveryFailed, recordRecoveryRefused } from './ledger-records.js'
 import { beginAttemptIfAbsent } from './ledger-admission.js'
+import { recordRecoveryCheck } from './recovery/automatic-ledger.js'
 import { recordReadback, listReadbackCandidates } from './recovery/readback-ledger.js'
 /**
  * @agent-core/workflow-execution/src/ledger.js — the execution ledger store
@@ -136,8 +137,9 @@ export class ExecutionLedger {
       recordRunDelivered: (id, fields) => this.#recordRunDelivered(id, fields),
       recordDeliveryFailed: (id, reason) => this.#recordDeliveryFailed(id, reason),
       recordResolutionBlocked: (id, code) => this.#recordResolutionBlocked(id, code),
-      recordRecoveryAuthorized: (id, ref) => this.#recordRecoveryAuthorized(id, ref),
-      recordRecoveryRefused: (id, ref, code) => this.#recordRecoveryRefused(id, ref, code),
+      recordRecoveryAuthorized: (id, ref, audit) => this.#recordRecoveryAuthorized(id, ref, audit),
+      recordRecoveryRefused: (id, ref, code, audit) => this.#recordRecoveryRefused(id, ref, code, audit),
+      recordRecoveryCheck: (id, fields) => recordRecoveryCheck(this, this.#operationPort(), id, fields),
     }
   }
 
@@ -374,13 +376,13 @@ export class ExecutionLedger {
     return this.#recordForActive(nodeVisitId, (event) => Object.assign(event, patch))
   }
 
-  #recordRecoveryAuthorized(nodeVisitId, authorityRef) {
-    const patch = buildRecoveryAuthorizedEvent(this.#precheckActive(nodeVisitId, 'recovery_authorized'), nodeVisitId, authorityRef)
+  #recordRecoveryAuthorized(nodeVisitId, authorityRef, authorization) {
+    const patch = buildRecoveryAuthorizedEvent(this.#precheckActive(nodeVisitId, 'recovery_authorized'), nodeVisitId, authorityRef, authorization)
     return this.#recordForActive(nodeVisitId, (event) => Object.assign(event, patch))
   }
 
-  #recordRecoveryRefused(nodeVisitId, authorityRef, refused) {
-    const patch = buildRecoveryRefusedEvent(this.#precheckActive(nodeVisitId, 'recovery_refused'), nodeVisitId, authorityRef, refused)
+  #recordRecoveryRefused(nodeVisitId, authorityRef, refused, authorization) {
+    const patch = buildRecoveryRefusedEvent(this.#precheckActive(nodeVisitId, 'recovery_refused'), nodeVisitId, authorityRef, refused, authorization)
     return this.#recordForActive(nodeVisitId, (event) => Object.assign(event, patch))
   }
 

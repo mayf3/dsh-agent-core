@@ -1,0 +1,6 @@
+[feat/b2-auto-recovery d3d4410c] fix(workflow): preserve blocked refusal duty and reject stale terminal reconciliation
+ 9 files changed, 489 insertions(+), 24 deletions(-)
+ create mode 100644 packages/workflow-execution/src/recovery/refusal.js
+ create mode 100644 packages/workflow-execution/test/observation-cas/blocked-refusal.test.js
+
+exit_code: 0

@@ -1,0 +1,3 @@
+$ git diff --cached --check -- . ':(exclude)docs/evidence/**'
+
+exit_code: 0

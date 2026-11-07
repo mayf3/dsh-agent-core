@@ -5,7 +5,7 @@ function sameId(left, right) {
   return typeof left === 'string' && typeof right === 'string' && left.toLowerCase() === right.toLowerCase()
 }
 
-function detailMatchesActivation(body, identity) {
+export function detailMatchesActivation(body, identity) {
   const detail = body?.detail
   const visit = detail?.current_visit
   const instance = detail?.instance

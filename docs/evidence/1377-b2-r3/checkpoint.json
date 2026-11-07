@@ -1,0 +1,62 @@
+{
+  "baseHead": "3c1bcf98bc40a2c34cca24f241c87d1b12cea216",
+  "sourceHead": "77b9644b2a6ff70cb6af2cf00bb134502a0eef8b",
+  "branch": "feat/b2-auto-recovery",
+  "nodeVersion": "v26.7.0",
+  "trackedSourceDiffAfterTests": [],
+  "sourceFiles": [
+    {
+      "path": "packages/production-runtime/src/workflow-execution-runtime.js",
+      "sha256": "92d0b10ca354d1d4c53bd48c062ef8d9b2ecb326b0cd1003d88f0fef5fdfb32a"
+    },
+    {
+      "path": "packages/workflow-execution/src/engine.js",
+      "sha256": "c7694559168a86cbf63156262b858796abb527078f942e79f5624098833588c0"
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger-events.js",
+      "sha256": "7f56582cd1ed9d36eda7b3648f7e92de347ae39c9616d60a8548692b18aa983e"
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger-records.js",
+      "sha256": "e74694cdc2188273973910713c8e6e3e4817d7ba1ccbdb1edf2cdb15cb4bb327"
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger.js",
+      "sha256": "7869bcffa41ea3bbb12fee767bd93ec5c107267c9709fc0ef5a6fac17ac77619"
+    },
+    {
+      "path": "packages/workflow-execution/src/owner-assistance-resume-engine.js",
+      "sha256": "e26f2b27df06a39226ab3e831ec089187c007e7951a60426c434fa58418e1a7e"
+    },
+    {
+      "path": "packages/workflow-execution/src/recovery/automatic-ledger.js",
+      "sha256": "22682ee7c6a46f25dc5cf3e65420e4f2e5e2f55d66a14da97b78e6e6749a40e3"
+    },
+    {
+      "path": "packages/workflow-execution/src/recovery/automatic.js",
+      "sha256": "3266648a4ea3f4e9775b8e7b739bbac775cf6b168a8f4f3779d37f8631cb7c76"
+    },
+    {
+      "path": "packages/workflow-execution/src/recovery/operation.js",
+      "sha256": "ba8c4f2cde3be0429234c976ed064d0dac182989e3039807813367e4417db5ff"
+    },
+    {
+      "path": "packages/workflow-execution/test/observation-cas/blocked-recovery-process.js",
+      "sha256": "236aed0f47a4b7731fcb45e68c42676c828aba2e7c52115ec91af43fd3c4fad1"
+    },
+    {
+      "path": "packages/workflow-execution/test/observation-cas/blocked-recovery-restart.test.js",
+      "sha256": "ee717a9539d0b4e6428b1a29dd571e73697438d3e9e7d52cf24d2a88856d71a8"
+    },
+    {
+      "path": "packages/workflow-execution/test/observation-cas/blocked-recovery.test.js",
+      "sha256": "f3fdcb96eaac0038c913848fa4e1f50fd7c27882d5e529e063beddd9fb316aec"
+    }
+  ],
+  "sourceReview": "REVISE - CONTRACT_VIOLATION world-drift responsibility consumer missing",
+  "pushPerformed": false,
+  "prCreated": false,
+  "merged": false,
+  "productionWrites": 0
+}

@@ -1,0 +1,24 @@
+$ EKR_SOURCE_SHA=ba16e0529a7ac68683d076416106140fdd018009 node --test packages/workflow-execution/test/ledger.test.js
+started_at_utc: 2026-11-07T03:20:28.218213+00:00
+✔ attemptIdFor is deterministic per NodeVisit and grammar-checked (2.075041ms)
+✔ beginAttemptIfAbsent: first call creates, ANY existing attempt blocks a second (no re-run after NEEDS_REVIEW) (113.128042ms)
+✔ concurrent beginAttemptIfAbsent for one NodeVisit mints exactly one attempt (47.899708ms)
+✔ full lifecycle: planned -> delivered -> reconciled SETTLED; terminal attempts refuse further appends (82.5925ms)
+✔ reconciled verdict ACTIVE is not a ledger event (only terminal verdicts land) (25.221417ms)
+✔ restart replay: a fresh ledger over the same dir restores the exact projection (dedupe survives restarts) (75.867875ms)
+✔ torn tail: repair under lock preserves the next fence across another restart (62.603125ms)
+✔ complete tail without newline is sealed before the next durable append (52.4985ms)
+✔ newline seal I/O failure aborts the locked mutation before event append (66.3505ms)
+✔ first fence syncs the ledger directory and fails loud when publication durability is unavailable (45.618541ms)
+✔ new ledger directory is published before the first event-file directory entry (17.157584ms)
+✔ records for unknown NodeVisits fail loud (never fabricate linkage) (16.459541ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 722.747125
+
+exit_code: 0

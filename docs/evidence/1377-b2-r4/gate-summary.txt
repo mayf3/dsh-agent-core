@@ -1,0 +1,7 @@
+ℹ tests 46
+ℹ pass 44
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ duration_ms 8866.665209
+exit_code: 1
