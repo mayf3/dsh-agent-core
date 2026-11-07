@@ -93,3 +93,18 @@ the current attributable task, not a claim to have verified that original.
   document body. It replaces the supersedes span and appends the correction note.
   No standalone V3 acceptance, retirement, product-source change or production
   effect is claimed. C's independently confirmed raw-input limitation remains.
+
+## Current C evidence checkpoint — R2, 2026-11-07
+
+The earlier C-dependent pause above is historical. The explicitly resumed
+`BRIEF-C-GATE-R2.md` task uses the authorized native local-rule gate, without
+fabricating V2 frontmatter or relabeling it as the governing-Spec transition CLI.
+The complete C execution returned actual rc0 with all 24 negative, 8 exception-
+scope and 11 strict/legacy controls PASS. Raw output and its source coordinates
+are preserved in `docs/reports/rc3-chain-20261107/C-R2-native-result.json` and the
+R2 receipt; V3's appended Validation observation references their exact digest.
+
+C evidence is no longer paused for publication to PR #642. A/B evidence and all
+existing normative A/B/C text are reused unchanged. Independent review is still
+pending with the regulator; Owner acceptance, Phase 2 retirement, merge, product
+implementation and production operations remain outside this task.
