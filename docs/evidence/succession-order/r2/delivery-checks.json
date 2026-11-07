@@ -1,0 +1,125 @@
+{
+  "checked_at": "2026-11-07T15:53:06.768658+00:00",
+  "records": [
+    {
+      "name": "staged_whitespace",
+      "command": [
+        "git",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "started_at": "2026-11-07T15:53:06.711714+00:00",
+      "finished_at": "2026-11-07T15:53:06.727453+00:00",
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "docs_only_scope": {
+    "result": "PASS",
+    "files": [
+      "BRIEF-SUCCESSION-ORDER.md",
+      "BRIEF-SUCCESSION-R2.md",
+      "RECEIPT-SUCCESSION-ORDER.md",
+      "STOPPED-SUCCESSION-ORDER.md",
+      "SUCCESSION-ORDER-AND-CONFLICTS.md",
+      "docs/evidence/succession-order/643-owner-comment.json",
+      "docs/evidence/succession-order/owner-ruling.json",
+      "docs/evidence/succession-order/pr-snapshot.json",
+      "docs/evidence/succession-order/r2/SHA256SUMS",
+      "docs/evidence/succession-order/r2/checks.json",
+      "docs/evidence/succession-order/r2/owner-rulings.json",
+      "docs/evidence/succession-order/r2/pr-snapshot.json",
+      "docs/evidence/succession-order/r2/svc-authority.json",
+      "docs/evidence/succession-order/r2/svc-companion-comparison.json",
+      "docs/evidence/succession-order/svc-authority.json"
+    ]
+  },
+  "inherited_preimage_verification": {
+    "result": "PASS",
+    "files": [
+      "BRIEF-SUCCESSION-ORDER.md",
+      "BRIEF-SUCCESSION-R2.md",
+      "STOPPED-SUCCESSION-ORDER.md",
+      "docs/evidence/succession-order/643-owner-comment.json",
+      "docs/evidence/succession-order/owner-ruling.json",
+      "docs/evidence/succession-order/pr-snapshot.json",
+      "docs/evidence/succession-order/svc-authority.json"
+    ],
+    "stopped_prefix_only": true
+  },
+  "artifact_hash_verification": {
+    "result": "PASS",
+    "entries": 14
+  },
+  "report_receipt_local_links": {
+    "result": "PASS",
+    "links": [
+      {
+        "source": "SUCCESSION-ORDER-AND-CONFLICTS.md",
+        "target": "BRIEF-SUCCESSION-R2.md"
+      },
+      {
+        "source": "SUCCESSION-ORDER-AND-CONFLICTS.md",
+        "target": "BRIEF-SUCCESSION-ORDER.md"
+      },
+      {
+        "source": "SUCCESSION-ORDER-AND-CONFLICTS.md",
+        "target": "docs/evidence/succession-order/r2/owner-rulings.json"
+      },
+      {
+        "source": "SUCCESSION-ORDER-AND-CONFLICTS.md",
+        "target": "docs/evidence/succession-order/r2/pr-snapshot.json"
+      },
+      {
+        "source": "SUCCESSION-ORDER-AND-CONFLICTS.md",
+        "target": "docs/evidence/succession-order/r2/checks.json"
+      },
+      {
+        "source": "SUCCESSION-ORDER-AND-CONFLICTS.md",
+        "target": "docs/evidence/succession-order/r2/svc-authority.json"
+      },
+      {
+        "source": "SUCCESSION-ORDER-AND-CONFLICTS.md",
+        "target": "STOPPED-SUCCESSION-ORDER.md"
+      },
+      {
+        "source": "SUCCESSION-ORDER-AND-CONFLICTS.md",
+        "target": "RECEIPT-SUCCESSION-ORDER.md"
+      },
+      {
+        "source": "RECEIPT-SUCCESSION-ORDER.md",
+        "target": "SUCCESSION-ORDER-AND-CONFLICTS.md"
+      },
+      {
+        "source": "RECEIPT-SUCCESSION-ORDER.md",
+        "target": "BRIEF-SUCCESSION-R2.md"
+      },
+      {
+        "source": "RECEIPT-SUCCESSION-ORDER.md",
+        "target": "BRIEF-SUCCESSION-ORDER.md"
+      },
+      {
+        "source": "RECEIPT-SUCCESSION-ORDER.md",
+        "target": "docs/evidence/succession-order/r2/owner-rulings.json"
+      },
+      {
+        "source": "RECEIPT-SUCCESSION-ORDER.md",
+        "target": "docs/evidence/succession-order/r2/pr-snapshot.json"
+      },
+      {
+        "source": "RECEIPT-SUCCESSION-ORDER.md",
+        "target": "docs/evidence/succession-order/r2/checks.json"
+      },
+      {
+        "source": "RECEIPT-SUCCESSION-ORDER.md",
+        "target": "docs/evidence/succession-order/r2/SHA256SUMS"
+      }
+    ]
+  },
+  "five_requested_sections": "PRESENT (structural coverage only, semantic review separate)",
+  "source_implementation": "NONE",
+  "product_tests": "NOT_RUN",
+  "dual_writer": "NOT_RUN"
+}
