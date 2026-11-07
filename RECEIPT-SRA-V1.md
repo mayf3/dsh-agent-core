@@ -1,7 +1,7 @@
 # RECEIPT-SRA-V1 — R2 docs-only 起草收据
 
 ```text
-STATUS = DRAFT_COMPLETE_PUBLICATION_PENDING
+STATUS = DRAFT_REVIEWED_DOCS_PUBLICATION_PENDING
 GOAL = Owner预授权V2的六节可执行委托草案及docs-only PR
 AUTHORITY_ACTION = NEW
 ROUTE_STAGE = AUTHORITY_AUTHORING
@@ -105,15 +105,22 @@ Owner原件的选中记录在 [owner-selected-records.json](docs/reports/sra-v1-
 
 ## 6. 验证与出版状态
 
-适用验证是文档语义独审、来源hash/selector复核、六节/六条/十节覆盖、Markdown本地链接、docs-only diff、`git diff --check` 和 vendored integrity；不运行产品测试或生产工具来冒充文档审查。命令及独审实际结果将在本轮证据目录记录后更新此段。
+适用验证是文档语义独审、来源hash/selector复核、六节/六条/十节覆盖、Markdown本地链接、docs-only diff、`git diff --check` 和 vendored integrity；不运行产品测试或生产工具来冒充文档审查。初始实际检查见 [checks-initial.json](docs/reports/sra-v1-draft-20261107/checks-initial.json)，所有检查通过；对实际新增文件还执行了暂存区 `git diff --cached --check`（rc0）和9文件docs-only白名单核验。
+
+语义候选 commit=`67723399ee801d3262b92969a8c016ff53c8a7d2`，parent=`f6e332d7568b01c5253618449bfef5839102c851`；草案实际 SHA256=`5c1bb2567bd2ca04a2743d6c871934204fe511023aec340058f02df0477531e2`。两名非作者 `/root/sra_source_audit`、`/root/w7_gate_audit` 对同一候选独立审查均 PASS，`FROZEN_BLOCKER_UNION=[]`。前者核Owner六条/身份/接受/生效，后者核W7十节/门/阶段/回滚；两者都未创作受审语义或操作生产。结论见 [independent-review.md](docs/reports/sra-v1-draft-20261107/independent-review.md)。本次后续提交仅记录审查与收据，不改草案语义，仍需非作者 final-HEAD delta recheck，结果绑定于PR出版记录。
+
+出版前再次 API 读取 main 实际rc0，仍为同一 `f6e332d7568b01c5253618449bfef5839102c851`。当前隔离worktree检查干净；原检出只读status显示3个installer相关tracked修改及既有untracked文件，均未由本任务写入、暂存或纳入本分支；不对其内容或资格作结论。
 
 提交/推送/PR均遵守本轮直接授权；本地没有配置remote，使用明确仓库URL推送，`gh pr create --repo mayf3/dsh-agent-core --base main` 明确base仓库。不合并。普通失败停止并记录真实错误；仅push同类瞬断允许一次重试，写入结果不明先原生/API读回。
 
 ```text
 SOURCE_AUTHORING = COMPLETE
-INDEPENDENT_REVIEW = PENDING
-CHECKS = PENDING
-COMMIT / PUSH / PR = NOT_EXECUTED_AT_THIS_RECORD_POINT
+INDEPENDENT_REVIEW = PASS_AT_67723399_NONAUTHOR_X2
+FROZEN_BLOCKER_UNION = []
+CHECKS = PASS
+SEMANTIC_COMMIT = 67723399ee801d3262b92969a8c016ff53c8a7d2
+PUBLICATION_HEAD = BOUND_BY_PR_HEAD_AND_FINAL_DELTA_REVIEW
+PUSH / PR = NOT_EXECUTED_AT_THIS_RECORD_POINT
 SPEC_ACCEPTANCE / DELEGATION_EFFECTIVE / W7_ISSUANCE = NOT_EXECUTED
-NEXT_REAL_ACTION = DOCS_VALIDATION_AND_INDEPENDENT_REVIEW
+NEXT_REAL_ACTION = RECEIPT_COMMIT_FINAL_HEAD_DELTA_RECHECK_PUSH_AND_PR
 ```
