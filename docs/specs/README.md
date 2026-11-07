@@ -456,5 +456,7 @@ activate a deployment controller/profile, or perform production operations.
 | [Recovery Liveness V1](AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1.md) | superseded → PPR | historical | full body and historical scoped effects carried |
 | [RBAH V1](AGENT_CORE_READBACK_AGING_HANDOFF_V1.md) | accepted limited semantic; dependency pointers migrated | none; production none | WEC/Svc companion gates remain; no new reason implementation |
 | [RTH V1](AGENT_CORE_REFUSAL_TERMINAL_HANDOFF_V1.md) | accepted limited proposal semantics; NEW, supersedes [] | none; production none | #655→#657→#658 main activation; owning Core whole successors and paired Svc acceptance still required before new protocol implementation |
+| [AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V5](AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V5.md) | accepted 2026-11-08; whole successor to WEC V4; bounded unlocked-read timing | implementation contracts (post-acceptance); production none | `rulings[id=owner-20261108-three-unified].items[1]`; PR #664 semantic source `e6e32698`; reviewed head `e6e32698` |
+| [AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V2](AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V2.md) | accepted 2026-11-08; whole successor to WAE V3 + Recovery Liveness V1; bounded planned admission + refusal terminal | implementation contracts (post-acceptance); production none | `rulings[id=owner-20261108-three-unified].items[1]`; PR #664 semantic source `e6e32698`; reviewed head `e6e32698` |
 
 Branch statuses do not establish active main authority before those ordered merges.
