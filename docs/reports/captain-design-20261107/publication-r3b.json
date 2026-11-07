@@ -1,0 +1,182 @@
+{
+  "recorded_at_utc": "2026-11-07T07:35:26.374135+00:00",
+  "stage": "PR created and first commit read back; final receipt commit/push still pending",
+  "repository": "mayf3/dsh-agent-core",
+  "branch": "docs/captain-design-proposal",
+  "docs_commit": "8bb66baf4a850c9c6c6de23fe89ed579549932ba",
+  "commit_steps": [
+    {
+      "argv": [
+        "git",
+        "add",
+        "--",
+        "CAPTAIN-DESIGN-PROPOSAL.md",
+        "RECEIPT-CAPTAIN-DESIGN.md",
+        "STOPPED-CAPTAIN-DESIGN.md",
+        "docs/reports/captain-design-20261107/"
+      ],
+      "raw_rc": 0,
+      "stdout": "",
+      "stderr": "",
+      "observed_at_utc": "2026-11-07T07:30:56.345690+00:00"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "raw_rc": 0,
+      "stdout": "",
+      "stderr": "",
+      "observed_at_utc": "2026-11-07T07:30:56.360006+00:00"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--cached",
+        "--stat"
+      ],
+      "raw_rc": 0,
+      "stdout": " CAPTAIN-DESIGN-PROPOSAL.md                         | 211 +++++++++++++++++++++\n RECEIPT-CAPTAIN-DESIGN.md                          | 118 ++++++++++++\n STOPPED-CAPTAIN-DESIGN.md                          | 201 ++++++++++++++++++++\n .../BRIEF-CAPTAIN-DESIGN.source.md                 |  18 ++\n docs/reports/captain-design-20261107/checks.json   |  15 ++\n .../control-probe-result.json                      |  30 +++\n .../captain-design-20261107/control-probe.md       |  41 ++++\n .../independent-review-r3b.json                    |  34 ++++\n .../owner-selected-records.json                    |  43 +++++\n .../captain-design-20261107/r3b-delta-checks.json  |  90 +++++++++\n .../captain-design-20261107/source-provenance.json | 112 +++++++++++\n .../captain-design-20261107/static-checks.md       | 145 ++++++++++++++\n 12 files changed, 1058 insertions(+)\n",
+      "stderr": "",
+      "observed_at_utc": "2026-11-07T07:30:56.373261+00:00"
+    },
+    {
+      "argv": [
+        "git",
+        "commit",
+        "-m",
+        "docs(captain): publish proposed delegation design and R3b checks"
+      ],
+      "raw_rc": 0,
+      "stdout": "[docs/captain-design-proposal 8bb66baf] docs(captain): publish proposed delegation design and R3b checks\n 12 files changed, 1058 insertions(+)\n create mode 100644 CAPTAIN-DESIGN-PROPOSAL.md\n create mode 100644 RECEIPT-CAPTAIN-DESIGN.md\n create mode 100644 STOPPED-CAPTAIN-DESIGN.md\n create mode 100644 docs/reports/captain-design-20261107/BRIEF-CAPTAIN-DESIGN.source.md\n create mode 100644 docs/reports/captain-design-20261107/checks.json\n create mode 100644 docs/reports/captain-design-20261107/control-probe-result.json\n create mode 100644 docs/reports/captain-design-20261107/control-probe.md\n create mode 100644 docs/reports/captain-design-20261107/independent-review-r3b.json\n create mode 100644 docs/reports/captain-design-20261107/owner-selected-records.json\n create mode 100644 docs/reports/captain-design-20261107/r3b-delta-checks.json\n create mode 100644 docs/reports/captain-design-20261107/source-provenance.json\n create mode 100644 docs/reports/captain-design-20261107/static-checks.md\n",
+      "stderr": "",
+      "observed_at_utc": "2026-11-07T07:30:56.403134+00:00"
+    }
+  ],
+  "first_push": {
+    "argv": [
+      "git",
+      "-c",
+      "credential.helper=",
+      "-c",
+      "credential.helper=!gh auth git-credential",
+      "push",
+      "https://github.com/mayf3/dsh-agent-core.git",
+      "HEAD:refs/heads/docs/captain-design-proposal"
+    ],
+    "raw_rc": 0,
+    "stdout": "",
+    "stderr": "remote: \nremote: Create a pull request for 'docs/captain-design-proposal' on GitHub by visiting:        \nremote:      https://github.com/mayf3/dsh-agent-core/pull/new/docs/captain-design-proposal        \nremote: \nTo https://github.com/mayf3/dsh-agent-core.git\n * [new branch]        HEAD -> docs/captain-design-proposal\n",
+    "observed_at_utc": "2026-11-07T07:33:15.665234+00:00"
+  },
+  "pr_create": {
+    "argv": [
+      "gh",
+      "pr",
+      "create",
+      "--repo",
+      "mayf3/dsh-agent-core",
+      "--head",
+      "docs/captain-design-proposal",
+      "--base",
+      "main",
+      "--title",
+      "docs: Release Captain 受托核定方案与 R3b 处置回执",
+      "--body-file",
+      "/private/tmp/captain-r3b-pr-body.md"
+    ],
+    "raw_rc": 0,
+    "stdout": "https://github.com/mayf3/dsh-agent-core/pull/649\n",
+    "stderr": "",
+    "observed_at_utc": "2026-11-07T07:33:34.668526+00:00"
+  },
+  "readbacks": [
+    {
+      "argv": [
+        "gh",
+        "pr",
+        "view",
+        "649",
+        "--repo",
+        "mayf3/dsh-agent-core",
+        "--json",
+        "number,url,state,mergedAt,headRefName,headRefOid,baseRefName,baseRefOid"
+      ],
+      "raw_rc": 0,
+      "stdout": "{\"baseRefName\":\"main\",\"baseRefOid\":\"55f442c74414dc723306a6d8e0cdba73d78eb8da\",\"headRefName\":\"docs/captain-design-proposal\",\"headRefOid\":\"8bb66baf4a850c9c6c6de23fe89ed579549932ba\",\"mergedAt\":null,\"number\":649,\"state\":\"OPEN\",\"url\":\"https://github.com/mayf3/dsh-agent-core/pull/649\"}\n",
+      "stderr": "",
+      "observed_at_utc": "2026-11-07T07:35:24.501721+00:00"
+    },
+    {
+      "argv": [
+        "gh",
+        "pr",
+        "view",
+        "648",
+        "--repo",
+        "mayf3/dsh-agent-core",
+        "--json",
+        "state,mergedAt,mergeCommit,headRefOid,url"
+      ],
+      "raw_rc": 0,
+      "stdout": "{\"headRefOid\":\"459c7de7a98a96c43cbea34cc315cc9a49ddbe12\",\"mergeCommit\":{\"oid\":\"55f442c74414dc723306a6d8e0cdba73d78eb8da\"},\"mergedAt\":\"2026-11-07T07:31:39Z\",\"state\":\"MERGED\",\"url\":\"https://github.com/mayf3/dsh-agent-core/pull/648\"}\n",
+      "stderr": "",
+      "observed_at_utc": "2026-11-07T07:35:25.753824+00:00"
+    },
+    {
+      "argv": [
+        "gh",
+        "api",
+        "repos/mayf3/dsh-agent-core/git/ref/heads/main"
+      ],
+      "raw_rc": 0,
+      "stdout": "{\"ref\":\"refs/heads/main\",\"node_id\":\"REF_kwDOT4gz1q9yZWZzL2hlYWRzL21haW4\",\"url\":\"https://api.github.com/repos/mayf3/dsh-agent-core/git/refs/heads/main\",\"object\":{\"sha\":\"55f442c74414dc723306a6d8e0cdba73d78eb8da\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/mayf3/dsh-agent-core/git/commits/55f442c74414dc723306a6d8e0cdba73d78eb8da\"}}",
+      "stderr": "",
+      "observed_at_utc": "2026-11-07T07:35:26.373920+00:00"
+    }
+  ],
+  "independent_review": {
+    "reviewer": "/root/captain_r3b_review",
+    "target_head": "8bb66baf4a850c9c6c6de23fe89ed579549932ba",
+    "base_head": "f6e332d7568b01c5253618449bfef5839102c851",
+    "author_independence": "PASS",
+    "blockers": 0,
+    "spec_gaps": 0,
+    "docs_publication_ready": true,
+    "merge_ready": false,
+    "implementation_allowed": false,
+    "operation_allowed": false,
+    "scope": "independent resumed proposal review, committed document tree, R3b receipt/STOPPED and evidence bindings; final receipt delta reviewed separately in PR"
+  },
+  "bounded_base_impact": {
+    "initial_base": "f6e332d7568b01c5253618449bfef5839102c851",
+    "current_main": "55f442c74414dc723306a6d8e0cdba73d78eb8da",
+    "change": "PR648 merged previously reviewed formalization and Owner acceptance transaction",
+    "semantic_source": "61b97d326e337057cd1f71c0a6ff0dc37ab72ec2",
+    "sra_head": "459c7de7a98a96c43cbea34cc315cc9a49ddbe12",
+    "source_snapshot_is_historical": true,
+    "six_contract_sections": "independent reviewer confirmed exact text equality after reversing format heading/link relocation",
+    "captain_appointment_control_qualification_and_window_issuance": "not established by SRA acceptance or this docs task"
+  },
+  "non_gate_read_only_tool_error": {
+    "actor": "/root/captain_r3b_review",
+    "command": "git show --stat --oneline 8bb66baf4a850c9c6c6de23fe89ed579549932ba && git diff --name-status f6e332d7568b01c5253618449bfef5839102c851 8bb66baf4a850c9c6c6de23fe89ed579549932ba && cat docs/reports/captain-design-20261107/r3b-delta-checks.json && cat docs/reports/captain-design-20261107/r3b-publication-preflight.json",
+    "raw_rc": 1,
+    "error_as_shown_in_combined_output": "cat: docs/reports/captain-design-20261107/r3b-publication-preflight.json: No such file or directory",
+    "stderr_separately_captured": false,
+    "disposition": "extra guessed file not in the required 12-file delivery or evidence list; no validator execution or mutation; error retained, not called PASS; resumed read-only review from actual committed paths"
+  },
+  "local_object_availability_observation": {
+    "command": "git cat-file -t 55f442c74414dc723306a6d8e0cdba73d78eb8da",
+    "raw_rc": 128,
+    "output": "fatal: git cat-file: could not get object info",
+    "meaning": "new main object not present in local object database; fresh main and merge facts read successfully with GitHub API; no fetch/rebase/shared remote change"
+  },
+  "production_reads": 0,
+  "production_writes": 0,
+  "merge_performed_by_this_task": false
+}
