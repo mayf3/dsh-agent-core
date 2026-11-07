@@ -1,0 +1,10 @@
+{
+  "ts": "2026-11-07 20:54",
+  "id": "owner-20261107-five-decisions",
+  "items": [
+    "①Captain principal=A(专用release-captain-agent-core-20261107): 先auth-service身份绑定核验→任命登记(validUntil 2026-12-07T16:00Z)→§6.5控制生效验证(负向: 越界/过期/缺门拒绝)→生效",
+    "②两缺口边界确认(PR#653评估采纳): aging与refused-terminal为两独立提案共用机制; 按此起草/推进",
+    "③#643 aging提案正式接受——**限定: 仅限提案语义; WEC/Svc配套权威正式接受前不得实施新reason或用于生产**(实施闸门保留)",
+    "④planned恢复合同立项: docs-first起草走审查(接受仍需Owner)"
+  ]
+}
