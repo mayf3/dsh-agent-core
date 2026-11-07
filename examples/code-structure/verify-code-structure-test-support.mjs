@@ -8,13 +8,13 @@ export const repositoryBase = 'd454c10913315a564945c30404ac2ea59dcd9755';
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const verifierPath = path.join(repository, 'scripts/verify-code-structure.mjs');
 
-export function fixture(t) {
+export function fixture(t, ref = repositoryBase) {
   const parent = mkdtempSync(path.join(tmpdir(), 'structure-v2-review-'));
   const work = path.join(parent, 'repo');
   execFileSync('git', ['clone', '--shared', '--no-checkout', repository, work], { stdio: 'ignore' });
   execFileSync('git', ['sparse-checkout', 'init', '--cone'], { cwd: work });
   execFileSync('git', ['sparse-checkout', 'set', '.agents', 'docs', 'examples', 'packages/agent-router/test'], { cwd: work });
-  execFileSync('git', ['checkout', '--detach', repositoryBase], { cwd: work, stdio: 'ignore' });
+  execFileSync('git', ['checkout', '--detach', ref], { cwd: work, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.name', 'Structure Fixture'], { cwd: work });
   execFileSync('git', ['config', 'user.email', 'fixture@example.invalid'], { cwd: work });
   t.after(() => rmSync(parent, { recursive: true, force: true }));
