@@ -1,5 +1,28 @@
 import { DEFAULT_MAX_ATTEMPTS_PER_VISIT } from './ledger.js'
 
+/** Candidate selection only; commits still revalidate under the ledger lock. */
+export function staleCandidates(attempts, thresholdMs, nowMs) {
+  if (!Number.isInteger(thresholdMs) || thresholdMs < 1) {
+    throw new TypeError('workflow-execution: listStaleCandidatesFresh requires a positive integer thresholdMs')
+  }
+  return attempts.filter(attempt => attempt.delivered !== undefined
+    && attempt.retryReason !== 'owner_assistance_resolved'
+    && nowMs - attempt.delivered.atMs >= thresholdMs
+    && ((attempt.state === 'ACTIVE' && attempt.phase === 'run_delivered')
+      || (attempt.state === 'NEEDS_REVIEW' && attempt.judgment === 'run_ended_no_submission')))
+}
+
+export function runEndedCandidates(attempts, retryDelayMs, nowMs) {
+  if (!Number.isInteger(retryDelayMs) || retryDelayMs < 1) {
+    throw new TypeError('workflow-execution: listRunEndedCandidatesFresh requires a positive integer retryDelayMs')
+  }
+  return attempts.filter(attempt => attempt.state === 'NEEDS_REVIEW'
+    && attempt.retryReason !== 'owner_assistance_resolved'
+    && attempt.judgment === 'run_ended_no_submission'
+    && Number.isInteger(attempt.reconciledAtMs)
+    && nowMs - attempt.reconciledAtMs >= retryDelayMs)
+}
+
 export function createTerminalAttemptOperations({ ledger, escalateAttemptLimit }) {
   async function isAtAttemptLimit(attempt) {
     const policy = ledger.attemptPolicy ? await ledger.attemptPolicy(attempt)

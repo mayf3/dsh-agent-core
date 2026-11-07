@@ -11,7 +11,7 @@ import { createRecoveryOperation } from './recovery/operation.js'
 import { createReadbackOperations } from './recovery/readback.js'
 import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeStaleFromDetail } from './judgment.js'
 import { createOwnerAssistanceResumeOperations } from './owner-assistance-resume-engine.js'
-import { createAttemptLimitEscalation, createTerminalAttemptOperations } from './terminal-attempt-operations.js'
+import { createAttemptLimitEscalation, createTerminalAttemptOperations, staleCandidates, runEndedCandidates } from './terminal-attempt-operations.js'
 import { reconcileDeliveryEvidence } from './projection.js'
 import { createAdmissionBudget } from './ledger-admission.js'
 export const DEFAULT_POLL_INTERVAL_MS = 30_000
@@ -215,8 +215,10 @@ export function createWorkflowExecutionEngine({
   /** Reconcile ACTIVE attempts; blocked recovery uses the shared safe gate. */
   async function reconcileOnce() {
     const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [], staleObservations: [] }
-    for (const attempt of await ledger.listActiveFresh()) {
+    let candidates = await ledger.snapshotFresh(), refreshCandidates = false
+    for (const attempt of candidates.filter(attempt => attempt.state === 'ACTIVE')) {
       if (attempt.phase !== 'planned' || attempt.retryReason !== 'owner_assistance_resolved') continue
+      refreshCandidates = true
       try {
         await ledger.continuePlannedOwnerResume(attempt.nodeVisitId,
           (fresh) => ownerResumeOps.verifyPlannedOwnerResume(fresh),
@@ -225,15 +227,17 @@ export function createWorkflowExecutionEngine({
         log.error?.(`workflow-execution: planned Owner-resume recovery failed for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
     }
-    // Cross-process failover must not reconcile a cached projection. Refresh
-    // under the ledger's existing OwnerLock before enumerating this pass.
-    for (const attempt of await ledger.listActiveFresh()) {
+    // Share selection until work may have changed it; every commit still replays under lock.
+    if (refreshCandidates) candidates = await ledger.snapshotFresh()
+    refreshCandidates = false
+    for (const attempt of candidates.filter(attempt => attempt.state === 'ACTIVE')) {
       if (attempt.phase === 'resolution_blocked') {
         summary.blocked += 1
         continue
       }
       if (readbacks.owns(attempt)) continue
       summary.examined += 1
+      refreshCandidates = true
       try {
         const turnState = queryTurnState(attempt)
         const verdict = judgeAttempt(attempt, { turnState })
@@ -282,10 +286,12 @@ export function createWorkflowExecutionEngine({
         log.error?.(`workflow-execution: reconcile error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
     }
-    // CTR-SRE-002: the terminal run_ended_no_submission class uses the same business probe.
-    for (const attempt of await ledger.listStaleCandidatesFresh(staleNoProgressThresholdMs)) {
+    if (refreshCandidates) candidates = await ledger.snapshotFresh()
+    refreshCandidates = false
+    for (const attempt of staleCandidates(candidates, staleNoProgressThresholdMs, clock())) {
       if (attempt.state !== 'NEEDS_REVIEW') continue
       if (readbacks.owns(attempt)) continue
+      refreshCandidates = true
       try {
         const stale = await judgeStale(attempt)
         retainStaleObservation(summary, await reconcileTerminalCandidate(attempt, stale, summary.staleReentry))
@@ -294,7 +300,8 @@ export function createWorkflowExecutionEngine({
       }
     }
     // CTR-WEC1-004: fast continuation uses the retry delay; durable UNKNOWN is excluded.
-    for (const attempt of await ledger.listRunEndedCandidatesFresh(retryDelayMs)) {
+    if (refreshCandidates) candidates = await ledger.snapshotFresh()
+    for (const attempt of runEndedCandidates(candidates, retryDelayMs, clock())) {
       if (readbacks.owns(attempt)) continue
       try {
         const stale = await judgeStale(attempt)

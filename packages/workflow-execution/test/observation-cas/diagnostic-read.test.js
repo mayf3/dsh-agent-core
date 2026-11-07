@@ -1,0 +1,168 @@
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+import { createHash } from 'node:crypto'
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { fixture, intent, identity, delivered, engine, VISIT, INSTANCE } from './fixture.js'
+import { ExecutionLedger } from '../../src/ledger.js'
+import { createPluginContext } from '../../../production-runtime/src/context.js'
+import { mountWorkflowCapabilityRuntime } from '../../../production-runtime/src/workflow/capability-runtime.js'
+
+const hash = file => createHash('sha256').update(readFileSync(file)).digest('hex')
+
+async function seeded() {
+  const fx = fixture()
+  await fx.writer.beginAttemptIfAbsent(intent())
+  await fx.writer.recordResolutionBlocked({ nodeVisitId: VISIT, code: 'principal_missing' })
+  return fx
+}
+
+function watch(ledger) {
+  const calls = { mutate: 0, repair: 0, load: 0, lock: 0, append: 0 }
+  for (const [name, count] of [['mutate', 'mutate'], ['load', 'load'], ['appendFileSync', 'append']]) {
+    const original = ledger[name].bind(ledger)
+    ledger[name] = (...args) => {
+      calls[count] += 1
+      if (name === 'load' && args[0]?.repairTornTail) calls.repair += 1
+      return original(...args)
+    }
+  }
+  const lock = ledger.lock.runExclusive.bind(ledger.lock)
+  ledger.lock.runExclusive = (...args) => { calls.lock += 1; return lock(...args) }
+  return calls
+}
+
+function runtime(fx) {
+  const ctx = createPluginContext()
+  const unexpected = () => { throw new Error('diagnostic attempted external operation') }
+  ctx.provide('brokerGateway', { execute: unexpected })
+  ctx.provide('agentPrincipalResolutionAccess', { handlers: { agent_resolve_principal: { resolve: unexpected } } })
+  const mounted = mountWorkflowCapabilityRuntime({ ctx,
+    layout: { workflowExecutionDir: fx.dir, developmentExecutionDir: join(fx.dir, 'development') },
+    router: { deliver: unexpected }, log: { log() {}, warn() {}, error() {} },
+    opts: { workflowExecution: { pollerAgentId: '' } } })
+  return { ledger: mounted.ledger, access: ctx.get('workflowExecutionAccess') }
+}
+
+for (const kind of ['invalid_json', 'missing_newline']) {
+  for (const surface of ['traces', 'attention']) {
+    test(`1367 ${surface}: ${kind} is reported without event-file repair`, async t => {
+      const fx = await seeded()
+      try {
+        if (kind === 'invalid_json') appendFileSync(fx.writer.eventsFile, '{broken-tail')
+        else writeFileSync(fx.writer.eventsFile, readFileSync(fx.writer.eventsFile).subarray(0, -1))
+        const { ledger, access } = runtime(fx)
+        const calls = watch(ledger)
+        const before = hash(ledger.eventsFile)
+        const result = surface === 'traces' ? await access.traces({ workflowInstanceId: INSTANCE }) : await access.attention()
+        const after = hash(ledger.eventsFile)
+        t.diagnostic(JSON.stringify({ surface, kind, before, after, calls }))
+        assert.equal(after, before, 'diagnostic must leave attempts.jsonl hash unchanged')
+        assert.deepEqual(calls, { mutate: 0, repair: 0, load: 1, lock: 1, append: 0 })
+        assert.deepEqual(result.ledgerRead, { tailIncomplete: true, tailKind: kind })
+        assert.equal(surface === 'traces' ? result.nodeVisits[0].executionState : result.items[0].executionState, 'BLOCKED')
+      } finally { fx.cleanup() }
+    })
+  }
+}
+
+test('1367 fresh-reader family: no mutate/repair, current cross-instance prefix, absent file stays absent', async () => {
+  const fx = await seeded()
+  try {
+    fx.reader.load() // prime a cached projection, then publish another writer's change
+    await fx.writer.recordDeliveryFailed({ nodeVisitId: VISIT, ...identity(fx.writer.get(VISIT)), reason: 'injected_failure' })
+    appendFileSync(fx.writer.eventsFile, '{broken-tail')
+    const before = hash(fx.writer.eventsFile)
+    const calls = watch(fx.reader)
+    const snapshot = await fx.reader.snapshotFresh()
+    assert.equal(snapshot[0].state, 'NEEDS_REVIEW')
+    assert.deepEqual(await fx.reader.listActiveFresh(), [])
+    assert.deepEqual(await fx.reader.listStaleCandidatesFresh(1), [])
+    assert.deepEqual(await fx.reader.listRunEndedCandidatesFresh(1), [])
+    assert.deepEqual(await fx.reader.listReadbackCandidatesFresh(1), [])
+    const status = await fx.reader.inspectFresh((_attempts, read) => read)
+    assert.deepEqual(status, { tailIncomplete: true, tailKind: 'invalid_json' })
+    assert.equal(hash(fx.writer.eventsFile), before)
+    assert.equal(calls.mutate, 0)
+    assert.equal(calls.repair, 0)
+    assert.equal(calls.append, 0)
+    const empty = new ExecutionLedger({ dir: join(fx.dir, 'absent') })
+    assert.deepEqual(await empty.snapshotFresh(), [])
+    assert.equal(existsSync(empty.eventsFile), false)
+  } finally { fx.cleanup() }
+})
+
+for (const kind of ['invalid_json', 'missing_newline']) {
+  test(`1367 real mutation still repairs ${kind} under the existing lock`, async () => {
+    const fx = await seeded()
+    try {
+      if (kind === 'invalid_json') appendFileSync(fx.writer.eventsFile, '{broken-tail')
+      else writeFileSync(fx.writer.eventsFile, readFileSync(fx.writer.eventsFile).subarray(0, -1))
+      const before = hash(fx.writer.eventsFile)
+      const calls = watch(fx.reader)
+      await fx.reader.recordDeliveryFailed({ nodeVisitId: VISIT, ...identity(fx.writer.get(VISIT)), reason: 'injected_failure' })
+      assert.equal(calls.repair, 1)
+      assert.equal(calls.lock, 1)
+      assert.notEqual(hash(fx.writer.eventsFile), before)
+      assert.ok(readFileSync(fx.writer.eventsFile, 'utf8').endsWith('\n'))
+      for (const line of readFileSync(fx.writer.eventsFile, 'utf8').trim().split('\n')) JSON.parse(line)
+      assert.equal(fx.reader.get(VISIT).state, 'NEEDS_REVIEW')
+    } finally { fx.cleanup() }
+  })
+}
+
+test('1367 non-tail corruption remains fail-loud and unchanged', async () => {
+  const fx = await seeded()
+  try {
+    appendFileSync(fx.writer.eventsFile, '{broken-record\n')
+    const before = hash(fx.writer.eventsFile)
+    await assert.rejects(fx.reader.snapshotFresh(), /corrupt ledger record/)
+    assert.equal(hash(fx.writer.eventsFile), before)
+  } finally { fx.cleanup() }
+})
+
+test('1367 no-work reconciliation shares four candidate scans: six total replays become three', async t => {
+  const fx = await seeded()
+  try {
+    await fx.writer.recordDeliveryFailed({ nodeVisitId: VISIT, ...identity(fx.writer.get(VISIT)), reason: 'injected_failure' })
+    const before = hash(fx.writer.eventsFile)
+    const calls = watch(fx.reader)
+    const summary = await engine(fx).engine.reconcileOnce()
+    t.diagnostic(JSON.stringify({ source: process.env.READSEP_SOURCE_SHA, calls, examined: summary.examined }))
+    assert.equal(summary.examined, 0)
+    assert.equal(hash(fx.writer.eventsFile), before)
+    // One candidate snapshot plus the existing readback and exact Router-correlation inspections.
+    assert.equal(calls.load, 3)
+    assert.equal(calls.lock, 3)
+    assert.equal(calls.mutate, 0)
+    assert.equal(calls.repair, 0)
+  } finally { fx.cleanup() }
+})
+
+test('1367 candidate refresh retains same-pass ACTIVE to terminal stale processing', async () => {
+  const fx = fixture({ age: 2_000 })
+  try {
+    await delivered(fx.writer)
+    const run = engine(fx)
+    const result = await run.engine.reconcileOnce()
+    assert.deepEqual(result.staleReentry, [VISIT])
+    assert.equal(fx.reader.get(VISIT).judgment, 'stale_no_progress')
+    assert.equal(fx.reader.get(VISIT).generation, 1)
+    assert.deepEqual(run.calls.delivers, [])
+    assert.deepEqual(run.calls.errors, [])
+  } finally { fx.cleanup() }
+})
+
+test('1367 tail qualification belongs to the current read and healthy diagnostic shapes stay unchanged', async () => {
+  const fx = await seeded()
+  try {
+    appendFileSync(fx.writer.eventsFile, '{broken-tail')
+    assert.deepEqual(await fx.reader.inspectFresh((_attempts, read) => read),
+      { tailIncomplete: true, tailKind: 'invalid_json' })
+    await fx.writer.recordDeliveryFailed({ nodeVisitId: VISIT, ...identity(fx.writer.get(VISIT)), reason: 'injected_failure' })
+    assert.deepEqual(await fx.reader.inspectFresh((_attempts, read) => read), { tailIncomplete: false })
+    const { access } = runtime(fx)
+    assert.equal(Object.hasOwn(await access.traces({ workflowInstanceId: INSTANCE }), 'ledgerRead'), false)
+    assert.equal(Object.hasOwn(await access.attention(), 'ledgerRead'), false)
+  } finally { fx.cleanup() }
+})
