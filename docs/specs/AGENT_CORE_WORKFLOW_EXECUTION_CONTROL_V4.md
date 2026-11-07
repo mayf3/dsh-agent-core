@@ -41,7 +41,15 @@ acceptance_authority_selector: $.rulings[id=owner-20261107-four-pr-rulings]
 acceptance_authority_canonical_sha256: 677bfe608a67d67f8f9092d817fff0e4f4d040f1bc6e0a0184a69315bc54d7b7
 acceptance_transaction_executor: /root under user-delegated standing section 3B; records Owner decision only
 activation_boundary: main merge after independent final-HEAD review; until then main predecessor remains controlling
+current_recovery_authority: AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V1
+current_recovery_authority_activation: ordered main merge of PR 655 then PR 657
 ---
+
+<!-- R4_WEC_CURRENT_RECOVERY_OWNER -->
+> Current recovery ownership resolves WAE3 and Liveness1 references through their complete
+> successor PPR V1 after ordered #655/#657 main activation. Historical references and WEC4
+> Contracts remain unchanged; only two designated collection reads use the bounded lock exception.
+<!-- END R4_WEC_CURRENT_RECOVERY_OWNER -->
 
 # AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4
 

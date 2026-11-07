@@ -53,7 +53,15 @@ external_authorities:
     authority_id: AGENT_FORUM_WORKFLOW_INSTANCE_CONTEXT_V1
     revision: 71882c48593599c550259892e255ec9c3d73b7f2
     relation: interoperates_with
+current_scoped_effect_carrier: AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V1 (Appendix B section 8; CTR-EKRWAE-006/007)
+current_scoped_effect_carrier_activation: ordered main merge of PR 655 then PR 657
 ---
+
+<!-- R4_SRE_SCOPED_EFFECT_CARRIER -->
+> The existing Liveness V1 scoped effects are carried by PPR V1 Appendix B §8,
+> CTR-EKRWAE-006/007 after ordered main activation. SRE V2 remains accepted as a whole.
+> No new clause-supersession, product meaning, or historical acceptance is introduced here.
+<!-- END R4_SRE_SCOPED_EFFECT_CARRIER -->
 
 # AGENT_CORE_WORKFLOW_STALE_REENTRY_V2
 

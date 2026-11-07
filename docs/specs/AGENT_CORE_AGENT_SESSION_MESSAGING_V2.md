@@ -81,7 +81,15 @@ whole_authority_note: >-
   are the CTR-ASM2-008/009 trace-coordinate persistence/return clauses and
   CTR-ASM2-010 through CTR-ASM2-016: a separately granted caller-owned
   exact-turn inspector.
+current_workflow_origin_carrier: AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V1#CTR-WAE-004
+current_workflow_origin_carrier_activation: ordered main merge of PR 655 then PR 657; historical amendment provenance retained
 ---
+
+<!-- R4_ASM_CURRENT_CARRIER -->
+> Current workflow-origin carrier on ordered main activation is PPR V1 Appendix A `CTR-WAE-004`.
+> Historical `amended_by` and both `inter_agent | workflow_execution` definitions remain unchanged.
+> This pointer migration grants no new origin or delivery authority; branch status is not main activation.
+<!-- END R4_ASM_CURRENT_CARRIER -->
 
 # AGENT_CORE_AGENT_SESSION_MESSAGING_V2
 
