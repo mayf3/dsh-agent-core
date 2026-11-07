@@ -13,6 +13,7 @@ import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeStaleFrom
 import { createOwnerAssistanceResumeOperations } from './owner-assistance-resume-engine.js'
 import { createAttemptLimitEscalation, createTerminalAttemptOperations } from './terminal-attempt-operations.js'
 import { reconcileDeliveryEvidence } from './projection.js'
+import { createAdmissionBudget } from './ledger-admission.js'
 export const DEFAULT_POLL_INTERVAL_MS = 30_000
 export const DEFAULT_MAX_ADMISSIONS_PER_POLL = 25
 
@@ -51,6 +52,7 @@ export function createWorkflowExecutionEngine({
     if (fn === undefined) throw new TypeError(`workflow-execution: engine dep ${name} is required`)
   }
   const maxAdmissions = config.maxAdmissionsPerPoll ?? DEFAULT_MAX_ADMISSIONS_PER_POLL
+  const admissionBudget = createAdmissionBudget(maxAdmissions)
   const staleNoProgressThresholdMs = config.staleNoProgressThresholdMs ?? DEFAULT_STALE_NO_PROGRESS_THRESHOLD_MS
   if (!Number.isInteger(staleNoProgressThresholdMs) || staleNoProgressThresholdMs < 1) {
     throw new TypeError(`workflow-execution: config.staleNoProgressThresholdMs must be a positive integer (got ${JSON.stringify(config.staleNoProgressThresholdMs)})`)
@@ -81,7 +83,7 @@ export function createWorkflowExecutionEngine({
    * precedes Router invocation and post-invocation failures remain terminal.
    * CTR-SRE-004: unproven quiescence defers before mint, preserving eligibility.
    */
-  async function admitDueIntent(rawIntent) {
+  async function admitDueIntent(rawIntent, recordAttemptResult = () => {}) {
     const attemptResult = await ledger.beginAttemptIfAbsent({
       dispatchIntentId: rawIntent.dispatchIntentId,
       nodeVisitId: rawIntent.nodeVisitId,
@@ -126,6 +128,7 @@ export function createWorkflowExecutionEngine({
         }
       }
     }, hasQuiescentTurn, ownerResumeOps.prepareAttemptPlan, (attempt) => ownerResumeOps.canOwnerResume(attempt, ownerResumeOps.queryTurnReconciliation))
+    recordAttemptResult(attemptResult)
     if (!attemptResult.created) {
       if (attemptResult.cause === 'pre_plan_unavailable' || attemptResult.cause === 'owner_resume_proof_unavailable') {
         return { action: 'pre_plan_unavailable', nodeVisitId: rawIntent.nodeVisitId, ...(attemptResult.attempt?.attemptId === undefined ? {} : { attemptId: attemptResult.attempt.attemptId }) }
@@ -319,7 +322,7 @@ export function createWorkflowExecutionEngine({
     const admissions = []
     const skipped = []
     let pages = 0
-    let newAttempts = 0
+    const budget = admissionBudget.begin()
     let boundReached = false
     let boundSkipped = 0
     let cursor
@@ -365,28 +368,29 @@ export function createWorkflowExecutionEngine({
           log.warn?.(`workflow-execution: skipped malformed due record (${normalized.reason})`)
           continue
         }
-        if (newAttempts >= maxAdmissions) {
+        if (!budget.take(normalized.intent.nodeVisitId)) {
           boundReached = true
           boundSkipped += 1
           continue
         }
         try {
-          const result = await admitDueIntent(normalized.intent)
+          const result = await admitDueIntent(normalized.intent, budget.recordCreated)
           admissions.push(result)
-          if (result.action !== 'already_attempted' && result.action !== 'deferred_quiescence') newAttempts += 1
+          budget.recordResult(result.action)
         } catch (error) {
           log.error?.(`workflow-execution: admission error: ${error?.message ?? error}`)
           admissions.push({ action: 'engine_error', error: String(error?.message ?? error) })
-          newAttempts += 1
+          budget.recordUnknown()
         }
       }
       if (exhausted) break
       cursor = { afterNextEligibleAt: last.nextEligibleAt, afterDispatchIntentId: last.dispatchIntentId }
     }
+    if (!drainedEarly) budget.finish()
     if (boundReached) {
-      log.warn?.(`workflow-execution: admission bound (${maxAdmissions}) reached; ${boundSkipped} due intents left unadmitted — they stay due and are re-discovered next sweep`)
+      log.warn?.(`workflow-execution: bounded admission probes (${JSON.stringify(budget.stats)}); ${boundSkipped} due intents deferred to a later probe rotation`)
     }
-    return { ok: true, reconciled, admissions, skipped, pages }
+    return { ok: true, reconciled, admissions, skipped, pages, admissionBudget: { ...budget.stats } }
   }
 
 
