@@ -73,3 +73,126 @@ NEXT_ACTION = CONTINUE
 Model convergence：RETAIN 既有 reconciler、OwnerLock、ledger、recoverAttempt 与人工入口；MIGRATE blocked 永久 skip 到同一入口的有界自动消费；不新增 Scheduler/timer/queue/恢复引擎。delivery-domain/B3/Owner-resume 保持各自既有责任，不合并不同许可。
 
 EXPANSION_TRIGGER：权威冲突、普通 planned 正向准入、业务 replay/身份或权限扩展、必需验收失败；本任务不得扩展修复。
+
+## R4 PREFLIGHT — only B2-R3-REV-001 (2026-11-07)
+
+User R4 authorizes repairing the single implementation blocker, retaining the
+uncommitted R3 receipt/evidence and STOPPED history, then rerunning all prescribed
+gates, committing, pushing and opening a PR against main without merge. Mechanical
+read errors may continue; implementation/test/review/structure failures stop.
+
+```text
+schema_version = 2
+SPEC_GOVERNANCE_MODE = PREFLIGHT
+TARGET_REPOSITORY = mayf3/dsh-agent-core
+REVIEW_TARGET_HEAD = 77b9644b2a6ff70cb6af2cf00bb134502a0eef8b
+BASE_HEAD = CURRENT_BASE_HEAD = 3c1bcf98bc40a2c34cca24f241c87d1b12cea216
+AUTHORITY_ACTION = REUSE
+ROUTE_STAGE = IMPLEMENTATION
+AUTHORITY_ACCEPTED_IN_BASE = YES
+PRIMARY_AUTHORITY = AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1 CTR-EKRWAE-003/004/005/007 @ BASE_HEAD
+IMPLEMENTATION_AUTHORITY = contracts
+PLAN_LEVEL = BRIEF
+ASSURANCE_LEVEL = DURABLE
+MUTATION_AUTHORIZATION = EXECUTION_MANDATE = VALID (user R4 + original Brief)
+ISOLATED_WRITE_SURFACE = YES (same worktree/ref; single source writer)
+CONTROLLED_RUNBOOK_REQUIRED = NO
+ATOMIC_SPEC_IMPLEMENTATION_PERMITTED = NO
+SPEC_GAP_DEPENDENCY = NONE
+EVIDENCE_REVIEWABILITY = PASS
+LIVE_AUTHORITY_GAP = NONE
+OWNER_DECISION_REQUIRED = NO
+BASE_IMPACT = NONE (fresh ls-remote confirms main unchanged)
+IMPLEMENTATION_ALLOWED = YES
+MERGE_READY = NO (not authorized to merge)
+OPERATION_ALLOWED = NO
+NEXT_ACTION = CONTINUE
+```
+
+Choice: **retain the original durable automatic obligation**, not a claimed
+Owner/Assistance handoff. Authority coordinates: Recovery Liveness CTR-003:203–205,
+CTR-004:238–239, CTR-005:243–255 and CTR-007:278–285. The original automatic
+consumer persists an immutable recurring read obligation while ACTIVE, before
+its refusal, in the same append-only ledger and OwnerLock. The existing poller
+then consumes it read-only after terminal refusal. A persisted first-check anchor
+and positive bounded cadence reconstruct subsequent triggers after restart.
+Every pass has a finite budget, per-slot throttling and fair rotation. Dependency
+failure retains the obligation. Observing changed/current world never reopens
+admission or claims closure; this consumer has no authority to transfer/close the
+responsibility. Future legal Owner/Assistance transfer would still require exact
+recipient, delivery, answer-validation and re-trigger evidence under CTR-007.
+
+The B1/B4 terminal-append exception does not cover B2 (§8:160; CTR-003:207–215).
+Thus B2 terminal events/bytes remain immutable, recoverAttempt E3 remains no-op,
+and no terminal recovery_checked/readback append is introduced. WEC CTR-WEC1-005
+is only for actual attempt exhaustion and is not borrowed for world drift.
+No new permission, #1379 transport work, second ledger, timer or queue. Existing
+manual and historical refusals without this automatic obligation are retained,
+not silently enrolled under a different authorization source.
+
+DONE_WHEN: cover refusal-to-read-only-consumer, durable cadence/restart, dependency
+failure, no starvation, concurrent consumers, E3/UNKNOWN/zero-admission; rerun
+original new-33, observation-47, broker-31 and regression-135 plus added cases with
+raw rc0; exact candidate structure rc0; independent affected delta and final-head
+recheck close B2-R3-REV-001; update receipt; commit/push/base-main PR, no merge.
+EXPANSION_TRIGGER: authority conflict, scope/permission widening, required gate
+failure. Retain R3 evidence unchanged (initial hashes: evidence R4 inherited-files).
+Model convergence: RETAIN same poller/recovery/ledger/manual entry; consume its
+previously orphaned automatic refusal obligation without a parallel engine.
+
+
+## R5 PREFLIGHT — single terminal-write regression (2026-11-07)
+
+User R5 authorizes the bounded R4 regression repair, then ordered gates, receipt,
+independent review closure, commit/push and base-main PR without merge. Mechanical
+read errors may continue; mandatory implementation/test/structure/review failure
+stops dependent work. Prior R3/R4 evidence and STOPPED history remain unchanged.
+
+```text
+schema_version = 2
+SPEC_GOVERNANCE_MODE = PREFLIGHT
+TARGET_REPOSITORY = mayf3/dsh-agent-core
+REVIEW_TARGET_HEAD = 77b9644b2a6ff70cb6af2cf00bb134502a0eef8b + inherited R4 working tree
+BASE_HEAD = CURRENT_BASE_HEAD = 3c1bcf98bc40a2c34cca24f241c87d1b12cea216
+AUTHORITY_ACTION = REUSE
+ROUTE_STAGE = IMPLEMENTATION
+AUTHORITY_ACCEPTED_IN_BASE = YES
+PRIMARY_AUTHORITY = AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1 CTR-EKRWAE-001/003/004/005/007 @ BASE_HEAD
+RELATED_AUTHORITIES = WAE V3 CTR-WAE-005/012/013 E3; D-009 section 8.4/8.5; D009_ALIGNMENT CTR-527D2-002/003
+IMPLEMENTATION_AUTHORITY = contracts
+PLAN_LEVEL = BRIEF
+ASSURANCE_LEVEL = DURABLE
+MUTATION_AUTHORIZATION = EXECUTION_MANDATE = VALID (user R5 + original Brief)
+ISOLATED_WRITE_SURFACE = YES (same worktree/ref; root sole writer)
+ATOMIC_SPEC_IMPLEMENTATION_PERMITTED = NO (not needed; proposed adoption does not authorize implementation)
+CONTROLLED_RUNBOOK_REQUIRED = NO
+SPEC_GAP_DEPENDENCY = NONE
+EVIDENCE_REVIEWABILITY = PASS
+LIVE_AUTHORITY_GAP = EMERGENCY_STATE = NONE
+OWNER_DECISION_REQUIRED = NO
+BASE_IMPACT = NONE (fresh ls-remote main unchanged; remote feature branch absent)
+IMPLEMENTATION_ALLOWED = YES
+MERGE_READY = OPERATION_ALLOWED = NO
+NEXT_ACTION = CONTINUE
+```
+
+OBSERVATION: recordReconciled checks terminal state before its existing phase CAS;
+R4 after-WAL and accepted/ACK-lost restart cases record duplicate reconciliation
+errors. A lost ACTIVE observation must return committed:false/attempt_changed at
+the write boundary before reaching the terminal appender. Move the existing phase
+CAS ahead of terminalGuard, retaining identity CAS first and explicit same-phase
+terminal append refusal. Terminal refusal obligations remain carried solely by
+R4's pre-refusal persistent schedule and original poller's read-only consumer.
+No terminal reconciled append, obligation-close write, admission, new store or
+permission is introduced. Strengthen existing fault cases with exact-one terminal
+verdict and byte/projection immutability across later polls; preserve test oracles.
+
+DONE_WHEN: 46 targeted rc0 raw output, then full new13 + original47 + broker31 +
+regression135 rc0 (targeted46 also rebinds original33); exact candidate structure
+rc0; independent affected review closes B2-R3-REV-001 and R5 regression, final-head
+delta recheck; updated receipt and commit/push feat/b2-auto-recovery with PR base
+main, no merge. Additional ledger regression suite validates retained fail-loud.
+EXPANSION_TRIGGER: authority conflict, widened scope/permissions, required gate
+failure. planned-positive, production/install and live business remain excluded.
+Model convergence: RETAIN existing poller/ledger/locks/CAS/recovery entry; no new
+model, timer, queue, authority or attempt lifecycle.

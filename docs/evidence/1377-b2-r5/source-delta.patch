@@ -1,0 +1,108 @@
+diff --git a/packages/workflow-execution/src/ledger-records.js b/packages/workflow-execution/src/ledger-records.js
+index be311604..bd3ce88f 100644
+--- a/packages/workflow-execution/src/ledger-records.js
++++ b/packages/workflow-execution/src/ledger-records.js
+@@ -77,10 +77,12 @@ export async function recordReconciled(ledger, io, { nodeVisitId, expectedAttemp
+     }
+     const stale = staleObservation(current, observation)
+     if (stale) return stale
+-    if (current.state !== 'ACTIVE') io.terminalGuard(current, { kind: 'reconciled', nodeVisitId })
++    // A competing writer may have settled this ACTIVE observation already.
++    // Reject its changed phase before attempting any terminal write.
+     if (current.phase !== expectedPhase) {
+       return { committed: false, attempt: { ...current }, cause: 'attempt_changed' }
+     }
++    if (current.state !== 'ACTIVE') io.terminalGuard(current, { kind: 'reconciled', nodeVisitId })
+     const record = io.recordForActive(nodeVisitId, (event) => {
+       event.kind = 'reconciled'
+       event.verdict = verdict
+diff --git a/packages/workflow-execution/test/observation-cas/blocked-recovery-process.js b/packages/workflow-execution/test/observation-cas/blocked-recovery-process.js
+index 1a710550..46733a98 100644
+--- a/packages/workflow-execution/test/observation-cas/blocked-recovery-process.js
++++ b/packages/workflow-execution/test/observation-cas/blocked-recovery-process.js
+@@ -19,7 +19,7 @@ if (process.env.EKR_BLOCKED_RECOVERY_CHILD === '1') {
+     if (result?.outcome === 'REFUSAL_RESPONSIBILITY_PENDING') recoveryResults.push(result)
+     return result
+   }
+-  let polls = 0, watcher, finishing = false
++  let polls = 0, watcher, finishing = false, terminalSnapshot
+   const send = (stage, fields = {}) => new Promise((resolve, reject) => {
+     process.send({ stage, ...fields }, error => error ? reject(error) : resolve())
+   })
+@@ -47,7 +47,15 @@ if (process.env.EKR_BLOCKED_RECOVERY_CHILD === '1') {
+     ledger,
+     config: { automaticRecoveryEnabled: true, recoveryRetryDelayMs: 80,
+       recoveryMaxDelayMs: 160, maxRecoveryChecksPerPoll: 25 },
+-    fetchDuePage: async () => { polls += 1; return { ok: true, items: [] } },
++    fetchDuePage: async () => {
++      polls += 1
++      const attempt = ledger.get(VISIT)
++      if (mode === 'observe' && terminalSnapshot === undefined && attempt?.state === 'NEEDS_REVIEW') {
++        terminalSnapshot = { attempt: structuredClone(attempt), polls,
++          ledgerBytes: readFileSync(join(dir, 'attempts.jsonl'), 'utf8') }
++      }
++      return { ok: true, items: [] }
++    },
+     resolvePrincipalToAgent: async principalId => {
+       const response = await fetch(`${endpoint}/resolve`, { headers: { 'x-principal-id': principalId } })
+       return response.ok ? response.json() : { ok: false, code: `http_${response.status}` }
+@@ -83,7 +91,7 @@ if (process.env.EKR_BLOCKED_RECOVERY_CHILD === '1') {
+       ? await engine.recoverAttempt({ nodeVisitId: VISIT, authorityRef: 'B2_PROCESS_READ_ONLY_CHECK' }) : undefined
+     const attempt = ledger.get(VISIT)
+     const correlation = attempt ? router.resolveCallerCorrelation({ requestId: attempt.attemptId }) : undefined
+-    await send(stage, { ...fields, attempt, errors, polls, correlations, correlation, recoveryResults, terminalRecovery,
++    await send(stage, { ...fields, attempt, errors, polls, correlations, correlation, recoveryResults, terminalRecovery, terminalSnapshot,
+       routerBytes: readFileSync(routerFile, 'utf8') })
+     process.disconnect()
+   }
+diff --git a/packages/workflow-execution/test/observation-cas/blocked-recovery-restart.test.js b/packages/workflow-execution/test/observation-cas/blocked-recovery-restart.test.js
+index 1b6e2402..920b8f8f 100644
+--- a/packages/workflow-execution/test/observation-cas/blocked-recovery-restart.test.js
++++ b/packages/workflow-execution/test/observation-cas/blocked-recovery-restart.test.js
+@@ -142,6 +142,15 @@ function sameIdentity(actual, initial) {
+   assert.equal(actual.recoveryCheck.businessOutcome, 'UNKNOWN')
+ }
+ 
++function unchangedTerminal(fx, actual) {
++  assert.equal(count(fx.dir, 'reconciled'), 1, 'only the first terminal verdict is appended')
++  assert.equal(actual.terminalSnapshot.attempt.phase, 'reconciled')
++  assert.ok(actual.polls > actual.terminalSnapshot.polls, 'later polls observe the terminal attempt')
++  assert.deepEqual(actual.attempt, actual.terminalSnapshot.attempt, 'later polls cannot mutate the terminal projection')
++  assert.equal(bytes(join(fx.dir, 'attempts.jsonl')), actual.terminalSnapshot.ledgerBytes,
++    'later polls cannot append reconciled or obligation-release events')
++}
++
+ function assertAutomaticAudit(dir, initial) {
+   const authorized = events(dir).filter(event => event.kind === 'recovery_authorized')
+   assert.ok(authorized.length >= 1)
+@@ -216,6 +225,7 @@ for (const point of ['before-wal', 'after-wal']) {
+       assert.equal(count(fx.dir, 'delivery_started'), 1)
+       assert.equal(fx.state.deliveries.length, point === 'before-wal' ? 1 : 0)
+       if (point === 'after-wal') {
++        unchangedTerminal(fx, actual)
+         assert.ok(actual.polls >= 4)
+         assert.equal(count(fx.dir, 'run_delivered'), 0)
+         assert.equal(actual.correlation.state, 'never_existed', 'false negative cannot override durable WAL')
+@@ -254,6 +264,7 @@ test('B2 real SIGKILL after Router acceptance with HTTP ACK lost: restart preser
+     assert.equal(actual.correlation.snapshot.fenceState, 'active')
+     assert.equal(actual.correlation.snapshot.outcome, null)
+     assert.equal(actual.correlation.snapshot.terminationEvidence, null)
++    unchangedTerminal(fx, actual)
+     assert.equal(actual.routerBytes, loaded.routerBytes, 'poll/correlation reads cannot write Router outcome or fence')
+     assert.ok(bytes(join(fx.dir, 'attempts.jsonl')).startsWith(prefix))
+     assertAutomaticAudit(fx.dir, initial.attempt)
+diff --git a/packages/workflow-execution/test/observation-cas/ledger-identity.test.js b/packages/workflow-execution/test/observation-cas/ledger-identity.test.js
+index d19f8e71..fc636da9 100644
+--- a/packages/workflow-execution/test/observation-cas/ledger-identity.test.js
++++ b/packages/workflow-execution/test/observation-cas/ledger-identity.test.js
+@@ -93,6 +93,10 @@ test('P0-A same-generation phase CAS and terminal refusal retain their existing
+     await assertUnchanged(fx.writer, before)
+     const terminal = await runEnded(fx.writer, attempt)
+     const terminalBefore = await snapshot(fx.writer)
++    const lost = await fx.reader.recordReconciled(reconcileInput(attempt))
++    assert.equal(lost.committed, false)
++    assert.equal(lost.cause, 'attempt_changed')
++    await assertUnchanged(fx.writer, terminalBefore)
+     await assert.rejects(fx.writer.recordReconciled(reconcileInput(terminal)), /terminal/)
+     await assertUnchanged(fx.writer, terminalBefore)
+   } finally { fx.cleanup() }

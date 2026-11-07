@@ -1,0 +1,123 @@
+{
+  "status": "SOURCE_COMMITTED_ALL_GATES_AND_INDEPENDENT_DELTA_REVIEW_PASS",
+  "at_utc": "2026-11-07T03:21:55.592225+00:00",
+  "branch": "feat/b2-auto-recovery",
+  "branch_head_before_delivery": "77b9644b2a6ff70cb6af2cf00bb134502a0eef8b",
+  "review_target_head": "ba16e0529a7ac68683d076416106140fdd018009",
+  "base_head": "3c1bcf98bc40a2c34cca24f241c87d1b12cea216",
+  "gates": [
+    {
+      "gate": "syntax-1",
+      "rc": 0
+    },
+    {
+      "gate": "syntax-2",
+      "rc": 0
+    },
+    {
+      "gate": "syntax-3",
+      "rc": 0
+    },
+    {
+      "gate": "syntax-4",
+      "rc": 0
+    },
+    {
+      "gate": "syntax-5",
+      "rc": 0
+    },
+    {
+      "gate": "syntax-6",
+      "rc": 0
+    },
+    {
+      "gate": "syntax-7",
+      "rc": 0
+    },
+    {
+      "gate": "syntax-8",
+      "rc": 0
+    },
+    {
+      "gate": "syntax-9",
+      "rc": 0
+    },
+    {
+      "gate": "diff-check",
+      "rc": 0
+    },
+    {
+      "gate": "blocked-targeted",
+      "rc": 0
+    },
+    {
+      "gate": "observation-cas-full",
+      "rc": 0
+    },
+    {
+      "gate": "broker-owner-obligation-31",
+      "rc": 0
+    },
+    {
+      "gate": "affected-regressions-135",
+      "rc": 0
+    },
+    {
+      "gate": "ledger-terminal-regression",
+      "rc": 0
+    },
+    {
+      "gate": "structure",
+      "rc": 0
+    }
+  ],
+  "targeted": {
+    "tests": 46,
+    "pass": 46,
+    "fail": 0,
+    "new_r4_tests": 13
+  },
+  "observation_cas_full": {
+    "tests": 93,
+    "composition": "original47 + previous33 + R4new13",
+    "pass": 93,
+    "fail": 0
+  },
+  "broker": 31,
+  "affected_regression": 135,
+  "ledger_regression": 12,
+  "structure": {
+    "rc": 0,
+    "candidate_violations": 0,
+    "baseline_debt": 28
+  },
+  "frozen_blocker_union": [
+    "B2-R3-REV-001"
+  ],
+  "delivery_commit": null,
+  "push": false,
+  "pr": null,
+  "merge": false,
+  "production_writes": 0,
+  "limitations": [
+    "planned-positive excluded",
+    "no Svc DB or Docker/compose",
+    "not installed/enabled",
+    "live business and end-to-end unattended UNKNOWN"
+  ],
+  "implementation_head": "d3d4410c9184ca5d1c05607c5d47c3ca024b66c8",
+  "source_equals_tested_candidate": true,
+  "review_result": "PASS",
+  "blockers": 0,
+  "spec_gaps": 0,
+  "frozen_blocker_disposition": "B2-R3-REV-001 CLOSED_FOR_THIS_SOURCE_CANDIDATE",
+  "r5_regression": "CLOSED_FOR_THIS_SOURCE_CANDIDATE",
+  "next_action": "documentation commit, independent final HEAD check, push/base-main PR; no merge",
+  "final_publication_readback": "Delivery PR body and GitHub metadata bind final documentation HEAD; this prepublication checkpoint is not the publication receipt.",
+  "packaging_diagnostic": {
+    "extra_raw_evidence_whitespace_rc": 2,
+    "wrapper_rc": 1,
+    "required_product_gate_failure": false,
+    "disposition": "Preserve byte-exact raw artifacts; scoped handwritten check rc0; independent reviewer agrees applicability; final HEAD recheck pending"
+  }
+}

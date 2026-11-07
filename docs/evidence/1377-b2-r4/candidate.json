@@ -1,0 +1,16 @@
+{
+  "candidate_kind": "unreferenced review commit object; branch HEAD unchanged until final delivery commit",
+  "review_target_head": "2419593722d4846ab6eda915e440af0c477c7e1e",
+  "tree": "da66e9d5eaf5baa36c2f26112d23d8c6a0c3ce7f",
+  "parent_head": "77b9644b2a6ff70cb6af2cf00bb134502a0eef8b",
+  "base_head": "3c1bcf98bc40a2c34cca24f241c87d1b12cea216",
+  "files": {
+    "packages/workflow-execution/src/recovery/automatic-ledger.js": "37872d963f53e9744833a2e882479ea400ef24859b87535c3fc07a4354faf592",
+    "packages/workflow-execution/src/recovery/automatic.js": "1a27ac6e1f6172bdd1cd4a0ce42800c5a592b863dbbcbeabaafa7962c6cacdef",
+    "packages/workflow-execution/src/recovery/operation.js": "2a30ea7476c184e90241a16dde50069b20f080c1c93ed53efebd2aba436a8449",
+    "packages/workflow-execution/src/recovery/refusal.js": "d4c5bb2733f75f70c1db2f5334c5c6a30cdd9663a7b9fbeafad6ab2395e92a26",
+    "packages/workflow-execution/test/observation-cas/blocked-refusal.test.js": "63cc8b2e079db410d8e446c5003a1c9fe2628deac64a99d9911f83cba9849da8",
+    "packages/workflow-execution/test/observation-cas/blocked-recovery-process.js": "27d3f0337a1b758998cbd30e6894204cdf2b97b11bbee4cc78937a74099311d4",
+    "packages/workflow-execution/test/observation-cas/blocked-recovery-restart.test.js": "353ca8d28e125ec3ac5626fae832c8ca011c79a6a7659f9fb82d537fa59ac1ec"
+  }
+}

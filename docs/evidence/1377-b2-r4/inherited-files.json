@@ -1,0 +1,49 @@
+{
+  "head": "77b9644b2a6ff70cb6af2cf00bb134502a0eef8b",
+  "files": {
+    "STOPPED-1377-B2.md": {
+      "sha256": "16b177553a9ac2c0c567a0c140acecd24d71c050a5a12940ae8037e94e2eea12",
+      "bytes": 16841
+    },
+    "RECEIPT-1377-B2.md": {
+      "sha256": "5c41906592b1bd7e847a31604d9d0f2951725fbca2aa0294029b9e0d8d43492d",
+      "bytes": 9772
+    },
+    "docs/evidence/1377-b2-r3/REVIEW-1377-B2-R3.md": {
+      "sha256": "415869ebd4e291258586617568ddacb79271a88fb5868c2623f7a194118ab07c",
+      "bytes": 4445
+    },
+    "docs/evidence/1377-b2-r3/SHA256SUMS.txt": {
+      "sha256": "a72f575cd2e4d2fa24b0b12e865ed976ebf9780a7866b1077f84c24803ac9b18",
+      "bytes": 1148
+    },
+    "docs/evidence/1377-b2-r3/affected-regressions.txt": {
+      "sha256": "4c41e6990b332115e2fb9a0d34da044f5c01a5651fa5e28469a92722e6d6322e",
+      "bytes": 18838
+    },
+    "docs/evidence/1377-b2-r3/blocked-targeted.txt": {
+      "sha256": "fdc18db54bc350ae53f52e4758640b3f79fd49412df339e746e94785e3d57393",
+      "bytes": 88619
+    },
+    "docs/evidence/1377-b2-r3/broker-owner-obligation-31.txt": {
+      "sha256": "1cf06713046ee3c76229d9fcb84f9a10a2263c77ddc6913305e9489efa931f22",
+      "bytes": 7609
+    },
+    "docs/evidence/1377-b2-r3/checkpoint.json": {
+      "sha256": "7fbc79b1d6f8b939a048e072972af31646f25ffca443bc0bb756d2408e334648",
+      "bytes": 2500
+    },
+    "docs/evidence/1377-b2-r3/observation-cas-47.txt": {
+      "sha256": "2675bac220eb23bd4dc0a5a2772f84bd5f302a39c16d8fa8386645ce2b7bc0ac",
+      "bytes": 54043
+    },
+    "docs/evidence/1377-b2-r3/structure.json.txt": {
+      "sha256": "5a1c51787cab889f32f5a84bd7eb5c4a226c981280493c250888093f1e7eed2c",
+      "bytes": 67287
+    },
+    "docs/evidence/1377-b2-r3/syntax.txt": {
+      "sha256": "23eff02f9eeef100aa32a4c92ccc0cc6ea08c7496fe28fb184276c2f9d3e1990",
+      "bytes": 1093
+    }
+  }
+}

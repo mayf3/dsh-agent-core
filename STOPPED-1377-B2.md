@@ -161,3 +161,63 @@ Docker 不可用结论。未生成成功性质的 RECEIPT；安装启用、业�
 
 **未交付面：planned 半**（明确出圈，待 docs-first 合同另立）；本次范围内的 blocked
 实现、自动消费者和真实进程验收也尚未交付，不能以已关闭原范围缺口冒充实现完成。
+
+## R3 停止：必要独立合同审查 REVISE（2026-11-07）
+
+R3 已完成 blocked-only PREFLIGHT、实现候选和隔离验收，停在**独立审查门**，不是只读路径错误或新的权威缺口。
+
+- worktree：`/private/tmp/h1377-b2`；branch：`feat/b2-auto-recovery`。
+- base：`3c1bcf98bc40a2c34cca24f241c87d1b12cea216`。
+- 已提交/已测试/已审源码：`77b9644b2a6ff70cb6af2cf00bb134502a0eef8b`；测试后无源码 diff。
+- 新针对性 **33/33 rc0**（含 5 个真实进程场景）；原 observation-cas **47/47 rc0**；broker **31/31 rc0**（其中要求的 owner-obligation-attempt 6 条全部通过）；受影响回归 **135/135 rc0**。
+- 结构门 rc0：`CANDIDATE_DELTA_PASS_WITH_BASELINE_DEBT`，候选违规 0、既有 debt 28；不声称全仓无债务。
+- 独立 reviewer `/root/blocked_scope_advice`：`REVISE`，冻结 blocker union `[B2-R3-REV-001]`，`SPEC_GAPS=0`。
+
+**具体失败：** 自动 world drift 会记录 `recovery_refused` 并进入终态；自动消费者只选 ACTIVE/resolution_blocked，既有 readback 需要 delivered，Forum 也跳过该 refusal。持久 next-check 成了无消费者元数据，未形成 accepted `CTR-EKRWAE-004/007` 所需责任延续/可靠交接。已有测试只验证此分支零投递，不能证明拒绝后的责任闭环。
+
+**最小关闭：** 在同一 accepted 合同内完成终态 refusal 的实际持久消费者/合法可靠交接，覆盖拒绝后重启、交接失败保留责任和合法答复/重新触发；保留 E3 终态 no-op、UNKNOWN、原身份、零二次 admission。不能假造 Assistance case 或冒用次数耗尽原因，不需另造 Spec。
+
+收到该必要审查门失败后，根立即停止实现、修复、追加测试和 PR 交付，仅保存审查原文、实际日志、哈希、checkpoint 与本停止记录。**未 push、未开 PR、未 merge、零生产写入**；不进行本轮修复/重审循环。
+
+完整失败收据：[RECEIPT-1377-B2.md](RECEIPT-1377-B2.md)。审查原文：[REVIEW-1377-B2-R3.md](docs/evidence/1377-b2-r3/REVIEW-1377-B2-R3.md)。原始执行证据：[docs/evidence/1377-b2-r3/](docs/evidence/1377-b2-r3/)。这些 R3 运行日志及停止收据保存在本 worktree，未在失败后另行提交或远端发布。
+
+planned 半继续明确未交付（CTR-EKRWAE-004 排除）；本次 blocked-only 也因上述唯一审查 blocker 未完成，不能声称关闭 #1377。
+
+
+## R4 停止：必要测试门 rc1（2026-11-07）
+
+用户仅授权修复 B2-R3-REV-001；候选选择 accepted CTR-EKRWAE-003:203–205 /
+004:238–239 / 005:243–255 / 007:278–285 的原自动责任保留方案：ACTIVE时同ledger持久
+cadence，refusal后原poller只读消费，终态零追加；无新权限/传输面/第二账本。
+
+实际branch HEAD仍 `77b9644b2a6ff70cb6af2cf00bb134502a0eef8b`；测试候选为无引用review commit object
+`2419593722d4846ab6eda915e440af0c477c7e1e`，不是分支交付commit。四个源文件、三个测试文件及文档差量
+均保留工作树。7语法检查和whitespace rc0；针对性46条 **44 pass / 2 fail / rc1**。
+两失败为原真实进程 after-wal 与 Router acceptance/ACK-lost restart，均因 actual.errors
+出现 duplicate reconciled 被terminal guard拒绝。新增13条（含refusal SIGKILL+两次重启）
+通过，不能代替整门PASS。没有对照重跑，根因未定，不冒称旧环境噪声。
+
+验收脚本在失败处退出。47/31/135、结构门及正式独立审查 **NOT_RUN**；停止修复、测试、
+交付commit、push和PR，未merge、零生产写入。失败后仅只读提取日志和保存STOPPED/
+RECEIPT/checkpoint/哈希；未修源码或测试、未重跑。R3原证据不变，原R3收据字节归档
+`docs/evidence/1377-b2-r3/RECEIPT-1377-B2-R3.md`，原STOPPED历史原文保留。
+
+完整失败收据：[RECEIPT-1377-B2.md](RECEIPT-1377-B2.md)。原文日志与可恢复patch：
+`docs/evidence/1377-b2-r4/`。原审查blocker未正式验收闭合；planned半及生产面继续未交付。
+
+
+## R5 处置：源码与隔离验收闭合（2026-11-07）
+
+用户 R5 授权单一回归精修。原 phase CAS 前移至终态守卫之前，旧 ACTIVE 观察在写边界
+返回 attempt_changed；明确终态追加仍 fail-loud。R4 义务仍在拒绝前持久登记，终态消费
+零状态/事件变更，不追加 reconciled。R3/R4 历史原文不改。
+
+实际源码 HEAD：`d3d4410c9184ca5d1c05607c5d47c3ca024b66c8`；测试/独立审查候选
+`ba16e0529a7ac68683d076416106140fdd018009`，整个 packages 树相同。
+针对性46、observation-cas全93（原47+33+新13）、broker31、回归135、额外ledger12均rc0；
+结构rc0（候选违规0、历史debt28）。独立受影响审查PASS，B2-R3-REV-001与R5回归已在
+该源码候选闭合。最终文档HEAD复核及push/base-main PR readback随交付PR持久绑定；不合并。
+
+当前证据：[RECEIPT-1377-B2.md](RECEIPT-1377-B2.md) 和 docs/evidence/1377-b2-r5/。
+旧停止状态为历史，不再表示R5测试或合同审查失败。planned-positive及生产/业务面仍排除，
+安装启用/真实Svc DB/跨服务业务/全流程无人值守NOT_RUN/UNKNOWN，零生产写入。

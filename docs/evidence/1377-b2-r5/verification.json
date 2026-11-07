@@ -1,0 +1,56 @@
+{
+  "at_utc": "2026-11-07T03:21:09.205223+00:00",
+  "source_equals_tested_candidate": {
+    "packages/workflow-execution/src/ledger-records.js": true,
+    "packages/workflow-execution/src/recovery/automatic-ledger.js": true,
+    "packages/workflow-execution/src/recovery/automatic.js": true,
+    "packages/workflow-execution/src/recovery/operation.js": true,
+    "packages/workflow-execution/src/recovery/refusal.js": true,
+    "packages/workflow-execution/test/observation-cas/blocked-recovery-process.js": true,
+    "packages/workflow-execution/test/observation-cas/blocked-recovery-restart.test.js": true,
+    "packages/workflow-execution/test/observation-cas/blocked-refusal.test.js": true,
+    "packages/workflow-execution/test/observation-cas/ledger-identity.test.js": true
+  },
+  "inherited_evidence_unchanged": {
+    "STOPPED-1377-B2.md": true,
+    "RECEIPT-1377-B2.md": true,
+    "docs/evidence/1377-b2-r3/RECEIPT-1377-B2-R3.md": true,
+    "docs/evidence/1377-b2-r3/REVIEW-1377-B2-R3.md": true,
+    "docs/evidence/1377-b2-r3/SHA256SUMS.txt": true,
+    "docs/evidence/1377-b2-r3/affected-regressions.txt": true,
+    "docs/evidence/1377-b2-r3/blocked-targeted.txt": true,
+    "docs/evidence/1377-b2-r3/broker-owner-obligation-31.txt": true,
+    "docs/evidence/1377-b2-r3/checkpoint.json": true,
+    "docs/evidence/1377-b2-r3/observation-cas-47.txt": true,
+    "docs/evidence/1377-b2-r3/structure.json.txt": true,
+    "docs/evidence/1377-b2-r3/syntax.txt": true,
+    "docs/evidence/1377-b2-r4/SHA256SUMS.txt": true,
+    "docs/evidence/1377-b2-r4/blocked-targeted.txt": true,
+    "docs/evidence/1377-b2-r4/candidate.json": true,
+    "docs/evidence/1377-b2-r4/checkpoint.json": true,
+    "docs/evidence/1377-b2-r4/diff-check.txt": true,
+    "docs/evidence/1377-b2-r4/gate-summary.txt": true,
+    "docs/evidence/1377-b2-r4/inherited-files.json": true,
+    "docs/evidence/1377-b2-r4/source-delta.patch": true,
+    "docs/evidence/1377-b2-r4/syntax-1.txt": true,
+    "docs/evidence/1377-b2-r4/syntax-2.txt": true,
+    "docs/evidence/1377-b2-r4/syntax-3.txt": true,
+    "docs/evidence/1377-b2-r4/syntax-4.txt": true,
+    "docs/evidence/1377-b2-r4/syntax-5.txt": true,
+    "docs/evidence/1377-b2-r4/syntax-6.txt": true,
+    "docs/evidence/1377-b2-r4/syntax-7.txt": true
+  },
+  "structure_summary": {
+    "exit_code": 0,
+    "in_scope_files": 976,
+    "candidate_violations": 0,
+    "baseline_debt": 28,
+    "resolved_debt": 0
+  },
+  "structure_status": null,
+  "evidence_size_bytes": {
+    "1377-b2-r3": 255354,
+    "1377-b2-r4": 122968,
+    "1377-b2-r5": 422568
+  }
+}
