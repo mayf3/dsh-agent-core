@@ -1,0 +1,160 @@
+{
+  "checked_at": "2026-11-07T15:50:06.089695+00:00",
+  "task_base": "9df5bd2fdea17f04bcd1762cd6800c350efcf9c3",
+  "current_base": "bb67ce5ae53908c299e751d3904793b9f4d08240",
+  "checks": [
+    {
+      "name": "governance_integrity",
+      "command": [
+        "python3",
+        ".agents/tools/verify_governance.py",
+        "--target",
+        ".",
+        "--require-accepted"
+      ],
+      "started_at": "2026-11-07T15:50:05.580112+00:00",
+      "finished_at": "2026-11-07T15:50:05.632930+00:00",
+      "rc": 0,
+      "stdout": "vendored governance bytes match governance.lock.json and adoption is accepted\n",
+      "stderr": ""
+    },
+    {
+      "name": "tracked_diff_whitespace",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "started_at": "2026-11-07T15:50:05.632966+00:00",
+      "finished_at": "2026-11-07T15:50:05.687570+00:00",
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "base_impact_blobs": [
+    {
+      "path": ".agents/README.md",
+      "base_blob": "e3493fbf67f4cb2641c7990478d7c008c1dd9ca5",
+      "current_main_blob": "e3493fbf67f4cb2641c7990478d7c008c1dd9ca5",
+      "unchanged": true
+    },
+    {
+      "path": ".agents/local/README.md",
+      "base_blob": "c2b6e9ea255e436c602f0e5ae04dd3108da91956",
+      "current_main_blob": "c2b6e9ea255e436c602f0e5ae04dd3108da91956",
+      "unchanged": true
+    },
+    {
+      "path": ".agents/governance.lock.json",
+      "base_blob": "59a9da8bcd6a567a71ec3096b6066bf69c5b9d52",
+      "current_main_blob": "59a9da8bcd6a567a71ec3096b6066bf69c5b9d52",
+      "unchanged": true
+    },
+    {
+      "path": "docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md",
+      "base_blob": "f260b482564a561cf97f1b94676b048f67bd2f90",
+      "current_main_blob": "f260b482564a561cf97f1b94676b048f67bd2f90",
+      "unchanged": true
+    },
+    {
+      "path": "docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md",
+      "base_blob": "0c3f6f6005794edec2faf666e4fb035a9c87b009",
+      "current_main_blob": "0c3f6f6005794edec2faf666e4fb035a9c87b009",
+      "unchanged": true
+    },
+    {
+      "path": "docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V3.md",
+      "base_blob": "fd4ee0df516fd1cda800e586dd05cab8bfc355eb",
+      "current_main_blob": "fd4ee0df516fd1cda800e586dd05cab8bfc355eb",
+      "unchanged": true
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3.md",
+      "base_blob": "f7623521fd031f661ecc74fe61cf9ec52e69ba13",
+      "current_main_blob": "f7623521fd031f661ecc74fe61cf9ec52e69ba13",
+      "unchanged": true
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3.md",
+      "base_blob": "ffa4defa97973b8c25240c2a4e7191dc6fee4167",
+      "current_main_blob": "ffa4defa97973b8c25240c2a4e7191dc6fee4167",
+      "unchanged": true
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1.md",
+      "base_blob": "232b890c1b8f01c9d2fbcd9a1f6b8acfb401a816",
+      "current_main_blob": "232b890c1b8f01c9d2fbcd9a1f6b8acfb401a816",
+      "unchanged": true
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_READBACK_AGING_HANDOFF_V1.md",
+      "base_blob": "bead52566374a5f06b134c8300f05e89634090a2",
+      "current_main_blob": "bead52566374a5f06b134c8300f05e89634090a2",
+      "unchanged": true
+    }
+  ],
+  "proposals": [
+    {
+      "head": "a61ba45f1f168d5b755a9aa37d74f21135467ec6",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4.md",
+      "blob": "10c223de269bbf1e425c71d4c7abdb2cd59de2d7",
+      "size": 48096,
+      "sha256": "77b3e31b772e7502e08dc2544961737df8b0ca5001464f7084f87453310fc5a7"
+    },
+    {
+      "head": "d7fcc52cff01abd6990aaa6f741de8b0deb2da24",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V1.md",
+      "blob": "b18a524517ecd655c2088f4a90081af4aeecc944",
+      "size": 111479,
+      "sha256": "be086f7089a383430fdc6f8ae63d9d7b87218c5875387063245f7e4e68ee3ccf"
+    },
+    {
+      "head": "680dc594e05a823128ca0efaa5b527683b6dbf62",
+      "path": "docs/specs/AGENT_CORE_REFUSAL_TERMINAL_HANDOFF_V1.md",
+      "blob": "e09a8dce3a5ec70be8d518b4840c758ebc6bb285",
+      "size": 30375,
+      "sha256": "c5fe3b5da21082e417c2c78d0952ed6df2246d5e3e222316a6943152515ff212"
+    }
+  ],
+  "inherited_files_before_r2_append": [
+    {
+      "path": "BRIEF-SUCCESSION-ORDER.md",
+      "size": 2370,
+      "sha256": "84f14d9f5c122a75c96d7637746838b343d200168ba7c217577644b08bf7fbca"
+    },
+    {
+      "path": "BRIEF-SUCCESSION-R2.md",
+      "size": 1114,
+      "sha256": "5ecbbde0a5a9b7e9bf5d1b4fad153463b304c3dee6261c7df873ec4ea29950a6"
+    },
+    {
+      "path": "STOPPED-SUCCESSION-ORDER.md",
+      "size": 10640,
+      "sha256": "872c8ed518b050df48ecfe47db2dcd409819d6560a2bd9693f2e36afd247f336"
+    },
+    {
+      "path": "docs/evidence/succession-order/643-owner-comment.json",
+      "size": 662,
+      "sha256": "1372dc39e19ee696478bdb51a69d26f663efbaf6eed87ad720a09fa7d69fb286"
+    },
+    {
+      "path": "docs/evidence/succession-order/owner-ruling.json",
+      "size": 2786,
+      "sha256": "6cb23848d3a1fbe3a5484d56cf9bac807e42baac4b68fe9c4ab815b37aba8622"
+    },
+    {
+      "path": "docs/evidence/succession-order/pr-snapshot.json",
+      "size": 6214,
+      "sha256": "29333712ff13d7c34d29c78d9f8b0ab6c91c9e309d76099ad47f45085f4c426e"
+    },
+    {
+      "path": "docs/evidence/succession-order/svc-authority.json",
+      "size": 650,
+      "sha256": "3c88c53a9d6b307712565a9b8f29e529a366d9f7de77868e59e615d7e6560a42"
+    }
+  ],
+  "source_product_tests": "NOT_RUN",
+  "dual_writer": "NOT_RUN",
+  "production_writes": 0
+}
