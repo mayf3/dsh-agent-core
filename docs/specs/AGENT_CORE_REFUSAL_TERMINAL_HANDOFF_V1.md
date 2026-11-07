@@ -15,13 +15,13 @@ governed_by:
   - AGENT_CORE_PRODUCT_ARCHITECTURE_V1
   - AGENT_WORKSPACE_SESSION_MODEL_V3
   - SCHEDULER_OCCURRENCE_OUTCOME_V3
-  - AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1
-  - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3
-  - AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3
+  - AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V1
+  - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4
+
 external_authorities:
   - repository: mayf3/svc-workflow
     authority_id: SVC_WORKFLOW_EXECUTION_CONTROL_V3
-    revision: d4c510d94f8929f5377989bd69229d611ab49304
+    revision: 8da8dbcb70e700d9e35970e8b662b1be2c29afdc
     relation: constrained_by
 supersedes: []
 superseded_by: null
@@ -52,7 +52,7 @@ world drift 是总类；visit 迁移、可信历史可见性、assignee 不符�
 不承接 #650 a/b 的自动持久关闭；真实 terminal/moved 事实在本提案只支持责任交接，
 不自动关闭原观察责任，不把旧 Run 归因为完成者。
 
-不改产品源码/测试/配置/accepted 文档；不实现、不接受、不合并、不生产读写。
+本R4只修订文档并准备独立限定接受事务；不改产品源码/测试/配置，不实现、不合并、不生产读写。
 不开放 ordinary planned 恢复，不重做已交付 B2 blocked 自动恢复，不改身份/Grant。
 与 [#1379 Wake](https://github.com/mayf3/agent-control/issues/1379) 解耦：仅消费合法
 同请求接收证明，不实施传输改造；不建第二 ledger、queue、通知平台或业务重试引擎。
@@ -65,7 +65,9 @@ world drift 是总类；visit 迁移、可信历史可见性、assignee 不符�
 `rulings[id=owner-20261107-five-decisions].items[1]`（裁定②，采纳 #653 的两缺口边界）
 及预授权 V2 §5（原记录 items[4]）。选中原文、读取时间、canonical hash 见
 [来源记录](../reports/refusal-terminal-proposal-20261107/source-provenance.json)。
-它们授权本次 docs commit/push/PR，不构成新 Product Contract 的接受。
+它们是原始起草授权，不构成新 Product Contract 的接受。当前R4用户续派及Owner
+四PR裁定③、常设授权原§3B授权本次精确修订、非作者独审与随后限定语义接受事务；
+来源selector/hash及执行边界见本步接受记录。Owner为权威，worker仅记录受托事务。
 
 裁定③另行认可 #643 的**提案语义**；该提案已正式限定接受并合并至 main
 `9df5bd2fdea17f04bcd1762cd6800c350efcf9c3`，frontmatter 为 accepted，
@@ -78,11 +80,18 @@ WEC/Svc 配套权威正式接受前不得实施新 reason 或用于生产；#643
 NEW 是本独立 proposed 设计的路线，**不是对 accepted closed reason/terminal refusal
 规则的新增例外**；不能用“NEW 已接受”绕过其 owning authority。
 
-未来激活至少需要 docs-first **whole-authority successors** 承接 Core WEC V3 的系统
-producer/reason/消费边界、LIVENESS V1 的 B2 terminal 责任元数据例外，以及 WAE V3
-仍有效的 terminal-refusing 约束及依赖。须完整保留未变义务、明确 crosswalk，并在接受时
-原子更新整权 supersedes/superseded_by/backlinks。不得改旧 stable ID 或复制 LIVENESS
-§3 的历史任务专属 partial-supersession 例外。这里不写这些 successors，也不预定其 ID。
+未来协议激活至少需要 docs-first **whole-authority successors** 面向届时有效的
+Core WEC4 系统 producer/reason/消费边界及 PPR 的完整恢复权威，承接所需 B2 terminal
+责任元数据和 terminal-refusing 约束变化。不能从已被其整体继任的 WEC3/WAE3/Liveness1
+再次分叉。须完整保留未变义务、明确 crosswalk，并在接受时原子更新整权
+supersedes/superseded_by/backlinks。不得改旧 stable ID 或复制历史 LIVENESS §3 的
+任务专属 partial-supersession 例外。这里不写这些 future successors，也不预定其 ID。
+
+本候选组合绑定步2 WEC4接受事务 `1e064916fc0cf423a3b917cfbcc11a97d56921e9`，
+及步3 PPR/依赖载体事务 `7f6c1dd59df9537724eb4e97a4ad739768230d31`。
+其文档差量精确携入本分支；main `bb67ce5a…` 仍由旧权威控制，未称它们已在main生效。
+本限定接受在main的current引用生效依赖监管按 #655→#657→#658 核验合入；
+不得据branch accepted状态实施协议。WEC4/PPR的接受本身没有完成上述future配套门。
 
 Svc 单独拥有历史业务关系、case 生命周期、系统 caller 授权、Domain Owner 解析、事务、
 幂等收据/读回、Owner inbox/action 与 request/resolution provenance。前言的 external
@@ -90,7 +99,7 @@ reference 只绑定**现有约束**；新 Svc successor ID/接受/main SHA 为 U
 Core 提案不能解除 Svc current/nonterminal 前置，不能借 active Owner-resume evidence
 查询为历史交接读回。Svc 配对面须接受 CTR-RTH-002/004/005 才可能有合法正例。
 
-### 3.2 Pinned current authorities and counterexample
+### 3.2 Pinned historical authoring authorities and counterexample
 
 Core 以下行号均 @ `2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648`。
 L=[LIVENESS V1](AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1.md)，
@@ -350,7 +359,7 @@ Core/Svc base/head、配置/时钟、输入/故障、原 tuple、ledger前后、
 
 ## 12. Migration, compatibility, and rollback
 
-当前仅proposed文档，无运行时迁移。未来须先Core/Svc权威承接和main接受→含接受的base
+本语义准备仍proposed，下一步只作限定语义接受；无运行时迁移。未来须先Core/Svc权威承接和main接受→含接受的base
 RE_PREFLIGHT→先证明服务/消费者兼容和历史case可发现/答复→另行授权启用producer。
 沿用同一ledger，旧事件不bulk改写，不要求补造原schedule/基线；未获权/缺来源仍保留旧观察。
 与#643可共享实现骨架，但接受坐标/启用条件独立；不得先开放全部reason再等接受。
@@ -370,7 +379,7 @@ SPEC_GOVERNANCE_MODE = AUTHOR
 AUTHORITY_ACTION = NEW (independent proposal; accepted-meaning activation requires SUPERSEDE)
 SPEC_ID = AGENT_CORE_REFUSAL_TERMINAL_HANDOFF_V1
 STATUS = proposed
-PRIMARY_PARENT_AUTHORITY = accepted LIVENESS V1 / WEC V3 / WAE V3, constrained not replaced
+PRIMARY_PARENT_AUTHORITY = reviewed WEC4 / PPR branch transactions; main activation pending ordered merges; constrained not replaced
 PLAN_LEVEL = BRIEF
 ASSURANCE_LEVEL = CONTROLLED (cross-repository lifecycle/protocol; docs only)
 ROUTE_STAGE = AUTHORITY_AUTHORING
@@ -380,7 +389,7 @@ IMPLEMENTATION_AUTHORITY = none
 IMPLEMENTATION_ALLOWED = NO
 MERGE_READY = NO
 OPERATION_ALLOWED = NO
-OPEN_OWNER_DECISIONS = proposed historical/discrepancy case semantics; Core whole successors and paired Svc acceptance
+OPEN_OWNER_DECISIONS = NONE for ruling ③ bounded semantic acceptance; Core whole successors and paired Svc protocol acceptance remain separate
 NORMATIVE_TBD = NONE_IN_PROPOSED_DESIGN; acceptance dependencies remain OPEN
 PARTIAL_SUPERSESSION = NONE
 CONTRACT_COUNT = 6

@@ -1,7 +1,7 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3
 title: Accepted whole-authority successor to AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V2
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -18,12 +18,16 @@ paired_authority: SVC_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1
 external_authorities: []
 supersedes:
   - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V2
-superseded_by: null
+superseded_by: AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4
 owners:
   - mayf3
 acceptance_authority_basis: >-
   Root acceptance under user-delegated authority; ROOT_OWNER_ACCEPTANCE.json SHA-256 43eef302fb86cf131106fd6d39c0e338abc0acf9f14fb0210a5e51918d91448e; reviewed semantic Svc b115c0641e4c2b6b965a6a3cd24252734754c14f and Core 0629858c08029ebcaed39b012b4c4a2a2a8078fb. Lifecycle transaction only; no production apply authority.
 ---
+
+<!-- R4 lifecycle: whole-authority retirement to AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4.
+Owner mayf3 ruling ④ / standing §3B; activates only with the paired main transaction.
+Original Contracts, historical acceptance and V1→V2→V3 provenance remain unchanged. -->
 
 # AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3 — accepted whole-authority successor
 
