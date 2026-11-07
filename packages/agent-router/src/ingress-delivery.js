@@ -232,7 +232,7 @@ export function createIngressDelivery({
       throw new TypeError('agent-router: deliver control options must be an object')
     }
     for (const key of Object.keys(controlOpts)) {
-      if (key !== 'messageOrigin') {
+      if (key !== 'messageOrigin' && key !== 'taskBinding') {
         throw new TypeError(`agent-router: deliver control option "${key}" is not allowlisted`)
       }
     }
@@ -277,6 +277,23 @@ export function createIngressDelivery({
       throw new TypeError('agent-router: messageOrigin.correlation must be a non-empty opaque string')
     }
     return Object.freeze({ kind: origin.kind, sourceAgentId: origin.sourceAgentId, correlation: origin.correlation })
+  }
+
+  function validateTaskBinding(controlOpts) {
+    const binding = controlOpts?.taskBinding
+    if (binding === undefined) return undefined
+    if (binding === null || typeof binding !== 'object' || Array.isArray(binding)) throw new TypeError('agent-router: taskBinding must be an object')
+    const keys = Object.keys(binding)
+    if (keys.length !== 3 || binding.kind !== 'task_dispatch'
+      || !keys.includes('dispatchIntentId') || !keys.includes('workflowInstanceIds')) {
+      throw new TypeError('agent-router: taskBinding must be { kind, dispatchIntentId, workflowInstanceIds }')
+    }
+    if (!/^[0-9a-fA-F-]{36}$/.test(binding.dispatchIntentId)
+      || !Array.isArray(binding.workflowInstanceIds) || binding.workflowInstanceIds.length === 0
+      || binding.workflowInstanceIds.some(id => typeof id !== 'string' || !/^[0-9a-fA-F-]{36}$/.test(id))) {
+      throw new TypeError('agent-router: taskBinding identifiers are invalid')
+    }
+    return Object.freeze({ kind: 'task_dispatch', dispatchIntentId: binding.dispatchIntentId, workflowInstanceIds: Object.freeze([...binding.workflowInstanceIds]) })
   }
 
   /**
@@ -326,6 +343,7 @@ export function createIngressDelivery({
     const message = req?.message
     // R4: trusted sidecar validated + frozen BEFORE any admission work.
     const messageOrigin = validateMessageOrigin(controlOpts)
+    const taskBinding = validateTaskBinding(controlOpts)
     if (typeof requestId !== 'string' || requestId === '') {
       throw new TypeError('agent-router: deliver requestId must be a non-empty string')
     }
@@ -441,6 +459,7 @@ export function createIngressDelivery({
         cwd: workspacePath,
         callerCorrelation: { requestId },
         ...(messageOrigin === undefined ? {} : { messageOrigin }),
+        ...(taskBinding === undefined ? {} : { taskBinding }),
       },
     })
     deliveries.push({

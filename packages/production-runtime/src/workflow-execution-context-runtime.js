@@ -27,6 +27,15 @@ function normalizeProvenance(value) {
     attemptId: value.attemptId,
   })
 }
+function normalizeTaskBinding(value) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return undefined
+  const keys = Object.keys(value)
+  if (keys.length !== 3 || value.kind !== 'task_dispatch'
+    || !keys.includes('dispatchIntentId') || !keys.includes('workflowInstanceIds')) return undefined
+  if (!UUID_RE.test(value.dispatchIntentId ?? '') || !Array.isArray(value.workflowInstanceIds)
+    || value.workflowInstanceIds.length === 0 || value.workflowInstanceIds.some(id => !UUID_RE.test(id))) return undefined
+  return Object.freeze({ kind: 'task_dispatch', dispatchIntentId: value.dispatchIntentId.toLowerCase(), workflowInstanceIds: Object.freeze(value.workflowInstanceIds.map(id => id.toLowerCase())) })
+}
 function turnIdFromTrustedContext(trustedContext) {
   const nested = trustedContext?.ingressContext?.turnExecutionId
   const legacy = trustedContext?.turnExecutionId
@@ -43,12 +52,13 @@ export function mountWorkflowExecutionContextRuntime({ ctx }) {
 
   const byTurn = new Map()
 
-  function noteWorkflowTurn({ turnExecutionId, provenance, agentId, sessionId }) {
+  function noteWorkflowTurn({ turnExecutionId, provenance, taskBinding, agentId, sessionId }) {
     if (typeof turnExecutionId !== 'string' || turnExecutionId === '') {
       return { ok: false, code: 'invalid_turn' }
     }
-    const workflow = normalizeProvenance(provenance)
-    if (workflow === undefined) return { ok: false, code: 'missing_trusted_context' }
+    const workflow = provenance === undefined ? undefined : normalizeProvenance(provenance)
+    const task = taskBinding === undefined ? undefined : normalizeTaskBinding(taskBinding)
+    if (workflow === undefined && task === undefined) return { ok: false, code: 'missing_trusted_context' }
     if (agentId !== undefined && (typeof agentId !== 'string' || !AGENT_ID_RE.test(agentId))) {
       return { ok: false, code: 'invalid_agent' }
     }
@@ -58,7 +68,8 @@ export function mountWorkflowExecutionContextRuntime({ ctx }) {
 
     if (byTurn.size >= MAX_NOTED_TURNS) byTurn.delete(byTurn.keys().next().value)
     byTurn.set(turnExecutionId, Object.freeze({
-      workflow,
+      ...(workflow === undefined ? {} : { workflow }),
+      ...(task === undefined ? {} : { taskBinding: task }),
       ...(agentId === undefined ? {} : { agentId }),
       ...(sessionId === undefined ? {} : { sessionId }),
       turnExecutionId,
@@ -74,7 +85,8 @@ export function mountWorkflowExecutionContextRuntime({ ctx }) {
     if (parentOrigin !== undefined) {
       const workflow = normalizeProvenance(parentOrigin)
       if (!workflow || !AGENT_ID_RE.test(actualAgentId ?? '') || trustedContext.sourceTurnExecutionId !== turnExecutionId) return undefined
-      if (noted && (noted.agentId !== actualAgentId || Object.keys(workflow).some(k => workflow[k] !== noted.workflow[k]))) return undefined
+      if (noted && (noted.agentId !== actualAgentId || noted.workflow === undefined
+        || Object.keys(workflow).some(k => workflow[k] !== noted.workflow[k]))) return undefined
       return Object.freeze({ workflow, agentId: actualAgentId, turnExecutionId })
     }
     if (noted === undefined) return undefined
@@ -86,11 +98,19 @@ export function mountWorkflowExecutionContextRuntime({ ctx }) {
   function resolveWorkflowProvenance(trustedContext) {
     return resolveWorkflowExecutionContext(trustedContext)?.workflow
   }
+  function noteTaskBinding({ turnExecutionId, taskBinding, agentId, sessionId }) {
+    return noteWorkflowTurn({ turnExecutionId, taskBinding, agentId, sessionId })
+  }
+  function resolveTaskBinding(trustedContext) {
+    return resolveWorkflowExecutionContext(trustedContext)?.taskBinding
+  }
 
   const access = Object.freeze({
     noteWorkflowTurn,
+    noteTaskBinding,
     resolveWorkflowExecutionContext,
     resolveWorkflowProvenance,
+    resolveTaskBinding,
   })
   ctx.provide('workflowExecutionContextAccess', access)
   return access

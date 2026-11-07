@@ -21,7 +21,7 @@ import { DELIVERY_COMPLETION } from './delivery-resilience.js'
 import { scheduledReceiptDeadline } from './scheduler-receipt.js'
 
 export class TurnExecution {
-  constructor({ handle, sessionId, mode, watermarkSeq, startMono, hardDeadlineAt, deadlines, bindingContext }) {
+  constructor({ handle, sessionId, mode, watermarkSeq, startMono, hardDeadlineAt, deadlines, bindingContext, taskBinding }) {
     this.handle = handle
     this.sessionId = sessionId
     this.mode = mode // 'turn' | 'deliver'
@@ -31,6 +31,7 @@ export class TurnExecution {
     this.hardDeadlineAt = hardDeadlineAt
     this.deadlines = deadlines
     this.bindingContext = bindingContext
+    this.taskBinding = taskBinding
     this.phase = 'queued'
     // Deadlines: prompt receipt + turn terminal, both anchored immediately
     // before the prompt write (C-001 / §5.1 table).
@@ -268,6 +269,7 @@ export const turnExecutionMethods = {
       deadlines: mode === 'turn' ? { ...this.deadlines,
         promptReceiptTimeoutMs: scheduledReceiptDeadline(this, sessionId, opts) } : this.deadlines,
       bindingContext: opts?.bindingContext,
+      taskBinding: opts?.taskBinding,
     })
     // Capture the ingress-validated origin before prompt write: the first RPC
     // can precede deliver()'s receipt and the runtime's bounded cache entry.

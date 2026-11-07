@@ -82,14 +82,16 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
         'processGeneration', 'turnExecutionId', 'channelNamespace', 'channelConversationId',
         'feishuChatId', 'feishuConversationId', 'feishuMessageId',
         'ingressContext', 'activeIngressContext',
-        'sourceTurnExecutionId', 'workflowProvenance',
+        'sourceTurnExecutionId', 'workflowProvenance', 'taskBinding',
       ].filter((field) => params?.[field] !== undefined)
       if (selfReported.length > 0) {
         log.log(`[broker] agent ${agentId}: IGNORING child-supplied identity fields: ${selfReported.join(', ')}`)
       }
       const proc = getProc()
       const sourceTurnExecutionId = provenSourceTurnExecutionId(proc, rpcMeta)
-      const workflowProvenance = proc.executions?.get(sourceTurnExecutionId)?.workflowProvenance
+      const execution = proc.executions?.get(sourceTurnExecutionId)
+      const workflowProvenance = execution?.workflowProvenance
+      const taskBinding = execution?.taskBinding
       // An explicit correlation that no longer proves a live execution must
       // not become an ordinary call after finishExecution removes the entry.
       if (sourceTurnExecutionId === undefined && (rpcMeta.turnExecutionId !== undefined
