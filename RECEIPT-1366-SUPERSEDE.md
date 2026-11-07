@@ -1,6 +1,6 @@
 # RECEIPT-1366-SUPERSEDE — R3 docs-only authority proposal
 
-状态：`PROPOSAL_AUTHORING_REVIEW_PASS — DELIVERY_PENDING`。此回执只证明已记录的文档动作；
+状态：`PROPOSAL_AUTHORING_REVIEW_PASS — DELIVERY_COMPLETE`。此回执只证明已记录的文档动作；
 不是 Owner 接受、产品实现、并发测试或生产验收 PASS。起草日期：2026-11-07。
 
 ## 1. 授权、历史与隔离坐标
@@ -251,17 +251,73 @@ R4 直接用户授权：
   `docs/specs/AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4.md`。
 - 初始及最终独立审查仅做 receipt/stop/HEAD delta recheck；V4 原独审 PASS 以原 hash 复用。
 
-### 9.2 当前交付游标
+### 9.2 独立提交后 delta 复核
+
+未参与作者写入的 `/root/delivery_delta_review` 对实际第一提交独立只读核验：
 
 ```text
-DELIVERY_STATUS = DELIVERY_PENDING
-NEXT_REAL_ACTION = COMMIT_THREE_DOCUMENTS
-COMMIT = NOT_CREATED
-PUSH = NOT_RUN
-PR = NOT_CREATED
+REVIEW_KIND = FINAL_HEAD
+REVIEW_SCOPE = DELTA
+REVIEW_TARGET_HEAD = a6c7275a181f58242af4ab733ebe9b0fded7f297
+BASE_HEAD = CURRENT_BASE_HEAD = 24974c720d634b965943e08bfd0862657b9be0e1
+AUTHOR_INDEPENDENCE = PASS
+AUTHORITY_REVIEW = PASS
+PRIMITIVE_BOUNDARY_REVIEW = PASS
+MANDATE_SCOPE_REVIEW = PASS
+EVIDENCE_REVIEWABILITY = PASS
+BASE_IMPACT = NONE
+BLOCKERS = 0
+SPEC_GAPS = 0
+```
+
+实测 commit diff whitespace rc0，变更恰为三份文档；committed V4 的 842 行和完整 hash
+与 R3 已审提案相同；STOPPED 历史前缀 23131 bytes hash 与 §9.1 记录相等；
+两个 Brief 字节未变、未纳提交，tracked/index clean。独审 fresh `git ls-remote` 确认 main
+仍为 BASE_HEAD。这里只复用未变提案的 R3 完整语义审查，没有声称对新产品实现作过审查。
+
+### 9.3 已完成的 commit、push 与 PR
+
+- 三文档提交：`a6c7275a181f58242af4ab733ebe9b0fded7f297`，
+  `docs(workflow): propose WEC V4 lock timing supersession`；实测 commit rc0。
+- `git push -u origin HEAD:refs/heads/docs/wec1-008-lock-timing-supersede` 实测 rc0，
+  远端分支创建成功并建立 upstream。
+- `gh pr create --repo mayf3/dsh-agent-core --base main --head docs/wec1-008-lock-timing-supersede --title 'docs(workflow): propose WEC V4 bounded lock timing supersession' --body-file /private/tmp/h1366-r4-delivery/pr-body.md`
+  实测 rc0，返回 [PR #655](https://github.com/mayf3/dsh-agent-core/pull/655)。
+- `gh pr view 655 --repo mayf3/dsh-agent-core --json number,url,state,isDraft,baseRefName,headRefName,headRefOid,mergedAt,autoMergeRequest`
+  实测 rc0；回读时间 `2026-11-07T12:48:08+00:00`，结果如下。
+
+```json
+{
+  "autoMergeRequest": null,
+  "baseRefName": "main",
+  "headRefName": "docs/wec1-008-lock-timing-supersede",
+  "headRefOid": "a6c7275a181f58242af4ab733ebe9b0fded7f297",
+  "isDraft": false,
+  "mergedAt": null,
+  "number": 655,
+  "state": "OPEN",
+  "url": "https://github.com/mayf3/dsh-agent-core/pull/655"
+}
+```
+
+本节绑定 PR 创建时的已推送提交；随后只有回执补记提交，最终提交坐标由 PR HEAD / Git
+readback 绑定。该补记在最终推送前做独立 receipt-only delta recheck，不递归重审未变提案。
+R3 历史 PENDING/失败不改写为成功；R4 已按新的直接授权完成机械恢复和文档交付。
+
+```text
+DELIVERY_STATUS = DELIVERY_COMPLETE
+DELIVERY_COMMIT = a6c7275a181f58242af4ab733ebe9b0fded7f297
+PUSH = SUCCEEDED (rc0)
+PR = https://github.com/mayf3/dsh-agent-core/pull/655
+PR_BASE = main
+PR_STATE = OPEN
+AUTO_MERGE = DISABLED
 OWNER_ACCEPTANCE = NOT_PERFORMED
 MERGE = NOT_PERFORMED
+IMPLEMENTATION_ALLOWED = NO
+OPERATION_ALLOWED = NO
 SOURCE_OR_PRODUCT_TESTS = NOT_RUN
 PRODUCTION_WRITE = ZERO
-DONE_WHEN = NOT_MET
+DONE_WHEN = MET (proposal + receipt + stopped history committed/pushed; base main PR created; not merged)
+NEXT_REAL_ACTION = STOP_AFTER_RECEIPT_ONLY_FINAL_RECHECK_AND_PUSH
 ```
