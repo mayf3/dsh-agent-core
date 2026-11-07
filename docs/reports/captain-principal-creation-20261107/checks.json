@@ -1,0 +1,90 @@
+{
+  "observedAtUTC": "2026-11-07T15:05:42.021209+00:00",
+  "baseHead": "9df5bd2fdea17f04bcd1762cd6800c350efcf9c3",
+  "result": "PASS",
+  "scope": "documentation/source-provenance consistency only; no runtime qualification",
+  "checks": [
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "rawRC": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "python3",
+        ".agents/tools/verify_governance.py",
+        "--target",
+        "."
+      ],
+      "rawRC": 0,
+      "stdout": "vendored governance bytes match governance.lock.json\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "merge-base",
+        "--is-ancestor",
+        "55f442c74414dc723306a6d8e0cdba73d78eb8da",
+        "HEAD"
+      ],
+      "rawRC": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "contentChecks": [
+    "all selected UTF-8 files <=500 lines",
+    "JSON parse",
+    "local Markdown links resolve",
+    "source hash readback equals recorded Git blobs/local inputs",
+    "no private key or JWT token material in new artifacts"
+  ],
+  "filesAtValidation": [
+    {
+      "path": "BRIEF-CAPTAIN-CREATE.md",
+      "sha256": "629d59a1db8a474c497108f6d2490763261eb720f74b9c00c4606f8e892189b5",
+      "lineCount": 12
+    },
+    {
+      "path": "STOPPED-CAPTAIN-CREATE.md",
+      "sha256": "de7c119f4fa3e6b022a36ad275aae2223199f7d40a27cf84da3648947010459f",
+      "lineCount": 29
+    },
+    {
+      "path": "CAPTAIN-CREATION-PACKAGE.md",
+      "sha256": "2203e434945856c242d765fc017521d76344da4246e164938ce08211c59a19c4",
+      "lineCount": 181
+    },
+    {
+      "path": "RECEIPT-CAPTAIN-CREATE.md",
+      "sha256": "9f2e574a361d8c1529e0f066a5d0fc1bcaf26d1758e0b506d0d7ca3e4b5900ff",
+      "lineCount": 33
+    },
+    {
+      "path": "docs/reports/captain-principal-creation-20261107/auth-readonly-observations.json",
+      "sha256": "fd8340a011b328734466b0f7e48875453f39c618ab557bc84bc62bace42d2c7d",
+      "lineCount": 36
+    },
+    {
+      "path": "docs/reports/captain-principal-creation-20261107/owner-authority.json",
+      "sha256": "6c4a2ad017e1ee581e5114d3e17fde1ade2868ab99be1bda3daf013969bf75da",
+      "lineCount": 40
+    },
+    {
+      "path": "docs/reports/captain-principal-creation-20261107/source-provenance.json",
+      "sha256": "78eb3282fb8ceb58428eb80be5af54308e1d81a257ecf35a670c034ddf6e0410",
+      "lineCount": 140
+    }
+  ],
+  "notRun": [
+    "Known unqualified V3 structure runner; no code or verifier adaptation in scope",
+    "runtime control negatives, appointment, issuance, production execution"
+  ],
+  "authCreatePostAttempts": 0
+}
