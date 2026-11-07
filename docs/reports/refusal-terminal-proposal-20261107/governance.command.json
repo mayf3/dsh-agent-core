@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "python3",
+    ".agents/tools/verify_governance.py",
+    "--target",
+    ".",
+    "--require-accepted"
+  ],
+  "started_at_utc": "2026-11-07T13:08:56.076919+00:00",
+  "finished_at_utc": "2026-11-07T13:08:56.120531+00:00",
+  "cwd": "/private/tmp/h-refusal-proposal",
+  "rc": 0,
+  "stdout_sha256": "c8671db6c5d33b2e2c051a17143acc9bb5736cf8788e72feed4728b5cb32f332",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648"
+}
