@@ -1,0 +1,27 @@
+✖ scripted native rounds obtain fresh parent proof after prior settlement through real child transport (0.653333ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 45.908333
+
+✖ failing tests:
+
+test at packages/agent-router/test/route-chain/native-goal-composed.test.js:14:1
+✖ scripted native rounds obtain fresh parent proof after prior settlement through real child transport (0.653333ms)
+  AssertionError [ERR_ASSERTION]: paired native build is required; this conformance test must not silently skip
+      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/route-chain/native-goal-composed.test.js:15:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.start (node:internal/test_runner/test:1257:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

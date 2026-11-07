@@ -1,0 +1,22 @@
+✖ F: missing credential fails loud on the real chain — never a silent fallback (0.460792ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 44.165125
+
+✖ failing tests:
+
+test at packages/agent-router/test/luna-credential-chain.test.js:169:1
+✖ F: missing credential fails loud on the real chain — never a silent fallback (0.460792ms)
+  Error: dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout
+      at cliBin (file:///private/tmp/h605-r2/packages/agent-provisioning/src/index.js:76:11)
+      at gates (file:///private/tmp/h605-r2/packages/agent-router/test/luna-credential-chain.test.js:42:46)
+      at TestContext.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/test/luna-credential-chain.test.js:170:8)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.start (node:internal/test_runner/test:1257:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)

@@ -1,0 +1,21 @@
+{
+  "base": "4f7df01bcf087075c114901a96a7a54573110f61",
+  "currentMain": "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed",
+  "mainImpactFiles": [
+    "RECEIPT-VERIFIER-ADAPT.md",
+    "examples/code-structure/verify-code-structure-retirement.test.mjs",
+    "examples/code-structure/verify-code-structure-test-support.mjs",
+    "examples/code-structure/verify-code-structure-transition.test.mjs",
+    "scripts/governance/code-structure-authority.mjs",
+    "scripts/verify-code-structure.mjs"
+  ],
+  "tree": "0b08aade230d1dbb19ae56483220a572218aff98",
+  "snapshot": "adf6b4adf65baa0c661b41ed36942b30df44c838",
+  "snapshotIsDeliveryCommit": false,
+  "branchHeadUnchanged": "4f7df01bcf087075c114901a96a7a54573110f61",
+  "verifierSourceCommit": "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed",
+  "verifierFiles": {
+    "scripts/verify-code-structure.mjs": "f4d31dbd7d4d648f18856707e6fd599e043a4df2bdf37a7b66381e7d6d9d7565",
+    "scripts/governance/code-structure-authority.mjs": "2b4288df8bd037b39de95086a056dd9a260193eda5023b764c52dbb7124b8d26"
+  }
+}

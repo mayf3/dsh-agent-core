@@ -1,0 +1,27 @@
+✖ real child cancel removes native queued admission before old owner release (32.415292ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 74.371958
+
+✖ failing tests:
+
+test at packages/agent-router/test/route-chain/native-goal-composed.test.js:74:43
+✖ real child cancel removes native queued admission before old owner release (32.415292ms)
+  Error: agent agt_cancel-source (generation 1) RPC initialize rejected: AGENT_PROCESS_EXITED
+      at AgentProcess.rejectAllPending (file:///private/tmp/h605-r2/packages/agent-router/src/process/rpc-channel.js:358:35)
+      at AgentProcess.onChildExit (file:///private/tmp/h605-r2/packages/agent-router/src/process/spawn.js:143:10)
+      at ChildProcess.<anonymous> (file:///private/tmp/h605-r2/packages/agent-router/src/process/spawn.js:77:47)
+      at ChildProcess.wrapper (node:events:639:12)
+      at ChildProcess.emit (node:events:514:20)
+      at ChildProcess._handle.onexit (node:internal/child_process:294:12) {
+    code: 'AGENT_PROCESS_EXITED',
+    agentId: 'agt_cancel-source',
+    processGeneration: 1,
+    method: 'initialize',
+    evidence: { code: 1, signal: null }
+  }

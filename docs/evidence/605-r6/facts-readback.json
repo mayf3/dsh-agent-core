@@ -1,0 +1,126 @@
+{
+  "evaluatedAt": "2026-11-07T04:21:21.600082+00:00",
+  "sourceSHA256": "1488d505a69c65c417af96be0da05fb40b52fb2adc2c1cbd3d88d4dd3e85864a",
+  "retainedR5BeforeSHA256": "c43e83044b8bca34208b295615ea49feb4f04b8716a1d60a8c747e4f7f5f624c",
+  "finalSnapshot": "/private/tmp/h605-r6-evidence/matrix-rollback-router-after.json",
+  "finalSnapshotSHA256": "0d5976f37179bedb2247120a3ce0009c35d6def54bec32990e6fed7a59558cc8",
+  "recordCountBefore": 5227,
+  "recordCountAfter": 5227,
+  "protectedFullEquality": {
+    "5124": true,
+    "5125": true,
+    "5127": true
+  },
+  "digestEvidence": {
+    "5163": {
+      "before": {
+        "sha256": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+        "originalBytes": 2,
+        "truncated": false
+      },
+      "after": {
+        "sha256": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+        "originalBytes": 2,
+        "truncated": false
+      }
+    },
+    "5193": {
+      "before": {
+        "sha256": "875057036fde12b65953ff57f04782148f7958c0c985ca6cb8ca4abae4f88fe6",
+        "originalBytes": 2424,
+        "truncated": false
+      },
+      "after": {
+        "sha256": "875057036fde12b65953ff57f04782148f7958c0c985ca6cb8ca4abae4f88fe6",
+        "originalBytes": 2424,
+        "truncated": false
+      }
+    },
+    "5195": {
+      "before": {
+        "sha256": "7dc31f8ddb2e69d89e3a54e3fde62552f944e0b36f5e8b15023bc583c9daa937",
+        "originalBytes": 324,
+        "truncated": false
+      },
+      "after": {
+        "sha256": "7dc31f8ddb2e69d89e3a54e3fde62552f944e0b36f5e8b15023bc583c9daa937",
+        "originalBytes": 324,
+        "truncated": false
+      }
+    },
+    "5196": {
+      "before": {
+        "sha256": "a9fc8633427c3acbdbe5f2313507d11582f452eec8d15daf97ea04d34cff52f1",
+        "originalBytes": 2252,
+        "truncated": false
+      },
+      "after": {
+        "sha256": "a9fc8633427c3acbdbe5f2313507d11582f452eec8d15daf97ea04d34cff52f1",
+        "originalBytes": 2252,
+        "truncated": false
+      }
+    },
+    "5220": {
+      "before": {
+        "sha256": "897b00362733eedae3060ee4416307d74eabe8cc60ae29226f8e868f6f61dcdc",
+        "originalBytes": 1272,
+        "truncated": false
+      },
+      "after": {
+        "sha256": "897b00362733eedae3060ee4416307d74eabe8cc60ae29226f8e868f6f61dcdc",
+        "originalBytes": 1272,
+        "truncated": false
+      }
+    },
+    "5221": {
+      "before": {
+        "sha256": "624f20dc61025297b60fda4cf0335b112e8af9bcf0600bc5a0ae2bff406c9e2a",
+        "originalBytes": 1498,
+        "truncated": false
+      },
+      "after": {
+        "sha256": "624f20dc61025297b60fda4cf0335b112e8af9bcf0600bc5a0ae2bff406c9e2a",
+        "originalBytes": 1498,
+        "truncated": false
+      }
+    },
+    "5223": {
+      "before": {
+        "sha256": "1b1375bf27c9a4ea0d9dfabe94dd25ba99980655d4df1fa1512e7108a71f2b73",
+        "originalBytes": 351,
+        "truncated": false
+      },
+      "after": {
+        "sha256": "1b1375bf27c9a4ea0d9dfabe94dd25ba99980655d4df1fa1512e7108a71f2b73",
+        "originalBytes": 351,
+        "truncated": false
+      }
+    }
+  },
+  "nonAuditFactDiffIndexes": [],
+  "maxAuditEntries": 32,
+  "maxAuditUTF8JSONBytes": 4289,
+  "inputFiles": [
+    {
+      "path": "/private/tmp/w6-state-compat-readable/sanitized/control/turn-recovery-v3.json",
+      "bytes": 10700760,
+      "sha256": "1488d505a69c65c417af96be0da05fb40b52fb2adc2c1cbd3d88d4dd3e85864a"
+    },
+    {
+      "path": "/private/tmp/w6-state-compat-readable/sanitized/control/turn-recovery-v3.json.abandonment-declarations.json",
+      "bytes": 4062,
+      "sha256": "139348609fb6e4936cb2339450ad47ef23869a9337f08f8a76bf1b27501839d3"
+    },
+    {
+      "path": "/private/tmp/w6-state-compat-readable/sanitized/control/turn-recovery-v3.json.faults.json",
+      "bytes": 147,
+      "sha256": "1177da0f7dbe7b722ec2dce5ae6a404d2a0460d05bb901f0493dec3f180d3486"
+    },
+    {
+      "path": "/private/tmp/w6-state-compat-readable/sanitized/scheduler/jobs.json",
+      "bytes": 7016723,
+      "sha256": "5fe2b0d530f271e5c9c0c0f41e62b0732c9735580d4d0ff12dabb1de26609d77"
+    }
+  ],
+  "trackedDiffSHA256": "3fc44ad5e09d77cb9e2d81af4e4d08c7731581b67c7b6f9871ab9c5549ac2c23"
+}

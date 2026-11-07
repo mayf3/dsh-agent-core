@@ -12,6 +12,7 @@
  */
 
 import { correlationEntryByteSize } from './capacity.js'
+import { isLegacyUnprovenFenceClear } from './state-machine.js'
 
 const RECOVERY_PROJECTION_KEYS = Object.freeze([
   'failureStage', 'fencedBy', 'reconciliationHandle', 'processGeneration', 'terminationEvidence',
@@ -53,7 +54,7 @@ export const queryMethods = {
     const record = classified.record
     return {
       failureStage,
-      fencedBy: record?.fenceState === 'active' ? handle : null,
+      fencedBy: record && (record.fenceState === 'active' || isLegacyUnprovenFenceClear(record)) ? handle : null,
       reconciliationHandle: record?.handle ?? null,
       processGeneration: record?.processGeneration ?? null,
       terminationEvidence: record?.terminationEvidence ?? null,
@@ -104,6 +105,7 @@ export const queryMethods = {
       failureReason: record.failureReason ?? null,
       nextSafeAction: record.nextSafeAction ?? 'none',
       fenceState: record.fenceState ?? 'none',
+      ...(isLegacyUnprovenFenceClear(record) ? { legacyFormat: 'unproven_fence_clear' } : {}),
       finalAssistantOutput: record.finalAssistantOutput === null ? null : { ...record.finalAssistantOutput },
       audit: record.audit.map(entry => ({ ...entry })),
       ...(record.auditDroppedCount === undefined ? {} : { auditDroppedCount: record.auditDroppedCount }),
