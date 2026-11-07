@@ -1,0 +1,64 @@
+{
+  "observed_at": "2026-11-07T15:56:37.674091+00:00",
+  "discovery_scope": "workspace metadata depth <=6, no symlink following; runtime/secret/dependencies pruned; production-* dirs not descended; not full machine exhaustive",
+  "discovery_category_paths": 2957,
+  "real_target_node_modules_closure_dirs": 2698,
+  "symlink_node_modules_excluded": 90,
+  "nonnested_discovered_dirs": 2698,
+  "measured_selected_nonoverlapping_leaf_candidates": 13,
+  "protected_prefix_count": 10,
+  "protected_prefixes": [
+    {
+      "prefix": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence",
+      "reason": "historical B7 evidence/preimage/custody/rollback",
+      "discovered_matching_generated_directories": 0
+    },
+    {
+      "prefix": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1",
+      "reason": "deployment bootstrap/closure/receipt lineage",
+      "discovered_matching_generated_directories": 0
+    },
+    {
+      "prefix": "/Users/yanfenma/workspace/agent-workspaces",
+      "reason": "active Agent data",
+      "discovered_matching_generated_directories": 1
+    },
+    {
+      "prefix": "/Users/yanfenma/workspace/deploy",
+      "reason": "launchd service deployment",
+      "discovered_matching_generated_directories": 1
+    },
+    {
+      "prefix": "/Users/yanfenma/workspace/runtime",
+      "reason": "runtime/DB",
+      "discovered_matching_generated_directories": 0
+    },
+    {
+      "prefix": "/Users/yanfenma/workspace/project/boke",
+      "reason": "visible active processes and launchd",
+      "discovered_matching_generated_directories": 1
+    },
+    {
+      "prefix": "/Users/yanfenma/workspace/project/agent-core",
+      "reason": "launchd runtime binaries",
+      "discovered_matching_generated_directories": 1
+    },
+    {
+      "prefix": "/Users/yanfenma/workspace/github/deepseek-harness",
+      "reason": "visible active Node and launchd",
+      "discovered_matching_generated_directories": 238
+    },
+    {
+      "prefix": "/Users/yanfenma/workspace/worktrees/codex-assistance-resume-svc-contract-20261028",
+      "reason": "visible active postgres children/DB",
+      "discovered_matching_generated_directories": 0
+    },
+    {
+      "prefix": "/Users/yanfenma/workspace/deployment-artifacts",
+      "reason": "controlled release/recovery/closure lineage excluded as whole-tree candidates",
+      "discovered_matching_generated_directories": 3
+    }
+  ],
+  "ranking_claim": "These13 are prioritized investigated candidates selected from measured large workspace domains, not absolute global top13/20.2957 is a path inventory, not2957 measured reclaimable caches.",
+  "not_measured_as_candidates": "Other discovered package-local node_modules and targets are not claimed smaller, unreferenced, or reclaimable. Full-domain du rankings remain evidence, leaf candidate census remains bounded."
+}

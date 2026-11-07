@@ -1,0 +1,2841 @@
+{
+  "observed_at": "2026-11-07T15:48:44.669412+00:00",
+  "roots": [
+    {
+      "path": "/private/tmp/sw-367",
+      "started_at": "2026-11-07T15:48:40.928829+00:00",
+      "ended_at": "2026-11-07T15:48:41.225331+00:00",
+      "aggregate": {
+        "regular_files": 11084,
+        "unique_regular_inodes": 2556,
+        "logical_bytes_unique": 566503143,
+        "allocated_bytes_unique": 571609088,
+        "private_bytes_nlink1": 151154688,
+        "private_bytes_all_links_in_root": 571609088,
+        "hardlink_inodes": 2081,
+        "clone_refcount_gt1_files": 0,
+        "attr_unsupported_files": 0,
+        "nonregular_allocated_bytes": 0
+      },
+      "errors": [],
+      "largest_files": [
+        {
+          "path": "/private/tmp/sw-367/target/debug/deps/libsvc_workflow-624c53cdc47add25.rmeta",
+          "logical_bytes": 20289895,
+          "allocated_bytes": 20291584,
+          "dev": 16777229,
+          "inode": 334473199,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 20291584,
+            "clone_id": 334473199,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-367/target/debug/deps/svc_workflow-624c53cdc47add25.46x80pdj7k5fqtlqt3mc7afh1.12tss02.rcgu.o",
+          "logical_bytes": 13436528,
+          "allocated_bytes": 13438976,
+          "dev": 16777229,
+          "inode": 334473247,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 13438976,
+            "clone_id": 334473247,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-367/target/debug/deps/svc_workflow-624c53cdc47add25.46x80pdj7k5fqtlqt3mc7afh1.0tuzsv0.rcgu.o",
+          "logical_bytes": 13436528,
+          "allocated_bytes": 13438976,
+          "dev": 16777229,
+          "inode": 334457228,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 13438976,
+            "clone_id": 334457228,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-367/target/debug/deps/svc_workflow-51a4d00b093396f1.ehpjx1hjexs7ksu8uzl6y9s32.0z6g4a4.rcgu.o",
+          "logical_bytes": 11690344,
+          "allocated_bytes": 11694080,
+          "dev": 16777229,
+          "inode": 331967064,
+          "nlink": 3,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 11694080,
+            "clone_id": 331967064,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-367/target/debug/deps/svc_workflow-624c53cdc47add25.ctoudm8jzbk609h73bokxq6bi.12tss02.rcgu.o",
+          "logical_bytes": 7132120,
+          "allocated_bytes": 7135232,
+          "dev": 16777229,
+          "inode": 331958120,
+          "nlink": 7,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 7135232,
+            "clone_id": 331958120,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-367/target/debug/deps/svc_workflow-51a4d00b093396f1.38tf15wc8x4xckdxee5rtzhtu.16v3pzs.rcgu.o",
+          "logical_bytes": 5266400,
+          "allocated_bytes": 5267456,
+          "dev": 16777229,
+          "inode": 331967079,
+          "nlink": 3,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 5267456,
+            "clone_id": 331967079,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-367/target/debug/deps/svc_workflow-624c53cdc47add25.bdizlmiyph2ah9843ychp6s82.12tss02.rcgu.o",
+          "logical_bytes": 4451448,
+          "allocated_bytes": 4452352,
+          "dev": 16777229,
+          "inode": 334473386,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4452352,
+            "clone_id": 334473386,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-367/target/debug/deps/svc_workflow-624c53cdc47add25.bdizlmiyph2ah9843ychp6s82.0tuzsv0.rcgu.o",
+          "logical_bytes": 4451448,
+          "allocated_bytes": 4452352,
+          "dev": 16777229,
+          "inode": 334457374,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4452352,
+            "clone_id": 334457374,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-367/target/debug/deps/svc_workflow-51a4d00b093396f1.d6wxwczdklas5wkixtp4t3otq.16v3pzs.rcgu.o",
+          "logical_bytes": 3752768,
+          "allocated_bytes": 3756032,
+          "dev": 16777229,
+          "inode": 331967082,
+          "nlink": 3,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3756032,
+            "clone_id": 331967082,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-367/target/debug/deps/svc_workflow-51a4d00b093396f1.0n3n3h3jqwx0583b68uoy31xt.16v3pzs.rcgu.o",
+          "logical_bytes": 3678352,
+          "allocated_bytes": 3682304,
+          "dev": 16777229,
+          "inode": 331967144,
+          "nlink": 3,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3682304,
+            "clone_id": 331967144,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-367/target/debug/deps/svc_workflow-624c53cdc47add25.5089ysfkvowf5fol61ihxtira.12tss02.rcgu.o",
+          "logical_bytes": 3327128,
+          "allocated_bytes": 3330048,
+          "dev": 16777229,
+          "inode": 334473486,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3330048,
+            "clone_id": 334473486,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-367/target/debug/deps/svc_workflow-624c53cdc47add25.5089ysfkvowf5fol61ihxtira.0tuzsv0.rcgu.o",
+          "logical_bytes": 3327128,
+          "allocated_bytes": 3330048,
+          "dev": 16777229,
+          "inode": 334457468,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3330048,
+            "clone_id": 334457468,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        }
+      ],
+      "clone_groups_top20": [],
+      "interpretation": "private bytes is metadata estimate for unshared data; nlink and open handles/snapshot/time drift still gate actual release; candidate authorization is separate; union-clone final-link release may exceed private sum; no file content read"
+    },
+    {
+      "path": "/private/tmp/gcr-svc-target",
+      "started_at": "2026-11-07T15:48:41.225698+00:00",
+      "ended_at": "2026-11-07T15:48:41.745013+00:00",
+      "aggregate": {
+        "regular_files": 25279,
+        "unique_regular_inodes": 2565,
+        "logical_bytes_unique": 503162144,
+        "allocated_bytes_unique": 508239872,
+        "private_bytes_nlink1": 32501760,
+        "private_bytes_all_links_in_root": 508239872,
+        "hardlink_inodes": 2350,
+        "clone_refcount_gt1_files": 0,
+        "attr_unsupported_files": 0,
+        "nonregular_allocated_bytes": 0
+      },
+      "errors": [],
+      "largest_files": [
+        {
+          "path": "/private/tmp/gcr-svc-target/debug/deps/svc_workflow-51a4d00b093396f1.ehpjx1hjexs7ksu8uzl6y9s32.0no9t26.rcgu.o",
+          "logical_bytes": 10746080,
+          "allocated_bytes": 10747904,
+          "dev": 16777229,
+          "inode": 301709126,
+          "nlink": 4,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 10747904,
+            "clone_id": 301709126,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/gcr-svc-target/debug/deps/svc_workflow-624c53cdc47add25.ctoudm8jzbk609h73bokxq6bi.1i53275.rcgu.o",
+          "logical_bytes": 6400888,
+          "allocated_bytes": 6402048,
+          "dev": 16777229,
+          "inode": 301709302,
+          "nlink": 8,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 6402048,
+            "clone_id": 301709302,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/gcr-svc-target/debug/deps/25_workflow_assistance-0463b9f7c1c8fd96.6kxhev6077kxpfqkjamqsoqd6.12fam2y.rcgu.o",
+          "logical_bytes": 5900192,
+          "allocated_bytes": 5902336,
+          "dev": 16777229,
+          "inode": 301732644,
+          "nlink": 2,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 5902336,
+            "clone_id": 301732644,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/gcr-svc-target/debug/deps/25_workflow_assistance-0463b9f7c1c8fd96.0nqhmoybmy37krr5j8x6p4zlp.09y9mhp.rcgu.o",
+          "logical_bytes": 5169496,
+          "allocated_bytes": 5173248,
+          "dev": 16777229,
+          "inode": 301732748,
+          "nlink": 2,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 5173248,
+            "clone_id": 301732748,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/gcr-svc-target/debug/deps/25_workflow_assistance-0463b9f7c1c8fd96.1qs6hh4c8d6reri76hefc308t.12fam2y.rcgu.o",
+          "logical_bytes": 4727440,
+          "allocated_bytes": 4730880,
+          "dev": 16777229,
+          "inode": 301687991,
+          "nlink": 3,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4730880,
+            "clone_id": 301687991,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/gcr-svc-target/debug/deps/svc_workflow-51a4d00b093396f1.38tf15wc8x4xckdxee5rtzhtu.1exup48.rcgu.o",
+          "logical_bytes": 4643000,
+          "allocated_bytes": 4644864,
+          "dev": 16777229,
+          "inode": 301709151,
+          "nlink": 4,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4644864,
+            "clone_id": 301709151,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/gcr-svc-target/debug/deps/25_workflow_assistance-0463b9f7c1c8fd96.cyq0qfc0th1by2cf9n1i20zb2.1bv1xwi.rcgu.o",
+          "logical_bytes": 3876160,
+          "allocated_bytes": 3878912,
+          "dev": 16777229,
+          "inode": 301688206,
+          "nlink": 3,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3878912,
+            "clone_id": 301688206,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/gcr-svc-target/debug/deps/svc_workflow-51a4d00b093396f1.d6wxwczdklas5wkixtp4t3otq.1exup48.rcgu.o",
+          "logical_bytes": 3752832,
+          "allocated_bytes": 3756032,
+          "dev": 16777229,
+          "inode": 301686105,
+          "nlink": 5,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3756032,
+            "clone_id": 301686105,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/gcr-svc-target/debug/deps/25_workflow_assistance-0463b9f7c1c8fd96.0vq4d989acnsdysfdil8t7bas.12fam2y.rcgu.o",
+          "logical_bytes": 3749408,
+          "allocated_bytes": 3751936,
+          "dev": 16777229,
+          "inode": 301732829,
+          "nlink": 2,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3751936,
+            "clone_id": 301732829,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/gcr-svc-target/debug/deps/svc_workflow-51a4d00b093396f1.0n3n3h3jqwx0583b68uoy31xt.1exup48.rcgu.o",
+          "logical_bytes": 3678408,
+          "allocated_bytes": 3682304,
+          "dev": 16777229,
+          "inode": 301688137,
+          "nlink": 5,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3682304,
+            "clone_id": 301688137,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/gcr-svc-target/debug/deps/svc_workflow-51a4d00b093396f1.447elz0t32pdlpjdy2k1q1pmn.1exup48.rcgu.o",
+          "logical_bytes": 2898032,
+          "allocated_bytes": 2899968,
+          "dev": 16777229,
+          "inode": 301687812,
+          "nlink": 5,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 2899968,
+            "clone_id": 301687812,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/gcr-svc-target/debug/deps/svc_workflow-624c53cdc47add25.bqj3s6qg2gh5xuwpc5vm9q0tn.0p3grvo.rcgu.o",
+          "logical_bytes": 2864624,
+          "allocated_bytes": 2867200,
+          "dev": 16777229,
+          "inode": 301709350,
+          "nlink": 8,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 2867200,
+            "clone_id": 301709350,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        }
+      ],
+      "clone_groups_top20": [],
+      "interpretation": "private bytes is metadata estimate for unshared data; nlink and open handles/snapshot/time drift still gate actual release; candidate authorization is separate; union-clone final-link release may exceed private sum; no file content read"
+    },
+    {
+      "path": "/private/tmp/sw-1347-evidence",
+      "started_at": "2026-11-07T15:48:41.745564+00:00",
+      "ended_at": "2026-11-07T15:48:41.931026+00:00",
+      "aggregate": {
+        "regular_files": 5451,
+        "unique_regular_inodes": 1833,
+        "logical_bytes_unique": 496577074,
+        "allocated_bytes_unique": 500228096,
+        "private_bytes_nlink1": 91500544,
+        "private_bytes_all_links_in_root": 500228096,
+        "hardlink_inodes": 1809,
+        "clone_refcount_gt1_files": 0,
+        "attr_unsupported_files": 0,
+        "nonregular_allocated_bytes": 0
+      },
+      "errors": [],
+      "largest_files": [
+        {
+          "path": "/private/tmp/sw-1347-evidence/target-candidate/debug/deps/libsvc_workflow-624c53cdc47add25.rmeta",
+          "logical_bytes": 20355589,
+          "allocated_bytes": 20357120,
+          "dev": 16777229,
+          "inode": 340634470,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 20357120,
+            "clone_id": 340634470,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-1347-evidence/target-candidate/debug/deps/svc_workflow-624c53cdc47add25.46x80pdj7k5fqtlqt3mc7afh1.0r3z8jf.rcgu.o",
+          "logical_bytes": 13456720,
+          "allocated_bytes": 13459456,
+          "dev": 16777229,
+          "inode": 340624683,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 13459456,
+            "clone_id": 340624683,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-1347-evidence/target-candidate/debug/deps/svc_workflow-624c53cdc47add25.46x80pdj7k5fqtlqt3mc7afh1.0j2rbn4.rcgu.o",
+          "logical_bytes": 13456720,
+          "allocated_bytes": 13459456,
+          "dev": 16777229,
+          "inode": 340634521,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 13459456,
+            "clone_id": 340634521,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-1347-evidence/target-candidate/debug/deps/17_workflow_runtime-52b0849c8157633d.31gnj4cjxo28p59cgar4g7wh6.0t9xu2f.rcgu.o",
+          "logical_bytes": 9450568,
+          "allocated_bytes": 9453568,
+          "dev": 16777229,
+          "inode": 340633051,
+          "nlink": 3,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 9453568,
+            "clone_id": 340633051,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-1347-evidence/target-candidate/debug/deps/svc_workflow-624c53cdc47add25.ctoudm8jzbk609h73bokxq6bi.0r3z8jf.rcgu.o",
+          "logical_bytes": 7134592,
+          "allocated_bytes": 7135232,
+          "dev": 16777229,
+          "inode": 340624704,
+          "nlink": 3,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 7135232,
+            "clone_id": 340624704,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-1347-evidence/target-candidate/debug/deps/17_workflow_runtime-52b0849c8157633d.e1t5cifoepzc576sjiyte6lkj.1ww2zgm.rcgu.o",
+          "logical_bytes": 6665440,
+          "allocated_bytes": 6668288,
+          "dev": 16777229,
+          "inode": 340633057,
+          "nlink": 3,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 6668288,
+            "clone_id": 340633057,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-1347-evidence/target-candidate/debug/deps/17_workflow_runtime-52b0849c8157633d.enzmg3p544fxef8dzkjz6zp0d.1ww2zgm.rcgu.o",
+          "logical_bytes": 6593984,
+          "allocated_bytes": 6594560,
+          "dev": 16777229,
+          "inode": 340633089,
+          "nlink": 3,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 6594560,
+            "clone_id": 340633089,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-1347-evidence/target-candidate/debug/deps/17_workflow_runtime-52b0849c8157633d.cjss3vygg7bi21i2oxx6fcule.0t9xu2f.rcgu.o",
+          "logical_bytes": 5264704,
+          "allocated_bytes": 5267456,
+          "dev": 16777229,
+          "inode": 340633083,
+          "nlink": 3,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 5267456,
+            "clone_id": 340633083,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-1347-evidence/target-candidate/debug/deps/17_workflow_runtime-52b0849c8157633d.cf0461x6nt9nhqc4k7pvtr3wq.0t9xu2f.rcgu.o",
+          "logical_bytes": 4601976,
+          "allocated_bytes": 4603904,
+          "dev": 16777229,
+          "inode": 340633064,
+          "nlink": 3,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4603904,
+            "clone_id": 340633064,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-1347-evidence/target-candidate/debug/deps/svc_workflow-624c53cdc47add25.bdizlmiyph2ah9843ychp6s82.0r3z8jf.rcgu.o",
+          "logical_bytes": 4455624,
+          "allocated_bytes": 4456448,
+          "dev": 16777229,
+          "inode": 340624896,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4456448,
+            "clone_id": 340624896,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-1347-evidence/target-candidate/debug/deps/svc_workflow-624c53cdc47add25.bdizlmiyph2ah9843ychp6s82.0j2rbn4.rcgu.o",
+          "logical_bytes": 4455624,
+          "allocated_bytes": 4456448,
+          "dev": 16777229,
+          "inode": 340634680,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4456448,
+            "clone_id": 340634680,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-1347-evidence/target-candidate/debug/deps/svc_workflow-624c53cdc47add25.5089ysfkvowf5fol61ihxtira.0r3z8jf.rcgu.o",
+          "logical_bytes": 3331312,
+          "allocated_bytes": 3334144,
+          "dev": 16777229,
+          "inode": 340625023,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3334144,
+            "clone_id": 340625023,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        }
+      ],
+      "clone_groups_top20": [],
+      "interpretation": "private bytes is metadata estimate for unshared data; nlink and open handles/snapshot/time drift still gate actual release; candidate authorization is separate; union-clone final-link release may exceed private sum; no file content read"
+    },
+    {
+      "path": "/private/tmp/sw-aa-r4-evidence",
+      "started_at": "2026-11-07T15:48:41.931516+00:00",
+      "ended_at": "2026-11-07T15:48:42.272432+00:00",
+      "aggregate": {
+        "regular_files": 18535,
+        "unique_regular_inodes": 1304,
+        "logical_bytes_unique": 333581478,
+        "allocated_bytes_unique": 336154624,
+        "private_bytes_nlink1": 94212096,
+        "private_bytes_all_links_in_root": 336154624,
+        "hardlink_inodes": 1277,
+        "clone_refcount_gt1_files": 0,
+        "attr_unsupported_files": 0,
+        "nonregular_allocated_bytes": 0
+      },
+      "errors": [],
+      "largest_files": [
+        {
+          "path": "/private/tmp/sw-aa-r4-evidence/target/debug/deps/libsvc_workflow-624c53cdc47add25.rmeta",
+          "logical_bytes": 20499630,
+          "allocated_bytes": 20500480,
+          "dev": 16777229,
+          "inode": 341611177,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 20500480,
+            "clone_id": 341611177,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-aa-r4-evidence/target/debug/deps/svc_workflow-624c53cdc47add25.46x80pdj7k5fqtlqt3mc7afh1.13wma6u.rcgu.o",
+          "logical_bytes": 13474224,
+          "allocated_bytes": 13475840,
+          "dev": 16777229,
+          "inode": 341601972,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 13475840,
+            "clone_id": 341601972,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-aa-r4-evidence/target/debug/deps/svc_workflow-624c53cdc47add25.46x80pdj7k5fqtlqt3mc7afh1.10dzm2l.rcgu.o",
+          "logical_bytes": 13474224,
+          "allocated_bytes": 13475840,
+          "dev": 16777229,
+          "inode": 341611468,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 13475840,
+            "clone_id": 341611468,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-aa-r4-evidence/target/debug/deps/svc_workflow-624c53cdc47add25.ctoudm8jzbk609h73bokxq6bi.0boqoe4.rcgu.o",
+          "logical_bytes": 7167504,
+          "allocated_bytes": 7168000,
+          "dev": 16777229,
+          "inode": 341526501,
+          "nlink": 15,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 7168000,
+            "clone_id": 341526501,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-aa-r4-evidence/target/debug/deps/svc_workflow-624c53cdc47add25.bdizlmiyph2ah9843ychp6s82.13wma6u.rcgu.o",
+          "logical_bytes": 4464864,
+          "allocated_bytes": 4468736,
+          "dev": 16777229,
+          "inode": 341602127,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4468736,
+            "clone_id": 341602127,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-aa-r4-evidence/target/debug/deps/svc_workflow-624c53cdc47add25.bdizlmiyph2ah9843ychp6s82.10dzm2l.rcgu.o",
+          "logical_bytes": 4464864,
+          "allocated_bytes": 4468736,
+          "dev": 16777229,
+          "inode": 341611978,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4468736,
+            "clone_id": 341611978,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-aa-r4-evidence/target/debug/deps/svc_workflow-624c53cdc47add25.5089ysfkvowf5fol61ihxtira.13wma6u.rcgu.o",
+          "logical_bytes": 3340560,
+          "allocated_bytes": 3342336,
+          "dev": 16777229,
+          "inode": 341602221,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3342336,
+            "clone_id": 341602221,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-aa-r4-evidence/target/debug/deps/svc_workflow-624c53cdc47add25.5089ysfkvowf5fol61ihxtira.10dzm2l.rcgu.o",
+          "logical_bytes": 3340560,
+          "allocated_bytes": 3342336,
+          "dev": 16777229,
+          "inode": 341612117,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3342336,
+            "clone_id": 341612117,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-aa-r4-evidence/target/debug/deps/svc_workflow-624c53cdc47add25.bqj3s6qg2gh5xuwpc5vm9q0tn.0ezz53q.rcgu.o",
+          "logical_bytes": 3213456,
+          "allocated_bytes": 3215360,
+          "dev": 16777229,
+          "inode": 341526511,
+          "nlink": 15,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3215360,
+            "clone_id": 341526511,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-aa-r4-evidence/target/debug/deps/svc_workflow-624c53cdc47add25.c5sz3dshmnoumwqj5v13eq9of.13wma6u.rcgu.o",
+          "logical_bytes": 3007864,
+          "allocated_bytes": 3010560,
+          "dev": 16777229,
+          "inode": 341602186,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3010560,
+            "clone_id": 341602186,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-aa-r4-evidence/target/debug/deps/svc_workflow-624c53cdc47add25.c5sz3dshmnoumwqj5v13eq9of.10dzm2l.rcgu.o",
+          "logical_bytes": 3007864,
+          "allocated_bytes": 3010560,
+          "dev": 16777229,
+          "inode": 341612053,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3010560,
+            "clone_id": 341612053,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-aa-r4-evidence/target/debug/deps/svc_workflow-624c53cdc47add25.5b5bqoqrgh2f5akcbcwoazf0p.0nmgyrz.rcgu.o",
+          "logical_bytes": 2686352,
+          "allocated_bytes": 2686976,
+          "dev": 16777229,
+          "inode": 341526513,
+          "nlink": 15,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 2686976,
+            "clone_id": 341526513,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        }
+      ],
+      "clone_groups_top20": [],
+      "interpretation": "private bytes is metadata estimate for unshared data; nlink and open handles/snapshot/time drift still gate actual release; candidate authorization is separate; union-clone final-link release may exceed private sum; no file content read"
+    },
+    {
+      "path": "/private/tmp/sw-d6-fix",
+      "started_at": "2026-11-07T15:48:42.273006+00:00",
+      "ended_at": "2026-11-07T15:48:42.393437+00:00",
+      "aggregate": {
+        "regular_files": 1308,
+        "unique_regular_inodes": 1308,
+        "logical_bytes_unique": 331260562,
+        "allocated_bytes_unique": 333914112,
+        "private_bytes_nlink1": 333914112,
+        "private_bytes_all_links_in_root": 333914112,
+        "hardlink_inodes": 0,
+        "clone_refcount_gt1_files": 0,
+        "attr_unsupported_files": 0,
+        "nonregular_allocated_bytes": 0
+      },
+      "errors": [],
+      "largest_files": [
+        {
+          "path": "/private/tmp/sw-d6-fix/target/debug/deps/libsvc_workflow-624c53cdc47add25.rmeta",
+          "logical_bytes": 20893737,
+          "allocated_bytes": 20897792,
+          "dev": 16777229,
+          "inode": 341867495,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 20897792,
+            "clone_id": 341867495,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-d6-fix/target/debug/deps/libsvc_workflow-00eb6488bca1a7a3.rmeta",
+          "logical_bytes": 15468409,
+          "allocated_bytes": 15470592,
+          "dev": 16777229,
+          "inode": 342118755,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 15470592,
+            "clone_id": 342118755,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-d6-fix/target/debug/deps/svc_workflow-624c53cdc47add25.46x80pdj7k5fqtlqt3mc7afh1.0xr223h.rcgu.o",
+          "logical_bytes": 13590416,
+          "allocated_bytes": 13590528,
+          "dev": 16777229,
+          "inode": 341868560,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 13590528,
+            "clone_id": 341868560,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-d6-fix/target/debug/deps/svc_workflow-624c53cdc47add25.ctoudm8jzbk609h73bokxq6bi.0xr223h.rcgu.o",
+          "logical_bytes": 7235640,
+          "allocated_bytes": 7237632,
+          "dev": 16777229,
+          "inode": 341868561,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 7237632,
+            "clone_id": 341868561,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-d6-fix/target/debug/deps/svc_workflow-624c53cdc47add25.bdizlmiyph2ah9843ychp6s82.0xr223h.rcgu.o",
+          "logical_bytes": 4487312,
+          "allocated_bytes": 4489216,
+          "dev": 16777229,
+          "inode": 341868828,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4489216,
+            "clone_id": 341868828,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-d6-fix/target/debug/deps/svc_workflow-624c53cdc47add25.5089ysfkvowf5fol61ihxtira.0xr223h.rcgu.o",
+          "logical_bytes": 3363080,
+          "allocated_bytes": 3366912,
+          "dev": 16777229,
+          "inode": 341869006,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3366912,
+            "clone_id": 341869006,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-d6-fix/target/debug/deps/svc_workflow-624c53cdc47add25.bqj3s6qg2gh5xuwpc5vm9q0tn.0xr223h.rcgu.o",
+          "logical_bytes": 3221640,
+          "allocated_bytes": 3223552,
+          "dev": 16777229,
+          "inode": 341868583,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3223552,
+            "clone_id": 341868583,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-d6-fix/target/debug/deps/svc_workflow-624c53cdc47add25.c5sz3dshmnoumwqj5v13eq9of.0xr223h.rcgu.o",
+          "logical_bytes": 3030232,
+          "allocated_bytes": 3031040,
+          "dev": 16777229,
+          "inode": 341868959,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3031040,
+            "clone_id": 341868959,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-d6-fix/target/debug/deps/svc_workflow-624c53cdc47add25.5b5bqoqrgh2f5akcbcwoazf0p.0xr223h.rcgu.o",
+          "logical_bytes": 2687504,
+          "allocated_bytes": 2691072,
+          "dev": 16777229,
+          "inode": 341868587,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 2691072,
+            "clone_id": 341868587,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-d6-fix/target/debug/deps/svc_workflow-624c53cdc47add25.03mqniqbov03r0s238cq5bnyv.0xr223h.rcgu.o",
+          "logical_bytes": 2553488,
+          "allocated_bytes": 2555904,
+          "dev": 16777229,
+          "inode": 341868630,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 2555904,
+            "clone_id": 341868630,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-d6-fix/target/debug/deps/svc_workflow-624c53cdc47add25.b3b0xlzm3ho0ygghwjjblo87k.0xr223h.rcgu.o",
+          "logical_bytes": 2360440,
+          "allocated_bytes": 2363392,
+          "dev": 16777229,
+          "inode": 341868589,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 2363392,
+            "clone_id": 341868589,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/sw-d6-fix/target/debug/deps/svc_workflow-624c53cdc47add25.0t9v2s3qxmq5ts25947ddrat2.0xr223h.rcgu.o",
+          "logical_bytes": 2174544,
+          "allocated_bytes": 2174976,
+          "dev": 16777229,
+          "inode": 341868597,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 2174976,
+            "clone_id": 341868597,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        }
+      ],
+      "clone_groups_top20": [],
+      "interpretation": "private bytes is metadata estimate for unshared data; nlink and open handles/snapshot/time drift still gate actual release; candidate authorization is separate; union-clone final-link release may exceed private sum; no file content read"
+    },
+    {
+      "path": "/private/tmp/dsh-548-r2-iwl_bczh",
+      "started_at": "2026-11-07T15:48:42.396405+00:00",
+      "ended_at": "2026-11-07T15:48:43.119950+00:00",
+      "aggregate": {
+        "regular_files": 23491,
+        "unique_regular_inodes": 23491,
+        "logical_bytes_unique": 266333322,
+        "allocated_bytes_unique": 326766592,
+        "private_bytes_nlink1": 326766592,
+        "private_bytes_all_links_in_root": 326766592,
+        "hardlink_inodes": 0,
+        "clone_refcount_gt1_files": 0,
+        "attr_unsupported_files": 0,
+        "nonregular_allocated_bytes": 0
+      },
+      "errors": [],
+      "largest_files": [
+        {
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master.tar",
+          "logical_bytes": 57241600,
+          "allocated_bytes": 57241600,
+          "dev": 16777229,
+          "inode": 350680984,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 57241600,
+            "clone_id": 350680984,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin.tar",
+          "logical_bytes": 57221120,
+          "allocated_bytes": 57221120,
+          "dev": 16777229,
+          "inode": 350671658,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 57221120,
+            "clone_id": 350671658,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/pnpm-lock.yaml",
+          "logical_bytes": 697364,
+          "allocated_bytes": 700416,
+          "dev": 16777229,
+          "inode": 350680389,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 700416,
+            "clone_id": 350680389,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master/pnpm-lock.yaml",
+          "logical_bytes": 697364,
+          "allocated_bytes": 700416,
+          "dev": 16777229,
+          "inode": 350689716,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 700416,
+            "clone_id": 350689716,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed/pnpm-lock.yaml",
+          "logical_bytes": 697364,
+          "allocated_bytes": 700416,
+          "dev": 16777229,
+          "inode": 350862277,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 700416,
+            "clone_id": 350862277,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/packages/extensions/tool-cordis/src/api-catalog.ts",
+          "logical_bytes": 354075,
+          "allocated_bytes": 356352,
+          "dev": 16777229,
+          "inode": 350677744,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 356352,
+            "clone_id": 350677744,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master/packages/extensions/tool-cordis/src/api-catalog.ts",
+          "logical_bytes": 354075,
+          "allocated_bytes": 356352,
+          "dev": 16777229,
+          "inode": 350687072,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 356352,
+            "clone_id": 350687072,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed/packages/extensions/tool-cordis/src/api-catalog.ts",
+          "logical_bytes": 354075,
+          "allocated_bytes": 356352,
+          "dev": 16777229,
+          "inode": 350859632,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 356352,
+            "clone_id": 350859632,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/packages/typert/generator/tests/__snapshots__/type-model.spec.ts.snap",
+          "logical_bytes": 229389,
+          "allocated_bytes": 233472,
+          "dev": 16777229,
+          "inode": 350680031,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 233472,
+            "clone_id": 350680031,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master/packages/typert/generator/tests/__snapshots__/type-model.spec.ts.snap",
+          "logical_bytes": 229389,
+          "allocated_bytes": 233472,
+          "dev": 16777229,
+          "inode": 350689358,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 233472,
+            "clone_id": 350689358,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed/packages/typert/generator/tests/__snapshots__/type-model.spec.ts.snap",
+          "logical_bytes": 229389,
+          "allocated_bytes": 233472,
+          "dev": 16777229,
+          "inode": 350861919,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 233472,
+            "clone_id": 350861919,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/packages/context/agent-instructions/tests/agent-instructions.spec.ts",
+          "logical_bytes": 197986,
+          "allocated_bytes": 200704,
+          "dev": 16777229,
+          "inode": 350677269,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 200704,
+            "clone_id": 350677269,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        }
+      ],
+      "clone_groups_top20": [],
+      "interpretation": "private bytes is metadata estimate for unshared data; nlink and open handles/snapshot/time drift still gate actual release; candidate authorization is separate; union-clone final-link release may exceed private sum; no file content read"
+    },
+    {
+      "path": "/private/tmp/darwinx64-fix",
+      "started_at": "2026-11-07T15:48:43.121162+00:00",
+      "ended_at": "2026-11-07T15:48:43.126529+00:00",
+      "aggregate": {
+        "regular_files": 20,
+        "unique_regular_inodes": 20,
+        "logical_bytes_unique": 270121339,
+        "allocated_bytes_unique": 270159872,
+        "private_bytes_nlink1": 270159872,
+        "private_bytes_all_links_in_root": 270159872,
+        "hardlink_inodes": 0,
+        "clone_refcount_gt1_files": 0,
+        "attr_unsupported_files": 0,
+        "nonregular_allocated_bytes": 0
+      },
+      "errors": [],
+      "largest_files": [
+        {
+          "path": "/private/tmp/darwinx64-fix/@openai_codex-0.147.0-darwin-x64.tgz",
+          "logical_bytes": 118685907,
+          "allocated_bytes": 118689792,
+          "dev": 16777229,
+          "inode": 353910725,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 118689792,
+            "clone_id": 353910725,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/darwinx64-fix/@anthropic-ai_claude-agent-sdk-darwin-x64-0.3.220.tgz",
+          "logical_bytes": 79494526,
+          "allocated_bytes": 79495168,
+          "dev": 16777229,
+          "inode": 353910509,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 79495168,
+            "clone_id": 353910509,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/darwinx64-fix/@rolldown_binding-darwin-x64-1.1.1.tgz",
+          "logical_bytes": 10743313,
+          "allocated_bytes": 10743808,
+          "dev": 16777229,
+          "inode": 353910495,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 10743808,
+            "clone_id": 353910495,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/darwinx64-fix/@img_sharp-libvips-darwin-x64-1.3.2.tgz",
+          "logical_bytes": 8838419,
+          "allocated_bytes": 8839168,
+          "dev": 16777229,
+          "inode": 353910424,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 8839168,
+            "clone_id": 353910424,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/darwinx64-fix/@rolldown_binding-darwin-x64-1.0.3.tgz",
+          "logical_bytes": 8371546,
+          "allocated_bytes": 8372224,
+          "dev": 16777229,
+          "inode": 353910440,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 8372224,
+            "clone_id": 353910440,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/darwinx64-fix/@oxlint-tsgolint_darwin-x64-7.0.2001.tgz",
+          "logical_bytes": 7816826,
+          "allocated_bytes": 7819264,
+          "dev": 16777229,
+          "inode": 353910558,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 7819264,
+            "clone_id": 353910558,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/darwinx64-fix/@oxlint_binding-darwin-x64-1.76.0.tgz",
+          "logical_bytes": 6262826,
+          "allocated_bytes": 6266880,
+          "dev": 16777229,
+          "inode": 353910757,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 6266880,
+            "clone_id": 353910757,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/darwinx64-fix/lefthook-darwin-x64-2.1.9.tgz",
+          "logical_bytes": 5604535,
+          "allocated_bytes": 5607424,
+          "dev": 16777229,
+          "inode": 353910515,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 5607424,
+            "clone_id": 353910515,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/darwinx64-fix/@esbuild_darwin-x64-0.28.1.tgz",
+          "logical_bytes": 4792951,
+          "allocated_bytes": 4796416,
+          "dev": 16777229,
+          "inode": 353910533,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4796416,
+            "clone_id": 353910533,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/darwinx64-fix/@esbuild_darwin-x64-0.25.12.tgz",
+          "logical_bytes": 4469597,
+          "allocated_bytes": 4472832,
+          "dev": 16777229,
+          "inode": 353910525,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4472832,
+            "clone_id": 353910525,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/darwinx64-fix/@esbuild_darwin-x64-0.21.5.tgz",
+          "logical_bytes": 4251628,
+          "allocated_bytes": 4251648,
+          "dev": 16777229,
+          "inode": 353910463,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4251648,
+            "clone_id": 353910463,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/darwinx64-fix/lightningcss-darwin-x64-1.32.0.tgz",
+          "logical_bytes": 3860279,
+          "allocated_bytes": 3862528,
+          "dev": 16777229,
+          "inode": 353910745,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3862528,
+            "clone_id": 353910745,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        }
+      ],
+      "clone_groups_top20": [],
+      "interpretation": "private bytes is metadata estimate for unshared data; nlink and open handles/snapshot/time drift still gate actual release; candidate authorization is separate; union-clone final-link release may exceed private sum; no file content read"
+    },
+    {
+      "path": "/private/tmp/dsh-523-impl",
+      "started_at": "2026-11-07T15:48:43.126825+00:00",
+      "ended_at": "2026-11-07T15:48:43.243670+00:00",
+      "aggregate": {
+        "regular_files": 3308,
+        "unique_regular_inodes": 3308,
+        "logical_bytes_unique": 129790274,
+        "allocated_bytes_unique": 137674752,
+        "private_bytes_nlink1": 137674752,
+        "private_bytes_all_links_in_root": 137674752,
+        "hardlink_inodes": 0,
+        "clone_refcount_gt1_files": 0,
+        "attr_unsupported_files": 0,
+        "nonregular_allocated_bytes": 0
+      },
+      "errors": [],
+      "largest_files": [
+        {
+          "path": "/private/tmp/dsh-523-impl/node_modules/sherpa-onnx-darwin-arm64/libonnxruntime.dylib",
+          "logical_bytes": 29006384,
+          "allocated_bytes": 29007872,
+          "dev": 16777229,
+          "inode": 347925545,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 29007872,
+            "clone_id": 347925545,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-523-impl/.git/objects/pack/pack-4dc1445e3580ee779082bf217751e1d25613909e.pack",
+          "logical_bytes": 22343563,
+          "allocated_bytes": 22343680,
+          "dev": 16777229,
+          "inode": 347922676,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 22343680,
+            "clone_id": 347922676,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-523-impl/node_modules/@larksuiteoapi/node-sdk/types/index.d.ts",
+          "logical_bytes": 17667489,
+          "allocated_bytes": 17670144,
+          "dev": 16777229,
+          "inode": 347926881,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 17670144,
+            "clone_id": 347926881,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-523-impl/node_modules/@larksuiteoapi/node-sdk/lib/index.js",
+          "logical_bytes": 6274536,
+          "allocated_bytes": 6275072,
+          "dev": 16777229,
+          "inode": 347926805,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 6275072,
+            "clone_id": 347926805,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-523-impl/node_modules/@larksuiteoapi/node-sdk/es/index.js",
+          "logical_bytes": 6230822,
+          "allocated_bytes": 6234112,
+          "dev": 16777229,
+          "inode": 347925711,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 6234112,
+            "clone_id": 347925711,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-523-impl/node_modules/sherpa-onnx-darwin-arm64/libsherpa-onnx-c-api.dylib",
+          "logical_bytes": 4275368,
+          "allocated_bytes": 4276224,
+          "dev": 16777229,
+          "inode": 347926882,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4276224,
+            "clone_id": 347926882,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-523-impl/node_modules/@koromix/koffi-darwin-arm64/darwin_arm64/koffi.node",
+          "logical_bytes": 1226760,
+          "allocated_bytes": 1228800,
+          "dev": 16777229,
+          "inode": 347925791,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 1228800,
+            "clone_id": 347925791,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-523-impl/.git/objects/pack/pack-4dc1445e3580ee779082bf217751e1d25613909e.idx",
+          "logical_bytes": 702780,
+          "allocated_bytes": 704512,
+          "dev": 16777229,
+          "inode": 347922688,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 704512,
+            "clone_id": 347922688,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-523-impl/node_modules/sherpa-onnx-darwin-arm64/sherpa-onnx.node",
+          "logical_bytes": 644448,
+          "allocated_bytes": 647168,
+          "dev": 16777229,
+          "inode": 347926887,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 647168,
+            "clone_id": 347926887,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-523-impl/node_modules/protobufjs/dist/protobuf.min.js.map",
+          "logical_bytes": 444152,
+          "allocated_bytes": 446464,
+          "dev": 16777229,
+          "inode": 347926799,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 446464,
+            "clone_id": 347926799,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-523-impl/node_modules/protobufjs/dist/protobuf.js.map",
+          "logical_bytes": 369840,
+          "allocated_bytes": 372736,
+          "dev": 16777229,
+          "inode": 347926749,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 372736,
+            "clone_id": 347926749,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-523-impl/node_modules/protobufjs/dist/light/protobuf.min.js.map",
+          "logical_bytes": 366320,
+          "allocated_bytes": 368640,
+          "dev": 16777229,
+          "inode": 347926770,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 368640,
+            "clone_id": 347926770,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        }
+      ],
+      "clone_groups_top20": [],
+      "interpretation": "private bytes is metadata estimate for unshared data; nlink and open handles/snapshot/time drift still gate actual release; candidate authorization is separate; union-clone final-link release may exceed private sum; no file content read"
+    },
+    {
+      "path": "/private/tmp/dsh-548-r5-evidence",
+      "started_at": "2026-11-07T15:48:43.244085+00:00",
+      "ended_at": "2026-11-07T15:48:43.472784+00:00",
+      "aggregate": {
+        "regular_files": 7823,
+        "unique_regular_inodes": 7823,
+        "logical_bytes_unique": 107731181,
+        "allocated_bytes_unique": 127864832,
+        "private_bytes_nlink1": 127864832,
+        "private_bytes_all_links_in_root": 127864832,
+        "hardlink_inodes": 0,
+        "clone_refcount_gt1_files": 0,
+        "attr_unsupported_files": 0,
+        "nonregular_allocated_bytes": 0
+      },
+      "errors": [],
+      "largest_files": [
+        {
+          "path": "/private/tmp/dsh-548-r5-evidence/base.tar",
+          "logical_bytes": 57241600,
+          "allocated_bytes": 57241600,
+          "dev": 16777229,
+          "inode": 350836414,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 57241600,
+            "clone_id": 350836414,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r5-evidence/base/pnpm-lock.yaml",
+          "logical_bytes": 697364,
+          "allocated_bytes": 700416,
+          "dev": 16777229,
+          "inode": 350845147,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 700416,
+            "clone_id": 350845147,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r5-evidence/base/packages/extensions/tool-cordis/src/api-catalog.ts",
+          "logical_bytes": 354075,
+          "allocated_bytes": 356352,
+          "dev": 16777229,
+          "inode": 350842501,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 356352,
+            "clone_id": 350842501,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r5-evidence/base/packages/typert/generator/tests/__snapshots__/type-model.spec.ts.snap",
+          "logical_bytes": 229389,
+          "allocated_bytes": 233472,
+          "dev": 16777229,
+          "inode": 350844789,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 233472,
+            "clone_id": 350844789,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r5-evidence/base/packages/context/agent-instructions/tests/agent-instructions.spec.ts",
+          "logical_bytes": 197986,
+          "allocated_bytes": 200704,
+          "dev": 16777229,
+          "inode": 350842026,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 200704,
+            "clone_id": 350842026,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r5-evidence/base/packages/host/apiproxy/src/api-proxy.ts",
+          "logical_bytes": 161758,
+          "allocated_bytes": 163840,
+          "dev": 16777229,
+          "inode": 350842855,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 163840,
+            "clone_id": 350842855,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r5-evidence/base/packages/client/connection/src/client/fixture.ts",
+          "logical_bytes": 150425,
+          "allocated_bytes": 151552,
+          "dev": 16777229,
+          "inode": 350840530,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 151552,
+            "clone_id": 350840530,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r5-evidence/base/docs/config-catalog.zh.md",
+          "logical_bytes": 140881,
+          "allocated_bytes": 143360,
+          "dev": 16777229,
+          "inode": 350839124,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 143360,
+            "clone_id": 350839124,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r5-evidence/base/docs/config-catalog.md",
+          "logical_bytes": 140372,
+          "allocated_bytes": 143360,
+          "dev": 16777229,
+          "inode": 350839123,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 143360,
+            "clone_id": 350839123,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r5-evidence/base/scripts/snapshots/translation-prompt-v4/request-response.expected.json",
+          "logical_bytes": 133019,
+          "allocated_bytes": 135168,
+          "dev": 16777229,
+          "inode": 350845317,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 135168,
+            "clone_id": 350845317,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r5-evidence/base/packages/typert/generator/src/analyzer.ts",
+          "logical_bytes": 134365,
+          "allocated_bytes": 135168,
+          "dev": 16777229,
+          "inode": 350844774,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 135168,
+            "clone_id": 350844774,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r5-evidence/base/docs/module-graph.zh.md",
+          "logical_bytes": 127726,
+          "allocated_bytes": 131072,
+          "dev": 16777229,
+          "inode": 350839225,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 131072,
+            "clone_id": 350839225,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        }
+      ],
+      "clone_groups_top20": [],
+      "interpretation": "private bytes is metadata estimate for unshared data; nlink and open handles/snapshot/time drift still gate actual release; candidate authorization is separate; union-clone final-link release may exceed private sum; no file content read"
+    },
+    {
+      "path": "/private/tmp/dsh-548-r4-evidence",
+      "started_at": "2026-11-07T15:48:43.475145+00:00",
+      "ended_at": "2026-11-07T15:48:43.722090+00:00",
+      "aggregate": {
+        "regular_files": 7821,
+        "unique_regular_inodes": 7821,
+        "logical_bytes_unique": 107730219,
+        "allocated_bytes_unique": 127856640,
+        "private_bytes_nlink1": 127856640,
+        "private_bytes_all_links_in_root": 127856640,
+        "hardlink_inodes": 0,
+        "clone_refcount_gt1_files": 0,
+        "attr_unsupported_files": 0,
+        "nonregular_allocated_bytes": 0
+      },
+      "errors": [],
+      "largest_files": [
+        {
+          "path": "/private/tmp/dsh-548-r4-evidence/base.tar",
+          "logical_bytes": 57241600,
+          "allocated_bytes": 57241600,
+          "dev": 16777229,
+          "inode": 350823711,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 57241600,
+            "clone_id": 350823711,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r4-evidence/base/pnpm-lock.yaml",
+          "logical_bytes": 697364,
+          "allocated_bytes": 700416,
+          "dev": 16777229,
+          "inode": 350832444,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 700416,
+            "clone_id": 350832444,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r4-evidence/base/packages/extensions/tool-cordis/src/api-catalog.ts",
+          "logical_bytes": 354075,
+          "allocated_bytes": 356352,
+          "dev": 16777229,
+          "inode": 350829799,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 356352,
+            "clone_id": 350829799,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r4-evidence/base/packages/typert/generator/tests/__snapshots__/type-model.spec.ts.snap",
+          "logical_bytes": 229389,
+          "allocated_bytes": 233472,
+          "dev": 16777229,
+          "inode": 350832086,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 233472,
+            "clone_id": 350832086,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r4-evidence/base/packages/context/agent-instructions/tests/agent-instructions.spec.ts",
+          "logical_bytes": 197986,
+          "allocated_bytes": 200704,
+          "dev": 16777229,
+          "inode": 350829324,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 200704,
+            "clone_id": 350829324,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r4-evidence/base/packages/host/apiproxy/src/api-proxy.ts",
+          "logical_bytes": 161758,
+          "allocated_bytes": 163840,
+          "dev": 16777229,
+          "inode": 350830153,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 163840,
+            "clone_id": 350830153,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r4-evidence/base/packages/client/connection/src/client/fixture.ts",
+          "logical_bytes": 150425,
+          "allocated_bytes": 151552,
+          "dev": 16777229,
+          "inode": 350827827,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 151552,
+            "clone_id": 350827827,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r4-evidence/base/docs/config-catalog.zh.md",
+          "logical_bytes": 140881,
+          "allocated_bytes": 143360,
+          "dev": 16777229,
+          "inode": 350826422,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 143360,
+            "clone_id": 350826422,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r4-evidence/base/docs/config-catalog.md",
+          "logical_bytes": 140372,
+          "allocated_bytes": 143360,
+          "dev": 16777229,
+          "inode": 350826421,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 143360,
+            "clone_id": 350826421,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r4-evidence/base/scripts/snapshots/translation-prompt-v4/request-response.expected.json",
+          "logical_bytes": 133019,
+          "allocated_bytes": 135168,
+          "dev": 16777229,
+          "inode": 350832614,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 135168,
+            "clone_id": 350832614,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r4-evidence/base/packages/typert/generator/src/analyzer.ts",
+          "logical_bytes": 134365,
+          "allocated_bytes": 135168,
+          "dev": 16777229,
+          "inode": 350832071,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 135168,
+            "clone_id": 350832071,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/private/tmp/dsh-548-r4-evidence/base/docs/module-graph.zh.md",
+          "logical_bytes": 127726,
+          "allocated_bytes": 131072,
+          "dev": 16777229,
+          "inode": 350826523,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 131072,
+            "clone_id": 350826523,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        }
+      ],
+      "clone_groups_top20": [],
+      "interpretation": "private bytes is metadata estimate for unshared data; nlink and open handles/snapshot/time drift still gate actual release; candidate authorization is separate; union-clone final-link release may exceed private sum; no file content read"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/archived_sessions",
+      "started_at": "2026-11-07T15:48:43.722642+00:00",
+      "ended_at": "2026-11-07T15:48:43.764974+00:00",
+      "aggregate": {
+        "regular_files": 445,
+        "unique_regular_inodes": 445,
+        "logical_bytes_unique": 350718671,
+        "allocated_bytes_unique": 351625216,
+        "private_bytes_nlink1": 351625216,
+        "private_bytes_all_links_in_root": 351625216,
+        "hardlink_inodes": 0,
+        "clone_refcount_gt1_files": 0,
+        "attr_unsupported_files": 0,
+        "nonregular_allocated_bytes": 0
+      },
+      "errors": [],
+      "largest_files": [
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-07-28T22-11-18-019fa910-ceb2-74e3-a1b9-e1f495896141.jsonl.zst",
+          "logical_bytes": 42590546,
+          "allocated_bytes": 42594304,
+          "dev": 16777229,
+          "inode": 216580520,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 42594304,
+            "clone_id": 216580520,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-09-14T22-41-22-01a0a05d-93b0-7693-b24b-abb81f436028.jsonl.zst",
+          "logical_bytes": 13118162,
+          "allocated_bytes": 13119488,
+          "dev": 16777229,
+          "inode": 216578037,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 13119488,
+            "clone_id": 216578037,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-06-08T08-38-40-019ea4aa-d7f2-7091-87f0-d7d290995276.jsonl.zst",
+          "logical_bytes": 10786862,
+          "allocated_bytes": 10788864,
+          "dev": 16777229,
+          "inode": 216578640,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 10788864,
+            "clone_id": 216578640,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-10-12T07-29-50-01a12d4d-1b84-7a22-80ca-96b2f0275fc6.jsonl.zst",
+          "logical_bytes": 10674900,
+          "allocated_bytes": 10678272,
+          "dev": 16777229,
+          "inode": 227785311,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 10678272,
+            "clone_id": 227785311,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-09-13T23-29-20-01a09b63-218e-7603-8d11-c001eca47120.jsonl.zst",
+          "logical_bytes": 8126991,
+          "allocated_bytes": 8130560,
+          "dev": 16777229,
+          "inode": 216579370,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 8130560,
+            "clone_id": 216579370,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-10-13T08-05-30-01a13294-2024-7083-a0d4-c9ab53ef6ae1.jsonl.zst",
+          "logical_bytes": 7155592,
+          "allocated_bytes": 7155712,
+          "dev": 16777229,
+          "inode": 227785426,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 7155712,
+            "clone_id": 227785426,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-09-14T08-11-38-01a09d41-4f7f-70d1-b4d9-bca0a2aacf39.jsonl.zst",
+          "logical_bytes": 6238229,
+          "allocated_bytes": 6242304,
+          "dev": 16777229,
+          "inode": 216581187,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 6242304,
+            "clone_id": 216581187,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-09-16T07-02-33-01a0a74e-ca7d-7852-a31c-d6f81e820e4c.jsonl.zst",
+          "logical_bytes": 5746411,
+          "allocated_bytes": 5746688,
+          "dev": 16777229,
+          "inode": 216580503,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 5746688,
+            "clone_id": 216580503,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-09-03T00-26-41-01a062f1-ae1b-78c2-944c-560dd77c9113.jsonl.zst",
+          "logical_bytes": 5560357,
+          "allocated_bytes": 5562368,
+          "dev": 16777229,
+          "inode": 216580748,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 5562368,
+            "clone_id": 216580748,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-09-13T13-28-21-01a0993c-ea35-75d1-9bc0-cc97914a3fd0.jsonl.zst",
+          "logical_bytes": 5275000,
+          "allocated_bytes": 5275648,
+          "dev": 16777229,
+          "inode": 216580604,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 5275648,
+            "clone_id": 216580604,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-05-13T09-24-24-019e1eef-5df8-7c51-8254-22a98e34aa09.jsonl.zst",
+          "logical_bytes": 4900305,
+          "allocated_bytes": 4902912,
+          "dev": 16777229,
+          "inode": 216580157,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4902912,
+            "clone_id": 216580157,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-09-16T08-32-52-01a0a064-7ae6-7500-9362-143ba58d0f25_01a0a7a1-7728-7973-b2b8-4a4398a73d7a.jsonl.zst",
+          "logical_bytes": 4804784,
+          "allocated_bytes": 4808704,
+          "dev": 16777229,
+          "inode": 216579388,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4808704,
+            "clone_id": 216579388,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        }
+      ],
+      "clone_groups_top20": [],
+      "interpretation": "private bytes is metadata estimate for unshared data; nlink and open handles/snapshot/time drift still gate actual release; candidate authorization is separate; union-clone final-link release may exceed private sum; no file content read"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/sessions",
+      "started_at": "2026-11-07T15:48:43.765375+00:00",
+      "ended_at": "2026-11-07T15:48:44.665086+00:00",
+      "aggregate": {
+        "regular_files": 2319,
+        "unique_regular_inodes": 2319,
+        "logical_bytes_unique": 5579105584,
+        "allocated_bytes_unique": 5590507520,
+        "private_bytes_nlink1": 5590441984,
+        "private_bytes_all_links_in_root": 5590441984,
+        "hardlink_inodes": 0,
+        "clone_refcount_gt1_files": 0,
+        "attr_unsupported_files": 0,
+        "nonregular_allocated_bytes": 0
+      },
+      "errors": [],
+      "largest_files": [
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/21/rollout-2026-10-21T09-15-37-01a15c07-31b7-73f0-885c-0f82c5533cb8.jsonl",
+          "logical_bytes": 407463427,
+          "allocated_bytes": 407465984,
+          "dev": 16777229,
+          "inode": 220940134,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 407465984,
+            "clone_id": 220940134,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/22/rollout-2026-10-22T22-35-05-01a16409-7acb-70b3-b250-87b4f04c58b2.jsonl",
+          "logical_bytes": 276813301,
+          "allocated_bytes": 276815872,
+          "dev": 16777229,
+          "inode": 228192191,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 276815872,
+            "clone_id": 228192191,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/27/rollout-2026-10-27T22-59-31-01a17ddf-a4c3-73c0-9f4a-8cbb952a7519.jsonl",
+          "logical_bytes": 179564908,
+          "allocated_bytes": 179568640,
+          "dev": 16777229,
+          "inode": 279451949,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 179568640,
+            "clone_id": 279451949,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/14/rollout-2026-10-14T07-16-47-01a1378d-e052-7021-9992-f0760eb9f9e7.jsonl",
+          "logical_bytes": 126838396,
+          "allocated_bytes": 126840832,
+          "dev": 16777229,
+          "inode": 193597472,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 126840832,
+            "clone_id": 193597472,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/26/rollout-2026-10-26T09-54-14-01a175ea-5880-7b23-b40e-1738883401f1.jsonl",
+          "logical_bytes": 125906593,
+          "allocated_bytes": 125906944,
+          "dev": 16777229,
+          "inode": 269511731,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 125906944,
+            "clone_id": 269511731,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/09/17/rollout-2026-09-17T09-40-56-01a0ad06-249f-7632-809b-961b93c3b113.jsonl.zst",
+          "logical_bytes": 123922010,
+          "allocated_bytes": 123924480,
+          "dev": 16777229,
+          "inode": 227786972,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 123924480,
+            "clone_id": 227786972,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/19/rollout-2026-10-19T20-41-26-01a1542e-5bec-7901-88c0-76aee187beba.jsonl",
+          "logical_bytes": 84564240,
+          "allocated_bytes": 84566016,
+          "dev": 16777229,
+          "inode": 318692003,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 84566016,
+            "clone_id": 318692003,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/16/rollout-2026-10-16T14-52-40-01a1437b-f9f3-7a33-a253-8f7fce9459f3.jsonl.zst",
+          "logical_bytes": 78536295,
+          "allocated_bytes": 78536704,
+          "dev": 16777229,
+          "inode": 296661556,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 78536704,
+            "clone_id": 296661556,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/26/rollout-2026-10-26T07-37-39-01a1756d-4b14-7473-9d49-a77f34ff5adb.jsonl.zst",
+          "logical_bytes": 70632818,
+          "allocated_bytes": 70635520,
+          "dev": 16777229,
+          "inode": 344777044,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 70635520,
+            "clone_id": 344777044,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/27/rollout-2026-10-27T23-00-04-01a17de0-289d-7431-b5cc-f3076b20aa3a.jsonl",
+          "logical_bytes": 67651867,
+          "allocated_bytes": 67653632,
+          "dev": 16777229,
+          "inode": 279453283,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 67653632,
+            "clone_id": 279453283,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/19/rollout-2026-10-19T20-42-06-01a1542e-f778-7033-a649-d53d19ce3b01.jsonl.zst",
+          "logical_bytes": 66986572,
+          "allocated_bytes": 66990080,
+          "dev": 16777229,
+          "inode": 296660755,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 66990080,
+            "clone_id": 296660755,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/13/rollout-2026-10-13T07-46-42-01a13282-e895-78f3-a0ba-cea68de7b4cb.jsonl.zst",
+          "logical_bytes": 53108332,
+          "allocated_bytes": 53108736,
+          "dev": 16777229,
+          "inode": 296660370,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 53108736,
+            "clone_id": 296660370,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        }
+      ],
+      "clone_groups_top20": [],
+      "interpretation": "private bytes is metadata estimate for unshared data; nlink and open handles/snapshot/time drift still gate actual release; candidate authorization is separate; union-clone final-link release may exceed private sum; no file content read"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/cache",
+      "started_at": "2026-11-07T15:48:44.665649+00:00",
+      "ended_at": "2026-11-07T15:48:44.669400+00:00",
+      "aggregate": {
+        "regular_files": 6,
+        "unique_regular_inodes": 6,
+        "logical_bytes_unique": 74391370,
+        "allocated_bytes_unique": 74407936,
+        "private_bytes_nlink1": 74407936,
+        "private_bytes_all_links_in_root": 74407936,
+        "hardlink_inodes": 0,
+        "clone_refcount_gt1_files": 0,
+        "attr_unsupported_files": 0,
+        "nonregular_allocated_bytes": 0
+      },
+      "errors": [],
+      "largest_files": [
+        {
+          "path": "/Users/yanfenma/.codex/cache/remote_plugin_catalog/9c3d674a775f8ad4.json",
+          "logical_bytes": 62919080,
+          "allocated_bytes": 62922752,
+          "dev": 16777229,
+          "inode": 359377602,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 62922752,
+            "clone_id": 359377602,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/cache/codex_app_directory/ff59d4157569fa1fde441a4ad63e93415a0599a7.json",
+          "logical_bytes": 8469002,
+          "allocated_bytes": 8470528,
+          "dev": 16777229,
+          "inode": 413950,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 8470528,
+            "clone_id": 413950,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/cache/codex_apps_tools/5b4a9800e4d2ce4750d87854431f787a400c78ff.json",
+          "logical_bytes": 3001049,
+          "allocated_bytes": 3002368,
+          "dev": 16777229,
+          "inode": 359377584,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 3002368,
+            "clone_id": 359377584,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/cache/remote_plugin_catalog/1c336dc392b44837.json",
+          "logical_bytes": 1994,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 359377606,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4096,
+            "clone_id": 359377606,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/cache/codex_apps_server_info/5b4a9800e4d2ce4750d87854431f787a400c78ff.json",
+          "logical_bytes": 189,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 359377585,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4096,
+            "clone_id": 359377585,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/.codex/cache/bundled_plugin_exclusions/8c953287e83709e088ac4e9b6c922d07faed5c3007ad6fcddced181e8e4708e9.json",
+          "logical_bytes": 56,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 133543169,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 4096,
+            "clone_id": 133543169,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        }
+      ],
+      "clone_groups_top20": [],
+      "interpretation": "private bytes is metadata estimate for unshared data; nlink and open handles/snapshot/time drift still gate actual release; candidate authorization is separate; union-clone final-link release may exceed private sum; no file content read"
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+0	/System/Volumes/Data/sw
+1	/System/Volumes/Data/home
+2152	/System/Volumes/Data/usr/libexec
+32917728	/System/Volumes/Data/usr/local
+1032	/System/Volumes/Data/usr/share
+32920912	/System/Volumes/Data/usr
+0	/System/Volumes/Data/.adobeTemp
+208852	/System/Volumes/Data/Previous Content/boot
+0	/System/Volumes/Data/Previous Content/private
+208852	/System/Volumes/Data/Previous Content
+54120	/System/Volumes/Data/Library/Apple
+24	/System/Volumes/Data/Library/Image Capture
+16	/System/Volumes/Data/Library/Receipts
+356964	/System/Volumes/Data/Library/Application Support
+0	/System/Volumes/Data/Library/DirectoryServices
+0	/System/Volumes/Data/Library/StartupItems
+2137948	/System/Volumes/Data/Library/Developer
+11236	/System/Volumes/Data/Library/Documentation
+0	/System/Volumes/Data/Library/Video
+624	/System/Volumes/Data/Library/Preferences
+4	/System/Volumes/Data/Library/OSAnalytics
+1528	/System/Volumes/Data/Library/Keychains
+0	/System/Volumes/Data/Library/ColorPickers
+0	/System/Volumes/Data/Library/StagedDriverExtensions
+180	/System/Volumes/Data/Library/ColorSync
+123220	/System/Volumes/Data/Library/QuickLook
+0	/System/Volumes/Data/Library/AppStore
+76	/System/Volumes/Data/Library/Security
+176	/System/Volumes/Data/Library/Catacomb
+676	/System/Volumes/Data/Library/Trial
+0	/System/Volumes/Data/Library/Compositions
+0	/System/Volumes/Data/Library/Google
+0	/System/Volumes/Data/Library/StagedExtensions
+0	/System/Volumes/Data/Library/Perl
+18256	/System/Volumes/Data/Library/PrivilegedHelperTools
+0	/System/Volumes/Data/Library/InstallerSandboxes
+0	/System/Volumes/Data/Library/CoreAnalytics
+0	/System/Volumes/Data/Library/Java
+0	/System/Volumes/Data/Library/ScriptingAdditions
+0	/System/Volumes/Data/Library/KernelCollections
+250736	/System/Volumes/Data/Library/Updates
+0	/System/Volumes/Data/Library/Speech
+504	/System/Volumes/Data/Library/Extensions
+0	/System/Volumes/Data/Library/DriverExtensions
+10672	/System/Volumes/Data/Library/WebServer
+0	/System/Volumes/Data/Library/Components
+124	/System/Volumes/Data/Library/Printers
+72	/System/Volumes/Data/Library/Audio
+24	/System/Volumes/Data/Library/SystemMigration
+0	/System/Volumes/Data/Library/CoreMediaIO
+0	/System/Volumes/Data/Library/Keyboard Layouts
+15628	/System/Volumes/Data/Library/Logs
+2684	/System/Volumes/Data/Library/Internet Plug-Ins
+0	/System/Volumes/Data/Library/Sandbox
+0	/System/Volumes/Data/Library/SystemProfiler
+0	/System/Volumes/Data/Library/User Pictures
+9392	/System/Volumes/Data/Library/Bluetooth
+0	/System/Volumes/Data/Library/PreferencePanes
+1292	/System/Volumes/Data/Library/User Template
+732	/System/Volumes/Data/Library/Scripts
+28	/System/Volumes/Data/Library/LaunchAgents
+0	/System/Volumes/Data/Library/Contextual Menu Items
+0	/System/Volumes/Data/Library/Frameworks
+224	/System/Volumes/Data/Library/LaunchDaemons
+0	/System/Volumes/Data/Library/Graphics
+0	/System/Volumes/Data/Library/Fonts
+7108	/System/Volumes/Data/Library/SystemExtensions
+0	/System/Volumes/Data/Library/Screen Savers
+60	/System/Volumes/Data/Library/AgentCoreRunbooks
+0	/System/Volumes/Data/Library/Managed Preferences
+1066328	/System/Volumes/Data/Library/Input Methods
+1848	/System/Volumes/Data/Library/Ruby
+0	/System/Volumes/Data/Library/OpenDirectory
+0	/System/Volumes/Data/Library/Filesystems
+0	/System/Volumes/Data/Library/GPUBundles
+4	/System/Volumes/Data/Library/Caches
+4072508	/System/Volumes/Data/Library
+720	/System/Volumes/Data/MobileSoftwareUpdate
+6357832	/System/Volumes/Data/System/Library
+6357832	/System/Volumes/Data/System
+0	/System/Volumes/Data/mnt
+1732	/System/Volumes/Data/private/etc
+48961040	/System/Volumes/Data/private/var
+14898952	/System/Volumes/Data/private/tmp
+0	/System/Volumes/Data/private/tftpboot
+63861724	/System/Volumes/Data/private
+1257304	/System/Volumes/Data/Users/.AllUsers
+550263252	/System/Volumes/Data/Users/yanfenma
+30308	/System/Volumes/Data/Users/Shared
+24317948	/System/Volumes/Data/Users/authsvc
+575868812	/System/Volumes/Data/Users
+353916	/System/Volumes/Data/Applications/OpenMTP.app
+12	/System/Volumes/Data/Applications/Unity
+924380	/System/Volumes/Data/Applications/WorkBuddy.app
+1832220	/System/Volumes/Data/Applications/Lark.app
+732688	/System/Volumes/Data/Applications/Gemini.app
+933164	/System/Volumes/Data/Applications/ZCode.app
+1497168	/System/Volumes/Data/Applications/DingTalk.app
+2231296	/System/Volumes/Data/Applications/Google Chrome.app
+162036	/System/Volumes/Data/Applications/iKuuuVPN.app
+1911516	/System/Volumes/Data/Applications/wpsoffice.app
+117384	/System/Volumes/Data/Applications/JustStream.app
+408560	/System/Volumes/Data/Applications/Numbers.app
+36644	/System/Volumes/Data/Applications/LocalSend.app
+77736	/System/Volumes/Data/Applications/PDF Reader Pro Lite.app
+3668188	/System/Volumes/Data/Applications/Xcode.app
+1141768	/System/Volumes/Data/Applications/OneDrive.app
+499108	/System/Volumes/Data/Applications/Pocket Casts.app
+521844	/System/Volumes/Data/Applications/Unity Hub.app
+1163500	/System/Volumes/Data/Applications/wechatwebdevtools.app
+721124	/System/Volumes/Data/Applications/MiniMax Design.app
+88700	/System/Volumes/Data/Applications/RadianceKit.app
+79392	/System/Volumes/Data/Applications/PixelStyle Photo Editor.app
+2166832	/System/Volumes/Data/Applications/Docker.app
+540448	/System/Volumes/Data/Applications/Voicebox.app
+495376	/System/Volumes/Data/Applications/Obsidian.app
+317864	/System/Volumes/Data/Applications/TencentMeeting.app
+518564	/System/Volumes/Data/Applications/Utilities
+1816380	/System/Volumes/Data/Applications/ChatGPT.app
+928300	/System/Volumes/Data/Applications/Blender.app
+1405232	/System/Volumes/Data/Applications/WeChat.app
+2228	/System/Volumes/Data/Applications/CH34xVCPDriver.app
+851876	/System/Volumes/Data/Applications/Doubao.app
+819172	/System/Volumes/Data/Applications/LibreOffice.app
+64512	/System/Volumes/Data/Applications/ClashX Pro.app
+447632	/System/Volumes/Data/Applications/BaiduNetdisk_mac.app
+579588	/System/Volumes/Data/Applications/Brave Browser.app
+17552	/System/Volumes/Data/Applications/The Unarchiver.app
+1239916	/System/Volumes/Data/Applications/Microsoft OneNote.app
+689728	/System/Volumes/Data/Applications/BambuStudio.app
+341664	/System/Volumes/Data/Applications/Godot.app
+14656	/System/Volumes/Data/Applications/Alacritty.app
+46748	/System/Volumes/Data/Applications/TUCSender.app
+22948	/System/Volumes/Data/Applications/AltTab.app
+705468	/System/Volumes/Data/Applications/Qoder.app
+7532	/System/Volumes/Data/Applications/GIPHY CAPTURE.app
+918196	/System/Volumes/Data/Applications/QwenWorkCN.app
+34060772	/System/Volumes/Data/Applications
+15022772	/System/Volumes/Data/opt/homebrew
+15022772	/System/Volumes/Data/opt
+9960	/System/Volumes/Data/.PreviousSystemInformation
+512	/System/Volumes/Data/Volumes/My PSSD
+512	/System/Volumes/Data/Volumes
+0	/System/Volumes/Data/.TemporaryItems
+0	/System/Volumes/Data/cores
+0	/System/Volumes/Data/pkg
+0	/System/Volumes/Data/.exclave/5d03c7a3-ae8a-4723-99d0-d5d8f238cb02
+0	/System/Volumes/Data/.exclave
+732385385	/System/Volumes/Data

@@ -1,0 +1,82 @@
+[
+  {
+    "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules",
+    "command": [
+      "du",
+      "-x",
+      "-k",
+      "-d",
+      "1",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules"
+    ],
+    "started_at": "2026-11-07T15:50:52.559894+00:00",
+    "ended_at": "2026-11-07T15:50:53.324435+00:00",
+    "rc": 0,
+    "stdout": "1387388\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/@types\n88\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.bin\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.vite-temp\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/@yarnpkg\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/@stylistic\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/@agentclientprotocol\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/@img\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/@vitest\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/@koromix\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/@deepseek-ai\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/@testing-library\n4\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.vite\n1387608\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules\n",
+    "stderr": ""
+  },
+  {
+    "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules",
+    "command": [
+      "du",
+      "-x",
+      "-k",
+      "-d",
+      "1",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules"
+    ],
+    "started_at": "2026-11-07T15:50:52.560069+00:00",
+    "ended_at": "2026-11-07T15:50:53.390630+00:00",
+    "rc": 0,
+    "stdout": "1387388\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/.pnpm\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/@types\n88\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/.bin\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/.vite-temp\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/@yarnpkg\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/@stylistic\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/@agentclientprotocol\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/@img\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/@vitest\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/@koromix\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/@deepseek-ai\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/@testing-library\n4\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/.vite\n1387608\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules\n",
+    "stderr": ""
+  },
+  {
+    "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules",
+    "command": [
+      "du",
+      "-x",
+      "-k",
+      "-d",
+      "1",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules"
+    ],
+    "started_at": "2026-11-07T15:50:53.324516+00:00",
+    "ended_at": "2026-11-07T15:50:54.229616+00:00",
+    "rc": 0,
+    "stdout": "1387388\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/@types\n88\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.bin\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.vite-temp\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/@yarnpkg\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/@stylistic\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/@agentclientprotocol\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/@img\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/@vitest\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/@koromix\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/@deepseek-ai\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/@testing-library\n4\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.vite\n1387608\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules\n",
+    "stderr": ""
+  },
+  {
+    "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-build-7f6844b5-release/release",
+    "command": [
+      "du",
+      "-x",
+      "-k",
+      "-d",
+      "1",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-build-7f6844b5-release/release"
+    ],
+    "started_at": "2026-11-07T15:50:53.390684+00:00",
+    "ended_at": "2026-11-07T15:50:53.459235+00:00",
+    "rc": 0,
+    "stdout": "6560\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-build-7f6844b5-release/release/.fingerprint\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-build-7f6844b5-release/release/incremental\n0\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-build-7f6844b5-release/release/examples\n768612\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-build-7f6844b5-release/release/deps\n55852\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-build-7f6844b5-release/release/build\n855064\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-build-7f6844b5-release/release\n",
+    "stderr": ""
+  },
+  {
+    "path": "/Users/yanfenma/workspace/deployment-worktrees/c11r3-candidate-scratch/harness/node_modules",
+    "command": [
+      "du",
+      "-x",
+      "-k",
+      "-d",
+      "1",
+      "/Users/yanfenma/workspace/deployment-worktrees/c11r3-candidate-scratch/harness/node_modules"
+    ],
+    "started_at": "2026-11-07T15:50:53.459288+00:00",
+    "ended_at": "2026-11-07T15:50:54.161531+00:00",
+    "rc": 0,
+    "stdout": "908272\t/Users/yanfenma/workspace/deployment-worktrees/c11r3-candidate-scratch/harness/node_modules/.pnpm\n0\t/Users/yanfenma/workspace/deployment-worktrees/c11r3-candidate-scratch/harness/node_modules/@types\n60\t/Users/yanfenma/workspace/deployment-worktrees/c11r3-candidate-scratch/harness/node_modules/.bin\n0\t/Users/yanfenma/workspace/deployment-worktrees/c11r3-candidate-scratch/harness/node_modules/@yarnpkg\n0\t/Users/yanfenma/workspace/deployment-worktrees/c11r3-candidate-scratch/harness/node_modules/@stylistic\n0\t/Users/yanfenma/workspace/deployment-worktrees/c11r3-candidate-scratch/harness/node_modules/@agentclientprotocol\n0\t/Users/yanfenma/workspace/deployment-worktrees/c11r3-candidate-scratch/harness/node_modules/@vitest\n0\t/Users/yanfenma/workspace/deployment-worktrees/c11r3-candidate-scratch/harness/node_modules/@deepseek-ai\n0\t/Users/yanfenma/workspace/deployment-worktrees/c11r3-candidate-scratch/harness/node_modules/@testing-library\n908460\t/Users/yanfenma/workspace/deployment-worktrees/c11r3-candidate-scratch/harness/node_modules\n",
+    "stderr": ""
+  }
+]

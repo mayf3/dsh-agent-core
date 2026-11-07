@@ -1,0 +1,251 @@
+{
+  "observed_at_utc": "2026-11-07T15:49:46.761514+00:00",
+  "limitations": "mtime is latest observed output modification, NEVER proof of last consumer reference; no DB/preimage content reads",
+  "rows": [
+    {
+      "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46",
+      "last_visible_regular_file_mtime_not_reference": {
+        "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/SHA256SUMS.txt",
+        "at_utc": "2026-11-07T07:34:16.401007+00:00"
+      },
+      "file_count_scoped": 12457,
+      "extension_counts": {
+        ".md": 3131,
+        ".ts": 2389,
+        "": 1740,
+        ".json": 1262,
+        ".yaml": 1137,
+        ".js": 811,
+        ".jsonl": 282,
+        ".tsx": 264,
+        ".txt": 225,
+        ".mjs": 224,
+        ".py": 179,
+        ".yml": 172
+      },
+      "errors": [
+        {
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/apps/cli/lib",
+          "errno": 13,
+          "error": "[Errno 13] Permission denied: '/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/apps/cli/lib'"
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/sw-367",
+      "last_visible_regular_file_mtime_not_reference": {
+        "path": "/private/tmp/sw-367/target/debug/deps/human_executor_normalization_v0-3c7d3a34315397c5.9kbc0zdwwv1yhfzeuhdtf8m8k.1p33d7y.rcgu.o",
+        "at_utc": "2026-10-31T08:59:33.743172+00:00"
+      },
+      "file_count_scoped": 11084,
+      "extension_counts": {
+        ".o": 11083,
+        ".rmeta": 1
+      },
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/gcr-svc-target",
+      "last_visible_regular_file_mtime_not_reference": {
+        "path": "/private/tmp/gcr-svc-target/debug/deps/svc_workflow-7d9d6e31bcda0436.b2p4p5esxabc2c8fd7xkvhifu.09cig6g.rcgu.o",
+        "at_utc": "2026-10-28T07:57:06.599498+00:00"
+      },
+      "file_count_scoped": 25279,
+      "extension_counts": {
+        ".o": 25279
+      },
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/sw-1347-evidence",
+      "last_visible_regular_file_mtime_not_reference": {
+        "path": "/private/tmp/sw-1347-evidence/delivery.json",
+        "at_utc": "2026-11-01T03:42:23.445663+00:00"
+      },
+      "file_count_scoped": 5451,
+      "extension_counts": {
+        ".o": 5449,
+        ".json": 1,
+        ".rmeta": 1
+      },
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/sw-aa-r4-evidence",
+      "last_visible_regular_file_mtime_not_reference": {
+        "path": "/private/tmp/sw-aa-r4-evidence/target/debug/deps/67_authorized_actions_r4-f2eba2d9ba5000ef.5koc8tdwcjulk4rvy1fl0bwzw.0afj9nz.rcgu.o",
+        "at_utc": "2026-11-01T07:50:01.426265+00:00"
+      },
+      "file_count_scoped": 18535,
+      "extension_counts": {
+        ".o": 18534,
+        ".rmeta": 1
+      },
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/sw-d6-fix",
+      "last_visible_regular_file_mtime_not_reference": {
+        "path": "/private/tmp/sw-d6-fix/target/debug/deps/libsvc_workflow-00eb6488bca1a7a3.rmeta",
+        "at_utc": "2026-11-01T09:44:58.862808+00:00"
+      },
+      "file_count_scoped": 1308,
+      "extension_counts": {
+        ".o": 1306,
+        ".rmeta": 2
+      },
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/dsh-548-r2-iwl_bczh",
+      "last_visible_regular_file_mtime_not_reference": {
+        "path": "/private/tmp/dsh-548-r2-iwl_bczh/green-fixtures/manifest.json",
+        "at_utc": "2026-11-04T03:09:06.024007+00:00"
+      },
+      "file_count_scoped": 23203,
+      "extension_counts": {
+        ".md": 7363,
+        ".ts": 7149,
+        ".yaml": 3399,
+        ".json": 2111,
+        ".jsonl": 843,
+        ".tsx": 792,
+        ".yml": 480,
+        ".css": 339,
+        ".txt": 203,
+        ".sql": 168,
+        ".mjs": 96,
+        "": 70
+      },
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/darwinx64-fix",
+      "last_visible_regular_file_mtime_not_reference": {
+        "path": "/private/tmp/darwinx64-fix/@oxlint_binding-darwin-x64-1.76.0.tgz",
+        "at_utc": "2026-11-04T21:16:56.240922+00:00"
+      },
+      "file_count_scoped": 20,
+      "extension_counts": {
+        ".tgz": 19,
+        ".txt": 1
+      },
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/fleet-w6-s04",
+      "last_visible_regular_file_mtime_not_reference": {
+        "path": "/private/tmp/fleet-w6-s04/RECEIPT-W6-S04-R2.md.sha256",
+        "at_utc": "2026-11-06T00:10:22.488158+00:00"
+      },
+      "file_count_scoped": 1606,
+      "extension_counts": {
+        ".js": 731,
+        ".ts": 221,
+        ".json": 186,
+        ".md": 134,
+        "": 101,
+        ".log": 47,
+        ".yml": 30,
+        ".map": 25,
+        ".cc": 17,
+        ".mjs": 16,
+        ".cjs": 13,
+        ".jsonl": 10
+      },
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/dsh-523-impl",
+      "last_visible_regular_file_mtime_not_reference": {
+        "path": "/private/tmp/dsh-523-impl/.git/logs/refs/remotes/origin/issue523/agent-turn-switch-guard-20261103",
+        "at_utc": "2026-11-02T23:53:54.906509+00:00"
+      },
+      "file_count_scoped": 3307,
+      "extension_counts": {
+        ".js": 1177,
+        ".md": 664,
+        ".json": 342,
+        ".ts": 306,
+        "": 180,
+        ".mjs": 136,
+        ".py": 133,
+        ".txt": 57,
+        ".gz": 33,
+        ".yml": 32,
+        ".map": 32,
+        ".fixture": 27
+      },
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/dsh-548-r5-evidence",
+      "last_visible_regular_file_mtime_not_reference": {
+        "path": "/private/tmp/dsh-548-r5-evidence/preservation.log",
+        "at_utc": "2026-11-04T02:36:49.229305+00:00"
+      },
+      "file_count_scoped": 7727,
+      "extension_counts": {
+        ".md": 2454,
+        ".ts": 2383,
+        ".yaml": 1133,
+        ".json": 701,
+        ".jsonl": 277,
+        ".tsx": 264,
+        ".yml": 160,
+        ".css": 113,
+        ".txt": 67,
+        ".sql": 56,
+        ".mjs": 32,
+        "": 23
+      },
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/dsh-548-r4-evidence",
+      "last_visible_regular_file_mtime_not_reference": {
+        "path": "/private/tmp/dsh-548-r4-evidence/preservation-readback.json",
+        "at_utc": "2026-11-04T02:22:44.149071+00:00"
+      },
+      "file_count_scoped": 7725,
+      "extension_counts": {
+        ".md": 2454,
+        ".ts": 2383,
+        ".yaml": 1133,
+        ".json": 701,
+        ".jsonl": 277,
+        ".tsx": 264,
+        ".yml": 160,
+        ".css": 113,
+        ".txt": 67,
+        ".sql": 56,
+        ".mjs": 32,
+        "": 23
+      },
+      "errors": []
+    },
+    {
+      "path": "/private/tmp/fleet-v5-candidate",
+      "last_visible_regular_file_mtime_not_reference": {
+        "path": "/private/tmp/fleet-v5-candidate/.git/index",
+        "at_utc": "2026-11-07T05:54:34.239118+00:00"
+      },
+      "file_count_scoped": 2811,
+      "extension_counts": {
+        ".js": 802,
+        ".md": 669,
+        ".json": 521,
+        ".txt": 158,
+        ".py": 157,
+        ".mjs": 151,
+        ".log": 140,
+        ".gz": 31,
+        ".fixture": 27,
+        ".sh": 25,
+        ".tap": 20,
+        ".sha256": 17
+      },
+      "errors": []
+    }
+  ]
+}

@@ -1,0 +1,398 @@
+{
+  "observed_at": "2026-11-07T15:51:53.212497+00:00",
+  "method": "lstat only; no DB/Secret content read",
+  "rows": [
+    {
+      "path": "/Users/yanfenma/.codex/thread_history_1.sqlite",
+      "logical_bytes": 3592933376,
+      "allocated_bytes": 3601149952,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:50:51.088520+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/logs_2.sqlite",
+      "logical_bytes": 74813440,
+      "allocated_bytes": 74813440,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:42:31.896121+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/logs_2.sqlite-wal",
+      "logical_bytes": 31571592,
+      "allocated_bytes": 32509952,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:51:31.067350+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/state_5.sqlite",
+      "logical_bytes": 22564864,
+      "allocated_bytes": 23347200,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:51:10.425995+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/state_5.sqlite-wal",
+      "logical_bytes": 4202432,
+      "allocated_bytes": 5246976,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:51:53.139592+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/queue_1.sqlite",
+      "logical_bytes": 3969024,
+      "allocated_bytes": 4259840,
+      "nlink": 1,
+      "mtime_utc": "2026-11-03T12:33:51.054013+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/thread_history_1.sqlite-wal",
+      "logical_bytes": 4181832,
+      "allocated_bytes": 4198400,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:51:53.136258+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/queue_1.sqlite-wal",
+      "logical_bytes": 4132392,
+      "allocated_bytes": 4198400,
+      "nlink": 1,
+      "mtime_utc": "2026-11-01T15:18:40.907836+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/.codex-global-state.json.bak",
+      "logical_bytes": 2834854,
+      "allocated_bytes": 2838528,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:51:00.050629+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/.codex-global-state.json",
+      "logical_bytes": 2834854,
+      "allocated_bytes": 2838528,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:51:00.042770+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/memories_1.sqlite",
+      "logical_bytes": 1495040,
+      "allocated_bytes": 2162688,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:14:56.828579+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/models_cache.json",
+      "logical_bytes": 464747,
+      "allocated_bytes": 466944,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:49:44.387230+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/..codex-global-state.json.tmp-1786148525892-6ad6bf7a-fbc0-4a5a-bac2-a25a59d1b384",
+      "logical_bytes": 420612,
+      "allocated_bytes": 421888,
+      "nlink": 1,
+      "mtime_utc": "2026-08-08T00:22:05.896146+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/..codex-global-state.json.tmp-1786026264586-6fe2c21f-3eb7-414c-8fa4-b43eb9d49be5",
+      "logical_bytes": 420559,
+      "allocated_bytes": 421888,
+      "nlink": 1,
+      "mtime_utc": "2026-08-06T14:24:24.590080+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/..codex-global-state.json.tmp-1785891775873-a9071c9b-e7b8-4f4b-879b-22cd9d54a50b",
+      "logical_bytes": 420323,
+      "allocated_bytes": 421888,
+      "nlink": 1,
+      "mtime_utc": "2026-08-05T01:02:55.876785+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/..codex-global-state.json.tmp-1785544475159-27dd192e-2202-475f-a8fe-1451cb4a6f62",
+      "logical_bytes": 341179,
+      "allocated_bytes": 344064,
+      "nlink": 1,
+      "mtime_utc": "2026-08-01T00:34:35.162966+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/..codex-global-state.json.tmp-1785453260897-d054a865-1b3e-4fba-b001-68b7c11bba21",
+      "logical_bytes": 339325,
+      "allocated_bytes": 339968,
+      "nlink": 1,
+      "mtime_utc": "2026-07-30T23:14:20.900311+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/..codex-global-state.json.tmp-1785335228569-089f1ee6-18de-4c79-b15a-692cbd8e5944",
+      "logical_bytes": 301854,
+      "allocated_bytes": 303104,
+      "nlink": 1,
+      "mtime_utc": "2026-07-29T14:27:08.572280+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/..codex-global-state.json.tmp-1784895054208-e37ced66-7797-4620-a401-3db658a88b51",
+      "logical_bytes": 228898,
+      "allocated_bytes": 229376,
+      "nlink": 1,
+      "mtime_utc": "2026-07-24T12:10:54.211600+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/..codex-global-state.json.tmp-1784941686344-18253ac2-a2be-4140-8ce1-716345f4db37",
+      "logical_bytes": 229249,
+      "allocated_bytes": 229376,
+      "nlink": 1,
+      "mtime_utc": "2026-07-25T01:08:06.346744+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/..codex-global-state.json.tmp-1784770024194-926e4570-ccac-4c96-95d2-f8c68cb0c5e6",
+      "logical_bytes": 223856,
+      "allocated_bytes": 225280,
+      "nlink": 1,
+      "mtime_utc": "2026-07-23T01:27:04.197664+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/..codex-global-state.json.tmp-1784674969470-b5b27f68-977a-4bfa-af8a-fa05acfcedeb",
+      "logical_bytes": 213428,
+      "allocated_bytes": 217088,
+      "nlink": 1,
+      "mtime_utc": "2026-07-21T23:02:49.472080+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/..codex-global-state.json.tmp-1784533474003-2db1f51a-c316-471d-90a5-997794dd4835",
+      "logical_bytes": 213428,
+      "allocated_bytes": 217088,
+      "nlink": 1,
+      "mtime_utc": "2026-07-20T07:44:34.005392+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/..codex-global-state.json.tmp-1784638663089-a74d3d17-7d8e-4117-9159-5ac49a7fb52f",
+      "logical_bytes": 213428,
+      "allocated_bytes": 217088,
+      "nlink": 1,
+      "mtime_utc": "2026-07-21T12:57:43.091033+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/..codex-global-state.json.tmp-1784338900204-05cef3ee-74aa-43ab-80c0-0a3c21ec758a",
+      "logical_bytes": 193876,
+      "allocated_bytes": 196608,
+      "nlink": 1,
+      "mtime_utc": "2026-07-18T01:41:40.206425+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/..codex-global-state.json.tmp-1784368117997-580bdba3-483e-4c66-82b7-21fb6e1008c6",
+      "logical_bytes": 195123,
+      "allocated_bytes": 196608,
+      "nlink": 1,
+      "mtime_utc": "2026-07-18T09:48:38.000654+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/..codex-global-state.json.tmp-1784295687595-ae8e080b-2ae7-4bf2-a187-b3d585ab15e2",
+      "logical_bytes": 193876,
+      "allocated_bytes": 196608,
+      "nlink": 1,
+      "mtime_utc": "2026-07-17T13:41:27.597135+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite",
+      "logical_bytes": 167936,
+      "allocated_bytes": 196608,
+      "nlink": 1,
+      "mtime_utc": "2026-11-02T15:55:08.290911+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/..codex-global-state.json.tmp-1783843694136-0521d0a7-b6cb-464f-905b-0ef7b9a948cf",
+      "logical_bytes": 171482,
+      "allocated_bytes": 172032,
+      "nlink": 1,
+      "mtime_utc": "2026-07-12T08:08:14.138027+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/goals_1.sqlite",
+      "logical_bytes": 102400,
+      "allocated_bytes": 131072,
+      "nlink": 1,
+      "mtime_utc": "2026-10-24T14:03:46.073702+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/history.jsonl",
+      "logical_bytes": 102194,
+      "allocated_bytes": 102400,
+      "nlink": 1,
+      "mtime_utc": "2026-10-17T14:07:13.997155+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/logs_2.sqlite-shm",
+      "logical_bytes": 65536,
+      "allocated_bytes": 65536,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T08:47:48.982349+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/session_index.jsonl",
+      "logical_bytes": 41000,
+      "allocated_bytes": 45056,
+      "nlink": 1,
+      "mtime_utc": "2026-11-02T15:39:33.306376+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/memories_1.sqlite-shm",
+      "logical_bytes": 32768,
+      "allocated_bytes": 32768,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:42:31.882915+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/thread_history_1.sqlite-shm",
+      "logical_bytes": 32768,
+      "allocated_bytes": 32768,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:30:45.974580+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite-shm",
+      "logical_bytes": 32768,
+      "allocated_bytes": 32768,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:42:31.890917+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/queue_1.sqlite-shm",
+      "logical_bytes": 32768,
+      "allocated_bytes": 32768,
+      "nlink": 1,
+      "mtime_utc": "2026-11-03T12:34:02.165782+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/goals_1.sqlite-shm",
+      "logical_bytes": 32768,
+      "allocated_bytes": 32768,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:42:31.881493+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/state_5.sqlite-shm",
+      "logical_bytes": 32768,
+      "allocated_bytes": 32768,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T14:53:42.619745+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/config.toml",
+      "logical_bytes": 17331,
+      "allocated_bytes": 20480,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T05:45:49.056947+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/config.toml.bak-ultra-20261024-2015",
+      "logical_bytes": 15709,
+      "allocated_bytes": 16384,
+      "nlink": 1,
+      "mtime_utc": "2026-10-24T12:15:49.375464+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/version.json",
+      "logical_bytes": 102,
+      "allocated_bytes": 4096,
+      "nlink": 1,
+      "mtime_utc": "2026-10-24T12:22:14.674434+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/.personality_migration",
+      "logical_bytes": 3,
+      "allocated_bytes": 4096,
+      "nlink": 1,
+      "mtime_utc": "2026-03-22T14:20:29.784734+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/installation_id",
+      "logical_bytes": 36,
+      "allocated_bytes": 4096,
+      "nlink": 1,
+      "mtime_utc": "2026-04-15T00:38:28.128742+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/transcription-history.jsonl",
+      "logical_bytes": 849,
+      "allocated_bytes": 4096,
+      "nlink": 1,
+      "mtime_utc": "2026-09-07T01:08:37.658008+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/.sandbox_migration",
+      "logical_bytes": 3,
+      "allocated_bytes": 4096,
+      "nlink": 1,
+      "mtime_utc": "2026-07-25T01:08:03.754249+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/auth.json",
+      "logical_bytes": 3962,
+      "allocated_bytes": 4096,
+      "nlink": 1,
+      "mtime_utc": "2026-11-06T22:00:06.930526+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/chrome-native-hosts-v2.json",
+      "logical_bytes": 1900,
+      "allocated_bytes": 4096,
+      "nlink": 1,
+      "mtime_utc": "2026-11-03T12:34:08.628774+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite-wal",
+      "logical_bytes": 0,
+      "allocated_bytes": 0,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:42:31.890799+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/memories_1.sqlite-wal",
+      "logical_bytes": 0,
+      "allocated_bytes": 0,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:42:31.882808+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/auth.lock",
+      "logical_bytes": 0,
+      "allocated_bytes": 0,
+      "nlink": 1,
+      "mtime_utc": "2026-11-06T22:00:06.929155+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/.sqlite-maintenance.lock",
+      "logical_bytes": 0,
+      "allocated_bytes": 0,
+      "nlink": 1,
+      "mtime_utc": "2026-10-06T08:20:17.961613+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/session_index.jsonl.lock",
+      "logical_bytes": 0,
+      "allocated_bytes": 0,
+      "nlink": 1,
+      "mtime_utc": "2026-11-02T01:22:25.627214+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/AGENTS.md",
+      "logical_bytes": 0,
+      "allocated_bytes": 0,
+      "nlink": 1,
+      "mtime_utc": "2026-07-14T22:55:35.173633+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/memories_v2.lock",
+      "logical_bytes": 0,
+      "allocated_bytes": 0,
+      "nlink": 1,
+      "mtime_utc": "2026-11-02T01:22:27.130893+00:00"
+    },
+    {
+      "path": "/Users/yanfenma/.codex/goals_1.sqlite-wal",
+      "logical_bytes": 0,
+      "allocated_bytes": 0,
+      "nlink": 1,
+      "mtime_utc": "2026-11-07T15:15:15.285050+00:00"
+    }
+  ]
+}

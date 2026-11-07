@@ -1,0 +1,80 @@
+{
+  "observed_at": "2026-11-07T15:55:28.351044+00:00",
+  "pairs": [
+    {
+      "alias": "/Users",
+      "canonical": "/System/Volumes/Data/Users",
+      "alias_stat": {
+        "dev": 16777229,
+        "inode": 18495,
+        "nlink": 8
+      },
+      "canonical_stat": {
+        "dev": 16777229,
+        "inode": 18495,
+        "nlink": 8
+      },
+      "same_object": true
+    },
+    {
+      "alias": "/private",
+      "canonical": "/System/Volumes/Data/private",
+      "alias_stat": {
+        "dev": 16777229,
+        "inode": 59193401,
+        "nlink": 6
+      },
+      "canonical_stat": {
+        "dev": 16777229,
+        "inode": 59193401,
+        "nlink": 6
+      },
+      "same_object": true
+    },
+    {
+      "alias": "/usr/local",
+      "canonical": "/System/Volumes/Data/usr/local",
+      "alias_stat": {
+        "dev": 16777229,
+        "inode": 59176011,
+        "nlink": 17
+      },
+      "canonical_stat": {
+        "dev": 16777229,
+        "inode": 59176011,
+        "nlink": 17
+      },
+      "same_object": true
+    },
+    {
+      "alias": "/Applications",
+      "canonical": "/System/Volumes/Data/Applications",
+      "alias_stat": {
+        "dev": 16777229,
+        "inode": 59194381,
+        "nlink": 52
+      },
+      "canonical_stat": {
+        "dev": 16777229,
+        "inode": 59194381,
+        "nlink": 52
+      },
+      "same_object": true
+    },
+    {
+      "alias": "/tmp",
+      "canonical": "/private/tmp",
+      "alias_stat": {
+        "dev": 16777229,
+        "inode": 296610156,
+        "nlink": 4598
+      },
+      "canonical_stat": {
+        "dev": 16777229,
+        "inode": 296610156,
+        "nlink": 4598
+      },
+      "same_object": true
+    }
+  ]
+}
