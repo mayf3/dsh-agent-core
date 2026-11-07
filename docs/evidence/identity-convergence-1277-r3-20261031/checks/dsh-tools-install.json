@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "npm",
+    "install",
+    "--prefix",
+    "/tmp/ac1277-r3-node-deps",
+    "--no-save",
+    "--ignore-scripts",
+    "--no-package-lock",
+    "--registry=https://registry.npmjs.org",
+    "--userconfig=/tmp/ac1277-r3-evidence/npm-empty-user",
+    "--globalconfig=/tmp/ac1277-r3-evidence/npm-empty-global",
+    "--cache=/tmp/ac1277-r3-npm-cache",
+    "croner@10.0.1",
+    "@deepseek-ai/dsh-tools@0.1.0-rc.8"
+  ],
+  "elapsedSeconds": 9.455,
+  "rc": 0,
+  "log": "dsh-tools-install.log",
+  "sha256": "b5be7c51c6ab3ce3cffabaa8b4a6cedef4c50965e3fd1fa7ccd579b75e1031dd",
+  "scope": "task-local dependency; ignored lifecycle scripts; no package/source/lock change; not production-equivalent install proof"
+}

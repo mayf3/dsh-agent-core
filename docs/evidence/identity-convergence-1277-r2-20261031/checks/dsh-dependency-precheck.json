@@ -1,0 +1,32 @@
+{
+  "recorded_by": "/root/dsh_resume_audit",
+  "argv": [
+    "python3",
+    "-c",
+    "import hashlib,json,pathlib,subprocess,sys\nroot=pathlib.Path('.')\np=json.loads((root/'package.json').read_text())\nlocks=['package-lock.json','npm-shrinkwrap.json','pnpm-lock.yaml','yarn.lock']\nprint(json.dumps({'rootPackageSha256':hashlib.sha256((root/'package.json').read_bytes()).hexdigest(),'cronerRange':p.get('dependencies',{}).get('croner'),'rootLocks':{name:(root/name).exists() for name in locks}},indent=2),flush=True)\ntracked=subprocess.check_output(['git','ls-tree','HEAD',*locks],text=True)\nprint('tracked root lock objects:',repr(tracked),flush=True)\nif not (root/'package-lock.json').exists() and not (root/'npm-shrinkwrap.json').exists():\n print('BLOCKED: no root npm lock exists; npm ci --ignore-scripts is NOT_RUN because existing locked dependency restoration cannot be performed without authoring a new lock or changing source scope.',flush=True)\n sys.exit(1)\n"
+  ],
+  "cwd": "/tmp/ac1277-dsh-agent-core",
+  "head": "4c8fe59133395a1cb21d29f0dc1b0553d18a4828",
+  "startedAt": "2026-10-31T00:23:58.549127+00:00",
+  "elapsedSeconds": 0.057441,
+  "rc": 1,
+  "log": "/tmp/ac1277-r2-evidence/dsh-dependency-precheck.log",
+  "sha256": "bd89db46313bd3faf6d4f0f467098daf5a9616c377ff31cb840b22ee70b54ec9",
+  "envKeys": [
+    "HOME",
+    "PATH",
+    "TMPDIR"
+  ],
+  "installation": {
+    "argv": [
+      "npm",
+      "ci",
+      "--ignore-scripts"
+    ],
+    "status": "NOT_RUN",
+    "reason": "No root package-lock.json or npm-shrinkwrap.json at fixed source HEAD; generating a new lock is outside the authorized locked dependency restoration"
+  },
+  "brokerRestoredRerun": "NOT_RUN",
+  "production_access": false,
+  "packageOrLockChanges": false
+}

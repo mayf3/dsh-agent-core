@@ -1,0 +1,37 @@
+{
+  "scope": "R3 source T1/T2 plus report/evidence; no whole-goal readiness",
+  "authority": "Accepted V2 disabled subsection in source base; no T3 product authority fabricated",
+  "primitive": "source/compile/dirty-tree GREEN/exact runtime/baseline comparison/production kept distinct",
+  "contract": "T1/T2 source final review PASS at06c; T3 has two load-bearing bounded gaps",
+  "acceptance": "540 affected integration PASS;252 library PASS1ignore; original full gate rc1011180/95/1;20 original failures resolved by fresh fixture/name reruns;75 retained unpassed",
+  "mandate": "SOURCE only;production0;no operator APPLY/live transition/deploy/session reset/guard weakening",
+  "evidence": "All command raw-log hashes verified by packager; gzip stores exact raw bytes; independent receipts retained",
+  "reportSha256": "f2bc9b665b5aa1a5323f2a79a5370f7a074fe75dfab5213d49f1b6fd05a4bf4d",
+  "reusedT0": "R2cf2397b502/0 + bounded original-base creator/continuity failures; see R2 archived evidence",
+  "states": {
+    "T0": "DONE_BOUNDED",
+    "T1": "DONE_BOUNDED_SOURCE",
+    "T2": "DONE_BOUNDED_SOURCE",
+    "T3": "BLOCKED_CONTRACT",
+    "T4": "BLOCKED_DEPENDENCY",
+    "T5": "BLOCKED_DEPENDENCY",
+    "fullProject": "FAIL_WITH_CLASSIFIED_EXCEPTIONS",
+    "overallSourceReady": false,
+    "mergeReady": false,
+    "installed": false,
+    "businessVerified": "NOT_TESTED"
+  },
+  "retainedInvalidOrSetupRuns": {
+    "t1_red": "Old baseline7PASS after authoring script aborted; not the intended behavior RED",
+    "r3_b1_type_red": "INVALID_ORACLE: presumed HUMAN fixture was AGENT",
+    "r3_b1_green": "Intermediate failure includes invalid projected-type oracle; not final regression evidence",
+    "early_compile_and_dependency_errors": "Preserved as compile/setup observations, not business-case PASS"
+  },
+  "deliveryEvidenceIndependentReview": {
+    "result": "PASS_BOUNDED_R3_DELIVERY_EVIDENCE",
+    "reviewTarget": "fd929072357e25b36ff475a06204ffa752881221",
+    "receipt": "delivery-independent-review.json",
+    "receiptSha256": "461328bc64895af8d655e7c7a92cd6ded6dfe80df1fe02ff16beae9de89358f3",
+    "finalDelta": "Only two exact test-target display-name corrections, report hash, this receipt pointer, receipt inclusion and manifest; final recheck external"
+  }
+}

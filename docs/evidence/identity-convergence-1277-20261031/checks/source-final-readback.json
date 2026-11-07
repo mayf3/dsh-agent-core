@@ -1,0 +1,16 @@
+{
+  "svc": {
+    "head": "cf2397b048d84b1c6eadd1170b3cda1c102de11b",
+    "tree": "65fcd731491cb1d23fa9cea20f550c1f0b14d524",
+    "status": "",
+    "base": "35c3b685db4ac91bc7a216d840fcf19a0fa1a890"
+  },
+  "dsh": {
+    "head": "0b64aca3615aec203b95aa960eff39d635bd26c1",
+    "tree": "f01fe7e2675ac0364bfda794009322d802702752",
+    "status": "?? docs/evidence/identity-convergence-1277-20261031/\n?? docs/reports/AC1277_IDENTITY_CONVERGENCE_20261031.md\n",
+    "base": "0b64aca3615aec203b95aa960eff39d635bd26c1"
+  },
+  "observation_time_utc": "2026-10-31T00:13:51.585159+00:00",
+  "note": "DSH readback is before evidence commit; svc source is frozen and published. Final DSH commit is in Git/PR/issue readback."
+}

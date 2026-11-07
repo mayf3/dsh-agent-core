@@ -1,0 +1,44 @@
+[
+  {
+    "repo": "/tmp/ac1277-dsh-agent-core",
+    "package": "croner",
+    "version": "10.0.1",
+    "realpath": "/tmp/ac1277-r3-node-deps/node_modules/croner",
+    "packageJsonSha256": "8dacc66c293f46a9e9d36987b7d22f7c851b0654e6a1b7a0113fcbdac5403250"
+  },
+  {
+    "repo": "/tmp/ac1277-dsh-agent-core",
+    "package": "@deepseek-ai/dsh-tools",
+    "version": "0.1.0-rc.8",
+    "realpath": "/tmp/ac1277-r3-node-deps/node_modules/@deepseek-ai/dsh-tools",
+    "packageJsonSha256": "ccd1bfd65689c9ea6076b7119427110c1041ea1e6e454df27c23e42d25e17801"
+  },
+  {
+    "repo": "/tmp/ac1277-dsh-agent-core",
+    "package": "@deepseek-ai/schemastery",
+    "version": "3.18.5",
+    "realpath": "/tmp/ac1277-r3-node-deps/node_modules/@deepseek-ai/schemastery",
+    "packageJsonSha256": "3e7deee09015c7f7aa17ae6cecfb928985520baec66aa676dc3f4ed67d4231f0"
+  },
+  {
+    "repo": "/tmp/ac1277-r3-dsh-baseline",
+    "package": "croner",
+    "version": "10.0.1",
+    "realpath": "/tmp/ac1277-r3-node-deps/node_modules/croner",
+    "packageJsonSha256": "8dacc66c293f46a9e9d36987b7d22f7c851b0654e6a1b7a0113fcbdac5403250"
+  },
+  {
+    "repo": "/tmp/ac1277-r3-dsh-baseline",
+    "package": "@deepseek-ai/dsh-tools",
+    "version": "0.1.0-rc.8",
+    "realpath": "/tmp/ac1277-r3-node-deps/node_modules/@deepseek-ai/dsh-tools",
+    "packageJsonSha256": "ccd1bfd65689c9ea6076b7119427110c1041ea1e6e454df27c23e42d25e17801"
+  },
+  {
+    "repo": "/tmp/ac1277-r3-dsh-baseline",
+    "package": "@deepseek-ai/schemastery",
+    "version": "3.18.5",
+    "realpath": "/tmp/ac1277-r3-node-deps/node_modules/@deepseek-ai/schemastery",
+    "packageJsonSha256": "3e7deee09015c7f7aa17ae6cecfb928985520baec66aa676dc3f4ed67d4231f0"
+  }
+]

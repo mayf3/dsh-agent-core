@@ -1,0 +1,122 @@
+{
+  "recorded_by": "/root",
+  "reviewer": "/root/svc_t0_audit",
+  "author": "/root",
+  "author_independence": true,
+  "review_mode": "Read-only source and evidence; no DB access or test rerun",
+  "base_head": "35c3b685db4ac91bc7a216d840fcf19a0fa1a890",
+  "review_target_head": "cf2397b048d84b1c6eadd1170b3cda1c102de11b",
+  "review_target_tree": "65fcd731491cb1d23fa9cea20f550c1f0b14d524",
+  "binary_diff_sha256": "7e1a50f4d7c1d05d1c25a235b1f7c051570a8e42b808f32919b1145d75ee2c89",
+  "binary_diff_meaning": "git diff --binary BASE HEAD, not executable bytes",
+  "checks": {
+    "AUTHORITY_REVIEW": "PASS_LIMITED_T0",
+    "PRIMITIVE_BOUNDARY_REVIEW": "PASS",
+    "CONTRACT_REVIEW": "PASS_SOURCE_ONLY",
+    "ACCEPTANCE_COVERAGE_REVIEW": "BLOCKED_EXECUTION",
+    "MANDATE_SCOPE_REVIEW": "PASS",
+    "EVIDENCE_REVIEWABILITY": "PASS_FOR_RECORDED_RESULTS; DB_VERIFICATION_MISSING"
+  },
+  "source_semantic_review": "PASS_BOUNDED_T0",
+  "source_code_blockers": [],
+  "frozen_blocker_union": [
+    {
+      "id": "B1277-T0-DB",
+      "classification": "REQUIRED_GATE_FAILURE",
+      "source": "User completion definition 2 and plan T0 verification",
+      "counterexample": "canonical_assignee_reads_and_advances_where_stale_uuid_stored: tests/common/mod.rs:346 PoolTimedOut, rc101, 0 passed/1 failed; owned initdb shmget EPERM",
+      "impact": "No current-main executed DB acceptance/regression evidence",
+      "minimal_closure": "Permitted isolated PostgreSQL cluster; fresh identity readback; bind DATABASE_URL and TEST_DATABASE_URL; run affected suites and baseline comparison; independent receipt check",
+      "affected_readiness": [
+        "T0_SOURCE_READY",
+        "T0_TESTS_PASS",
+        "T0_MERGE_READY"
+      ]
+    }
+  ],
+  "open_blocker_count": 1,
+  "head_drift": "NONE",
+  "required_db_tests": "BLOCKED",
+  "source_ready": false,
+  "merge_ready": false,
+  "operation_allowed": false,
+  "production_acceptance": "NOT_TESTED",
+  "evidence_completion_delta": {
+    "result": "PASS",
+    "candidate_compile_rc": 0,
+    "candidate_compile_elapsed_seconds": 20.275,
+    "candidate_compile_log_sha256": "f21c1320478de4e002306692e67d4e89dc18ba055395f6df2bc6ba46ac5b3096",
+    "commands_jsonl_sha256": "9fe59c1e78754a856e7e5dd1f958f170f1eb364c6f0e6388c1d2ba62cb2d977a",
+    "initdb_mmap_log_sha256": "af138a9b6dfbfab50d04bd0b50e5681b0924433eb5b5b901348f947b31e2c538",
+    "initial_log_attribution_corrected": "initdb.log is stdout only; full EPERM is in initdb-mmap.log",
+    "red_continuity": "INFRASTRUCTURE_FAILURE_ONLY_NOT_RED_BASELINE_OR_CANDIDATE_PROOF"
+  },
+  "read_only_commands_rc0": [
+    [
+      "git",
+      "rev-parse",
+      "HEAD",
+      "HEAD^{tree}"
+    ],
+    [
+      "git",
+      "status",
+      "--porcelain=v1"
+    ],
+    [
+      "git",
+      "diff",
+      "--raw",
+      "35c3b685db4ac91bc7a216d840fcf19a0fa1a890",
+      "cf2397b048d84b1c6eadd1170b3cda1c102de11b"
+    ],
+    [
+      "git",
+      "diff",
+      "--numstat",
+      "35c3b685db4ac91bc7a216d840fcf19a0fa1a890",
+      "cf2397b048d84b1c6eadd1170b3cda1c102de11b"
+    ],
+    [
+      "git",
+      "diff",
+      "35c3b685db4ac91bc7a216d840fcf19a0fa1a890",
+      "cf2397b048d84b1c6eadd1170b3cda1c102de11b",
+      "--",
+      "src"
+    ],
+    [
+      "git",
+      "diff",
+      "35c3b685db4ac91bc7a216d840fcf19a0fa1a890",
+      "cf2397b048d84b1c6eadd1170b3cda1c102de11b",
+      "--",
+      "tests"
+    ],
+    [
+      "git",
+      "diff",
+      "--check",
+      "35c3b685db4ac91bc7a216d840fcf19a0fa1a890",
+      "cf2397b048d84b1c6eadd1170b3cda1c102de11b"
+    ],
+    [
+      "git",
+      "diff",
+      "--exit-code",
+      "35c3b685db4ac91bc7a216d840fcf19a0fa1a890",
+      "cf2397b048d84b1c6eadd1170b3cda1c102de11b",
+      "--",
+      "docs/specs",
+      "docs/product",
+      "docs/architecture",
+      ".agents",
+      "migrations"
+    ]
+  ],
+  "limitations": [
+    "Reviewer did not execute DB tests",
+    "Old P1-I test pass is not current main verification",
+    "Two absent-glob reads rc1 and one wrong-path search rc2 were corrected; not test failures"
+  ]
+}

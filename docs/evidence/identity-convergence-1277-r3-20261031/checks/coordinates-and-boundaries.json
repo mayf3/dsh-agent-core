@@ -1,0 +1,52 @@
+{
+  "recordedAt": "2026-10-31T02:26:45.313396+00:00",
+  "svc": {
+    "worktree": "/tmp/ac1277-svc-workflow",
+    "branch": "ac-task/1277-identity-convergence",
+    "head": "06c035467ef7effc664f41ab703bbe736523d13e",
+    "tree": "9c0c7df1451bf712f0e3627b3c4093b0e1670225",
+    "integrationBase": "3b81d8f99a286caeb04ea2c349966b0f6662275d",
+    "originalSelectedBase": "35c3b685db4ac91bc7a216d840fcf19a0fa1a890",
+    "diffSha256": "4cd02089d00c8074b7d98983fc8e9e635cc0ea9fdfc6d6bd9bc17bc6eac3634c",
+    "status": "",
+    "authorities": [
+      {
+        "path": "docs/specs/SVC_WORKFLOW_CANONICAL_IDENTITY_RECONCILIATION_V2.md",
+        "sha256": "4ccc1e87c08a8cbe080c8e1f7dc704e5c1ae0ca6b49565ad3e150ee50ded716f",
+        "equalToBase": true
+      },
+      {
+        "path": "docs/product/SVC_WORKFLOW_PRODUCT_BOUNDARY_V13.md",
+        "sha256": "646271316ac20804d0b1375b7a7bd1e35eff8c545bc2fd71e60eaa477a99726b",
+        "equalToBase": true
+      },
+      {
+        "path": "docs/architecture/SVC_WORKFLOW_ARCHITECTURE_V0_4_7.md",
+        "sha256": "59ea63c105c04ac314c63bf2ede774455c33040ada80f728afe9b60a50bb9024",
+        "equalToBase": true
+      }
+    ]
+  },
+  "dsh": {
+    "worktree": "/tmp/ac1277-dsh-agent-core",
+    "branch": "ac-task/1277-identity-convergence",
+    "testedHead": "ca18b7176cea0f66f14b825a6fd4b47bfcef577d",
+    "originalBase": "0b64aca3615aec203b95aa960eff39d635bd26c1",
+    "productDelta": "",
+    "r3Delta": "reports/evidence only"
+  },
+  "productionChanges": 0,
+  "productionDbAccess": false,
+  "productionDbWrites": 0,
+  "realBusinessTransition": false,
+  "sessionReset": false,
+  "deployment": false,
+  "installation": false,
+  "legacyAuthDisabled": false,
+  "guardRemoved": false,
+  "port55432Accessed": false,
+  "sourcePrMerged": false,
+  "docsOnlyPr108Merged": true,
+  "localDatabaseProvenance": "R2 db-setup-receipt.json under identity-convergence-1277-r2-20261031; exact task-owned /tmp/ac1277-r2-pg,127.0.0.1:57278; R3 final identity/stop receipt preserved; R3 restart elapsed NOT_INSTRUMENTED",
+  "limitation": "Database identity in common runner envelopes is the explicitly configured local test DSN; governance, git and JS commands do not thereby establish any DB connection."
+}

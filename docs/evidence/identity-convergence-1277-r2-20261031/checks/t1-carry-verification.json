@@ -1,0 +1,10 @@
+{
+  "proposalHead": "27747607937ecaa032982bd1a81301601633791d",
+  "originalV2Sha256": "8d873a72c6d231b5eff689d2f26e0ba6039af638b67216951657a51198c63e5f",
+  "bodySha256": "55e8b518e91dfef94f7c74e4642a57ec4ad7471903f70bef9e64ed4e4d3bd84e",
+  "carriedBodyByteIdentical": true,
+  "v2Unmodified": true,
+  "proposalSha256": "2bf37d825ee4260c93ad6350b546079bea032a5bacaf0fa868fe234973058eb0",
+  "accepted": false,
+  "openDecision": "OQ-NW-001"
+}

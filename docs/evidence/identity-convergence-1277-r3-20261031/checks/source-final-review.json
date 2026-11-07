@@ -1,0 +1,281 @@
+{
+  "schema": "ac1277-r3-independent-final-source-review-v1",
+  "created_at": "2026-10-31T02:02:35.455694+00:00",
+  "repository": "mayf3/svc-workflow",
+  "worktree": "/tmp/ac1277-svc-workflow",
+  "SPEC_GOVERNANCE_MODE": "REVIEW",
+  "REVIEW_KIND": "FINAL_HEAD",
+  "SPEC_REVIEW": "NOT_APPLICABLE",
+  "REVIEW_TARGET_HEAD": "06c035467ef7effc664f41ab703bbe736523d13e",
+  "REVIEW_TARGET_TREE": "9c0c7df1451bf712f0e3627b3c4093b0e1670225",
+  "BASE_HEAD": "3b81d8f99a286caeb04ea2c349966b0f6662275d",
+  "CORRECTION_PARENT_HEAD": "3567fdc83cbe60cc19c9c4b1d73c9dc20b31f008",
+  "CURRENT_BASE_HEAD": "3b81d8f99a286caeb04ea2c349966b0f6662275d",
+  "REVIEWER_ID": "/root/source_review",
+  "AUTHOR_ID": "/root",
+  "AUTHOR_INDEPENDENCE": "PASS",
+  "ASSURANCE_LEVEL": "CONTROLLED",
+  "route": "REUSE existing accepted CIR V2 CTR-CIR-002/003; source-only correction",
+  "prior_review": {
+    "path": "/tmp/ac1277-r3-source-review.json",
+    "sha256": "48e5ee4a49645f0d67dd27bb4cea35ff170d8c4a757f2ce66b102892ac0e7e86",
+    "reuse": "Whole-branch T0/T1/T2 affected review retained; bounded final delta closes R3-B1. Original receipt is preserved. This receipt supersedes its B1 status and explicitly clarifies two ambiguous declined-to-judge entries."
+  },
+  "coordinates": {
+    "clean_head_observed": true,
+    "delta_sha256": "04b9101296c791be9619c02be3225bf15ce30f6bf1299417d2f4d8b7959534c1",
+    "delta_paths": [
+      "src/auth/admission.rs",
+      "src/store/postgres/admission_gate.rs",
+      "tests/31_admission_wiring.rs"
+    ],
+    "whole_branch_diff_sha256": "4cd02089d00c8074b7d98983fc8e9e635cc0ea9fdfc6d6bd9bc17bc6eac3634c",
+    "governing_authorities_unmodified": true
+  },
+  "checks": {
+    "AUTHORITY": {
+      "result": "PASS",
+      "detail": "No authority amendment, public code addition, permission transfer or repair-membership change. B1 closure directly enforces accepted exact identity agreement; T3 remains separately blocked."
+    },
+    "PRIMITIVE": {
+      "result": "PASS",
+      "detail": "Valid RED, invalid-oracle attempts, corrected mutation RED, final GREEN, exact source delta, full-runtime pending and production acceptance remain explicitly distinct."
+    },
+    "CONTRACT": {
+      "result": "PASS",
+      "detail": "Mapped historical target carries exact immutable canonical_agent_id; fresh observed Agent ID must match before ValidatedTarget exists. Mapped local target must be AGENT. Mismatch uses existing admission_rejected and rolls back transaction. No fallback to P, other Q or guessed Agent identity."
+    },
+    "ACCEPTANCE": {
+      "result": "PASS",
+      "scope": "R3-B1 and reused T1/T2 affected source contracts",
+      "detail": "Real mismatched Agent ID RED demonstrated prior incorrect success. Corrected explicit HUMAN oracle with only type guard removed demonstrated incorrect success. Final unchanged 11-case suite passes, including positive exact pair, disabled P to active Q RETURN/history/replay, directory-disabled failures and both new zero-write denials. Whole-project runtime gate is not evaluated as PASS here."
+    },
+    "MANDATE": {
+      "result": "PASS",
+      "detail": "Only read-only repository/log inspection and this permitted new external receipt. No tests, DB access, production writes, extra agents, consumer edits or new authority by reviewer."
+    },
+    "EVIDENCE": {
+      "result": "PASS",
+      "detail": "Three discriminating log hashes verified. Final GREEN diff hash is exactly the parent-to-final-HEAD Git diff hash, binding the executed source/test bytes to corrected candidate. Prior reviews and unaffected evidence reused."
+    }
+  },
+  "AUTHORITY_REVIEW": "PASS",
+  "PRIMITIVE_BOUNDARY_REVIEW": "PASS",
+  "CONTRACT_REVIEW": "PASS",
+  "ACCEPTANCE_COVERAGE_REVIEW": "PASS",
+  "MANDATE_SCOPE_REVIEW": "PASS",
+  "EVIDENCE_REVIEWABILITY": "PASS",
+  "BASE_IMPACT": "NONE",
+  "SPEC_COMPLIANCE": "PASS",
+  "SPEC_COMPLIANCE_SCOPE": "Reviewed T0/T1/T2 source contracts at exact 06c0354; not overall #1277, full-project runtime or production acceptance",
+  "BLOCKERS": 0,
+  "blocker_closure": [
+    {
+      "id": "R3-B1",
+      "status": "CLOSED",
+      "code": "src/store/postgres/admission_gate.rs exact expected_agent_id read, local AGENT predicate, and fresh observed.agent_id comparison; src/auth/admission.rs internal CanonicalBindingMismatch retains generic admission_rejected wire code",
+      "counterexample_result": "Now rejects before returning validated target; failure unwinds held business transaction. New tests compare Visit/Event/Context counts and assert no receipt.",
+      "positive_preservation": "Positive pair fixture now records the same valid-grammar agt_<uuid> returned by the directory; original disabled P history and original request/replay assertions retained."
+    }
+  ],
+  "prohibition_boundary_clarification": {
+    "meaning": "These code boundaries were IN SCOPE in the prior whole-branch review and remain IN SCOPE here. Prior declined wording meant no authority is created for the prohibited behavior, not that reviewing the prohibition was excluded.",
+    "verified": [
+      {
+        "boundary": "No creator alias inheritance",
+        "evidence": [
+          "src/store/postgres/workflow_instance_repository/revise_transaction.rs:252 exact created_by == actor",
+          "src/store/postgres/workflow_instance_repository/combined_transaction.rs:205 exact creator before separate effective-assignee check",
+          "src/store/postgres/workflow_instance_repository/query_visibility.rs:309 exact creator-on-DRAFT",
+          "prior executed query_worklists creator successor negative cases"
+        ]
+      },
+      {
+        "boundary": "No Domain Owner/admin/auditor inheritance",
+        "evidence": [
+          "query_visibility.rs:35 check_domain_owner uses exact actor and enabled DOMAIN_OWNER binding",
+          "query_visibility.rs:60 global read role uses exact actor binding, no successor resolution",
+          "admin_recovery_repository/override_transaction.rs:191-192 validates actual actor and workflow-admin authority",
+          "admin_recovery_repository/authorization.rs:34 exact principal and domain binding check",
+          "T1/T2 identity helper applies only to current-assignee subpredicate; no role/grant writes or copy in reviewed delta"
+        ]
+      },
+      {
+        "boundary": "Advisory is not execution authority",
+        "evidence": [
+          "transition_transaction.rs:152 onwards re-locks Instance, checks expected version, current Visit, enabled actor and effective current assignee",
+          "transition_transaction.rs:235 open-assistance denial and subsequent Definition/schema/role checks remain transaction-local",
+          "query response executable_for_actor is not an input credential or authorization argument to execute service"
+        ]
+      },
+      {
+        "boundary": "UNKNOWN does not permit a second write",
+        "evidence": [
+          "application/workflow_instance/execute_transition.rs computes hash from original command and passes original actor/request",
+          "transition_transaction.rs:72-127 handles existing same actor/key/hash receipt before new fact path",
+          "transition_helpers.rs:106 handles completed match/conflict/processing, no changed-key automatic retry",
+          "transition_transaction.rs:1101-1122 commit timeout yields CommitOutcomeUnknown; no internal automatic resubmit",
+          "positive RETURN test replays original key/hash to same Visit and one receipt"
+        ]
+      }
+    ],
+    "limitations": "This is source and scoped test review. It does not establish live revocation timing, a real unknown remote outcome, client/model behavioral compliance, or production business acceptance."
+  },
+  "evidence": {
+    "discriminating_runs": [
+      {
+        "label": "r3-b1-red",
+        "argv": [
+          "cargo",
+          "test",
+          "--test",
+          "31_admission_wiring",
+          "historical_return_rejects_conflicting",
+          "--",
+          "--test-threads=1"
+        ],
+        "cwd": "/tmp/ac1277-svc-workflow",
+        "head": "3567fdc83cbe60cc19c9c4b1d73c9dc20b31f008",
+        "dirtyDiffSha256": "145f531a97eb0e959f9e1d037a11ab8d7bbe9817c3c5e2c846e143d7d426bb32",
+        "startedAt": "2026-10-31T01:39:49.856044+00:00",
+        "elapsedSeconds": 4.925,
+        "rc": 101,
+        "log": "r3-b1-red.log",
+        "sha256": "4188f62db72d21954947cec9375ea5cbe1e28e4a5e0fba8ee13fa75f65190312",
+        "databaseIdentity": "postgres://ac1277_r2_test@127.0.0.1:57278/ac1277_r2_test",
+        "environment": "allowlisted env; DATABASE_URL=TEST_DATABASE_URL; local test cluster",
+        "verified_raw_log_sha256": "4188f62db72d21954947cec9375ea5cbe1e28e4a5e0fba8ee13fa75f65190312",
+        "hash_match": true
+      },
+      {
+        "label": "r3-b1-type-valid-red",
+        "argv": [
+          "cargo",
+          "test",
+          "--test",
+          "31_admission_wiring",
+          "historical_return_rejects_wrong_projected_type",
+          "--",
+          "--test-threads=1"
+        ],
+        "cwd": "/tmp/ac1277-svc-workflow",
+        "head": "3567fdc83cbe60cc19c9c4b1d73c9dc20b31f008",
+        "dirtyDiffSha256": "326923e1cd96377e55294865852b9e346c4bd188c9d91e5ba9c6adfe14c6496c",
+        "startedAt": "2026-10-31T01:47:02.281198+00:00",
+        "elapsedSeconds": 12.06,
+        "rc": 101,
+        "log": "r3-b1-type-valid-red.log",
+        "sha256": "2518c630f5824e41737ac03764b137240a12a0b6722e568358112dcacc1b8b12",
+        "databaseIdentity": "postgres://ac1277_r2_test@127.0.0.1:57278/ac1277_r2_test",
+        "environment": "allowlisted env; DATABASE_URL=TEST_DATABASE_URL; local test cluster",
+        "verified_raw_log_sha256": "2518c630f5824e41737ac03764b137240a12a0b6722e568358112dcacc1b8b12",
+        "hash_match": true
+      },
+      {
+        "label": "r3-b1-final-green",
+        "argv": [
+          "cargo",
+          "test",
+          "--test",
+          "31_admission_wiring",
+          "--",
+          "--test-threads=1"
+        ],
+        "cwd": "/tmp/ac1277-svc-workflow",
+        "head": "3567fdc83cbe60cc19c9c4b1d73c9dc20b31f008",
+        "dirtyDiffSha256": "04b9101296c791be9619c02be3225bf15ce30f6bf1299417d2f4d8b7959534c1",
+        "startedAt": "2026-10-31T01:48:05.199078+00:00",
+        "elapsedSeconds": 32.045,
+        "rc": 0,
+        "log": "r3-b1-final-green.log",
+        "sha256": "cd34c5b39fa902909ca19f391b8f53f353f051fb08134aeb0cdc3705351cf986",
+        "databaseIdentity": "postgres://ac1277_r2_test@127.0.0.1:57278/ac1277_r2_test",
+        "environment": "allowlisted env; DATABASE_URL=TEST_DATABASE_URL; local test cluster",
+        "verified_raw_log_sha256": "cd34c5b39fa902909ca19f391b8f53f353f051fb08134aeb0cdc3705351cf986",
+        "hash_match": true
+      }
+    ],
+    "valid_final_delta_binding": true,
+    "excluded_invalid_oracles": [
+      "r3-b1-type-red: initial presumed HUMAN fixture was actually AGENT; excluded from projected-type behavior RED claims",
+      "intermediate r3-b1-green failure with invalid projected-type oracle is not a valid regression result"
+    ],
+    "prior_exact_compile": "3567fdc cargo test --no-run rc0, retained only for that earlier exact HEAD",
+    "full_project_runtime": {
+      "state": "RUNNING_OR_NOT_FINAL_AT_REVIEW_CUT",
+      "candidate": "06c035467ef7effc664f41ab703bbe736523d13e",
+      "reviewer_executed": false,
+      "all_project_pass": false,
+      "reported_failure": "01_migration_tests::test_migration_0019_constraint_enforced",
+      "baseline_contrast": {
+        "kind": "SQL_PRECONDITION_CONTRAST_NOT_PRISTINE_BASE_CARGO_TEST",
+        "receipt": "/tmp/ac1277-r3-evidence/baseline-migration01-sql.json",
+        "receipt_sha256": "a1abdbb63018242900c9a9b0be950236b3ba1d2ed0563ec2a372791b8faf5ea0",
+        "log_hash_verified": true,
+        "original_test_identical_at_baseline_and_candidate": true,
+        "observation": "Original test uses arbitrary LIMIT 1 then changes semantic_model_version; recorded exact UPDATE on a legitimately referenced baseline version fails fk_instance_definition_version_model, with equal before/after hash. This supports a pre-existing SQL precondition hazard, not a whole baseline runtime result or a candidate all-project PASS."
+      },
+      "next": "Receipt-only evidence followup may finalize gate/disposition when the ongoing exact-HEAD run finishes."
+    }
+  },
+  "SPEC_GAPS": 2,
+  "spec_gaps": [
+    {
+      "id": "R3-SG1",
+      "class": "SPEC_GAP",
+      "scope": "T3 current projection",
+      "load_bearing_for": [
+        "T3",
+        "T4",
+        "T5",
+        "overall #1277 completion"
+      ],
+      "detail": "Native canonical, successor metadata and unresolved nullable enrichment lack accepted exact proof source, closed current DTO/UNKNOWN semantics and consumer compatibility window. Existing fields are not silently redefined.",
+      "next_action": "RE_PREFLIGHT",
+      "readiness": "NO"
+    },
+    {
+      "id": "R3-SG2",
+      "class": "SPEC_GAP",
+      "scope": "T3 paired Broker declared error surface",
+      "load_bearing_for": [
+        "T3 consumer closure",
+        "overall #1277 completion"
+      ],
+      "detail": "The existing accepted Broker V3 declaration table omits admission_legacy_input/admission_target_disabled; current generic http_4xx degradation with HTTP422/detail/requestId preservation is not a Svc T1/T2 source violation. Widening that closed declaration requires its owning accepted contract route, not this implementation review. This review consumes the package/root report and does not independently audit the DSH consumer branch.",
+      "next_action": "RE_PREFLIGHT",
+      "readiness": "NO"
+    }
+  ],
+  "TOOLING_DEBT": 0,
+  "readiness": {
+    "T1_T2_SOURCE_REVIEW": "PASS",
+    "R3_B1": "CLOSED",
+    "FULL_PROJECT_RUNTIME_GATE": "PENDING_FINAL_RESULT_AND_FAILURE_DISPOSITION",
+    "MERGE_READY": "NO_UNTIL_REQUIRED_FINAL_TEST_GATE_DISPOSITION",
+    "OPERATION_ALLOWED": "NO",
+    "overall_1277": "INCOMPLETE_T3_BLOCKED_T4_T5_DEPENDENT",
+    "convergence_exit": "NOT_APPLICABLE_NO_FINAL_RETIREMENT_CLAIM",
+    "NEXT_ACTION": "Receive final runtime evidence; preserve T3 owning-contract route; no new implementation requested by this review"
+  },
+  "declined_to_judge": [
+    "Creating or accepting any new authority for automatic creator/Domain Owner/admin/auditor alias inheritance; its absence in affected code WAS reviewed above.",
+    "Creating or accepting authority to treat advisory as a durable ticket or timeout as resubmit permission; affected source guards WERE reviewed above.",
+    "Production identity/grants/configuration, live DB data, installed/runtime-loaded binary, deployment, migration apply, real-user business acceptance.",
+    "T3 unresolved DTO/UNKNOWN/proof source/consumer window or closed Broker declaration changes as accepted authority.",
+    "T4/T5 full inventory, zero-live-dependency retirement, disabling legacy authentication or warm-context model acceptance.",
+    "Full-project runtime PASS before the ongoing command produces a final coordinate-bound receipt.",
+    "Pristine baseline cargo result from the supplied SQL-only contrast.",
+    "Unrelated pre-existing P9 operator or general repository re-audit beyond the frozen B1 closure."
+  ],
+  "reviewer_actions": {
+    "repository_mutations": 0,
+    "test_executions": 0,
+    "database_accesses": 0,
+    "production_actions": 0,
+    "spawned_agents": 0,
+    "new_files": [
+      "/tmp/ac1277-r3-source-final-review.json"
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "stopCommand": [
+    "pg_ctl",
+    "-D",
+    "/tmp/ac1277-r2-pg",
+    "-m",
+    "fast",
+    "stop"
+  ],
+  "stopRc": null,
+  "statusCommandRc": 3,
+  "statusMeaning": "no server running",
+  "dataRetained": true,
+  "identityAfterBaselineTests": "ac1277_r2_baseline|ac1277_r2_test|127.0.0.1|57278|/tmp/ac1277-r2-pg",
+  "stopRcLimit": "not separately captured in multi-command shell; stop log explicitly reports server stopped; final shell rc3 is status subcommand"
+}
