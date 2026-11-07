@@ -1,0 +1,112 @@
+{
+  "observed_at_utc": "2026-11-07T07:13:34.320006+00:00",
+  "repository": "mayf3/dsh-agent-core",
+  "worktree": "/private/tmp/fleet-captain-design-docs",
+  "branch": "docs/release-captain-design-v1",
+  "base_head": "f6e332d7568b01c5253618449bfef5839102c851",
+  "source_brief_sha256": "e2c973d1c00e6d94c4ce3ea15f4a8f6e9127133aeccb7bb3a90b5309f1f6bb5d",
+  "repository_coordinates": [
+    {
+      "path": "AGENTS.md",
+      "commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "f068abfda1c7f461755dc1b05828bfb4f7163ae2",
+      "sha256": "4cb49c5f6bbb6e0389505c9eb4efefbe7a7f128710731da9ff2ebbf4f5c61f9a"
+    },
+    {
+      "path": ".agents/README.md",
+      "commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "e3493fbf67f4cb2641c7990478d7c008c1dd9ca5",
+      "sha256": "18d2ee74877c9871b7a086bbc8ec02ae8219146c61e6ecfc4f33038b881c98e2"
+    },
+    {
+      "path": ".agents/local/README.md",
+      "commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "c2b6e9ea255e436c602f0e5ae04dd3108da91956",
+      "sha256": "ebd1a2f0a39ebfd17b6a17035ad63ff35c59f5e7384ebc3597687b3c3fac8d5a"
+    },
+    {
+      "path": ".agents/governance.lock.json",
+      "commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "59a9da8bcd6a567a71ec3096b6066bf69c5b9d52",
+      "sha256": "0cb6acb6e7839ee2b6d0312653e6c5efc680512a36bf44a842db3aa79dc5a8b5"
+    },
+    {
+      "path": "docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md",
+      "commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "f260b482564a561cf97f1b94676b048f67bd2f90",
+      "sha256": "c8d2627086cb202dcf0e70d9e0d0a9aeb174ea1d74b0b9cfd54339d28c33fe9b"
+    },
+    {
+      "path": "docs/decisions/README.md",
+      "commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "c4708e25e36dce2f91436352bfc00ba08e999b32",
+      "sha256": "0a64bf62cedac37ba8f39d6f81b90f2d7a117ee64c8f427e73537590e271fd0e"
+    },
+    {
+      "path": "docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md",
+      "commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "0c3f6f6005794edec2faf666e4fb035a9c87b009",
+      "sha256": "fcc3603d8f1ab7b1ab10eda7088a56fb2e5095792336311d63a92f74fba6e160"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_HARDENING_PROGRAM_V1.md",
+      "commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "06da4a7bf3debf50d7954b35a33ed55f3e14ac4d",
+      "sha256": "f2a78ab23d00693b85d70a1e0e1025ef7db64d5207818f89560990811ce2a5bc"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_CREDENTIAL_METADATA_RESOLUTION_V1.md",
+      "commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "f92f0913aa5534e21cb9953d5f984c59ae07c543",
+      "sha256": "bdb1d6039d6ca6a67b79af947698e8434aa787a3d4c2c8eeaf834f4c6a1b9398"
+    },
+    {
+      "path": "docs/specs/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1.md",
+      "commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "af655bb5801ca5af956003c8a7fabc2b27b4b6de",
+      "sha256": "c46b84ef91637a88929dd0f297bfb794ca80ee6b2719f495f90d0034aaa84e25"
+    },
+    {
+      "path": "scripts/fleet-window/window_helper_core.py",
+      "commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "3160e002c508c271cfe7ea1cbcbe64f975b84248",
+      "sha256": "655ef82e19e294c6519b285b6ec13b7679cbd8dd3c3b5f82e594612b8e1e73ac"
+    },
+    {
+      "path": "scripts/fleet-window/window_helper.py",
+      "commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "ceb659fe7615da6dacb1fcded7903b382a9452a1",
+      "sha256": "956b7559287068a1516a21c665de411f3992b6b6cbb8d8011458441c14619047"
+    },
+    {
+      "path": "scripts/fleet-window/window-executor-v5.sh",
+      "commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "19d563b091613457cbe91af399654bccb26e1868",
+      "sha256": "e59a3ac8e5fcf3afd6a7dee47b6ad53c2c20f0a80240f22a31d2be3c5c2cdf8f"
+    },
+    {
+      "path": "scripts/fleet-window/window-selftest.py",
+      "commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "73ccd63a6957885e5ba47badd9a8274e6c6a85c2",
+      "sha256": "6adedc6344bd1d3b21ba561a1af14aa942e5878b87547069ca9f8173c5ddd974"
+    }
+  ],
+  "sra_proposed_input": {
+    "path": "STANDING-RELEASE-AUTHORIZATION-V1-DRAFT.md",
+    "commit": "61b97d326e337057cd1f71c0a6ff0dc37ab72ec2",
+    "git_blob": "f0e776a546a6dfdb0e36f84f01b7d6a4b619e2b9",
+    "sha256": "5c1bb2567bd2ca04a2743d6c871934204fe511023aec340058f02df0477531e2"
+  },
+  "sra_pr_observation": {
+    "url": "https://github.com/mayf3/dsh-agent-core/pull/648",
+    "state": "open",
+    "merged": false,
+    "head": "61b97d326e337057cd1f71c0a6ff0dc37ab72ec2",
+    "base": "f6e332d7568b01c5253618449bfef5839102c851"
+  },
+  "limitations": [
+    "No auth-service production lookup, provisioning, token minting or grant writes",
+    "No production read/write or window execution",
+    "PR648 is proposed input, not accepted authority"
+  ]
+}
