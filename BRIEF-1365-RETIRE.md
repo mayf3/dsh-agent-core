@@ -87,3 +87,7 @@ R3 existing 71/71、targeted 91/91，均 child/capture rc0、skip/cancel0；真�
 结构门在不可变验证对象 `91662c3cab497518cc875447f6641b5b2f56aa4d` rc0，0 新违规/28 旧债务。独立 `/root/independent_review` 对该精确候选 PASS、OPEN_BLOCKERS=0、SPEC_GAPS=0。实际源码 commit=`739fdd3434626b9b215fe1b1557689dfc1eea61b`，整个 tree 与验证对象相等；未 rebase，未修改红线范围。
 
 当前 PUBLICATION_READY=YES（文档最终 HEAD 仍作 DELTA 独审）；MERGE_READY=NO；OPERATION_ALLOWED=NO。NEXT_REAL_ACTION=提交证据/收据、普通 push、开 base main 未合并 PR，真实发布读回后补齐 RECEIPT 即 STOP。详细证据见 [RECEIPT-1365-RETIRE.md](RECEIPT-1365-RETIRE.md)。
+
+### R3 实际交付
+
+源码 `739fdd34`；文档证据 `6a3f822174cf446eba24b9f42738db54ddc74af6` 独立 final-HEAD DELTA PASS。普通 push rc0；实际 [PR #666](https://github.com/mayf3/dsh-agent-core/pull/666) base main，fresh readback open、merged=false。RECEIPT 已补齐原始 RED/GREEN、真实版本切换、71/91 rc0、结构/独审、diff 和 DONE_WHEN 对照。仅剩这次文档补齐的 containing commit/DELTA 复核/普通 follow-up push 与最终读回，完成即 STOP；无新语义开发或可选扩展。

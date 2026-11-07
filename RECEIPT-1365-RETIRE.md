@@ -1,6 +1,6 @@
 # RECEIPT-1365-RETIRE — R3 Node 环境归因与退役执行器解耦
 
-当前状态：`VERIFIED_SOURCE / PUBLICATION_PENDING`。真实 Node v25.6.1 下原受影响套件 71/71、其他面定向抽查 91/91，均 child/capture rc0；本次结构违规 0。提交、推送与 PR 读回将在实际发生后补齐。零生产写入，不 rebase，不合并 PR。
+交付状态：`DELIVERED / PR_OPEN_UNMERGED`。[PR #666](https://github.com/mayf3/dsh-agent-core/pull/666)，base main，实际 push rc0，fresh PR readback 为 open、merged=false。真实 Node v25.6.1 下原受影响套件 71/71、其他面定向抽查 91/91，均 child/capture rc0；本次结构违规 0、独审 PASS。零生产写入，不 rebase，不合并 PR。
 
 ## 授权、权威与坐标
 
@@ -121,6 +121,17 @@ R3 targeted: child rc0; capture rc0
 
 独立 reviewer=`/root/independent_review`，未创作本轮源码、测试、捕获器或证据，不运行第二写者。[完整独审记录](docs/evidence/1365-retire/R3-independent-review.md) 对上述不可变验证 commit PASS：CTR-DEC-001/002、保留只读契约、生产 opt-out 边界、环境/全部 hash 与结构证据均通过；R2 existing blocker 已 CLOSED_BY R3-existing，OPEN_BLOCKERS=0、SPEC_GAPS=0、PUBLICATION_READY=YES。最终交付 HEAD 仅文档/证据增量须独立 DELTA 复核。
 
+[发布前 final-HEAD DELTA PASS](docs/evidence/1365-retire/R3-prepublication-head-review.md) 绑定 `6a3f822174cf446eba24b9f42738db54ddc74af6`：源树不变、25 文档/证据增量、21 manifest 项 fresh hash 全匹配、工作区 clean；无新 blocker/SPEC_GAP。未重跑不变产品套件。
+
+## 实际提交、推送与 PR
+
+- 源码提交：`739fdd3434626b9b215fe1b1557689dfc1eea61b`，完整 tree 与测试/结构/独审对象相等。
+- 首次文档证据 HEAD：`6a3f822174cf446eba24b9f42738db54ddc74af6`，独立 final-HEAD DELTA PASS 后发布。
+- 普通 `git push -u origin fix/retire-executor-decouple` 实际 rc0，创建远端分支；UTC `2026-11-07T23:41:40.888261+00:00` 至 `23:41:43.738305+00:00`。[完整命令/stdout/stderr/rc](docs/evidence/1365-retire/R3-initial-push.json)。无 force push。
+- GitHub connector 实际创建 [PR #666](https://github.com/mayf3/dsh-agent-core/pull/666)，created_at=`2026-11-07T23:41:53Z`，base=`main`，head=`fix/retire-executor-decouple`，open、merged=false。[创建结果](docs/evidence/1365-retire/R3-pr-create.json)。
+- 随后独立 get_pr_info fresh readback：head_sha=`6a3f822174cf446eba24b9f42738db54ddc74af6`、base_sha=`e8d6d333743f812945d47b96ace61b817f35f9cf`、state=open、merged=false、mergeable=true、merged_at=null。[读回结果](docs/evidence/1365-retire/R3-pr-initial-readback.json)。mergeable 是服务端当时的冲突计算，不是合并或业务验收；初次创建时尚未完成的 mergeability 观察原样保留。
+- 本次收据补齐只添加实际发布事实和证据。其最终 containing commit、自身独立 DELTA 复核、普通后续 push rc 与 fresh PR head/open/unmerged 读回，在实际发生后绑定于 PR body 和最终交接；不把 commit 自己的哈希写入自己的内容，不为该文档增量重跑不变产品套件。
+
 ## DONE_WHEN 对照
 
 | 项目 | 证据/结果 |
@@ -129,8 +140,8 @@ R3 targeted: child rc0; capture rc0
 | 最小惰性构造、退役拒写及历史只读 GREEN | DONE，R2 pass5；R3 existing 再次执行 pass5，源码哈希绑定 |
 | 真实 Node v25.6.1 下原受影响门 rc0 | DONE，71/71；version 命令、PATH、execPath、二进制 hash 与 raw |
 | 其他受影响面定向抽查 rc0 | DONE，四文件 91/91 |
-| 结构门及独立受影响审查 | DONE，0 新违规/28 旧债务；独审 exact-candidate PASS，最终文档 HEAD 待 DELTA 复核 |
-| commit → push → base main PR，不合并 | PENDING_PUBLICATION |
-| 完成收据、保留停止/原始证据 | 收据待发布事实回填；R1/R2 原件保留 |
+| 结构门及独立受影响审查 | DONE，0 新违规/28 旧债务；独审 exact-candidate 与发布前文档 HEAD DELTA PASS |
+| commit → push → base main PR，不合并 | DONE，source 739fdd34；6a3f8221 普通 push rc0；#666 open/unmerged、base main |
+| 完成收据、保留停止/原始证据 | DONE，发布事实已回填；R1/R2 原件保留；最终 containing commit 绑定见 PR body/最终交接 |
 
 这些是离线源码与夹具证据，不表示安装、生产启动、运行时 admission 或业务验收。`MERGE_READY=NO; OPERATION_ALLOWED=NO`。发布完成且无 EXPANSION_TRIGGER 后即停止。
