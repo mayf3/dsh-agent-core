@@ -93,6 +93,10 @@ test('P0-A same-generation phase CAS and terminal refusal retain their existing 
     await assertUnchanged(fx.writer, before)
     const terminal = await runEnded(fx.writer, attempt)
     const terminalBefore = await snapshot(fx.writer)
+    const lost = await fx.reader.recordReconciled(reconcileInput(attempt))
+    assert.equal(lost.committed, false)
+    assert.equal(lost.cause, 'attempt_changed')
+    await assertUnchanged(fx.writer, terminalBefore)
     await assert.rejects(fx.writer.recordReconciled(reconcileInput(terminal)), /terminal/)
     await assertUnchanged(fx.writer, terminalBefore)
   } finally { fx.cleanup() }
