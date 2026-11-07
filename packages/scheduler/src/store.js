@@ -5,6 +5,7 @@ import {
   logicalCoordinates,
   rebuildFences,
   validateOccurrenceRecord,
+  decodeOccurrenceRecord,
 } from './occurrence-model.js'
 import { OwnerLock } from './lock.js'
 import { storeMigrationMethods } from './store-migration.js'
@@ -215,7 +216,7 @@ export class JobStore {
     }
   }
 
-  async _readDocRaw({ repairFences = false } = {}) {
+  async _readDocRaw({ repairFences = false, decodeHistory = false } = {}) {
     let raw
     try {
       raw = await fs.readFile(this.filePath, 'utf8')
@@ -237,7 +238,7 @@ export class JobStore {
       const validated = repairFences && Array.isArray(data.occurrences)
         ? { ...data, fences: rebuildFences(data.occurrences) }
         : data
-      this._validateDocument(validated)
+      this._validateDocument(validated, { decodeHistory })
       return { status: 'v3', raw: data, doc: data }
     }
     if (UPGRADEABLE_VERSIONS.has(data.version)) {
@@ -253,7 +254,7 @@ export class JobStore {
     failLoud('validate document', new Error(`unsupported store version ${JSON.stringify(data.version)}`))
   }
 
-  _validateDocument(doc) {
+  _validateDocument(doc, { decodeHistory = false } = {}) {
     if (doc.version !== STORE_VERSION || !Array.isArray(doc.jobs)
       || !Array.isArray(doc.occurrences) || !doc.fences
       || typeof doc.fences !== 'object' || Array.isArray(doc.fences)) {
@@ -261,9 +262,10 @@ export class JobStore {
     }
     const ids = new Map()
     const coordinateKeys = new Map()
-    for (const record of doc.occurrences) {
+    for (const [index, record] of doc.occurrences.entries()) {
       try {
-        validateOccurrenceRecord(record)
+        if (decodeHistory) doc.occurrences[index] = decodeOccurrenceRecord(record)
+        else validateOccurrenceRecord(record)
       } catch (error) {
         failLoud('occurrence authority corrupted (fail loud, not an empty store)', error)
       }
@@ -359,7 +361,7 @@ export class JobStore {
       failLoud(`stat ${this.filePath}`, error)
     }
     if (!force && this._cacheDoc && stat.mtimeMs === this._mtimeMs) return clone(this._cacheDoc)
-    const classified = await this._readDocRaw()
+    const classified = await this._readDocRaw({ decodeHistory: true })
     if (classified.status === 'v1' || classified.status === 'v2') {
       await this.ensureUpgraded()
       return this.loadDoc({ force: true })

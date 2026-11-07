@@ -168,6 +168,17 @@ const REQUIRED_FIELDS = [
  * treated as "no occurrence" (C-022 / ACC-021).
  */
 export function validateOccurrenceRecord(record) {
+  return validateRecord(record, false)
+}
+
+/** Read-only compatibility projection; never usable as writer authority. */
+export function decodeOccurrenceRecord(record) {
+  const decoded = structuredClone(record)
+  validateRecord(decoded, true)
+  return decoded
+}
+
+function validateRecord(record, compatibleHistory) {
   const corrupt = (message) => {
     throw Object.assign(new Error(`occurrence ${record?.occurrenceId ?? '(unknown)'}: ${message}`), {
       code: 'OCCURRENCE_STORE_CORRUPT',
@@ -221,30 +232,44 @@ export function validateOccurrenceRecord(record) {
   if (record.state === 'outcome_unknown' && record.executionOutcome !== undefined) corrupt('outcome_unknown cannot claim a terminal executionOutcome')
 
   if (!Array.isArray(record.history) || record.history.length === 0) corrupt('history must be a non-empty array')
+  const invalidEnums = []
+  for (const [index, entry] of record.history.entries()) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry) || !Number.isFinite(entry.at)
+      || !Object.hasOwn(entry, 'from') || !Object.hasOwn(entry, 'to')
+      || entry.from === undefined || entry.to === undefined || typeof entry.reason !== 'string') {
+      corrupt(`malformed history entry ${index}`)
+    }
+    if (!OCCURRENCE_STATES.has(entry.to)
+      || !(entry.from === null && index === 0) && !OCCURRENCE_STATES.has(entry.from)) invalidEnums.push(index)
+  }
+  const unverifiable = compatibleHistory && invalidEnums.length > 0
+  const unverifiableAt = at => unverifiable && invalidEnums.some(index => record.history[index].at === at)
   let previous = null
   let previousAt = -Infinity
   let unknownResolutionEntry = null
   let terminationAnnotationCount = 0
   for (const [index, entry] of record.history.entries()) {
-    if (!entry || typeof entry !== 'object' || !Number.isFinite(entry.at)
-      || typeof entry.to !== 'string' || typeof entry.reason !== 'string') corrupt(`malformed history entry ${index}`)
-    if (entry.from !== previous) corrupt(`history entry ${index} has discontinuous from-state`)
+    const fromKnown = OCCURRENCE_STATES.has(entry.from) || index === 0 && entry.from === null
+    const toKnown = OCCURRENCE_STATES.has(entry.to)
+    const previousKnown = index === 0 || OCCURRENCE_STATES.has(previous)
+    if ((!unverifiable || fromKnown && previousKnown) && entry.from !== previous) corrupt(`history entry ${index} has discontinuous from-state`)
     if (entry.at < previousAt) corrupt(`history entry ${index} moves backward in time`)
     if (index === 0 && entry.at !== record.admittedAt) corrupt('history must begin at admittedAt')
-    if (previous === null && entry.to !== 'admitted') corrupt('history must begin with admitted')
-    const terminationAnnotation = previous === 'outcome_unknown' && entry.to === 'outcome_unknown'
+    if (index === 0 && (!unverifiable || toKnown) && entry.to !== 'admitted') corrupt('history must begin with admitted')
+    const terminationAnnotation = entry.from === 'outcome_unknown' && entry.to === 'outcome_unknown'
       && record.terminationSettlement?.settledAt === entry.at
     if (terminationAnnotation) terminationAnnotationCount += 1
-    if (previous !== null && !canTransition(previous, entry.to) && !terminationAnnotation) {
-      corrupt(`history contains illegal ${previous} -> ${entry.to}`)
+    if (index > 0 && (!unverifiable || fromKnown && toKnown) && !canTransition(entry.from, entry.to) && !terminationAnnotation) {
+      corrupt(`history contains illegal ${entry.from} -> ${entry.to}`)
     }
-    if (previous === 'outcome_unknown' && TERMINAL_STATES.has(entry.to)) unknownResolutionEntry = entry
+    if (entry.from === 'outcome_unknown' && TERMINAL_STATES.has(entry.to)) unknownResolutionEntry = entry
     previous = entry.to
     previousAt = entry.at
   }
-  if (previous !== record.state) corrupt('history final state does not match record.state')
+  if ((!unverifiable || OCCURRENCE_STATES.has(previous)) && previous !== record.state) corrupt('history final state does not match record.state')
   if (record.startedAt !== undefined
-    && !record.history.some((entry) => entry.to === 'running' && entry.at === record.startedAt)) {
+    && !record.history.some((entry) => entry.to === 'running' && entry.at === record.startedAt)
+    && !unverifiableAt(record.startedAt)) {
     corrupt('startedAt must match the running transition')
   }
   if (record.endedAt !== undefined && previousAt !== record.endedAt) corrupt('endedAt must match the final history transition')
@@ -256,14 +281,15 @@ export function validateOccurrenceRecord(record) {
     if (!settlement || !LATE_SETTLEMENT_BASES.has(settlement.basis)
       || !TERMINAL_STATES.has(settlement.resolvedTo)
       || settlement.resolvedTo !== record.state || !Number.isFinite(settlement.resolvedAt)
-      || !unknownResolutionEntry || settlement.resolvedAt !== unknownResolutionEntry.at
+      || !(unknownResolutionEntry && settlement.resolvedAt === unknownResolutionEntry.at
+        || unverifiableAt(settlement.resolvedAt))
       || typeof settlement.evidenceRef !== 'string' || settlement.evidenceRef === '') {
       corrupt('invalid lateSettlement authority')
     }
   }
   if (record.terminationSettlement !== undefined) {
     const settlement = record.terminationSettlement
-    if (terminationAnnotationCount !== 1
+    if (terminationAnnotationCount > 1 || terminationAnnotationCount !== 1 && !unverifiableAt(settlement?.settledAt)
       || !(record.state === 'outcome_unknown' || (TERMINAL_STATES.has(record.state) && record.lateSettlement !== undefined))
       || settlement?.kind !== 'terminated_without_outcome'
       || settlement.businessStateAtCommit !== 'outcome_unknown'
@@ -282,6 +308,12 @@ export function validateOccurrenceRecord(record) {
     }
   } else if (terminationAnnotationCount !== 0) {
     corrupt('termination history annotation requires terminationSettlement authority')
+  }
+  // Derived diagnostic only. Raw history and all business/evidence fields stay intact.
+  // Recompute it on every read; a caller-supplied marker cannot bypass validation.
+  if (compatibleHistory) {
+    delete record.historyVerification
+    if (unverifiable) record.historyVerification = { status: 'unverifiable', outcome: 'UNKNOWN', invalidEnumEntries: invalidEnums }
   }
   return record
 }

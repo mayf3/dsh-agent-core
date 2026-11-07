@@ -23,6 +23,16 @@ export const TERMINATION_EVIDENCE_TYPES = Object.freeze([
   'restart_quiescence_proven',
 ])
 
+/** Exact historical writer defect, recognized without repairing durable facts. */
+export function isLegacyUnprovenFenceClear(record) {
+  if (record.fenceState !== 'cleared' || record.initialOutcome !== 'outcome_unknown') return false
+  const queryState = record.queryState ?? record.state
+  const recoveryState = record.queryState === undefined ? record.recoveryState : record.state
+  return queryState === 'pending' && recoveryState === 'blocked'
+    && record.exitObservedAt === null && record.terminationEvidence === null
+    && record.settlementResult === null
+}
+
 export const settlementMethods = {
   recordRecoveryAction(handle, { action, result, reasonCode }) {
     const record = this.requireRecord(handle)
@@ -118,6 +128,8 @@ export const settlementMethods = {
 
   markRecoveryBlocked(handle, missingEvidence, reasonCode) {
     const record = this.requireRecord(handle)
+    // Startup preserves the historical facts; admission projects quarantine.
+    if (isLegacyUnprovenFenceClear(record)) return false
     if (record.state === 'settled') return false
     this.mutateRecord(record, (candidate) => {
       candidate.recoveryState = 'blocked'
@@ -156,6 +168,15 @@ export const settlementMethods = {
 
   markFenceCleared(handle) {
     const record = this.requireRecord(handle)
+    // EMPTY/ownership loss and a previous bad clear are never proof. Throw
+    // before the idempotent return so releaseFence retains its local fence.
+    if (record.state !== 'settled'
+        || ![...DIRECT_OUTCOMES, ...LATE_OUTCOMES].includes(record.settlementResult)
+        || !TERMINATION_EVIDENCE_TYPES.includes(record.terminationEvidence)) {
+      throw Object.assign(new Error('fence cleanup requires exact settlement and termination evidence'), {
+        code: 'RECONCILIATION_FENCE_CLEAR_UNPROVEN',
+      })
+    }
     if (record.fenceState === 'cleared') return false
     this.mutateRecord(record, (candidate) => {
       candidate.fenceState = 'cleared'

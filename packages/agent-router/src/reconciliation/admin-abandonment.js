@@ -40,6 +40,7 @@
  */
 
 import { RECONCILIATION_CAPS, ReconciliationCapacityError } from './capacity.js'
+import { isLegacyUnprovenFenceClear } from './state-machine.js'
 
 /** Bounded number of durable declaration operations (closed store budget). */
 export const MAX_ADMIN_ABANDONMENT_DECLARATIONS = 32
@@ -103,9 +104,15 @@ export const adminAbandonmentMethods = {
    */
   admissionBlockerForAgent(agentId) {
     for (const record of this.records.values()) {
-      if (record.agentId !== agentId || record.initialOutcome !== 'outcome_unknown'
-          || record.fenceState === 'cleared'
-          || (record.adminAbandonment ?? null) !== null) continue
+      if (record.agentId !== agentId || record.initialOutcome !== 'outcome_unknown') continue
+      // A historical bad clear is quarantined even if it carries an old
+      // abandonment marker. Keep compatibility decoding off ordinary prompt
+      // admission: only a cleared UNKNOWN can have the historical defect.
+      if (record.fenceState === 'cleared') {
+        if (isLegacyUnprovenFenceClear(record)) return record
+        continue
+      }
+      if ((record.adminAbandonment ?? null) !== null) continue
       return record
     }
     return null
