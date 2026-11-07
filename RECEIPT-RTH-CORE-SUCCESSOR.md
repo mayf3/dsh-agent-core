@@ -188,5 +188,22 @@ STOPPED-1377-MINIMPL.md 并停依赖交付，不自行修复后冒称一轮通�
 | RTH Acceptance carried section | `d01565645c56de608f1ab47ccd9c9f2800e92fdfbf3504f12b4717b2e4c46d68` |
 | Svc readback evidence | `f50d641930d6f434918cc1a2a63964ebc71176141bc3a019521f21b1018842c1` |
 
-独立审查/commit/push/PR 状态将在实际发生后追加；不预报 PASS。
 产品测试、安装、运行、生产与业务验收均 NOT_RUN（docs-only），没有产品源码或生产写入。
+
+## 8. 已执行独审与交付
+
+- 语义提交：`d195a08f530f985345750fe9984838a3218a92ea`，包含本 Brief/提案/收据/Svc 证据
+  五份新增 Markdown。独立非作者 `/root/authority_audit` 对该 exact head 完成初次完整
+  proposed-docs 审查，PASS、0 blockers、`FROZEN_BLOCKER_UNION=[]`；完整报告：
+  [independent-review.md](docs/reports/rth-core-successor/independent-review.md)。这不是 Owner 接受。
+- `git push -u origin docs/rth-core-successor` rc0；`git ls-remote` fresh readback 为上述语义
+  head，main 仍为 `b177d3fcce3febb09711135c145cc4b43e63aa8e`。
+- 已创建 [PR #664](https://github.com/mayf3/dsh-agent-core/pull/664)，base=`main`，
+  head=`docs/rth-core-successor`；GitHub 2026-11-07T21:44:55Z readback 为 OPEN、merged=false，
+  head SHA 与已审语义提交一致。
+- 本次追加仅记录真实独审和发布结果，并将 reviewer 自己的报告入库；两份 Spec/Svc 证据/Brief
+  字节不变。新增本收据/报告的最终 Git head 需独立 bounded delta recheck 后再 push。
+  为避免自引用 SHA/复核记录循环，最终 head、复核者与实际 push/readback 结果绑定于 PR #664
+  的最终描述及 Git ref；本收据不提前声明该尚待步骤 PASS。
+- 新 proposed 仍 none/production none，旧 accepted authority 完全未改；无接受、合并、实现、
+  安装、运行/业务/无人值守验收。本 task DONE 只指这份 docs-only proposed PR 的交付。
