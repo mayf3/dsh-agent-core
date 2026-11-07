@@ -94,3 +94,7 @@ NEXT_ACTION = CONTINUE
 完成后写 `RECEIPT-603-REVERIFY.md`：逐 commit 实际处置、逐门 rc 原文和日志哈希、新 HEAD/树、独审与未覆盖面。push 新分支，更新 PR603 正文说明新分支和收据（GitHub不支持修改现有PR head分支）；不 merge、不关闭旧PR、不强推旧head。新分支远端 SHA 读回后停止。
 
 任何真实 required-gate failure 或选定工作上的权威冲突：写 `STOPPED-603-REVERIFY.md`，保留失败输出/候选，标清后续门 NOT_RUN，不修复、不继续 push/PR 写入，待独立续行授权。范围外功能、旧历史日志、生产业务/物理状态均不算本次已覆盖。
+
+## 交付台账环境配方：R7 通用裁定
+
+监管用户 2026-11-07 裁定 `603-R7-RAW-CLASS-001`，全仓后续交付适用：verbatim 机器捕获件在 `docs/evidence/` 下按 `.diff/.stderr/.stdout/.log` 四类豁免 whitespace，固有空白保真；收据/Markdown/JSON/MJS/脚本等编成件仍全量检查。精确命令及九键子进程配方见 [R7 environment-recipe.json](docs/evidence/603-reverify/r7/environment-recipe.json)，授权坐标见 [Brief R7](BRIEF-603-REVERIFY.md#r7-通用监管裁定与续行授权2026-11-07)。R4–R6 原始结果/字节不变；历史逐文件豁免不再控制后续新捕获件。网络操作继承网络环境，Secret 值不记录，不改主机环境或 guard。
