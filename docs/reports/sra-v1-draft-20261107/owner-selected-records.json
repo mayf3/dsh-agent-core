@@ -1,0 +1,56 @@
+{
+  "source": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json",
+  "observed_at_utc": "2026-11-07T06:53:23.346534+00:00",
+  "source_file_sha256": "12e36c70d9a0f7d87b084f6079d1b4727054c54ecc9f1b8adaae3a549d8e7181",
+  "canonicalization": "UTF-8 json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':')); no trailing newline",
+  "records": [
+    {
+      "selector": "$.rulings[id=owner-20261107-preauth-v2]",
+      "observed_index": 1,
+      "canonical_sha256": "087461a2a7424088b258940393ef4f9ad5939e59d0a1e420dfc57efd2829c006",
+      "record": {
+        "ts": "2026-11-07 14:43",
+        "id": "owner-20261107-preauth-v2",
+        "items": [
+          "核心原则: Owner定长期边界+重大新决策; 合法受托维护者做既定语义接受+合规发布签发; 执行Agent实现; 已授权工作不因新commit/Session/窗口/PR/worker更换重复请批",
+          "Spec接受委托: Owner已决定且语义无实质变化的规范继任→明确授权+可归属+独立于作者的维护者按现行规则正式接受; 先核身份/权限/委托范围/可接受Spec类型; 独审PASS≠自动接受; 执行者不得自我签发",
+          "常设发布签发委托: 期限范围明确的Standing Release Authorization+Release Captain签发符合accepted Contracts的标准可恢复生产发布; 每次仍须完整Execution Mandate(精确候选+预期旧版/installer/harness/闭包/生产状态+在飞+外部效果边界/认证+consumer兼容/唯一执行者+独立verifier+时窗+最大尝试/回滚证明+STOP条件+终收据); 条件全过Captain签发不逐单请批; 须现行合法授权体系承认+可执行控制, 不能只靠提示词/自写JSON",
+          "stage10通用原则: 标准可恢复发布在旧runtime+已派发外部操作终止或有效隔离+全部技术与合同门通过后, stage10 bootstrap可作停机containment结束点; 只恢复原有合法自然准入, 不清历史UNKNOWN/不绕fence/不重放/不放宽认证; 需bootstrap后继续全局暂停的发布非标准类, 须另行证明机制",
+          "授权失败处理: 普通缺陷/测试失败/installer未资格/构建不兼容/缺证→原责任链自行补齐重验; 缺证禁依赖操作但不把已授权修复停成WAITING_OWNER; 仅未授权语义变化/危险迁移/扩权/无法安全回退/超发布策略重大风险才找Owner",
+          "实施边界: 复用现有HR/Root/ITOps/QA/Issue/PR/Mandate/Runbook/Receipt; 不建第二套审批平台; 委托与发布控制真正生效前现行生产禁令继续; 不追认来源未知部署; 不自动签发W7",
+          "行动指令: 原治理责任链先完成受托角色+签发范围+技术强制门适配→可执行委托版本提交合法接受→之后日常发布自主推进"
+        ]
+      }
+    },
+    {
+      "selector": "$.history[round=sra-v1-draft-dispatched]",
+      "observed_index": 660,
+      "canonical_sha256": "0498d4a65f2eb5d66cc3ec686a377ccbbbc3a779d79460a7ba6569233dc004e5",
+      "record": {
+        "ts": "2026-11-07 14:44",
+        "round": "sra-v1-draft-dispatched",
+        "actions": [
+          "SRA V1可执行委托版本起草已派(fleet-window tools仓, docs-only): 六节=受托角色定义/签发范围/强制门checklist(从W7 Mandate十节抽取)/stage10落地/失败处理操作化/合法接受与生效程序",
+          "首任Release Captain候选=监管会话(uid 502, 台账归属); W7明确不自动签发(生效后首单标准发布走完整Mandate)",
+          "并行在飞: W7 installer资格确认worker(签发前最后prep件)"
+        ],
+        "result": "sra-draft-inflight"
+      }
+    },
+    {
+      "selector": "$.history[round=sra-r1-netstop-r2]",
+      "observed_index": 661,
+      "canonical_sha256": "3406ca76208ec353c58b2f5ec1ff421c66eb8ffe02cc73d7f3f344c0136daa1b",
+      "record": {
+        "ts": "2026-11-07 14:50",
+        "round": "sra-r1-netstop-r2",
+        "actions": [
+          "SRA R1停点: git ls-remote RPC curl 18 rc=128(网络瞬断); 同轮gh api实际rc0(main=f6e332d7)证据已在; 本地分支已建立, 正文未写",
+          "依预授权V2§5(瞬断=普通缺陷自行补齐)R2已派: 双路径重读坐标→六节全文→commit→push→PR不合并"
+        ],
+        "result": "r2-dispatched"
+      }
+    }
+  ],
+  "scope": "selected Owner ruling, nomination and R2 history only; no full registry or Secret data"
+}

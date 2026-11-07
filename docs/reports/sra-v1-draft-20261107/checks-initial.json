@@ -1,0 +1,37 @@
+{
+  "coordinate": "working tree before initial semantic commit; tracked diff empty, new docs validated separately",
+  "checks": [
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "started_at_utc": "2026-11-07T06:58:49.292616+00:00",
+      "finished_at_utc": "2026-11-07T06:58:49.305942+00:00",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "python3",
+        ".agents/tools/verify_governance.py",
+        "--target",
+        "."
+      ],
+      "started_at_utc": "2026-11-07T06:58:49.305975+00:00",
+      "finished_at_utc": "2026-11-07T06:58:49.348093+00:00",
+      "exit_code": 0,
+      "stdout": "vendored governance bytes match governance.lock.json\n",
+      "stderr": ""
+    },
+    {
+      "method": "six numbered sections and existing local Markdown links in both deliverables; exact snapshot bytes and Owner canonical selector hashes",
+      "result": "PASS",
+      "observed_at_utc": "2026-11-07T06:58:49.348125+00:00"
+    }
+  ],
+  "result": "PASS",
+  "limitations": "No product tests, production operations, appointment, acceptance or control qualification."
+}
