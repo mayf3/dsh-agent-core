@@ -1,0 +1,61 @@
+{
+  "result": "PASS",
+  "observed_at_utc": "2026-11-07T07:21:29.713422+00:00",
+  "source_head": "61b97d326e337057cd1f71c0a6ff0dc37ab72ec2",
+  "source_path": "STANDING-RELEASE-AUTHORIZATION-V1-DRAFT.md",
+  "source_sha256": "5c1bb2567bd2ca04a2743d6c871934204fe511023aec340058f02df0477531e2",
+  "formal_path": "docs/specs/AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1.md",
+  "formal_sha256": "11e0f998e67036fd52d04b8abde632e36eb90fdca99df3c78795cfee7e9e17fc",
+  "reconstructed_full_source_sha256": "5c1bb2567bd2ca04a2743d6c871934204fe511023aec340058f02df0477531e2",
+  "schema": "PASS",
+  "thirteen_sections": "PASS",
+  "local_links": 14,
+  "contract_acceptance_coverage": "6/6",
+  "sections": [
+    {
+      "section": 1,
+      "contract": "SRA-C-001",
+      "source_sha256": "c1c3d78de22a5a2cdba86097b79a361daa65dc77bb7e0885d91c55dcd02aa6f1",
+      "recovered_sha256": "c1c3d78de22a5a2cdba86097b79a361daa65dc77bb7e0885d91c55dcd02aa6f1",
+      "byte_identity": true
+    },
+    {
+      "section": 2,
+      "contract": "SRA-C-002",
+      "source_sha256": "06311e963d40174c660a3fd6f7f3a40033b04a42a73ffe9ea14d2aff81f6a4a8",
+      "recovered_sha256": "06311e963d40174c660a3fd6f7f3a40033b04a42a73ffe9ea14d2aff81f6a4a8",
+      "byte_identity": true
+    },
+    {
+      "section": 3,
+      "contract": "SRA-C-003",
+      "source_sha256": "2f238305b4ee3db8e7fc6175bbd49e0e2faa81da708a721a2b4dbd045b6f85c2",
+      "recovered_sha256": "2f238305b4ee3db8e7fc6175bbd49e0e2faa81da708a721a2b4dbd045b6f85c2",
+      "byte_identity": true
+    },
+    {
+      "section": 4,
+      "contract": "SRA-C-004",
+      "source_sha256": "da55263d21cab964722d0661d0f144929522c92c015e92d029fe67b465fbd79b",
+      "recovered_sha256": "da55263d21cab964722d0661d0f144929522c92c015e92d029fe67b465fbd79b",
+      "byte_identity": true
+    },
+    {
+      "section": 5,
+      "contract": "SRA-C-005",
+      "source_sha256": "fb911a77d0e867e7ffd32585564cc1af073ca1ff9977aa23d6a41ecd90800199",
+      "recovered_sha256": "fb911a77d0e867e7ffd32585564cc1af073ca1ff9977aa23d6a41ecd90800199",
+      "byte_identity": true
+    },
+    {
+      "section": 6,
+      "contract": "SRA-C-006",
+      "source_sha256": "696d6e74eac43d178e2beef1a3fbae15ceaac9aab0d5edf1d69aec0034ed2fa8",
+      "recovered_sha256": "696d6e74eac43d178e2beef1a3fbae15ceaac9aab0d5edf1d69aec0034ed2fa8",
+      "byte_identity": true
+    }
+  ],
+  "diff_check_rc": 0,
+  "governance_integrity_rc": 0,
+  "semantic_limitation": "Deterministic identity and syntax checks; independent semantic review is separate."
+}
