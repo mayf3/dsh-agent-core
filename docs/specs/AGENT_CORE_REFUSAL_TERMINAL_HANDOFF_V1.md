@@ -67,9 +67,10 @@ world drift 是总类；visit 迁移、可信历史可见性、assignee 不符�
 [来源记录](../reports/refusal-terminal-proposal-20261107/source-provenance.json)。
 它们授权本次 docs commit/push/PR，不构成新 Product Contract 的接受。
 
-裁定③另行认可 #643 的**提案语义**，明确 WEC/Svc 配套权威正式接受前不得实施新 reason
-或用于生产。#643 固定 head 的 frontmatter 仍 proposed/none、PR 未合并；本文记录这两个
-不同层次，不称其从未获 Owner 语义认可，也不把该认可扩展到本提案。
+裁定③另行认可 #643 的**提案语义**；该提案已正式限定接受并合并至 main
+`9df5bd2fdea17f04bcd1762cd6800c350efcf9c3`，frontmatter 为 accepted，
+`implementation_authority: none`、`production_apply_authority: none` 保持不变。
+WEC/Svc 配套权威正式接受前不得实施新 reason 或用于生产；#643 的接受不扩展到本提案。
 
 选择 **NEW**：refused-terminal 的独立 Decision、历史对象接收和责任范围不属于
 #643 的 bounded B1/B4 aging scope；没有 active accepted authority 决定这一专用交接协议。
