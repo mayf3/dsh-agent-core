@@ -1,0 +1,17 @@
+{
+  "command": [
+    "node",
+    "scripts/verify-code-structure.mjs",
+    "--base",
+    "55f442c74414dc723306a6d8e0cdba73d78eb8da",
+    "--head",
+    "3e15d880bf10ab3569174f56fb8b8065a36a4517",
+    "--json"
+  ],
+  "shell_display": "node scripts/verify-code-structure.mjs --base 55f442c74414dc723306a6d8e0cdba73d78eb8da --head 3e15d880bf10ab3569174f56fb8b8065a36a4517 --json",
+  "started_at": "2026-11-07T09:01:06.587352+00:00",
+  "finished_at": "2026-11-07T09:01:07.579005+00:00",
+  "rc": 0,
+  "stdout_sha256": "7c7e93eb1cde6f2ed628e300ad7d62bb3bfffe93579f93d372ae79ec4ab57094",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
