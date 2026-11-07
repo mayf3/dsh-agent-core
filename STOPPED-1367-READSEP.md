@@ -154,3 +154,59 @@ NEXT_ACTION=STOP; PR_DELIVERY_READY=NO; dependent writes stopped.
 ### R4 raw-class scope qualification
 
 The automatic capture wrapper initially treated any nonzero command as an unexpected failure, before evaluating the already authorized class exemption. Actual R4-whitespace rc2 names only R3-diff-check.txt, a byte-preserved raw git-diff-check stdout capture already covered by the user R4/603-R7-RAW-CLASS-001 class authorization. Its exclusion was an implementation omission in the first scoped command. The wrapper stop above is retained as execution history but does not create a new approval requirement or narrow the user mandate. Current mechanical continuation completes the existing class scope, preserves actual rc2 and original hashes, then reruns the scoped gate. Any nonexempt finding or unexpected delivery failure still stops dependent work.
+
+
+## R4 new unexpected failure
+
+{
+  "argv": [
+    "git",
+    "ls-remote",
+    "origin",
+    "refs/heads/main",
+    "refs/heads/fix/diagnostic-read-separation"
+  ],
+  "started_at_utc": "2026-11-07T11:26:49.873092+00:00",
+  "finished_at_utc": "2026-11-07T11:27:52.255456+00:00",
+  "pre": {
+    "head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+    "branch": "fix/diagnostic-read-separation",
+    "worktree": "/private/tmp/h1367-readsep",
+    "index_tree": "07ff18450ba8099edf7e655fa8bdc4b500154cac"
+  },
+  "actual_rc": 128,
+  "post_head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "ac3ee3f85aea23b1d99c328f409e2771ac2a3a2604901fa61f9ef86ad823fd50"
+}
+
+NEXT_ACTION=STOP; PR_DELIVERY_READY=NO; dependent writes stopped.
+
+
+## R4 current stop — genuine remote-preflight failure
+
+schema_version=2; FINDING=REQUIRED_GATE_FAILURE (delivery preflight; no product regression).
+SOURCE=current user R4 failure-stop mandate.
+COUNTEREXAMPLE=git ls-remote origin main/feature returned rc128/curl18/expected-flush, no valid remote ref list; exact R4-precommit-remote.json/.stderr archived.
+IMPACT=commit/push/PR not executed; affected_readiness=[PR_DELIVERY_READY,TASK_DONE]; both NO. Latest remote state UNKNOWN; branch HEAD remains2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648.
+MINIMAL_CLOSURE=subsequent authorized continuation may fresh-read refs and finish unchanged candidate delivery; no new product repair or dynamic rerun needed absent invalidating drift.
+
+Corrected class whitespace rc0 and staged candidate independent PASS are preserved at tree07ff18450ba8099edf7e655fa8bdc4b500154cac. No retry/commit/push/PR after this failure. Final root receipt and postfailure captures are local uncommitted archival facts. MERGE_READY=NOT_APPLICABLE (forbidden); PRODUCTION_OPERATION_ALLOWED=NO; NEXT_ACTION=STOP.
+
+
+## R5 current stop — packaging wrapper index-lock failure
+
+Current user R5 resumed only the R4 network stop: first one-key Git probe, then complete remote preflight, commit/push/open base-main PR, receipt; new failure-stop unchanged. Owner V2 §5 live ruling and unchanged32/32 source/evidence hashes were verified and recorded in the Brief/R5-entry. R4 receipt is preserved byte-for-byte as R4-RECEIPT.md.
+
+One-key `git ls-remote origin refs/heads/main`: rc0. Full `git ls-remote origin refs/heads/main refs/heads/fix/diagnostic-read-separation`: rc0, main=`2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648`, no feature line at2026-11-07T11:33:05.486785+00:00. The concurrent PR-list capture wrapper failed BEFORE `gh pr list` execution: wrapper rc1, nested pre-coordinate `git write-tree` rc128, index.lock File exists. Root mistakenly parallelized wrappers whose metadata precommand writes the same index. Exact recorded tool-output transcription and provenance: docs/evidence/1367-readsep/R5-precommit-pr-list-wrapper.log/.json. This is not a failed remote Git probe or an executed PR query.
+
+Dependent delivery stopped immediately. No wrapper rerun, lock removal, environment/host/source repair, commit, push or PR create followed. Read-only local check at2026-11-07T11:33:46.482061+00:00 found the transient index.lock absent, HEAD unchanged, index equal to the R4 reviewed tree and all32 source/evidence hashes unchanged. Lock absence is observation, not retry permission. PR current state was not queried in R5 and remains UNKNOWN.
+
+schema_version=2; FINDING=REQUIRED_GATE_FAILURE; SOURCE=R5 explicit failure-stop and incomplete required remote/PR preflight; COUNTEREXAMPLE=PR-list wrapper aborted rc1 before gh invocation due to nested index-write lock failure; IMPACT=precommit delivery gate incomplete, no commit/push/PR; MINIMAL_CLOSURE=subsequent authorized continuation uses sequential capture commands or genuinely index-read-only metadata, performs unfinished all-state PR check and fresh required remote check, then delivers unchanged candidate; no new product repair or unchanged dynamic rerun needed. FROZEN_BLOCKER_UNION=[R5_CAPTURE_PRECOMMAND_INDEX_LOCK_FAILURE]; affected_readiness=[PR_DELIVERY_READY,TASK_DONE]; both NO. MERGE_READY=NOT_APPLICABLE (forbidden); PRODUCTION_OPERATION_ALLOWED=NO; NEXT_ACTION=STOP. Only stop-fact archival/receipt writes and independent local readback follow.
+
+
+## R6 disposition of the historical R5 stop — 2026-11-07
+
+The current user's explicit R6 mandate resumed the wrapper failure for strictly serial delivery. All R1-R5 stops and their actual rc values above remain historical; none is rewritten as PASS. R5's root cause was concurrent capture metadata `git write-tree` calls contending for the same index.lock, before its PR query ran; remote Git reads had succeeded.
+
+R6 reverified the unchanged 47-file staged tree and observed index.lock absent without removal. Direct serial commands committed `ed31db7cfa068ac8128c127382efd98986abff4b`, pushed the branch, created base-main PR #654 and read back matching headRefOid; all rc0. The PR was OPEN and unmerged. Thus R5_CAPTURE_PRECOMMAND_INDEX_LOCK_FAILURE is closed for this bounded delivery by the new mandate and actual successful operations. It does not reopen product work or authorize merge/production. Current completion facts are in RECEIPT-1367-READSEP.md and R6-delivery.json; this file retains the original failure history.
