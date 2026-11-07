@@ -92,20 +92,34 @@ The accepted paired governing authorities are `docs/specs/SVC_WORKFLOW_OWNER_OBL
 
 ## Code structure rules
 
-Current binding repository-local rule: [`.agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md`](CODE_STRUCTURE_GUARDRAILS_V2.md)
-(frozen limits, fixed-baseline registry validation, candidate-delta gate and visible
-historical debt). V2 and its V1 supersession activate atomically on main.
-The implementation contract is
+Accepted whole-authority successor:
+[`.agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md`](CODE_STRUCTURE_GUARDRAILS_V3.md)
+(Owner 2026-11-07, reviewed semantic head `7f36750bf08d308cd7f648153e24c0b0e528e4c6`,
+PR #642 comment-6701500077; `rulings[id=owner-20261107-642-643-1377]`). V3 inherits
+V2 completely and absorbs TE_V1's one exact transition with all constraints.
+V2 and TE_V1 are superseded with reciprocal links in the same lifecycle commit.
+This transaction activates only on main merge after independent final-HEAD review;
+until then, main's accepted predecessor authorities remain controlling.
+The historical V1-to-V2 link and all predecessor acceptance records are retained.
+
+The separate implementation contract remains
 [`CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1`](../../docs/specs/CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md).
-Implementation starts only after both accepted authorities are in its base.
-The existing V1 runner remains unqualified for V2 until the implementation lands.
+The existing runner still consumes the predecessor formats and requires V2
+ACCEPTED; it is not qualified for the retired Phase2/V3 authority state.
+Owner reserves verifier adaptation and #603 revalidation for separate tasks
+following main merge. No runner adaptation or product implementation occurs here.
 
 ```text
-RULE = .agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md
+RULE = .agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md
 EXCEPTION_REGISTRY = .agents/structure-registry.json
 VERIFIER = node scripts/verify-code-structure.mjs --base <ref> --head <ref> [--json]
 NPM = npm run verify:structure
+V3_VERIFIER_QUALIFICATION = PENDING_SEPARATE_TASK
 ```
+
+The explicit rc.3 distribution update is accepted under adoption V3's unchanged
+Contracts; see its §14 and `RECEIPT-642-PHASE2.md` for exact lock/source/Owner
+coordinates. Accepted update status on this branch is not main activation.
 
 Raw logs may remain outside Git, but every load-bearing Observation or Evidence relation must retain enough provenance to retrieve and interpret the source.
 

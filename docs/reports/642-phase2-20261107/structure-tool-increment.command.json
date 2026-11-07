@@ -1,0 +1,14 @@
+{
+  "command": [
+    "node",
+    "scripts/verify-code-structure.mjs",
+    "--base",
+    "7f36750bf08d308cd7f648153e24c0b0e528e4c6",
+    "--head",
+    "245d361a229513abb0fb09ba6a73ddcae11ab559",
+    "--json"
+  ],
+  "exit_code": 0,
+  "observed_at": "2026-11-07T03:18:59.941250+00:00",
+  "head": "245d361a229513abb0fb09ba6a73ddcae11ab559"
+}

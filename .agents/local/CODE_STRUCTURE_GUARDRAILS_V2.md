@@ -3,7 +3,7 @@
 ```text
 RULE_ID = CODE_STRUCTURE_GUARDRAILS_V2
 RULE_KIND = repository-local binding rule (carried by .agents/local/, not a docs/specs authority)
-LIFECYCLE = ACCEPTED
+LIFECYCLE = SUPERSEDED
 EFFECTIVE_RULE = CODE_STRUCTURE_GUARDRAILS_V2 upon this accepted transaction merging into main
 SUPERSEDES = CODE_STRUCTURE_GUARDRAILS_V1 (effective upon merge into main)
 IMPLEMENTATION_CONTRACTS = CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1
@@ -11,6 +11,7 @@ ENFORCEMENT = machine verifier (scripts/verify-code-structure.mjs) + manual revi
 BASELINE_COMMIT = d506f81105e8aa05177a01b817ebe11dcc076ba5 (unchanged from V1)
 ACCEPTANCE_ACTORS = mayf3 or an explicitly authorized maintainer recorded in the acceptance PR
 REGISTRY_APPROVAL_ACTORS = [mayf3] (a different actor requires an accepted rule change; prose alone cannot extend this list)
+SUPERSEDED_BY = CODE_STRUCTURE_GUARDRAILS_V3
 ```
 
 This is the accepted whole-version successor to local V1, under the Owner's explicit maintainer delegation. It becomes effective on merge into main. The implementation contracts are defined once in `docs/specs/CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md`; this file remains the single authority for structural thresholds and rule semantics.

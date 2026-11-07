@@ -1,6 +1,6 @@
 ---
 spec_id: CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -13,20 +13,8 @@ governed_by:
   - CODE_STRUCTURE_GUARDRAILS_V2
   - CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1
 external_authorities: []
-supersedes:
-  - scope: CODE_STRUCTURE_GUARDRAILS_V2
-    extent: disposition-only, exact-transition-scoped
-    authority: Owner rulings 2026-11-06 ①② (route adoption and formal acceptance)
-    binding: |
-      For the exact registered blob-pair transition (path
-      scripts/trusted-cp-deploy-install.sh, base blob ef505320..., head blob
-      356899a8..., delta limited to the scheduler-watchdog.mjs whitelist line),
-      this rule's disposition (transitional exception; the touched installer
-      remains recorded BASELINE_DEBT) supersedes the V2 hard-fail disposition
-      (INVALID_FILE_EXCEPTION_AUTHORITY). All other V2 terms remain in force
-      unchanged. Recorded via Owner rulings and coordination note
-      (docs/v2-v3-succession-coordination, merged 2026-11-06T10:29Z).
-superseded_by: null
+supersedes: []
+superseded_by: CODE_STRUCTURE_GUARDRAILS_V3
 owners: [mayf3]
 date: 2026-11-06
 ---
@@ -253,3 +241,25 @@ bound to reviewed semantic version 296b0c9f; P2 construction fix 279adffe passed
 independent review). The one-time exception is active solely for the registered
 blob pair; the installer's 1,315-line state remains recorded historical technical
 debt with a separate follow-up split responsibility and acceptance.
+
+
+## Historical metadata format correction (2026-11-07)
+
+Under the Owner's current rc.3 consumer-readoption and succession-chain task,
+only the malformed YAML `supersedes` list containing an object is corrected to
+`supersedes: []`. The previous list was not a legal list of whole-authority IDs;
+this change does not create or retire a whole-authority successor relationship.
+Every other frontmatter field and all pre-existing body text are unchanged.
+
+The original metadata is preserved at main base
+`230de798e340cc6c157e6b21822f0b1fda77e51e`, document blob
+`a87b968fc0d89c1c0c1955ee1bf649b5e66c3307`, and in this chain's faithful base JSON
+export. The earlier body's reference to the frontmatter `supersedes` binding
+above refers to that historical object-shaped binding, retained in those
+sources. Its Owner rulings, reviewed-semantic-version binding, formal acceptance
+history, exact transition identity, exception disposition, visible debt and
+separate split obligation retain their existing meaning. This is a syntax
+correction only; it does not revoke or widen the accepted exact-transition rule,
+accept standalone V3, retire V2 or this supplement, or grant implementation or
+production effects. The proposed standalone whole-authority succession and any
+later Phase 2 acceptance/retirement remain separate transactions.
