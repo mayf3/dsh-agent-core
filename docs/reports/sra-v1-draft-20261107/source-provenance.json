@@ -1,0 +1,98 @@
+{
+  "observed_at_utc": "2026-11-07T06:53:23.346534+00:00",
+  "repository": "mayf3/dsh-agent-core",
+  "worktree": "/private/tmp/fleet-sra-v1-docs",
+  "branch": "docs/standing-release-auth-v1",
+  "parent": "f6e332d7568b01c5253618449bfef5839102c851",
+  "sources": [
+    {
+      "source": "/private/tmp/fleet-roll-src/BRIEF-SRA-V1-DRAFT.md",
+      "snapshot": "BRIEF-SRA-V1-DRAFT.source.md",
+      "sha256": "61f75cc7cd88c14193e419bc68762b2f09a3858b99d0efc19cf69347d1be4b47",
+      "bytes": 2272,
+      "observed_at_utc": "2026-11-07T06:53:23.346534+00:00",
+      "authority_effect": "source evidence only; not acceptance or window issuance"
+    },
+    {
+      "source": "/private/tmp/dsh-fleet-window-tools/EXECUTION-MANDATE-W7-DRAFT.md",
+      "snapshot": "EXECUTION-MANDATE-W7-DRAFT.source.md",
+      "sha256": "ffe1088eca1df5b63ae8e1a4e4897d5c390aa38cf76021fcc45e323fad96c911",
+      "bytes": 26921,
+      "observed_at_utc": "2026-11-07T06:53:23.346534+00:00",
+      "authority_effect": "source evidence only; not acceptance or window issuance"
+    }
+  ],
+  "repository_authority_coordinates": [
+    {
+      "path": "AGENTS.md",
+      "at_commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "f068abfda1c7f461755dc1b05828bfb4f7163ae2",
+      "sha256": "4cb49c5f6bbb6e0389505c9eb4efefbe7a7f128710731da9ff2ebbf4f5c61f9a"
+    },
+    {
+      "path": ".agents/README.md",
+      "at_commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "e3493fbf67f4cb2641c7990478d7c008c1dd9ca5",
+      "sha256": "18d2ee74877c9871b7a086bbc8ec02ae8219146c61e6ecfc4f33038b881c98e2"
+    },
+    {
+      "path": ".agents/local/README.md",
+      "at_commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "c2b6e9ea255e436c602f0e5ae04dd3108da91956",
+      "sha256": "ebd1a2f0a39ebfd17b6a17035ad63ff35c59f5e7384ebc3597687b3c3fac8d5a"
+    },
+    {
+      "path": ".agents/governance.lock.json",
+      "at_commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "59a9da8bcd6a567a71ec3096b6066bf69c5b9d52",
+      "sha256": "0cb6acb6e7839ee2b6d0312653e6c5efc680512a36bf44a842db3aa79dc5a8b5"
+    },
+    {
+      "path": "docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md",
+      "at_commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "f260b482564a561cf97f1b94676b048f67bd2f90",
+      "sha256": "c8d2627086cb202dcf0e70d9e0d0a9aeb174ea1d74b0b9cfd54339d28c33fe9b"
+    },
+    {
+      "path": "docs/decisions/README.md",
+      "at_commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "c4708e25e36dce2f91436352bfc00ba08e999b32",
+      "sha256": "0a64bf62cedac37ba8f39d6f81b90f2d7a117ee64c8f427e73537590e271fd0e"
+    },
+    {
+      "path": "docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V3.md",
+      "at_commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "fd4ee0df516fd1cda800e586dd05cab8bfc355eb",
+      "sha256": "1c37687e473df7ce977e5cc571f74d9a6dc0470f3aca95a599d4c9066e52321f"
+    },
+    {
+      "path": "docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V3.md",
+      "at_commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "89e15887a5a98a9a4b4162731852866bbcf0dca6",
+      "sha256": "a3d2dbebdea895882b76d0944a6064518d5d111202388216a9c863ff5a24d342"
+    },
+    {
+      "path": "docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V4.md",
+      "at_commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "06d735aa706c0da706d9b9f5e6e81a7406a7d4f0",
+      "sha256": "4bf8511905551ffae6d255844e893deb45dcd2844eed28078804b37f394eaf7a"
+    },
+    {
+      "path": "docs/specs/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1.md",
+      "at_commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "af655bb5801ca5af956003c8a7fabc2b27b4b6de",
+      "sha256": "c46b84ef91637a88929dd0f297bfb794ca80ee6b2719f495f90d0034aaa84e25"
+    },
+    {
+      "path": "docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md",
+      "at_commit": "f6e332d7568b01c5253618449bfef5839102c851",
+      "git_blob": "482fd3931da0bb7a9a2d233ac41c1daa0b9e8085",
+      "sha256": "1264d680f0b425be4f7abace4a7f263a5f0f347bb6c08ac721ba57a8fa1494f1"
+    }
+  ],
+  "limitations": [
+    "Snapshots do not accept SRA, appoint a Captain or issue W7.",
+    "W7 qualification claims are limited to the source snapshot; later installer qualification records have not been evaluated in this task.",
+    "No production reads, writes or runtime tests were executed."
+  ]
+}

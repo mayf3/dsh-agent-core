@@ -424,3 +424,14 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Lifecycle | Scope | Activation |
 |---|---|---|---|
 | [AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3](AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md) | accepted by mayf3 2026-10-15; V2 superseded | exact upstream PR #21 fixes plus local bounded-development routing; no product implementation or production effect | docs-only activation separately approved from #497 CI; effective after final-head review and main merge |
+
+
+## Standing Release Authorization V1
+
+| Spec | Lifecycle | Implementation / production authority | Acceptance binding |
+|---|---|---|---|
+| [AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1](AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1.md) | Owner mayf3 authorized acceptance transaction recorded 2026-11-07; active only after regulator independent final-HEAD review and main merge | implementation none; conditional controlled operation only after original §§1/6 appointment/effectiveness/control qualification and complete §§3/4 per-window Mandate; no window issued here | `rulings[id=owner-20261107-sra-formalization]`; PR #648 semantic source `61b97d326e337057cd1f71c0a6ff0dc37ab72ec2`; reviewed proposed head `8fdd5e9dc4f9cf525188d6ac19f986e0191e9604`; [transaction receipt](../reports/sra-v1-formalization-20261107/acceptance-transaction.md) |
+
+The root draft is retained as historical source and links to this unique formal
+Spec. This transaction does not appoint a Captain, qualify controls, issue W7,
+activate a deployment controller/profile, or perform production operations.
