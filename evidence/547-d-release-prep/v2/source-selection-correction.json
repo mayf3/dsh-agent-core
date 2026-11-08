@@ -1,0 +1,8 @@
+{
+  "classification": "explained source-selection recorder mistake; no candidate bytes changed",
+  "previous_recorder_sha256": "3a11c4bc8ddb378d84e7b5e963b2c068470acbc84539c97a65bf3f644cebb6fd",
+  "previous_observation": "development-execution/package.json absent from installed app",
+  "official_recipe": "trusted-cp-deploy-install.sh code-only development-execution override removes the package directory after helper copy and then copies only src/; assemble-runner.sh does the same",
+  "correction": "simulate that final deletion/override in selected source census. The file was not required in final official closure. Recompute source manifests and check; no build or mechanism rerun needed",
+  "initial_observation_retained": "foundation-source-check.initial-selection.json"
+}

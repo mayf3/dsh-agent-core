@@ -1,0 +1,107 @@
+{
+  "files": [
+    {
+      "path": "packages/agent-router/src/reconciliation/admin-abandonment.js",
+      "sha256": {
+        "393a0afccedc5cce7be8b492c82d68d8d52206f6": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+        "42487e65b36f049811b0e83f90178510a3da28b7": "62237fb500694f95d894f0f75516ee97fee05cd961971156783120bcbe059710",
+        "95a8e1cb512fc99dc018209d837250dd51b4d08f": "62237fb500694f95d894f0f75516ee97fee05cd961971156783120bcbe059710",
+        "08102a550cf2f5e14646c6858786d7fe7a50c61d": "62237fb500694f95d894f0f75516ee97fee05cd961971156783120bcbe059710",
+        "installed": "62237fb500694f95d894f0f75516ee97fee05cd961971156783120bcbe059710"
+      },
+      "rollback_preimage": {
+        "path": "/Users/Shared/r129d-rollback-20261108/packages_agent-router_src_reconciliation_admin-abandonment.js",
+        "exists": true,
+        "sha256": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f"
+      },
+      "reason": "legacy quarantine admission"
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/durable-file.js",
+      "sha256": {
+        "393a0afccedc5cce7be8b492c82d68d8d52206f6": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+        "42487e65b36f049811b0e83f90178510a3da28b7": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c",
+        "95a8e1cb512fc99dc018209d837250dd51b4d08f": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c",
+        "08102a550cf2f5e14646c6858786d7fe7a50c61d": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c",
+        "installed": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c"
+      },
+      "rollback_preimage": {
+        "path": "/Users/Shared/r129d-rollback-20261108/packages_agent-router_src_reconciliation_durable-file.js",
+        "exists": true,
+        "sha256": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26"
+      },
+      "reason": "narrow legacy reader tolerance"
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/query.js",
+      "sha256": {
+        "393a0afccedc5cce7be8b492c82d68d8d52206f6": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+        "42487e65b36f049811b0e83f90178510a3da28b7": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63",
+        "95a8e1cb512fc99dc018209d837250dd51b4d08f": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63",
+        "08102a550cf2f5e14646c6858786d7fe7a50c61d": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63",
+        "installed": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63"
+      },
+      "rollback_preimage": {
+        "path": "/Users/Shared/r129d-rollback-20261108/packages_agent-router_src_reconciliation_query.js",
+        "exists": true,
+        "sha256": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4"
+      },
+      "reason": "legacy state projection"
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/state-machine.js",
+      "sha256": {
+        "393a0afccedc5cce7be8b492c82d68d8d52206f6": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+        "42487e65b36f049811b0e83f90178510a3da28b7": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f",
+        "95a8e1cb512fc99dc018209d837250dd51b4d08f": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f",
+        "08102a550cf2f5e14646c6858786d7fe7a50c61d": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f",
+        "installed": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f"
+      },
+      "rollback_preimage": {
+        "path": "/Users/Shared/r129d-rollback-20261108/packages_agent-router_src_reconciliation_state-machine.js",
+        "exists": true,
+        "sha256": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5"
+      },
+      "reason": "reject unproven fence-clear writes"
+    },
+    {
+      "path": "packages/scheduler/src/occurrence-model.js",
+      "sha256": {
+        "393a0afccedc5cce7be8b492c82d68d8d52206f6": "6db88f5cee57d8a217fabde4749ffd7bf677399f348208131b2e2f2309ee9292",
+        "42487e65b36f049811b0e83f90178510a3da28b7": "9d4faed6f2ccd8843c5be6fd5baff070efb449ec3ff56c318a2f88ca99e7474a",
+        "95a8e1cb512fc99dc018209d837250dd51b4d08f": "9d4faed6f2ccd8843c5be6fd5baff070efb449ec3ff56c318a2f88ca99e7474a",
+        "08102a550cf2f5e14646c6858786d7fe7a50c61d": "accb4e4bb20ed867f9c06c7704dbd70cc6652c27b76bc28a4092611db57f5847",
+        "installed": "accb4e4bb20ed867f9c06c7704dbd70cc6652c27b76bc28a4092611db57f5847"
+      },
+      "rollback_preimage": {
+        "path": "/Users/Shared/r129d-rollback-20261108/packages_scheduler_src_occurrence-model.js",
+        "exists": true,
+        "sha256": "6db88f5cee57d8a217fabde4749ffd7bf677399f348208131b2e2f2309ee9292"
+      },
+      "reason": "preserve unverifiable scheduler history"
+    },
+    {
+      "path": "packages/scheduler/src/store.js",
+      "sha256": {
+        "393a0afccedc5cce7be8b492c82d68d8d52206f6": "a8eacf4f16edd207b7181a5fcc47b30a4b26c9e852d335ca2746c88fd4ac3fcc",
+        "42487e65b36f049811b0e83f90178510a3da28b7": "db512f94c11cf2f3fadaa7b56850ddda762a94afb1b577a762c49c0a724b4f03",
+        "95a8e1cb512fc99dc018209d837250dd51b4d08f": "db512f94c11cf2f3fadaa7b56850ddda762a94afb1b577a762c49c0a724b4f03",
+        "08102a550cf2f5e14646c6858786d7fe7a50c61d": "3e829b1e1bba8b01093811135717773444ff279ad5ffeabc9af7e2415d8cffa3",
+        "installed": "3e829b1e1bba8b01093811135717773444ff279ad5ffeabc9af7e2415d8cffa3"
+      },
+      "rollback_preimage": {
+        "path": "/Users/Shared/r129d-rollback-20261108/packages_scheduler_src_store.js",
+        "exists": true,
+        "sha256": "a8eacf4f16edd207b7181a5fcc47b30a4b26c9e852d335ca2746c88fd4ac3fcc"
+      },
+      "reason": "use non-destructive history decoder"
+    }
+  ],
+  "installed_all_match_declared_overlay": true,
+  "requested_source_equal_overlay": [
+    "packages/agent-router/src/reconciliation/admin-abandonment.js",
+    "packages/agent-router/src/reconciliation/durable-file.js",
+    "packages/agent-router/src/reconciliation/query.js",
+    "packages/agent-router/src/reconciliation/state-machine.js"
+  ]
+}

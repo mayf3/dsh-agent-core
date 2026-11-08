@@ -1,0 +1,83 @@
+{
+  "D_blob_provider_commit": "95a8e1cb512fc99dc018209d837250dd51b4d08f",
+  "D_paths": [
+    "packages/agent-router/src/reconciliation/admin-abandonment.js",
+    "packages/agent-router/src/reconciliation/durable-file.js",
+    "packages/agent-router/src/reconciliation/query.js",
+    "packages/agent-router/src/reconciliation/state-machine.js"
+  ],
+  "artifact": {
+    "bytes": 15621483,
+    "path": "/Users/yanfenma/workspace/project/worktrees/h547-release-prep/evidence/547-d-release-prep/v2/private-attempt2/candidate-d-router-393-plus-95.tgz",
+    "sha256": "302804005fe9bd7090c8dd027c34b1712ab7912ef52f3245da69ba75d414afa0"
+  },
+  "artifact_type": "app-only composite; unchanged Node/Harness bound externally, no config/home/credentials/state",
+  "base_commit": "393a0afccedc5cce7be8b492c82d68d8d52206f6",
+  "candidate_manifest": {
+    "entries": 1703,
+    "file_bytes": 81814367,
+    "files": 1387,
+    "gzip_sha256": "4255981892d53e26cd115eafe3d0a958108bb1c2e7bcb0b5eb983e50b1097d39",
+    "path": "candidate-manifest.json.gz",
+    "symlinks": 27,
+    "uncompressed_sha256": "9e12767acc02b3f1d64dda4fc28dbb2144cdc5365007e40a8c5b1846b77cdd63"
+  },
+  "ended_at": "2026-11-08T08:26:23.531176+00:00",
+  "limitations": [
+    "Foundation is reconstructed from installed bytes and verified six source preimages, not a qualified historical full393 backup.",
+    "Source composition is explicit; no claim of whole-main95 package or trusted build-issuer admission.",
+    "Existing literal install links preclude executing candidate tree in place. No payload, constructor, installer, startup or shutdown was executed.",
+    "Current observed081 contains same four Router bytes and two Scheduler fixes. Candidate differs there; baseline393 precondition is not met.",
+    "No production install, loaded-byte proof, drain execution, rollback execution, or business acceptance."
+  ],
+  "operation_allowed": false,
+  "production_writes": 0,
+  "reconstructed_foundation_manifest": {
+    "entries": 1703,
+    "file_bytes": 81810672,
+    "files": 1387,
+    "gzip_sha256": "92acb3e191a26092bc08a2ca99a939a9d7c33d9309843865a7da6cbe2ff7af68",
+    "path": "reconstructed-foundation-manifest.json.gz",
+    "symlinks": 27,
+    "uncompressed_sha256": "bac4ec5aeb5262a13ea247ab2caa0bbecc3a848fb5927668f95484c18a1e2736"
+  },
+  "runtime_bindings": {
+    "harness": {
+      "manifest": {
+        "entries": 86734,
+        "file_bytes": 1382681446,
+        "files": 70424,
+        "gzip_sha256": "154168d7ef8906234a7e49359a857e5840987f9cfa1dfaec75e5fcfe454d3068",
+        "path": "harness-manifest.json.gz",
+        "symlinks": 5618,
+        "uncompressed_sha256": "ca43e8565e3325556350b06da58143bdfabae80225ea0e8cbc58472304500624"
+      },
+      "root": "/usr/local/libexec/agent-core/harness"
+    },
+    "node": {
+      "binary_sha256": "c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b",
+      "manifest": {
+        "entries": 2415,
+        "file_bytes": 78708758,
+        "files": 1931,
+        "gzip_sha256": "831f1be7d52b398119d71257140a0de09022bc6bbb35a3899e77572917142a10",
+        "path": "node-runtime-manifest.json.gz",
+        "symlinks": 0,
+        "uncompressed_sha256": "2da7750de724b577a97488826944de7e9b82284333f2958d6f4de543ba00ac67"
+      },
+      "root": "/usr/local/libexec/agent-core/node-runtime",
+      "version": "v25.6.1"
+    }
+  },
+  "schema_version": 2,
+  "source_not_whole_main95": true,
+  "started_at": "2026-11-08T08:25:26.608000+00:00",
+  "status": "ISOLATED_COMPOSITE_PINNED_NOT_INSTALL_ADMITTED",
+  "verified": [
+    "full archive file/member/mode/link/digest readback",
+    "four literal95 blob identities",
+    "only four source paths plus provenance changed versus reconstructed foundation",
+    "live app and bound runtime closures byte/coordinate-stable across assembly",
+    "isolated output unchanged after archive"
+  ]
+}
