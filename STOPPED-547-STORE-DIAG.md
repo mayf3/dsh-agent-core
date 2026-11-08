@@ -1,6 +1,8 @@
 # STOPPED-547-STORE-DIAG
 
-状态：**STOPPED / 调查未完成**。2026-11-08 14:49:02 +08:00
+最新状态：**v2 STOPPED / 调查未完成**，见文末 v2 节。下文 v1 原始停点保留。
+
+v1 状态：**STOPPED / 调查未完成**。2026-11-08 14:49:02 +08:00
 （`2026-11-08T06:49:02.992836+00:00`）。本报告是停止记录，不是恢复授权。
 
 ## 目标、授权和坐标
@@ -130,3 +132,118 @@ DURABLE-STORE-DIAG-547.md = NOT_PRODUCED
 
 只交付停止报告、原始简报、实际执行的采集脚本、脱敏命令收据、partial hash manifest 和独立复核记录。
 不提交 private 原始数据；不把本报告命名为诊断完成报告。PR 仅记录阻塞，不合并。
+
+## v2 STOPPED — 历史文件名 `unblock` 被误识别为 lock
+
+v2 授权：用户 2026-11-08 续办指令及 brief v2，缩小到源码实际消费集，排除
+root `.bak` 历史备份，三遍一致性、离线同谓词复现、零生产写入、失败再停。
+本轮 parent `7d5979a94096ea4ffd41bbc5f2e29e0773916fb9`，分支/隔离 worktree 不变；
+remote main fresh read 为 `95a8e1cb512fc99dc018209d837250dd51b4d08f`。
+现有 PR [#670](https://github.com/mayf3/dsh-agent-core/pull/670) 续记，不合并。
+
+采集窗口：`2026-11-08T07:00:23.742502+00:00 .. 07:00:24.956394+00:00`
+（北京时间 15:00:23..15:00:24）。97 个命令全部 rc=0；其中 95 个
+`sudo -n -u authsvc` 仅 ls/stat/cat，另两个为同一 PID 的前后 ps。
+没有 root 身份命令，也没有读取任何 `.bak` 内容。
+
+### 实际失败与停止动作
+
+这是本轮采集器的范围错误，**不是生产 store 的失败谓词**。
+[capture-v2.py:54](docs/evidence/h547-store-diag/capture-v2.py) 的实际执行原文：
+
+```python
+auxiliary = '.tmp-' in name or 'lock' in name.lower() or 'history' in name.lower()
+```
+
+可达反例：`turn-recovery-v3.pre-fleet-unblock-20261002-111745.json` 含 `lock`
+子串，但它是历史副本；没有证据表明 deployed 启动读取它。
+实际 selected=4，期望本次观察到的实际消费文件=3；多出的 1 个文件为 authsvc 属主、0600，
+2,536,800 bytes，SHA-256
+`fd682125eb0a37f08223f98b78ad3b50c5db2ad7d4af3b02998b824ede81f6bb`。
+它被三遍复制、每遍两次读取；不是跳过权限失败后继续，也不是读了 root 历史备份。
+
+采集器未把此语义错误识别为异常，故原始 receipt 的 `status=PASS` 只表达其机器检查结果。
+操作者事后检查 receipt/file set 时发现错误，立即停止后续诊断：无进一步生产读取、
+无重采、无源码 import/同谓词离线校验。只整理本地停止材料、独立复核和 PR。
+原始脚本与 receipt 原样保留，不能把 receipt 的 PASS 升格为范围/任务 PASS。
+
+```text
+FINDING = SCOPE_ESCALATION
+SOURCE = 用户 v2 + BRIEF-547-STORE-DIAG.md 的源码实际消费集边界
+COUNTEREXAMPLE = capture-v2.py:54 接纳 pre-fleet-unblock 历史文件
+IMPACT = 多读一个非消费文件；诊断流程未按约定范围执行
+MINIMAL_CLOSURE = 维持 STOP；责任链明确后续仅用已取得的三个必要文件
+                  还是另行采集；任何后续采集先修正精确命名规则并本地核对清单
+affected_readiness = [diagnostic_continuation, diagnostic_completion]
+OPERATION_ALLOWED = NO
+NEXT_ACTION = STOP
+```
+
+### 三遍实际结果（不撤销真实观察，也不声称范围合规）
+
+[capture-v2-receipt.json](docs/evidence/h547-store-diag/capture-v2-receipt.json)
+包含逐文件 pre-stat、复制、post-stat、第二源读取、final stat；三遍完整 SHA/stat 向量与前后目录
+membership 相同；源码 18 个文件复制前后字节 hash 相同；PID 前后 ps 相同。
+这是短窗口的稳定读取证据，不是原子文件系统快照，也不证明启动时/停点之后内容相同。
+
+下表每个文件的三个 `pass-N` 副本及六次源读取 hash 均相同。生产路径前缀为
+`/Users/authsvc/.agent-core/control/`；本地前缀为
+`docs/evidence/h547-store-diag/private/v2/pass-{1,2,3}/`。
+
+| 文件 | bytes | 实测 SHA-256 |
+|---|---:|---|
+| `turn-recovery-v3.json` | 8507342 | `682f7d8af8c537a341346b880f99ce75135f21ce71e48992a97936f9771a5a2b` |
+| `turn-recovery-v3.json.abandonment-declarations.json` | 3137 | `28ba4a74693d23ad0fc3338d77d2f5c72a35c1ae43970dfb2b4f854d6c727cc1` |
+| `turn-recovery-v3.json.faults.json` | 119 | `40952f56c38ee736955e9e9f2da6dee59ee984bb69456a0ac9659c3412730e93` |
+| 越界历史副本 `turn-recovery-v3.pre-fleet-unblock-20261002-111745.json` | 2536800 | `fd682125eb0a37f08223f98b78ad3b50c5db2ad7d4af3b02998b824ede81f6bb` |
+
+首轮 v1 `85c4b0ce…` 单读副本保留，不与 v2 混同。v2 私有目录 0700、文件 0600，Git ignored；
+仅发布脚本、路径、时间、stat、hash 与停止事实，未发布 raw store/source 副本。
+检查副本时仅 JSON 解析取得顶层计数（epochs=256、records=5320、issuance=93、correlationIndex=3985），
+**没有调用 deployed validator**；这些计数不能证明其他谓词通过，不能推断故障已消失。
+
+### 新线索与当前未知
+
+- **11-06 手术痕迹**：v1 ls 原始观察的 root-owned
+  `.bak-pre-epoch-fix2-20261106` 文件名，及 v2 listing 中继续存在的该名字，
+  支持“存在 epoch-fix2 手术命名痕迹”；操作者、授权、具体改动及其与故障因果均 UNKNOWN。
+  本轮没有读取该 root 文件。相同 listing 还出现 `.bak-pre-r129-fence-repair-20261108`；
+  这也仅是名字线索，不证明修复内容或授权有效。
+- **今日重启**：前后 ps 都显示 PID 396、authsvc，启动
+  `Sun Nov 8 13:56:34 2026`，`--root /Users/authsvc/.agent-core --catchup 0`。
+  重启者/授权 UNKNOWN。仅凭这次 ps 不能认定故障已清除。
+- **磁盘源码变化**：本轮快照 `pack-provenance.json` 声明
+  `source_head_sha=08102a550cf2f5e14646c6858786d7fe7a50c61d`，
+  `main_repo_head_sha=393a0afccedc5cce7be8b492c82d68d8d52206f6`，
+  `integration_note=R129-D minimal cherry-pick of 42487e65 onto 393a0afc ...`。
+  这些是磁盘声明，不是本轮核实的部署授权或进程加载认证；PID loaded bytes=UNKNOWN。
+  源码全文件 SHA 在 receipt 中。本轮实际 `store.js` 为
+  `1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3`，
+  `durable-file.js` 为 `db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c`。
+- 本轮源码分类坐标是 `store.js:117-121`，候选 epoch 上限是
+  `durable-file.js:360`，常量仍为 `capacity.js:24` 的 256；不沿用 v1 行号。
+  未运行，故**实际失败谓词/记录/字段/字节坐标仍 UNKNOWN**。
+
+### 未完成项与续办最小方案（不执行）
+
+```text
+CONTENT_CONSISTENCY = THREE_PASS_STABLE
+CAPTURE_SCOPE = FAIL
+OFFLINE_SAME_PREDICATE_REPRODUCTION = NOT_RUN
+ACTUAL_FAILED_PREDICATE / RECORD / FIELD / BYTE = UNKNOWN
+DURABLE_STORE_ROOT_CAUSE = UNKNOWN
+RECOVERY_EXECUTED = NO
+DURABLE-STORE-DIAG-547.md = NOT_PRODUCED
+DONE_WHEN = NOT_MET
+```
+
+最小续办可由责任链明确是否允许仅用现有副本中的三个实际消费文件继续离线分析，
+从而不必再次读生产。若要求新采集，先改成由源码命名规则导出的精确 allowlist，
+以现有本地目录清单检验 `unblock` 等历史名称必被排除；不得直接重跑本轮脚本。
+同谓词复现须包含 deployed reader、registry、authority/capacity 与 startup 内存路径；
+构造器可能写文件，不能直接以捕获文件路径实例化。
+
+只有未来完成离线校验且无失败，才可以如实写“现象可能被重启清除/仅启动窗口出现”；
+验证先绑定当前进程 loaded bytes 与启动/健康证据，再在另有授权的全新请求上观察真实 admission/readback。
+不得 replay 旧 UNKNOWN、清 fence、裁 epoch 或为验证而重启。当前不提出生产恢复操作；
+任何 restart/账本修改/恢复均须后续精确维护链/Owner 授权，本任务没有执行这些动作。
