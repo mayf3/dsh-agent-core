@@ -1,9 +1,18 @@
 ---
 spec_id: AGENT_CORE_ROUTING_CONFIG_GENERATION_POLICY_V1
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_date: 2026-11-08
+accepted_at: 2026-11-08T03:45:38.412673Z
+acceptance_authority: Owner mayf3 ruling owner-20261108-phase-receipt-deltas items[4], under CTR-SOD-003
+acceptance_authority_source: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json
+acceptance_authority_selector: $.rulings[id=owner-20261108-phase-receipt-deltas].items[4]
+acceptance_authority_canonical_sha256: 8f0db121113bebd3b58f36aeb29cb561d70409d3ea9a305542bcdf8fc95b5154
+acceptance_reviewed_head: cad041d84784b00cdc4dfd3685376e24e1a5ab75
+acceptance_transaction_executor: /root (non-author delegated acceptance context)
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
 date: 2026-11-08
 authoring_base_main: 45d008a5e4df2c8a44f83fe5d4dca150d2772c7f
@@ -27,8 +36,24 @@ owners:
 
 # AGENT_CORE_ROUTING_CONFIG_GENERATION_POLICY_V1
 
-> #1370 的 docs-first 政策提案。`proposed / none` 如实表示本候选不授予实现权；
-> 未作政策接受、不更改既有 accepted authority、不实施、不合并、零生产写入。
+> **接受状态（2026-11-08）：本分支已记录 Owner mayf3 的 accepted/contracts 正式接受事务；production none。**
+> 真实授权来源为 `$.rulings[id=owner-20261108-phase-receipt-deltas].items[4]`（裁定④），
+> 来源文件、selector 与 canonical SHA-256 见 frontmatter；按 UTF-8
+> `json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':'))` 无尾换行现场重验一致。
+> `/root` 仅为本轮非作者受托接受事务执行者，依据该裁定及
+> [Standing Operational Delegation V1](AGENT_CORE_STANDING_OPERATIONAL_DELEGATION_V1.md)
+> `CTR-SOD-003`（原 §3）记录 Owner 接受，不以 worker 名称或技术写权限自授接受权。
+> 非作者 `/root/proposal_review` 的独立语义审查 ACCEPT / BLOCKERS=0，绑定 reviewed HEAD
+> `cad041d84784b00cdc4dfd3685376e24e1a5ab75`、原提案 SHA-256
+> `91230bafc7a72e67376c62d6734592669155dcc256b606e6fb518af9dd5c7ad1`；交付收据 HEAD
+> `5a8bb89aae6ad7388188dafb8655f61de91a300b` 仅增加报告收据，无语义漂移。
+> **本接受事务显式将 `implementation_authority: none` 翻转为 `contracts`**，依据裁定④
+> “然后接续实现”及原 §3 的 contracts 接受委托；该明示差量须在接受提交前独立复核，
+> 最终 accepted HEAD 由本事务 Git commit 及独立 final-HEAD delta recheck 绑定。
+> 本政策为 NEW，`supersedes: []` 不变；§1 及以下保持 reviewed 文本逐字节不变，
+> 其中 proposed/none、未接受和前置清单等提案阶段表述是原审查快照，当前生命周期以本接受注记及 frontmatter 为准。
+> 实施仍须另开 RE_PREFLIGHT 独立任务，且本政策 exact accepted revision 先进入 main/实施 base；
+> 本分支接受不等于 main 激活。本次不实施、不合并；`production_apply_authority: none` 保持，零生产写入。
 
 ## 1. Goal
 
