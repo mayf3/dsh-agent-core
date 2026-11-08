@@ -1,0 +1,151 @@
+{
+  "base": "393a0afccedc5cce7be8b492c82d68d8d52206f6",
+  "blob_provider": "95a8e1cb512fc99dc018209d837250dd51b4d08f",
+  "note": "candidate keeps Scheduler393; current081 includes two extra424 lineage Scheduler changes. Do not install this artifact over current081 under the old393 precondition.",
+  "reconstructed_foundation_delta": [
+    {
+      "after": {
+        "bytes": 2307,
+        "mode": "0644",
+        "path": "pack-provenance.json",
+        "sha256": "41ef0490ab7f1ab7411ed210aa1e5732a59868994511cd679f72a21f40c0fc65",
+        "type": "file"
+      },
+      "before": {
+        "bytes": 863,
+        "mode": "0644",
+        "path": "pack-provenance.json",
+        "sha256": "3f3fb100dfbf8ba392fa000b157b123bb40ddc761d14f4dc4a5c42c305dd403c",
+        "type": "file"
+      },
+      "path": "pack-provenance.json",
+      "why": "truthful composite provenance"
+    },
+    {
+      "after": {
+        "bytes": 12388,
+        "mode": "0644",
+        "path": "packages/agent-router/src/reconciliation/admin-abandonment.js",
+        "sha256": "62237fb500694f95d894f0f75516ee97fee05cd961971156783120bcbe059710",
+        "type": "file"
+      },
+      "before": {
+        "bytes": 12005,
+        "mode": "0644",
+        "path": "packages/agent-router/src/reconciliation/admin-abandonment.js",
+        "sha256": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+        "type": "file"
+      },
+      "path": "packages/agent-router/src/reconciliation/admin-abandonment.js",
+      "why": "D narrow legacy read/quarantine/write guard from fixed95"
+    },
+    {
+      "after": {
+        "bytes": 21137,
+        "mode": "0644",
+        "path": "packages/agent-router/src/reconciliation/durable-file.js",
+        "sha256": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c",
+        "type": "file"
+      },
+      "before": {
+        "bytes": 20708,
+        "mode": "0644",
+        "path": "packages/agent-router/src/reconciliation/durable-file.js",
+        "sha256": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+        "type": "file"
+      },
+      "path": "packages/agent-router/src/reconciliation/durable-file.js",
+      "why": "D narrow legacy read/quarantine/write guard from fixed95"
+    },
+    {
+      "after": {
+        "bytes": 11151,
+        "mode": "0644",
+        "path": "packages/agent-router/src/reconciliation/query.js",
+        "sha256": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63",
+        "type": "file"
+      },
+      "before": {
+        "bytes": 10943,
+        "mode": "0644",
+        "path": "packages/agent-router/src/reconciliation/query.js",
+        "sha256": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+        "type": "file"
+      },
+      "path": "packages/agent-router/src/reconciliation/query.js",
+      "why": "D narrow legacy read/quarantine/write guard from fixed95"
+    },
+    {
+      "after": {
+        "bytes": 18433,
+        "mode": "0644",
+        "path": "packages/agent-router/src/reconciliation/state-machine.js",
+        "sha256": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f",
+        "type": "file"
+      },
+      "before": {
+        "bytes": 17202,
+        "mode": "0644",
+        "path": "packages/agent-router/src/reconciliation/state-machine.js",
+        "sha256": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+        "type": "file"
+      },
+      "path": "packages/agent-router/src/reconciliation/state-machine.js",
+      "why": "D narrow legacy read/quarantine/write guard from fixed95"
+    }
+  ],
+  "relative_current_overlay_delta": [
+    {
+      "candidate": {
+        "bytes": 2307,
+        "mode": "0644",
+        "path": "pack-provenance.json",
+        "sha256": "41ef0490ab7f1ab7411ed210aa1e5732a59868994511cd679f72a21f40c0fc65",
+        "type": "file"
+      },
+      "installed": {
+        "bytes": 2492,
+        "mode": "0644",
+        "path": "pack-provenance.json",
+        "sha256": "ca9a0e45149d9b59c4a93600d5a02696d8d416f40922f8e940d11b9c86e642fc",
+        "type": "file"
+      },
+      "path": "pack-provenance.json"
+    },
+    {
+      "candidate": {
+        "bytes": 20123,
+        "mode": "0644",
+        "path": "packages/scheduler/src/occurrence-model.js",
+        "sha256": "6db88f5cee57d8a217fabde4749ffd7bf677399f348208131b2e2f2309ee9292",
+        "type": "file"
+      },
+      "installed": {
+        "bytes": 21914,
+        "mode": "0644",
+        "path": "packages/scheduler/src/occurrence-model.js",
+        "sha256": "accb4e4bb20ed867f9c06c7704dbd70cc6652c27b76bc28a4092611db57f5847",
+        "type": "file"
+      },
+      "path": "packages/scheduler/src/occurrence-model.js"
+    },
+    {
+      "candidate": {
+        "bytes": 17495,
+        "mode": "0644",
+        "path": "packages/scheduler/src/store.js",
+        "sha256": "a8eacf4f16edd207b7181a5fcc47b30a4b26c9e852d335ca2746c88fd4ac3fcc",
+        "type": "file"
+      },
+      "installed": {
+        "bytes": 17725,
+        "mode": "0644",
+        "path": "packages/scheduler/src/store.js",
+        "sha256": "3e829b1e1bba8b01093811135717773444ff279ad5ffeabc9af7e2415d8cffa3",
+        "type": "file"
+      },
+      "path": "packages/scheduler/src/store.js"
+    }
+  ],
+  "scope": "complete app tree, including dependencies, file modes and literal symlink targets"
+}
