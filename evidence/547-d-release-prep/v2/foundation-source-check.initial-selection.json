@@ -1,0 +1,12 @@
+{
+  "scope": "all official selected base source files except six declared overlay paths; no dependency proof",
+  "base": "393a0afccedc5cce7be8b492c82d68d8d52206f6",
+  "checked": 350,
+  "mismatches": [
+    {
+      "path": "packages/development-execution/package.json",
+      "expected": "1b59eddcc89d4d8314983132f1489dd585613d6879be7dcd53a2ebea07e12e32",
+      "actual": "ABSENT"
+    }
+  ]
+}

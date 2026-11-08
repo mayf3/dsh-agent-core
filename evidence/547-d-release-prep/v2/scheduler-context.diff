@@ -1,0 +1,30 @@
+diff --git a/packages/scheduler/src/occurrence-model.js b/packages/scheduler/src/occurrence-model.js
+index a0a147b8..78b8ce48 100644
+--- a/packages/scheduler/src/occurrence-model.js
++++ b/packages/scheduler/src/occurrence-model.js
+@@ -25 +25,7 @@ export const DELIVERY_STATUSES = new Set(['delivered', 'not-delivered', 'not-req
+-export const LATE_SETTLEMENT_BASES = new Set(['trusted-late-evidence', 'operator-reconcile'])
++// 'policy-auto-reconcile' — D-009 and accepted
++// AGENT_DELIVERY_RESILIENCE_D009_ALIGNMENT_V1: the exact-evidence policy settles
++// unresolved unknowns through the same late-settlement authority with a
++// machine receipt actor (control.js autoReconcileOccurrences). The policy is
++// frozen to exact evidence forms (CTR-S2) and may never settle an
++// unknown-without-evidence (CTR-S5).
++export const LATE_SETTLEMENT_BASES = new Set(['trusted-late-evidence', 'operator-reconcile', 'policy-auto-reconcile'])
+@@ -27 +33 @@ export const TERMINAL_EVIDENCE_KINDS = new Set([
+-  'pre-start-rejection', 'turn-terminal', 'late-settlement', 'operator-reconcile', 'termination-only',
++  'pre-start-rejection', 'turn-terminal', 'late-settlement', 'operator-reconcile', 'policy-auto-reconcile', 'termination-only',
+@@ -34 +40 @@ export const TERMINATION_EVIDENCE_KINDS = new Set([
+-export const TERMINATION_ACTOR_KINDS = new Set(['self-agent', 'operator'])
++export const TERMINATION_ACTOR_KINDS = new Set(['self-agent', 'operator', 'scheduler-policy'])
+@@ -121,0 +128 @@ export function computePayloadHash({ agentId, payload }) {
++      receiptTimeoutSeconds: payload?.receiptTimeoutSeconds,
+diff --git a/packages/scheduler/src/store.js b/packages/scheduler/src/store.js
+index ea19e41c..19fbab66 100644
+--- a/packages/scheduler/src/store.js
++++ b/packages/scheduler/src/store.js
+@@ -10,2 +10,2 @@ import {
+-import { OwnerLock } from './lock.js'
+-import { storeMigrationMethods } from './store-migration.js'
++import { OwnerLock } from './store/lock.js'
++import { storeMigrationMethods } from './store/store-migration.js'

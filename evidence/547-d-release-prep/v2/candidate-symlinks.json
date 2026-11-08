@@ -1,0 +1,168 @@
+{
+  "execution": "NOT_EXECUTED",
+  "literal_install_links_preserved": [
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/agent-credential-provisioning",
+      "target": "/usr/local/libexec/agent-core/app/packages/agent-credential-provisioning",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/agent-definition",
+      "target": "/usr/local/libexec/agent-core/app/packages/agent-definition",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/agent-identity-capabilities",
+      "target": "/usr/local/libexec/agent-core/app/packages/agent-identity-capabilities",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/agent-memory",
+      "target": "/usr/local/libexec/agent-core/app/packages/agent-memory",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/agent-provisioning",
+      "target": "/usr/local/libexec/agent-core/app/packages/agent-provisioning",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/agent-router",
+      "target": "/usr/local/libexec/agent-core/app/packages/agent-router",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/agent-switch",
+      "target": "/usr/local/libexec/agent-core/app/packages/agent-switch",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/broker",
+      "target": "/usr/local/libexec/agent-core/app/packages/broker",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/bundle-agent-switch",
+      "target": "/usr/local/libexec/agent-core/app/bundle-agent-switch",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/bundle-broker",
+      "target": "/usr/local/libexec/agent-core/app/bundle-broker",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/bundle-demo",
+      "target": "/usr/local/libexec/agent-core/app/bundle-demo",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/bundle-integration",
+      "target": "/usr/local/libexec/agent-core/app/bundle-integration",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/bundle-memory",
+      "target": "/usr/local/libexec/agent-core/app/bundle-memory",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/demo-server",
+      "target": "/usr/local/libexec/agent-core/app/packages/demo-server",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/execution-history",
+      "target": "/usr/local/libexec/agent-core/app/packages/execution-history",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/feishu-connector",
+      "target": "/usr/local/libexec/agent-core/app/packages/feishu-connector",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/fixed-operation",
+      "target": "/usr/local/libexec/agent-core/app/packages/fixed-operation",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/notification-ingress",
+      "target": "/usr/local/libexec/agent-core/app/packages/notification-ingress",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/owner-guard",
+      "target": "/usr/local/libexec/agent-core/app/packages/owner-guard",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/product-api",
+      "target": "/usr/local/libexec/agent-core/app/packages/product-api",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/production-runtime",
+      "target": "/usr/local/libexec/agent-core/app/packages/production-runtime",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/scheduler",
+      "target": "/usr/local/libexec/agent-core/app/packages/scheduler",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/scheduler-router",
+      "target": "/usr/local/libexec/agent-core/app/packages/scheduler-router",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/session-history",
+      "target": "/usr/local/libexec/agent-core/app/packages/session-history",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/workflow-execution",
+      "target": "/usr/local/libexec/agent-core/app/packages/workflow-execution",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@agent-core/workspace-bootstrap",
+      "target": "/usr/local/libexec/agent-core/app/packages/workspace-bootstrap",
+      "type": "symlink"
+    },
+    {
+      "mode": "0755",
+      "path": "node_modules/@deepseek-ai",
+      "target": "../../harness/node_modules/.pnpm/node_modules/@deepseek-ai",
+      "type": "symlink"
+    }
+  ],
+  "note": "absolute @agent-core links address the existing production destination; this storage artifact must not be executed in place. Harness bridge requires exact external binding."
+}
