@@ -1,6 +1,6 @@
 # STOPPED-547-STORE-DIAG
 
-最新状态：**v2 STOPPED / 调查未完成**，见文末 v2 节。下文 v1 原始停点保留。
+最新状态：**v3 STOPPED / 当前快照 QA 未完成**，见文末 v3 节。下文 v1/v2 原始停点保留。
 
 v1 状态：**STOPPED / 调查未完成**。2026-11-08 14:49:02 +08:00
 （`2026-11-08T06:49:02.992836+00:00`）。本报告是停止记录，不是恢复授权。
@@ -247,3 +247,42 @@ DONE_WHEN = NOT_MET
 验证先绑定当前进程 loaded bytes 与启动/健康证据，再在另有授权的全新请求上观察真实 admission/readback。
 不得 replay 旧 UNKNOWN、清 fence、裁 epoch 或为验证而重启。当前不提出生产恢复操作；
 任何 restart/账本修改/恢复均须后续精确维护链/Owner 授权，本任务没有执行这些动作。
+
+## v3 STOPPED — 本地源码查询错误，尚未采集当前快照
+
+本轮用户明确恢复 v3 只读诊断，root 已读 v3 与 v1/v2 停点；执行 parent
+`c8036802f1543b108eddce3f8fce474bdc2d4d99`，分支/worktree/PR #670 不变。
+本轮候选查重已确认 main `42487e65` 三件套，不实施重复修复。
+
+helper `/root/offline_design_review` 的已执行工具 `exec_command`（chunk `d460e0`）原文：
+
+```text
+rg -n 'fault|r28|history|businessAdmissionStatus|assertBusiness' packages/agent-router/src/reconciliation/store.js packages/agent-router/src/index.js packages/agent-router/src/reconciliation/authority-capacity.js packages/agent-router/src/reconciliation/dispatch-faults.js
+rc=2
+rg: packages/agent-router/src/reconciliation/dispatch-faults.js: No such file or directory (os error 2)
+```
+
+错误发生时刻 UNKNOWN，wall time `0.000002834s`；root 固定停止收据时读取时钟为
+`2026-11-08 07:13:49 UTC`，不冒充错误时刻。该 helper 在同一 exec 内随后完成
+三条已安排的本地 Spec sed 读取，均 rc=0，之后未继续工具调用；不是逐命令立即停止。
+这是本地检索引用错误，导致 fault-sidecar 完整实现核查未完成，**不是 store 失败谓词**。
+root 收到报告后停止依赖的新鲜采集和离线验证，没有修正路径后重跑。
+
+```text
+V3_PRODUCTION_READ_COMMANDS = 0
+V3_PRODUCTION_WRITE_COMMANDS = 0
+V3_AUTHSVC_COMMANDS = 0
+FRESH_CONSISTENT_COPY = NOT_RUN
+FOUR_CURRENT_RECORD_FACTS = NOT_VERIFIED
+FULL_STORE_LOAD / BLOCKING / NO_REPLAY / NARROW_TOLERANCE = NOT_RUN
+RECOVERY / CUTOVER / RESTART = NOT_EXECUTED
+DONE_WHEN = NOT_MET
+OPERATION_ALLOWED = NO
+NEXT_ACTION = STOP
+```
+
+未执行的 `capture-v3.py` 仅是精确白名单草稿，未运行 `--check`，无 v3 capture receipt。
+v1/v2 脚本/receipt/私有副本原样保留，不将旧稳定观察升格为当前 QA。
+仅继续整理既有观察、独立复核停止材料和更新 PR，不开展新诊断。
+[D-STORE-QA-547.md](D-STORE-QA-547.md) 明确四条待核事实和安全发布缺项；不是诊断完成报告。
+错误收据见 [stop-v3-receipt.json](docs/evidence/h547-store-diag/stop-v3-receipt.json)。

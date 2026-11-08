@@ -1,5 +1,13 @@
 # #547 stopped capture evidence
 
+Latest: **v3 STOPPED** after a local helper query referenced a nonexistent source
+file (rc=2). This is not a store/validator failure. No v3 production reads, capture,
+constructor load or product tests ran. See [D-STORE-QA-547.md](../../../D-STORE-QA-547.md)
+and `stop-v3-receipt.json`. `capture-v3.py` is an **UNEXECUTED / UNVALIDATED draft**,
+including its local `--check`; do not run it under the current STOP.
+`candidate-audit-v3.md` packages already executed source/dedup observations only.
+No v1/v2 evidence or raw private data was modified.
+
 Read [../../../STOPPED-547-STORE-DIAG.md](../../../STOPPED-547-STORE-DIAG.md) first.
 
 `capture.py` is the exact script from the failed single attempt, retained for review.
