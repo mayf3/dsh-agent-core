@@ -1,0 +1,59 @@
+{
+  "observed_at": "2026-11-08T08:28:33.006868+00:00",
+  "path": "/usr/local/libexec/agent-core/app/pack-provenance.json",
+  "sha256": "ca9a0e45149d9b59c4a93600d5a02696d8d416f40922f8e940d11b9c86e642fc",
+  "provenance": {
+    "provenance": "TRUSTED_CP_PACK_INPUT_PROVENANCE_V1",
+    "repo_src_realpath": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+    "source_head_sha": "08102a550cf2f5e14646c6858786d7fe7a50c61d",
+    "source_tree_sha": "8cfbb484201f473efb9cf72e1b4d0e4f8423f6d9",
+    "source_clean": "yes",
+    "generation_label_sha": "08102a550cf2f5e14646c6858786d7fe7a50c61d",
+    "source_label_matches_pack_input": "YES",
+    "main_repo_realpath": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+    "main_repo_head_sha": "393a0afccedc5cce7be8b492c82d68d8d52206f6",
+    "packed_app_tree_sha256": "9301fce33a7f5c910e662e80dd270f71efad5d359f29332d4c12c2da9c0039c6",
+    "broker_workflow_js_sha256": "207fa11372b6f7164a8a4b77ab31dba40c6cf6d63d6042b765162a48b9599482",
+    "broker_package_json_sha256": "835296e41f62321b53c79d95da5300a21160e6d3c39f209cefcc5a6485f15d0e",
+    "integration_note": "R129-D minimal cherry-pick of 42487e65 onto 393a0afc (Owner Watch3 authorization); QA INDEPENDENT PASS 2026-11-08",
+    "overlay_base_commit": "393a0afccedc5cce7be8b492c82d68d8d52206f6",
+    "overlay_commit": "08102a550cf2f5e14646c6858786d7fe7a50c61d",
+    "overlay_files": [
+      {
+        "path": "packages/agent-router/src/reconciliation/admin-abandonment.js",
+        "sha256": "62237fb500694f95d894f0f75516ee97fee05cd961971156783120bcbe059710"
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/durable-file.js",
+        "sha256": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c"
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/query.js",
+        "sha256": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63"
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/state-machine.js",
+        "sha256": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f"
+      },
+      {
+        "path": "packages/scheduler/src/occurrence-model.js",
+        "sha256": "accb4e4bb20ed867f9c06c7704dbd70cc6652c27b76bc28a4092611db57f5847"
+      },
+      {
+        "path": "packages/scheduler/src/store.js",
+        "sha256": "3e829b1e1bba8b01093811135717773444ff279ad5ffeabc9af7e2415d8cffa3"
+      }
+    ],
+    "overlay_source": "cherry-pick 42487e65 via Owner Watch3 authorization",
+    "packed_app_tree_sha256_note": "base-era value; does not represent the current app tree after the 08102a55 six-file overlay",
+    "source_tree_sha_note": "base-era source tree value retained for provenance; current source is represented by source_head_sha plus overlay_files"
+  },
+  "stability_check": "same provenance bytes before/after; six files separately hashed, not atomic/full-pack verification",
+  "node_binding": {
+    "path": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+    "realpath": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+    "version": "v25.6.1",
+    "binary_sha256": "c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b",
+    "full_runtime_closure_digest": "NOT_GENERATED"
+  }
+}
