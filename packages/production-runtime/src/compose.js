@@ -58,8 +58,7 @@ import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
 import { appendRestartBoundaryReceipt, collectRuntimeRestartCensus } from './restart-boundary.js'
-import { loadAgentModelOverrides, canonicalDefaultGlobalRoute, createModelArtifactContext } from './model-overrides.js'
-import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
+import { composeRoutingConfig } from './identity/model-routing/composition.js'
 import {
   mountNotificationIngressRuntime,
 } from './notification-ingress-runtime.js'
@@ -222,47 +221,14 @@ export async function composeProductionRuntime(options = {}) {
   const productApiCfg = opts.productApi ?? {}
   const productApiAdmission = mountProductApiAdmission({ definition, productApiCfg, log })
 
-  // AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1 (accepted) + IMPL_V1: deployment-
-  // owned static route chain config (agent-model-overrides.json version 3).
-  // The composition validates it against the already-loaded Agent Definition
-  // and re-reads it ONLY at each new process boundary (turn-start chain
-  // snapshot) so target-only rollback needs neither a runtime restart nor a
-  // file watcher. The Router receives the immutable snapshot resolver and
-  // never reads the file or learns provider/model rules.
-  // DEFAULT_MODEL_ROUTING_CONFIG_V1 §3: composition config > env pair > the
-  // canonical built-in default (GPT Luna as a complete subscription route).
-  const modelLoadOptions = { deploymentRoot: layout.root, artifactContext: createModelArtifactContext(layout.root) }
-  const globalRouteSource = opts.globalRoute !== undefined
-    ? 'composition_config'
-    : (process.env.DSH_AGENT_PROVIDER !== undefined || process.env.DSH_AGENT_MODEL !== undefined
-      ? 'runtime_env'
-      : 'builtin_default')
-  const globalRoute = Object.freeze(opts.globalRoute ?? (globalRouteSource === 'runtime_env'
-    ? {
-      provider: process.env.DSH_AGENT_PROVIDER ?? CANONICAL_DEFAULT_MODEL_ROUTE.provider,
-      model: process.env.DSH_AGENT_MODEL ?? CANONICAL_DEFAULT_MODEL_ROUTE.model,
-    }
-    : canonicalDefaultGlobalRoute(modelLoadOptions)))
-  log.log(`global model route: ${globalRoute.provider}/${globalRoute.model} (source=${globalRouteSource})`)
+  // One publication boundary owns candidate validation, activation and refusal.
+  // Both process startup and the existing turn executor consume its snapshots.
   const modelOverridesFile = layout.agentModelOverrides ?? join(layout.root, 'agent-model-overrides.json')
-  const registeredAgentIds = Object.freeze(definition.listAgents().map((agent) => agent.id))
-  // Reconciliation A2/A4: the runtime root binds its own credential and
-  // immutable artifact identity at startup and subsequent process boundaries.
-  // A foreign domain or changed artifact fails closed at load.
-  const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, modelLoadOptions)
-  const resolveRouteChain = (agentId) => loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, modelLoadOptions)
-    .resolveChain(agentId, globalRoute)
-  const resolveProcessConfig = (agentId) => {
-    // Default route = the chain's primary (route[0]); the unified chain
-    // executor drives ordered fallbacks through resolveRouteChain. This is
-    // process-start configuration, never per-turn dynamic routing.
-    const snapshot = resolveRouteChain(agentId)
-    return snapshot.routes[0].processConfig
-  }
-  for (const [agentId, override] of Object.entries(initialModelOverrides.overrides)) {
-    const chain = [override.primary, ...override.fallbacks]
-    log.log(`agent model route chain loaded for ${agentId}: ${chain.join(' -> ')} (length ${chain.length})`)
-  }
+  const { runtime: routingConfig, globalRoute } = composeRoutingConfig({
+    layout, opts, definition, agentProfile, log, file: modelOverridesFile,
+  })
+  const resolveRouteChain = (agentId) => routingConfig.resolveChain(agentId)
+  const resolveProcessConfig = (agentId) => resolveRouteChain(agentId).routes[0].processConfig
 
   // Feishu channel: mounted ONLY with real credentials. Absent => honest
   // offline (no fake recording seam in production); delivery-requesting
@@ -440,6 +406,7 @@ export async function composeProductionRuntime(options = {}) {
     layout,
     agentProfile,
     globalRoute,
+    routingConfig,
     definition,
     router,
     feishu,
@@ -453,6 +420,7 @@ export async function composeProductionRuntime(options = {}) {
     writeEvidence,
     start: createSchedulerRuntimeStarter({ schedulerHealth, scheduler, workflowExecution, catchup, readinessRequired: opts.schedulerReadinessRequired }),
     stop: async (signal) => {
+      routingConfig.close()
       // C11-R3 (Product #426 A4): while this (old-epoch) process is still
       // observable, persist the exact restart-boundary receipt — quiesce_begin
       // before the drain (previous epoch + lifecycle slots + unresolved
