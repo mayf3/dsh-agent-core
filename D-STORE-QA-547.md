@@ -1,3 +1,109 @@
+# D-STORE-QA-547 — v5 当前副本隔离 QA 终版
+
+本次完成白名单一致采集与固定 reader 的真实 scratch 加载；141 项断言通过。当前文件实际有 **5 条目标异常（4 legacy + 1 普通 blocker）**，全部可识别且继续阻断。4 条有 caller correlation 的旧记录通过同一 no-replay 入口；dev-engineer 缺 correlation，保留覆盖缺项。**这是当前副本的本地机制 QA；生产切换未执行、不在本任务授权内，业务恢复 UNKNOWN，SAFE_TO_PUBLISH=NO。**
+
+## 坐标、授权与复用
+
+- Repository `mayf3/dsh-agent-core`；worktree `/Users/yanfenma/workspace/project/worktrees/h547-store-diag`；branch `diag/547-durable-store`；执行 parent `f6b988232ce218e7b85ea1853d4d0f8b47a4032a`；沿用 [PR #670](https://github.com/mayf3/dsh-agent-core/pull/670)，base main，不合并。
+- 用户本次 v5 指令及 [BRIEF v5](BRIEF-547-STORE-DIAG.md) 预授权按续办配方执行。`PREFLIGHT / REUSE / BRIEF / DURABLE / OPERATION`；仅本地证据/报告及 git 交付；生产写入、restart、signal、旧 UNKNOWN 业务重放为 0。
+- Primary authority 沿用 accepted PLH V4 C-018/C-019/BOUNDED、HR trusted recovery V2 RQ-003/RQ-006；不改 Product Contract 或产品源码。固定 reader base `95a8e1cb512fc99dc018209d837250dd51b4d08f`，已包含 D 三件套 `42487e65`。fresh remote main `206e19c17c268c7513e5a4d8b2135ac496cf7daf` 已 fetch；固定 base..该 main 的相关 Architecture、Decisions、两份 Specs、local grammar 和 reconciliation 路径无差异。既有候选/作者/PR 查重复用 v3 有界观察，未发布工作和该观察之后的新候选 UNKNOWN；没有重复实现 D。
+- [一次路径自检](docs/evidence/h547-store-diag/path-selfcheck-v5.json)：35 个本地路径逐一 `test -e`，18 个旧源码快照逐一 hash 匹配；authsvc 只读 `test -e` active 与三可选 sidecar。r28 history 不存在属于可选缺席；用户自引用名修正为本文件实名，未作为失败。
+- v1/v2 原件、源码和 v1–v4 停止记录全部保留。`capture-v3.py` 文件名是脚本版本，**本次首次执行属于 v5 授权**；旧 capture.py/capture-v2.py 未重跑。
+
+## 新鲜白名单与一致性
+
+采集窗口 `2026-11-08T07:45:10.188505+00:00..2026-11-08T07:45:10.599670+00:00`。36 条 authsvc 命令全 rc=0，仅 ls/stat/cat；加上自检 4 次只读 test，共 40 次 authsvc 只读调用。每文件每遍两读三 stat，两个 pass 的成员、hash、stat 向量全相等。它是两遍稳定观察，不是 atomic snapshot 或 loaded-byte 证明。
+
+| 生产路径（目录 `/Users/authsvc/.agent-core/control/`） | 字节 | SHA-256 |
+|---|---:|---|
+| `turn-recovery-v3.json` | 8513146 | `ce231b88d6a5cca631ad074523aa493e328846cdc66587075733d35d22a0a243` |
+| `turn-recovery-v3.json.abandonment-declarations.json` | 3137 | `28ba4a74693d23ad0fc3338d77d2f5c72a35c1ae43970dfb2b4f854d6c727cc1` |
+| `turn-recovery-v3.json.faults.json` | 633 | `7d3406c02b601c34f3a033e3f003b2e62b5adfe701ed2ee5e6e4affe1b5a4591` |
+
+副本在 `docs/evidence/h547-store-diag/private/v3/pass-{1,2}/`（0700 目录/0600 文件，Git ignored，禁止 force-add）；r28 history 与 active `.tmp-*` 当次未出现；白名单外内容未采。根路径来自旧 deployed `paths.js:107`，faults 由 `store.js:65`，registry 实际由 `durable-file.js:72-73`，history 由 `index.js:196-197` 拼装。不是猜测同名 JS 模块。
+
+[原始 capture stdout](docs/evidence/h547-store-diag/capture-v5.stdout.txt)、[完整采集收据](docs/evidence/h547-store-diag/capture-v3-receipt.json)、[本地 allowlist 检查原文](docs/evidence/h547-store-diag/capture-preflight-v5.stdout.txt)。结束后六个采集原件再次 hash 全匹配，见 [postrun](docs/evidence/h547-store-diag/postrun-v5.json)。
+
+## 实际 reader、构造器与 epoch 行为
+
+固定 base 完整 `git archive` 的 3236 文件及 SHA 见 [reader manifest](docs/evidence/h547-store-diag/reader-manifest-v5.json)，全部解压在 ignored `private/v5/reader/`，末次全量 hash 无变化。旧 deployed 源码快照已复用，[只读原谓词输出](docs/evidence/h547-store-diag/predicates-v5.stdout.txt) 显示当前 5322 records、256 epochs、16 registry entries 解码全部通过：本次没有从当前文件复现过去的 `durable_store_invalid`，不据此断言生产已恢复。
+
+真实 `TurnReconciliationStore` 仅指向独立可写 `private/v5/scratch-3/turn-recovery-v3.json`。构造器/registry 的正常 startup recovery 会持久化，因此从未指向采集原件。macOS [sandbox profile](docs/evidence/h547-store-diag/sandbox-v5.sb) 拒绝全部文件写，仅允许该 scratch；拒绝 network 与 process-fork。[沙箱原文](docs/evidence/h547-store-diag/sandbox-probe-v5.stdout.txt) 证明 scratch 内 file/directory fsync 成功、无害本地越界写被 EPERM 拒绝，没有向生产路径试写。
+
+实际 constructor `businessAdmissionStatus={"ready":true,"reason":null}`，records=5322。全新默认 UUID `af638042-3d67-4e17-9322-7503595d571c`，没有传旧 epoch、手工预处理/删改 epoch 或改变上限。输入 256 epochs，79 个被当前记录引用；**未改 reader 的 `compactRuntimeEpochs()` 在 scratch 正常持久化时自然替换了一个无记录历史 epoch `c3896f43-0e73-48a0-980e-161376797a14`，输出仍 256**。全部记录引用 epoch 保留。这是实际 native scratch 行为，不能写成“epoch 完全不变”；生产和采集原件均未变。
+
+scratch constructor 后 active SHA `14cd62ca7e23fcdadf714237740110001a2ab86e1254782a2d20353638db4b43`，process registry 挂载完成后最终 SHA `84ace0832c55f1f3563d902b925649b4fb011b8dd3dec489d7e4449ed1e5872d`。与原件相比仅 7 条记录的 bytes/updatedAt/attemptedActions 有 native 差异，顶层 runtimeEpoch/runtimeEpochs 更新；五个目标的 UNKNOWN、outcome/lateOutcome、terminationEvidence、settlementResult、exitObservedAt、fenceState 均逐字段保持。registry/fault sidecar SHA 不变。详见 postrun，不把 startup 审计写误称第二次业务效果。
+
+## 逐 handle 四事实实填
+
+以下直接从本次 raw 内容与实际方法返回派生，没有使用旧索引/预定数量。所有目标 raw 均 `initialOutcome=outcome_unknown, queryState=pending, state=blocked`，`exitObservedAt/terminationEvidence/settlementResult=null`，`failureReason=runtime_restart_ownership_unavailable`。四条 legacy 的 `fenceState=cleared`，普通 stock 的 `fenceState=active`。HR 是旧四槽之外的当前第五条，实测数量变化可解释，不丢弃该记录。
+
+| Agent / handle | 原始记录精确 SHA-256 | 0-based UTF-8 byte offset / length |
+|---|---|---:|
+| `agt_stock_agent`<br>`turn:a7e296e6-22cd-4205-a366-2e915fb7f22e:a32:g9:s16` | `48e55b5f28c33fc5ce9a72e0dd4c2b3e94a897111fdc3b12f55e4e7e12cb304f` | 6717676 / 5857 |
+| `agt_needs-radar-agent`<br>`turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a11:g23:s76` | `a8224055c3ced0b892961aa34bf56922300c6ba6e55bc12c99da9547c0a7341c` | 7002294 / 3613 |
+| `agt_lobster-agent`<br>`turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a54:g23:s43` | `0589b1c60ef720938fe61a3b3b468d1647794a12bb3f79024282ba6b20e6bee0` | 7005908 / 3605 |
+| `agt_agent-dev-engineer`<br>`turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a40:g84:s397` | `4575b826431f566b3278532bd592d7d719812fd294b97f1f263efae6f4338427` | 7010870 / 3760 |
+| `agt_hr-agent`<br>`turn:60129522-4196-44bb-a644-52a255dde15d:a2:g70:s3581` | `3495585aefa3fa596c35844eb01df180fcbb7258629fec555590356da6364e78` | 7940273 / 1833 |
+
+每行绑定同一 active 文件 SHA `ce231b88d6a5cca631ad074523aa493e328846cdc66587075733d35d22a0a243`。raw-record SHA 是原文件中该 JSON object 的精确字节，不是重新序列化后的 SHA。
+
+| Agent | ①可识别/reader兼容 | ②持续阻断（实际首 blocker） | ③同一 no-replay 入口 | ④窄容忍 |
+|---|---|---|---|---|
+| `agt_stock_agent` | `recovering`，exact handle 保留；普通 blocked | `turn:a7e296e6-22cd-4205-a366-2e915fb7f22e:a32:g9:s16`；prompt gate/registry 均同值并拒绝 | 原 correlation 精确返回同 handle；duplicate mint 拒绝；零第二次效果 | predicate=false，N/A，不借用 legacy 例外 |
+| `agt_needs-radar-agent` | `recovering`，exact handle 保留；legacyFormat=unproven_fence_clear | `turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a11:g23:s76`；prompt gate/registry 均同值并拒绝 | 原 correlation 精确返回同 handle；duplicate mint 拒绝；零第二次效果 | raw/loaded predicate=true；7/7 malformed neighbors TypeError |
+| `agt_lobster-agent` | `recovering`，exact handle 保留；legacyFormat=unproven_fence_clear | `turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a54:g23:s43`；prompt gate/registry 均同值并拒绝 | 原 correlation 精确返回同 handle；duplicate mint 拒绝；零第二次效果 | raw/loaded predicate=true；7/7 malformed neighbors TypeError |
+| `agt_agent-dev-engineer` | `recovering`，exact handle 保留；legacyFormat=unproven_fence_clear | `turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a40:g84:s397`；prompt gate/registry 均同值并拒绝 | **correlation=null，覆盖缺项**；仅验证 admission quarantine，未捏造 correlation | raw/loaded predicate=true；7/7 malformed neighbors TypeError |
+| `agt_hr-agent` | `recovering`，exact handle 保留；legacyFormat=unproven_fence_clear | `turn:60129522-4196-44bb-a644-52a255dde15d:a2:g70:s3581`；prompt gate/registry 均同值并拒绝 | 原 correlation 精确返回同 handle；duplicate mint 拒绝；零第二次效果 | raw/loaded predicate=true；7/7 malformed neighbors TypeError |
+
+`admissionBlockerForAgent` 只返回同 Agent 首 blocker；上表逐次保留实际返回值，本次五条恰好都等于自身，未假定一般情况下逐条独立返回。`createRecoveryAdmission.assertUnfenced` 与 `processRegistry.ensureRunning` 均拒绝 `AGENT_PROCESS_TURN_FENCED`，最后 prompt gate 同样取该 blocker。
+
+no-replay 复用既有 compat 矩阵的**同一源码入口** `resolveCallerCorrelation → mintTurnExecution`（重复 correlation 抛 `RECONCILIATION_CORRELATION_CONFLICT`）和 `registry.ensureRunning`；输入全部换成本次真实记录，未用旧矩阵/固定计数作 QA。每条记录/磁盘/记录数5322/索引数3982 的 no-replay 前后摘要相等；`processFactoryCalls=0, workspaceWrites=0, effects=0`。这证明隔离机制未产生第二次执行，不认证旧 worker/tools 已在生产终止。
+
+四条 legacy 各测试 7 个相邻坏值：state=pending_unknown、queryState=settled、initialOutcome=null、exitObservedAt=1、terminationEvidence=child_real_exit、settlementResult=terminated_without_outcome、failureReason=null，全部 TypeError。每个负例只改独立 scratch negative 文件，不改原件或主 scratch。共28个负例证明当前 tuple 的豁免没有取消这些交叉字段校验。
+
+## registry / marker / faults 实测关系
+
+| Agent | marker 与 registry | faults 精确 generation key |
+|---|---|---|
+| `agt_stock_agent` | 无 marker，此 handle 不在 registry scope | `agt_stock_agent:9` 存在 |
+| `agt_needs-radar-agent` | marker对应声明的 agent/time/handle匹配；共有3个历史 scope含此handle | `agt_needs-radar-agent:23` 存在 |
+| `agt_lobster-agent` | marker对应声明的 agent/time/handle匹配；共有3个历史 scope含此handle | `agt_lobster-agent:23` 存在 |
+| `agt_agent-dev-engineer` | marker对应声明的 agent/time/handle匹配；共有3个历史 scope含此handle | `agt_agent-dev-engineer:84` 存在 |
+| `agt_hr-agent` | 无 marker，此 handle 不在 registry scope | `agt_hr-agent:70` 存在 |
+
+registry 共16 declarations；三条有 marker 的 legacy 均匹配其 b 声明，但 registry 同时保留 c/final 历史声明，不声称全局一对一一致。独立 raw 复核还看到全局 CTO 的 marker 时间与同 ID registry 不等，以及一条旧 HR scope 已无当前记录；作为历史关系观察保留，没有擅自删除或裁定需改。
+
+faults 共5个 generation keys，逐项 value SHA/字段名见 stdout；key 不是 handle，不应靠 handle 子串查找。**固定 main reader 的 store 不消费 faults sidecar**，本次独立只读解析并 hash；它不是终止证明、结算事实或 admission authority。registry 由真实 constructor 读取，标记不解除 legacy 的 fail-closed blocker。
+
+## 原始输出、已解释 harness 失败与独立复核
+
+最终执行 `2026-11-08T07:51:21.973444+00:00..2026-11-08T07:51:26.049449+00:00`，rc=0，141/141 assertions PASS；原始 stdout SHA `c5380e46323ecd4eff82fd60c8672a4d9a8debc551c0e63778a5bdec0f9879f5`。完整逐项 actual/expected 见 [原始 stdout JSON](docs/evidence/h547-store-diag/qa-v5.stdout.json)，[执行收据](docs/evidence/h547-store-diag/qa-run-v5-receipt.json) 绑定 exact argv、Node v26.7.0、runner SHA、sandbox SHA；stderr为空。
+
+两次本地 harness 问题均原样保留，未伪装 PASS：attempt1 在复制前被尚不存在的 scratch 路径权限拦住，未 constructor；attempt2 已 constructor，但 Node permission model 禁用 fsync，返回 durable_store_unavailable（不是当前 store 校验失败）。独立无害 probe 得到精确错误 `fsync API is disabled when Permission Model is enabled.`；最终改用允许 scratch fsync 的 OS sandbox，**没有修改 reader 或数据来消除失败**。按 v5 可解释本地 harness 错误记录后继续；未发生必需输入缺失、无法解释的非预期谓词、生产写入被拒或一致性失败。
+
+见 [harness 解释收据](docs/evidence/h547-store-diag/harness-correction-v5.json)、attempt1/attempt2 的 `.mjs`/stdout/receipt。两次 rc=1 保留；原始内部状态字符串 STOPPED 仅表示该次 invocation 退出，不覆盖本次后续有依据的 v5 续办。未重新采生产或重放业务。
+
+独立采集及最终受影响面复核见 [independent-review-v5.md](docs/evidence/h547-store-diag/independent-review-v5.md)：PASS，独立执行证据复核通过，最终 committed Head 另做 delta recheck；不将代码作者的自检当作独立 QA。
+
+## D 安全发布条件终版
+
+| 条件 | 已满足项 | 缺项 / 结论 |
+|---|---|---|
+| 当前副本独立 QA | 白名单范围/一致性独立核验通过；真实 constructor、5条事实、4份correlation no-replay、28窄容忍负例已执行 | dev-engineer correlation覆盖缺项；独立受影响面复核 PASS；不是生产QA全覆盖 |
+| 精确制品 pin | source commit、完整本地archive SHA/3236文件manifest、Node版本及实际runner/sandbox哈希已固定 | 生产可安装包及依赖/Node制品digest、目标loaded bytes/启动绑定未认证；NOT_SATISFIED |
+| 在途排空 | 本次未发生产业务请求、未重放旧UNKNOWN；本地effect/spawn计数0 | 生产旧worker/已发tools在实际写边界的终止/隔离、唯一写者排空和切换窗口授权均缺；UNKNOWN |
+| 回滚方案 | 原始store/sidecar和v1–v4历史证据保留；本次sidecar解析/哈希已核 | 精确rollback制品、生产sidecar兼容性、回滚后可用性与不重放尚未核实；NOT_READY |
+| 生产操作授权 | v5只读诊断和隔离分析授权有效 | 切生产/restart/写账本/清fence均不在本任务；OUT_OF_SCOPE |
+
+`CAPTURE_SCOPE=PASS; CAPTURE_CONSISTENCY=PASS; FULL_STORE_LOAD=PASS; CURRENT_TARGETS=5; CONTINUED_BLOCKING=5/5; CORRELATION_NO_REPLAY=4/4_AVAILABLE; MISSING_CORRELATION=1; NARROW_TOLERANCE=4_LEGACY/28_NEGATIVES_PASS; SAFE_TO_PUBLISH=NO; PRODUCTION_CUTOVER=NOT_EXECUTED; BUSINESS_RECOVERED=UNKNOWN; MERGE_READY=NO`。
+
+本次文档/输出交付可完成；发布缺项属于下一次有界维护操作的必要条件，不授权在本任务切换、修复或扩大诊断。v1–v4 原报告如下，保留其当时的 STOPPED 和 UNKNOWN，不作为当前状态。
+
+---
+
+## v4/v3 历史报告（原文保留）
+
 # D-STORE-QA-547 — v4 STOPPED，当前快照 QA 未完成
 
 v4 在 root 本地预检查询阶段停止，**白名单新鲜采集与 scratch 真实 store 验证均未执行，D QA 未完成**。这是本地路径查询错误，不是生产 store 校验结果。生产切换未执行、不在本任务授权内。

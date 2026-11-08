@@ -1,3 +1,15 @@
+# #547 v5 current-copy QA evidence
+
+Latest: **v5 capture and real scratch QA executed**. Exact allowlist capture passed two-pass stability; current raw bytes contain five targets (four legacy plus one ordinary blocker). Full constructor loaded 5322 records; 141 checks passed. Four available caller correlations rejected duplicate mint; dev-engineer has an explicit correlation coverage gap. Production cutover was not executed; SAFE_TO_PUBLISH=NO.
+
+See [D-STORE-QA-547.md](../../../D-STORE-QA-547.md), `qa-v5.stdout.json`, `qa-run-v5-receipt.json`, `postrun-v5.json`, and `independent-review-v5.md`. `capture-v3.py` is the unchanged script version first executed under v5; `capture-v3-receipt.json` belongs to this v5 invocation. Do not rerun old scripts or overwrite captured originals.
+
+The 18 old deployed source snapshots and all old receipts remain reusable evidence. Current private copies, full fixed-reader archive and scratch are Git ignored under private 0700 directories (captured originals are 0600); never force-add them. Published JSON has metadata and hashes only, without prompt/answer/secret contents. Scratch native startup persistence is explicitly recorded, including its unreferenced historical epoch compaction; no manual epoch preprocessing or old epoch override occurred.
+
+Two explained local harness failures and their original code/stdout/receipts are retained as attempt1 and attempt2. Final macOS sandbox restricts all writes to scratch-3, denies network and process fork, and supports native fsync. These attempts did not write production or change capture bytes.
+
+## Historical README (verbatim)
+
 # #547 stopped capture evidence
 
 Latest: **v4 STOPPED** after root's local file discovery referenced nonexistent

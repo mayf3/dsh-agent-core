@@ -1,0 +1,13 @@
+{
+  "method": "retained deployed readDurableRecoveryStore + readAbandonmentDeclarationRegistry; no constructor/write",
+  "source_provenance": "capture-v2-receipt.json source_files, all 18 hashes rechecked in path-selfcheck-v5.json",
+  "sha256": "ce231b88d6a5cca631ad074523aa493e328846cdc66587075733d35d22a0a243",
+  "records": 5322,
+  "epochs": 256,
+  "epoch_cap": 256,
+  "declarations": 16,
+  "actual": "all deployed file/schema/record/issuance decoding predicates passed",
+  "expected": "preserve actual result; a past durable_store_invalid is not required to reproduce",
+  "failure": null,
+  "limitation": "not full constructor/capacity recount, not loaded runtime evidence"
+}

@@ -1,0 +1,1 @@
+{"fsync_file":"PASS","fsync_directory":"PASS","outside_local_write_rejected":"EPERM","outside_exists":false,"scratch_empty":true}
