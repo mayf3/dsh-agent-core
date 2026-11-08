@@ -26,7 +26,6 @@ external_authorities:
     relation: interoperates_with
 supersedes:
   - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3
-superseded_by: null
 owners:
   - mayf3
 accepted_by: mayf3

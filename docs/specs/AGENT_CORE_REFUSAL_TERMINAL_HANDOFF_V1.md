@@ -44,7 +44,7 @@ activation_boundary: main merge after ordered PR 655 and PR 657 and independent 
 ---
 
 <!-- R4_RTH_LIMITED_ACCEPTANCE_LIFECYCLE -->
-> **当前：Owner mayf3 已限定接受本独立提案语义，事务已记录；尚未合 main。**
+> **当前：Owner mayf3 已限定接受本独立提案语义，事务已记录；已合 main（PR #658，merge `b6ddc2a6`）。**
 > 非作者语义独审 HEAD `a8dc8b810140339cb2cb00f99baa2fd9a731d38c` PASS，0 blockers。
 > `implementation_authority: none`、`production_apply_authority: none`、`supersedes: []` 保留。
 > 本NEW语义接受不实施新reason、B2 terminal元数据或历史/closed/discrepancy-only协议；
