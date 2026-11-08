@@ -200,7 +200,7 @@ export function apply(ctx, config) {
   const authenticatedIngressOpts = new WeakMap()
   const ingressCorrelationLookup = (opts) => authenticatedIngressOpts.get(opts) ?? null
   const baseProcessFactory = typeof cfg.processFactory === 'function' ? cfg.processFactory : (opts) => new AgentProcess(opts)
-  const processFactory = (opts) => baseProcessFactory({ ...opts, ingressCorrelationLookup, env: {...opts.env, ...(typeof cfg.conversationSourceDir === 'string' ? {DSH_CONVERSATION_SOURCE_DIR:cfg.conversationSourceDir} : {})} })
+  const processFactory = (opts) => baseProcessFactory({ ...opts, ingressCorrelationLookup, processEvidenceSink: typeof cfg.processEvidenceSink === 'function' ? cfg.processEvidenceSink : opts.processEvidenceSink, env: {...opts.env, ...(typeof cfg.conversationSourceDir === 'string' ? {DSH_CONVERSATION_SOURCE_DIR:cfg.conversationSourceDir} : {})} })
   const resolveProcessConfig = typeof cfg.resolveProcessConfig === 'function'
     ? cfg.resolveProcessConfig
     : () => ({})

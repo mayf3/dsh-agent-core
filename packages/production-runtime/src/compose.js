@@ -191,6 +191,19 @@ export async function composeProductionRuntime(options = {}) {
     }
   }
 
+  // R129/#1374: credential-shaped scrub for bounded agent-process stderr
+  // tails before they reach the durable evidence log.
+  const redactSensitiveText = (text) => {
+    if (typeof text !== 'string') return text
+    return text
+      .replace(/sk-[A-Za-z0-9_-]{8,}/g, '[REDACTED_KEY]')
+      .replace(/Bearer\s+[A-Za-z0-9._~+/-]{8,}/gi, 'Bearer [REDACTED]')
+      .replace(/((?:token|secret|password|api[_-]?key)["']?\s*[:=]\s*["']?)[A-Za-z0-9._~+/-]{8,}/gi, '$1[REDACTED]')
+  }
+  const processEvidenceSink = opts.processEvidenceSink === undefined
+    ? (row) => writeEvidence({ kind: 'agent_process_initialize_failed', ...row, stderrTail: redactSensitiveText(row.stderrTail) })
+    : opts.processEvidenceSink
+
   const ctx = createPluginContext()
 
   // ── row order: bundle-integration composition ────────────────────────────
@@ -338,6 +351,11 @@ export async function composeProductionRuntime(options = {}) {
     defaultSessionId: 'main',
     agentProfile,
     ...(opts.processFactory === undefined ? {} : { processFactory: opts.processFactory }),
+    processEvidenceSink,
+    // R129/#1374: parent-produced durable initialize-failure evidence rows.
+    // stderr tail arrives bounded (2KiB cap in agent-router) and is scrubbed
+    // of credential-shaped strings here before touching the durable log.
+    ...(opts.processEvidenceSink === undefined ? {} : { processEvidenceSink: opts.processEvidenceSink }),
     ...(opts.provisionHome === undefined ? {} : { provisionHome: opts.provisionHome }),
     resolveProcessConfig,
     resolveRouteChain,
