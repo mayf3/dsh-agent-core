@@ -1,0 +1,110 @@
+{
+  "time_utc": "2026-11-08T07:52:32.992505+00:00",
+  "captured_files_immutable": [
+    {
+      "path": "docs/evidence/h547-store-diag/private/v3/pass-1/turn-recovery-v3.json",
+      "sha256": "ce231b88d6a5cca631ad074523aa493e328846cdc66587075733d35d22a0a243",
+      "expected": "ce231b88d6a5cca631ad074523aa493e328846cdc66587075733d35d22a0a243",
+      "pass": true
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v3/pass-1/turn-recovery-v3.json.abandonment-declarations.json",
+      "sha256": "28ba4a74693d23ad0fc3338d77d2f5c72a35c1ae43970dfb2b4f854d6c727cc1",
+      "expected": "28ba4a74693d23ad0fc3338d77d2f5c72a35c1ae43970dfb2b4f854d6c727cc1",
+      "pass": true
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v3/pass-1/turn-recovery-v3.json.faults.json",
+      "sha256": "7d3406c02b601c34f3a033e3f003b2e62b5adfe701ed2ee5e6e4affe1b5a4591",
+      "expected": "7d3406c02b601c34f3a033e3f003b2e62b5adfe701ed2ee5e6e4affe1b5a4591",
+      "pass": true
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v3/pass-2/turn-recovery-v3.json",
+      "sha256": "ce231b88d6a5cca631ad074523aa493e328846cdc66587075733d35d22a0a243",
+      "expected": "ce231b88d6a5cca631ad074523aa493e328846cdc66587075733d35d22a0a243",
+      "pass": true
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v3/pass-2/turn-recovery-v3.json.abandonment-declarations.json",
+      "sha256": "28ba4a74693d23ad0fc3338d77d2f5c72a35c1ae43970dfb2b4f854d6c727cc1",
+      "expected": "28ba4a74693d23ad0fc3338d77d2f5c72a35c1ae43970dfb2b4f854d6c727cc1",
+      "pass": true
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v3/pass-2/turn-recovery-v3.json.faults.json",
+      "sha256": "7d3406c02b601c34f3a033e3f003b2e62b5adfe701ed2ee5e6e4affe1b5a4591",
+      "expected": "7d3406c02b601c34f3a033e3f003b2e62b5adfe701ed2ee5e6e4affe1b5a4591",
+      "pass": true
+    }
+  ],
+  "scratch_changes": [
+    {
+      "handle": "turn:9e513d62-057d-4a37-a3d8-83b0a66abf23:a18:g23:s339",
+      "changed_fields": [
+        "updatedAt"
+      ]
+    },
+    {
+      "handle": "turn:a7e296e6-22cd-4205-a366-2e915fb7f22e:a32:g9:s16",
+      "changed_fields": [
+        "attemptedActions",
+        "updatedAt"
+      ]
+    },
+    {
+      "handle": "turn:74f06ecb-7b05-4e7e-b62d-d207ce6e952b:a47:g40:s304",
+      "changed_fields": [
+        "bytes"
+      ]
+    },
+    {
+      "handle": "turn:74f06ecb-7b05-4e7e-b62d-d207ce6e952b:a18:g44:s408",
+      "changed_fields": [
+        "bytes"
+      ]
+    },
+    {
+      "handle": "turn:74f06ecb-7b05-4e7e-b62d-d207ce6e952b:a16:g33:s507",
+      "changed_fields": [
+        "bytes"
+      ]
+    },
+    {
+      "handle": "turn:74f06ecb-7b05-4e7e-b62d-d207ce6e952b:a37:g29:s219",
+      "changed_fields": [
+        "bytes"
+      ]
+    },
+    {
+      "handle": "turn:74f06ecb-7b05-4e7e-b62d-d207ce6e952b:a37:g29:s220",
+      "changed_fields": [
+        "bytes"
+      ]
+    }
+  ],
+  "scratch_changed_record_count": 7,
+  "scratch_top_changed_fields": [
+    "runtimeEpoch",
+    "runtimeEpochs"
+  ],
+  "native_epoch_change": {
+    "input_count": 256,
+    "input_referenced_epochs": 79,
+    "fresh": "af638042-3d67-4e17-9322-7503595d571c",
+    "output_count": 256,
+    "removed": [
+      "c3896f43-0e73-48a0-980e-161376797a14"
+    ],
+    "removed_has_current_record": false,
+    "manual_epoch_edit": false,
+    "cause": "unchanged reader compactRuntimeEpochs during native scratch persistence; no preprocessing or override"
+  },
+  "source_baseline": "95a8e1cb512fc99dc018209d837250dd51b4d08f",
+  "source_integrity": {
+    "full_manifest_matches": true,
+    "files": 3236,
+    "changed_paths": []
+  },
+  "current_base": "206e19c17c268c7513e5a4d8b2135ac496cf7daf"
+}

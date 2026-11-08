@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "started_at_utc": "2026-11-08T07:45:10.188505+00:00",
+  "ended_at_utc": "2026-11-08T07:45:10.599670+00:00",
+  "consistency": "TWO_PASS_STABLE; two reads and three stats per file per pass; selected membership stable; not atomic; not startup-loaded proof",
+  "error": null
+}

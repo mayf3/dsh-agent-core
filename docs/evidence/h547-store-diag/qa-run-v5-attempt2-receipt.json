@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "node",
+    "--permission",
+    "--allow-fs-read=/Users/yanfenma/workspace/project/worktrees/h547-store-diag",
+    "--allow-fs-write=/Users/yanfenma/workspace/project/worktrees/h547-store-diag/docs/evidence/h547-store-diag/private/v5/scratch-2",
+    "/Users/yanfenma/workspace/project/worktrees/h547-store-diag/docs/evidence/h547-store-diag/qa-v5.mjs",
+    "/Users/yanfenma/workspace/project/worktrees/h547-store-diag/docs/evidence/h547-store-diag/private/v5/reader",
+    "/Users/yanfenma/workspace/project/worktrees/h547-store-diag/docs/evidence/h547-store-diag/private/v3/pass-1",
+    "/Users/yanfenma/workspace/project/worktrees/h547-store-diag/docs/evidence/h547-store-diag/private/v5/scratch-2"
+  ],
+  "started_at_utc": "2026-11-08T07:49:38.487368+00:00",
+  "ended_at_utc": "2026-11-08T07:49:39.235860+00:00",
+  "rc": 1,
+  "stdout_bytes": 43152,
+  "stdout_sha256": "3bee371ac8be434bcb0aecfb2372cd02671da5c69440a5477a48b8c465cb6321",
+  "stderr": "",
+  "runner_sha256": "bdb78f2e039f1220323fad0d89ef4fcb810a8c16fd1c5a5945f89cccd0ae99d5",
+  "restrictions": "Node permission model: only workspace reads and pre-existing empty scratch-2 writes; no network/child/worker/native addon permissions"
+}
