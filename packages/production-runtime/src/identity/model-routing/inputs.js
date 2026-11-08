@@ -13,7 +13,7 @@ export function immutable(value) {
   if (typeof value !== 'object' || ![Object.prototype, null].includes(Object.getPrototypeOf(value))) {
     throw invalid('configuration context is not comparable')
   }
-  return Object.freeze(Object.fromEntries(Object.keys(value).sort().map(key => [key, immutable(value[key])])))
+  return Object.freeze(Object.fromEntries(Object.keys(value).map(key => [key, immutable(value[key])])))
 }
 
 export function identity(value) {
