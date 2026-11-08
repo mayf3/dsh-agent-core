@@ -1,0 +1,109 @@
+{
+  "at": "2026-11-08T17:37:48.487549+00:00",
+  "base": "6ad69d1fa6fa8c7dcfb3b5b61207c7d21a80ecef",
+  "scope": "Docs and evidence validation only; no product tests or production constructors executed",
+  "checks": [
+    {
+      "check": "json_parse",
+      "path": "evidence/release-convergence-547/app-manifest-after.json",
+      "result": "PASS"
+    },
+    {
+      "check": "json_parse",
+      "path": "evidence/release-convergence-547/app-manifest-before.json",
+      "result": "PASS"
+    },
+    {
+      "check": "json_parse",
+      "path": "evidence/release-convergence-547/base-source-comparison.json",
+      "result": "PASS"
+    },
+    {
+      "check": "json_parse",
+      "path": "evidence/release-convergence-547/overlay-findings.json",
+      "result": "PASS"
+    },
+    {
+      "check": "json_parse",
+      "path": "evidence/release-convergence-547/process-and-install.json",
+      "result": "PASS"
+    },
+    {
+      "check": "json_parse",
+      "path": "evidence/release-convergence-547/protected-summary.json",
+      "result": "PASS"
+    },
+    {
+      "check": "json_parse",
+      "path": "evidence/release-convergence-547/publisher-findings.json",
+      "result": "PASS"
+    },
+    {
+      "check": "json_parse",
+      "path": "evidence/release-convergence-547/rollback-findings.json",
+      "result": "PASS"
+    },
+    {
+      "check": "json_parse",
+      "path": "evidence/release-convergence-547/supplement-original.json",
+      "result": "PASS"
+    },
+    {
+      "check": "json_parse",
+      "path": "evidence/release-convergence-547/supplement.json",
+      "result": "PASS"
+    },
+    {
+      "check": "json_parse",
+      "path": "evidence/release-convergence-547/time-binding.json",
+      "result": "PASS"
+    },
+    {
+      "check": "python_ast_parse_no_execution",
+      "path": "evidence/release-convergence-547/capture-readonly.py",
+      "result": "PASS"
+    },
+    {
+      "check": "python_ast_parse_no_execution",
+      "path": "evidence/release-convergence-547/capture-supplement.py",
+      "result": "PASS"
+    },
+    {
+      "check": "report_local_links_except_review_receipt_pending",
+      "pending_allowed": [
+        "evidence/release-convergence-547/validation.json",
+        "evidence/release-convergence-547/independent-review.md"
+      ],
+      "unexpected_missing": [],
+      "result": "PASS"
+    },
+    {
+      "check": "manifest_before_after_equality",
+      "result": "PASS",
+      "entries": 1703
+    },
+    {
+      "check": "selected_source_delta",
+      "result": "PASS",
+      "checked": 355,
+      "diffs": 9
+    },
+    {
+      "check": "governance_integrity_accepted",
+      "rc": 0,
+      "stdout": "vendored governance bytes match governance.lock.json and adoption is accepted\n",
+      "stderr": "",
+      "result": "PASS"
+    },
+    {
+      "check": "git_diff_check_before_staging",
+      "rc": 0,
+      "stdout": "",
+      "stderr": "",
+      "result": "PASS"
+    }
+  ],
+  "report_sha256": "107a6e70ad3102927a10007698967ce4a9911b8462e93cda2849c4db8906caee",
+  "independent_review": "PENDING",
+  "production_mutation_count": 0
+}
