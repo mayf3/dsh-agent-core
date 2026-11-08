@@ -26,7 +26,7 @@
 import { TurnReconciliationStore } from '../reconciliation/index.js'
 import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../../agent-provisioning/src/shared-codex.js'
 import { assertPositiveSafeDeadline, monotonicNowMs, stateMachineMethods } from './state-machine.js'
-import { FAIL_LOUD_PROVIDER_ERRORS, sanitizeProviderError } from './provider-errors.js'
+import { FAIL_LOUD_PROVIDER_ERRORS, redactSensitiveText, sanitizeProviderError } from './provider-errors.js'
 import { evidenceBufferMethods } from './evidence-buffer.js'
 import { rpcChannelMethods } from './rpc-channel.js'
 import { eventCorrelationMethods } from './event-correlation.js'
@@ -48,6 +48,7 @@ export class AgentProcess {
     reconciliationStore,
     ingressCorrelationLookup = null,
     registryIntegration = null,
+    processEvidenceSink = null,
   }) {
     if (typeof profile !== 'string' || profile === '') {
       throw new TypeError('AgentProcess: profile is required (no default — the caller owns the composition choice)')
@@ -85,6 +86,13 @@ export class AgentProcess {
     this.store = reconciliationStore ?? new TurnReconciliationStore()
     this.ingressCorrelationLookup = ingressCorrelationLookup
     this.registryIntegration = registryIntegration
+    // R129/#1374: parent-produced durable failure evidence. When wired (the
+    // production runtime composes it onto control/runtime-evidence.jsonl),
+    // initialization-phase fatal failures land as queryable rows WITHOUT
+    // depending on the target Agent ever starting. Redaction + bounding are
+    // applied here; the sink itself never gates admission.
+    this.processEvidenceSink = typeof processEvidenceSink === 'function' ? processEvidenceSink : null
+    this.fatalEvidenceEmitted = false
 
     this.state = 'SPAWNING'
     this.stateHistory = [{ to: 'SPAWNING', atWallMs: Date.now() }]
@@ -160,6 +168,24 @@ export class AgentProcess {
     return [...this.eventLog.values()].map(entry => entry.params)
   }
 
+  /** R129/#1374: one parent-produced evidence row per initialize-phase fatal. */
+  emitInitializeFailureEvidence(cause, extra = {}) {
+    if (this.fatalEvidenceEmitted || typeof this.processEvidenceSink !== 'function') return
+    this.fatalEvidenceEmitted = true
+    const tail = typeof this.stderr === 'string' ? this.stderr.slice(-2048) : ''
+    this.processEvidenceSink({
+      kind: 'agent_process_initialize_failed',
+      agentId: this.agentId,
+      generation: this.processGeneration,
+      cause,
+      initializeBudgetMs: this.deadlines.initializeTimeoutMs,
+      exitCode: this.exit?.code ?? null,
+      stderrTailBytes: Buffer.byteLength(tail, 'utf8'),
+      stderrTail: redactSensitiveText(tail),
+      ...extra,
+    })
+  }
+
   // ------------------------------------------------------------- readiness
 
   /** spawn → initialize (retries bounded by ONE total deadline; C-001). */
@@ -173,11 +199,13 @@ export class AgentProcess {
     const startedWall = Date.now()
     for (;;) {
       if (this.exit !== undefined) {
+        this.emitInitializeFailureEvidence('initialize_exited', { spawnFailure: this.spawnFailure !== null })
         throw this.spawnFailure !== null
           ? Object.assign(new Error(`spawn failed without child for agent ${this.agentId}: ${this.spawnFailure.error}`), { code: 'AGENT_PROCESS_SPAWN_FAILED' })
           : Object.assign(new Error(`initialize failed for agent ${this.agentId}: child exited (${this.exit.code ?? 'signal'})`), { code: 'AGENT_PROCESS_EXITED' })
       }
       if (monotonicNowMs() >= initDeadlineMono) {
+        this.emitInitializeFailureEvidence('initialize_timeout')
         void this.fatal('initialize_timeout')
         throw Object.assign(new Error(`initialize timeout for agent ${this.agentId}`), { code: 'AGENT_PROCESS_INITIALIZE_TIMEOUT' })
       }
@@ -215,10 +243,12 @@ export class AgentProcess {
             : error
         }
         if (FAIL_LOUD_PROVIDER_ERRORS.has(error?.code)) {
+          this.emitInitializeFailureEvidence('initialize_failed')
           void this.fatal('initialize_failed')
           throw error
         }
         if (monotonicNowMs() >= initDeadlineMono) {
+          this.emitInitializeFailureEvidence('initialize_timeout')
           void this.fatal('initialize_timeout')
           throw Object.assign(new Error(`initialize timeout for agent ${this.agentId}`), { code: 'AGENT_PROCESS_INITIALIZE_TIMEOUT' })
         }
