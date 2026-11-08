@@ -1,0 +1,7 @@
+{
+  "command": "NGC_HARNESS_ROOT=/Users/yanfenma/workspace/worktrees/codex-native-goal-enqueue-20261027 /usr/local/bin/node --test packages/agent-router/test/route-chain/*.test.js packages/production-runtime/test/model-overrides*.test.js packages/production-runtime/test/default-model-route.test.js packages/agent-router/test/default-model-route.test.js packages/production-runtime/test/identity/model-routing/*.test.js",
+  "start": "2026-11-08T06:59:26.476050+00:00",
+  "end": "2026-11-08T06:59:34.454772+00:00",
+  "exit_code": 1,
+  "sha256": "5ab73617805075959d69436a91b2a512e8be818e5763053420266e1c01380973"
+}
