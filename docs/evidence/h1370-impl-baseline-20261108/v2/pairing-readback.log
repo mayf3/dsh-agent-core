@@ -1,0 +1,38 @@
+Read-only static pairing observations; no rebuild, patch or retry performed.
+
+$ git -C /Users/yanfenma/workspace/github/deepseek-harness rev-parse HEAD
+514ab7b0029141b88c807704764d0d3e1eea1da4
+exit_code=0
+
+$ git -C /Users/yanfenma/workspace/github/deepseek-harness status --short -- packages/goal/goal-round-driver
+exit_code=0
+
+$ git -C /Users/yanfenma/workspace/github/deepseek-harness ls-files packages/goal/goal-round-driver/lib/index.js
+exit_code=0
+
+$ rg -n protocolVersion|enqueueMode|goalRoundDriver|goalRoundEnqueue /Users/yanfenma/workspace/github/deepseek-harness/packages/goal/goal-round-driver/lib/index.js /Users/yanfenma/workspace/github/deepseek-harness/packages/goal/goal-round-driver/src/index.ts
+exit_code=1
+
+$ rg -n NATIVE_GOAL_PROTOCOL_UNAVAILABLE|parentVersion|protocolVersion|enqueueMode packages/demo-server/src/native-goal-admission.js
+16:  function activate({ parentVersion, driver }) {
+17:    if (parentVersion !== 1 || driver?.protocolVersion !== 1 || driver?.enqueueMode !== 'external') {
+18:      throw rejected('native goal admission protocol is unavailable', 'NATIVE_GOAL_PROTOCOL_UNAVAILABLE')
+98:  return { protocolVersion: 1, activate, enqueue, commit, dispose }
+exit_code=0
+
+$ rg -n nativeGoal.activate|goalRoundDriver packages/demo-server/src/index.js
+254:          ? nativeGoal.activate({ parentVersion: params?.nativeGoalContinuation?.version, driver: ctx.get('goalRoundDriver') }) : null
+exit_code=0
+
+$ rg -n NGC_HARNESS_ROOT|enqueueMode: external|nativeGoalContinuation: true|goal-round-driver packages/agent-router/test/helpers/native-goal-child.js
+6:const root = process.env.NGC_HARNESS_ROOT
+7:if (!root) throw new Error('NGC_HARNESS_ROOT must name the paired built native source')
+12:  load('packages/core/agent-loop'), load('packages/goal/goal'), load('packages/goal/goal-round-driver'), load('packages/llm/llm'), load('packages/session/session-persistence-jsonl'),
+48:await writeFile(configPath, `- name: native-driver\n  config:\n    enqueueMode: external\n    enqueueTimeoutMs: ${process.env.NGC_CANCEL_PENDING === 'timeout' ? 100 : 5000}\n- name: demo-server\n  config:\n    nativeGoalContinuation: true\n`)
+exit_code=0
+
+/Users/yanfenma/workspace/github/deepseek-harness/packages/goal/goal-round-driver/lib/index.js
+bytes=13582 sha256=95f68fdb41a96082df3ae0dab2fb27a80de7bf57b1cc147651d0ff7a8f1a1af8
+
+/Users/yanfenma/workspace/github/deepseek-harness/packages/goal/goal-round-driver/src/index.ts
+bytes=16555 sha256=0c40f5fdcb039a8a505f131c63bc7051945d51aea5531e671f970215a92db881

@@ -1,0 +1,22 @@
+{
+  "task": "h1370 v3 environmental preparation",
+  "time": "2026-11-08T07:03:06.887875+00:00",
+  "actions": [
+    {
+      "action": "add missing peer link inside h1370-impl local dependency directory",
+      "link": "/Users/yanfenma/workspace/project/worktrees/h1370-impl/node_modules/@deepseek-ai/dsh-tools",
+      "target": "/Users/yanfenma/workspace/worktrees/codex-native-goal-enqueue-20261027/packages/core/tools",
+      "manifest_version": "0.1.0-rc.8"
+    },
+    {
+      "action": "create detached verification checkout for unchanged provisioning filename precondition",
+      "cwd": "/Users/yanfenma/workspace/project/worktrees/h1370-verification/dsh-agent-core",
+      "head": "3be31659",
+      "reason": "pre-existing provisioning.test.js:132 requires root ending dsh-agent-core or containing .worktree; tests unchanged and complete 29-test suite executed"
+    },
+    {
+      "action": "set child-only test environment",
+      "description": "remove only RECOGNIZED_PROXY_ENV_KEYS; set NGC_HARNESS_ROOT and DSH_HARNESS_ROOT to paired root; no global environment, network configuration, or production service mutation"
+    }
+  ]
+}

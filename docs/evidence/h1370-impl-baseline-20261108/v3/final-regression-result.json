@@ -1,0 +1,24 @@
+{
+  "command": "/usr/local/bin/node --test packages/agent-router/test/route-chain/*.test.js packages/production-runtime/test/model-overrides*.test.js packages/production-runtime/test/default-model-route.test.js packages/agent-router/test/default-model-route.test.js packages/production-runtime/test/identity/model-routing/*.test.js packages/agent-router/test/process-lifecycle/unknown-fence-no-replay.test.js",
+  "cwd": "/Users/yanfenma/workspace/project/worktrees/h1370-impl",
+  "environment": {
+    "removed_child_env_keys": [
+      "HTTP_PROXY",
+      "HTTPS_PROXY",
+      "NO_PROXY",
+      "http_proxy",
+      "https_proxy",
+      "no_proxy",
+      "ALL_PROXY",
+      "all_proxy",
+      "NODE_USE_ENV_PROXY"
+    ],
+    "NGC_HARNESS_ROOT": "/Users/yanfenma/workspace/worktrees/codex-native-goal-enqueue-20261027",
+    "DSH_HARNESS_ROOT": "/Users/yanfenma/workspace/worktrees/codex-native-goal-enqueue-20261027"
+  },
+  "head": "ece5cce6c51cbf0c3768be534b6e35822a86688b",
+  "start": "2026-11-08T07:01:09.594384+00:00",
+  "end": "2026-11-08T07:01:18.185616+00:00",
+  "exit_code": 0,
+  "sha256": "403aef5d564b1fcc129eced7ec2e80512833f896dc1aa1ecb71d07fe1ff560ce"
+}
