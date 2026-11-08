@@ -69,15 +69,6 @@
       "result": "PASS"
     },
     {
-      "check": "report_local_links_except_review_receipt_pending",
-      "pending_allowed": [
-        "evidence/release-convergence-547/validation.json",
-        "evidence/release-convergence-547/independent-review.md"
-      ],
-      "unexpected_missing": [],
-      "result": "PASS"
-    },
-    {
       "check": "manifest_before_after_equality",
       "result": "PASS",
       "entries": 1703
@@ -101,9 +92,29 @@
       "stdout": "",
       "stderr": "",
       "result": "PASS"
+    },
+    {
+      "check": "all_report_local_links_after_review",
+      "result": "PASS"
+    },
+    {
+      "check": "git_diff_check_base_to_semantic_candidate",
+      "rc": 0,
+      "result": "PASS"
+    },
+    {
+      "check": "all_json_after_receipt_updates",
+      "result": "PASS"
     }
   ],
   "report_sha256": "107a6e70ad3102927a10007698967ce4a9911b8462e93cda2849c4db8906caee",
-  "independent_review": "PENDING",
-  "production_mutation_count": 0
+  "independent_review": {
+    "result": "PASS",
+    "review_target_head": "0f96a5e09b15e206ec7c1b8ba45b1b8558966e01",
+    "receipt": "independent-review.md",
+    "sha256": "5e99c1f9e8ce4ccafd8781b38bc96904f7503b81fff877a34891155aa89dfd4c",
+    "final_delta_recheck": "PENDING_FINAL_COMMIT"
+  },
+  "production_mutation_count": 0,
+  "at_final_validation": "2026-11-08T17:41:03.893730+00:00"
 }

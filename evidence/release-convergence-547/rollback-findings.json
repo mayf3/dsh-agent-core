@@ -515,7 +515,7 @@
       ]
     },
     {
-      "combination": "Installed393 base +081 six files +1386 +GapB + external Harness#1386 + app#1374",
+      "combination": "Installed393 base +081 six files +GapB +app#1374 +external Harness#1386",
       "current_turn_store": "NARROW_LEGACY_DECODE_SOURCE_COMPATIBLE_FULL_LOAD_UNKNOWN",
       "epoch_schema": "V3 max256, narrow tuple accepted by retained durable/state reader source",
       "availability_rollback": "RUNNING_COMPOSITION_NOT_A_ROLLBACK_RECEIPT",
