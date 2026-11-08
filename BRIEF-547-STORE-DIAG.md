@@ -112,9 +112,9 @@
 - `EXPANSION_TRIGGER` 采用 v5 明确失败语义；仅必需输入缺失、无法解释的非预期谓词、生产写入被拒、数据一致性失败停止依赖工作。路径草稿错误、探索空结果和子代理纠偏记录后继续。`NEXT_ACTION=CONTINUE; NEXT_REAL_ACTION=精确白名单单次采集，然后只在新 scratch 实例化固定 reader`。
 
 
-### v5 实际结果（交付复核中）
+### v5 实际结果与交付坐标
 - 单次新鲜 capture PASS；两遍稳定，3 个精确白名单文件，36 条 authsvc ls/stat/cat 全 rc0；加自检4次 test 共40次只读调用。六个原件末次hash未变，v1/v2原件保持。
 - 固定 main 完整 reader 的真实 scratch constructor PASS（5322 records），141 checks全通过；当前真实异常为5条（4legacy+1ordinary），全部识别且持续阻断，4份已有correlation精确查回/duplicate mint拒绝，dev-engineer缺correlation明确记覆盖缺项；28窄容忍反例均预期TypeError。
 - 两次本地harness问题均保留原始rc1/输出/源码并具体解释：缺省scratch路径权限、Node permission禁用fsync。最终OS sandbox只允许scratch3写、拒绝network/process-fork，rc0；无未解释谓词失败，未重采生产。见 harness-correction-v5.json。
 - 无手工epoch编辑或旧epochoverride；正常原生compactRuntimeEpochs在scratch中用fresh UUID替换1个无记录历史epoch，输入/输出均256，全部79个record引用epoch保留。真实差异明确记录，不称scratch epoch字节全不变；生产/采集原件不变。
-- 独立capture/源码/输出/受影响Contract复核 PASS，FROZEN_BLOCKER_UNION=[]；最终committed Head另做delta recheck。SAFE_TO_PUBLISH=NO；精确生产制品/loaded bytes、在途排空、rollback和生产操作授权均仍缺；BUSINESS_RECOVERED=UNKNOWN; MERGE_READY=NO。D-STORE-QA-547.md 已实填终版与发布缺项；待commit/push/PR交付后停止，不做生产操作。
+- 独立capture/源码/输出/受影响Contract复核 PASS，FROZEN_BLOCKER_UNION=[]；执行交付Head `75f1e80e41bcd7600ca38d11795d702d8a113181` 独立delta recheck PASS；后续仅措辞/复核记录delta另核。SAFE_TO_PUBLISH=NO；精确生产制品/loaded bytes、在途排空、rollback和生产操作授权均仍缺；BUSINESS_RECOVERED=UNKNOWN; MERGE_READY=NO。D-STORE-QA-547.md 已实填终版与发布缺项；本地实填终版和全部原始证据已commit；最终远端HEAD及不合并状态由PR #670 fresh readback绑定，交付后停止，不做生产操作。
