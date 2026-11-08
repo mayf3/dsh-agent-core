@@ -1,0 +1,923 @@
+{
+  "schema_version": 1,
+  "kind": "SANITIZED_READONLY_OVERLAY_FINDINGS",
+  "recorded_at_utc": "2026-11-08T17:32:49.375247+00:00",
+  "repo_head": "6ad69d1fa6fa8c7dcfb3b5b61207c7d21a80ecef",
+  "scope": "Static installed bytes and named overlays; process-loaded certification belongs to process-and-install.json. No production write or candidate execution.",
+  "finding": "Installed combination is 393 base + six-file 081 D overlay + Gap B admin overlay + #1374 three-file app overlay + #1386 two-file external Harness overlay. Provenance alone does not name the complete current closure.",
+  "provenance": {
+    "path": "/usr/local/libexec/agent-core/app/pack-provenance.json",
+    "sha256": "ca9a0e45149d9b59c4a93600d5a02696d8d416f40922f8e940d11b9c86e642fc",
+    "bytes": 2492,
+    "mtime_ns": 1794122613415590501,
+    "mtime_utc": "2026-11-08T07:23:33.415590+00:00",
+    "ctime_ns": 1794122613451998933,
+    "ctime_utc": "2026-11-08T07:23:33.451999+00:00",
+    "uid": 505,
+    "gid": 601,
+    "mode": "0o644",
+    "stable_during_read": true
+  },
+  "provenance_claims": {
+    "source_head_sha": "08102a550cf2f5e14646c6858786d7fe7a50c61d",
+    "overlay_base_commit": "393a0afccedc5cce7be8b492c82d68d8d52206f6",
+    "overlay_commit": "08102a550cf2f5e14646c6858786d7fe7a50c61d",
+    "packed_app_tree_sha256_note": "base-era value; does not represent the current app tree after the 08102a55 six-file overlay",
+    "source_tree_sha_note": "base-era source tree value retained for provenance; current source is represented by source_head_sha plus overlay_files",
+    "declared_files_matching": 5,
+    "declared_files_total": 6
+  },
+  "six_file_overlay": [
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/agent-router/src/reconciliation/admin-abandonment.js",
+      "sha256": "95172846f40ec0589f3a10ffcc350e3eda5d05f0e7f396d0c3d3570c14e8e19e",
+      "bytes": 13370,
+      "mtime_ns": 1794138718936025558,
+      "mtime_utc": "2026-11-08T11:51:58.936026+00:00",
+      "ctime_ns": 1794138719049407685,
+      "ctime_utc": "2026-11-08T11:51:59.049408+00:00",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o644",
+      "stable_during_read": true,
+      "declared_sha256": "62237fb500694f95d894f0f75516ee97fee05cd961971156783120bcbe059710",
+      "declared_hash_matches": false,
+      "git_081": {
+        "repository_path": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+        "commit": "08102a550cf2f5e14646c6858786d7fe7a50c61d",
+        "path": "packages/agent-router/src/reconciliation/admin-abandonment.js",
+        "returncode": 0,
+        "sha256": "62237fb500694f95d894f0f75516ee97fee05cd961971156783120bcbe059710"
+      }
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/agent-router/src/reconciliation/durable-file.js",
+      "sha256": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c",
+      "bytes": 21137,
+      "mtime_ns": 1794120898137315479,
+      "mtime_utc": "2026-11-08T06:54:58.137316+00:00",
+      "ctime_ns": 1794120898168807188,
+      "ctime_utc": "2026-11-08T06:54:58.168807+00:00",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o644",
+      "stable_during_read": true,
+      "declared_sha256": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c",
+      "declared_hash_matches": true,
+      "git_081": {
+        "repository_path": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+        "commit": "08102a550cf2f5e14646c6858786d7fe7a50c61d",
+        "path": "packages/agent-router/src/reconciliation/durable-file.js",
+        "returncode": 0,
+        "sha256": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c"
+      }
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/agent-router/src/reconciliation/query.js",
+      "sha256": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63",
+      "bytes": 11151,
+      "mtime_ns": 1794120898299494301,
+      "mtime_utc": "2026-11-08T06:54:58.299495+00:00",
+      "ctime_ns": 1794120898331174053,
+      "ctime_utc": "2026-11-08T06:54:58.331174+00:00",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o644",
+      "stable_during_read": true,
+      "declared_sha256": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63",
+      "declared_hash_matches": true,
+      "git_081": {
+        "repository_path": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+        "commit": "08102a550cf2f5e14646c6858786d7fe7a50c61d",
+        "path": "packages/agent-router/src/reconciliation/query.js",
+        "returncode": 0,
+        "sha256": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63"
+      }
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/agent-router/src/reconciliation/state-machine.js",
+      "sha256": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f",
+      "bytes": 18433,
+      "mtime_ns": 1794120898433144847,
+      "mtime_utc": "2026-11-08T06:54:58.433145+00:00",
+      "ctime_ns": 1794120898459568530,
+      "ctime_utc": "2026-11-08T06:54:58.459569+00:00",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o644",
+      "stable_during_read": true,
+      "declared_sha256": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f",
+      "declared_hash_matches": true,
+      "git_081": {
+        "repository_path": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+        "commit": "08102a550cf2f5e14646c6858786d7fe7a50c61d",
+        "path": "packages/agent-router/src/reconciliation/state-machine.js",
+        "returncode": 0,
+        "sha256": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f"
+      }
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/scheduler/src/occurrence-model.js",
+      "sha256": "accb4e4bb20ed867f9c06c7704dbd70cc6652c27b76bc28a4092611db57f5847",
+      "bytes": 21914,
+      "mtime_ns": 1794120898567567730,
+      "mtime_utc": "2026-11-08T06:54:58.567568+00:00",
+      "ctime_ns": 1794120898595837922,
+      "ctime_utc": "2026-11-08T06:54:58.595838+00:00",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o644",
+      "stable_during_read": true,
+      "declared_sha256": "accb4e4bb20ed867f9c06c7704dbd70cc6652c27b76bc28a4092611db57f5847",
+      "declared_hash_matches": true,
+      "git_081": {
+        "repository_path": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+        "commit": "08102a550cf2f5e14646c6858786d7fe7a50c61d",
+        "path": "packages/scheduler/src/occurrence-model.js",
+        "returncode": 0,
+        "sha256": "accb4e4bb20ed867f9c06c7704dbd70cc6652c27b76bc28a4092611db57f5847"
+      }
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/scheduler/src/store.js",
+      "sha256": "3e829b1e1bba8b01093811135717773444ff279ad5ffeabc9af7e2415d8cffa3",
+      "bytes": 17725,
+      "mtime_ns": 1794120898704610794,
+      "mtime_utc": "2026-11-08T06:54:58.704611+00:00",
+      "ctime_ns": 1794120898739394354,
+      "ctime_utc": "2026-11-08T06:54:58.739394+00:00",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o644",
+      "stable_during_read": true,
+      "declared_sha256": "3e829b1e1bba8b01093811135717773444ff279ad5ffeabc9af7e2415d8cffa3",
+      "declared_hash_matches": true,
+      "git_081": {
+        "repository_path": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+        "commit": "08102a550cf2f5e14646c6858786d7fe7a50c61d",
+        "path": "packages/scheduler/src/store.js",
+        "returncode": 0,
+        "sha256": "3e829b1e1bba8b01093811135717773444ff279ad5ffeabc9af7e2415d8cffa3"
+      }
+    }
+  ],
+  "issue1386": {
+    "source_repository": "mayf3/deepseek-harness",
+    "local_source_repository": "/Users/yanfenma/workspace/project/.worktrees/h1386-inbox-reanchor",
+    "source_commit": "5603c68c5055afe598576057a42a08edb7c9f2e3",
+    "parent_commit": "514ab7b0029141b88c807704764d0d3e1eea1da4",
+    "files": [
+      {
+        "path": "/usr/local/libexec/agent-core/harness/packages/core/agent/lib/types/inbox.js",
+        "sha256": "2d2d01808c45075f4f1a6dfec9fdae75a37699fac86a52d90c7ff692982b2d37",
+        "bytes": 8386,
+        "mtime_ns": 1794137722738619392,
+        "mtime_utc": "2026-11-08T11:35:22.738619+00:00",
+        "ctime_ns": 1794137722809229783,
+        "ctime_utc": "2026-11-08T11:35:22.809230+00:00",
+        "uid": 505,
+        "gid": 601,
+        "mode": "0o644",
+        "stable_during_read": true,
+        "shared_base": {
+          "path": "/Users/Shared/issue-1386-deploy/inbox.js.base",
+          "sha256": "daa03af2303216dc23d9ee5e1d45e12a179746ca73d31dc0c30bdbc691f0a5f4",
+          "bytes": 7928,
+          "mtime_ns": 1788082721000000000,
+          "mtime_utc": "2026-08-30T09:38:41+00:00",
+          "ctime_ns": 1794137177601827848,
+          "ctime_utc": "2026-11-08T11:26:17.601828+00:00",
+          "uid": 505,
+          "gid": 601,
+          "mode": "0o644",
+          "stable_during_read": true
+        },
+        "shared_candidate": {
+          "path": "/Users/Shared/issue-1386-deploy/inbox.js.candidate",
+          "sha256": "2d2d01808c45075f4f1a6dfec9fdae75a37699fac86a52d90c7ff692982b2d37",
+          "bytes": 8386,
+          "mtime_ns": 1794137221732287293,
+          "mtime_utc": "2026-11-08T11:27:01.732287+00:00",
+          "ctime_ns": 1794137221732287293,
+          "ctime_utc": "2026-11-08T11:27:01.732287+00:00",
+          "uid": 502,
+          "gid": 0,
+          "mode": "0o644",
+          "stable_during_read": true
+        },
+        "rollback_preimage": {
+          "path": "/Users/Shared/issue-1386-deploy/rollback-live-20261108/inbox.js",
+          "sha256": "daa03af2303216dc23d9ee5e1d45e12a179746ca73d31dc0c30bdbc691f0a5f4",
+          "bytes": 7928,
+          "mtime_ns": 1788082721000000000,
+          "mtime_utc": "2026-08-30T09:38:41+00:00",
+          "ctime_ns": 1794137704807046130,
+          "ctime_utc": "2026-11-08T11:35:04.807046+00:00",
+          "uid": 505,
+          "gid": 601,
+          "mode": "0o644",
+          "stable_during_read": true
+        },
+        "candidate_matches_live": true,
+        "installed_js_diff": "--- /Users/Shared/issue-1386-deploy/inbox.js.base\n+++ /Users/Shared/issue-1386-deploy/inbox.js.candidate\n@@ -11,13 +11,20 @@\n     constructor(session, notifications) {\n         this.session = session;\n         this.notifications = notifications;\n+        let acceptedSplice = false;\n         for (const event of session.events.slice(session.header.seedLength ?? 0)) {\n             if (event.type !== 'agent/inbox/spliced')\n                 continue;\n             try {\n                 this.apply(event.data);\n+                acceptedSplice = true;\n             }\n             catch (error) {\n+                const data = event.data;\n+                const pureDeletionNoInput = Array.isArray(data?.inserted) && data.inserted.length === 0;\n+                const boundsPreconditionMissing = error instanceof Error && error.message === 'invalid inbox splice';\n+                if (!acceptedSplice && pureDeletionNoInput && boundsPreconditionMissing)\n+                    continue;\n                 throw new Error(`invalid persisted inbox splice at session seq ${event.seq}`, { cause: error });\n             }\n         }\n"
+      },
+      {
+        "path": "/usr/local/libexec/agent-core/harness/packages/core/agent/lib/index.js",
+        "sha256": "6faef8d4b5378b68ce54ab139850fd45f41d6d3364ce43010806c5ea2d1fcb80",
+        "bytes": 31932,
+        "mtime_ns": 1794137722773610193,
+        "mtime_utc": "2026-11-08T11:35:22.773610+00:00",
+        "ctime_ns": 1794137722809309866,
+        "ctime_utc": "2026-11-08T11:35:22.809310+00:00",
+        "uid": 505,
+        "gid": 601,
+        "mode": "0o644",
+        "stable_during_read": true,
+        "shared_base": {
+          "path": "/Users/Shared/issue-1386-deploy/index.js.base",
+          "sha256": "e7e40c5ca66d9827a5084c5c0c68983f9685842bb9b6d604803d4cb4642bb263",
+          "bytes": 31560,
+          "mtime_ns": 1788100672000000000,
+          "mtime_utc": "2026-08-30T14:37:52+00:00",
+          "ctime_ns": 1794137177611021107,
+          "ctime_utc": "2026-11-08T11:26:17.611021+00:00",
+          "uid": 505,
+          "gid": 601,
+          "mode": "0o644",
+          "stable_during_read": true
+        },
+        "shared_candidate": {
+          "path": "/Users/Shared/issue-1386-deploy/index.js.candidate",
+          "sha256": "6faef8d4b5378b68ce54ab139850fd45f41d6d3364ce43010806c5ea2d1fcb80",
+          "bytes": 31932,
+          "mtime_ns": 1794137221742917963,
+          "mtime_utc": "2026-11-08T11:27:01.742918+00:00",
+          "ctime_ns": 1794137221742917963,
+          "ctime_utc": "2026-11-08T11:27:01.742918+00:00",
+          "uid": 502,
+          "gid": 0,
+          "mode": "0o644",
+          "stable_during_read": true
+        },
+        "rollback_preimage": {
+          "path": "/Users/Shared/issue-1386-deploy/rollback-live-20261108/index.js",
+          "sha256": "e7e40c5ca66d9827a5084c5c0c68983f9685842bb9b6d604803d4cb4642bb263",
+          "bytes": 31560,
+          "mtime_ns": 1788100672000000000,
+          "mtime_utc": "2026-08-30T14:37:52+00:00",
+          "ctime_ns": 1794137704844353253,
+          "ctime_utc": "2026-11-08T11:35:04.844353+00:00",
+          "uid": 505,
+          "gid": 601,
+          "mode": "0o644",
+          "stable_during_read": true
+        },
+        "candidate_matches_live": true,
+        "installed_js_diff": "--- /Users/Shared/issue-1386-deploy/index.js.base\n+++ /Users/Shared/issue-1386-deploy/index.js.candidate\n@@ -19,11 +19,17 @@\n \tconstructor(session, notifications) {\n \t\tthis.session = session;\n \t\tthis.notifications = notifications;\n+\t\tlet acceptedSplice = false;\n \t\tfor (const event of session.events.slice(session.header.seedLength ?? 0)) {\n \t\t\tif (event.type !== \"agent/inbox/spliced\") continue;\n \t\t\ttry {\n \t\t\t\tthis.apply(event.data);\n+\t\t\t\tacceptedSplice = true;\n \t\t\t} catch (error) {\n+\t\t\t\tconst data = event.data;\n+\t\t\t\tconst pureDeletionNoInput = Array.isArray(data?.inserted) && data.inserted.length === 0;\n+\t\t\t\tconst boundsPreconditionMissing = error instanceof Error && error.message === \"invalid inbox splice\";\n+\t\t\t\tif (!acceptedSplice && pureDeletionNoInput && boundsPreconditionMissing) continue;\n \t\t\t\tthrow new Error(`invalid persisted inbox splice at session seq ${event.seq}`, { cause: error });\n \t\t\t}\n \t\t}\n"
+      }
+    ],
+    "runtime_link": {
+      "path": "/usr/local/libexec/agent-core/app/node_modules/@deepseek-ai/dsh-agent",
+      "literal_target": "../../../../packages/core/agent",
+      "resolved_target": "/usr/local/libexec/agent-core/harness/packages/core/agent",
+      "package_default_export": "./lib/index.js"
+    },
+    "semantics": [
+      "Before first accepted splice, tolerate only an input-free pure deletion with exact invalid inbox splice bounds error.",
+      "After first accepted splice, errors still fail closed. Input-bearing splices never skip. No history deletion or delivery replay."
+    ],
+    "limits": [
+      "External Harness bytes are not the app 081 source tree.",
+      "Installed JS matches Shared candidate exactly; full authenticated TS-to-JS build attestation was not found in this subtask.",
+      "Historical 30/30 QA is reused as historical source evidence, not rerun or proof of each running child loading these modules.",
+      "Restoring base JS restores known cold-replay rejection; backup existence does not certify usable rollback."
+    ]
+  },
+  "gap_b": {
+    "source_commit": "8871f3852acc88408416c0148d1157b48ab054db",
+    "parent_commit": "08102a550cf2f5e14646c6858786d7fe7a50c61d",
+    "live": {
+      "path": "/usr/local/libexec/agent-core/app/packages/agent-router/src/reconciliation/admin-abandonment.js",
+      "sha256": "95172846f40ec0589f3a10ffcc350e3eda5d05f0e7f396d0c3d3570c14e8e19e",
+      "bytes": 13370,
+      "mtime_ns": 1794138718936025558,
+      "mtime_utc": "2026-11-08T11:51:58.936026+00:00",
+      "ctime_ns": 1794138719049407685,
+      "ctime_utc": "2026-11-08T11:51:59.049408+00:00",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o644",
+      "stable_during_read": true
+    },
+    "git_blob": {
+      "repository_path": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+      "commit": "8871f3852acc88408416c0148d1157b48ab054db",
+      "path": "packages/agent-router/src/reconciliation/admin-abandonment.js",
+      "returncode": 0,
+      "sha256": "95172846f40ec0589f3a10ffcc350e3eda5d05f0e7f396d0c3d3570c14e8e19e"
+    },
+    "shared_base": {
+      "path": "/Users/Shared/r129-gapb-deploy/admin-abandonment.js.base",
+      "sha256": "62237fb500694f95d894f0f75516ee97fee05cd961971156783120bcbe059710",
+      "bytes": 12388,
+      "mtime_ns": 1794120897996052726,
+      "mtime_utc": "2026-11-08T06:54:57.996053+00:00",
+      "ctime_ns": 1794138636176681730,
+      "ctime_utc": "2026-11-08T11:50:36.176682+00:00",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o644",
+      "stable_during_read": true
+    },
+    "shared_candidate": {
+      "path": "/Users/Shared/r129-gapb-deploy/admin-abandonment.js.candidate",
+      "sha256": "95172846f40ec0589f3a10ffcc350e3eda5d05f0e7f396d0c3d3570c14e8e19e",
+      "bytes": 13370,
+      "mtime_ns": 1794138636190210332,
+      "mtime_utc": "2026-11-08T11:50:36.190210+00:00",
+      "ctime_ns": 1794138636190349831,
+      "ctime_utc": "2026-11-08T11:50:36.190350+00:00",
+      "uid": 502,
+      "gid": 0,
+      "mode": "0o644",
+      "stable_during_read": true
+    },
+    "rollback_preimage": {
+      "path": "/Users/Shared/r129-gapb-deploy/rollback-live-20261108/admin-abandonment.js",
+      "sha256": "62237fb500694f95d894f0f75516ee97fee05cd961971156783120bcbe059710",
+      "bytes": 12388,
+      "mtime_ns": 1794120897996052726,
+      "mtime_utc": "2026-11-08T06:54:57.996053+00:00",
+      "ctime_ns": 1794138711668729756,
+      "ctime_utc": "2026-11-08T11:51:51.668730+00:00",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o644",
+      "stable_during_read": true
+    },
+    "installed_js_diff": "--- /Users/Shared/r129-gapb-deploy/admin-abandonment.js.base\n+++ /Users/Shared/r129-gapb-deploy/admin-abandonment.js.candidate\n@@ -71,7 +71,11 @@\n function stuckAdmissionHandles(store, agentId) {\n   return [...store.records.values()]\n     .filter(record => record.agentId === agentId\n-      && record.initialOutcome === 'outcome_unknown' && record.fenceState !== 'cleared'\n+      && record.initialOutcome === 'outcome_unknown'\n+      // A legacy unproven fence clear is admission-quarantined exactly like an\n+      // armed unknown (admissionBlockerForAgent), so the D6 scope must be able\n+      // to cover it — otherwise the quarantined class has no release path.\n+      && (record.fenceState !== 'cleared' || isLegacyUnprovenFenceClear(record))\n       && (record.adminAbandonment ?? null) === null)\n     .map(record => record.handle)\n }\n@@ -108,8 +112,17 @@\n       // A historical bad clear is quarantined even if it carries an old\n       // abandonment marker. Keep compatibility decoding off ordinary prompt\n       // admission: only a cleared UNKNOWN can have the historical defect.\n+      // A D6 owner-risk acceptance audit entry (stamped with the marker) is\n+      // the one authorized release: it records the explicit owner decision\n+      // for the restart-lost class whose termination evidence is\n+      // uncollectable, so admission unblocks while the record stays fenced +\n+      // outcome_unknown + no-replay. Markers without the acceptance audit\n+      // (pre-D6 stamps) keep the quarantine.\n       if (record.fenceState === 'cleared') {\n-        if (isLegacyUnprovenFenceClear(record)) return record\n+        if (!isLegacyUnprovenFenceClear(record)) continue\n+        const stampedWithAcceptance = (record.adminAbandonment ?? null) !== null\n+          && (record.audit ?? []).some(entry => entry?.kind === 'owner_risk_acceptance_unproven_termination')\n+        if (!stampedWithAcceptance) return record\n         continue\n       }\n       if ((record.adminAbandonment ?? null) !== null) continue\n@@ -147,7 +160,7 @@\n   stuckFenceWithoutDurableExitEvidenceForAgent(agentId) {\n     for (const record of this.records.values()) {\n       if (record.agentId !== agentId || record.initialOutcome !== 'outcome_unknown'\n-          || record.fenceState === 'cleared'\n+          || ((record.fenceState === 'cleared') && !isLegacyUnprovenFenceClear(record))\n           || (record.adminAbandonment ?? null) !== null) continue\n       if ((record.exitObservedAt ?? null) === null && (record.terminationEvidence ?? null) === null) {\n         return { handle: record.handle, failureReason: record.failureReason ?? null }\n",
+    "semantics": [
+      "Include legacy unproven cleared UNKNOWN records in D6 scope and stuck-fence projection.",
+      "Admission quarantine releases only when abandonment marker and owner_risk_acceptance_unproven_termination audit coexist.",
+      "Pre-D6 markers without acceptance audit stay quarantined; non-legacy settled-cleared rows are excluded; later rows still scanned.",
+      "Old UNKNOWN, absent termination proof and no-replay remain; reader compatibility and admission compatibility are separate conclusions."
+    ],
+    "state_limit": "Do not reuse historical five-of-five admission blocking as current: owner-risk audit markers can alter admission under Gap B; current persistent facts belong to root snapshot."
+  },
+  "extra_issue1374": {
+    "why_in_scope": "Named app closure includes an additional unlisted overlay; omitting it would falsely call the current app pure081+GapB. No implementation expansion.",
+    "source_commit": "ac0480a95e8dcfaa345b4cd9fc42bebcafa8c1a1",
+    "parent_commit": "8871f3852acc88408416c0148d1157b48ab054db",
+    "files": [
+      {
+        "path": "/usr/local/libexec/agent-core/app/packages/agent-router/src/index.js",
+        "sha256": "b9a7f382508dca181b21afc571006a6f10239ded9e8ae8fdcded0f514ad6f889",
+        "bytes": 27097,
+        "mtime_ns": 1794153298066246950,
+        "mtime_utc": "2026-11-08T15:54:58.066247+00:00",
+        "ctime_ns": 1794153298269042114,
+        "ctime_utc": "2026-11-08T15:54:58.269042+00:00",
+        "uid": 505,
+        "gid": 601,
+        "mode": "0o644",
+        "stable_during_read": true,
+        "git_blob": {
+          "repository_path": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+          "commit": "ac0480a95e8dcfaa345b4cd9fc42bebcafa8c1a1",
+          "path": "packages/agent-router/src/index.js",
+          "returncode": 0,
+          "sha256": "b9a7f382508dca181b21afc571006a6f10239ded9e8ae8fdcded0f514ad6f889"
+        },
+        "shared_base": {
+          "path": "/Users/Shared/issue1374-fatalev-deploy/packages_agent-router_src_index.js.base",
+          "sha256": "bd19c4f1465fda669986adf1ff82416a70ddba5283a650f30c6bde0fcd952603",
+          "bytes": 26976,
+          "mtime_ns": 1793923942102397770,
+          "mtime_utc": "2026-11-06T00:12:22.102398+00:00",
+          "ctime_ns": 1794153111273310696,
+          "ctime_utc": "2026-11-08T15:51:51.273311+00:00",
+          "uid": 505,
+          "gid": 601,
+          "mode": "0o644",
+          "stable_during_read": true
+        },
+        "shared_candidate": {
+          "path": "/Users/Shared/issue1374-fatalev-deploy/packages_agent-router_src_index.js.candidate",
+          "sha256": "b9a7f382508dca181b21afc571006a6f10239ded9e8ae8fdcded0f514ad6f889",
+          "bytes": 27097,
+          "mtime_ns": 1794153111322927392,
+          "mtime_utc": "2026-11-08T15:51:51.322927+00:00",
+          "ctime_ns": 1794153111323061560,
+          "ctime_utc": "2026-11-08T15:51:51.323061+00:00",
+          "uid": 502,
+          "gid": 0,
+          "mode": "0o644",
+          "stable_during_read": true
+        },
+        "rollback_preimage": {
+          "path": "/Users/Shared/issue1374-fatalev-deploy/rollback-live-20261108/index.js",
+          "sha256": "bd19c4f1465fda669986adf1ff82416a70ddba5283a650f30c6bde0fcd952603",
+          "bytes": 26976,
+          "mtime_ns": 1793923942102397770,
+          "mtime_utc": "2026-11-06T00:12:22.102398+00:00",
+          "ctime_ns": 1794153281241303673,
+          "ctime_utc": "2026-11-08T15:54:41.241303+00:00",
+          "uid": 505,
+          "gid": 601,
+          "mode": "0o644",
+          "stable_during_read": true
+        },
+        "candidate_matches_live": true,
+        "git_matches_live": true,
+        "installed_js_diff": "--- /Users/Shared/issue1374-fatalev-deploy/packages_agent-router_src_index.js.base\n+++ /Users/Shared/issue1374-fatalev-deploy/packages_agent-router_src_index.js.candidate\n@@ -200,7 +200,7 @@\n   const authenticatedIngressOpts = new WeakMap()\n   const ingressCorrelationLookup = (opts) => authenticatedIngressOpts.get(opts) ?? null\n   const baseProcessFactory = typeof cfg.processFactory === 'function' ? cfg.processFactory : (opts) => new AgentProcess(opts)\n-  const processFactory = (opts) => baseProcessFactory({ ...opts, ingressCorrelationLookup, env: {...opts.env, ...(typeof cfg.conversationSourceDir === 'string' ? {DSH_CONVERSATION_SOURCE_DIR:cfg.conversationSourceDir} : {})} })\n+  const processFactory = (opts) => baseProcessFactory({ ...opts, ingressCorrelationLookup, processEvidenceSink: typeof cfg.processEvidenceSink === 'function' ? cfg.processEvidenceSink : opts.processEvidenceSink, env: {...opts.env, ...(typeof cfg.conversationSourceDir === 'string' ? {DSH_CONVERSATION_SOURCE_DIR:cfg.conversationSourceDir} : {})} })\n   const resolveProcessConfig = typeof cfg.resolveProcessConfig === 'function'\n     ? cfg.resolveProcessConfig\n     : () => ({})\n"
+      },
+      {
+        "path": "/usr/local/libexec/agent-core/app/packages/agent-router/src/process/agent-process.js",
+        "sha256": "47c4dfcfc13203283282405df57ecd0b27adf765b2ba218405f9cddb8b60a195",
+        "bytes": 17091,
+        "mtime_ns": 1794153299737528745,
+        "mtime_utc": "2026-11-08T15:54:59.737529+00:00",
+        "ctime_ns": 1794153299783247395,
+        "ctime_utc": "2026-11-08T15:54:59.783247+00:00",
+        "uid": 505,
+        "gid": 601,
+        "mode": "0o644",
+        "stable_during_read": true,
+        "git_blob": {
+          "repository_path": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+          "commit": "ac0480a95e8dcfaa345b4cd9fc42bebcafa8c1a1",
+          "path": "packages/agent-router/src/process/agent-process.js",
+          "returncode": 0,
+          "sha256": "47c4dfcfc13203283282405df57ecd0b27adf765b2ba218405f9cddb8b60a195"
+        },
+        "shared_base": {
+          "path": "/Users/Shared/issue1374-fatalev-deploy/packages_agent-router_src_process_agent-process.js.base",
+          "sha256": "473003ddfb1fc7b1d560863f6edce8feb8105a291d3155f70a49cbd9cde30088",
+          "bytes": 15487,
+          "mtime_ns": 1793923942104692329,
+          "mtime_utc": "2026-11-06T00:12:22.104692+00:00",
+          "ctime_ns": 1794153111249055542,
+          "ctime_utc": "2026-11-08T15:51:51.249055+00:00",
+          "uid": 505,
+          "gid": 601,
+          "mode": "0o644",
+          "stable_during_read": true
+        },
+        "shared_candidate": {
+          "path": "/Users/Shared/issue1374-fatalev-deploy/packages_agent-router_src_process_agent-process.js.candidate",
+          "sha256": "47c4dfcfc13203283282405df57ecd0b27adf765b2ba218405f9cddb8b60a195",
+          "bytes": 17091,
+          "mtime_ns": 1794153111314922133,
+          "mtime_utc": "2026-11-08T15:51:51.314922+00:00",
+          "ctime_ns": 1794153111315124552,
+          "ctime_utc": "2026-11-08T15:51:51.315125+00:00",
+          "uid": 502,
+          "gid": 0,
+          "mode": "0o644",
+          "stable_during_read": true
+        },
+        "rollback_preimage": {
+          "path": "/Users/Shared/issue1374-fatalev-deploy/rollback-live-20261108/agent-process.js",
+          "sha256": "473003ddfb1fc7b1d560863f6edce8feb8105a291d3155f70a49cbd9cde30088",
+          "bytes": 15487,
+          "mtime_ns": 1793923942104692329,
+          "mtime_utc": "2026-11-06T00:12:22.104692+00:00",
+          "ctime_ns": 1794153281402686612,
+          "ctime_utc": "2026-11-08T15:54:41.402687+00:00",
+          "uid": 505,
+          "gid": 601,
+          "mode": "0o644",
+          "stable_during_read": true
+        },
+        "candidate_matches_live": true,
+        "git_matches_live": true,
+        "installed_js_diff": "--- /Users/Shared/issue1374-fatalev-deploy/packages_agent-router_src_process_agent-process.js.base\n+++ /Users/Shared/issue1374-fatalev-deploy/packages_agent-router_src_process_agent-process.js.candidate\n@@ -26,7 +26,7 @@\n import { TurnReconciliationStore } from '../reconciliation/index.js'\n import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../../agent-provisioning/src/shared-codex.js'\n import { assertPositiveSafeDeadline, monotonicNowMs, stateMachineMethods } from './state-machine.js'\n-import { FAIL_LOUD_PROVIDER_ERRORS, sanitizeProviderError } from './provider-errors.js'\n+import { FAIL_LOUD_PROVIDER_ERRORS, redactSensitiveText, sanitizeProviderError } from './provider-errors.js'\n import { evidenceBufferMethods } from './evidence-buffer.js'\n import { rpcChannelMethods } from './rpc-channel.js'\n import { eventCorrelationMethods } from './event-correlation.js'\n@@ -48,6 +48,7 @@\n     reconciliationStore,\n     ingressCorrelationLookup = null,\n     registryIntegration = null,\n+    processEvidenceSink = null,\n   }) {\n     if (typeof profile !== 'string' || profile === '') {\n       throw new TypeError('AgentProcess: profile is required (no default — the caller owns the composition choice)')\n@@ -85,6 +86,13 @@\n     this.store = reconciliationStore ?? new TurnReconciliationStore()\n     this.ingressCorrelationLookup = ingressCorrelationLookup\n     this.registryIntegration = registryIntegration\n+    // R129/#1374: parent-produced durable failure evidence. When wired (the\n+    // production runtime composes it onto control/runtime-evidence.jsonl),\n+    // initialization-phase fatal failures land as queryable rows WITHOUT\n+    // depending on the target Agent ever starting. Redaction + bounding are\n+    // applied here; the sink itself never gates admission.\n+    this.processEvidenceSink = typeof processEvidenceSink === 'function' ? processEvidenceSink : null\n+    this.fatalEvidenceEmitted = false\n \n     this.state = 'SPAWNING'\n     this.stateHistory = [{ to: 'SPAWNING', atWallMs: Date.now() }]\n@@ -160,6 +168,24 @@\n     return [...this.eventLog.values()].map(entry => entry.params)\n   }\n \n+  /** R129/#1374: one parent-produced evidence row per initialize-phase fatal. */\n+  emitInitializeFailureEvidence(cause, extra = {}) {\n+    if (this.fatalEvidenceEmitted || typeof this.processEvidenceSink !== 'function') return\n+    this.fatalEvidenceEmitted = true\n+    const tail = typeof this.stderr === 'string' ? this.stderr.slice(-2048) : ''\n+    this.processEvidenceSink({\n+      kind: 'agent_process_initialize_failed',\n+      agentId: this.agentId,\n+      generation: this.processGeneration,\n+      cause,\n+      initializeBudgetMs: this.deadlines.initializeTimeoutMs,\n+      exitCode: this.exit?.code ?? null,\n+      stderrTailBytes: Buffer.byteLength(tail, 'utf8'),\n+      stderrTail: redactSensitiveText(tail),\n+      ...extra,\n+    })\n+  }\n+\n   // ------------------------------------------------------------- readiness\n \n   /** spawn → initialize (retries bounded by ONE total deadline; C-001). */\n@@ -173,11 +199,13 @@\n     const startedWall = Date.now()\n     for (;;) {\n       if (this.exit !== undefined) {\n+        this.emitInitializeFailureEvidence('initialize_exited', { spawnFailure: this.spawnFailure !== null })\n         throw this.spawnFailure !== null\n           ? Object.assign(new Error(`spawn failed without child for agent ${this.agentId}: ${this.spawnFailure.error}`), { code: 'AGENT_PROCESS_SPAWN_FAILED' })\n           : Object.assign(new Error(`initialize failed for agent ${this.agentId}: child exited (${this.exit.code ?? 'signal'})`), { code: 'AGENT_PROCESS_EXITED' })\n       }\n       if (monotonicNowMs() >= initDeadlineMono) {\n+        this.emitInitializeFailureEvidence('initialize_timeout')\n         void this.fatal('initialize_timeout')\n         throw Object.assign(new Error(`initialize timeout for agent ${this.agentId}`), { code: 'AGENT_PROCESS_INITIALIZE_TIMEOUT' })\n       }\n@@ -215,10 +243,12 @@\n             : error\n         }\n         if (FAIL_LOUD_PROVIDER_ERRORS.has(error?.code)) {\n+          this.emitInitializeFailureEvidence('initialize_failed')\n           void this.fatal('initialize_failed')\n           throw error\n         }\n         if (monotonicNowMs() >= initDeadlineMono) {\n+          this.emitInitializeFailureEvidence('initialize_timeout')\n           void this.fatal('initialize_timeout')\n           throw Object.assign(new Error(`initialize timeout for agent ${this.agentId}`), { code: 'AGENT_PROCESS_INITIALIZE_TIMEOUT' })\n         }\n"
+      },
+      {
+        "path": "/usr/local/libexec/agent-core/app/packages/production-runtime/src/compose.js",
+        "sha256": "c31db4e1342344c32810076ab0b6d8a58cb1bf94d8a505fc92623771c5746838",
+        "bytes": 37331,
+        "mtime_ns": 1794153300077912366,
+        "mtime_utc": "2026-11-08T15:55:00.077912+00:00",
+        "ctime_ns": 1794153300123955978,
+        "ctime_utc": "2026-11-08T15:55:00.123956+00:00",
+        "uid": 505,
+        "gid": 601,
+        "mode": "0o644",
+        "stable_during_read": true,
+        "git_blob": {
+          "repository_path": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+          "commit": "ac0480a95e8dcfaa345b4cd9fc42bebcafa8c1a1",
+          "path": "packages/production-runtime/src/compose.js",
+          "returncode": 0,
+          "sha256": "c31db4e1342344c32810076ab0b6d8a58cb1bf94d8a505fc92623771c5746838"
+        },
+        "shared_base": {
+          "path": "/Users/Shared/issue1374-fatalev-deploy/packages_production-runtime_src_compose.js.base",
+          "sha256": "04287bd404bf6b45d6026a82443ec2b94b944d7502a7e7766af295f8125a1cce",
+          "bytes": 36255,
+          "mtime_ns": 1793923943406775595,
+          "mtime_utc": "2026-11-06T00:12:23.406775+00:00",
+          "ctime_ns": 1794153111306241241,
+          "ctime_utc": "2026-11-08T15:51:51.306241+00:00",
+          "uid": 505,
+          "gid": 601,
+          "mode": "0o644",
+          "stable_during_read": true
+        },
+        "shared_candidate": {
+          "path": "/Users/Shared/issue1374-fatalev-deploy/packages_production-runtime_src_compose.js.candidate",
+          "sha256": "c31db4e1342344c32810076ab0b6d8a58cb1bf94d8a505fc92623771c5746838",
+          "bytes": 37331,
+          "mtime_ns": 1794153111330354185,
+          "mtime_utc": "2026-11-08T15:51:51.330354+00:00",
+          "ctime_ns": 1794153111330514770,
+          "ctime_utc": "2026-11-08T15:51:51.330515+00:00",
+          "uid": 502,
+          "gid": 0,
+          "mode": "0o644",
+          "stable_during_read": true
+        },
+        "rollback_preimage": {
+          "path": "/Users/Shared/issue1374-fatalev-deploy/rollback-live-20261108/compose.js",
+          "sha256": "04287bd404bf6b45d6026a82443ec2b94b944d7502a7e7766af295f8125a1cce",
+          "bytes": 36255,
+          "mtime_ns": 1793923943406775595,
+          "mtime_utc": "2026-11-06T00:12:23.406775+00:00",
+          "ctime_ns": 1794153281478715277,
+          "ctime_utc": "2026-11-08T15:54:41.478715+00:00",
+          "uid": 505,
+          "gid": 601,
+          "mode": "0o644",
+          "stable_during_read": true
+        },
+        "candidate_matches_live": true,
+        "git_matches_live": true,
+        "installed_js_diff": "--- /Users/Shared/issue1374-fatalev-deploy/packages_production-runtime_src_compose.js.base\n+++ /Users/Shared/issue1374-fatalev-deploy/packages_production-runtime_src_compose.js.candidate\n@@ -191,6 +191,19 @@\n     }\n   }\n \n+  // R129/#1374: credential-shaped scrub for bounded agent-process stderr\n+  // tails before they reach the durable evidence log.\n+  const redactSensitiveText = (text) => {\n+    if (typeof text !== 'string') return text\n+    return text\n+      .replace(/sk-[A-Za-z0-9_-]{8,}/g, '[REDACTED_KEY]')\n+      .replace(/Bearer\\s+[A-Za-z0-9._~+/-]{8,}/gi, 'Bearer [REDACTED]')\n+      .replace(/((?:token|secret|password|api[_-]?key)[\"']?\\s*[:=]\\s*[\"']?)[A-Za-z0-9._~+/-]{8,}/gi, '$1[REDACTED]')\n+  }\n+  const processEvidenceSink = opts.processEvidenceSink === undefined\n+    ? (row) => writeEvidence({ kind: 'agent_process_initialize_failed', ...row, stderrTail: redactSensitiveText(row.stderrTail) })\n+    : opts.processEvidenceSink\n+\n   const ctx = createPluginContext()\n \n   // ── row order: bundle-integration composition ────────────────────────────\n@@ -338,6 +351,11 @@\n     defaultSessionId: 'main',\n     agentProfile,\n     ...(opts.processFactory === undefined ? {} : { processFactory: opts.processFactory }),\n+    processEvidenceSink,\n+    // R129/#1374: parent-produced durable initialize-failure evidence rows.\n+    // stderr tail arrives bounded (2KiB cap in agent-router) and is scrubbed\n+    // of credential-shaped strings here before touching the durable log.\n+    ...(opts.processEvidenceSink === undefined ? {} : { processEvidenceSink: opts.processEvidenceSink }),\n     ...(opts.provisionHome === undefined ? {} : { provisionHome: opts.provisionHome }),\n     resolveProcessConfig,\n     resolveRouteChain,\n"
+      }
+    ],
+    "semantics": [
+      "Router passes processEvidenceSink to AgentProcess.",
+      "Single-shot bounded/redacted parent-produced initialization-failure evidence for exit/timeout/fail-loud branches.",
+      "Composition defaults sink to append-only runtime evidence log; sink absence/failure is observational, not an admission gate."
+    ],
+    "ledger_coordinate": "/Users/yanfenma/workspace/project/it-ops-control-plane/inventory/receipts/2026-11.local.jsonl:4",
+    "ledger_historical_result": "BLOCKED: recorded TERM16139 rc0 but PID remained after20s; no new PID or boot verification at that receipt. Do not conflate later observed PID22118 with success of that exact recorded attempt."
+  },
+  "source_material": [
+    {
+      "path": "/Users/Shared/issue-1386-dev-materials/1386-candidate-identity.txt",
+      "sha256": "2ec9c0db31e579739b048c4423a15d3a12b610521e5107866856cd5fc6836cdf",
+      "bytes": 188,
+      "mtime_ns": 1794126360144503416,
+      "mtime_utc": "2026-11-08T08:26:00.144503+00:00",
+      "ctime_ns": 1794126360144503416,
+      "ctime_utc": "2026-11-08T08:26:00.144503+00:00",
+      "uid": 502,
+      "gid": 0,
+      "mode": "0o644",
+      "stable_during_read": true,
+      "public_excerpt": {
+        "path": "/Users/Shared/issue-1386-dev-materials/1386-candidate-identity.txt",
+        "line_start": 1,
+        "line_end": 3,
+        "text": "candidate: 5603c68c5055afe598576057a42a08edb7c9f2e3\nparent: 514ab7b0029141b88c807704764d0d3e1eea1da4\nsubject: fix(agent): re-anchor un-durable pure-deletion splices on cold replay (#1386)"
+      }
+    },
+    {
+      "path": "/Users/Shared/issue-1386-dev-materials/1386-candidate-5603c68c.diff",
+      "sha256": "9966869d5d5d69214a4269a8fe51f5dc88e9ef84f8acab603c6af53f5f6740c1",
+      "bytes": 8973,
+      "mtime_ns": 1794126360101180609,
+      "mtime_utc": "2026-11-08T08:26:00.101181+00:00",
+      "ctime_ns": 1794126360101180609,
+      "ctime_utc": "2026-11-08T08:26:00.101181+00:00",
+      "uid": 502,
+      "gid": 0,
+      "mode": "0o644",
+      "stable_during_read": true,
+      "public_excerpt": {
+        "path": "/Users/Shared/issue-1386-dev-materials/1386-candidate-5603c68c.diff",
+        "line_start": 9,
+        "line_end": 12,
+        "text": "+    // Restart-recovery re-anchor (#1386): a durable pure deletion whose\n+    // precondition lived only in a dead process's memory is a semantic no-op\n+    // against the durable projection — nothing is re-delivered and no history\n+    // is cleared. While no splice has been accepted yet, such a failure"
+      }
+    },
+    {
+      "path": "/Users/Shared/issue-1386-dev-materials/QA-INDEPENDENT-REVIEW-5603c68c.md",
+      "sha256": "62ea135e1f6d49831b2fdee83788af3bd41d495fa0fd4e0f13da246509d96554",
+      "bytes": 5137,
+      "mtime_ns": 1794127564108788535,
+      "mtime_utc": "2026-11-08T08:46:04.108788+00:00",
+      "ctime_ns": 1794127564112854665,
+      "ctime_utc": "2026-11-08T08:46:04.112855+00:00",
+      "uid": 502,
+      "gid": 0,
+      "mode": "0o600",
+      "stable_during_read": true,
+      "public_excerpt": {
+        "path": "/Users/Shared/issue-1386-dev-materials/QA-INDEPENDENT-REVIEW-5603c68c.md",
+        "line_start": 11,
+        "line_end": 14,
+        "text": "The candidate source review, independent RED reproduction, arm64 runtime suite, and main-tree restoration all pass. The required three-file suite produced the requested `30/30` result using `/opt/homebrew/bin/node` v26.7.0 arm64.\n\n## 1. Identity and diff\n"
+      }
+    },
+    {
+      "path": "/Users/Shared/r129-gapb-review/gapb-identity.txt",
+      "sha256": "c33ed86e4935237c5bba91182773b93d78afe450541db55bd8750ef88d49fb21",
+      "bytes": 193,
+      "mtime_ns": 1794138365965398246,
+      "mtime_utc": "2026-11-08T11:46:05.965398+00:00",
+      "ctime_ns": 1794138365965398246,
+      "ctime_utc": "2026-11-08T11:46:05.965398+00:00",
+      "uid": 502,
+      "gid": 0,
+      "mode": "0o644",
+      "stable_during_read": true,
+      "public_excerpt": {
+        "path": "/Users/Shared/r129-gapb-review/gapb-identity.txt",
+        "line_start": 1,
+        "line_end": 3,
+        "text": "candidate: 8871f3852acc88408416c0148d1157b48ab054db\nparent: 08102a550cf2f5e14646c6858786d7fe7a50c61d\nsubject: fix(reconciliation): D6 release path for legacy unproven fence clears (R129 Gap B)"
+      }
+    },
+    {
+      "path": "/Users/Shared/r129-gapb-review/gapb-8871f385-src.diff",
+      "sha256": "8cd8f46cdb3d8d1fb1090ac89f6ef171e1eae34cc1255f525a3d5a1ac95112d3",
+      "bytes": 2955,
+      "mtime_ns": 1794138365954323337,
+      "mtime_utc": "2026-11-08T11:46:05.954324+00:00",
+      "ctime_ns": 1794138365954323337,
+      "ctime_utc": "2026-11-08T11:46:05.954324+00:00",
+      "uid": 502,
+      "gid": 0,
+      "mode": "0o644",
+      "stable_during_read": true,
+      "public_excerpt": {
+        "path": "/Users/Shared/r129-gapb-review/gapb-8871f385-src.diff",
+        "line_start": 22,
+        "line_end": 25,
+        "text": "+      // A D6 owner-risk acceptance audit entry (stamped with the marker) is\n+      // the one authorized release: it records the explicit owner decision\n+      // for the restart-lost class whose termination evidence is\n+      // uncollectable, so admission unblocks while the record stays fenced +"
+      }
+    },
+    {
+      "path": "/Users/Shared/r129-gapb-review/QA-INDEPENDENT-REVIEW-8871f385.md",
+      "sha256": "12c648b195a91b1a83c711094859804b4d8763152c4a2c41eb45fb40dffa8b9d",
+      "bytes": 5946,
+      "mtime_ns": 1794138604296870047,
+      "mtime_utc": "2026-11-08T11:50:04.296870+00:00",
+      "ctime_ns": 1794138604301422273,
+      "ctime_utc": "2026-11-08T11:50:04.301422+00:00",
+      "uid": 502,
+      "gid": 0,
+      "mode": "0o600",
+      "stable_during_read": true,
+      "public_excerpt": {
+        "path": "/Users/Shared/r129-gapb-review/QA-INDEPENDENT-REVIEW-8871f385.md",
+        "line_start": 11,
+        "line_end": 14,
+        "text": "The candidate source semantics and regression suites pass. Under the corrected claim, the candidate supports releasing only the marker-free HR `g70:s3581` legacy-cleared record with `ownerRiskAcceptance:true`; the three pre-D6-marker rows remain quarantined and require a separate Owner decision outside this candidate scope.\n\n## 1. Identity and diff — PASS\n"
+      }
+    },
+    {
+      "path": "/Users/Shared/issue1374-fatal-evidence-review/identity.txt",
+      "sha256": "bde08c5049562b099c1d61ec380d9894d3fd5a799f82667eac399cd3cc0c7a94",
+      "bytes": 189,
+      "mtime_ns": 1794152766044265337,
+      "mtime_utc": "2026-11-08T15:46:06.044265+00:00",
+      "ctime_ns": 1794152766044265337,
+      "ctime_utc": "2026-11-08T15:46:06.044265+00:00",
+      "uid": 502,
+      "gid": 0,
+      "mode": "0o644",
+      "stable_during_read": true,
+      "public_excerpt": {
+        "path": "/Users/Shared/issue1374-fatal-evidence-review/identity.txt",
+        "line_start": 1,
+        "line_end": 3,
+        "text": "candidate: ac0480a95e8dcfaa345b4cd9fc42bebcafa8c1a1\nparent: 8871f3852acc88408416c0148d1157b48ab054db\nsubject: feat(router): parent-produced durable initialize-failure evidence (R129 #1374)"
+      }
+    },
+    {
+      "path": "/Users/Shared/issue1374-fatal-evidence-review/fatalev-8871f385..ac0480a9.diff",
+      "sha256": "12741d3bc1e1f293f2c6adb5250c6fdab2fde7b8eee4fb2f4160babcb3eb1667",
+      "bytes": 12596,
+      "mtime_ns": 1794152766016908939,
+      "mtime_utc": "2026-11-08T15:46:06.016909+00:00",
+      "ctime_ns": 1794152766016908939,
+      "ctime_utc": "2026-11-08T15:46:06.016909+00:00",
+      "uid": 502,
+      "gid": 0,
+      "mode": "0o644",
+      "stable_during_read": true,
+      "public_excerpt": {
+        "path": "/Users/Shared/issue1374-fatal-evidence-review/fatalev-8871f385..ac0480a9.diff",
+        "line_start": 1,
+        "line_end": 4,
+        "text": "diff --git a/packages/agent-router/src/index.js b/packages/agent-router/src/index.js\nindex c8855469..8c6d6257 100644\n--- a/packages/agent-router/src/index.js\n+++ b/packages/agent-router/src/index.js"
+      }
+    },
+    {
+      "path": "/Users/Shared/issue1374-fatal-evidence-review/QA-INDEPENDENT-REVIEW-ac0480a9.md",
+      "sha256": "d71bc5337ae2c82c5d714537d53682c30d03163ad9477bed49f43a59f4d80315",
+      "bytes": 4986,
+      "mtime_ns": 1794153084339639679,
+      "mtime_utc": "2026-11-08T15:51:24.339640+00:00",
+      "ctime_ns": 1794153084347615104,
+      "ctime_utc": "2026-11-08T15:51:24.347615+00:00",
+      "uid": 502,
+      "gid": 0,
+      "mode": "0o600",
+      "stable_during_read": true,
+      "public_excerpt": {
+        "path": "/Users/Shared/issue1374-fatal-evidence-review/QA-INDEPENDENT-REVIEW-ac0480a9.md",
+        "line_start": 119,
+        "line_end": 121,
+        "text": "QA PASS is limited to candidate source semantics, regression behavior, durable evidence wiring, and read-only adoption mapping. No production runtime was started, no evidence row was injected, and no workflow operation was performed.\n\nBound instance `e6b49415-dc3c-42ab-9364-41f45d5022d8` was not transitioned."
+      }
+    },
+    {
+      "path": "/Users/Shared/r129d-rollback-20261108/DEPLOY-RECEIPT.md",
+      "sha256": "e24948c9c4bb1b4de24b496d92c057bace0f7bb2ef3c8d7c92b2bfd1cfdfb2c2",
+      "bytes": 6859,
+      "mtime_ns": 1794122765434599944,
+      "mtime_utc": "2026-11-08T07:26:05.434600+00:00",
+      "ctime_ns": 1794122765466147374,
+      "ctime_utc": "2026-11-08T07:26:05.466147+00:00",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o644",
+      "stable_during_read": true,
+      "public_excerpt": {
+        "path": "/Users/Shared/r129d-rollback-20261108/DEPLOY-RECEIPT.md",
+        "line_start": 51,
+        "line_end": 54,
+        "text": "- Current `/usr/local/libexec/agent-core/app/pack-provenance.json` SHA256:\n  `ca9a0e45149d9b59c4a93600d5a02696d8d416f40922f8e940d11b9c86e642fc`\n- Preserved base-era `source_tree_sha` and `packed_app_tree_sha256` values are explicitly annotated as not representing the current six-file overlay.\n- Added overlay metadata: base `393a0afc`, overlay `08102a55`, six paths and candidate hashes, source `cherry-pick 42487e65 via Owner Watch3 authorization`."
+      }
+    }
+  ],
+  "manifest_cross_reference": {
+    "path": "evidence/release-convergence-547/app-manifest-before.json",
+    "sha256": "93637f33091daea8b383a3e65ccd85c9603c3af9846fd70c564b243d0ef2491c",
+    "selected_entries": [
+      {
+        "path": "packages/agent-router/src/reconciliation/admin-abandonment.js",
+        "mode": "0o644",
+        "uid": 505,
+        "gid": 601,
+        "dev": 16777234,
+        "ino": 355392992,
+        "size": 13370,
+        "mtime_ns": 1794138718936025558,
+        "ctime_ns": 1794138719049407685,
+        "kind": "file",
+        "sha256": "95172846f40ec0589f3a10ffcc350e3eda5d05f0e7f396d0c3d3570c14e8e19e",
+        "stat_stable_during_read": true
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/durable-file.js",
+        "mode": "0o644",
+        "uid": 505,
+        "gid": 601,
+        "dev": 16777234,
+        "ino": 355392995,
+        "size": 21137,
+        "mtime_ns": 1794120898137315479,
+        "ctime_ns": 1794120898168807188,
+        "kind": "file",
+        "sha256": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c",
+        "stat_stable_during_read": true
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/query.js",
+        "mode": "0o644",
+        "uid": 505,
+        "gid": 601,
+        "dev": 16777234,
+        "ino": 355392993,
+        "size": 11151,
+        "mtime_ns": 1794120898299494301,
+        "ctime_ns": 1794120898331174053,
+        "kind": "file",
+        "sha256": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63",
+        "stat_stable_during_read": true
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/state-machine.js",
+        "mode": "0o644",
+        "uid": 505,
+        "gid": 601,
+        "dev": 16777234,
+        "ino": 355392987,
+        "size": 18433,
+        "mtime_ns": 1794120898433144847,
+        "ctime_ns": 1794120898459568530,
+        "kind": "file",
+        "sha256": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f",
+        "stat_stable_during_read": true
+      },
+      {
+        "path": "packages/scheduler/src/occurrence-model.js",
+        "mode": "0o644",
+        "uid": 505,
+        "gid": 601,
+        "dev": 16777234,
+        "ino": 355393293,
+        "size": 21914,
+        "mtime_ns": 1794120898567567730,
+        "ctime_ns": 1794120898595837922,
+        "kind": "file",
+        "sha256": "accb4e4bb20ed867f9c06c7704dbd70cc6652c27b76bc28a4092611db57f5847",
+        "stat_stable_during_read": true
+      },
+      {
+        "path": "packages/scheduler/src/store.js",
+        "mode": "0o644",
+        "uid": 505,
+        "gid": 601,
+        "dev": 16777234,
+        "ino": 355393257,
+        "size": 17725,
+        "mtime_ns": 1794120898704610794,
+        "ctime_ns": 1794120898739394354,
+        "kind": "file",
+        "sha256": "3e829b1e1bba8b01093811135717773444ff279ad5ffeabc9af7e2415d8cffa3",
+        "stat_stable_during_read": true
+      },
+      {
+        "path": "packages/agent-router/src/index.js",
+        "mode": "0o644",
+        "uid": 505,
+        "gid": 601,
+        "dev": 16777234,
+        "ino": 355393004,
+        "size": 27097,
+        "mtime_ns": 1794153298066246950,
+        "ctime_ns": 1794153298269042114,
+        "kind": "file",
+        "sha256": "b9a7f382508dca181b21afc571006a6f10239ded9e8ae8fdcded0f514ad6f889",
+        "stat_stable_during_read": true
+      },
+      {
+        "path": "packages/agent-router/src/process/agent-process.js",
+        "mode": "0o644",
+        "uid": 505,
+        "gid": 601,
+        "dev": 16777234,
+        "ino": 355393029,
+        "size": 17091,
+        "mtime_ns": 1794153299737528745,
+        "ctime_ns": 1794153299783247395,
+        "kind": "file",
+        "sha256": "47c4dfcfc13203283282405df57ecd0b27adf765b2ba218405f9cddb8b60a195",
+        "stat_stable_during_read": true
+      },
+      {
+        "path": "packages/production-runtime/src/compose.js",
+        "mode": "0o644",
+        "uid": 505,
+        "gid": 601,
+        "dev": 16777234,
+        "ino": 355393200,
+        "size": 37331,
+        "mtime_ns": 1794153300077912366,
+        "ctime_ns": 1794153300123955978,
+        "kind": "file",
+        "sha256": "c31db4e1342344c32810076ab0b6d8a58cb1bf94d8a505fc92623771c5746838",
+        "stat_stable_during_read": true
+      }
+    ],
+    "limit": "Root captured complete app manifest; these selected entries bind named overlays, not an exhaustive source-to-whole-app build attestation."
+  },
+  "authority_and_boundaries": {
+    "authority_action": "REUSE",
+    "plan_level": "BRIEF",
+    "assurance_level": "DURABLE",
+    "primary_scope": "Evidence only; no Product Contract change",
+    "production_mutation": false,
+    "candidate_code_execution": false,
+    "repository_refs_modified": false,
+    "written_file": "evidence/release-convergence-547/overlay-findings.json",
+    "unknowns": [
+      "Authenticated exact installer/authorization chain for #1386 and GapB not established by this static subtask; publisher audit owns that evidence.",
+      "Loaded JS bytes cannot be inferred solely from present disk hashes; PID/time proof and historical module admission remain separately bounded."
+    ]
+  },
+  "exploration_notes": [
+    {
+      "query": "GitHub dsh-agent-core PR1386",
+      "result": "404",
+      "interpretation": "Expected exploratory wrong-repository miss, not task failure."
+    },
+    {
+      "query": "rg broad Shared rollback family",
+      "result": "permission denied on protected durable-restore JSON",
+      "interpretation": "No bypass performed. Protected state content not required for this static overlay subtask; root owns authorized store read."
+    },
+    {
+      "query": "git081 in ops worktree",
+      "result": "object absent",
+      "interpretation": "Used fixed object in production source repo read-only; no checkout/ref mutation."
+    }
+  ]
+}

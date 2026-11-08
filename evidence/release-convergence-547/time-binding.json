@@ -1,0 +1,25 @@
+{
+  "pid": 22118,
+  "lstart_utc": "2026-11-08T16:13:26Z",
+  "app_entries": 1703,
+  "app_regular_files": 1387,
+  "all_app_regular_mtime_before_lstart": true,
+  "all_app_regular_ctime_before_lstart": true,
+  "latest_app_file": {
+    "path": "packages/production-runtime/src/compose.js",
+    "mode": "0o644",
+    "uid": 505,
+    "gid": 601,
+    "dev": 16777234,
+    "ino": 355393200,
+    "size": 37331,
+    "mtime_ns": 1794153300077912366,
+    "ctime_ns": 1794153300123955978,
+    "kind": "file",
+    "sha256": "c31db4e1342344c32810076ab0b6d8a58cb1bf94d8a505fc92623771c5746838",
+    "stat_stable_during_read": true
+  },
+  "all_sampled_external_mtime_before_lstart": true,
+  "all_sampled_external_ctime_before_lstart": true,
+  "limitation": "Temporal disk/start correlation only; no in-memory bytes read, not historical16139 lstart, not trusted immutable install. External closure sampled, not fully hashed."
+}

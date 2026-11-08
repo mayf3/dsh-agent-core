@@ -1,0 +1,2196 @@
+{
+  "at": "2026-11-08T17:34:24.288180+00:00",
+  "base": "393a0afccedc5cce7be8b492c82d68d8d52206f6",
+  "repository": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+  "scope": "Every observed non-node_modules regular file except provenance, compared at same Git path. Not official assembly selection/dependency validation. Captured disk manifest is source of observations; no production reread.",
+  "checked": 355,
+  "differences": [
+    {
+      "path": "packages/agent-router/src/index.js",
+      "git_base_sha256": "bd19c4f1465fda669986adf1ff82416a70ddba5283a650f30c6bde0fcd952603",
+      "observed_sha256": "b9a7f382508dca181b21afc571006a6f10239ded9e8ae8fdcded0f514ad6f889",
+      "match": false
+    },
+    {
+      "path": "packages/agent-router/src/process/agent-process.js",
+      "git_base_sha256": "473003ddfb1fc7b1d560863f6edce8feb8105a291d3155f70a49cbd9cde30088",
+      "observed_sha256": "47c4dfcfc13203283282405df57ecd0b27adf765b2ba218405f9cddb8b60a195",
+      "match": false
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/admin-abandonment.js",
+      "git_base_sha256": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+      "observed_sha256": "95172846f40ec0589f3a10ffcc350e3eda5d05f0e7f396d0c3d3570c14e8e19e",
+      "match": false
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/durable-file.js",
+      "git_base_sha256": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+      "observed_sha256": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c",
+      "match": false
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/query.js",
+      "git_base_sha256": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+      "observed_sha256": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63",
+      "match": false
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/state-machine.js",
+      "git_base_sha256": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+      "observed_sha256": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f",
+      "match": false
+    },
+    {
+      "path": "packages/production-runtime/src/compose.js",
+      "git_base_sha256": "04287bd404bf6b45d6026a82443ec2b94b944d7502a7e7766af295f8125a1cce",
+      "observed_sha256": "c31db4e1342344c32810076ab0b6d8a58cb1bf94d8a505fc92623771c5746838",
+      "match": false
+    },
+    {
+      "path": "packages/scheduler/src/occurrence-model.js",
+      "git_base_sha256": "6db88f5cee57d8a217fabde4749ffd7bf677399f348208131b2e2f2309ee9292",
+      "observed_sha256": "accb4e4bb20ed867f9c06c7704dbd70cc6652c27b76bc28a4092611db57f5847",
+      "match": false
+    },
+    {
+      "path": "packages/scheduler/src/store.js",
+      "git_base_sha256": "a8eacf4f16edd207b7181a5fcc47b30a4b26c9e852d335ca2746c88fd4ac3fcc",
+      "observed_sha256": "3e829b1e1bba8b01093811135717773444ff279ad5ffeabc9af7e2415d8cffa3",
+      "match": false
+    }
+  ],
+  "absent_git_paths": [],
+  "rows": [
+    {
+      "path": "bundle-agent-switch/cordis.patch.yml",
+      "git_base_sha256": "401e0ceeeb32632c847d99fd7f9e4ba90d03e0c49b1ee8720df4fc321d3e9c5a",
+      "observed_sha256": "401e0ceeeb32632c847d99fd7f9e4ba90d03e0c49b1ee8720df4fc321d3e9c5a",
+      "match": true
+    },
+    {
+      "path": "bundle-agent-switch/package.json",
+      "git_base_sha256": "eec14fddbe619bb4864c9a81f9920d234a18044b3b351204e1ee5c05b16505d3",
+      "observed_sha256": "eec14fddbe619bb4864c9a81f9920d234a18044b3b351204e1ee5c05b16505d3",
+      "match": true
+    },
+    {
+      "path": "bundle-broker/cordis.patch.yml",
+      "git_base_sha256": "5a3cb83eca3e31a3b37f0aa36f5403fe094a0514df963a584fa2649e2daff7b8",
+      "observed_sha256": "5a3cb83eca3e31a3b37f0aa36f5403fe094a0514df963a584fa2649e2daff7b8",
+      "match": true
+    },
+    {
+      "path": "bundle-broker/package.json",
+      "git_base_sha256": "bed99c24a0fc49a624e12a1836586f5e858f121844e78e16fe49bf8f1df620ed",
+      "observed_sha256": "bed99c24a0fc49a624e12a1836586f5e858f121844e78e16fe49bf8f1df620ed",
+      "match": true
+    },
+    {
+      "path": "bundle-demo/cordis.patch.yml",
+      "git_base_sha256": "ec0e07737214f5296eb8b8541557c4fba8d04d3c7b8c5f686eed8ca34df17d28",
+      "observed_sha256": "ec0e07737214f5296eb8b8541557c4fba8d04d3c7b8c5f686eed8ca34df17d28",
+      "match": true
+    },
+    {
+      "path": "bundle-demo/package.json",
+      "git_base_sha256": "b300c086eab68ced09e3d34410c67d655a1b93670f223e4cfec74d7107ec4043",
+      "observed_sha256": "b300c086eab68ced09e3d34410c67d655a1b93670f223e4cfec74d7107ec4043",
+      "match": true
+    },
+    {
+      "path": "bundle-integration/cordis.patch.yml",
+      "git_base_sha256": "f4a64cbbb2bd20210125d6d7ce0c93f5f3b14e5e88ae15e9d5c41226235147fd",
+      "observed_sha256": "f4a64cbbb2bd20210125d6d7ce0c93f5f3b14e5e88ae15e9d5c41226235147fd",
+      "match": true
+    },
+    {
+      "path": "bundle-integration/package.json",
+      "git_base_sha256": "06e5a43f15b609dd46731ac97d06d6ef6886b1dd17becb259c22e9ed1c3f36eb",
+      "observed_sha256": "06e5a43f15b609dd46731ac97d06d6ef6886b1dd17becb259c22e9ed1c3f36eb",
+      "match": true
+    },
+    {
+      "path": "bundle-memory/cordis.patch.yml",
+      "git_base_sha256": "f7715b128c890328699addfbde630fbac3147ba2410a6b0278b44ed88cfb5e6c",
+      "observed_sha256": "f7715b128c890328699addfbde630fbac3147ba2410a6b0278b44ed88cfb5e6c",
+      "match": true
+    },
+    {
+      "path": "bundle-memory/package.json",
+      "git_base_sha256": "65c41a351f62240d4474258bfe7179d73f8761dab7eced460871eb5301e97306",
+      "observed_sha256": "65c41a351f62240d4474258bfe7179d73f8761dab7eced460871eb5301e97306",
+      "match": true
+    },
+    {
+      "path": "package.json",
+      "git_base_sha256": "d57644033f2ed7458272262dedad91c1cabc86aa51bc75bcc1f35184029299cd",
+      "observed_sha256": "d57644033f2ed7458272262dedad91c1cabc86aa51bc75bcc1f35184029299cd",
+      "match": true
+    },
+    {
+      "path": "packages/agent-credential-provisioning/package.json",
+      "git_base_sha256": "088b63035aac89a6ca2ed5983f6b898bcd970dff8f58c1834beb0474818fb3b6",
+      "observed_sha256": "088b63035aac89a6ca2ed5983f6b898bcd970dff8f58c1834beb0474818fb3b6",
+      "match": true
+    },
+    {
+      "path": "packages/agent-credential-provisioning/src/auth-client.js",
+      "git_base_sha256": "3e1b0c1e686479ad0c7f26bc472cd372dbda84a90858969e107082e50635c276",
+      "observed_sha256": "3e1b0c1e686479ad0c7f26bc472cd372dbda84a90858969e107082e50635c276",
+      "match": true
+    },
+    {
+      "path": "packages/agent-credential-provisioning/src/index.js",
+      "git_base_sha256": "9fea68765761634bf13b13a6bedc273febaca3c4d92e773100c858264063d3e1",
+      "observed_sha256": "9fea68765761634bf13b13a6bedc273febaca3c4d92e773100c858264063d3e1",
+      "match": true
+    },
+    {
+      "path": "packages/agent-credential-provisioning/src/privileged-channel-psql.js",
+      "git_base_sha256": "f00ee006ff21689c2a693cb19ac8edd8457fce0fb2a9294fab95400babaa3fdc",
+      "observed_sha256": "f00ee006ff21689c2a693cb19ac8edd8457fce0fb2a9294fab95400babaa3fdc",
+      "match": true
+    },
+    {
+      "path": "packages/agent-credential-provisioning/src/rotation-seam.js",
+      "git_base_sha256": "f7c4a0db66ce47886353c4fe787311bd286503d57efaf18781b355ba3c2d5939",
+      "observed_sha256": "f7c4a0db66ce47886353c4fe787311bd286503d57efaf18781b355ba3c2d5939",
+      "match": true
+    },
+    {
+      "path": "packages/agent-credential-provisioning/src/store-writer.js",
+      "git_base_sha256": "36cb9af0625d7f8f1944d888b57e5bb809d12b17f4d368d489bad23b3c5fe4fe",
+      "observed_sha256": "36cb9af0625d7f8f1944d888b57e5bb809d12b17f4d368d489bad23b3c5fe4fe",
+      "match": true
+    },
+    {
+      "path": "packages/agent-definition/package.json",
+      "git_base_sha256": "a5be1dec68b0adbfa5125fec070530eff6cf504eb6a0a0e33005757f916f2a1b",
+      "observed_sha256": "a5be1dec68b0adbfa5125fec070530eff6cf504eb6a0a0e33005757f916f2a1b",
+      "match": true
+    },
+    {
+      "path": "packages/agent-definition/src/access.js",
+      "git_base_sha256": "0cf284aa9c61f3dba1edf861c0929e13c857831e9a13a4d678f003ee5606f210",
+      "observed_sha256": "0cf284aa9c61f3dba1edf861c0929e13c857831e9a13a4d678f003ee5606f210",
+      "match": true
+    },
+    {
+      "path": "packages/agent-definition/src/config.js",
+      "git_base_sha256": "fa33f6ff4cb905e558be661f29e7b7b82099427982430c2e86c9ccf914ff366c",
+      "observed_sha256": "fa33f6ff4cb905e558be661f29e7b7b82099427982430c2e86c9ccf914ff366c",
+      "match": true
+    },
+    {
+      "path": "packages/agent-definition/src/definition.js",
+      "git_base_sha256": "3ac7332957717e70c03b92a682a83ca1e60180140688903c5a746b4c9803db4a",
+      "observed_sha256": "3ac7332957717e70c03b92a682a83ca1e60180140688903c5a746b4c9803db4a",
+      "match": true
+    },
+    {
+      "path": "packages/agent-definition/src/index.js",
+      "git_base_sha256": "9754ec51d67848607a84313e65529a6075c8676dd4a97173ef6b4629953ccf73",
+      "observed_sha256": "9754ec51d67848607a84313e65529a6075c8676dd4a97173ef6b4629953ccf73",
+      "match": true
+    },
+    {
+      "path": "packages/agent-identity-capabilities/index.js",
+      "git_base_sha256": "f60ca14209f4861070099c4981362ecc0772356c1f01c0cde3da6b0d5ada9bf3",
+      "observed_sha256": "f60ca14209f4861070099c4981362ecc0772356c1f01c0cde3da6b0d5ada9bf3",
+      "match": true
+    },
+    {
+      "path": "packages/agent-identity-capabilities/package.json",
+      "git_base_sha256": "e42c31e52ee6194f90b81ce7e039a0b938eae3dfb82d92f012e59d78ca958c02",
+      "observed_sha256": "e42c31e52ee6194f90b81ce7e039a0b938eae3dfb82d92f012e59d78ca958c02",
+      "match": true
+    },
+    {
+      "path": "packages/agent-identity-capabilities/src/agent-directory.js",
+      "git_base_sha256": "068fa166fed52f4843e4c49839e8b06920dacb36efa9a1d84b7a3ed9ec5b8b19",
+      "observed_sha256": "068fa166fed52f4843e4c49839e8b06920dacb36efa9a1d84b7a3ed9ec5b8b19",
+      "match": true
+    },
+    {
+      "path": "packages/agent-identity-capabilities/src/agent-principal-resolution.js",
+      "git_base_sha256": "956927b697ac57ee3caf1cdb3535cd1408a7eceb48b831b0368acb8a3ac38638",
+      "observed_sha256": "956927b697ac57ee3caf1cdb3535cd1408a7eceb48b831b0368acb8a3ac38638",
+      "match": true
+    },
+    {
+      "path": "packages/agent-identity-capabilities/src/agent-principal-reverse-resolution.js",
+      "git_base_sha256": "77c8dbdac3f1e55661bee7c38118b197213fc49f99d2322bba27780f312a957b",
+      "observed_sha256": "77c8dbdac3f1e55661bee7c38118b197213fc49f99d2322bba27780f312a957b",
+      "match": true
+    },
+    {
+      "path": "packages/agent-identity-capabilities/src/index.js",
+      "git_base_sha256": "e919a67b01469e8fe4b9509b2c2082657628daa63e65c3deb15c1a3f0c25f34f",
+      "observed_sha256": "e919a67b01469e8fe4b9509b2c2082657628daa63e65c3deb15c1a3f0c25f34f",
+      "match": true
+    },
+    {
+      "path": "packages/agent-memory/package.json",
+      "git_base_sha256": "591a6ed957d88ddc642b0a7d8f3528a35139b92ba1ddcc720f6774581dc6a05d",
+      "observed_sha256": "591a6ed957d88ddc642b0a7d8f3528a35139b92ba1ddcc720f6774581dc6a05d",
+      "match": true
+    },
+    {
+      "path": "packages/agent-memory/src/index.js",
+      "git_base_sha256": "691371f0b2b4036d7d6ec6365501541b150d22dedc10e63d7257865058fde20f",
+      "observed_sha256": "691371f0b2b4036d7d6ec6365501541b150d22dedc10e63d7257865058fde20f",
+      "match": true
+    },
+    {
+      "path": "packages/agent-memory/src/memory.js",
+      "git_base_sha256": "239cd5ed488886ee9c66900112e7203ce7b6a9432efa1365d550787a2bfeabcc",
+      "observed_sha256": "239cd5ed488886ee9c66900112e7203ce7b6a9432efa1365d550787a2bfeabcc",
+      "match": true
+    },
+    {
+      "path": "packages/agent-memory/src/paths.js",
+      "git_base_sha256": "d0db84ad9ea5a5c93fbe7ea474b83b3c332795b87b61d76e6def215313a97d1b",
+      "observed_sha256": "d0db84ad9ea5a5c93fbe7ea474b83b3c332795b87b61d76e6def215313a97d1b",
+      "match": true
+    },
+    {
+      "path": "packages/agent-provisioning/package.json",
+      "git_base_sha256": "6b4d085939c1a182a0e2661cf3f8001eea37f4aed290a573cf812eb460a5bef2",
+      "observed_sha256": "6b4d085939c1a182a0e2661cf3f8001eea37f4aed290a573cf812eb460a5bef2",
+      "match": true
+    },
+    {
+      "path": "packages/agent-provisioning/src/deployment-artifact.js",
+      "git_base_sha256": "a7be3e535ec2a81af7f86616f83b1860dbcee0860ac5a24f579b0a32f272c1fb",
+      "observed_sha256": "a7be3e535ec2a81af7f86616f83b1860dbcee0860ac5a24f579b0a32f272c1fb",
+      "match": true
+    },
+    {
+      "path": "packages/agent-provisioning/src/ensure-symlink.js",
+      "git_base_sha256": "b61ba4808d6eba76c85edb5c364f6588e0fcb9f670040e1d8b3cce7c2999d063",
+      "observed_sha256": "b61ba4808d6eba76c85edb5c364f6588e0fcb9f670040e1d8b3cce7c2999d063",
+      "match": true
+    },
+    {
+      "path": "packages/agent-provisioning/src/index.js",
+      "git_base_sha256": "ba397d8cb92d56f11158400256097379edbea69271a6ac5fee471b56127eb0cf",
+      "observed_sha256": "ba397d8cb92d56f11158400256097379edbea69271a6ac5fee471b56127eb0cf",
+      "match": true
+    },
+    {
+      "path": "packages/agent-provisioning/src/plugin-artifact.js",
+      "git_base_sha256": "0c7bf111402afa36e55d86f869be89d192a54bb7ae61a7c1c42c0a1a93472112",
+      "observed_sha256": "0c7bf111402afa36e55d86f869be89d192a54bb7ae61a7c1c42c0a1a93472112",
+      "match": true
+    },
+    {
+      "path": "packages/agent-provisioning/src/repo-core-bridge.js",
+      "git_base_sha256": "b85c7f574cec3e2564ba092426c4501ac09caf057b9c975669a1072ed3228f4b",
+      "observed_sha256": "b85c7f574cec3e2564ba092426c4501ac09caf057b9c975669a1072ed3228f4b",
+      "match": true
+    },
+    {
+      "path": "packages/agent-provisioning/src/shared-codex.js",
+      "git_base_sha256": "1355948d3c1c75bc641d65f0febffa1dd4db7e858d3454679bfad5e245e3c3c2",
+      "observed_sha256": "1355948d3c1c75bc641d65f0febffa1dd4db7e858d3454679bfad5e245e3c3c2",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/package.json",
+      "git_base_sha256": "9622010ec44bed87f0e71fd7e6a5cac3427cd68b20e06c4bbaa93e1f99e79e15",
+      "observed_sha256": "9622010ec44bed87f0e71fd7e6a5cac3427cd68b20e06c4bbaa93e1f99e79e15",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/binding-resolution.js",
+      "git_base_sha256": "615f8cab77dbed9ff89e4c92cfaf7055afc028240b4525cb212ba60aaeb4f738",
+      "observed_sha256": "615f8cab77dbed9ff89e4c92cfaf7055afc028240b4525cb212ba60aaeb4f738",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/binding-store.js",
+      "git_base_sha256": "4fe013a03dcbc0a6a8503c4a8ed83a869835557decc84a6b7b63ba9ef5194cf5",
+      "observed_sha256": "4fe013a03dcbc0a6a8503c4a8ed83a869835557decc84a6b7b63ba9ef5194cf5",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/channel-conversation.js",
+      "git_base_sha256": "18e787bc1950077e8eac811a212925cb7ab6cbd0b90167c655b5903c09d33c25",
+      "observed_sha256": "18e787bc1950077e8eac811a212925cb7ab6cbd0b90167c655b5903c09d33c25",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/conversation/persistence.js",
+      "git_base_sha256": "0a980ab16302e728de14aa0480118b37df7fa9894e0fec059b2382c5016e6f20",
+      "observed_sha256": "0a980ab16302e728de14aa0480118b37df7fa9894e0fec059b2382c5016e6f20",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/conversation/source.js",
+      "git_base_sha256": "ea96a9d09eaadcc044a6f040abf8f96b323cc12260e2400ddd1a9683c87e341c",
+      "observed_sha256": "ea96a9d09eaadcc044a6f040abf8f96b323cc12260e2400ddd1a9683c87e341c",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/conversation/surface.js",
+      "git_base_sha256": "08deaada5571030b5d4ce67f458d3b01cc06bdbf42b61d2197311240e4fe1210",
+      "observed_sha256": "08deaada5571030b5d4ce67f458d3b01cc06bdbf42b61d2197311240e4fe1210",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/deadline-config.js",
+      "git_base_sha256": "dde4a7a2c8c90f92d5944a32720407fc51a32fa3865b86178cba0ae542600485",
+      "observed_sha256": "dde4a7a2c8c90f92d5944a32720407fc51a32fa3865b86178cba0ae542600485",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/index.js",
+      "git_base_sha256": "bd19c4f1465fda669986adf1ff82416a70ddba5283a650f30c6bde0fcd952603",
+      "observed_sha256": "b9a7f382508dca181b21afc571006a6f10239ded9e8ae8fdcded0f514ad6f889",
+      "match": false
+    },
+    {
+      "path": "packages/agent-router/src/ingress-authenticated.js",
+      "git_base_sha256": "17dcedddf0b15c644e61c523e72619e5e93584d23c0e4cecd8e88320d5d4f95e",
+      "observed_sha256": "17dcedddf0b15c644e61c523e72619e5e93584d23c0e4cecd8e88320d5d4f95e",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/ingress-delivery.js",
+      "git_base_sha256": "01eab5d3e535f2b05fd15960e396376a2db339676a2a5f57993a189c868484f6",
+      "observed_sha256": "01eab5d3e535f2b05fd15960e396376a2db339676a2a5f57993a189c868484f6",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/operator-exact-generation-recovery.js",
+      "git_base_sha256": "12b94a3ea713b37044e78698ba13797419ae4f6c5f4d027c684be8e2e7181941",
+      "observed_sha256": "12b94a3ea713b37044e78698ba13797419ae4f6c5f4d027c684be8e2e7181941",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/parent-rpc-relay.js",
+      "git_base_sha256": "1ac2e0e03a405d8d84a0dc52116c0b84318009726f8a0457032341d8875e021a",
+      "observed_sha256": "1ac2e0e03a405d8d84a0dc52116c0b84318009726f8a0457032341d8875e021a",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/process-registry-route-gate.js",
+      "git_base_sha256": "949343251aad7feda52b24c4856b3fae938dbc2e7486508ddea6a25665e7b566",
+      "observed_sha256": "949343251aad7feda52b24c4856b3fae938dbc2e7486508ddea6a25665e7b566",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/process-registry-startup.js",
+      "git_base_sha256": "675ae69f454a8a9c0ae27e549a2f404a10fbaee25e24d4befa8f7ac8e5ac3a49",
+      "observed_sha256": "675ae69f454a8a9c0ae27e549a2f404a10fbaee25e24d4befa8f7ac8e5ac3a49",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/process-registry.js",
+      "git_base_sha256": "87abee00c4c4911bca44b002ecfdc1815eb680f8c1fd18444d32ba06c38334ae",
+      "observed_sha256": "87abee00c4c4911bca44b002ecfdc1815eb680f8c1fd18444d32ba06c38334ae",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/process.js",
+      "git_base_sha256": "b07a27f6b8ec9f43969f871ad17e0db2b8df8df23af72fff2f6b655aeb558e07",
+      "observed_sha256": "b07a27f6b8ec9f43969f871ad17e0db2b8df8df23af72fff2f6b655aeb558e07",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/process/agent-process.js",
+      "git_base_sha256": "473003ddfb1fc7b1d560863f6edce8feb8105a291d3155f70a49cbd9cde30088",
+      "observed_sha256": "47c4dfcfc13203283282405df57ecd0b27adf765b2ba218405f9cddb8b60a195",
+      "match": false
+    },
+    {
+      "path": "packages/agent-router/src/process/env.js",
+      "git_base_sha256": "d80e523341543ed1778327acfc5f80693d04b11c49cab82dd38893221023eb4e",
+      "observed_sha256": "d80e523341543ed1778327acfc5f80693d04b11c49cab82dd38893221023eb4e",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/process/event-correlation.js",
+      "git_base_sha256": "47693d4d79af4e0643078e4f178bd341457b8418c07892d1a65d846f07af58bc",
+      "observed_sha256": "47693d4d79af4e0643078e4f178bd341457b8418c07892d1a65d846f07af58bc",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/process/evidence-buffer.js",
+      "git_base_sha256": "c5f1938bbc199927d6e2e9ddf30563ebcf61066b392bb175474a2b0118b8ecbc",
+      "observed_sha256": "c5f1938bbc199927d6e2e9ddf30563ebcf61066b392bb175474a2b0118b8ecbc",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/process/index.js",
+      "git_base_sha256": "ade2ecf1f1fdb94001d8cf10fd16da7a6b8116cbc759077e537519102454350b",
+      "observed_sha256": "ade2ecf1f1fdb94001d8cf10fd16da7a6b8116cbc759077e537519102454350b",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/process/ingress-failure.js",
+      "git_base_sha256": "d3670623daef7e8382fe349beacb1c9c9a82bfa2f976bcec224f634bc479c91c",
+      "observed_sha256": "d3670623daef7e8382fe349beacb1c9c9a82bfa2f976bcec224f634bc479c91c",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/process/provider-errors.js",
+      "git_base_sha256": "3e25f3269b39a0e253949c022d7845709a255d62d74fb2cb98750bc4766578b6",
+      "observed_sha256": "3e25f3269b39a0e253949c022d7845709a255d62d74fb2cb98750bc4766578b6",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/process/route-chain-evidence.js",
+      "git_base_sha256": "b682c18dc244f22f11ccbe1f587ab7b0dda6487ccfda1f03c08d33575e5d65b9",
+      "observed_sha256": "b682c18dc244f22f11ccbe1f587ab7b0dda6487ccfda1f03c08d33575e5d65b9",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/process/rpc-channel.js",
+      "git_base_sha256": "23810dad5218da19e67a9a3c1f13103eab8dc390e074e35ee9ed5ae4d84cb7ee",
+      "observed_sha256": "23810dad5218da19e67a9a3c1f13103eab8dc390e074e35ee9ed5ae4d84cb7ee",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/process/shutdown.js",
+      "git_base_sha256": "159381ce7afdc1dfe11656973e6e0d00b4b59cb69ad2dbdab6f6e312f2829eab",
+      "observed_sha256": "159381ce7afdc1dfe11656973e6e0d00b4b59cb69ad2dbdab6f6e312f2829eab",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/process/spawn.js",
+      "git_base_sha256": "add4e95e3318b98f8157c8c2dc3d5e29db219839a2b50484a2f5f3a7a8fc0063",
+      "observed_sha256": "add4e95e3318b98f8157c8c2dc3d5e29db219839a2b50484a2f5f3a7a8fc0063",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/process/state-machine.js",
+      "git_base_sha256": "6e079adcc807c772e2a360db9c4e4efcd06070397ef196f53f9173ab9b643342",
+      "observed_sha256": "6e079adcc807c772e2a360db9c4e4efcd06070397ef196f53f9173ab9b643342",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/process/turn-execution.js",
+      "git_base_sha256": "d1e5ec10b20599aeeff3c5adb040469777c9df02424b7122f938628b68549cc6",
+      "observed_sha256": "d1e5ec10b20599aeeff3c5adb040469777c9df02424b7122f938628b68549cc6",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/r22-reliability-observability.js",
+      "git_base_sha256": "9684f07af0128851487f8394a46490e471e2e0a444e82f29649b70f882037e2c",
+      "observed_sha256": "9684f07af0128851487f8394a46490e471e2e0a444e82f29649b70f882037e2c",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/r28-recovery-control.js",
+      "git_base_sha256": "e66906cbc1c6c94a665f37690d0aac1f87164f762273eaddd25522234a8bb864",
+      "observed_sha256": "e66906cbc1c6c94a665f37690d0aac1f87164f762273eaddd25522234a8bb864",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/r28-recovery-state-machine.js",
+      "git_base_sha256": "f4936bfafb70b8f9cfa9d5af246105235ac0ec7fc2b3ae01b0e810e8a505af79",
+      "observed_sha256": "f4936bfafb70b8f9cfa9d5af246105235ac0ec7fc2b3ae01b0e810e8a505af79",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/r30-escalation.js",
+      "git_base_sha256": "51d2dffdb4b054241f591acfa87a74b62ce0f5482ceac9bde11feaa1abdd9ff1",
+      "observed_sha256": "51d2dffdb4b054241f591acfa87a74b62ce0f5482ceac9bde11feaa1abdd9ff1",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/r38-artifact-binding.js",
+      "git_base_sha256": "74191c2babb9f08fae97f3a40861efbffabbf287278503316c64ac7216b28bde",
+      "observed_sha256": "74191c2babb9f08fae97f3a40861efbffabbf287278503316c64ac7216b28bde",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation-store.js",
+      "git_base_sha256": "eb5ef8b3b4a0db0222d6529f16da1ba12a708b0e9099759448292ad585f9efcd",
+      "observed_sha256": "eb5ef8b3b4a0db0222d6529f16da1ba12a708b0e9099759448292ad585f9efcd",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/admin-abandonment.js",
+      "git_base_sha256": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+      "observed_sha256": "95172846f40ec0589f3a10ffcc350e3eda5d05f0e7f396d0c3d3570c14e8e19e",
+      "match": false
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/authority-capacity.js",
+      "git_base_sha256": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+      "observed_sha256": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/capacity.js",
+      "git_base_sha256": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+      "observed_sha256": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/durable-file.js",
+      "git_base_sha256": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+      "observed_sha256": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c",
+      "match": false
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/index.js",
+      "git_base_sha256": "8f8d56082e0513397ca89c3799c9bd745bbafa540050b7c4189bdb3f2a61a91f",
+      "observed_sha256": "8f8d56082e0513397ca89c3799c9bd745bbafa540050b7c4189bdb3f2a61a91f",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/ingress-correlation.js",
+      "git_base_sha256": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca",
+      "observed_sha256": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/query.js",
+      "git_base_sha256": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+      "observed_sha256": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63",
+      "match": false
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/quiescence-bundle.js",
+      "git_base_sha256": "f2a724c2b0e5e00d5b81e1a5eb86efddc97365519fb75daa3321e5417e1694ed",
+      "observed_sha256": "f2a724c2b0e5e00d5b81e1a5eb86efddc97365519fb75daa3321e5417e1694ed",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/quiescence-custody.js",
+      "git_base_sha256": "0a64281ff4beb6aab0e91bb249f2b58c78715ee579148d6fd45632e4073edef8",
+      "observed_sha256": "0a64281ff4beb6aab0e91bb249f2b58c78715ee579148d6fd45632e4073edef8",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/startup-recovery.js",
+      "git_base_sha256": "795c3cf863023d11f270ec2600bf350d0eaf04bd07c392503696ef57dba04963",
+      "observed_sha256": "795c3cf863023d11f270ec2600bf350d0eaf04bd07c392503696ef57dba04963",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/state-machine.js",
+      "git_base_sha256": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+      "observed_sha256": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f",
+      "match": false
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/store.js",
+      "git_base_sha256": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+      "observed_sha256": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/route-chain-canary.js",
+      "git_base_sha256": "ca228549abbbdfb4c7519641a8b5d6e08de7dca3ba5b72dac82f5ca562afc4b9",
+      "observed_sha256": "ca228549abbbdfb4c7519641a8b5d6e08de7dca3ba5b72dac82f5ca562afc4b9",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/route-chain.js",
+      "git_base_sha256": "261e8ca076a768679b9fc79d3a91eebccec04af3050e26cec0a590f27d93cb7a",
+      "observed_sha256": "261e8ca076a768679b9fc79d3a91eebccec04af3050e26cec0a590f27d93cb7a",
+      "match": true
+    },
+    {
+      "path": "packages/agent-router/src/workflow-recovery-chain.js",
+      "git_base_sha256": "3d1cf784125b33957c2e52097be6774718f69382b40ba8818db4e06f869c7e48",
+      "observed_sha256": "3d1cf784125b33957c2e52097be6774718f69382b40ba8818db4e06f869c7e48",
+      "match": true
+    },
+    {
+      "path": "packages/agent-switch/package.json",
+      "git_base_sha256": "ad59fa74ad6875dd4b1f618191a2548a313691c1abdf2f8c14840ffb99a2602e",
+      "observed_sha256": "ad59fa74ad6875dd4b1f618191a2548a313691c1abdf2f8c14840ffb99a2602e",
+      "match": true
+    },
+    {
+      "path": "packages/agent-switch/src/index.js",
+      "git_base_sha256": "0569fecc335dfb8068f999e1fb58a8d56a5732c5545cc6860bb0b72c99d29107",
+      "observed_sha256": "0569fecc335dfb8068f999e1fb58a8d56a5732c5545cc6860bb0b72c99d29107",
+      "match": true
+    },
+    {
+      "path": "packages/broker/package.json",
+      "git_base_sha256": "835296e41f62321b53c79d95da5300a21160e6d3c39f209cefcc5a6485f15d0e",
+      "observed_sha256": "835296e41f62321b53c79d95da5300a21160e6d3c39f209cefcc5a6485f15d0e",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/authoring-file-entry.js",
+      "git_base_sha256": "2db5aeea525f138aa2a4441831f377c2dbf6c17271a412c320331c4241d0e26a",
+      "observed_sha256": "2db5aeea525f138aa2a4441831f377c2dbf6c17271a412c320331c4241d0e26a",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/calculator.manifest.js",
+      "git_base_sha256": "dea44da1716d3203dde01cb1a90745b29d0c9a4f1be04afd8fad1e98af51cc3c",
+      "observed_sha256": "dea44da1716d3203dde01cb1a90745b29d0c9a4f1be04afd8fad1e98af51cc3c",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/agent-definition.js",
+      "git_base_sha256": "6a0566d0c7ef4135094087f92115076a1e6ec47f4cf67825b6e2eb90175e41c8",
+      "observed_sha256": "6a0566d0c7ef4135094087f92115076a1e6ec47f4cf67825b6e2eb90175e41c8",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/agent-directory.js",
+      "git_base_sha256": "67aaa493f159b6646f6be0a4755adc894ce7e4b0b4a9dfc0bcef65cff6ceccbd",
+      "observed_sha256": "67aaa493f159b6646f6be0a4755adc894ce7e4b0b4a9dfc0bcef65cff6ceccbd",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/agent-principal-resolution.js",
+      "git_base_sha256": "807763ee04269449c57daa851cad3269850bb8e777cb906b24f7794ea0866736",
+      "observed_sha256": "807763ee04269449c57daa851cad3269850bb8e777cb906b24f7794ea0866736",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/agent-principal-reverse-resolution.js",
+      "git_base_sha256": "e0fc2d7c245dea4c3177533a09904cbdfc041f7ea1b79c9264a300c478a0e2a1",
+      "observed_sha256": "e0fc2d7c245dea4c3177533a09904cbdfc041f7ea1b79c9264a300c478a0e2a1",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/agent-session-messaging.js",
+      "git_base_sha256": "96bd1db8cf9beda69f014a0581a0a74166e697b1d1eb3982112480a5481c1bd6",
+      "observed_sha256": "96bd1db8cf9beda69f014a0581a0a74166e697b1d1eb3982112480a5481c1bd6",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/agent-session-reconcile.js",
+      "git_base_sha256": "e237d72fa23e7d7b93075d87a42afb0c83d78de8cb593fa134038e0ee32cc5b4",
+      "observed_sha256": "e237d72fa23e7d7b93075d87a42afb0c83d78de8cb593fa134038e0ee32cc5b4",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/development-execute.js",
+      "git_base_sha256": "3bb2b8956b11b8af7d35af56e4fdbac5d4b8318368514d00cd68cf94925f11b6",
+      "observed_sha256": "3bb2b8956b11b8af7d35af56e4fdbac5d4b8318368514d00cd68cf94925f11b6",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/execution-history.js",
+      "git_base_sha256": "d303023f49f80ecc7df26cea2b3b9fd1ddedecfa7467a25cd61352f5c91b6598",
+      "observed_sha256": "d303023f49f80ecc7df26cea2b3b9fd1ddedecfa7467a25cd61352f5c91b6598",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/fixed-operation.js",
+      "git_base_sha256": "878c7c46b3ab6fe7fe8151b02b73a869cea1e45eebaf8502850982b37d164769",
+      "observed_sha256": "878c7c46b3ab6fe7fe8151b02b73a869cea1e45eebaf8502850982b37d164769",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/forum-governance.js",
+      "git_base_sha256": "7b743f2187e0cde05faa40153c68d2496d5a3a9378995977c482bc429c963e67",
+      "observed_sha256": "7b743f2187e0cde05faa40153c68d2496d5a3a9378995977c482bc429c963e67",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/forum-moderation.js",
+      "git_base_sha256": "44fde22f7d6926eaee2087f00d9b5fb1d3f338198be422920d2ca685d4951cf0",
+      "observed_sha256": "44fde22f7d6926eaee2087f00d9b5fb1d3f338198be422920d2ca685d4951cf0",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/forum-notifications.js",
+      "git_base_sha256": "e401f9fed8b292a4987c8aa1e73fbd32ac2f6c292c3e24ba5dc4785ce28355df",
+      "observed_sha256": "e401f9fed8b292a4987c8aa1e73fbd32ac2f6c292c3e24ba5dc4785ce28355df",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/forum.js",
+      "git_base_sha256": "99efd917cd9e19c0cec5e3e94929fbf92116cd65e4fe7a6e1309f8f2eff6a5e1",
+      "observed_sha256": "99efd917cd9e19c0cec5e3e94929fbf92116cd65e4fe7a6e1309f8f2eff6a5e1",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/life-workbench.mjs",
+      "git_base_sha256": "29159953c4f65f82e22d1f0c82fbd795d0890dce31843cc40cbc737b2a3765f4",
+      "observed_sha256": "29159953c4f65f82e22d1f0c82fbd795d0890dce31843cc40cbc737b2a3765f4",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/manifests.js",
+      "git_base_sha256": "a5d3f87b0a458af740d46aa7b54c8734a2bfe70a3ba37a56bcef2fdbf6640df7",
+      "observed_sha256": "a5d3f87b0a458af740d46aa7b54c8734a2bfe70a3ba37a56bcef2fdbf6640df7",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/okr.js",
+      "git_base_sha256": "97b95a47005e373aa379dce4f9a4d173fc03c9cfaf83797d65817b56212c7a46",
+      "observed_sha256": "97b95a47005e373aa379dce4f9a4d173fc03c9cfaf83797d65817b56212c7a46",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/scheduler.js",
+      "git_base_sha256": "b26510561dec8648abf1b20f6dbe788035f3ed17258f076638e1cf1b8186f1ea",
+      "observed_sha256": "b26510561dec8648abf1b20f6dbe788035f3ed17258f076638e1cf1b8186f1ea",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/self-ops.js",
+      "git_base_sha256": "e7f6105de4be81e37ccc60e983fe005751880d9b8a0af93c9e0602a78da87620",
+      "observed_sha256": "e7f6105de4be81e37ccc60e983fe005751880d9b8a0af93c9e0602a78da87620",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-assistance.js",
+      "git_base_sha256": "7db1ed7eb671459d2545b63eb00ce485050b07d98fc4fe236ddd83a2e661107d",
+      "observed_sha256": "7db1ed7eb671459d2545b63eb00ce485050b07d98fc4fe236ddd83a2e661107d",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-definition-authoring.js",
+      "git_base_sha256": "c95d4e45c827ae2026318052fc17ae7b2a87e634f49ee31d377883f8bf76ac0d",
+      "observed_sha256": "c95d4e45c827ae2026318052fc17ae7b2a87e634f49ee31d377883f8bf76ac0d",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-definition-read.js",
+      "git_base_sha256": "049358d75a3e2b8082afe172cb77c338da8506e79327e06479645a82b49fc478",
+      "observed_sha256": "049358d75a3e2b8082afe172cb77c338da8506e79327e06479645a82b49fc478",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-execute.js",
+      "git_base_sha256": "14a1c178ee81ce924a8cfbfe20e5f18e64a43a230ce11b6cf31f06738a54ba6c",
+      "observed_sha256": "14a1c178ee81ce924a8cfbfe20e5f18e64a43a230ce11b6cf31f06738a54ba6c",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-human-principal-projection.js",
+      "git_base_sha256": "f86b406f144edc2b3dde459069f391cb20c0193f5da8a8500abbb022625fd96b",
+      "observed_sha256": "f86b406f144edc2b3dde459069f391cb20c0193f5da8a8500abbb022625fd96b",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-linear-authoring.js",
+      "git_base_sha256": "5bee9fd3405a1b7047c6238e4db912f63a228170f8d915794d24744ed9a44990",
+      "observed_sha256": "5bee9fd3405a1b7047c6238e4db912f63a228170f8d915794d24744ed9a44990",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-progress.js",
+      "git_base_sha256": "16835b17b73e3d8560cfd9f99c6c6546c1eb95bf683a762122ff70d4f18c1296",
+      "observed_sha256": "16835b17b73e3d8560cfd9f99c6c6546c1eb95bf683a762122ff70d4f18c1296",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow.js",
+      "git_base_sha256": "207fa11372b6f7164a8a4b77ab31dba40c6cf6d63d6042b765162a48b9599482",
+      "observed_sha256": "207fa11372b6f7164a8a4b77ab31dba40c6cf6d63d6042b765162a48b9599482",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/credential-store.js",
+      "git_base_sha256": "4bc68707b98fb436155ebb3a3aa229ab2afcc388ac7e71660f752f2795b13ac0",
+      "observed_sha256": "4bc68707b98fb436155ebb3a3aa229ab2afcc388ac7e71660f752f2795b13ac0",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/credential.js",
+      "git_base_sha256": "b306ed3e09dce8f0d67e3972648392f3fcc58dbfbbda149c44f6ea43ffd55605",
+      "observed_sha256": "b306ed3e09dce8f0d67e3972648392f3fcc58dbfbbda149c44f6ea43ffd55605",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/error-detail-sanitizer.js",
+      "git_base_sha256": "6eb3307c8d20bced15464fcfac677d9cc6f1b5c44a65d17771a5b5e0f8470c6f",
+      "observed_sha256": "6eb3307c8d20bced15464fcfac677d9cc6f1b5c44a65d17771a5b5e0f8470c6f",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/fixtures/self-assert.js",
+      "git_base_sha256": "e5a7c73ca562ad3c24b7e34357601fa76a375874aabd54ce2a8a749d6db231a7",
+      "observed_sha256": "e5a7c73ca562ad3c24b7e34357601fa76a375874aabd54ce2a8a749d6db231a7",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/gateway.js",
+      "git_base_sha256": "db27861583543379b877803bb2d91056f2e4831b85224aacc504076de616f8a3",
+      "observed_sha256": "db27861583543379b877803bb2d91056f2e4831b85224aacc504076de616f8a3",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/identity.js",
+      "git_base_sha256": "5383d11820a7107cd076156a19d4fc63ea00f335364f10ca2609c95eaf902af1",
+      "observed_sha256": "5383d11820a7107cd076156a19d4fc63ea00f335364f10ca2609c95eaf902af1",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/index.js",
+      "git_base_sha256": "90bbcac4715020b55d1a9d1c699bd78a8d394c2762ae872a6d7d377718cf1a42",
+      "observed_sha256": "90bbcac4715020b55d1a9d1c699bd78a8d394c2762ae872a6d7d377718cf1a42",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/mapping.js",
+      "git_base_sha256": "c171a809abbebbdeafb2c99a17451008d025149b3f542386bce9aba4fcd75edf",
+      "observed_sha256": "c171a809abbebbdeafb2c99a17451008d025149b3f542386bce9aba4fcd75edf",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/readiness.js",
+      "git_base_sha256": "2d7d163ec601cf8387969bf169bd00b8ef220f0e58dccd671209bb52038bb1b7",
+      "observed_sha256": "2d7d163ec601cf8387969bf169bd00b8ef220f0e58dccd671209bb52038bb1b7",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/registry.js",
+      "git_base_sha256": "60932debd3ac865bc414f972e420315071be14ce469ce9c7b77c096b06e327d1",
+      "observed_sha256": "60932debd3ac865bc414f972e420315071be14ce469ce9c7b77c096b06e327d1",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/relay.js",
+      "git_base_sha256": "42e2de5e914d86928a8648a9d49434a2a92bd25548278a60dd9c13661dcb6880",
+      "observed_sha256": "42e2de5e914d86928a8648a9d49434a2a92bd25548278a60dd9c13661dcb6880",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/scheduler-mutation-result.js",
+      "git_base_sha256": "19459621773eef9376b1142c2b8545cbe8fec7903df0f4f46c6f9680d862adf6",
+      "observed_sha256": "19459621773eef9376b1142c2b8545cbe8fec7903df0f4f46c6f9680d862adf6",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/scheduler-validation.js",
+      "git_base_sha256": "4a3db6c16aa7ea827ee120b7b03aeb914ea79ffcd930ce6bdcd36f2b65576716",
+      "observed_sha256": "4a3db6c16aa7ea827ee120b7b03aeb914ea79ffcd930ce6bdcd36f2b65576716",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/schema.js",
+      "git_base_sha256": "ff0ee4cbae21121e0b5af55048227b3a5bf25a331d4af7749f16a2434fa939d8",
+      "observed_sha256": "ff0ee4cbae21121e0b5af55048227b3a5bf25a331d4af7749f16a2434fa939d8",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/targets.js",
+      "git_base_sha256": "d20172841530d1e89f29d6c309c52054d3733417070376c77a5528d35b2d5ef7",
+      "observed_sha256": "d20172841530d1e89f29d6c309c52054d3733417070376c77a5528d35b2d5ef7",
+      "match": true
+    },
+    {
+      "path": "packages/broker/src/transport.js",
+      "git_base_sha256": "c22f0a344a2e4595dc900cdc7851f6ee284b682ae4f6371f0cf29b4464be9663",
+      "observed_sha256": "c22f0a344a2e4595dc900cdc7851f6ee284b682ae4f6371f0cf29b4464be9663",
+      "match": true
+    },
+    {
+      "path": "packages/demo-server/package.json",
+      "git_base_sha256": "e3bc869fab1c55dbba48d421658442461516bce31c7337e3a1abf51784f5e2ba",
+      "observed_sha256": "e3bc869fab1c55dbba48d421658442461516bce31c7337e3a1abf51784f5e2ba",
+      "match": true
+    },
+    {
+      "path": "packages/demo-server/src/index.js",
+      "git_base_sha256": "0819237cd98b0cff5a43eb8c462684217c2ac99e8024136ce82c5572732b6065",
+      "observed_sha256": "0819237cd98b0cff5a43eb8c462684217c2ac99e8024136ce82c5572732b6065",
+      "match": true
+    },
+    {
+      "path": "packages/demo-server/src/session-seam.js",
+      "git_base_sha256": "0a8d1f4caf163bb85e5f821bb78550b44c2edd34371a5baf1dd62b2b45b4baf8",
+      "observed_sha256": "0a8d1f4caf163bb85e5f821bb78550b44c2edd34371a5baf1dd62b2b45b4baf8",
+      "match": true
+    },
+    {
+      "path": "packages/development-execution/src/authority.js",
+      "git_base_sha256": "3cbe83f020807744e3e5a9d3fbfd4aa20fd7062a863b7db3f0bb9c82195ed8a0",
+      "observed_sha256": "3cbe83f020807744e3e5a9d3fbfd4aa20fd7062a863b7db3f0bb9c82195ed8a0",
+      "match": true
+    },
+    {
+      "path": "packages/development-execution/src/codex-backend.js",
+      "git_base_sha256": "2de7e054df3558a8229c6e65467081781b0f55e9d02abf844ed386da6dc09fa7",
+      "observed_sha256": "2de7e054df3558a8229c6e65467081781b0f55e9d02abf844ed386da6dc09fa7",
+      "match": true
+    },
+    {
+      "path": "packages/development-execution/src/engine.js",
+      "git_base_sha256": "65d2965cdb14067cc770eb4cb8b1b3aff32f578e60c026c1e75e6fb8e2107dbe",
+      "observed_sha256": "65d2965cdb14067cc770eb4cb8b1b3aff32f578e60c026c1e75e6fb8e2107dbe",
+      "match": true
+    },
+    {
+      "path": "packages/development-execution/src/index.js",
+      "git_base_sha256": "d2cf0d4db98c16736733726ac38e61a550126af77dba3c6c190b44bc2dd13eb3",
+      "observed_sha256": "d2cf0d4db98c16736733726ac38e61a550126af77dba3c6c190b44bc2dd13eb3",
+      "match": true
+    },
+    {
+      "path": "packages/development-execution/src/ledger.js",
+      "git_base_sha256": "73f18559ea0dd3042e60335a9e701ff19d4fb741628669627112517a91790141",
+      "observed_sha256": "73f18559ea0dd3042e60335a9e701ff19d4fb741628669627112517a91790141",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/package.json",
+      "git_base_sha256": "5b01ecbee487d023449bc45f54b128c22724df915281d6f54dfdafda68342fe1",
+      "observed_sha256": "5b01ecbee487d023449bc45f54b128c22724df915281d6f54dfdafda68342fe1",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/boundary.js",
+      "git_base_sha256": "736712fde7c9016df46f7e39b8531ad32f4e2c76ded5787e519d0dac9f18b8aa",
+      "observed_sha256": "736712fde7c9016df46f7e39b8531ad32f4e2c76ded5787e519d0dac9f18b8aa",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/correlate/context.js",
+      "git_base_sha256": "d3a28fd36278ee39dfec1f1d3baeab6efc616c437dd06279f0ae1a5cc80a0b0b",
+      "observed_sha256": "d3a28fd36278ee39dfec1f1d3baeab6efc616c437dd06279f0ae1a5cc80a0b0b",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/correlate/message-root.js",
+      "git_base_sha256": "3b22335b4dbaee0774f8ebfe25396e244761ac75e80541114b4b22ddfe017de2",
+      "observed_sha256": "3b22335b4dbaee0774f8ebfe25396e244761ac75e80541114b4b22ddfe017de2",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/correlate/scheduler-root.js",
+      "git_base_sha256": "3cefe9f395c4f8e48702a0731085d939c887c315eff7c16031fd699804c45839",
+      "observed_sha256": "3cefe9f395c4f8e48702a0731085d939c887c315eff7c16031fd699804c45839",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/correlate/session-root.js",
+      "git_base_sha256": "c3e8555aad48a40bdfcca2220565ab5212d2b38b9141026206c4c970e59d07c5",
+      "observed_sha256": "c3e8555aad48a40bdfcca2220565ab5212d2b38b9141026206c4c970e59d07c5",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/correlate/workflow-root.js",
+      "git_base_sha256": "5533c3a1e0d35877ac947bc4fa8c0a3ffe5a8aabaf173f387c2eb1f6622b5327",
+      "observed_sha256": "5533c3a1e0d35877ac947bc4fa8c0a3ffe5a8aabaf173f387c2eb1f6622b5327",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/index.js",
+      "git_base_sha256": "b96e2014c496a6620fd9f6b38682ff6607185c5d1f553c14d73eacb71c6d803e",
+      "observed_sha256": "b96e2014c496a6620fd9f6b38682ff6607185c5d1f553c14d73eacb71c6d803e",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/loaders/asm-audit.js",
+      "git_base_sha256": "5146395bb6c0d50bffcbde5b99dffc129d1da7d6e3614dc4f80ee9a44f5d8749",
+      "observed_sha256": "5146395bb6c0d50bffcbde5b99dffc129d1da7d6e3614dc4f80ee9a44f5d8749",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/loaders/attempts-ledger.js",
+      "git_base_sha256": "9f7b4dfcc42a5746d67a7ca9055c5cbf8877ffc1551f76d2ab65a30f95fac3f2",
+      "observed_sha256": "9f7b4dfcc42a5746d67a7ca9055c5cbf8877ffc1551f76d2ab65a30f95fac3f2",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/loaders/lines.js",
+      "git_base_sha256": "0c003053e93d6a04556d759d212912ca71c11e0abb748bd079b62bb71159a6c2",
+      "observed_sha256": "0c003053e93d6a04556d759d212912ca71c11e0abb748bd079b62bb71159a6c2",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/loaders/runtime-evidence.js",
+      "git_base_sha256": "660f40c08af7ee4dcbf1fed7e791575b39d956548a19b99c5b7a8022dc45ee7e",
+      "observed_sha256": "660f40c08af7ee4dcbf1fed7e791575b39d956548a19b99c5b7a8022dc45ee7e",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/loaders/scheduler-history.js",
+      "git_base_sha256": "7981f8cec08d9875df81c77c8aa015dd7e179a028dfa4688126611d285a50798",
+      "observed_sha256": "7981f8cec08d9875df81c77c8aa015dd7e179a028dfa4688126611d285a50798",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/loaders/scheduler-store.js",
+      "git_base_sha256": "545ebb999d890c8fefa2bd335db3f70a59b0e2c01c3f127747315f46973fde3e",
+      "observed_sha256": "545ebb999d890c8fefa2bd335db3f70a59b0e2c01c3f127747315f46973fde3e",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/loaders/session-journal.js",
+      "git_base_sha256": "c82801aeeecf5e4dec9235c903facfef164402945a409d6a232986106a901b25",
+      "observed_sha256": "c82801aeeecf5e4dec9235c903facfef164402945a409d6a232986106a901b25",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/loaders/svc-facts.js",
+      "git_base_sha256": "88b3a575ff3b1abe50256fa4aeca87d829bef4438637e8bd8094e13fa231381d",
+      "observed_sha256": "88b3a575ff3b1abe50256fa4aeca87d829bef4438637e8bd8094e13fa231381d",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/redact.js",
+      "git_base_sha256": "f3547baea2f503e2c8ef184658151e9e7b03362878cdd3307fe3963c8f7cdad0",
+      "observed_sha256": "f3547baea2f503e2c8ef184658151e9e7b03362878cdd3307fe3963c8f7cdad0",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/report.js",
+      "git_base_sha256": "0adfbaaf2bc8c7d80c8f785f50ace207594a6acee6f0fa1b0d986176ef2a7776",
+      "observed_sha256": "0adfbaaf2bc8c7d80c8f785f50ace207594a6acee6f0fa1b0d986176ef2a7776",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/rules.js",
+      "git_base_sha256": "156e31fe474158e60195054452e0535726ab7a87c2b17721134c79e281dfb9f2",
+      "observed_sha256": "156e31fe474158e60195054452e0535726ab7a87c2b17721134c79e281dfb9f2",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/session-index.js",
+      "git_base_sha256": "0a5d1fb30efa095eb79ef22a2691372824d011102b5f167d45b268eb76cc8bce",
+      "observed_sha256": "0a5d1fb30efa095eb79ef22a2691372824d011102b5f167d45b268eb76cc8bce",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/session-listing.js",
+      "git_base_sha256": "cfca58936600eb56ac89e0fcd03a508b7f3533dbc2ff4afc6d0cf25ebf632f0f",
+      "observed_sha256": "cfca58936600eb56ac89e0fcd03a508b7f3533dbc2ff4afc6d0cf25ebf632f0f",
+      "match": true
+    },
+    {
+      "path": "packages/execution-history/src/workflow-node-history.js",
+      "git_base_sha256": "5f6ba33c482cbcb0831be287caf018d0b4835d6f642b2a10a7e4dd59c2a24f14",
+      "observed_sha256": "5f6ba33c482cbcb0831be287caf018d0b4835d6f642b2a10a7e4dd59c2a24f14",
+      "match": true
+    },
+    {
+      "path": "packages/feishu-connector/package.json",
+      "git_base_sha256": "ed871fbef0ae7919ae14a51c5e2b2e5acc875028c5d40f9e632c7f4c865d649e",
+      "observed_sha256": "ed871fbef0ae7919ae14a51c5e2b2e5acc875028c5d40f9e632c7f4c865d649e",
+      "match": true
+    },
+    {
+      "path": "packages/feishu-connector/src/bridge.js",
+      "git_base_sha256": "932d60de949d7754f7d8f80419cdf1726faf0d8a839e24decce8219428325ba5",
+      "observed_sha256": "932d60de949d7754f7d8f80419cdf1726faf0d8a839e24decce8219428325ba5",
+      "match": true
+    },
+    {
+      "path": "packages/feishu-connector/src/core.js",
+      "git_base_sha256": "57e7869a6645777f4272479237e8afc90a868a8be28a381b5c3a5f711fe70158",
+      "observed_sha256": "57e7869a6645777f4272479237e8afc90a868a8be28a381b5c3a5f711fe70158",
+      "match": true
+    },
+    {
+      "path": "packages/feishu-connector/src/index.js",
+      "git_base_sha256": "ebee382de2170248b0d09b6fdaae13becdfbb163d7d3ac109c3200be8e7f355f",
+      "observed_sha256": "ebee382de2170248b0d09b6fdaae13becdfbb163d7d3ac109c3200be8e7f355f",
+      "match": true
+    },
+    {
+      "path": "packages/feishu-connector/src/log-redaction.js",
+      "git_base_sha256": "5e15e6a132659f16cfdabc27b3057f82f36c50fde6275fbc6e4e3ca026f213b6",
+      "observed_sha256": "5e15e6a132659f16cfdabc27b3057f82f36c50fde6275fbc6e4e3ca026f213b6",
+      "match": true
+    },
+    {
+      "path": "packages/feishu-connector/src/processing-reaction.js",
+      "git_base_sha256": "a2fd007500809f12d432dc95393012cb592f2001f1572678b42edbbfe06032f9",
+      "observed_sha256": "a2fd007500809f12d432dc95393012cb592f2001f1572678b42edbbfe06032f9",
+      "match": true
+    },
+    {
+      "path": "packages/feishu-connector/src/reply-card.js",
+      "git_base_sha256": "52c8b3d134b5d31a8a7b553a6f114472b21f49a254786e845967ceb61b89192c",
+      "observed_sha256": "52c8b3d134b5d31a8a7b553a6f114472b21f49a254786e845967ceb61b89192c",
+      "match": true
+    },
+    {
+      "path": "packages/feishu-connector/src/reply-display.js",
+      "git_base_sha256": "b0556246d3640446fc060938e496a30e985f311ac4b5522d565d660360601e21",
+      "observed_sha256": "b0556246d3640446fc060938e496a30e985f311ac4b5522d565d660360601e21",
+      "match": true
+    },
+    {
+      "path": "packages/feishu-connector/standalone.mjs",
+      "git_base_sha256": "3801221b7c7ce07a951135ed945c46e865bc7afdb38adbc015a276692b4a4b92",
+      "observed_sha256": "3801221b7c7ce07a951135ed945c46e865bc7afdb38adbc015a276692b4a4b92",
+      "match": true
+    },
+    {
+      "path": "packages/fixed-operation/package.json",
+      "git_base_sha256": "02e71f5677936ef0eb2e65777f62e7acc746d532511dff78f065d43bd836fb6d",
+      "observed_sha256": "02e71f5677936ef0eb2e65777f62e7acc746d532511dff78f065d43bd836fb6d",
+      "match": true
+    },
+    {
+      "path": "packages/fixed-operation/src/canonical.js",
+      "git_base_sha256": "c9fc5efdd2fb9165cbd5fa10da072e4714785ce899d52086c0dde8c5d139c932",
+      "observed_sha256": "c9fc5efdd2fb9165cbd5fa10da072e4714785ce899d52086c0dde8c5d139c932",
+      "match": true
+    },
+    {
+      "path": "packages/fixed-operation/src/errors.js",
+      "git_base_sha256": "1c6d091eb1010195790455fd1e38a49bd39ae52d8aaa85bcd567094a38b6cd4b",
+      "observed_sha256": "1c6d091eb1010195790455fd1e38a49bd39ae52d8aaa85bcd567094a38b6cd4b",
+      "match": true
+    },
+    {
+      "path": "packages/fixed-operation/src/fixtures.js",
+      "git_base_sha256": "4ee1b35d3be625e4728f9fdfc8e9c63448fee4c6dd8cf82f6060eb1ca90d1b1b",
+      "observed_sha256": "4ee1b35d3be625e4728f9fdfc8e9c63448fee4c6dd8cf82f6060eb1ca90d1b1b",
+      "match": true
+    },
+    {
+      "path": "packages/fixed-operation/src/index.js",
+      "git_base_sha256": "e46a0625e33d49ac72fd7eabfc5acdbfc820dbea09fb909d51c04355e0375516",
+      "observed_sha256": "e46a0625e33d49ac72fd7eabfc5acdbfc820dbea09fb909d51c04355e0375516",
+      "match": true
+    },
+    {
+      "path": "packages/fixed-operation/src/registry.js",
+      "git_base_sha256": "4596adf537935f682d5a27422d5bdbcfcf9fafaba994f31c4b71b69aaba7ad74",
+      "observed_sha256": "4596adf537935f682d5a27422d5bdbcfcf9fafaba994f31c4b71b69aaba7ad74",
+      "match": true
+    },
+    {
+      "path": "packages/fixed-operation/src/trusted-context.js",
+      "git_base_sha256": "4ba94a81d5c01dd92c9f83f371a9af0691280f409df7b1208512d0d9adcefcb5",
+      "observed_sha256": "4ba94a81d5c01dd92c9f83f371a9af0691280f409df7b1208512d0d9adcefcb5",
+      "match": true
+    },
+    {
+      "path": "packages/notification-ingress/package.json",
+      "git_base_sha256": "84e72dd5b9d129a05edb0b97ff80010306c1db1b8a45b1732b02f9635ae8e6df",
+      "observed_sha256": "84e72dd5b9d129a05edb0b97ff80010306c1db1b8a45b1732b02f9635ae8e6df",
+      "match": true
+    },
+    {
+      "path": "packages/notification-ingress/src/auth.js",
+      "git_base_sha256": "f42d3ff45f622850631acefb9cc53f27f7839d18d05bbabb9c435dd521e76f14",
+      "observed_sha256": "f42d3ff45f622850631acefb9cc53f27f7839d18d05bbabb9c435dd521e76f14",
+      "match": true
+    },
+    {
+      "path": "packages/notification-ingress/src/deliver-handler.js",
+      "git_base_sha256": "22de52032f8b701687a1e3dc17444736cc8a55090f5f58480b30b5ee74d962c9",
+      "observed_sha256": "22de52032f8b701687a1e3dc17444736cc8a55090f5f58480b30b5ee74d962c9",
+      "match": true
+    },
+    {
+      "path": "packages/notification-ingress/src/idempotency-persistence.js",
+      "git_base_sha256": "42a075d0e16d0168b23e5801076e757998ec30bc10824c7841b020e0a73428e7",
+      "observed_sha256": "42a075d0e16d0168b23e5801076e757998ec30bc10824c7841b020e0a73428e7",
+      "match": true
+    },
+    {
+      "path": "packages/notification-ingress/src/idempotency-record.js",
+      "git_base_sha256": "2b0b118637c5e03bc308daadf5e3b72157b5707e6e1c3c6328f28b5e4bf0ef8d",
+      "observed_sha256": "2b0b118637c5e03bc308daadf5e3b72157b5707e6e1c3c6328f28b5e4bf0ef8d",
+      "match": true
+    },
+    {
+      "path": "packages/notification-ingress/src/idempotency.js",
+      "git_base_sha256": "28cc72da4d71d782fbc5384b138a5648eb4da42141725739f61bf1eb0928da92",
+      "observed_sha256": "28cc72da4d71d782fbc5384b138a5648eb4da42141725739f61bf1eb0928da92",
+      "match": true
+    },
+    {
+      "path": "packages/notification-ingress/src/index.js",
+      "git_base_sha256": "276d3b0ac568687d2c7f25ccead1d636843c18dd112f93a1c1f4520848bc37cc",
+      "observed_sha256": "276d3b0ac568687d2c7f25ccead1d636843c18dd112f93a1c1f4520848bc37cc",
+      "match": true
+    },
+    {
+      "path": "packages/notification-ingress/src/wire-response.js",
+      "git_base_sha256": "2a3240753ea122dbcbbf35006209ba4e7418dbb984494508e8abdf974855ac80",
+      "observed_sha256": "2a3240753ea122dbcbbf35006209ba4e7418dbb984494508e8abdf974855ac80",
+      "match": true
+    },
+    {
+      "path": "packages/owner-guard/package.json",
+      "git_base_sha256": "78f226ba67e06671924cd6ccd4028585c98b8aa40c1cab72a21ff46ff270c1ef",
+      "observed_sha256": "78f226ba67e06671924cd6ccd4028585c98b8aa40c1cab72a21ff46ff270c1ef",
+      "match": true
+    },
+    {
+      "path": "packages/owner-guard/src/index.js",
+      "git_base_sha256": "4633077e73198bcce1436832bfbfcbcbd048ae2ec8a7ad661e9cb32b11afac51",
+      "observed_sha256": "4633077e73198bcce1436832bfbfcbcbd048ae2ec8a7ad661e9cb32b11afac51",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/package.json",
+      "git_base_sha256": "a462648270153f4d26c07d5e06a483ec665e6c00142a8b548afe76fd6b89aaf2",
+      "observed_sha256": "a462648270153f4d26c07d5e06a483ec665e6c00142a8b548afe76fd6b89aaf2",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/agent-process-admin-routes.js",
+      "git_base_sha256": "81be1a2be2dc7c79a3bdb5301b4fbb05b8c9eccc3656250b3fa6ed6cd1966f21",
+      "observed_sha256": "81be1a2be2dc7c79a3bdb5301b4fbb05b8c9eccc3656250b3fa6ed6cd1966f21",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/conversation/auth.js",
+      "git_base_sha256": "ec835d2cf72de3e05cb5ed30afeab98f6e30ce0ffce679f2a0098c98426b631e",
+      "observed_sha256": "ec835d2cf72de3e05cb5ed30afeab98f6e30ce0ffce679f2a0098c98426b631e",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/conversation/http.js",
+      "git_base_sha256": "d854c53ceeb425ddc4c169eef28173b9e4213d5d79bb113ee2d9e5c04790ccd2",
+      "observed_sha256": "d854c53ceeb425ddc4c169eef28173b9e4213d5d79bb113ee2d9e5c04790ccd2",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/conversation/native-proof.js",
+      "git_base_sha256": "0abfe42a16c4bdf747988555583e9e01c6b6a56fdad48285a15a3f5e91a5a3a2",
+      "observed_sha256": "0abfe42a16c4bdf747988555583e9e01c6b6a56fdad48285a15a3f5e91a5a3a2",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/conversation/protocol.js",
+      "git_base_sha256": "4b4dcdc0375dd175c719d08c622a48175e2c72d0b0aba1f4e511656b3506bbbd",
+      "observed_sha256": "4b4dcdc0375dd175c719d08c622a48175e2c72d0b0aba1f4e511656b3506bbbd",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/conversation/runtime.js",
+      "git_base_sha256": "7c08dec0422b024f7f0d8f19802dc50de29c8a0cc471f58922f8a638a9a5cbe5",
+      "observed_sha256": "7c08dec0422b024f7f0d8f19802dc50de29c8a0cc471f58922f8a638a9a5cbe5",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/conversation/service.js",
+      "git_base_sha256": "61d872a1cba52a9eac58940ad498d058c309e91afa979e34d79ec560c5f7d9a3",
+      "observed_sha256": "61d872a1cba52a9eac58940ad498d058c309e91afa979e34d79ec560c5f7d9a3",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/conversation/store.js",
+      "git_base_sha256": "2a8060ae717fdb073cfb0397dc31da045ce171ded74fcb450a3b030817d7bafc",
+      "observed_sha256": "2a8060ae717fdb073cfb0397dc31da045ce171ded74fcb450a3b030817d7bafc",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/history-auth.js",
+      "git_base_sha256": "c632779322f13e85455820286a5f3828ac26d17ce9894c7b445dac4c579c76b2",
+      "observed_sha256": "c632779322f13e85455820286a5f3828ac26d17ce9894c7b445dac4c579c76b2",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/history-listener.js",
+      "git_base_sha256": "c0d970daaaccfed8413bfcbf520a572d586db31623feae1a3b8db80157f5ffe0",
+      "observed_sha256": "c0d970daaaccfed8413bfcbf520a572d586db31623feae1a3b8db80157f5ffe0",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/index.js",
+      "git_base_sha256": "c5998ca5e18442981d95a815ffcb78ee39297b56f8eeb3e6e9993247e81c97d8",
+      "observed_sha256": "c5998ca5e18442981d95a815ffcb78ee39297b56f8eeb3e6e9993247e81c97d8",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/scheduler-auth.js",
+      "git_base_sha256": "5802cc884d84159133fb0dca9a46b6a79b08e0a953ec14c2f6f5f3a396dd3e4e",
+      "observed_sha256": "5802cc884d84159133fb0dca9a46b6a79b08e0a953ec14c2f6f5f3a396dd3e4e",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/scheduler-health-routes.js",
+      "git_base_sha256": "8c04161f807f17aafb4a0cb265ea07b5f95a908b1ad735602f00f33c8a9ece5d",
+      "observed_sha256": "8c04161f807f17aafb4a0cb265ea07b5f95a908b1ad735602f00f33c8a9ece5d",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/scheduler-routes.js",
+      "git_base_sha256": "6476db6c03e45429a8a0861b29a2c4a630b29f2ac39c01cde5876d8dce83aa5f",
+      "observed_sha256": "6476db6c03e45429a8a0861b29a2c4a630b29f2ac39c01cde5876d8dce83aa5f",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/voice-transcription-worker.js",
+      "git_base_sha256": "00a6d410457e2474db51ef572f31f598268512b7a55df5037bea9a632ec36333",
+      "observed_sha256": "00a6d410457e2474db51ef572f31f598268512b7a55df5037bea9a632ec36333",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/voice-transcription.js",
+      "git_base_sha256": "bb253fe7f01458bc71d28e20f3eb49c58f3b6bec3342a2bb25c395daf1e3e256",
+      "observed_sha256": "bb253fe7f01458bc71d28e20f3eb49c58f3b6bec3342a2bb25c395daf1e3e256",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/workflow-admission.js",
+      "git_base_sha256": "339bd0eb1fd22fb2ec37e5c0c0201e4c816f3bde20a6665529c45d0ec2a2329e",
+      "observed_sha256": "339bd0eb1fd22fb2ec37e5c0c0201e4c816f3bde20a6665529c45d0ec2a2329e",
+      "match": true
+    },
+    {
+      "path": "packages/product-api/src/workflow-execution-routes.js",
+      "git_base_sha256": "fff8095040f2ee4946d6fcf083d3ceb47fad90d5a0868e92a5aca0e0d33b7ffc",
+      "observed_sha256": "fff8095040f2ee4946d6fcf083d3ceb47fad90d5a0868e92a5aca0e0d33b7ffc",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/package.json",
+      "git_base_sha256": "e83317fe9f9c276627fc80c6d9bd4df970048b13bfeb3f35516783fd9890a59b",
+      "observed_sha256": "e83317fe9f9c276627fc80c6d9bd4df970048b13bfeb3f35516783fd9890a59b",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session-messaging.js",
+      "git_base_sha256": "5928ac293853c646f9062456ac8631882b3a40727370437896ef7068089b6bcf",
+      "observed_sha256": "5928ac293853c646f9062456ac8631882b3a40727370437896ef7068089b6bcf",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session-reply-wait.js",
+      "git_base_sha256": "9b275f865a64f2700bddbbb9632678f49eb096921f74047705fac521b7d217f6",
+      "observed_sha256": "9b275f865a64f2700bddbbb9632678f49eb096921f74047705fac521b7d217f6",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session/audit.js",
+      "git_base_sha256": "cad16d223f2a2c56a1aa87d771ab6d6e269db6514f7b55b67b0256c7342792a7",
+      "observed_sha256": "cad16d223f2a2c56a1aa87d771ab6d6e269db6514f7b55b67b0256c7342792a7",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session/projection-redaction.js",
+      "git_base_sha256": "83117df9d41b7d68e460d96178a544d9ae982ac37dfce7423d0b3d320f2ad9d0",
+      "observed_sha256": "83117df9d41b7d68e460d96178a544d9ae982ac37dfce7423d0b3d320f2ad9d0",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session/runtime.js",
+      "git_base_sha256": "d272bee82cc3241ee30f7891aa30d1ed2b060f748627058a3201603ca4b82aa0",
+      "observed_sha256": "d272bee82cc3241ee30f7891aa30d1ed2b060f748627058a3201603ca4b82aa0",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session/turn-inspection.js",
+      "git_base_sha256": "583494fd55c883597fd6f07bcdec4927ca17c50c2571dc518c976e95f968e019",
+      "observed_sha256": "583494fd55c883597fd6f07bcdec4927ca17c50c2571dc518c976e95f968e019",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/broker-composition.js",
+      "git_base_sha256": "d05a8230d2399f0a59e321657362047aaa66c90f38c70f4853bef69b0ee78e2a",
+      "observed_sha256": "d05a8230d2399f0a59e321657362047aaa66c90f38c70f4853bef69b0ee78e2a",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/compose.js",
+      "git_base_sha256": "04287bd404bf6b45d6026a82443ec2b94b944d7502a7e7766af295f8125a1cce",
+      "observed_sha256": "c31db4e1342344c32810076ab0b6d8a58cb1bf94d8a505fc92623771c5746838",
+      "match": false
+    },
+    {
+      "path": "packages/production-runtime/src/context.js",
+      "git_base_sha256": "7af2e1407cdeb3ab157916bf4867695e36c141dcace88c8d67d8e20e0a4c04c7",
+      "observed_sha256": "7af2e1407cdeb3ab157916bf4867695e36c141dcace88c8d67d8e20e0a4c04c7",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/development-execution-runtime.js",
+      "git_base_sha256": "66a6c6ea9dbce25088a694098c91db724dbd2d9342a923c767bb05050ba4b849",
+      "observed_sha256": "66a6c6ea9dbce25088a694098c91db724dbd2d9342a923c767bb05050ba4b849",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/entry.js",
+      "git_base_sha256": "59b87c66b22d49f823b3f2fbaf78cd81543388bb20ad68a6051b2a9a6370fb9c",
+      "observed_sha256": "59b87c66b22d49f823b3f2fbaf78cd81543388bb20ad68a6051b2a9a6370fb9c",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/execution-history/runtime.js",
+      "git_base_sha256": "2786e90588331116c582a5f69f46cdf48990079de6b0bceaf49c4a5ad3a3b45b",
+      "observed_sha256": "2786e90588331116c582a5f69f46cdf48990079de6b0bceaf49c4a5ad3a3b45b",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/feishu-env.js",
+      "git_base_sha256": "db225ebc434d92930f3b3b37c53435925ef35fe47acb74fee16fd267b1dc2201",
+      "observed_sha256": "db225ebc434d92930f3b3b37c53435925ef35fe47acb74fee16fd267b1dc2201",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/fixed-operation-runtime.js",
+      "git_base_sha256": "6d7fc8fae63ddfafc8789fd88273120e04dd38de32a7648fb631162ec3622ddf",
+      "observed_sha256": "6d7fc8fae63ddfafc8789fd88273120e04dd38de32a7648fb631162ec3622ddf",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/identity/provider-environment.js",
+      "git_base_sha256": "3deb221a63dd5998cc29f579de2a4842b72f065f571fb6622d3acc315d0337b1",
+      "observed_sha256": "3deb221a63dd5998cc29f579de2a4842b72f065f571fb6622d3acc315d0337b1",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/identity/workflow-human-principal-projection.js",
+      "git_base_sha256": "ee5f80bcc5a25efab777c4f8dd2203712bfa0f06bea18de94bd31c06c248fb70",
+      "observed_sha256": "ee5f80bcc5a25efab777c4f8dd2203712bfa0f06bea18de94bd31c06c248fb70",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/model-overrides.js",
+      "git_base_sha256": "15fa37832c5696ca9561a1ff260734bc5a4a13814380fc5828a6b5fbd58081a3",
+      "observed_sha256": "15fa37832c5696ca9561a1ff260734bc5a4a13814380fc5828a6b5fbd58081a3",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/native-arm64/admission.js",
+      "git_base_sha256": "8b3ab6abd7c2d018655ff23dbed655f38bb88a600d4fa65ee33cfb568ca6dae7",
+      "observed_sha256": "8b3ab6abd7c2d018655ff23dbed655f38bb88a600d4fa65ee33cfb568ca6dae7",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/native-arm64/inventory.js",
+      "git_base_sha256": "63fad213132060481ae68cd96725b1908f2f7f0a12d4014336f48a0dcc3cf842",
+      "observed_sha256": "63fad213132060481ae68cd96725b1908f2f7f0a12d4014336f48a0dcc3cf842",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/notification-ingress-runtime.js",
+      "git_base_sha256": "d4685a4ae9dae89e65c5a6e8e44b706ff9fc6fd6003087d1ce3a87f3b4253df8",
+      "observed_sha256": "d4685a4ae9dae89e65c5a6e8e44b706ff9fc6fd6003087d1ce3a87f3b4253df8",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/paths.js",
+      "git_base_sha256": "44dbf7df2dd8e660b0bfb67d22e7bad2833c9147a0463577e859cf916ad54f36",
+      "observed_sha256": "44dbf7df2dd8e660b0bfb67d22e7bad2833c9147a0463577e859cf916ad54f36",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/restart-boundary.js",
+      "git_base_sha256": "449fa96838165829d2bdd0802cd3200984b4b0c9e05f3f5a0456fb336148841f",
+      "observed_sha256": "449fa96838165829d2bdd0802cd3200984b4b0c9e05f3f5a0456fb336148841f",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler-invoker.js",
+      "git_base_sha256": "d02643a28bcb8dce705bfd6448ddd84a5bb4a88fe4d1bfc76114b798956e8f7d",
+      "observed_sha256": "d02643a28bcb8dce705bfd6448ddd84a5bb4a88fe4d1bfc76114b798956e8f7d",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler-result.js",
+      "git_base_sha256": "fe0347b4cf5d8cec55843b4669ca3e1b9de984726303342adb206ff5a6203147",
+      "observed_sha256": "fe0347b4cf5d8cec55843b4669ca3e1b9de984726303342adb206ff5a6203147",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-canary-control.js",
+      "git_base_sha256": "d226b9b8c53e97438ab5aab5e13c07d1b2396a654e1961e0104664c7bcf59ef4",
+      "observed_sha256": "d226b9b8c53e97438ab5aab5e13c07d1b2396a654e1961e0104664c7bcf59ef4",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-desired-state.js",
+      "git_base_sha256": "52eedf03806f8d9886a7629a33b3ad9100ea8816b362978feafe3503343f747a",
+      "observed_sha256": "52eedf03806f8d9886a7629a33b3ad9100ea8816b362978feafe3503343f747a",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-durable-file.js",
+      "git_base_sha256": "0d8113e060e2b704a9bc76c042c838a3535a1113940eec7546eb3f4fa4a5c12a",
+      "observed_sha256": "0d8113e060e2b704a9bc76c042c838a3535a1113940eec7546eb3f4fa4a5c12a",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-file-metadata.js",
+      "git_base_sha256": "e5e085b5e7f92bb7beef09f419626ce9141e61683e9331188cbbe3c38dada8f8",
+      "observed_sha256": "e5e085b5e7f92bb7beef09f419626ce9141e61683e9331188cbbe3c38dada8f8",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-incident-directory.js",
+      "git_base_sha256": "4712bcb1b319c714fb040a5aae2c57d4cd782257ad7fb56118631a367fbdd4da",
+      "observed_sha256": "4712bcb1b319c714fb040a5aae2c57d4cd782257ad7fb56118631a367fbdd4da",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-incident-migration.js",
+      "git_base_sha256": "e9a83ca469bc48b389d7b4c2b665362a2248330dd5da851b786f49d0fb1bdcc7",
+      "observed_sha256": "e9a83ca469bc48b389d7b4c2b665362a2248330dd5da851b786f49d0fb1bdcc7",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-launchd.js",
+      "git_base_sha256": "4e5e98426ec7b1d9fe33a03d67cc8993f66ac7756338a98f0e3b3d3a909d5faf",
+      "observed_sha256": "4e5e98426ec7b1d9fe33a03d67cc8993f66ac7756338a98f0e3b3d3a909d5faf",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-postdeploy-finalize.js",
+      "git_base_sha256": "11dc08ce18f19dddae311944db3310ea5ca5d7b2f204a000927a24f04a57667e",
+      "observed_sha256": "11dc08ce18f19dddae311944db3310ea5ca5d7b2f204a000927a24f04a57667e",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-rollback-file.js",
+      "git_base_sha256": "c24637041f94f760c54d8256fb6c0d25d8a7f385d4b67f4a4a8bcc539002a708",
+      "observed_sha256": "c24637041f94f760c54d8256fb6c0d25d8a7f385d4b67f4a4a8bcc539002a708",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-rollback.js",
+      "git_base_sha256": "7ca608a62e75ac452cf11a2daa390c0295e06a92a72aa13fbc0d3f1812d3164c",
+      "observed_sha256": "7ca608a62e75ac452cf11a2daa390c0295e06a92a72aa13fbc0d3f1812d3164c",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-routing.js",
+      "git_base_sha256": "c2e433cc2de05f56808ce88d0b9d274a463c27e1fc39a38b523dd92c5fdbd88b",
+      "observed_sha256": "c2e433cc2de05f56808ce88d0b9d274a463c27e1fc39a38b523dd92c5fdbd88b",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-runtime-restart.js",
+      "git_base_sha256": "953c919d280c1599324dda67b814af3838a67b62ddd3f112d16c9c1013cd4903",
+      "observed_sha256": "953c919d280c1599324dda67b814af3838a67b62ddd3f112d16c9c1013cd4903",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-watchdog-replay.js",
+      "git_base_sha256": "7a022f81915fa11ac2f7e42b34fa5145530d3b68f699be8c0aab271146aea594",
+      "observed_sha256": "7a022f81915fa11ac2f7e42b34fa5145530d3b68f699be8c0aab271146aea594",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/health-runtime.js",
+      "git_base_sha256": "49c2fb7b77e6d5bfe8d38e3c66c613b527f83a3bed110eb95c6d8000201c694a",
+      "observed_sha256": "49c2fb7b77e6d5bfe8d38e3c66c613b527f83a3bed110eb95c6d8000201c694a",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/history-runtime.js",
+      "git_base_sha256": "ee7f82256c01d09c58aa9f16f695f2edc11e98a7628ca55fc338604d837b1144",
+      "observed_sha256": "ee7f82256c01d09c58aa9f16f695f2edc11e98a7628ca55fc338604d837b1144",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/restart-drain.js",
+      "git_base_sha256": "016ef8a6b26a4567dc7075c6dd039e05bf8217b80869d47a1882e66ac2c85b0f",
+      "observed_sha256": "016ef8a6b26a4567dc7075c6dd039e05bf8217b80869d47a1882e66ac2c85b0f",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/self-service-runtime.js",
+      "git_base_sha256": "acfde749a7c2c9201cc6270c4829c1267ce94d995b5610f39a64da64d2101df0",
+      "observed_sha256": "acfde749a7c2c9201cc6270c4829c1267ce94d995b5610f39a64da64d2101df0",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/shared-codex-migration-cli.js",
+      "git_base_sha256": "a974f8970a16007190ddfddef2af8e23686919f3fae58a42b64a076e68b30be0",
+      "observed_sha256": "a974f8970a16007190ddfddef2af8e23686919f3fae58a42b64a076e68b30be0",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/shared-codex-migration-executable.js",
+      "git_base_sha256": "94676f716c908a5f3f386dcd7c894d30ca70900808b54148bdb8ba0a0fe5c359",
+      "observed_sha256": "94676f716c908a5f3f386dcd7c894d30ca70900808b54148bdb8ba0a0fe5c359",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/shared-codex-migration.js",
+      "git_base_sha256": "b2e111fbdfe53ea850938d20a61be9dfaafd7bc50f9798e48e940914b54a67ab",
+      "observed_sha256": "b2e111fbdfe53ea850938d20a61be9dfaafd7bc50f9798e48e940914b54a67ab",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/shutdown-result.js",
+      "git_base_sha256": "84422ee9651ce4dc1e065fef324a91b193315a5b7fd1937e73932aa7f24ca23b",
+      "observed_sha256": "84422ee9651ce4dc1e065fef324a91b193315a5b7fd1937e73932aa7f24ca23b",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/v2-ingress-gate.js",
+      "git_base_sha256": "06d9c0c62cefedad46ccbb726e2f3e81313ccee5e358034ca3b413662679edd1",
+      "observed_sha256": "06d9c0c62cefedad46ccbb726e2f3e81313ccee5e358034ca3b413662679edd1",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/workflow-execution-context-runtime.js",
+      "git_base_sha256": "44c5d91912e7ca98f2325301f308a298b52c664656819b98cb53150dd97da578",
+      "observed_sha256": "44c5d91912e7ca98f2325301f308a298b52c664656819b98cb53150dd97da578",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/workflow-execution-runtime.js",
+      "git_base_sha256": "319a81a09032f36c6bee251c8ccbee9eb2bf1b90e33d870b3f019b0e199c750f",
+      "observed_sha256": "319a81a09032f36c6bee251c8ccbee9eb2bf1b90e33d870b3f019b0e199c750f",
+      "match": true
+    },
+    {
+      "path": "packages/production-runtime/src/workflow-progress-runtime.js",
+      "git_base_sha256": "f8b61ed2ae9342474b3e7c52a0fd86e206687b180476d213beccf34bfaced8aa",
+      "observed_sha256": "f8b61ed2ae9342474b3e7c52a0fd86e206687b180476d213beccf34bfaced8aa",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler-router/package.json",
+      "git_base_sha256": "ae3f42b21de78d61193d9968c8f239fc5648ed816d4045235982c8d86976d80d",
+      "observed_sha256": "ae3f42b21de78d61193d9968c8f239fc5648ed816d4045235982c8d86976d80d",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler-router/src/index.js",
+      "git_base_sha256": "1c0fca67ce7e4ece326f174e3a4f75291cee85f948d119d30fdc6ac528d31496",
+      "observed_sha256": "1c0fca67ce7e4ece326f174e3a4f75291cee85f948d119d30fdc6ac528d31496",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/package.json",
+      "git_base_sha256": "3ea454db4db55a3a035a63526a140b1353f1faf9f533ca9fdcc96748ab8aa45a",
+      "observed_sha256": "3ea454db4db55a3a035a63526a140b1353f1faf9f533ca9fdcc96748ab8aa45a",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/control.js",
+      "git_base_sha256": "be0ca2df850b6b1bc9a505c052b4882010829b16dfc0d0684f1ada2b2a9cfb6a",
+      "observed_sha256": "be0ca2df850b6b1bc9a505c052b4882010829b16dfc0d0684f1ada2b2a9cfb6a",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/eligibility.js",
+      "git_base_sha256": "939863a5d706c74c9129a443b00445ea638dd7791c60609259ee80d11006627b",
+      "observed_sha256": "939863a5d706c74c9129a443b00445ea638dd7791c60609259ee80d11006627b",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/history.js",
+      "git_base_sha256": "437188a64009ab048037e23c20aa4387b0c24211399f53a8d442fdf931acffe4",
+      "observed_sha256": "437188a64009ab048037e23c20aa4387b0c24211399f53a8d442fdf931acffe4",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/history/history-model.js",
+      "git_base_sha256": "3acaeeba8e734a0cdb8d30724c82188609d77961b022768eaf76246ba881f68d",
+      "observed_sha256": "3acaeeba8e734a0cdb8d30724c82188609d77961b022768eaf76246ba881f68d",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/history/history-projection.js",
+      "git_base_sha256": "53876fb55fb1d4ce29ce224bfc0dd5d28d7980cd8e2a5389afa61ec4ced3850d",
+      "observed_sha256": "53876fb55fb1d4ce29ce224bfc0dd5d28d7980cd8e2a5389afa61ec4ced3850d",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/history/history-sink.js",
+      "git_base_sha256": "7d7469aa57b8566d1279c6e1c13b5c350269a839da80650d962b4955835ba97f",
+      "observed_sha256": "7d7469aa57b8566d1279c6e1c13b5c350269a839da80650d962b4955835ba97f",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/history/history-storage.js",
+      "git_base_sha256": "ba742f6f7f30930260835fd77d3af2e3d17723256f6db882d10a24c63b968519",
+      "observed_sha256": "ba742f6f7f30930260835fd77d3af2e3d17723256f6db882d10a24c63b968519",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/history/history.js",
+      "git_base_sha256": "14298c1d918111c68df8936554dc6fe8ac0158b6dfa8b8fb539af0f0b104815d",
+      "observed_sha256": "14298c1d918111c68df8936554dc6fe8ac0158b6dfa8b8fb539af0f0b104815d",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/import-openclaw.js",
+      "git_base_sha256": "890ccfabd4203d40eaed3cadb88885c29948db68e5a09ada744df9811a532005",
+      "observed_sha256": "890ccfabd4203d40eaed3cadb88885c29948db68e5a09ada744df9811a532005",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/index.js",
+      "git_base_sha256": "9ded6900d6f60b1f50c04a5327a5d1b4dd92b31ca7816f34707198a3432c705d",
+      "observed_sha256": "9ded6900d6f60b1f50c04a5327a5d1b4dd92b31ca7816f34707198a3432c705d",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/job-model.js",
+      "git_base_sha256": "1d5b8045244d883c2738c888ba32f49d8a1f10211953d5b0bdddad1167be1c86",
+      "observed_sha256": "1d5b8045244d883c2738c888ba32f49d8a1f10211953d5b0bdddad1167be1c86",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/lock.js",
+      "git_base_sha256": "7f725f4289e8f57c97c0ad7987c95e48fa0e0b8660a0ba5b92ba302bd95700f8",
+      "observed_sha256": "7f725f4289e8f57c97c0ad7987c95e48fa0e0b8660a0ba5b92ba302bd95700f8",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/occurrence-model.js",
+      "git_base_sha256": "6db88f5cee57d8a217fabde4749ffd7bf677399f348208131b2e2f2309ee9292",
+      "observed_sha256": "accb4e4bb20ed867f9c06c7704dbd70cc6652c27b76bc28a4092611db57f5847",
+      "match": false
+    },
+    {
+      "path": "packages/scheduler/src/occurrence.js",
+      "git_base_sha256": "2e62f8429608c1047532ce51e0f7c07c2cab85c6fe8a61d804d65bf555b863f6",
+      "observed_sha256": "2e62f8429608c1047532ce51e0f7c07c2cab85c6fe8a61d804d65bf555b863f6",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/reconcile.js",
+      "git_base_sha256": "54424c728d58a939d4a21d0227424f75d3985a1547e89ddff8f64e90ae231ff8",
+      "observed_sha256": "54424c728d58a939d4a21d0227424f75d3985a1547e89ddff8f64e90ae231ff8",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/schedule.js",
+      "git_base_sha256": "be487dfe542bb0006ed5a3443c9cacf3fbf67a665451afbd356ca80fb23e1933",
+      "observed_sha256": "be487dfe542bb0006ed5a3443c9cacf3fbf67a665451afbd356ca80fb23e1933",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/scheduler.js",
+      "git_base_sha256": "778a8ebc2e67284dbd771c522359dd04150b3c892d03ffe36aa4dbb73b8f3943",
+      "observed_sha256": "778a8ebc2e67284dbd771c522359dd04150b3c892d03ffe36aa4dbb73b8f3943",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/seams.js",
+      "git_base_sha256": "6f851cf3681ba9d26f1da547134d91ab5aec89d4629a748668dce288ac0c6ae0",
+      "observed_sha256": "6f851cf3681ba9d26f1da547134d91ab5aec89d4629a748668dce288ac0c6ae0",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/self-ops/diagnosis.js",
+      "git_base_sha256": "57fe9cf42038233637ad0e8cd917fff49fbd7ea09a37929058cbc550c281fbc0",
+      "observed_sha256": "57fe9cf42038233637ad0e8cd917fff49fbd7ea09a37929058cbc550c281fbc0",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/self-ops/index.js",
+      "git_base_sha256": "0fcb6811f53278f23bca7bfed1cd841a1034874054533453935e4c75da4c4293",
+      "observed_sha256": "0fcb6811f53278f23bca7bfed1cd841a1034874054533453935e4c75da4c4293",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/self-ops/invoker-outcome.js",
+      "git_base_sha256": "9d2932647ce81532cfa04c39fa61c11306e8e900d6f7354cc91e39da175d63b0",
+      "observed_sha256": "9d2932647ce81532cfa04c39fa61c11306e8e900d6f7354cc91e39da175d63b0",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/self-service.js",
+      "git_base_sha256": "4bb5b4407c6bac7fca77c9b41c706de9b41489e7a8cafd323650b634e3253d5d",
+      "observed_sha256": "4bb5b4407c6bac7fca77c9b41c706de9b41489e7a8cafd323650b634e3253d5d",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/self-service/access.js",
+      "git_base_sha256": "b2f78f75a5e43fab6b6292a41669dd9adc06c04b733ca0f0a89e943c3952a7f4",
+      "observed_sha256": "b2f78f75a5e43fab6b6292a41669dd9adc06c04b733ca0f0a89e943c3952a7f4",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/self-service/clone.js",
+      "git_base_sha256": "4af125ed46fa828601eeb78c42956cabe4fe556cb555762bae704108acc48f8a",
+      "observed_sha256": "4af125ed46fa828601eeb78c42956cabe4fe556cb555762bae704108acc48f8a",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/self-service/critical-job-guard.js",
+      "git_base_sha256": "3aac816ab72bc5f62005bf8979d9e2be999b9d8000d45efb8b635f07541cdcac",
+      "observed_sha256": "3aac816ab72bc5f62005bf8979d9e2be999b9d8000d45efb8b635f07541cdcac",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/self-service/index.js",
+      "git_base_sha256": "610c7954beffca668581311cb2a8255fb90919055a499043e6deea944367b1a2",
+      "observed_sha256": "610c7954beffca668581311cb2a8255fb90919055a499043e6deea944367b1a2",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/self-service/projections.js",
+      "git_base_sha256": "cc128e6e57fa086f00034b38f3eb9d1a9a4e64b3cf4778fa848ee425075691c9",
+      "observed_sha256": "cc128e6e57fa086f00034b38f3eb9d1a9a4e64b3cf4778fa848ee425075691c9",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/self-service/schema.js",
+      "git_base_sha256": "268dcc076143755937991498ea7f3102c627aabf2388aacc8bb3c3ae31b358e6",
+      "observed_sha256": "268dcc076143755937991498ea7f3102c627aabf2388aacc8bb3c3ae31b358e6",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/store-migration.js",
+      "git_base_sha256": "e2ffe9c9fe00c74b2ff24fc4d444e2caccd6dd5e2fd00ff174f15ee4a7152d5c",
+      "observed_sha256": "e2ffe9c9fe00c74b2ff24fc4d444e2caccd6dd5e2fd00ff174f15ee4a7152d5c",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/store.js",
+      "git_base_sha256": "a8eacf4f16edd207b7181a5fcc47b30a4b26c9e852d335ca2746c88fd4ac3fcc",
+      "observed_sha256": "3e829b1e1bba8b01093811135717773444ff279ad5ffeabc9af7e2415d8cffa3",
+      "match": false
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/admission-isolation.js",
+      "git_base_sha256": "5c770d5e99ebc20f794284020aa9cf5471609e9bf7c9e1e2ff3c2be5a8671d25",
+      "observed_sha256": "5c770d5e99ebc20f794284020aa9cf5471609e9bf7c9e1e2ff3c2be5a8671d25",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/delivery-projection.js",
+      "git_base_sha256": "100459c3e117b6ac4d9074f85b16a56a71b0bb351076f2bec6f42aed6c84a32b",
+      "observed_sha256": "100459c3e117b6ac4d9074f85b16a56a71b0bb351076f2bec6f42aed6c84a32b",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/delivery.js",
+      "git_base_sha256": "6b875ae5ad13af7d4a066caafdc7375c2000dc789bd63354f616b0c56b21925c",
+      "observed_sha256": "6b875ae5ad13af7d4a066caafdc7375c2000dc789bd63354f616b0c56b21925c",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/durable-state.js",
+      "git_base_sha256": "a0bae637f5c73750964334d90f02fc0dab742558e826473ef10813e2eb5d2835",
+      "observed_sha256": "a0bae637f5c73750964334d90f02fc0dab742558e826473ef10813e2eb5d2835",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/health.js",
+      "git_base_sha256": "ab5aab07f6cdae61b173ab0c925d829c99416091985a8eb455ae90c798b625a3",
+      "observed_sha256": "ab5aab07f6cdae61b173ab0c925d829c99416091985a8eb455ae90c798b625a3",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/incident-compiler.js",
+      "git_base_sha256": "b4d0f02609468cffcc131fd28213ed6f599ae4caeb925e51fabb06e8cab807ed",
+      "observed_sha256": "b4d0f02609468cffcc131fd28213ed6f599ae4caeb925e51fabb06e8cab807ed",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/incident-lifecycle.js",
+      "git_base_sha256": "249e44a8e7d211a71b5b0dac9bc35e4c9c0588e2cebd82a50aa964fd3fd6bb68",
+      "observed_sha256": "249e44a8e7d211a71b5b0dac9bc35e4c9c0588e2cebd82a50aa964fd3fd6bb68",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/index.js",
+      "git_base_sha256": "b84914b558438a94e588db073601df0f548219fd5ccdf2cfb7eec4da6af56dfe",
+      "observed_sha256": "b84914b558438a94e588db073601df0f548219fd5ccdf2cfb7eec4da6af56dfe",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/private-state-io.js",
+      "git_base_sha256": "456227694c20e51158625e7dfdf40ce867a0b37b60cff8025af85ea78dba1f6b",
+      "observed_sha256": "456227694c20e51158625e7dfdf40ce867a0b37b60cff8025af85ea78dba1f6b",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/reconciliation.js",
+      "git_base_sha256": "3d1d31b6997e6c461ae8124bdf183e256e28630dcc930d5e5e01e666b8564aaa",
+      "observed_sha256": "3d1d31b6997e6c461ae8124bdf183e256e28630dcc930d5e5e01e666b8564aaa",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/routing.js",
+      "git_base_sha256": "91ec8516dedb2ac4f001434cbe5baa32fd8c0f3508e3256fa6d5c91d02334547",
+      "observed_sha256": "91ec8516dedb2ac4f001434cbe5baa32fd8c0f3508e3256fa6d5c91d02334547",
+      "match": true
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/slot-accounting.js",
+      "git_base_sha256": "f59279a3e6ef3f3deb852d8da23ff837ee1cb0376f201fecc438e32d60d376c3",
+      "observed_sha256": "f59279a3e6ef3f3deb852d8da23ff837ee1cb0376f201fecc438e32d60d376c3",
+      "match": true
+    },
+    {
+      "path": "packages/session-history/package.json",
+      "git_base_sha256": "d806d97f09d7537e50609f8463ed5822c698352129b54f0ad74574b49b672097",
+      "observed_sha256": "d806d97f09d7537e50609f8463ed5822c698352129b54f0ad74574b49b672097",
+      "match": true
+    },
+    {
+      "path": "packages/session-history/src/constants.js",
+      "git_base_sha256": "3dab412741e25cac36c91630345ec679b4f3fe16a121b97bd47ac4e63d689ac4",
+      "observed_sha256": "3dab412741e25cac36c91630345ec679b4f3fe16a121b97bd47ac4e63d689ac4",
+      "match": true
+    },
+    {
+      "path": "packages/session-history/src/dsh-compat.js",
+      "git_base_sha256": "3d59abbcca5bf58182c4ea8eba5b6fe1b3c4985fae36f111314bf9746399f8d5",
+      "observed_sha256": "3d59abbcca5bf58182c4ea8eba5b6fe1b3c4985fae36f111314bf9746399f8d5",
+      "match": true
+    },
+    {
+      "path": "packages/session-history/src/errors.js",
+      "git_base_sha256": "e41f918a5e6b52d533fdd406288d827fd15036fab25867354a0ec3a4f4149c0c",
+      "observed_sha256": "e41f918a5e6b52d533fdd406288d827fd15036fab25867354a0ec3a4f4149c0c",
+      "match": true
+    },
+    {
+      "path": "packages/session-history/src/ids.js",
+      "git_base_sha256": "cf7cef6167440e9a6fc83f239101a3b08fd389b0e51e5783aa1dc3ff3f3913c4",
+      "observed_sha256": "cf7cef6167440e9a6fc83f239101a3b08fd389b0e51e5783aa1dc3ff3f3913c4",
+      "match": true
+    },
+    {
+      "path": "packages/session-history/src/index.js",
+      "git_base_sha256": "ec04a058b7bb84bde8a04c642d7f62f56db9d3b0542588c24e84d0e808ce7904",
+      "observed_sha256": "ec04a058b7bb84bde8a04c642d7f62f56db9d3b0542588c24e84d0e808ce7904",
+      "match": true
+    },
+    {
+      "path": "packages/session-history/src/locator.js",
+      "git_base_sha256": "a762981c5ffce924c3dde9a6c6243f0ec0eb69dde688bf43b9172e1440b34e26",
+      "observed_sha256": "a762981c5ffce924c3dde9a6c6243f0ec0eb69dde688bf43b9172e1440b34e26",
+      "match": true
+    },
+    {
+      "path": "packages/session-history/src/projection.js",
+      "git_base_sha256": "ab3be19e141304bbc015753b4fb20d9df887a869bbc84e3938becff5b3a7ab1a",
+      "observed_sha256": "ab3be19e141304bbc015753b4fb20d9df887a869bbc84e3938becff5b3a7ab1a",
+      "match": true
+    },
+    {
+      "path": "packages/session-history/src/snapshot.js",
+      "git_base_sha256": "1e54fe154ce924284ede43eb6f40e893b9ce1aeb1c86be045069df942bb7ccd2",
+      "observed_sha256": "1e54fe154ce924284ede43eb6f40e893b9ce1aeb1c86be045069df942bb7ccd2",
+      "match": true
+    },
+    {
+      "path": "packages/workflow-execution/package.json",
+      "git_base_sha256": "c2bf3ace708369365704d73c61e8fed2f166e6acf00a5bc038a8c10031b3ea10",
+      "observed_sha256": "c2bf3ace708369365704d73c61e8fed2f166e6acf00a5bc038a8c10031b3ea10",
+      "match": true
+    },
+    {
+      "path": "packages/workflow-execution/src/admission-control.js",
+      "git_base_sha256": "4c4fb663e5b394102f1b88f7967cb56dc7be519239ff7cc895a09a0a5267463f",
+      "observed_sha256": "4c4fb663e5b394102f1b88f7967cb56dc7be519239ff7cc895a09a0a5267463f",
+      "match": true
+    },
+    {
+      "path": "packages/workflow-execution/src/attention.js",
+      "git_base_sha256": "00de4af42dbc1bddc9462eedfe80731c1cee19aaf9f5487887fa71c17c5a78c2",
+      "observed_sha256": "00de4af42dbc1bddc9462eedfe80731c1cee19aaf9f5487887fa71c17c5a78c2",
+      "match": true
+    },
+    {
+      "path": "packages/workflow-execution/src/effect-identity.js",
+      "git_base_sha256": "0628fa1a38838b9f041d1609deab59e3b4c80914c6553ed7a572505b11f3a508",
+      "observed_sha256": "0628fa1a38838b9f041d1609deab59e3b4c80914c6553ed7a572505b11f3a508",
+      "match": true
+    },
+    {
+      "path": "packages/workflow-execution/src/engine.js",
+      "git_base_sha256": "85ef49e9a9a66b8902e5d9b34ee8a513eb6ad2375c5114bbdc3539c4efe0aebc",
+      "observed_sha256": "85ef49e9a9a66b8902e5d9b34ee8a513eb6ad2375c5114bbdc3539c4efe0aebc",
+      "match": true
+    },
+    {
+      "path": "packages/workflow-execution/src/forum-projection.js",
+      "git_base_sha256": "20bee153a04985cab09617a6b69ccd38f86acf64ab8134d7c00b3b21c2707421",
+      "observed_sha256": "20bee153a04985cab09617a6b69ccd38f86acf64ab8134d7c00b3b21c2707421",
+      "match": true
+    },
+    {
+      "path": "packages/workflow-execution/src/index.js",
+      "git_base_sha256": "9579d7e0709a69f1b6b5def2b2b8dfc897dfd951200297b2d0b08eed9b7211f0",
+      "observed_sha256": "9579d7e0709a69f1b6b5def2b2b8dfc897dfd951200297b2d0b08eed9b7211f0",
+      "match": true
+    },
+    {
+      "path": "packages/workflow-execution/src/instruction.js",
+      "git_base_sha256": "fe9cca544a85d4b765bb72ec9e725152410f38b348193457cf2fa58015a6adda",
+      "observed_sha256": "fe9cca544a85d4b765bb72ec9e725152410f38b348193457cf2fa58015a6adda",
+      "match": true
+    },
+    {
+      "path": "packages/workflow-execution/src/judgment.js",
+      "git_base_sha256": "29128eb76e48d6fa7ff14532ff2c6e59fd55c8a662e0a5016d01270a3a13401a",
+      "observed_sha256": "29128eb76e48d6fa7ff14532ff2c6e59fd55c8a662e0a5016d01270a3a13401a",
+      "match": true
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger-events.js",
+      "git_base_sha256": "1ed2b2a4953c00d0e526985be284674a69866113403d796c85fcd7db0c4eac12",
+      "observed_sha256": "1ed2b2a4953c00d0e526985be284674a69866113403d796c85fcd7db0c4eac12",
+      "match": true
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger.js",
+      "git_base_sha256": "85135b76a654c4a2468a2569619330e71263afa00d1691331252323fa9b0f729",
+      "observed_sha256": "85135b76a654c4a2468a2569619330e71263afa00d1691331252323fa9b0f729",
+      "match": true
+    },
+    {
+      "path": "packages/workflow-execution/src/progress.js",
+      "git_base_sha256": "cf8226d17da8d307fae380835dcb14b16ce541e59a6f4be5ab62bb671f085262",
+      "observed_sha256": "cf8226d17da8d307fae380835dcb14b16ce541e59a6f4be5ab62bb671f085262",
+      "match": true
+    },
+    {
+      "path": "packages/workflow-execution/src/projection.js",
+      "git_base_sha256": "0573796b58fdf563cf3abd8947aef329e09a82ff02c479071be7adac8595354d",
+      "observed_sha256": "0573796b58fdf563cf3abd8947aef329e09a82ff02c479071be7adac8595354d",
+      "match": true
+    },
+    {
+      "path": "packages/workflow-execution/src/recovery.js",
+      "git_base_sha256": "9450fcc86d157e1034e73604b7f48fe5e219374bbe6feb4505b740782ccc5253",
+      "observed_sha256": "9450fcc86d157e1034e73604b7f48fe5e219374bbe6feb4505b740782ccc5253",
+      "match": true
+    },
+    {
+      "path": "packages/workspace-bootstrap/package.json",
+      "git_base_sha256": "7766eb5e49aebfa91cab499562951d0e3f0a3f68e5b1877e923b0edece56c634",
+      "observed_sha256": "7766eb5e49aebfa91cab499562951d0e3f0a3f68e5b1877e923b0edece56c634",
+      "match": true
+    },
+    {
+      "path": "packages/workspace-bootstrap/src/index.js",
+      "git_base_sha256": "e4c282a3cf2882598a9aff8e313b5ddf593abe99aec9fda2c11ac6e4e7d64486",
+      "observed_sha256": "e4c282a3cf2882598a9aff8e313b5ddf593abe99aec9fda2c11ac6e4e7d64486",
+      "match": true
+    },
+    {
+      "path": "packages/workspace-bootstrap/src/paths.js",
+      "git_base_sha256": "6f6659d92dd87cbe554442531218add5dba4ba2e20a8a03c1bf14b5e822f0ef5",
+      "observed_sha256": "6f6659d92dd87cbe554442531218add5dba4ba2e20a8a03c1bf14b5e822f0ef5",
+      "match": true
+    },
+    {
+      "path": "profile-demo/cordis.patch.yml",
+      "git_base_sha256": "3e73523196c3703ef6985755b3ad06d999631c1f62cfba1349254ccf54d3cf62",
+      "observed_sha256": "3e73523196c3703ef6985755b3ad06d999631c1f62cfba1349254ccf54d3cf62",
+      "match": true
+    },
+    {
+      "path": "profile-demo/package.json",
+      "git_base_sha256": "777016365f0f912b583165bb395c4569484a9ee80a0c9414eae82247d3c1e4b5",
+      "observed_sha256": "777016365f0f912b583165bb395c4569484a9ee80a0c9414eae82247d3c1e4b5",
+      "match": true
+    },
+    {
+      "path": "profile-integration-agent/cordis.patch.yml",
+      "git_base_sha256": "f63f3bcc306d603df01b10dd0c0df99c1eb953991d27fb9805fa4ffde9ed208b",
+      "observed_sha256": "f63f3bcc306d603df01b10dd0c0df99c1eb953991d27fb9805fa4ffde9ed208b",
+      "match": true
+    },
+    {
+      "path": "profile-integration-agent/package.json",
+      "git_base_sha256": "0f8d7d9d70cbbea8e65a90a55b0e36d9c8b82b1f5fd9f3dc8ff34b30466b4e68",
+      "observed_sha256": "0f8d7d9d70cbbea8e65a90a55b0e36d9c8b82b1f5fd9f3dc8ff34b30466b4e68",
+      "match": true
+    },
+    {
+      "path": "profile-integration/cordis.patch.yml",
+      "git_base_sha256": "8349fe930cd9d73f4f3b53fec25f46c9e829af7ff768134267ff746913a65315",
+      "observed_sha256": "8349fe930cd9d73f4f3b53fec25f46c9e829af7ff768134267ff746913a65315",
+      "match": true
+    },
+    {
+      "path": "profile-integration/package.json",
+      "git_base_sha256": "a2b4c4127194e1d9b531f45175d2930927a52171f7916d2dfcde765890aead68",
+      "observed_sha256": "a2b4c4127194e1d9b531f45175d2930927a52171f7916d2dfcde765890aead68",
+      "match": true
+    },
+    {
+      "path": "profile-memory/cordis.patch.yml",
+      "git_base_sha256": "9bf3c3cd7d6a581e808134af9bd3519424a97d9f4f31710647cd69634017f074",
+      "observed_sha256": "9bf3c3cd7d6a581e808134af9bd3519424a97d9f4f31710647cd69634017f074",
+      "match": true
+    },
+    {
+      "path": "profile-memory/package.json",
+      "git_base_sha256": "200509ceb8447e95144685047f7323bd0c9fa06eafbc443dd471efb337989f3b",
+      "observed_sha256": "200509ceb8447e95144685047f7323bd0c9fa06eafbc443dd471efb337989f3b",
+      "match": true
+    },
+    {
+      "path": "profile-production/cordis.patch.yml",
+      "git_base_sha256": "1eb164e5c43f3471d44798d0941c3e5adf19e41adbf276d88818586e6ab65fa5",
+      "observed_sha256": "1eb164e5c43f3471d44798d0941c3e5adf19e41adbf276d88818586e6ab65fa5",
+      "match": true
+    },
+    {
+      "path": "profile-production/package.json",
+      "git_base_sha256": "19cffb0937eecfbe2db6cc516e66efd706a1ce494b818a6fd823e49447220f33",
+      "observed_sha256": "19cffb0937eecfbe2db6cc516e66efd706a1ce494b818a6fd823e49447220f33",
+      "match": true
+    },
+    {
+      "path": "scripts/agent-core-backup-ops.sh",
+      "git_base_sha256": "39cbaa232a24fd2f51450b18b398f9e2036cbc0146db9bc5c462414732230c14",
+      "observed_sha256": "39cbaa232a24fd2f51450b18b398f9e2036cbc0146db9bc5c462414732230c14",
+      "match": true
+    },
+    {
+      "path": "scripts/agent-core-resident.mjs",
+      "git_base_sha256": "63218d468522603f6988a2dc55aad453609cab8418ed5ae3b578721e73a642bb",
+      "observed_sha256": "63218d468522603f6988a2dc55aad453609cab8418ed5ae3b578721e73a642bb",
+      "match": true
+    },
+    {
+      "path": "scripts/agentcore-cron.mjs",
+      "git_base_sha256": "98a2a0318157aac5677ab9a025081a5f14901dc23ffe81f0d23467bf8c00298e",
+      "observed_sha256": "98a2a0318157aac5677ab9a025081a5f14901dc23ffe81f0d23467bf8c00298e",
+      "match": true
+    },
+    {
+      "path": "scripts/demo-home.mjs",
+      "git_base_sha256": "f4493b78bbec11934df1601e27a7589543b1f4dd6b3aa2c8e664985848a81c19",
+      "observed_sha256": "f4493b78bbec11934df1601e27a7589543b1f4dd6b3aa2c8e664985848a81c19",
+      "match": true
+    },
+    {
+      "path": "scripts/dsh-agent-spawn-helper.c",
+      "git_base_sha256": "6200b4fb4e66f85f056450eab891bde9e662d836432dbea09d1f8df074400e1d",
+      "observed_sha256": "6200b4fb4e66f85f056450eab891bde9e662d836432dbea09d1f8df074400e1d",
+      "match": true
+    },
+    {
+      "path": "scripts/lib/trusted-source-git-stamp.sh",
+      "git_base_sha256": "64c2bb1b2be9464e10406685243f9661090795d7c2246cf2b35a08585bc4e847",
+      "observed_sha256": "64c2bb1b2be9464e10406685243f9661090795d7c2246cf2b35a08585bc4e847",
+      "match": true
+    },
+    {
+      "path": "scripts/production-agent-provision.mjs",
+      "git_base_sha256": "9ec70f029beeaab751ad197aaac549a019c10aaddcd821d23d0d5128730e2445",
+      "observed_sha256": "9ec70f029beeaab751ad197aaac549a019c10aaddcd821d23d0d5128730e2445",
+      "match": true
+    },
+    {
+      "path": "scripts/production-runtime-launchd.mjs",
+      "git_base_sha256": "e61adbcfa98aeae8b4b7cab6273fa6fb5ad9d4b0364f15e15ace30988e03446a",
+      "observed_sha256": "e61adbcfa98aeae8b4b7cab6273fa6fb5ad9d4b0364f15e15ace30988e03446a",
+      "match": true
+    },
+    {
+      "path": "scripts/production-runtime-v1-verify.mjs",
+      "git_base_sha256": "18f89a63785ad5a8207fb2bf013edc5b54ba971a78c95ada22a033ea96bcd0d9",
+      "observed_sha256": "18f89a63785ad5a8207fb2bf013edc5b54ba971a78c95ada22a033ea96bcd0d9",
+      "match": true
+    },
+    {
+      "path": "scripts/production-runtime.mjs",
+      "git_base_sha256": "6a35dab738acdbdfd9bb9abe5632a9b949426bca15f09a73383428e4762c8588",
+      "observed_sha256": "6a35dab738acdbdfd9bb9abe5632a9b949426bca15f09a73383428e4762c8588",
+      "match": true
+    },
+    {
+      "path": "scripts/trusted-cp-deploy-install.sh",
+      "git_base_sha256": "6d47b6094e07dc249869b4330e9f3dde45389022092cde4a53c420d4d5147047",
+      "observed_sha256": "6d47b6094e07dc249869b4330e9f3dde45389022092cde4a53c420d4d5147047",
+      "match": true
+    },
+    {
+      "path": "scripts/trusted-cp-hardening-v1-verify.mjs",
+      "git_base_sha256": "8cadebcb4b4e4381b15447bc7da806d0271487c7a672968e06b65cdbc30ea9f8",
+      "observed_sha256": "8cadebcb4b4e4381b15447bc7da806d0271487c7a672968e06b65cdbc30ea9f8",
+      "match": true
+    }
+  ]
+}

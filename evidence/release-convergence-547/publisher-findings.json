@@ -1,0 +1,525 @@
+{
+  "schema_version": 1,
+  "captured_at_utc": "2026-11-08T17:32:24.451450+00:00",
+  "audit_task": "RELEASE-CONVERGENCE-547 publisher read-only subtask",
+  "production_writes_by_this_subtask": 0,
+  "repository_write_scope": "This findings file only, authorized by parent",
+  "source_evidence": [
+    {
+      "path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "bytes": 6682188,
+      "sha256": "f3daf63855400abd676084709fe7faf145f873231bd239371a11f578dd1e6619",
+      "mtime_ns": 1794154353300884251,
+      "note": "Whole captured file/prefix; selected raw line hashes bind exact events. Live append-only session may grow."
+    },
+    {
+      "path": "/Users/Shared/r129d-rollback-20261108/DEPLOY-RECEIPT.md",
+      "bytes": 6859,
+      "sha256": "e24948c9c4bb1b4de24b496d92c057bace0f7bb2ef3c8d7c92b2bfd1cfdfb2c2",
+      "mtime_ns": 1794122765434599944,
+      "note": "Read-only local evidence; not an independently signed authority receipt."
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/it-ops-control-plane/inventory/receipts/2026-11.local.jsonl",
+      "bytes": 7145,
+      "sha256": "5cc875397a630a84f89873dd7ef273e053461e34d29a12cc4e00d429149b44b3",
+      "mtime_ns": 1794153469555060581,
+      "note": "Read-only local evidence; not an independently signed authority receipt."
+    },
+    {
+      "path": "/Users/Shared/r129d-candidate-review/QA-INDEPENDENT-REVIEW-08102a55.md",
+      "bytes": 1417,
+      "sha256": "0bf82d196b13dce8bb04649da0c4354d0b426f2a4d75c6d99e1c7476dfa1fe52",
+      "mtime_ns": 1794122468120938649,
+      "note": "Read-only local evidence; not an independently signed authority receipt."
+    },
+    {
+      "path": "/Users/Shared/issue-1386-dev-materials/QA-INDEPENDENT-REVIEW-5603c68c.md",
+      "bytes": 5137,
+      "sha256": "62ea135e1f6d49831b2fdee83788af3bd41d495fa0fd4e0f13da246509d96554",
+      "mtime_ns": 1794127564108788535,
+      "note": "Read-only local evidence; not an independently signed authority receipt."
+    },
+    {
+      "path": "/Users/Shared/r129-gapb-review/QA-INDEPENDENT-REVIEW-8871f385.md",
+      "bytes": 5946,
+      "sha256": "12c648b195a91b1a83c711094859804b4d8763152c4a2c41eb45fb40dffa8b9d",
+      "mtime_ns": 1794138604296870047,
+      "note": "Read-only local evidence; not an independently signed authority receipt."
+    }
+  ],
+  "publishers": [
+    {
+      "component": "08102a55 six-file app overlay",
+      "source_commit": "08102a550cf2f5e14646c6858786d7fe7a50c61d",
+      "operator_agent": "agt_itops-agent",
+      "operator_evidence": "Native session user messages, tool activity, DEPLOY-RECEIPT and ledger lines2-3 corroborate chain",
+      "attributable_human_operator": "UNKNOWN",
+      "authorization_basis_observed": "Dispatch9e9e7185-7810-4184-ab15-fb235ce564ef; GO0a3dd333-ee2b-42c8-9d04-7452012f4de8; closeout9a9950cb-f5f3-49ba-9c90-6a7400a253cc; claimed Owner Watch3 authorization",
+      "original_owner_approval_authenticity": "UNKNOWN",
+      "install_window_from_receipt": "2026-11-08T14:54:57+08:00/2026-11-08T14:54:58+08:00",
+      "receipt_status": "Local receipt exists; no independently signed/trusted publisher identity proven"
+    },
+    {
+      "component": "#1386 Harness compiled overlay",
+      "source_repository": "mayf3/deepseek-harness",
+      "source_commit": "5603c68c5055afe598576057a42a08edb7c9f2e3",
+      "operator_agent": "agt_itops-agent",
+      "operator_evidence": "Native ITOps session tool/call46328 + tool/result46329",
+      "attributable_human_operator": "UNKNOWN",
+      "authorization_basis_observed": "Dispatch9b3192a4-641a-46e6-9ccd-25dfb2c28e21; GO50821506-a050-471b-81a5-3885e08d55d4; received source.kind=user message claims Owner prior approval",
+      "original_owner_approval_authenticity": "UNKNOWN",
+      "install_window_utc": "2026-11-08T11:35:22.644Z/2026-11-08T11:35:23.125Z",
+      "standalone_deploy_receipt": "UNKNOWN; not present in inspected four-line November ledger or component directory"
+    },
+    {
+      "component": "R129 Gap B app admin-abandonment overlay",
+      "source_commit": "8871f3852acc88408416c0148d1157b48ab054db",
+      "operator_agent": "agt_itops-agent",
+      "operator_evidence": "Native ITOps session tool/call47534 + tool/result47535",
+      "attributable_human_operator": "UNKNOWN",
+      "authorization_basis_observed": "Dispatch32039f01-0e68-46f8-835d-2146fd3cf213; received source.kind=user message, actorITOps",
+      "original_owner_approval_authenticity": "UNKNOWN",
+      "install_window_utc": "2026-11-08T11:51:58.755Z/2026-11-08T11:51:59.226Z",
+      "standalone_deploy_receipt": "UNKNOWN; not present in inspected four-line November ledger or component directory",
+      "runtime_restart_result": "TERM9036 historical call persists; selected exact turn lacks success result; later launchd PID16139/runs4 is separate later observation"
+    },
+    {
+      "component": "#1374 extra app overlay discovered during reconciliation",
+      "source_commit_claim": "ac0480a9",
+      "operator_agent": "agt_itops-agent",
+      "operator_evidence": "Native tool/call48732 + result48733; ledger line4 operationissue1374-fatalev-deploy-4ba18fe7",
+      "attributable_human_operator": "UNKNOWN",
+      "authorization_basis_observed": "Dispatch4ba18fe7-6110-4e81-81bb-4241b53d6bb9; source.kind=user message",
+      "original_owner_approval_authenticity": "UNKNOWN",
+      "install_window_utc": "2026-11-08T15:54:56.763Z/2026-11-08T15:55:00.351Z",
+      "restart_result": "TERM16139 rc0 but alive20seconds exit42; ledgerBLOCKED; no newPID or cleanboot proof from this operation",
+      "later_pid22118_cause_or_operator": "UNKNOWN; root independently observed current instance, no causal attribution here"
+    }
+  ],
+  "events": [
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 4213,
+      "seq": 30123,
+      "type": "user/message",
+      "time_unix_ms": 1794120840439,
+      "time_utc": "2026-11-08T06:54:00.439000+00:00",
+      "byte_offset": 4470645,
+      "line_bytes_with_newline": 3244,
+      "line_sha256": "da0b9c9f80dc0e4937ad382eaa085d97c69bf72c839a875f3ccddb63b8ffe2e3",
+      "observation": "081 install mandate received; claims Owner Watch3 authorization",
+      "native_user_message_id": "f1eb3c34-1a07-4174-a17b-4e1a789fc033",
+      "source_kind": "user",
+      "attributable_human_issuer": "UNKNOWN"
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 4505,
+      "seq": 33034,
+      "type": "user/message",
+      "time_unix_ms": 1794121334209,
+      "time_utc": "2026-11-08T07:02:14.209000+00:00",
+      "byte_offset": 4804616,
+      "line_bytes_with_newline": 1688,
+      "line_sha256": "d5c9ba421f02dadf13f070b0411dabd6399c614881c47545fec7b02a40be80a5",
+      "observation": "081 TERM continuation mandate received",
+      "native_user_message_id": "46a7ef4d-af9d-459d-a2ae-ea3b487452e1",
+      "source_kind": "user",
+      "attributable_human_issuer": "UNKNOWN"
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 4573,
+      "seq": 33668,
+      "type": "user/message",
+      "time_unix_ms": 1794122419058,
+      "time_utc": "2026-11-08T07:20:19.058000+00:00",
+      "byte_offset": 4855017,
+      "line_bytes_with_newline": 3071,
+      "line_sha256": "7825746dc09b2b3a55368728dbe7c1a649846d5049aceb7bd70c302628a65b6c",
+      "observation": "081 provenance/receipt closeout mandate received; prior state-rewrite proposal excluded from current rollback",
+      "native_user_message_id": "84cc3ad3-4adc-4df3-8299-5df11f153527",
+      "source_kind": "user",
+      "attributable_human_issuer": "UNKNOWN"
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 5563,
+      "seq": 44959,
+      "type": "user/message",
+      "time_unix_ms": 1794137258717,
+      "time_utc": "2026-11-08T11:27:38.717000+00:00",
+      "byte_offset": 5777259,
+      "line_bytes_with_newline": 2920,
+      "line_sha256": "f74b8234a5d4225cd906df054f5ec394ef9b9e77599ccc92995e60a5a6a2081e",
+      "observation": "#1386 two Harness compiled-file install mandate received; claims prior Owner authorization",
+      "native_user_message_id": "8108a93b-8108-49c2-b9aa-793995fe46ea",
+      "source_kind": "user",
+      "attributable_human_issuer": "UNKNOWN"
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 5620,
+      "seq": 45357,
+      "type": "user/message",
+      "time_unix_ms": 1794137677195,
+      "time_utc": "2026-11-08T11:34:37.195000+00:00",
+      "byte_offset": 5841200,
+      "line_bytes_with_newline": 1698,
+      "line_sha256": "28f6c147dff51f4288af53f3eb618201200d8a6511222eb1fad74249b15aa9d3",
+      "observation": "#1386 GO continuation mandate received",
+      "native_user_message_id": "c37d30d3-9a7f-4d11-b337-22c209f0a018",
+      "source_kind": "user",
+      "attributable_human_issuer": "UNKNOWN"
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 5733,
+      "seq": 46328,
+      "type": "tool/call",
+      "time_unix_ms": 1794137722644,
+      "time_utc": "2026-11-08T11:35:22.644000+00:00",
+      "byte_offset": 5925524,
+      "line_bytes_with_newline": 1525,
+      "line_sha256": "64c67afd98b896ce9f5a93f01fc3a428488a937a9a55194046c60e2eecbdc63d",
+      "observation": "#1386 sudo copy/chown/chmod tool call by ITOps native session",
+      "call_id": "call_2ca164c1e1d244ec9b3393c89c015037|fc_096ab24317a6d776016af05e73cb5087d09c2765ad70e62104",
+      "tool_name": "bash",
+      "arguments_sha256": "bdb21f2fbf9b8b373ab7ced32182578575296993d5008ff858ba9159a725d6e4",
+      "historical_call_not_executed_by_this_audit": true
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 5734,
+      "seq": 46329,
+      "type": "tool/result",
+      "time_unix_ms": 1794137723125,
+      "time_utc": "2026-11-08T11:35:23.125000+00:00",
+      "byte_offset": 5927049,
+      "line_bytes_with_newline": 1039,
+      "line_sha256": "65cddf6bdc08979d674bdd32a3db4a6c1de5d44e070712394faac056de52f5bf",
+      "observation": "#1386 post-copy exact hashes result",
+      "call_id": "call_2ca164c1e1d244ec9b3393c89c015037|fc_096ab24317a6d776016af05e73cb5087d09c2765ad70e62104",
+      "sanitized_result_excerpt": [
+        "inbox.js candidate=2d2d01808c45075f4f1a6dfec9fdae75a37699fac86a52d90c7ff692982b2d37 live=2d2d01808c45075f4f1a6dfec9fdae75a37699fac86a52d90c7ff692982b2d37",
+        "index.js candidate=6faef8d4b5378b68ce54ab139850fd45f41d6d3364ce43010806c5ea2d1fcb80 live=6faef8d4b5378b68ce54ab139850fd45f41d6d3364ce43010806c5ea2d1fcb80"
+      ]
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 5769,
+      "seq": 46660,
+      "type": "user/message",
+      "time_unix_ms": 1794138644793,
+      "time_utc": "2026-11-08T11:50:44.793000+00:00",
+      "byte_offset": 5949663,
+      "line_bytes_with_newline": 1765,
+      "line_sha256": "439e21576438e555756851a7a365e809d0c7f882a3ea0ae6bba535795343f796",
+      "observation": "Gap B one app-file install mandate received",
+      "native_user_message_id": "9cc47733-c052-439a-9546-eae5874e9c21",
+      "source_kind": "user",
+      "attributable_human_issuer": "UNKNOWN"
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 5783,
+      "seq": 46674,
+      "type": "tool/result",
+      "time_unix_ms": 1794138659167,
+      "time_utc": "2026-11-08T11:50:59.167000+00:00",
+      "byte_offset": 6074433,
+      "line_bytes_with_newline": 2262,
+      "line_sha256": "b5e4b4ec442c8efcc32ec908566cbe713dd70847828f70e89978eeaeebf0cf0c",
+      "observation": "later launchd readback PID9036 runs3",
+      "call_id": "call_3967305420e24cefbdadf8067d628855|fc_096ab24317a6d776016af0621cc32487d09bd0b5117e62f269",
+      "sanitized_result_excerpt": [
+        "\tstate = running",
+        "\truns = 3",
+        "\tpid = 9036",
+        "\tlast exit code = 0",
+        "\t\tstate = active",
+        "\t\tstate = active"
+      ]
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 5892,
+      "seq": 47534,
+      "type": "tool/call",
+      "time_unix_ms": 1794138718755,
+      "time_utc": "2026-11-08T11:51:58.755000+00:00",
+      "byte_offset": 6162930,
+      "line_bytes_with_newline": 869,
+      "line_sha256": "814467d3ed81cc6f6c35b0bc76b3e7ecb5f4d3131e7abc7962852066957cbdcb",
+      "observation": "Gap B sudo copy/chown/chmod tool call by ITOps native session",
+      "call_id": "call_b9e7c3c519b64b12b98370dfcb9658fe|fc_096ab24317a6d776016af0625b14f087d0a9ed366630549103",
+      "tool_name": "bash",
+      "arguments_sha256": "e1c16bfffc781659c7ef3c039cea2d56c6fd5626a9bcf356fea14c60ed5fdcc9",
+      "historical_call_not_executed_by_this_audit": true
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 5893,
+      "seq": 47535,
+      "type": "tool/result",
+      "time_unix_ms": 1794138719226,
+      "time_utc": "2026-11-08T11:51:59.226000+00:00",
+      "byte_offset": 6163799,
+      "line_bytes_with_newline": 795,
+      "line_sha256": "f595010cd2c07a19ca42997c3af69d5d7acb2cd98d5292a4da8380df0aacedee",
+      "observation": "Gap B post-copy exact hash result",
+      "call_id": "call_b9e7c3c519b64b12b98370dfcb9658fe|fc_096ab24317a6d776016af0625b14f087d0a9ed366630549103",
+      "sanitized_result_excerpt": [
+        "candidate=95172846f40ec0589f3a10ffcc350e3eda5d05f0e7f396d0c3d3570c14e8e19e live=95172846f40ec0589f3a10ffcc350e3eda5d05f0e7f396d0c3d3570c14e8e19e"
+      ]
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 5919,
+      "seq": 47850,
+      "type": "tool/call",
+      "time_unix_ms": 1794138728148,
+      "time_utc": "2026-11-08T11:52:08.148000+00:00",
+      "byte_offset": 6180889,
+      "line_bytes_with_newline": 1155,
+      "line_sha256": "2888eef4df4db90fc037f07db06d5a2dadd342ffc21643e3174d9f32c28b6498",
+      "observation": "Gap B TERM9036 tool call; no successful result in the selected native chain",
+      "call_id": "call_6cceece628284a1fb3c5d02610cd279c|fc_096ab24317a6d776016af0626291a087d082747d579aa57d95",
+      "tool_name": "bash",
+      "arguments_sha256": "7fad6f930879939bcaf1b71485f1c8400ed88a4bd076ee0e0709f92c5521cb64",
+      "historical_call_not_executed_by_this_audit": true
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 5928,
+      "seq": 47859,
+      "type": "user/message",
+      "time_unix_ms": 1794153205660,
+      "time_utc": "2026-11-08T15:53:25.660000+00:00",
+      "byte_offset": 6184885,
+      "line_bytes_with_newline": 1641,
+      "line_sha256": "c616fae5a0e09abb8d2a1121bdeea85c743eaa3ec5a309ec5452c3b7343ca9f9",
+      "observation": "#1374 three app-file install mandate received",
+      "native_user_message_id": "eee5c57f-346e-484e-be38-daceae991193",
+      "source_kind": "user",
+      "attributable_human_issuer": "UNKNOWN"
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 5945,
+      "seq": 47876,
+      "type": "tool/result",
+      "time_unix_ms": 1794153226807,
+      "time_utc": "2026-11-08T15:53:46.807000+00:00",
+      "byte_offset": 6308875,
+      "line_bytes_with_newline": 3682,
+      "line_sha256": "7732e6d6be8a721440377405ab7e80a8c5899e96aaae89897af1def2f27404bd",
+      "observation": "later launchd readback PID16139 runs4",
+      "call_id": "call_7e440bf19d374cef81e9a3ac69d4f171|fc_096ab24317a6d776016af09afcb0a887d0805f65c0105e05c3",
+      "sanitized_result_excerpt": [
+        "\tstate = running",
+        "\truns = 4",
+        "\tpid = 16139",
+        "\tlast exit code = 0",
+        "\t\tstate = active",
+        "\t\tstate = active"
+      ]
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 6028,
+      "seq": 48489,
+      "type": "tool/result",
+      "time_unix_ms": 1794153285310,
+      "time_utc": "2026-11-08T15:54:45.310000+00:00",
+      "byte_offset": 6376348,
+      "line_bytes_with_newline": 1093,
+      "line_sha256": "af5307a069fea3401e44c6d1d6ff2b5261a68dc6cef21f61e46ea20162ae5758",
+      "observation": "#1374 backup result",
+      "call_id": "call_ee1e4525fe29458f8366418ca2edd45c|fc_096ab24317a6d776016af09b38514487d09423f2968c0fbd31",
+      "sanitized_result_excerpt": []
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 6055,
+      "seq": 48732,
+      "type": "tool/call",
+      "time_unix_ms": 1794153296763,
+      "time_utc": "2026-11-08T15:54:56.763000+00:00",
+      "byte_offset": 6392773,
+      "line_bytes_with_newline": 1067,
+      "line_sha256": "804aa04210de72dec7a4c79bf9a0d4d8b9802e5138eb649c07fcae73c43b8e29",
+      "observation": "#1374 three-file sudo copy tool call",
+      "call_id": "call_2b00cf0c41ee408082fca1c74f654a5d|fc_096ab24317a6d776016af09b4bd37887d0b46cccc14164952c",
+      "tool_name": "bash",
+      "arguments_sha256": "effeb98c418257e52ddc93eb38bc4e05a40e43b1a07ad63e7e366db57cbddd24",
+      "historical_call_not_executed_by_this_audit": true
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 6056,
+      "seq": 48733,
+      "type": "tool/result",
+      "time_unix_ms": 1794153300351,
+      "time_utc": "2026-11-08T15:55:00.351000+00:00",
+      "byte_offset": 6393840,
+      "line_bytes_with_newline": 1092,
+      "line_sha256": "eb896a1f925258ad66bee162ad01ffdb4d2547fe84c6caaf81011441f2d7c849",
+      "observation": "#1374 post-copy exact hashes result",
+      "call_id": "call_2b00cf0c41ee408082fca1c74f654a5d|fc_096ab24317a6d776016af09b4bd37887d0b46cccc14164952c",
+      "sanitized_result_excerpt": [
+        "packages/agent-router/src/index.js candidate=b9a7f382508dca181b21afc571006a6f10239ded9e8ae8fdcded0f514ad6f889 live=b9a7f382508dca181b21afc571006a6f10239ded9e8ae8fdcded0f514ad6f889",
+        "packages/agent-router/src/process/agent-process.js candidate=47c4dfcfc13203283282405df57ecd0b27adf765b2ba218405f9cddb8b60a195 live=47c4dfcfc13203283282405df57ecd0b27adf765b2ba218405f9cddb8b60a195",
+        "packages/production-runtime/src/compose.js candidate=c31db4e1342344c32810076ab0b6d8a58cb1bf94d8a505fc92623771c5746838 live=c31db4e1342344c32810076ab0b6d8a58cb1bf94d8a505fc92623771c5746838"
+      ]
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 6084,
+      "seq": 49048,
+      "type": "tool/call",
+      "time_unix_ms": 1794153311403,
+      "time_utc": "2026-11-08T15:55:11.403000+00:00",
+      "byte_offset": 6411897,
+      "line_bytes_with_newline": 1153,
+      "line_sha256": "e22b2db7e52b58618687fbb76e0e9ed9e93d9e5efd3bdc2713d531461a9dc034",
+      "observation": "#1374 TERM16139 tool call",
+      "call_id": "call_b5481665c8f441698a43b89d160bc272|fc_096ab24317a6d776016af09b59677087d0879a66f94bf0d1c3",
+      "tool_name": "bash",
+      "arguments_sha256": "4bf7dc9685340b3d01c515995620926b7aedfb9d9f61a0b5cf690419ff9dd717",
+      "historical_call_not_executed_by_this_audit": true
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 6085,
+      "seq": 49049,
+      "type": "tool/result",
+      "time_unix_ms": 1794153341378,
+      "time_utc": "2026-11-08T15:55:41.378000+00:00",
+      "byte_offset": 6413050,
+      "line_bytes_with_newline": 633,
+      "line_sha256": "558ea47271de7b73907c36da46ef6a5bc62cd23c45fca3966a95f8c2ec488802",
+      "observation": "#1374 TERM rc0, old PID remains alive after20s; exit42",
+      "call_id": "call_b5481665c8f441698a43b89d160bc272|fc_096ab24317a6d776016af09b59677087d0879a66f94bf0d1c3",
+      "sanitized_result_excerpt": [
+        "TERM_REQUEST 2026-11-08T23:55:12+08:00 pid=16139",
+        "TERM_RC 0",
+        "STOP OLD_PID_STILL_RUNNING_20S",
+        "[exit code: 42]"
+      ]
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 6103,
+      "seq": 49192,
+      "type": "tool/call",
+      "time_unix_ms": 1794153360101,
+      "time_utc": "2026-11-08T15:56:00.101000+00:00",
+      "byte_offset": 6426778,
+      "line_bytes_with_newline": 683,
+      "line_sha256": "bd0169a4305f9ace1b2e49977d18c91f7d46fdc2796323c8d864b6734d94dc44",
+      "observation": "Historical ps captured etime rather than lstart; no lstart claim supported",
+      "tool_name": "bash",
+      "call_id": "call_e5d7574aba484fc9b12b5a09b02b559a|fc_096ab24317a6d776016af09b8c621887d0a2783064b37ad5e5",
+      "arguments_sha256": "20db387b6f10da5a2cd3dde33e40b2e1cc355da8771f6516514965b6b91a2891",
+      "historical_call_not_executed_by_this_audit": true
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 6104,
+      "seq": 49193,
+      "type": "tool/result",
+      "time_unix_ms": 1794153367156,
+      "time_utc": "2026-11-08T15:56:07.156000+00:00",
+      "byte_offset": 6427461,
+      "line_bytes_with_newline": 1306,
+      "line_sha256": "21302b9506b3ec32667fdf5f9f82f66efe71c9b1910b97974102c5865ac2bcd7",
+      "observation": "#1374 fresh readback PID16139 still active with changed on-disk files",
+      "call_id": "call_e5d7574aba484fc9b12b5a09b02b559a|fc_096ab24317a6d776016af09b8c621887d0a2783064b37ad5e5",
+      "sanitized_result_excerpt": [
+        "\tstate = running",
+        "\truns = 4",
+        "\tpid = 16139",
+        "\tlast exit code = 0",
+        "\t\tstate = active",
+        "\t\tstate = active",
+        "authsvc 16139     1 04:03:54 Rs   /usr/local/libexec/agent-core/node-runtime/bin/node /usr/local/libexec/agent-core/app/scripts/production-runtime.mjs --root /Users/authsvc/.agent-core --catchup 0"
+      ]
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 6207,
+      "seq": 50584,
+      "type": "tool/result",
+      "time_unix_ms": 1794153469572,
+      "time_utc": "2026-11-08T15:57:49.572000+00:00",
+      "byte_offset": 6480231,
+      "line_bytes_with_newline": 761,
+      "line_sha256": "94a799e91d0521725563ed16b2094aa9b920605dce2105d1d1f861b9d015c038",
+      "observation": "#1374 BLOCKED receipt appended result",
+      "call_id": "call_559cd8aa59ff4b25befe4ac5c9eebecc|fc_096ab24317a6d776016af09bf0707087d0982fce65b0d95775",
+      "sanitized_result_excerpt": [
+        "✅ Receipt issue1374-fatalev-deploy-4ba18fe7 appended to /Users/yanfenma/workspace/project/it-ops-control-plane/inventory/receipts/2026-11.local.jsonl",
+        "   Risk: PRODUCTION_MUTATION, Result: BLOCKED"
+      ]
+    },
+    {
+      "source_path": "/Users/authsvc/.agent-core/homes/agt_itops-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_53a977b9dc9e50a350d95b70c6e4631d--/main/session.jsonl",
+      "line": 6334,
+      "seq": 51862,
+      "type": "tool/result",
+      "time_unix_ms": 1794154263546,
+      "time_utc": "2026-11-08T16:11:03.546000+00:00",
+      "byte_offset": 6575854,
+      "line_bytes_with_newline": 4070,
+      "line_sha256": "61a690f492e188b54a9fdf1a329c287d6704ddfbd69a30e9c78ccb10d5bae9d0",
+      "observation": "Historical bounded observation found PID16139 alive throughout 00:00:54..00:11:00 CST and timed out00:11:01; no later termination proof",
+      "sanitized_result_excerpt": [
+        "OBS_START 2026-11-09T00:00:54+08:00 old=16139",
+        "OBS tick=40 ts=2026-11-09T00:11:00+08:00 launchd_pid=16139 state=running old_alive=1",
+        "STOP_TIMEOUT 2026-11-09T00:11:01+08:00 old=16139"
+      ]
+    }
+  ],
+  "issue1374_current_on_disk_readback": [
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/agent-router/src/index.js",
+      "sha256": "b9a7f382508dca181b21afc571006a6f10239ded9e8ae8fdcded0f514ad6f889",
+      "bytes": 27097,
+      "mtime_ns": 1794153298066246950
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/agent-router/src/process/agent-process.js",
+      "sha256": "47c4dfcfc13203283282405df57ecd0b27adf765b2ba218405f9cddb8b60a195",
+      "bytes": 17091,
+      "mtime_ns": 1794153299737528745
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/production-runtime/src/compose.js",
+      "sha256": "c31db4e1342344c32810076ab0b6d8a58cb1bf94d8a505fc92623771c5746838",
+      "bytes": 37331,
+      "mtime_ns": 1794153300077912366
+    }
+  ],
+  "authority_dispositions": [
+    "Read-only task reuses accepted authority; historical user-message mandates are evidence subjects and not current production authorization.",
+    "Fileowner authsvc, Git author, runtime UID and source.kind=user alone do not identify a human installer or prove original Owner approval.",
+    "DCP production_apply_authority:none and SRA conditional delegation do not retroactively establish this operation authorization; no current deploy/restart permitted.",
+    "D-RELEASE-PACKAGE-547 excludes old business-fact rewrite as rollback plan; the historical four-fence rewrite/LOAD_OK does not prove original-state rollback compatibility."
+  ],
+  "limitations": [
+    "No outbound agent/GitHub messages sent. No service restart/deploy/TERM/fence/store writes invoked. Historical commands are recorded, not replayed.",
+    "Exploratory missing revisions and unavailable directories are evidence gaps, not task failures.",
+    "No global census of all possible publisher records; negative receipt findings limited to named inspected paths.",
+    "Current PID22118 start/cause should be bound by root fresh process evidence; historical TERM or later PID alone does not identify responsible actor."
+  ],
+  "historical_pid16139": {
+    "native_lstart": "UNKNOWN; not persisted in selected ITOps session tool results",
+    "observed_etime": "04:03:54 at2026-11-08T15:56:07.156Z tool-result time",
+    "inferred_start_utc_approx": "2026-11-08T11:52:13Z; inference only; capture latency/seconds resolution prevent exact native start claim",
+    "argv": "/usr/local/libexec/agent-core/node-runtime/bin/node /usr/local/libexec/agent-core/app/scripts/production-runtime.mjs --root /Users/authsvc/.agent-core --catchup 0",
+    "last_observed_alive_in_selected_chain": "2026-11-09T00:11:00+08:00",
+    "implication": "Issue1374 three app-file copy completed after this instance started and while it remained active; same on-disk bytes do not prove historical PID16139 loaded them."
+  }
+}
