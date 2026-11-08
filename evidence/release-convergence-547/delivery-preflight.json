@@ -1,0 +1,43 @@
+{
+  "at": "2026-11-08T17:41:03.893020+00:00",
+  "phase": "Before receipt-only commit; remote feature HEAD still semantic candidate0f96a5e0",
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "ls-remote",
+        "origin",
+        "refs/heads/main",
+        "refs/heads/ops/release-convergence"
+      ],
+      "rc": 0,
+      "stdout": "6ad69d1fa6fa8c7dcfb3b5b61207c7d21a80ecef\trefs/heads/main\n0f96a5e09b15e206ec7c1b8ba45b1b8558966e01\trefs/heads/ops/release-convergence\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-p",
+        "22118",
+        "-o",
+        "pid=,ppid=,user=,lstart=,args="
+      ],
+      "rc": 0,
+      "stdout": "22118     1 authsvc Sun Nov  8 16:13:26 2026     /usr/local/libexec/agent-core/node-runtime/bin/node /usr/local/libexec/agent-core/app/scripts/production-runtime.mjs --root /Users/authsvc/.agent-core --catchup 0\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check",
+        "6ad69d1fa6fa8c7dcfb3b5b61207c7d21a80ecef",
+        "HEAD"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "production_mutations": 0
+}
