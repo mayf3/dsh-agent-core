@@ -593,7 +593,8 @@ root:authsvc lrwxr-xr-x /Users/authsvc/.agent-core/agents.json
 并注明 packed_app_tree_sha256 和 source_tree_sha 是 overlay 前值，不能拿旧值认证整个当前树。
 初次在本 worktree 读取该对象 rc=128；随后在声明 source repo
 `/Users/yanfenma/workspace/project/production-dsh-agent-core` 用 `git show 08102a55:<path>`
-取得对象，对部署实际 bytes 比较，以下三项均 git rc=0、matches=true：
+取得对象，对部署实际 bytes 比较，表中前三项均 git rc=0、matches=true；
+第四项 hardening verifier 另按本报告 main 对象比较，结果也为相同：
 
 | 部署相对 app 路径 | 实测 SHA256 | 对固定 Git 对象的关系 |
 | --- | --- | --- |
