@@ -40,3 +40,10 @@ attempt1/attempt2 原始 STOPPED/rc=1/runner 均保留。attempt1 是 constructo
 `UNEXPLAINED_PREDICATE_FAILURES=0; PRODUCTION_CUTOVER=NOT_EXECUTED; BUSINESS_RECOVERED=UNKNOWN; SAFE_TO_PUBLISH=NO; MERGE_READY=NO`。
 
 本地真实副本 QA 完成，dev correlation 缺项明确。它不认证生产安装制品/loaded bytes、在途 worker/tools 终止或隔离、回滚可用性或业务恢复；发布缺项必须保留。
+
+
+## 执行交付 Head 的独立 delta recheck
+
+Reviewer `/root/capture_review` 对 `75f1e80e41bcd7600ca38d11795d702d8a113181` 复核：`FINAL_HEAD_RECHECK=PASS; REVIEW_SCOPE=DELTA; FROZEN_BLOCKER_UNION=[]; BLOCKERS=0; FOLLOW_UPS=1`。31 个路径仅文档/证据，无 private/产品源码；packaging manifest 的30个artifact hash/bytes全部匹配；四份旧文完整字节保留。报告的141 checks、5 targets、dev correlation缺项、native scratch compaction、两个harness解释与生产发布缺项均准确。
+
+唯一非阻断follow-up已在同一收口delta修正：把“实测数量变化”改为“当前文件枚举五条，旧文四槽未认证数量/身份，不推断生产数量随时间变化”。Reviewer额外只读v2 raw也找到相同五handles；不影响已通过QA，不重跑采集/constructor。后续收口commit仅此措辞、Brief交付坐标、本文与packaging hash刷新；最终Head另做该有限delta复核，结果持久化在PR #670 body。

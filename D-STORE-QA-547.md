@@ -36,7 +36,7 @@ scratch constructor 后 active SHA `14cd62ca7e23fcdadf714237740110001a2ab86e1254
 
 ## 逐 handle 四事实实填
 
-以下直接从本次 raw 内容与实际方法返回派生，没有使用旧索引/预定数量。所有目标 raw 均 `initialOutcome=outcome_unknown, queryState=pending, state=blocked`，`exitObservedAt/terminationEvidence/settlementResult=null`，`failureReason=runtime_restart_ownership_unavailable`。四条 legacy 的 `fenceState=cleared`，普通 stock 的 `fenceState=active`。HR 是旧四槽之外的当前第五条，实测数量变化可解释，不丢弃该记录。
+以下直接从本次 raw 内容与实际方法返回派生，没有使用旧索引/预定数量。所有目标 raw 均 `initialOutcome=outcome_unknown, queryState=pending, state=blocked`，`exitObservedAt/terminationEvidence/settlementResult=null`，`failureReason=runtime_restart_ownership_unavailable`。四条 legacy 的 `fenceState=cleared`，普通 stock 的 `fenceState=active`。当前文件实际枚举五条，较旧文四个待核槽位多一条；旧槽位未认证身份或数量，不据此推断生产数量随时间变化，不丢弃任何当前目标。
 
 | Agent / handle | 原始记录精确 SHA-256 | 0-based UTF-8 byte offset / length |
 |---|---|---:|
@@ -84,7 +84,7 @@ faults 共5个 generation keys，逐项 value SHA/字段名见 stdout；key 不�
 
 见 [harness 解释收据](docs/evidence/h547-store-diag/harness-correction-v5.json)、attempt1/attempt2 的 `.mjs`/stdout/receipt。两次 rc=1 保留；原始内部状态字符串 STOPPED 仅表示该次 invocation 退出，不覆盖本次后续有依据的 v5 续办。未重新采生产或重放业务。
 
-独立采集及最终受影响面复核见 [independent-review-v5.md](docs/evidence/h547-store-diag/independent-review-v5.md)：PASS，独立执行证据复核通过，最终 committed Head 另做 delta recheck；不将代码作者的自检当作独立 QA。
+独立采集及最终受影响面复核见 [independent-review-v5.md](docs/evidence/h547-store-diag/independent-review-v5.md)：PASS，独立执行证据复核通过，执行交付 Head `75f1e80e41bcd7600ca38d11795d702d8a113181` 的独立 delta recheck PASS；后续仅措辞/复核记录 delta 单独复核；不将代码作者的自检当作独立 QA。
 
 ## D 安全发布条件终版
 

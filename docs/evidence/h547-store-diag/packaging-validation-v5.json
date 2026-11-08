@@ -12,13 +12,13 @@
   "artifact_manifest": [
     {
       "path": "BRIEF-547-STORE-DIAG.md",
-      "bytes": 20567,
-      "sha256": "88770d02b6835db3722d5d542145deefd9410c5f0b0e6e79606d3155a8ea34f0"
+      "bytes": 20750,
+      "sha256": "fb8e6edae9dd3796fe00a479e711c51409b8ce24beb82fc41901830635dfc51f"
     },
     {
       "path": "D-STORE-QA-547.md",
-      "bytes": 29079,
-      "sha256": "63618e29b07a4b500434a59211eeac25a3714ade33eec5b2a3c77a920156a273"
+      "bytes": 29266,
+      "sha256": "1d35528a84ac6e23ebd9c01ddf7856a166f3b2ca493ee0a955420f8fedce4ca4"
     },
     {
       "path": "STOPPED-547-STORE-DIAG.md",
@@ -52,8 +52,8 @@
     },
     {
       "path": "docs/evidence/h547-store-diag/independent-review-v5.md",
-      "bytes": 5102,
-      "sha256": "170d3c3b1c9dc4e6590a6ca2ffc99b370d65d6d2791991bfbfefb64f3da400e9"
+      "bytes": 6092,
+      "sha256": "cc65aa5800aad49998bd6e8e7d0ebb0ef38ab21cda975240d0c4d2f0a0faac20"
     },
     {
       "path": "docs/evidence/h547-store-diag/path-selfcheck-v5.json",
@@ -160,5 +160,6 @@
       "bytes": 226,
       "sha256": "9e7b0ff26917ed0be427c38186231d42e233c0b45aacdc826e2095ea0ae0d4da"
     }
-  ]
+  ],
+  "final_doc_refresh_at_utc": "2026-11-08T07:58:09.659599+00:00"
 }
