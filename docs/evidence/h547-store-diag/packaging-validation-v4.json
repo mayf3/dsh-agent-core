@@ -1,0 +1,16 @@
+{
+  "scope": "v4 STOP record packaging only; not current snapshot/store/product QA",
+  "packaging_assertions_rc": 0,
+  "packaging_only": "PASS",
+  "git_diff_check_rc": 0,
+  "product_qa": "NOT_RUN",
+  "previous_evidence_modified": false,
+  "observation_basis": "Tracked delta contains only BRIEF, D report, STOPPED and evidence README. New receipt parses and retains unrecorded exit statuses as UNKNOWN. This does not independently rehash private v1/v2 raw copies.",
+  "reviewed_sha256": {
+    "BRIEF-547-STORE-DIAG.md": "cd2d7cabc602e5ac8fda4afafdfbac929ac08726feba758c6730dff9003c9691",
+    "D-STORE-QA-547.md": "ef8ee6ff9ef45d37a9f1c6f4605ffa75343117dbed341a8d965931a99e4b9837",
+    "STOPPED-547-STORE-DIAG.md": "6af4ee00992a701693941d07a75bf68ec9284bd9ff8664b221e3ee8c9ec66298",
+    "docs/evidence/h547-store-diag/README.md": "7c2362a01c67f9a7c34e7eb8f4abf2436b35f3bc6bda34b494968229e4df17c8",
+    "docs/evidence/h547-store-diag/stop-v4-receipt.json": "889e58e4e4f25d09af001e305c2a44b358f59b9cb91f08b989d58f478c093b27"
+  }
+}

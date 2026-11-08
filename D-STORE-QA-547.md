@@ -1,4 +1,49 @@
-# D-STORE-QA-547 — v3 STOPPED，当前快照 QA 未完成
+# D-STORE-QA-547 — v4 STOPPED，当前快照 QA 未完成
+
+v4 在 root 本地预检查询阶段停止，**白名单新鲜采集与 scratch 真实 store 验证均未执行，D QA 未完成**。这是本地路径查询错误，不是生产 store 校验结果。生产切换未执行、不在本任务授权内。
+
+## v4 执行坐标、授权与实际停点
+
+- Worktree `/Users/yanfenma/workspace/project/worktrees/h547-store-diag`，branch `diag/547-durable-store`，执行 parent `71fce950e249ef8e36a9d255e4cfdc97fdc70532`；沿用 [PR #670](https://github.com/mayf3/dsh-agent-core/pull/670)，base main，不合并。
+- 用户本轮指令及 BRIEF v4 授权采集、固定 main reader `95a8e1cb512fc99dc018209d837250dd51b4d08f`（含 `42487e65`）、可写 scratch 验证和报告交付；不授权生产修改或恢复。当前 remote-main tip 未 fresh-read，该 SHA 仍只是授权固定的 integration snapshot。
+- `schema_version=2; SPEC_GOVERNANCE_MODE=PREFLIGHT; AUTHORITY_ACTION=REUSE; PLAN_LEVEL=BRIEF; ASSURANCE_LEVEL=DURABLE; ROUTE_STAGE=OPERATION`。本轮停止于预检，未完成 accepted authorities 重读或白名单规则验证，没有作新的 authority/reader 合规通过声明。
+- root 用 `rg --files docs/architecture docs/decisions docs/specs` 查询了不存在的 `docs/architecture`。错误逐字原文及完整命令保存在 [stop-v4-receipt.json](docs/evidence/h547-store-diag/stop-v4-receipt.json) 和 [STOPPED v4](STOPPED-547-STORE-DIAG.md)。实际 Architecture 入口由 local README 声明为 `docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md`；本轮没有修正后重试。
+- 当时只转发了 output，未保留外层或内部命令退出码，均 `UNKNOWN_NOT_RETAINED`；不伪造 rc，不为补收据重跑。错误时刻 UNKNOWN，停止收据时钟 `2026-11-08 07:28:00 UTC` 不是错误时刻。
+- 观察 stderr 后停止依赖工作，打断白名单独立复核 helper；helper 已完成的四次本地只读 exec_command 均 rc=0，无生产调用或写入，未完成复核结论。此后只整理/复核停止材料并更新 PR。
+- 本轮操作者生产读取=0、authsvc 调用=0、生产写入=0、restart/signal=0、旧 UNKNOWN 重放请求=0。不推断活跃 runtime 自身的动作或历史业务结果。
+
+## v4 四条事实与验证状态
+
+尚未从当前文件识别任何一条目标记录；下表仅保留四个待核槽位，不认证数量、身份或异常组合。
+
+| 目标 | handle / 当前文件 SHA / raw-record SHA | registry/fault/marker 一致性 | 可识别 / 持续阻断（实际返回 handle） | 同一 no-replay 入口 / 窄容忍 |
+|---|---|---|---|---|
+| 待核 1 | UNKNOWN / UNKNOWN / UNKNOWN | NOT_VERIFIED | NOT_RUN / NOT_RUN | NOT_RUN / NOT_RUN |
+| 待核 2 | UNKNOWN / UNKNOWN / UNKNOWN | NOT_VERIFIED | NOT_RUN / NOT_RUN | NOT_RUN / NOT_RUN |
+| 待核 3 | UNKNOWN / UNKNOWN / UNKNOWN | NOT_VERIFIED | NOT_RUN / NOT_RUN | NOT_RUN / NOT_RUN |
+| 待核 4 | UNKNOWN / UNKNOWN / UNKNOWN | NOT_VERIFIED | NOT_RUN / NOT_RUN | NOT_RUN / NOT_RUN |
+
+唯一执行错误输出原文（不是 validator/test stdout）：
+
+```text
+rg: docs/architecture: No such file or directory (os error 2)
+```
+
+没有 v4 capture receipt、constructor/test stdout 或验证 rc 可交付。`capture-v3.py` 连 `--check` 也未运行；没有实例化 store，没有向采集原件或 scratch 写入，没有重用 runtimeEpoch 或裁 epoch。v1/v2/v3 原件保持不变，旧矩阵不充当当前 QA。
+
+## v4 D 安全发布条件终态（本轮停止）
+
+| 条件 | 现有事实 | 缺项 / 本轮结论 |
+|---|---|---|
+| 独立当前快照 QA | 独立 helper 只读过文档和脚本，随后停止 | 白名单核对、新鲜一致副本、四条精确事实、真实 store 加载、持续阻断、no-replay、窄容忍及独立复核均缺失；NOT_SATISFIED |
+| 精确制品 pin | 沿用 v3 source commit/三文件 SHA 的历史观察；本轮未刷新 | 完整安装包/Node/依赖 manifest、可信 pack digest、loaded bytes/启动绑定缺失；NOT_SATISFIED |
+| 在途排空 | 本轮没有发生产请求或重放 | 旧 worker/tools 在实际效果边界的终止/隔离、写者排空及切换窗口授权无证据；UNKNOWN |
+| 回滚方案 | 历史 evidence 保留 | 精确 rollback 制品、store/sidecar 兼容性、回滚后可用性与不重放未核实；NOT_READY |
+| 生产操作授权 | v4 仅授权只读诊断及本地副本分析 | 生产切换权限不存在；OUT_OF_SCOPE |
+
+`D_QA_COMPLETE=NO; SAFE_TO_PUBLISH=NO; BUSINESS_RECOVERED=UNKNOWN; DONE_WHEN=NOT_MET; OPERATION_ALLOWED=NO; NEXT_ACTION=STOP; MERGE_READY=NO`。停止记录的包装检查仅支持报告交付，不代表 D QA 通过。本轮不继续下方历史续办配方。
+
+## v3 历史报告（以下原文保留）
 
 本次已消费 BRIEF v3 / Owner Watch3 五点并复核 v1/v2 STOPPED。**没有完成当前快照采集或隔离验证，不是 D QA PASS，不具备生产发布结论。生产切换未执行、不在本任务授权内。**
 

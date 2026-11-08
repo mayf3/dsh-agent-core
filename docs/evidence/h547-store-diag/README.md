@@ -1,6 +1,12 @@
 # #547 stopped capture evidence
 
-Latest: **v3 STOPPED** after a local helper query referenced a nonexistent source
+Latest: **v4 STOPPED** after root's local file discovery referenced nonexistent
+`docs/architecture`. The stderr is preserved in `stop-v4-receipt.json`; outer and
+inner exit statuses were not retained and remain UNKNOWN. No v4 production read,
+authsvc call, capture, scratch constructor or product test ran. Only stop-record
+packaging and existing PR delivery continue. v1/v2/v3 raw evidence stays unchanged.
+
+Previous: **v3 STOPPED** after a local helper query referenced a nonexistent source
 file (rc=2). This is not a store/validator failure. No v3 production reads, capture,
 constructor load or product tests ran. See [D-STORE-QA-547.md](../../../D-STORE-QA-547.md)
 and `stop-v3-receipt.json`. `capture-v3.py` is an **UNEXECUTED / UNVALIDATED draft**,
