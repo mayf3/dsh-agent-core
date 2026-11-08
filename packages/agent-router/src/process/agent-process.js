@@ -48,7 +48,7 @@ const sleep = (ms) => new Promise((resolve) => {
 export class AgentProcess {
   constructor({
     agentId, home, workspace, profile, provider, model, providerEnv = {}, omitEnv = [], nativeToolPolicy,
-    log = console, env = {},
+    githubAccess = false, log = console, env = {},
     processGeneration = 1,
     deadlines,
     reconciliationStore,
@@ -75,6 +75,7 @@ export class AgentProcess {
     this.model = model ?? process.env.DSH_AGENT_MODEL ?? CANONICAL_DEFAULT_MODEL_ROUTE.model
     this.providerEnv = Object.freeze({ ...providerEnv })
     this.omitEnv = [...omitEnv]
+    this.githubAccess = githubAccess === true
     this.log = log
     this.env = env // extra env for the child (e.g. DSH_AGENT_ID)
 

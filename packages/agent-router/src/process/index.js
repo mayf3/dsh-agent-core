@@ -16,7 +16,7 @@
  * Legacy import path `src/process.js` re-exports this barrel.
  */
 
-export { RECOGNIZED_PROXY_ENV_KEYS, childSpawnConfig, AGENT_CHILD_TMPDIR, agentEnv } from './env.js'
+export { RECOGNIZED_PROXY_ENV_KEYS, GITHUB_TOKEN_SOURCE_ENV, childSpawnConfig, AGENT_CHILD_TMPDIR, agentEnv } from './env.js'
 export { redactSensitiveText, classifyProviderError, sanitizeProviderError } from './provider-errors.js'
 export { PROCESS_STATES, monotonicNowMs } from './state-machine.js'
 export { PROCESS_EVIDENCE_CAPS } from './evidence-buffer.js'

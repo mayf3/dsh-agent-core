@@ -22,7 +22,7 @@
  */
 
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { accessSync, chmodSync, mkdtempSync, rmSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -33,6 +33,7 @@ import {
   AGENT_CHILD_TMPDIR,
   AgentProcess,
   agentEnv,
+  GITHUB_TOKEN_SOURCE_ENV,
   redactSensitiveText,
 } from '../src/process.js'
 
@@ -125,6 +126,21 @@ test('T2: no caller channel can override or drop the fixed child TMPDIR', async 
   } finally {
     cleanupUntraversableDir(inaccessible)
   }
+})
+
+test('GH credentials RED→GREEN: gh auth fails without opt-in and succeeds with controlled GH_TOKEN injection', async () => {
+  const token = 'ghs_test_token_not_logged'
+  await withEnv(GITHUB_TOKEN_SOURCE_ENV, token, () => {
+    const noAccess = agentEnv('/tmp/gh-home', {}, [], {}, undefined, false)
+    const red = spawnSync(process.execPath, ['-e', "process.exit(process.env.GH_TOKEN ? 0 : 1)"], { env: noAccess })
+    assert.equal(red.status, 1, 'RED: undeclared GitHub access has no token')
+
+    const greenEnv = agentEnv('/tmp/gh-home', {}, [], {}, undefined, true)
+    const green = spawnSync(process.execPath, ['-e', "process.exit(process.env.GH_TOKEN === 'ghs_test_token_not_logged' ? 0 : 1)"], { env: greenEnv })
+    assert.equal(green.status, 0, 'GREEN: declared GitHub access exposes GH_TOKEN to child tools')
+    assert.equal(greenEnv.GH_TOKEN, token)
+    assert.equal(greenEnv[GITHUB_TOKEN_SOURCE_ENV], undefined, 'source secret is not forwarded to the child')
+  })
 })
 
 test('T3: real plugin boot under an untraversable parent TMPDIR — plugin tree, initialize and provider registration all pass', { timeout: 180_000 }, async (t) => {

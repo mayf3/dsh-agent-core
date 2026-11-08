@@ -10,6 +10,8 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
+export const GITHUB_TOKEN_SOURCE_ENV = 'AGENT_CORE_GITHUB_TOKEN'
+
 export const RECOGNIZED_PROXY_ENV_KEYS = Object.freeze([
   'HTTP_PROXY',
   'HTTPS_PROXY',
@@ -83,7 +85,7 @@ export function childSpawnConfig(log = console) {
 export const AGENT_CHILD_TMPDIR = process.platform === 'darwin' ? '/private/tmp' : '/tmp'
 
 /** Base environment for one agent process (its own home, workspace as cwd). */
-export function agentEnv(home, extra = {}, omit = [], providerEnv = {}, provider) {
+export function agentEnv(home, extra = {}, omit = [], providerEnv = {}, provider, githubAccess = false) {
   const env = {
     ...process.env,
     DSH_HOME: home,
@@ -97,6 +99,13 @@ export function agentEnv(home, extra = {}, omit = [], providerEnv = {}, provider
   // therefore has no recognized proxy variable at all.
   for (const name of RECOGNIZED_PROXY_ENV_KEYS) delete env[name]
   Object.assign(env, providerEnv)
+  // GitHub CLI auth is opt-in per Agent config. The parent reads the deployed
+  // secret from a controlled runtime env; the child gets only GH_TOKEN, so gh
+  // never traverses the authsvc HOME/config sandbox. Never inherit or log it.
+  delete env.GH_TOKEN
+  const token = process.env[GITHUB_TOKEN_SOURCE_ENV]
+  delete env[GITHUB_TOKEN_SOURCE_ENV]
+  if (githubAccess === true && typeof token === 'string' && token !== '') env.GH_TOKEN = token
   // The already-resolved process provider owns credential roles. Codex uses
   // its provisioned canonical OAuth reference, never the generic Go key.
   // Remove inherited/extra/provider-injected keys as well as skipping disk.

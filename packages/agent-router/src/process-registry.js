@@ -361,6 +361,7 @@ export function createProcessRegistry({
         providerEnv: processConfig.providerEnv,
         omitEnv: processConfig.omitEnv,
         nativeToolPolicy: processConfig.nativeToolPolicy,
+        githubAccess: processConfig.githubAccess === true,
         log,
         // The per-agent process must know its own identity: the memory plugin
         // and the switch tool resolve agentId from $DSH_AGENT_ID when set.
