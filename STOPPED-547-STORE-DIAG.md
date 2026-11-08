@@ -1,3 +1,5 @@
+> v5 状态指针：用户已明确恢复并重定义失败语义；本文件下方 v1–v4 STOPPED 均为当时历史记录。v5 已完成白名单采集和真实 scratch QA（141 checks），两次本地 harness 错误有解释且原文保留，见 D-STORE-QA-547.md；没有生产操作或业务恢复结论。
+
 # STOPPED-547-STORE-DIAG
 
 最新状态：**v4 STOPPED / 当前快照 QA 未完成**，见文末 v4 节。下文 v1/v2/v3 原始停点保留。

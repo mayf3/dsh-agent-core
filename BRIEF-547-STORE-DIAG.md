@@ -92,3 +92,35 @@
 - 当时工具只转发 output，未保留外层或内部命令的 exit status；二者均 `UNKNOWN_NOT_RETAINED`，不能回填 rc=0 或 rc=2。错误时间 UNKNOWN；停止收据时钟为 `2026-11-08 07:28:00 UTC`，不是错误时间。
 - 收到 stderr 后停止依赖诊断、打断只读复核 helper；不启动采集或任何 store 实例化。helper 已安排的四次本地只读 exec_command 完成，均 rc=0；本轮生产读取/authsvc 调用/生产写入/restart/旧 UNKNOWN 重放均为 0（本次操作者边界）。
 - `V4_FRESH_CAPTURE=NOT_RUN; FULL_STORE_LOAD=NOT_RUN; FOUR_RECORD_QA=NOT_VERIFIED; OPERATION_ALLOWED=NO; NEXT_ACTION=STOP; DONE_WHEN=NOT_MET; MERGE_READY=NO`。只继续保存停止证据、独立复核包装并 commit/push/更新现有 PR；不将材料包装校验算作 D QA。
+
+## 续办补充（v5，2026-11-08 监管裁定——失败语义修正）
+- **失败语义重定义（覆盖前版"失败即停"的模糊性）**：
+  - **构成失败需停**：①必需输入缺失（active store/源码快照/main reader 基线不可得）②验证谓词返回非预期结果且无法解释 ③生产写入尝试被拒 ④数据一致性校验失败
+  - **不构成失败，记录后继续**：①探索性查找空结果（rg/grep/ls 未命中）——改为从 store.js/durable-file.js/paths.js 源码拼装规则推导实名后继续 ②自身计划草稿引用了错误路径——现场查源码修正后继续 ③子代理跑偏——纠正后继续
+  - 开工前置自检（一次）：把本任务计划引用的全部文件路径先逐一 `test -e` 核对，从源码拼装规则得出实名清单，再开始采集/验证
+- v4 已有成果复用：D-STORE-QA-547.md 的续办配方 = **预授权按文执行**（无需重推导）；v1-v4 的副本、源码快照、清单全部复用
+- 交付与红线不变：D-STORE-QA-547.md 实填终版 + 输出原文 + commit/push/PR 不合并；零生产写入/authsvc 只读/不裁 epoch
+
+
+### v5 本次执行坐标与预检
+- `schema_version=2; SPEC_GOVERNANCE_MODE=PREFLIGHT; AUTHORITY_ACTION=REUSE; PLAN_LEVEL=BRIEF; ASSURANCE_LEVEL=DURABLE; ROUTE_STAGE=OPERATION`。执行 parent `f6b988232ce218e7b85ea1853d4d0f8b47a4032a`；隔离 worktree/分支/PR #670 沿用，用户提供的 v5 原文保留。
+- `BASE_HEAD=95a8e1cb512fc99dc018209d837250dd51b4d08f` 固定 reader；fresh ls-remote main 观察 `206e19c17c268c7513e5a4d8b2135ac496cf7daf`，不偷换 reader。两份 accepted Spec 在固定 base 可得，相关 Contract 沿用上文，不改长期语义。
+- `AUTHORITY_ACCEPTED_IN_BASE=YES; EXECUTION_MANDATE=VALID; MUTATION_AUTHORIZATION=VALID; ISOLATED_WRITE_SURFACE=YES; IMPLEMENTATION_ALLOWED=NO; OPERATION_ALLOWED=YES; MERGE_READY=NO; SPEC_GAP_DEPENDENCY=NONE; LIVE_AUTHORITY_GAP=NONE; OWNER_DECISION_REQUIRED=NO`。权限仅为本地采集/隔离分析/文档/commit/push/既有 PR；authsvc 只读。
+- 一次完整路径自检见 `path-selfcheck-v5.json`：35 个本地必需路径逐一 test -e、18 个旧源码 hash 校验、生产 active + 三种可选 sidecar 逐一只读 test -e；r28 history 缺席为可选输入，不是失败。用户自引用 D-STORE-STORE-QA-547.md 修正为实际 D-STORE-QA-547.md。
+- 独立执行前范围复核 PASS：capture-v3.py 精确白名单、authsvc 只读 ls/stat/cat、10 个正反例、18 个旧源码 hash；实际算法两遍，每文件每遍两读三 stat，不声称三遍或 atomic。脚本原样复用，文件名 v3 表示脚本版本，本次 invocation 属 v5。
+- `CURRENT_GAP`：本次新鲜一致采集及真实 store/scratch 四事实 QA 尚待执行。`EVIDENCE_NEEDED` 与 `DONE_WHEN` 按 v5 与预授权续办配方。历史原件 RETAIN，不迁移、清理或重采历史备份。
+- `EXPANSION_TRIGGER` 采用 v5 明确失败语义；仅必需输入缺失、无法解释的非预期谓词、生产写入被拒、数据一致性失败停止依赖工作。路径草稿错误、探索空结果和子代理纠偏记录后继续。`NEXT_ACTION=CONTINUE; NEXT_REAL_ACTION=精确白名单单次采集，然后只在新 scratch 实例化固定 reader`。
+
+
+### v5 实际结果与交付坐标
+- 单次新鲜 capture PASS；两遍稳定，3 个精确白名单文件，36 条 authsvc ls/stat/cat 全 rc0；加自检4次 test 共40次只读调用。六个原件末次hash未变，v1/v2原件保持。
+- 固定 main 完整 reader 的真实 scratch constructor PASS（5322 records），141 checks全通过；当前真实异常为5条（4legacy+1ordinary），全部识别且持续阻断，4份已有correlation精确查回/duplicate mint拒绝，dev-engineer缺correlation明确记覆盖缺项；28窄容忍反例均预期TypeError。
+- 两次本地harness问题均保留原始rc1/输出/源码并具体解释：缺省scratch路径权限、Node permission禁用fsync。最终OS sandbox只允许scratch3写、拒绝network/process-fork，rc0；无未解释谓词失败，未重采生产。见 harness-correction-v5.json。
+- 无手工epoch编辑或旧epochoverride；正常原生compactRuntimeEpochs在scratch中用fresh UUID替换1个无记录历史epoch，输入/输出均256，全部79个record引用epoch保留。真实差异明确记录，不称scratch epoch字节全不变；生产/采集原件不变。
+- 独立capture/源码/输出/受影响Contract复核 PASS，FROZEN_BLOCKER_UNION=[]；执行交付Head `75f1e80e41bcd7600ca38d11795d702d8a113181` 独立delta recheck PASS；后续仅措辞/复核记录delta另核。SAFE_TO_PUBLISH=NO；精确生产制品/loaded bytes、在途排空、rollback和生产操作授权均仍缺；BUSINESS_RECOVERED=UNKNOWN; MERGE_READY=NO。D-STORE-QA-547.md 已实填终版与发布缺项；本地实填终版和全部原始证据已commit；最终远端HEAD及不合并状态由PR #670 fresh readback绑定，交付后停止，不做生产操作。
+
+
+### v5 远端交付变化与后续 PR
+- fresh remote readback：#670 已于 `2026-11-08T07:58:05Z` 被外部合并；merge `f8b7a0e4c6ef5ba278859328462abe8bdbd7a788` 的第二父是旧 Head f6b98823，实际树仍为v4 STOPPED且无v5 stdout，不包含本轮v5提交。merge subject不作为证据；本操作者merge调用=0，外部actor UNKNOWN。
+- 旧PR已结束，故同分支用后续draft PR #672（base main）承接v5 delta，不是平行候选；旧PR元数据已纠正为真实历史状态并链接#672。独立base-impact recheck PASS，两authority、相关grammar/Architecture/Decisions、reconciliation/registry/prompt-gate无变动，沿用已通过QA。
+- 交付变化见 delivery-transition-v5.json；最终exact HEAD/最终有限delta复核与OPEN/DRAFT/merged=false fresh readback写入#672 body。仍不merge、不做生产操作，SAFE_TO_PUBLISH=NO。
