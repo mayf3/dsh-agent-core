@@ -48,3 +48,34 @@
 - 三遍采集于 `2026-11-08T07:00:23.742502Z..07:00:24.956394Z` 完成，但事后本地范围复核发现 `capture-v2.py:54` 将历史文件名中的 `unblock` 错当 `lock`，额外读了 authsvc 可读的 `turn-recovery-v3.pre-fleet-unblock-20261002-111745.json`。
 - `CONTENT_CONSISTENCY=THREE_PASS_STABLE; CAPTURE_SCOPE=FAIL; OPERATION_ALLOWED=NO; NEXT_ACTION=STOP`。不自动重采，不再读取生产，不继续离线同谓词校验；仅保存/复核停止记录并更新 PR。该范围错误不改变实际 hash 一致的观察，也不构成诊断通过。
 - `DONE_WHEN=NOT_MET`；见 [STOPPED-547-STORE-DIAG.md](STOPPED-547-STORE-DIAG.md) 的 v2 节。原始执行脚本和 receipt 原样留存，不改成“正确执行”的版本。
+
+## 续办补充（v3，2026-11-08 监管裁定——消费 Owner Watch3 指令）
+### A. 副本范围精确修正（复用已有证据，不做第三次全目录采集）
+- v2 停点根因 = 采集脚本 `'lock' in name.lower()` 误纳历史 `pre-fleet-unblock` 文件。v3 精确白名单 = 源码实际组合的文件名（paths.js:78-79,107 + store.js:65 + durable-file.js:71-72 + index.js:196-197）：
+  - `control/turn-recovery-v3.json`（active store）
+  - `control/turn-recovery-v3.json.faults.json`（存在才采）
+  - `control/turn-recovery-v3.json.abandonment-declarations.json`（存在才采）
+  - `control/turn-recovery-v3.json.r28-history.jsonl`（存在才采）
+  - `control/turn-recovery-v3.json.tmp-*`（原子写残留，存在才采）
+  - **白名单外一律不采**（.bak*/pre-fleet-unblock/historical 均排除）
+- v1 首轮副本（SHA 85c4b0ce）、v2 三遍稳定副本、源码快照**全部复用**，不丢弃；v3 只补缺失文件的精确采集 + 当前快照新鲜一致性读。
+### B. Watch3 消费（Owner 2026-11-08 comment 6718344408 五点）
+1. **当前生产新快照固定**（只读，等价 ITOps 快照职责的诊断代行）：对 A 白名单文件做新鲜一致性采集（前 stat→复制→后 stat→双 hash），记录 4 条异常记录的精确 handle/内容摘要/文件哈希/sidecar 一致性——**不得仅据观察投影断言**，以实际文件内容为准。
+2. **D 最小线查重先行**：核实 main `42487e65`（已含于 95a8e1cb）三件套（state-machine.js markFenceCleared 写侧 guard / durable-file.js isLegacyUnprovenFenceClear 窄容忍 / admin-abandonment.js:105-115 admissionBlockerForAgent 持续阻断）就是既定候选；grep 在途候选/作者/PR 确认无重复开发。
+3. **隔离环境验证（本任务核心交付）**：用当前真实快照副本 + main 新 reader 代码离线运行完整 store 加载：① 全量加载成功 ② 4 条异常全部可识别且**继续阻断**（admissionBlockerForAgent 返回记录）③ 旧 UNKNOWN 不产生第二次效果（no-replay）④ isLegacyUnprovenFenceClear 对旧毒态受限读取生效。全部结果输出原文。
+4. A 二次修复不作默认步骤；C transport 独立诊断不在本任务范围。
+5. 交付 `D-STORE-QA-547.md`：四条事实核实结果（逐条：handle/哈希/兼容性/阻断状态）+ D 候选安全发布条件清单（已满足项/缺项逐项列明：独立 QA/精确制品 pin/在途排空/回滚方案）+ 明确"生产切换未执行、不在本任务授权内"。
+- 纪律不变：零生产写入（不切生产、不重启、不改文件）、authsvc 只读、失败再停。
+
+### v3 本次执行坐标与预检
+- `schema_version=2; SPEC_GOVERNANCE_MODE=PREFLIGHT; AUTHORITY_ACTION=REUSE; PLAN_LEVEL=BRIEF; ASSURANCE_LEVEL=DURABLE; ROUTE_STAGE=OPERATION`。
+- `REVIEW_TARGET_HEAD=c8036802f1543b108eddce3f8fce474bdc2d4d99; BASE_HEAD=95a8e1cb512fc99dc018209d837250dd51b4d08f`；沿用隔离分支/worktree/PR #670。本轮未 fresh-read remote tip，`origin/main` 仅为 integration snapshot；本地旧 `main` 不用作候选。
+- 本次用户 v3 指令恢复只读采集/隔离验证/报告授权；v1/v2 STOPPED 保留原文。`AUTHORITY_ACCEPTED_IN_BASE=YES; EXECUTION_MANDATE=VALID; MUTATION_AUTHORIZATION=VALID; ISOLATED_WRITE_SURFACE=YES`（仅本地诊断产物与既有 PR 交付）。`IMPLEMENTATION_ALLOWED=NO; OPERATION_ALLOWED=YES`（诊断）；生产切换/恢复/merge 均禁止。
+- Primary authority 沿用 accepted PLH V4 C-018/C-019/BOUNDED 与 HR trusted recovery V2 RQ-003/RQ-006；不改 Contract，`SPEC_GAP_DEPENDENCY=NONE; LIVE_AUTHORITY_GAP=NONE`。旧证据 RETAIN；D 重用 main，零重复实现。
+- `CURRENT_GAP`：v3 当前一致副本、4 异常文件事实与 main reader 完整加载尚未验证。`DONE_WHEN`：D-STORE-QA-547.md、全部离线输出、独立受影响面复核及既有 PR 更新；生产发布条件允许记录缺项，不等于发布通过。
+- `EVIDENCE_NEEDED`：精确 allowlist 本地反例；当前逐文件 pre-stat/copy/post-stat/二次源读/final stat 与跨遍向量；复用源码 hash；完整 constructor + sidecar + 4 records 阻断/UNKNOWN/no-replay/窄容忍证据。
+- `EXPANSION_TRIGGER`：命令、读取、一致性、验证失败或越界/authority 冲突，停止依赖工作；不自动重试。预期负向断言捕获的拒绝是验证成功，不是意外失败。`MERGE_READY=NO; NEXT_ACTION=CONTINUE`。
+
+### v3 当前状态：STOPPED（本地查询引用不存在的文件）
+- helper 本地 `rg` 命令引用 `packages/agent-router/src/reconciliation/dispatch-faults.js`，rc=2 / No such file or directory；并非生产读取或 validator 错误。同一 exec 还完成三条已安排的本地 Spec 读取，之后停止；root 未启动采集/验证，不自动改名重试。
+- `V3_FRESH_CAPTURE=NOT_RUN; FULL_STORE_LOAD=NOT_RUN; FOUR_RECORD_QA=NOT_VERIFIED; OPERATION_ALLOWED=NO; NEXT_ACTION=STOP; DONE_WHEN=NOT_MET`。报告为 [D-STORE-QA-547.md](D-STORE-QA-547.md)，仅如实交付已完成查重与缺项，不宣称核心 QA 完成。
