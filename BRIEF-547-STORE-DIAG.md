@@ -79,3 +79,16 @@
 ### v3 当前状态：STOPPED（本地查询引用不存在的文件）
 - helper 本地 `rg` 命令引用 `packages/agent-router/src/reconciliation/dispatch-faults.js`，rc=2 / No such file or directory；并非生产读取或 validator 错误。同一 exec 还完成三条已安排的本地 Spec 读取，之后停止；root 未启动采集/验证，不自动改名重试。
 - `V3_FRESH_CAPTURE=NOT_RUN; FULL_STORE_LOAD=NOT_RUN; FOUR_RECORD_QA=NOT_VERIFIED; OPERATION_ALLOWED=NO; NEXT_ACTION=STOP; DONE_WHEN=NOT_MET`。报告为 [D-STORE-QA-547.md](D-STORE-QA-547.md)，仅如实交付已完成查重与缺项，不宣称核心 QA 完成。
+
+## 续办补充（v4，2026-11-08 监管裁定）
+- v3 停点 = 子任务引用不存在的 `reconciliation/dispatch-faults.js`（rg rc=2）——引用笔误，非生产失败谓词。**修正**：faults sidecar 实名 = `turn-recovery-v3.json.faults.json`（store.js:65 拼装规则）；abandonment 注册表实名 = `turn-recovery-v3.json.abandonment-declarations.json`（durable-file.js:71-72）。以此执行 `capture-v3.py`（先核对白名单与源码拼装规则逐项一致）。
+- **授权执行 D-STORE-QA-547.md 自列续办配方**：白名单一致副本采集（前/后 stat+双hash）→ 固定 main reader（95a8e1cb 含 42487e65）完整依赖集 → 只对**可写 scratch 副本**实例化真实 store（构造器 startup recovery 可能持久化 → 绝不指向采集原件）→ 读取 registry/fault sidecar → 逐 handle 核实四条异常：可识别 / admissionBlockerForAgent 持续阻断（该函数只返回同 Agent 首条 blocker——保留实际 handle，不假定逐条独立返回）/ 旧 UNKNOWN 经同一 no-replay 入口不产生第二次效果（缺 correlation 的如实标注覆盖缺项）/ isLegacyUnprovenFenceClear 受限读取生效。
+- 不重用旧 runtimeEpoch、不裁 epoch 制造 PASS；旧固定索引/计数的 sanitized 矩阵不充当当前快照 QA。
+- 完成定义 = D-STORE-QA-547.md 更新（四事实核实矩阵实填 + 安全发布条件清单已满足/缺项终版）+ 测试/验证输出原文 + commit/push/PR 不合并。失败再停。
+
+### v4 当前状态：STOPPED（root 本地目录查询错误）
+- 本轮执行 parent `71fce950e249ef8e36a9d255e4cfdc97fdc70532`，隔离分支/worktree/PR #670 不变。用户 v4 明确恢复本地采集/验证授权；沿用 `PREFLIGHT / REUSE / BRIEF / DURABLE / OPERATION`，不改变 Product Contract，不扩展生产权限。
+- root 预检 `rg --files docs/architecture docs/decisions docs/specs | rg ...` 引用了不存在的 `docs/architecture`，输出 `rg: docs/architecture: No such file or directory (os error 2)`。本仓库 Architecture 实际入口已由 local README 声明为 `docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md`；本轮没有改路径后重试。错误是本地查询问题，不是生产 store 失败谓词。
+- 当时工具只转发 output，未保留外层或内部命令的 exit status；二者均 `UNKNOWN_NOT_RETAINED`，不能回填 rc=0 或 rc=2。错误时间 UNKNOWN；停止收据时钟为 `2026-11-08 07:28:00 UTC`，不是错误时间。
+- 收到 stderr 后停止依赖诊断、打断只读复核 helper；不启动采集或任何 store 实例化。helper 已安排的四次本地只读 exec_command 完成，均 rc=0；本轮生产读取/authsvc 调用/生产写入/restart/旧 UNKNOWN 重放均为 0（本次操作者边界）。
+- `V4_FRESH_CAPTURE=NOT_RUN; FULL_STORE_LOAD=NOT_RUN; FOUR_RECORD_QA=NOT_VERIFIED; OPERATION_ALLOWED=NO; NEXT_ACTION=STOP; DONE_WHEN=NOT_MET; MERGE_READY=NO`。只继续保存停止证据、独立复核包装并 commit/push/更新现有 PR；不将材料包装校验算作 D QA。

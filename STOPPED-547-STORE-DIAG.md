@@ -1,6 +1,6 @@
 # STOPPED-547-STORE-DIAG
 
-最新状态：**v3 STOPPED / 当前快照 QA 未完成**，见文末 v3 节。下文 v1/v2 原始停点保留。
+最新状态：**v4 STOPPED / 当前快照 QA 未完成**，见文末 v4 节。下文 v1/v2/v3 原始停点保留。
 
 v1 状态：**STOPPED / 调查未完成**。2026-11-08 14:49:02 +08:00
 （`2026-11-08T06:49:02.992836+00:00`）。本报告是停止记录，不是恢复授权。
@@ -286,3 +286,51 @@ v1/v2 脚本/receipt/私有副本原样保留，不将旧稳定观察升格为�
 仅继续整理既有观察、独立复核停止材料和更新 PR，不开展新诊断。
 [D-STORE-QA-547.md](D-STORE-QA-547.md) 明确四条待核事实和安全发布缺项；不是诊断完成报告。
 错误收据见 [stop-v3-receipt.json](docs/evidence/h547-store-diag/stop-v3-receipt.json)。
+
+## v4 STOPPED — root 本地目录查询错误，尚未采集或验证
+
+本轮用户 v4 指令恢复只读诊断，执行 parent
+`71fce950e249ef8e36a9d255e4cfdc97fdc70532`，沿用隔离 worktree/分支/PR #670。
+root 已读 BRIEF v4、D 报告续办配方及治理入口；尚未完成相关 authority 重读、
+白名单独立核对或本地反例验证。没有执行 capture-v3.py（包括 --check）。
+
+root 在 functions.exec 中执行的本地命令原文：
+
+```sh
+cat .agents/skills/spec-governance/modes/preflight.md && sed -n '1,75p' .agents/local/README.md && rg --files docs/evidence/h547-store-diag && rg --files docs/architecture docs/decisions docs/specs | rg 'ARCHITECTURE|PROCESS_LIFECYCLE_HARDENING_V4|HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2|547|FENCE'
+```
+
+失败输出逐字原文：
+
+```text
+rg: docs/architecture: No such file or directory (os error 2)
+```
+
+该命令仍输出了三个匹配 Spec 路径，不能据此当成完整查询成功。
+root 当时只转发 exec_command.output，未保留外层 exit status 或内部 rg status；
+二者均为 UNKNOWN_NOT_RETAINED，不重新执行获取 rc，不把系统错误码 2 冒充 shell rc。
+错误时刻 UNKNOWN；停止收据时钟 `2026-11-08 07:28:00 UTC` 仅固定记录时间。
+这是 root 的查询路径错误，不是 v3 的文件名笔误复发，也不是生产 validator 失败。
+local README 已给出实际 Architecture 入口；停止后没有修正路径继续调查。
+
+root 在观察 stderr 后发送停止通报并打断 `/root/review_capture`。helper 只执行本地只读文档/文件名/HEAD 读取，
+更正自报为四次 exec_command，均 rc=0、无内部查询错误；未完成白名单结论。并行读取可能在 root 观察前已完成，
+不声称逐命令即时停止。停点之后仅保存材料、读取现有 PR 和独立复核包装。
+
+```text
+V4_PRODUCTION_READ_COMMANDS = 0
+V4_AUTHSVC_COMMANDS = 0
+V4_PRODUCTION_WRITE_COMMANDS = 0
+V4_FRESH_CAPTURE = NOT_RUN
+FULL_STORE_CONSTRUCTOR_LOAD = NOT_RUN
+FOUR_CURRENT_RECORD_FACTS = NOT_VERIFIED
+BLOCKING / NO_REPLAY / NARROW_TOLERANCE = NOT_RUN
+RECOVERY / CUTOVER / RESTART = NOT_EXECUTED
+DONE_WHEN = NOT_MET
+OPERATION_ALLOWED = NO
+NEXT_ACTION = STOP
+```
+
+计数只描述本轮操作者动作，不推断历史 UNKNOWN 的业务效果或生产 runtime 是否自行写入。
+既有 v1/v2/v3 evidence 原件保持不变；没有用历史副本/投影填当前矩阵。
+收据见 [stop-v4-receipt.json](docs/evidence/h547-store-diag/stop-v4-receipt.json)。
