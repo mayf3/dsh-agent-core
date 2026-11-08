@@ -90,8 +90,8 @@ holdings。对齐 [#1351](https://github.com/mayf3/agent-control/issues/1351) �
 
 | 前置 | 必须持久绑定的事实 | 当前状态 / 责任 |
 |---|---|---|
-| P1 删除入口 | 真实 owner repo、源码 commit/path/symbol、外层 callable→最终 mutation 的 invocation、全部同效删除/离册路径；精确目标/鉴权/并发边界 | UNKNOWN；实际 gateway/registry owner。不能把 Core disable 冒充删除或另造无调用方 helper |
-| P2 检查器 | 既有 NOT_IN_REGISTRY 检查器 owner repo、commit/path/symbol、invocation、现有报告面、role 扩展点 | UNKNOWN；实际检查器 owner。不能把 Scheduler watchdog 当替身；若另仓拥有实现，须其正式配套接受 |
+| P1 删除入口 | 真实 owner repo、源码 commit/path/symbol、外层 callable→最终 mutation 的 invocation、全部同效删除/离册路径；精确目标/鉴权/并发边界 | **PARTIALLY_BOUND**；已查环境未找到 Core 专用逐 Agent 删除 callable；Core 已绑定整表替换/强制迁移/安装 seed/restore、hardening verifier 整册删除后重建。OpenClaw `agents.delete` 安装能力 **BOUND**，写 `openclaw.json.agents.list` 而非 Core `agents.json`；当前 loaded/配置 override 及历史删除链 **UNKNOWN**。责任仍归实际 gateway/registry owner |
+| P2 检查器 | 既有 NOT_IN_REGISTRY 检查器 owner repo、commit/path/symbol、invocation、现有报告面、role 扩展点 | **NOT_LOCATED**；全仓、指定候选仓、部署 app（含 node_modules）及生产日志/状态排查未找到可执行产生者；Scheduler W1/W2、HR 档案一致性及 HR read projection 候选已排除。真实 owner/入口/报告面/role 扩展点仍 **UNKNOWN**；不将所查范围的负证据当成全环境不存在证明 |
 | P3 Svc 配套 | 真实 authority ID、Contract IDs、精确文档 hash、独审 reviewed HEAD、合法接受者及权限来源、最终接受事务/head、main SHA、各实施 base 包含关系 | REQUIRED/UNKNOWN；Svc 合法责任链。覆盖 holdings 全量读、全角色/owner 写点、身份解析/错误/时间界限、并发与过户合法性；Core 不代签 |
 | P4 本地接受 | 非作者 affected-Contract review、接受者真实身份权限、精确 reviewed/final HEAD；`none→contracts` 的另次明确 docs-only 事务和 main 激活 | NOT_EXECUTED；§3C 原责任链。PR 创建或审查 PASS 均不自动接受 |
 
@@ -164,6 +164,8 @@ observed_at=`2026-11-08T10:51:53Z`；basis=`OBS-GHP-001/002/003`、`EVD-GHP-001/
 
 ### CTR-GHP-001 — C1 删除/离册门禁，disable 例外
 
+GC 门禁定义的是新的 Core 逐 Agent 删除边界；本次排查未找到既有专用逐 Agent 删除 callable。
+
 真实删除/离册 callable MUST 在最终 mutation 前，以精确 Agent ID 和 Auth 所属 canonical
 Principal 关系查询 Svc holdings。不得用 display name、旧别名、ID 前缀或本地复制表猜映射。
 Auth owns Principal/type/status，Core Agent Definition owns Agent 存在及 enabled；复用现有
@@ -186,9 +188,11 @@ registry/CAS 漂移 MUST 保留身份并拒绝，不能 fail-open、静默降级
 disable principal/Agent Definition MUST 不调用此 GC 门、不以 holdings 查询成功/为空为前置。
 GC MUST NOT 清已有 holdings、fence、UNKNOWN 或历史；同效离册入口必须同样受控。
 
-### CTR-GHP-002 — C2 真实检查器的 role 维扩展
+### CTR-GHP-002 — C2 新建 Core 侧 holdings 巡检
 
-P2 指定的检查器 MUST 从 Svc 全量 Principal/当前实例 assignee/enabled domain+global role
+新建 Core 侧 holdings 巡检；本次实测排查未找到 `NOT_IN_REGISTRY` 标记的可执行产生者，
+部署状态与候选已排除清单见 [P1P2-BINDING-1351.md](https://github.com/mayf3/dsh-agent-core/blob/6d88289c8eaa0405e16c375a0ab0ad5a64dcc2bf/P1P2-BINDING-1351.md) §6–7。
+该巡检 MUST 从 Svc 全量 Principal/当前实例 assignee/enabled domain+global role
 读取构建候选集合，再按精确 canonical 关系与 Core 在册目录比对，不能只遍历在册 Agent，
 也不能只用 caller 的 worklist、只查实例或只查 owner。合法 human Principal 不属于 agent
 registry 检查对象；类型/映射未知须报告 unresolved，不能默认为 human 或把它当无 holding。
