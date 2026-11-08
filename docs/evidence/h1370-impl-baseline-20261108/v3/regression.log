@@ -1,0 +1,425 @@
+✔ profile table carries the production entry beside the legacy demo ones (2.935583ms)
+✔ profile is required — no silent demo default in the production package (0.906458ms)
+✔ provisionAgentHome installs profile copies + farm links idempotently (31.099917ms)
+✖ harness resolution is worktree-aware and cliBin fails loud without a checkout (12.701ms)
+✔ target-home plugin provisioning is exact, idempotent and leaves the shared profile byte-unchanged (89.042084ms)
+✔ same-version legacy dsh-codex 0.2.3 is not reused without pinned artifact provenance (34.466333ms)
+✔ plugin missing, plugin mismatch, DSH mismatch and credential boundaries fail loud (73.987958ms)
+✔ modified 0.2.3 artifact requires an exact digest and source stamp (128.638459ms)
+✔ readHarnessIdentity prefers git: a working git repo ignores the .source-stamp entirely (482.815916ms)
+✔ readHarnessIdentity: no .git + valid stamp (dirtyCount = 0) resolves the stamp commit (50.068208ms)
+✔ readHarnessIdentity: no .git + stamp dirtyCount != 0 fails loud (identity not exact) (136.970416ms)
+✔ readHarnessIdentity: malformed stamps fail loud (extra/missing keys, bad types, non-JSON) (620.405291ms)
+✔ readHarnessIdentity: no .git and no .source-stamp fails loud (48.588041ms)
+✔ stamp identity feeds the dshVersion/dshCommit pin check unchanged (mismatch is fail-loud, never a hop class) (144.817541ms)
+✔ ensureSymlink accepts realpath-equivalent links without rewriting (fleet EACCES class 2026-09-12) (20.055125ms)
+✔ DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite: provisioning stays PATH_ONLY — no parent-side credential probe anywhere (0.51825ms)
+✔ FLEET_SHARED_CODEX_AUTH A2/A4: canonical store resolves per deployment root; the yanfenma-domain constant stays frozen (0.122292ms)
+✔ FLEET_SHARED_CODEX_AUTH A4: cross-surface credential references are refused — one OAuth lineage per security surface (0.098709ms)
+✔ FLEET_SHARED_CODEX_AUTH A4: persistOpenAICodexCredentialFile refuses drift shapes and foreign deployment pins (6.95075ms)
+✔ DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite: stale foreign credential reference is idempotently rewritten to the own-domain canonical before the child starts (36.523125ms)
+✔ FLEET_SHARED_CODEX_AUTH A4: provisioning a production-layout home refuses a foreign surface canonical even without an explicit deploymentRoot (17.595584ms)
+✔ DEFAULT_MODEL_ROUTING_CONFIG_V1: fresh-home MINIMAL_SETTINGS defaults to the canonical Luna route and keeps OpenCode Go registrable (3.50775ms)
+✔ GPT6-P1: persistOpenAICodexCredentialFile writes the route reasoning effort into the plugin config block (1.339459ms)
+✔ GPT6-P2: absent reasoningEffort keeps the block byte-identical to the legacy shape (1.339ms)
+✔ GPT6-P3: an out-of-vocabulary reasoningEffort fails loud (reasoning_effort_invalid) (1.023458ms)
+✔ GPT6-P4: the committed catalog fixture IS the frozen 0.87.1 artifact bytes (self-verifying pin) (0.390916ms)
+✔ GPT6-P5: provisioning the GPT-6 tuple without pi-ai 0.87.1 fails loud (pi_ai_identity_mismatch) (4.353292ms)
+✔ GPT6-P6: a wrong pi-ai version or wrong catalog bytes is refused — no clamp, no registry guess (7.451875ms)
+✔ GPT6-P7: the exact 0.87.1 artifact identity provisions the GPT-6 tuple and the link is kept (6.319208ms)
+✔ zero-config construction resolves the canonical Luna built-in default (10.167792ms)
+✔ explicit constructor route wins over env; env wins over the default (5.147125ms)
+✔ R3 route: one real startup-blocked request enters shared alert feed once (14.852125ms)
+✔ R3 route: one real per-agent fence rejection enters shared alert feed once (59.589916ms)
+✔ R3 deliver: one real startup-blocked request enters shared alert feed once (8.652417ms)
+✔ R3 deliver: one real per-agent fence rejection enters shared alert feed once (52.920417ms)
+✔ R3 product: one real startup-blocked request enters shared alert feed once (1.561083ms)
+✔ R3 product: one real per-agent fence rejection enters shared alert feed once (43.212083ms)
+✔ R3 website: one real startup-blocked request enters shared alert feed once (1.880334ms)
+✔ R3 website: one real per-agent fence rejection enters shared alert feed once (38.415958ms)
+✔ R3 blocked observation accepts only bounded code/reason/agent metadata (0.441666ms)
+✔ R3 a blocked process acquisition already counted by the chain is not counted again by ingress (16.195292ms)
+✔ R3 website: late blocked acquisition alerts once without exposing raw Agent identity (19.082292ms)
+✔ R3 product: observing rejection preserves its existing raw-fence fallback (77.7845ms)
+✔ R3 website: observing rejection preserves its existing raw-fence fallback (74.977ms)
+✔ R3 real router initialization alerts on an invalid startup store before any delivery (11.903542ms)
+✔ default off: no canaryRuntimeRoot => zero filesystem effect, normal turn (4.27325ms)
+✔ absent descriptor is the ordinary fast path (no injection, no marker) (14.650375ms)
+✔ quota mode: acquire/dispatch boundary crossed, fixed terminal 429, hop luna, exact counts (31.047167ms)
+✔ quota mode on a length-1 chain: fixture 429 stays terminal (no next route) (17.201792ms)
+✔ outcome_unknown mode: STOP before acquire — zero acquires, no generation (19.618667ms)
+✔ binding mismatches: wrong agent / route / channel / sender / partial marker / no ingress (46.915042ms)
+✔ other-Agent isolation: a matching descriptor never affects another agent turn (8.903ms)
+✔ expired descriptor: no injection, not consumed, ordinary turn (7.840584ms)
+✔ malformed descriptors fail loud with zero attempts (97.508583ms)
+✔ metadata drift (wrong mode bits) fails loud (14.675ms)
+✔ one-shot race: exactly one of two concurrent matching turns gets the injection (14.806291ms)
+✔ crash after rename: used marker alone never re-consumes; ordinary turn (2.047917ms)
+✔ nonce collision: new descriptor whose used marker already exists fails loud (2.626458ms)
+✔ admission (deliver) entries never match the canary binding (5.153584ms)
+✔ after clear (descriptor + used marker absent) the seam is inert (12.837208ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/native-router-oVopJg/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: mcp:pilot... -> agent agt_pilot + session main + workspace (agent default)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794121104715,"routeChainId":"single-route","agentId":"agt_pilot","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121104716,"routeChainId":"single-route","agentId":"agt_pilot","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+✔ real Router ProductSurface seam preserves dedicated binding/main and hands source metadata to original chain (119.19025ms)
+✔ real AgentProcess receipt-only product surface holds trusted context until original terminal (13.779417ms)
+✔ source owner retains exact native reply before publication, survives reset and restart (84.290416ms)
+✔ source reserve fails before followup when durable retention is unavailable (1.495833ms)
+✔ B002: visible text and its native ID survive an empty completion anchor in the same exact turn (56.496875ms)
+✔ B002: a wholly-empty native completion records no visible reply rather than retaining an empty business answer (45.488167ms)
+✔ #1332 fresh spawn + suspended 59243-event resume: no prompt before application readiness (20.045875ms)
+✔ R1 readiness: initialize ready cannot bypass session preparation acknowledgement (14.611958ms)
+✔ R1 readiness: absent capability and mismatched acknowledgement fail closed (15.247834ms)
+✔ R1 readiness: never-ready child respects caller deadline and late ack cannot admit (41.059042ms)
+✔ R4 readiness: process state and newly installed UNKNOWN fence gate acknowledgement (2.83525ms)
+✔ R1 readiness: each call obtains a fresh ack; expired caller budget writes nothing (0.860708ms)
+✔ R1 readiness: an acknowledgement processed beyond the absolute budget cannot admit (8.094458ms)
+✔ R1 readiness preserves private-session log suppression without forwarding custody payload (11.278208ms)
+✔ CTR-R2 fresh/idle transport failure respawns twice with exponential delay, one reply/dispatch (61.332125ms)
+✔ CTR-R3 exhaustion durably retains original message, coordinates and explicit resend semantics (34.842791ms)
+✔ CTR-R2 no replay after unsafe/unknown event {"type":"assistant/message","data":{"message":{"content":[{"type":"text","text":"partial"}]}}} (1.895084ms)
+✔ CTR-R2 no replay after unsafe/unknown event {"type":"assistant/message","data":{"message":{"content":[{"type":"tool-call","name":"write"}]}}} (2.776166ms)
+✔ CTR-R2 no replay after unsafe/unknown event {"type":"tool/start","data":{}} (3.52475ms)
+✔ CTR-R2 no replay after unsafe/unknown event {"type":"unrecognized/provider-event","data":{}} (4.756666ms)
+✔ CTR-R5 final unknown increments caller-bound class without replay or respawn (902.964208ms)
+✔ CTR-R2/R3 async admission returns one receipt then recovers delayed failures and persists exhaustion (26.167958ms)
+✔ CTR-R3 failed exact generation reap still retains message and resend notice (22.744667ms)
+✔ CTR-R2 arbitrary fetch-failed text never provides replay authority (3.477167ms)
+✔ CTR-R5 all four categories and threshold are recomputable from structured log events (0.548958ms)
+✔ CTR-R5 real child exit after receipt counts child_exit_without_outcome and never retries (1.19025ms)
+✔ CTR-R2 parent RPC observation denies replay even without assistant/tool events (2.0095ms)
+✔ accepted original-source custody forbids a second prompt and retains failed original (10.78525ms)
+✔ CTR-R1 never-serviceable preparation respawns twice and dead-letters without any prompt (11.891125ms)
+✔ CTR-R3 real ingress failure reply keeps its prefix and explicitly says 请重发 (21.371333ms)
+✔ scenario 7 runs in a clean child-process environment (199.593917ms)
+✔ native continuation uses a new owned queue execution after the initial turn settles (30.921334ms)
+✔ duplicate native reservation cannot mint another execution or enqueue twice (19.266ms)
+✔ aborting a native request behind an occupied queue cannot write later (12.354583ms)
+✔ native entry rejects other sessions, incompatible children and forged fields before admission (6.431708ms)
+✔ native callback unknown is fenced rather than misclassified as definitive rejection (11.262292ms)
+✔ lost native prompt receipt can reconcile exact retained message without resending (37.107084ms)
+✔ a duplicate reservation remains rejected after its reconciled record is evicted (3.119167ms)
+✔ transport watermark rejects invalid, duplicate and out-of-order sequences before write (5.538292ms)
+✔ scripted native rounds obtain fresh parent proof after prior settlement through real child transport (662.594209ms)
+ℹ {"kind":"scripted_native_conformance","processGeneration":17,"initial":"turn:61761757-dcce-45c1-a947-19413e1d7584:a1:g17:s1","rounds":[{"messageId":"625537fa-abd6-456a-80f6-6f8d123dc458","source":{"kind":"goal","goalId":"goal-50b42017-56bb-43d7-9e33-bed24045d5f9","revision":1,"round":1},"handle":"turn:61761757-dcce-45c1-a947-19413e1d7584:a1:g17:s2"},{"messageId":"e985b6d2-0eda-420f-bcbf-cdb435cb9114","source":{"kind":"goal","goalId":"goal-50b42017-56bb-43d7-9e33-bed24045d5f9","revision":1,"round":2},"handle":"turn:61761757-dcce-45c1-a947-19413e1d7584:a1:g17:s3"}],"peerDeliveries":2}
+✔ real child timeout removes native queued admission before old owner release (692.783666ms)
+✔ real child cancel removes native queued admission before old owner release (644.744959ms)
+✔ draining child of an ordinary agent loses broker and switch at the stop barrier (2.971584ms)
+✔ a child whose exit the parent observed is denied even while its socket lingers (0.770333ms)
+✔ live READY child keeps the ordinary broker and switch semantics (0.442166ms)
+✔ real AgentProcess captures workflow origin before first prompt RPC and keeps it immutable (96.981208ms)
+✔ real completed managed turn cannot erase stale RPC correlation into ordinary fallback (7.511458ms)
+✔ invalid supplied turn correlation refuses while proven live unmanaged turns retain ordinary routing (0.189458ms)
+✔ native tool policy digest participates in process reuse identity while legacy identity stays stable (5.506125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-jrrnVz/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ DEC-IMPL-004: identity-matching READY process is reused with zero new generations (49.305417ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-nUIzLF/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ DEC-IMPL-004: mismatched IDLE process is shut down through the existing controlled path, then a new generation spawns under the wanted route (16.527834ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-NtHwGk/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ credential path switch never reuses the per-home OAuth child (26.264125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-XyuJru/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ trusted native policy is bound to exact-agent process identity and changes require a new generation (15.540375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-OXKGuT/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ legacy ensureRunning applies the trusted resolver before reuse when native policy is configured (10.76925ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-Optcgm/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ removing a trusted native policy also requires a fresh process generation (16.235458ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-6y92Dw/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ trusted native policy resolver identity mismatch fails before process creation (14.51125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-l6Yv3M/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ route acquisition without an identity closes policy removal instead of reusing the old generation (4.421208ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-ebkyp2/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ legacy acquisition rechecks policy removal while a policy-bound route startup is pending (8.997625ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-p4Lzqp/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ concurrent route acquisition converges a STARTUP policy removal through the same generation gate (19.079458ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-mTBblV/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ process config cannot opt in when the trusted resolver is absent (11.637ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-7feD6V/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ DEC-IMPL-004: mismatched BUSY process is never killed and never reused (15.976125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-lGAP5L/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ shared STARTUP: a second caller with a different route converges after the in-flight startup settles (11.916375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-zombie-gis3DB/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ a settled-but-unconverged STARTUP slot fails loud and bounded (no spin) (9.703792ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-33QBds/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ legacy ensureRunning still spawns via resolveProcessConfig and records the slot route identity (15.979875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-BeRVTj/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ undefined identity disables the gate (byte-equivalent legacy acquisition) (20.403125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-fail-nOOhen/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ registry-level startup failures reject the gate call with the structured carrier (21.476208ms)
+✔ resolved provider/model are immutable initialize inputs for the process that owns create and resume (22.905792ms)
+✔ target process environment explicitly omits OPENAI_API_KEY (0.766541ms)
+✔ every child strips all proxy variants; only target providerEnv is injected exactly (0.969417ms)
+✔ providerEnv is immutable per AgentProcess lifetime (0.208417ms)
+✔ provider/account errors are classified without secret echo and never rewrite the route (21.157041ms)
+✔ failure taxonomy and redaction cover frozen provider-side classes (2.895625ms)
+✔ real turn/end quota error rejects the turn with provider/account attribution and no empty success (10.49125ms)
+✔ all frozen runtime classes traverse the real session.event turn/end shape (24.711833ms)
+✔ turn correlation ignores history/another session but fences two same-session pre-receipt starts (84.112333ms)
+✔ async and sync provider errors share full token redaction and never retain raw payloads (11.193666ms)
+✔ quota signal + full authoritative evidence => exact new class, hop candidate (3.039833ms)
+✔ structured HTTP 429 status also qualifies as the quota signal (0.195917ms)
+✔ B/D matrix: every unsafe flag beats the quota signal => STOP (0.171542ms)
+✔ B (authoritative): captured assistant output stops even without carrier flags (0.104125ms)
+✔ C: 429-shaped outcome_unknown carrier => STOP outcome_unknown (0.103333ms)
+✔ 429 + transport timeout evidence => STOP timeout_without_proven_termination (0.685959ms)
+✔ ambiguous quota (no authoritative bundle, no controlled proofs) => STOP, never initialize/no-admission (0.564917ms)
+✔ each missing authoritative predicate separately breaks the quota class (0.543708ms)
+✔ text-only quota (quota words in message, non-quota structured code) => STOP post-admission (0.147792ms)
+✔ session-boundary quota sync rejection (no receipt, no proof) => STOP fail-closed, never class 3 (0.128167ms)
+✔ explicit initialize-origin quota + never READY + no prompt attempt => existing class 2 (0.659541ms)
+✔ the other three no-admission classes still hop (closed V1 whitelist intact) (0.243917ms)
+✔ A (real process): terminal pre-generation 429 hops glm53 -> luna -> success (42.10925ms)
+✔ B (real process): 429 after partial assistant output STOPs, zero luna acquires (10.763375ms)
+✔ C (real process): quota turn never terminates => outcome_unknown STOP, zero luna acquires (66.069125ms)
+✔ D (controlled carrier): 429 + tool started => STOP, zero luna acquires (0.697667ms)
+✔ journal redaction: quota attempts never journal raw provider bodies or prompts (0.645708ms)
+✔ no next route: exact quota class on a length-1 chain stays terminal (no cycle/restart) (0.326ms)
+✔ budget exhaustion: exact quota class with no remaining deadline STOPs (no refresh) (21.700167ms)
+✔ R2 atomic batch repairs three blocked+pending+cleared fixtures using their own durable evidence (784.585666ms)
+✔ R2 atomic batch refuses missing mandatory field: no source mutation or partial candidate (406.28525ms)
+✔ R2 atomic batch refuses wrong query enum: no source mutation or partial candidate (399.423375ms)
+✔ R2 atomic batch refuses wrong settlement enum: no source mutation or partial candidate (407.942541ms)
+✔ R2 atomic batch refuses wrong action enum: no source mutation or partial candidate (442.065167ms)
+✔ R2 atomic batch refuses missing action timestamp: no source mutation or partial candidate (469.268ms)
+✔ R2 atomic batch refuses missing exact termination proof: no source mutation or partial candidate (526.725875ms)
+✔ R2 atomic batch refuses outcome evidence has precedence: no source mutation or partial candidate (508.037042ms)
+✔ R2 atomic batch refuses unproven root-quiescence assertion: no source mutation or partial candidate (478.634709ms)
+✔ R2 atomic batch refuses null exit cannot be asserted as child exit: no source mutation or partial candidate (454.347333ms)
+✔ R2 atomic batch refuses unselected malformed record stays invalid: no source mutation or partial candidate (421.252042ms)
+✔ R2 atomic batch refuses duplicate target is refused: no source mutation or partial candidate (404.581833ms)
+✔ R2 atomic batch refuses wrong target identity: no source mutation or partial candidate (369.188917ms)
+✔ R2 CLI: three evidence-backed incident-shaped turns settle individually; unrelated UNKNOWN stays exact (987.737834ms)
+✔ R2 CLI: missing durable exit proof is refused even with explicit owner authorization (318.298042ms)
+✔ R2 CLI: stale preimage refuses without changing source or emitting candidate (386.179709ms)
+✔ R2 CLI: wrong tuple refuses without changing source or emitting candidate (387.336167ms)
+✔ R2 CLI: new evidence kind refuses without changing source or emitting candidate (401.276333ms)
+✔ R2 CLI: owner-writable by group refuses without changing source or emitting candidate (437.875041ms)
+✔ R2 CLI: missing authorization refuses without changing source or emitting candidate (487.939583ms)
+✔ R2 deployed loader rejects incident schema mistake: missing observedAtWallMs (491.583ms)
+✔ R2 deployed loader rejects incident schema mistake: state instead of queryState (457.974417ms)
+✔ R2 CLI: existing candidate or symlink output is never overwritten (417.137875ms)
+✔ R2 CLI: exact REAP registry cleanup must already be proven (431.636041ms)
+✔ R2 CLI: durable late success cleanup retains outcome and answer digest; repeated candidate is unchanged (617.997ms)
+✔ R2 CLI: durable exact outcome evidence cannot be downgraded by exit-only recovery (344.506416ms)
+✔ R2 CLI: wrong deployed loader digest refuses without source mutation (301.827834ms)
+✔ R2 CLI: validate uses deployed loader without triggering startup restoration (322.125625ms)
+✔ R2 CLI: single-handle resume preserves other Scheduler caller correlations (351.84375ms)
+✔ private caller opts cross to the final turn without entering the route acquire identity (3.85875ms)
+✔ classification: the four whitelisted proven-no-admission classes hop (1.356125ms)
+✔ classification: everything in the CTR-005 stop set stays put (0.427ms)
+✔ CTR-002: primary success means zero fallback activity (0.967958ms)
+✔ CTR-003/004: each whitelisted failure hops exactly once, in order, to the next route (5.593792ms)
+✔ CTR-003: multi-hop chains traverse route[0] -> route[1] -> route[2] with no skips (7.627084ms)
+✔ CTR-005: stop-set failures never hop; the original error propagates fail-loud (8.549042ms)
+✔ CTR-003: exhausting the chain fails loud with the last failure class (0.872459ms)
+✔ DEC-IMPL-005: explicit model strict mode = exactly one attempt, zero hops (1.317375ms)
+✔ DEC-IMPL-007: a whitelisted failure with no remaining budget does NOT hop (24.436042ms)
+✔ DEC-IMPL-007: busy_mismatch convergence waits consume the single budget, then stop (216.156833ms)
+✔ CTR-IMPL-003: deliver variant hops on admission failures and resolves on inbox accept (0.549208ms)
+✔ CTR-IMPL-005: onDispatch fires exactly once, right before the first dispatched attempt (0.4945ms)
+✔ CTR-IMPL-006: journal records carry only structural fields — never raw errors (0.7245ms)
+✔ no-override agents pass through the seam with a length-1 chain (legacy default snapshot) (0.223292ms)
+✔ invalid config at snapshot time fails loud with zero attempts and a truthful final block (0.203666ms)
+✔ canonicalRouteIdentity: credentialFile is part of reuse identity and is canonically resolved (0.56175ms)
+✔ scenario 5 runs in a clean child-process environment (195.790541ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-vQIVZA/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: feishu:surface-523... -> agent agt_a + session session-before + workspace (agent default)
+✔ #523: feishu agent-turn cross-workspace switch rejects before any Binding/bookmark write (120.22525ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-s8hf66/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: mobile:surface-523... -> agent agt_a + session session-before + workspace (agent default)
+✔ #523: mobile agent-turn cross-workspace switch rejects before any Binding/bookmark write (12.0515ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-F5xZjl/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: custom-channel:surface-5... -> agent agt_a + session session-before + workspace (agent default)
+✔ #523: custom-channel agent-turn cross-workspace switch rejects before any Binding/bookmark write (9.131875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-Q2D9dr/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: mobile:shared... -> agent agt_a + session remember-me + workspace (agent default)
+[router] bookmark: mobile:shared... x agt_a -> session remember-me
+[router] switch: mobile:shared... -> agent agt_b + session main + workspace (agent default)
+[router] bookmark: mobile:shared... x agt_b -> session main
+[router] switch: mobile:shared... -> agent agt_a + session remember-me + workspace (agent default)
+✔ #523: same imported primary path allows different agent IDs and display-name resolution (9.530375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-yAdpIp/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: feishu:explicit... -> agent agt_a + session main + workspace group-workspace
+✔ #523: explicit current workspace is compared instead of current agent primary (6.479667ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-ltKVZD/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: custom-channel:explicit-... -> agent agt_a + session main + workspace agt_b
+[router] bookmark: custom-channel:explicit-... x agt_a -> session main
+[router] switch: custom-channel:explicit-... -> agent agt_b + session main + workspace agt_b
+✔ #523: explicit workspace equal to target primary allows the switch (7.721625ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-ympZPH/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: mobile:no-bypass... -> agent agt_a + session main + workspace (agent default)
+✔ #523: targetSessionId and requested workspace cannot bypass cross-workspace admission (7.036791ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-TTMU5g/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: feishu:self... -> agent agt_a + session main + workspace another-workspace
+✔ #523: self-switch cannot bypass the guard when current effective workspace differs (7.1135ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-1VuZ9c/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: mobile:operator... -> agent agt_a + session saved-session + workspace (agent default)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[router] bookmark: mobile:operator... x agt_a -> session saved-session
+[router] switch: mobile:operator... -> agent agt_b + session main + workspace (agent default)
+✔ #523: operator POST /v1/switch-agent still crosses workspaces on the real Router (73.438291ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@deepseek-ai/dsh-tools' imported from /Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/broker/src/index.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:768:81)
+    at moduleResolve (node:internal/modules/esm/resolve:859:18)
+    at defaultResolve (node:internal/modules/esm/resolve:991:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:713:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:730:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:759:52)
+    at #resolve (node:internal/modules/esm/loader:695:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:615:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:160:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v25.6.1
+✖ packages/production-runtime/test/default-model-route.test.js (312.003333ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@deepseek-ai/dsh-tools' imported from /Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/broker/src/index.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:768:81)
+    at moduleResolve (node:internal/modules/esm/resolve:859:18)
+    at defaultResolve (node:internal/modules/esm/resolve:991:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:713:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:730:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:759:52)
+    at #resolve (node:internal/modules/esm/loader:695:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:615:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:160:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v25.6.1
+✖ packages/production-runtime/test/model-overrides-runtime.test.js (319.667125ms)
+✔ the code constant carries ONLY pins and scope — no route tuple values (F-10) (2.357958ms)
+✔ GPT6-0: the GPT-6 tuple constant carries the exact DEC-G6R-002/003 identity — dormant, separate from V3 (0.306417ms)
+✔ missing file = global passthrough; valid v3 chain resolves primary-first with identities (28.2485ms)
+✔ version discipline: older files fail loud (no auto conversion) (15.535417ms)
+✔ malformed family: bad JSON, wrong shape, extra keys, deep duplicate keys fail loud (7.478667ms)
+✔ reference integrity and dedup: unknown ref, repeated ref, canonical alias duplicates fail loud (8.164ms)
+✔ hard bound: chain length ≤ MAX_CONFIGURED_ROUTES = 4 (never 2) (4.615333ms)
+✔ fleet activation accepts any registered Agent and rejects unregistered Agent ids (1.6675ms)
+✔ CTR-011 pin: a dsh-codex route with any other pluginVersion fails loud (not a fallback class) (3.696417ms)
+✔ shared mode rejects missing, per-home, relative, and non-canonical credentialFile values (4.912334ms)
+✔ ACC-016 routeKind family: missing/invalid routeKind and plugin keys on a builtin fail loud (4.426708ms)
+✔ ACC-016/ACC-018: the frozen initial chain tuple loads; builtin processConfig has NO subscription block (1.88ms)
+✔ ACC-019 reuse-gate identity: builtin and subscription processes never share an identity (0.69625ms)
+✔ providerEnv accepts only the frozen four-key set and safe host-list grammar (19.755834ms)
+✔ providerEnv URL, key and value failures are fail-loud without secret echo (9.002959ms)
+✔ GPT6-1: an explicit reasoningEffort on the GPT-6 tuple loads and rides the process config (1.431667ms)
+✔ GPT6-2: effective reasoningEffort joins the canonical route identity — absent GPT-6 IS medium, high is distinct (2.793333ms)
+✔ GPT6-2b: absent and explicit medium in ONE catalog is a malformed alias (same canonical identity) (0.92025ms)
+✔ GPT6-3: the legacy tuple keeps the exact pre-change schema, identity bytes and absent reasoning (1.211083ms)
+✔ GPT6-4: an invalid reasoningEffort value fails loud with the closed vocabulary in the message (2.407417ms)
+✔ GPT6-5: reasoningEffort is FORBIDDEN outside the GPT-6 tuple — builtin, non-dsh-codex, legacy tuple (2.183458ms)
+✔ GPT6-6: two routeRefs differing only in reasoningEffort do NOT collapse into one identity (2.053333ms)
+✔ GPT6-7: the built-in default global route stays the legacy V3 tuple — merge is dormant (CTR-G6R-001) (1.337042ms)
+✔ GPT6-8: the dshr1 pin is bound to exactly one tuple — wrong pluginVersion/model pairings fail loud (ACC-G6R-005) (6.66725ms)
+✔ GPT6-9: both dsh-codex pins coexist in one catalog and keep distinct identities (1.684833ms)
+ℹ tests 238
+ℹ suites 0
+ℹ pass 235
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7823.963334
+
+✖ failing tests:
+
+test at packages/agent-provisioning/test/provisioning.test.js:129:1
+✖ harness resolution is worktree-aware and cliBin fails loud without a checkout (12.701ms)
+  AssertionError [ERR_ASSERTION]: repo root sanity: /Users/yanfenma/workspace/project/worktrees/h1370-impl
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/test/provisioning.test.js:132:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at packages/production-runtime/test/default-model-route.test.js:1:1
+✖ packages/production-runtime/test/default-model-route.test.js (312.003333ms)
+  'test failed'
+
+test at packages/production-runtime/test/model-overrides-runtime.test.js:1:1
+✖ packages/production-runtime/test/model-overrides-runtime.test.js (319.667125ms)
+  'test failed'
