@@ -14,7 +14,7 @@ commit→push→PR(base main)，不合并、不实施、不改产品代码/测�
 | Brief SHA-256 | `d4fe36e47330882cf81b429ff462c2254bfdb8c60332e8b43914de5d021e7483`；原文件保留，不纳入提案差量 |
 | 上位分析输入 | main 的 SEMANTIC-VERIFY-1370.md，SHA-256 `7fe9507d161ca0cc1020f6867e3cb7a56cf259cdd48cf6162a3009a9cdd3b0f6`，PR #667 |
 | 输出 | [AGENT_CORE_ROUTING_CONFIG_GENERATION_POLICY_V1](docs/specs/AGENT_CORE_ROUTING_CONFIG_GENERATION_POLICY_V1.md) 与本报告；仅新增文档 |
-| 当前阶段 | AUTHOR 候选；精确提交/远端 PR 的交付核对在下节补记 |
+| 当前阶段 | AUTHOR 提案交付；PR #669 open / 未合并，政策仍 proposed/none |
 
 GOAL_OR_TARGET：关闭 SEMANTIC-VERIFY §6 的五要素，提供受托路由维护者可审查/接受的
 最小政策提案。CURRENT_GAP：现有 accepted inventory 未决定失败候选后的可信旧代消费
@@ -89,5 +89,89 @@ none 接受当成实现权。生产仍另需 mandate，零生产写入不因 PR 
 不是精确提案 HEAD 的审查，也不是受托维护者接受。提案 §13 列出非作者独审、真实
 受托接受者、reviewed/final HEAD、正式事务和 base 激活的全部前置门。
 
-本轮提案的语法、范围、精确 HEAD 独立审查和 Git/PR 交付结果在完成后记入本节。
-作者不会自行标 accepted，不代任何生产维护者签署接受，不合并 PR。
+### 精确语义 HEAD 审查回执
+
+```text
+schema_version = 2
+SPEC_GOVERNANCE_MODE = REVIEW
+REVIEW_KIND = SPEC
+SPEC_REVIEW = ACCEPT  # 独立审查建议，不是正式接受事务
+REVIEW_TARGET_HEAD = cad041d84784b00cdc4dfd3685376e24e1a5ab75
+BASE_HEAD = 45d008a5e4df2c8a44f83fe5d4dca150d2772c7f
+CURRENT_BASE_HEAD = 45d008a5e4df2c8a44f83fe5d4dca150d2772c7f
+REVIEWED_AT = 2026-11-08T03:23:38Z
+REVIEWER_ID = /root/proposal_review
+AUTHOR_ID = /root
+AUTHOR_INDEPENDENCE = PASS
+REVIEW_SCOPE = FULL
+FULL_REVIEW_BASIS = INITIAL_REVIEW
+AUTHORITY_REVIEW = PASS
+PRIMITIVE_BOUNDARY_REVIEW = PASS
+CONTRACT_REVIEW = PASS
+ACCEPTANCE_COVERAGE_REVIEW = PASS
+MANDATE_SCOPE_REVIEW = PASS
+EVIDENCE_REVIEWABILITY = PASS
+BASE_IMPACT = NONE
+FROZEN_BLOCKER_UNION = []
+BLOCKERS = 0
+SPEC_GAPS = 0
+PROPOSAL_PR_DELIVERY_READY = YES
+FORMAL_ACCEPTANCE_COMPLETE = NO
+IMPLEMENTATION_ALLOWED = NO
+MERGE_READY = NO
+OPERATION_ALLOWED = NO
+```
+
+该审查明确支持 NEW、五要素和六条 Contract 的完整性。额外非作者窄反例检查
+`/root/proposal_review/counterexample_check` 对 explicit-wins/rejection 同样未发现
+具体冲突。Spec SHA-256 为
+`91230bafc7a72e67376c62d6734592669155dcc256b606e6fb518af9dd5c7ad1`。
+本报告此后仅补交付收据，提案规范文本不变；最终 HEAD 的差量复核绑定并持久化于
+同一 PR body，不通过反复修改本文自引用其自身 commit。
+
+### 已执行的文档与范围检查
+
+| 检查 | 结果与限制 |
+| --- | --- |
+| 候选 frontmatter 对 `.agents/schemas/spec-frontmatter.schema.json` | PASS，proposed/none、supersedes=[] |
+| vendored `validate_spec_transition([], [candidate])` | PASS；仅 NEW 候选生命周期，不冒充全库语义审查 |
+| 13 必需章节、稳定 ID、6/6 Contract→Acceptance、本地链接路径 | PASS，反向映射完整；不代表未来产品验收已执行 |
+| 直接相关 governed Specs 的 accepted 状态读取 | PASS，绑定本报告 base；候选后继不当 active |
+| `python3 .agents/tools/verify_governance.py --target . --require-accepted` | rc0，vendored bytes 与 accepted lock 一致 |
+| `git diff --check 45d008a5e4df2c8a44f83fe5d4dca150d2772c7f...cad041d84784b00cdc4dfd3685376e24e1a5ab75` | rc0；差量仅本报告与提案两个新增文档 |
+| Brief/SEMANTIC-VERIFY SHA-256 复读 | 均与上表一致；未修改原始输入、前次 STOPPED、accepted Spec、代码/测试/配置 |
+| 产品/运行/生产验证 | NOT_RUN / UNKNOWN / 零生产写入；本任务不以文档检查替代运行验证 |
+
+### Git 与 PR
+
+- 语义提案 commit：`cad041d84784b00cdc4dfd3685376e24e1a5ab75`，parent 为本报告固定 base。
+- `git push -u origin docs/routing-generation-policy` rc0，远端新分支建立成功。
+- [PR #669](https://github.com/mayf3/dsh-agent-core/pull/669)，base=`main`，
+  head=`docs/routing-generation-policy`；2026-11-08T03:24:08Z connector 创建回读
+  `state=open / merged=false / merge_commit_sha=null`。
+- 本报告交付收据作为随后独立 commit 推送同一分支；最终完整 HEAD、远端一致性和
+  report-only delta 独立复核结果保存在该 PR 的交付回执。规范内容摘要保持上值。
+
+```text
+schema_version = 2
+SPEC_GOVERNANCE_MODE = AUTHOR
+AUTHORITY_ACTION = NEW
+ROUTE_STAGE = AUTHORITY_AUTHORING
+AUTHORITY_ACCEPTED_IN_BASE = NO
+PLAN_LEVEL = BRIEF
+ASSURANCE_LEVEL = DURABLE
+DOCS_FIRST_REQUIRED = YES
+POLICY_STATUS = proposed
+IMPLEMENTATION_AUTHORITY = none
+IMPLEMENTATION_ALLOWED = NO
+IMPLEMENTATION_READY_TO_MERGE = NO
+OPERATION_ALLOWED = NO
+FORMAL_ACCEPTANCE_COMPLETE = NO
+PRODUCT_TESTS = NOT_RUN
+RUNTIME_CONFORMANCE = UNKNOWN
+PRODUCTION_WRITES = 0
+NEXT_PRODUCT_ACTION = INDEPENDENT_REVIEW_AND_DELEGATED_FORMAL_ACCEPTANCE_THEN_RE_PREFLIGHT
+```
+
+作者不自行标 accepted，不代任何生产维护者签署接受，不合并 PR。未触发任务失败
+停点，不生成虚假的 STOPPED；完成本次文档交付即停，不扩展为实施或接受任务。
