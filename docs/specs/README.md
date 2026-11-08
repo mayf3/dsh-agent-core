@@ -460,3 +460,9 @@ activate a deployment controller/profile, or perform production operations.
 | [AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V2](AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V2.md) | accepted 2026-11-08; whole successor to PPR V1; inherits WAE V3 + Recovery Liveness V1; bounded planned admission + refusal terminal | implementation contracts; production none | `rulings[id=owner-20261108-three-unified].items[1]`; PR #664 merged `e8d6d333`; semantic source `e6e32698`; reviewed head `e6e32698` |
 
 Branch statuses do not establish active main authority before those ordered merges.
+
+## Routing configuration generation policy authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| [AGENT_CORE_ROUTING_CONFIG_GENERATION_POLICY_V1](AGENT_CORE_ROUTING_CONFIG_GENERATION_POLICY_V1.md) | accepted 2026-11-08 under Owner mayf3 delegated ruling; NEW, supersedes []; effective after main merge | implementation contracts after exact accepted revision enters implementation base; production none | `$.rulings[id=owner-20261108-phase-receipt-deltas].items[4]`; reviewed head `cad041d8`; exact-content generation publication and bounded trusted-generation continuation; implementation requires separate RE_PREFLIGHT |
