@@ -71,7 +71,11 @@ export function reconstructAdminAbandonmentDeclarations(records) {
 function stuckAdmissionHandles(store, agentId) {
   return [...store.records.values()]
     .filter(record => record.agentId === agentId
-      && record.initialOutcome === 'outcome_unknown' && record.fenceState !== 'cleared'
+      && record.initialOutcome === 'outcome_unknown'
+      // A legacy unproven fence clear is admission-quarantined exactly like an
+      // armed unknown (admissionBlockerForAgent), so the D6 scope must be able
+      // to cover it — otherwise the quarantined class has no release path.
+      && (record.fenceState !== 'cleared' || isLegacyUnprovenFenceClear(record))
       && (record.adminAbandonment ?? null) === null)
     .map(record => record.handle)
 }
@@ -108,8 +112,17 @@ export const adminAbandonmentMethods = {
       // A historical bad clear is quarantined even if it carries an old
       // abandonment marker. Keep compatibility decoding off ordinary prompt
       // admission: only a cleared UNKNOWN can have the historical defect.
+      // A D6 owner-risk acceptance audit entry (stamped with the marker) is
+      // the one authorized release: it records the explicit owner decision
+      // for the restart-lost class whose termination evidence is
+      // uncollectable, so admission unblocks while the record stays fenced +
+      // outcome_unknown + no-replay. Markers without the acceptance audit
+      // (pre-D6 stamps) keep the quarantine.
       if (record.fenceState === 'cleared') {
-        if (isLegacyUnprovenFenceClear(record)) return record
+        if (!isLegacyUnprovenFenceClear(record)) continue
+        const stampedWithAcceptance = (record.adminAbandonment ?? null) !== null
+          && (record.audit ?? []).some(entry => entry?.kind === 'owner_risk_acceptance_unproven_termination')
+        if (!stampedWithAcceptance) return record
         continue
       }
       if ((record.adminAbandonment ?? null) !== null) continue
@@ -147,7 +160,7 @@ export const adminAbandonmentMethods = {
   stuckFenceWithoutDurableExitEvidenceForAgent(agentId) {
     for (const record of this.records.values()) {
       if (record.agentId !== agentId || record.initialOutcome !== 'outcome_unknown'
-          || record.fenceState === 'cleared'
+          || ((record.fenceState === 'cleared') && !isLegacyUnprovenFenceClear(record))
           || (record.adminAbandonment ?? null) !== null) continue
       if ((record.exitObservedAt ?? null) === null && (record.terminationEvidence ?? null) === null) {
         return { handle: record.handle, failureReason: record.failureReason ?? null }
