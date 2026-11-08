@@ -4,7 +4,7 @@
 
 ## 坐标、授权与复用
 
-- Repository `mayf3/dsh-agent-core`；worktree `/Users/yanfenma/workspace/project/worktrees/h547-store-diag`；branch `diag/547-durable-store`；执行 parent `f6b988232ce218e7b85ea1853d4d0f8b47a4032a`；沿用 [PR #670](https://github.com/mayf3/dsh-agent-core/pull/670)，base main，不合并。
+- Repository `mayf3/dsh-agent-core`；worktree `/Users/yanfenma/workspace/project/worktrees/h547-store-diag`；branch `diag/547-durable-store`；执行 parent `f6b988232ce218e7b85ea1853d4d0f8b47a4032a`；前序 [PR #670](https://github.com/mayf3/dsh-agent-core/pull/670) 已被外部在旧 Head 合并；本轮由后续 draft [PR #672](https://github.com/mayf3/dsh-agent-core/pull/672) 承接，base main，不合并。
 - 用户本次 v5 指令及 [BRIEF v5](BRIEF-547-STORE-DIAG.md) 预授权按续办配方执行。`PREFLIGHT / REUSE / BRIEF / DURABLE / OPERATION`；仅本地证据/报告及 git 交付；生产写入、restart、signal、旧 UNKNOWN 业务重放为 0。
 - Primary authority 沿用 accepted PLH V4 C-018/C-019/BOUNDED、HR trusted recovery V2 RQ-003/RQ-006；不改 Product Contract 或产品源码。固定 reader base `95a8e1cb512fc99dc018209d837250dd51b4d08f`，已包含 D 三件套 `42487e65`。fresh remote main `206e19c17c268c7513e5a4d8b2135ac496cf7daf` 已 fetch；固定 base..该 main 的相关 Architecture、Decisions、两份 Specs、local grammar 和 reconciliation 路径无差异。既有候选/作者/PR 查重复用 v3 有界观察，未发布工作和该观察之后的新候选 UNKNOWN；没有重复实现 D。
 - [一次路径自检](docs/evidence/h547-store-diag/path-selfcheck-v5.json)：35 个本地路径逐一 `test -e`，18 个旧源码快照逐一 hash 匹配；authsvc 只读 `test -e` active 与三可选 sidecar。r28 history 不存在属于可选缺席；用户自引用名修正为本文件实名，未作为失败。
@@ -98,7 +98,9 @@ faults 共5个 generation keys，逐项 value SHA/字段名见 stdout；key 不�
 
 `CAPTURE_SCOPE=PASS; CAPTURE_CONSISTENCY=PASS; FULL_STORE_LOAD=PASS; CURRENT_TARGETS=5; CONTINUED_BLOCKING=5/5; CORRELATION_NO_REPLAY=4/4_AVAILABLE; MISSING_CORRELATION=1; NARROW_TOLERANCE=4_LEGACY/28_NEGATIVES_PASS; SAFE_TO_PUBLISH=NO; PRODUCTION_CUTOVER=NOT_EXECUTED; BUSINESS_RECOVERED=UNKNOWN; MERGE_READY=NO`。
 
-本次文档/输出交付可完成；发布缺项属于下一次有界维护操作的必要条件，不授权在本任务切换、修复或扩大诊断。v1–v4 原报告如下，保留其当时的 STOPPED 和 UNKNOWN，不作为当前状态。
+交付时 fresh readback 核实前序 PR #670 于 07:58:05Z 合并的是旧 Head f6b98823，merge f8b7a0e4 的树仍是 v4 STOPPED，未包含 v5；merge subject 不作 v5 集成证明。本操作者未调用 merge，外部 actor UNKNOWN；因此用同分支后续 draft PR #672 承接，零并行开发。独立 base-impact recheck PASS，相关 authority/reader 源码不变，不重跑 QA。详见 [交付变化收据](docs/evidence/h547-store-diag/delivery-transition-v5.json)。
+
+本次文档/输出交付已通过本地/独立复核；发布缺项属于下一次有界维护操作的必要条件，不授权在本任务切换、修复或扩大诊断。v1–v4 原报告如下，保留其当时的 STOPPED 和 UNKNOWN，不作为当前状态。
 
 ---
 

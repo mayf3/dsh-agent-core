@@ -118,3 +118,9 @@
 - 两次本地harness问题均保留原始rc1/输出/源码并具体解释：缺省scratch路径权限、Node permission禁用fsync。最终OS sandbox只允许scratch3写、拒绝network/process-fork，rc0；无未解释谓词失败，未重采生产。见 harness-correction-v5.json。
 - 无手工epoch编辑或旧epochoverride；正常原生compactRuntimeEpochs在scratch中用fresh UUID替换1个无记录历史epoch，输入/输出均256，全部79个record引用epoch保留。真实差异明确记录，不称scratch epoch字节全不变；生产/采集原件不变。
 - 独立capture/源码/输出/受影响Contract复核 PASS，FROZEN_BLOCKER_UNION=[]；执行交付Head `75f1e80e41bcd7600ca38d11795d702d8a113181` 独立delta recheck PASS；后续仅措辞/复核记录delta另核。SAFE_TO_PUBLISH=NO；精确生产制品/loaded bytes、在途排空、rollback和生产操作授权均仍缺；BUSINESS_RECOVERED=UNKNOWN; MERGE_READY=NO。D-STORE-QA-547.md 已实填终版与发布缺项；本地实填终版和全部原始证据已commit；最终远端HEAD及不合并状态由PR #670 fresh readback绑定，交付后停止，不做生产操作。
+
+
+### v5 远端交付变化与后续 PR
+- fresh remote readback：#670 已于 `2026-11-08T07:58:05Z` 被外部合并；merge `f8b7a0e4c6ef5ba278859328462abe8bdbd7a788` 的第二父是旧 Head f6b98823，实际树仍为v4 STOPPED且无v5 stdout，不包含本轮v5提交。merge subject不作为证据；本操作者merge调用=0，外部actor UNKNOWN。
+- 旧PR已结束，故同分支用后续draft PR #672（base main）承接v5 delta，不是平行候选；旧PR元数据已纠正为真实历史状态并链接#672。独立base-impact recheck PASS，两authority、相关grammar/Architecture/Decisions、reconciliation/registry/prompt-gate无变动，沿用已通过QA。
+- 交付变化见 delivery-transition-v5.json；最终exact HEAD/最终有限delta复核与OPEN/DRAFT/merged=false fresh readback写入#672 body。仍不merge、不做生产操作，SAFE_TO_PUBLISH=NO。

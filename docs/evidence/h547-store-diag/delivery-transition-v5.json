@@ -1,0 +1,39 @@
+{
+  "schema_version": 5,
+  "observed_at_utc": "2026-11-08T08:01:38.560453+00:00",
+  "old_pr": {
+    "number": 670,
+    "state": "closed",
+    "merged": true,
+    "merged_at": "2026-11-08T07:58:05Z",
+    "head": "f6b988232ce218e7b85ea1853d4d0f8b47a4032a",
+    "merge": "f8b7a0e4c6ef5ba278859328462abe8bdbd7a788",
+    "parents": [
+      "206e19c17c268c7513e5a4d8b2135ac496cf7daf",
+      "f6b988232ce218e7b85ea1853d4d0f8b47a4032a"
+    ],
+    "merge_actor": "UNKNOWN_NOT_QUERIED",
+    "tree_qa_title": "v4 STOPPED\uff0c\u5f53\u524d\u5feb\u7167 QA \u672a\u5b8c\u6210",
+    "v5_stdout_present_in_merge": false
+  },
+  "operator_merge_calls": 0,
+  "v5_head_at_successor_creation": "97189e126e45294806a25d3e6fcd59be3e8c739a",
+  "v5_head_in_merge_ancestry": false,
+  "merge_base": "f6b988232ce218e7b85ea1853d4d0f8b47a4032a",
+  "successor_pr": {
+    "number": 672,
+    "url": "https://github.com/mayf3/dsh-agent-core/pull/672",
+    "state": "open",
+    "draft": true,
+    "merged": false,
+    "base": "main",
+    "base_sha_at_creation": "f8b7a0e4c6ef5ba278859328462abe8bdbd7a788",
+    "head_branch": "diag/547-durable-store"
+  },
+  "independent_base_impact_review": "PASS; applicable authorities/reconciliation/registry/prompt-gate unchanged from fixed baseline; no QA rerun needed",
+  "metadata_correction": "Old PR title/body corrected to actual v4 history and successor link; merge subject is not proof of v5 integration",
+  "private_or_product_delta": false,
+  "production_cutover": "NOT_EXECUTED",
+  "safe_to_publish": false,
+  "merge_ready": false
+}

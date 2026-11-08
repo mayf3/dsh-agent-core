@@ -47,3 +47,8 @@ attempt1/attempt2 原始 STOPPED/rc=1/runner 均保留。attempt1 是 constructo
 Reviewer `/root/capture_review` 对 `75f1e80e41bcd7600ca38d11795d702d8a113181` 复核：`FINAL_HEAD_RECHECK=PASS; REVIEW_SCOPE=DELTA; FROZEN_BLOCKER_UNION=[]; BLOCKERS=0; FOLLOW_UPS=1`。31 个路径仅文档/证据，无 private/产品源码；packaging manifest 的30个artifact hash/bytes全部匹配；四份旧文完整字节保留。报告的141 checks、5 targets、dev correlation缺项、native scratch compaction、两个harness解释与生产发布缺项均准确。
 
 唯一非阻断follow-up已在同一收口delta修正：把“实测数量变化”改为“当前文件枚举五条，旧文四槽未认证数量/身份，不推断生产数量随时间变化”。Reviewer额外只读v2 raw也找到相同五handles；不影响已通过QA，不重跑采集/constructor。后续收口commit仅此措辞、Brief交付坐标、本文与packaging hash刷新；最终Head另做该有限delta复核，结果持久化在PR #670 body。
+
+
+## 外部 base/PR 变化的独立有界复核
+
+Reviewer `/root/capture_review` 核实 f8b7a0e4 双父、merge-base=f6b98823，97189e12不在该merge祖先；main树仍v4 STOPPED且无qa-v5.stdout.json。固定baseline至新main的相关authority、registry/prompt gate和reconciliation无差异，既有QA仍适用。旧PR已结束，用同branch的后续draft #672闭合未集成v5交付合法，不是重复实现；旧PR元数据应纠正并链接successor。`FROZEN_BLOCKER_UNION=[]; SAFE_TO_PUBLISH=NO; MERGE_READY=NO`；外部merge actor UNKNOWN，本次操作者merge调用0。
