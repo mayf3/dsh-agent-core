@@ -1,0 +1,15 @@
+{
+  "evaluated_at_utc": "2026-11-08T06:51:20.414349+00:00",
+  "production_access": "NONE during validation",
+  "checks": {
+    "historical_script_syntax": "PASS (AST parse only; not executed again)",
+    "capture_status": "STOPPED",
+    "read_only_service_argv_and_terminal_failure": "PASS",
+    "partial_local_hashes_vs_first_read": "PASS; consistency not established",
+    "private_modes": "PASS: directories 0700, files 0600",
+    "diagnostic_report_absent": true
+  },
+  "capture_script_sha256": "8de646c0d705c22a96fbe2a54d1273bca53b42b2271b2e9bb9e47ee7c1392811",
+  "capture_receipt_sha256": "e354fa84cddc1c858443d880d2dd6c8d37764052c846c6598845e27df5846296",
+  "partial_manifest_sha256": "65727c9673bf1164f9d7f1d378087bc838cf3031f134a0c91a87ec6ea80f5444"
+}

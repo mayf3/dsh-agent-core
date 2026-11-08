@@ -1,0 +1,47 @@
+{
+  "status": "PARTIAL_ONLY_NOT_A_CONSISTENT_SNAPSHOT",
+  "files": [
+    {
+      "copy": "docs/evidence/h547-store-diag/private/store/turn-recovery-v3.invalid-dualwrite-20261002-090004.json",
+      "bytes": 2508184,
+      "sha256": "757c1edacfbdea455cd1c8a84b22f5f0bc32b9d85834b49e7834a24c8b47751a",
+      "consistency": "NOT_CERTIFIED_PARTIAL_COPY"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/store/turn-recovery-v3.json",
+      "bytes": 8505790,
+      "sha256": "85c4b0ce0957c03d6074edd7624ae33e8c2678feb9796087d27c5b7f7cd4b508",
+      "consistency": "NOT_CERTIFIED_PARTIAL_COPY"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/store/turn-recovery-v3.json.abandonment-declarations.json",
+      "bytes": 3137,
+      "sha256": "28ba4a74693d23ad0fc3338d77d2f5c72a35c1ae43970dfb2b4f854d6c727cc1",
+      "consistency": "NOT_CERTIFIED_PARTIAL_COPY"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/store/turn-recovery-v3.json.abandonment-declarations.json.bak-pre-cto-gen23-20261104",
+      "bytes": 149,
+      "sha256": "1fdd2f8b55b49912dc29a659b980e8b5e30ddd9d875629222765b19711b10534",
+      "consistency": "NOT_CERTIFIED_PARTIAL_COPY"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/store/turn-recovery-v3.json.abandonment-declarations.stale-090035.json",
+      "bytes": 483,
+      "sha256": "d0b9858b0fbdba7b97000e9f64d1b1a61f06bd5de29e4b8b415c9a1f87008569",
+      "consistency": "NOT_CERTIFIED_PARTIAL_COPY"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/store/turn-recovery-v3.json.bak-pre-R100-settlement-20261106",
+      "bytes": 8305897,
+      "sha256": "889b15175f77ccf1f68fd905dacbef4a79e1be4d4b046846a271a02b35d79e9d",
+      "consistency": "NOT_CERTIFIED_PARTIAL_COPY"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/store/turn-recovery-v3.json.bak-pre-cto-abandon-stamp-20261104",
+      "bytes": 8070664,
+      "sha256": "88c8c485790c04c3348c45d316d2ed8c97ee3e867474c069ef274bd18e1f5cd6",
+      "consistency": "NOT_CERTIFIED_PARTIAL_COPY"
+    }
+  ]
+}
