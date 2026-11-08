@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V1
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -23,7 +23,7 @@ external_authorities: []
 supersedes:
   - AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3
   - AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1
-superseded_by: null
+superseded_by: AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V2
 owners: [mayf3]
 accepted_by: mayf3
 accepted_date: 2026-11-08

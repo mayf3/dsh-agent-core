@@ -14,7 +14,7 @@ acceptance_qualifier: >-
   authority formal acceptance; production use gated on deployment authorization.
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
 authority_action: SUPERSEDE
 repository: mayf3/dsh-agent-core
@@ -42,9 +42,9 @@ owners: [mayf3]
 
 # AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V5
 
-**PROPOSED / 零当前实施权 / 零生产权。接受者为 Owner mayf3；本 PR 不执行接受或合并。**
-本次 `implementation_authority: none` 是提案阶段限制。未来正式接受事务须显式改为
-`contracts`、production 保持 `none`，并满足 §12；不能将 none 原样接受后声称已经取得实施权。
+**当前：已按 Owner mayf3 `owner-20261108-three-unified` items[1] 完成 accepted-contracts 接受事务（PR #664）。**
+`implementation_authority: contracts`，`production_apply_authority: none`；本次仅对齐已发生的接受记录。
+新 `RECOVERY_REFUSAL_TERMINAL` reason 的实施仍须 Svc 配套权威正式接受并进入各自实施 base，按 §12 保留配套与生产授权闸门。
 
 ## 1. Goal
 

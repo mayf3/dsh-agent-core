@@ -11,7 +11,7 @@ acceptance_authority_canonical_sha256: 00f1fb2995d5f83a3bb9f50f442754fadb13f4627
 acceptance_reviewed_head: e6e326986febeaaef7e51a632d0862fa7fc9099e
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
 authority_action: SUPERSEDE
 repository: mayf3/dsh-agent-core
@@ -40,9 +40,9 @@ owners: [mayf3]
 
 # AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V2
 
-**PROPOSED / 零当前实施权 / 零生产权。接受=Owner mayf3；本 PR 不执行接受或合并。**
-未来正式接受须将本候选与 WEC5 显式改为 accepted/contracts、production none，并按 §12
-原子退休直接前驱。RTH V1 维持 accepted/none；不能仅改其权限或引用它来取得实施权。
+**当前：已按 Owner mayf3 `owner-20261108-three-unified` items[1] 完成 accepted-contracts 接受事务（PR #664）。**
+本版与 WEC5 均为 accepted/contracts、production none；本次仅对齐直接前驱退休记录，不改 §1 以下语义。
+RTH V1 维持 accepted/none；新 `RECOVERY_REFUSAL_TERMINAL` 协议的实施仍须 Svc 配套权威正式接受并进入各自实施 base，配套与生产授权闸门保留。
 
 ## 1. Goal
 
