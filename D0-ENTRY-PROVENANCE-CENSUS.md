@@ -663,3 +663,29 @@ F0=`scripts/fleet-window/window-executor-v5.sh`，F1=`window_helper.py`，F2=`wi
 1. 原控制所有者补全D/client完整source repo/revision及内嵌载荷构建→installed pair的归属收据。
 2. 以合法只读可访问证据绑定真实loaded入口、已准入profile/目标/效果、当前唯一writer与各可达写/重启边界，补三次进程树及未覆盖闭包。
 3. 在来源与权限明确后另行完成SRA所需实际控制负向资格/独立verifier/任命生效；本次不激活、不改控制器，不宣称闭合。
+
+### 5.3 Git 交付与 push STOP 收据
+
+传输观察时间（UTC）：`2026-11-09 05:37:08 UTC`。单 commit 已在独立交付仓创建：`a14472acaff3713a3806f30e59dadfb80bc7c64f`，parent=`5f3133dd08dc6529279ab8adf6ba7aacac1e2fd7`；subject=`docs(ops): delta-0 real control entry provenance census (read-only)`。commit 只含报告665行与原简报38行；`git diff --cached --check` rc0、单commit计数1、提交后交付仓clean。原简报未改写。
+
+随后仅尝试一次 `git push origin ops/d0-entry-provenance`，rc=128，原文：
+
+```text
+fatal: unable to access 'https://github.com/mayf3/dsh-agent-core.git/': Failed to connect to 127.0.0.1 port 7890 after 0 ms: Couldn't connect to server
+```
+
+依简报执行 `env | grep -i proxy`，rc=0，原文（保持顺序与大小写）：
+
+```text
+ALL_PROXY=http://127.0.0.1:7890
+HTTPS_PROXY=http://127.0.0.1:7890
+HTTP_PROXY=http://127.0.0.1:7890
+NO_PROXY=localhost,open.feishu.cn,mcp.feishu.cn,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,*.local
+all_proxy=http://127.0.0.1:7890
+http_proxy=http://127.0.0.1:7890
+https_proxy=http://127.0.0.1:7890
+no_proxy=localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,*.local,api.z.ai,api.deepseek.com,open.feishu.cn,mcp.feishu.cn
+```
+
+**STOPPED — push 失败待监管传输。PR号：未创建。** 没有重试push、修改/清除代理、改传输方式、执行 `gh pr create` 或合并。本STOP附记在失败后按简报写入原工作树与交付仓报告；为停在push步骤，附记**尚未提交/未amend**，已创建的单commit不变。当前报告包含该失败收据，不能把本地提交称为已push/PR已创建。
+
