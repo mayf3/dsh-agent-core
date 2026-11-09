@@ -117,11 +117,16 @@ export const adminAbandonmentMethods = {
   admissionBlockerForAgent(agentId) {
     for (const record of this.records.values()) {
       if (record.agentId !== agentId || record.initialOutcome !== 'outcome_unknown') continue
-      // A historical bad clear is quarantined even if it carries an old
-      // abandonment marker. Keep compatibility decoding off ordinary prompt
-      // admission: only a cleared UNKNOWN can have the historical defect.
+      // R131 Gap-B parity with the installed admission projection: a cleared
+      // legacy-unproven record is quarantined UNLESS it carries the D6
+      // owner-risk acceptance audit (marker + acceptance audit together) —
+      // the one authorized release for the restart-lost class. Markers
+      // without the acceptance audit (pre-D6 stamps) keep the quarantine.
       if (record.fenceState === 'cleared') {
-        if (isLegacyUnprovenFenceClear(record)) return record
+        if (!isLegacyUnprovenFenceClear(record)) continue
+        const stampedWithAcceptance = (record.adminAbandonment ?? null) !== null
+          && hasAcceptanceAudit(record)
+        if (!stampedWithAcceptance) return record
         continue
       }
       if ((record.adminAbandonment ?? null) !== null) continue
