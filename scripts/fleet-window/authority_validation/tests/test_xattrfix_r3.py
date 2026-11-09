@@ -16,8 +16,11 @@ from unittest import mock
 
 BASE = 'c4152e9a45e2f1798807492c73516d924dcaf855'
 C7_BASE = '97fa15a138e4aafe7d566fc3c3d387c3594e87ba'
-HERE = Path(__file__).resolve().parent
-ROOT = Path('/usr/local/v5-boot-isolation/xattr-fix-test')
+HERE = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(HERE))
+ROOT = Path(os.environ.get('FWAV_XATTR_TEST_ROOT', tempfile.mkdtemp(prefix='fwav-xattrs-'))).resolve()
+if not ROOT.is_relative_to(Path(tempfile.gettempdir()).resolve()):
+    raise RuntimeError('xattr tests require a disposable temporary fixture root')
 # The core retains the original invocation context initialization; import only
 # definitions, never the operation dispatcher or any production stage.
 saved_argv = sys.argv[:]
@@ -25,6 +28,8 @@ sys.argv = [str(HERE / 'window_helper.py'), str(ROOT), 'selftest']
 import window_helper_core as core
 import window_preimage_xattr as xattrs
 sys.argv = saved_argv
+# These retained xattr tests inspect copying semantics, not authorization.
+xattrs.effect_guard = lambda *args, **kwargs: None
 
 
 def cli(*args):
@@ -34,12 +39,17 @@ def cli(*args):
 
 def old_source():
     return subprocess.check_output(['git', 'show', BASE + ':scripts/fleet-window/window-executor-v5.sh'],
-                                   cwd=HERE).decode()
+                                   cwd=Path.cwd()).decode()
+
+
+def task_base_source(name):
+    return subprocess.check_output(['git', 'show', '417cc8ee6e7ef9a5e840e900a11c30fe58d648da:scripts/fleet-window/' + name],
+                                   cwd=Path.cwd()).decode()
 
 
 def c7_source(name):
     return subprocess.check_output(['git', 'show', C7_BASE + ':scripts/fleet-window/' + name],
-                                   cwd=HERE).decode()
+                                   cwd=Path.cwd()).decode()
 
 
 class SyntheticTree(unittest.TestCase):
@@ -51,6 +61,8 @@ class SyntheticTree(unittest.TestCase):
         print('ISOLATION_ROOT=' + str(cls.run_root), flush=True)
 
     def setUp(self):
+        self.guard_calls = []
+        xattrs.effect_guard = lambda *args, **kwargs: self.guard_calls.append((args, kwargs))
         self.case = Path(tempfile.mkdtemp(prefix=self._testMethodName + '-', dir=self.run_root))
         self.source = self.case / 'source'
         self.target = self.case / 'target'
@@ -119,6 +131,8 @@ class SyntheticTree(unittest.TestCase):
                 cli('-sd', name, self.target / rel)
         repairs = self.reconcile()
         self.assertEqual(sorted(repairs), [('empty', 'com.r3.empty'), ('multiple', 'com.r3.second')])
+        self.assertEqual(len(self.guard_calls), len(repairs))
+        self.assertTrue(all(args[0] == 'xattr.write' for args, kwargs in self.guard_calls))
         self.assertEqual(xattrs.inventory(self.target), self.before)
 
     def test_nonempty_missing_stops_before_empty_repair(self):
@@ -189,7 +203,7 @@ class Consumers(SyntheticTree):
     def context(self):
         rd = self.case / 'receipts'
         rd.mkdir()
-        ns = dict(vars(core), inventory=xattrs.inventory, XATTRS_KEY=xattrs.XATTRS_KEY,
+        ns = dict(vars(core), effect_guard=lambda *args, **kwargs: None, inventory=xattrs.inventory, XATTRS_KEY=xattrs.XATTRS_KEY,
                   reconcile_xattrs=xattrs.reconcile_xattrs, rd=rd)
         ns['authority'] = lambda: {'expected_runtime_uid': os.getuid(), 'expected_runtime_gid': os.getgid()}
         ns['service_absent'] = lambda: None
@@ -237,10 +251,14 @@ class Consumers(SyntheticTree):
         cli('-w', 'com.r3.carried', 'value', pre / 'extra.json')
         core.run(['/usr/bin/ditto', '--rsrc', '--extattr', '--acl', pre, live / 'config'])
         (live / 'config/extra.json').unlink()
-        self.operate('preserve-config')
-        self.assertEqual(xattrs.inventory(live / 'config'), xattrs.inventory(pre))
-        result = json.loads((ns['rd'] / 'config-carryforward.json').read_text())
-        self.assertEqual(result['copiedMissingOnly'], ['extra.json'])
+        def internal_guard(*args, **kwargs):
+            if kwargs.get('internal'):
+                raise RuntimeError('internal per-write control UNKNOWN')
+        ns['effect_guard'] = internal_guard
+        with self.assertRaisesRegex(RuntimeError, 'internal per-write control UNKNOWN'):
+            self.operate('preserve-config')
+        self.assertFalse((live / 'config/extra.json').exists())
+        self.assertFalse((ns['rd'] / 'config-carryforward.json').exists())
         cli('-w', 'com.r3.bad', 'changed', live / 'config/agents.json')
         with self.assertRaisesRegex(RuntimeError, 'changed existing xattrs'):
             self.operate('preserve-config')
@@ -289,36 +307,22 @@ class Selftest(unittest.TestCase):
                 xattrs.parse_xattrs(data, paths)
 
     def test_stage_and_dispatch_identity(self):
-        original = old_source()
-        c7_shell = c7_source('window-executor-v5.sh')
+        original = task_base_source('window-executor-v5.sh')
         current = (HERE / 'window-executor-v5.sh').read_text()
-        # Exact original stages, with only #615's declared shell delta.
-        suffix = original[original.index('rollback_recipe() {'):]
-        suffix = suffix.replace('Waiting for 150s', 'Waiting for 180s')
-        suffix = suffix.replace('stage_13_close() { helper root release; }',
-                                'stage_13_close() { helper root close; helper root release; }')
-        start = c7_shell.index('    --selftest)')
-        end = c7_shell.index('    --execute)', start)
-        suffix = suffix.replace('    --execute)', c7_shell[start:end] + '    --execute)', 1)
-        self.assertEqual(c7_shell[c7_shell.index('rollback_recipe() {'):], suffix)
-        self.assertEqual(current[current.index('rollback_recipe() {'):], suffix)
-        # C7 usage is retained; boundaries intentionally retain the original bytes.
-        expected_prefix = c7_shell[:c7_shell.index('# Extracted stdlib helper.')]
-        a = expected_prefix.index('boundaries() {')
-        expected_prefix = expected_prefix[:a] + original[original.index('boundaries() {'):original.index('# One embedded stdlib helper.')]
-        self.assertEqual(current[:current.index('# Split stdlib helper.')], expected_prefix)
-        old_python = original.split("<<'PY'\n", 1)[1].split('\nPY\n', 1)[0]
-        old_ast = ast.parse(old_python)
+        self.assertEqual(current.split('rollback_recipe() {', 1)[1].split('stop_on_error() {', 1)[0],
+                         original.split('rollback_recipe() {', 1)[1].split('stop_on_error() {', 1)[0])
+        for marker in ('trap \'stop_on_error', 'stage_13_close() { helper root close; helper root release; }',
+                       'if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then main "$@"; fi'):
+            self.assertIn(marker, current)
+        old_ast = ast.parse(task_base_source('window_helper.py'))
+        old_core = ast.parse(task_base_source('window_helper_core.py'))
         core_ast = ast.parse((HERE / 'window_helper_core.py').read_text())
-        old_defs = {n.name: ast.dump(n) for n in old_ast.body if isinstance(n, ast.FunctionDef)}
-        c7_defs = {n.name: ast.dump(n) for n in ast.parse(c7_source('window_executor_state.py')).body
-                   if isinstance(n, ast.FunctionDef)}
-        self.assertEqual({n.name for n in core_ast.body if isinstance(n, ast.FunctionDef)},
-                         (set(old_defs) - {'extended', 'inventory'}) | {'validate_authority', 'quiet_ready'})
-        for node in core_ast.body:
-            if isinstance(node, ast.FunctionDef):
-                expected = old_defs if node.name in old_defs else c7_defs
-                self.assertEqual(ast.dump(node), expected[node.name], node.name)
+        old_defs = {n.name: ast.dump(n) for n in old_core.body if isinstance(n, ast.FunctionDef)}
+        current_defs = {n.name: ast.dump(n) for n in core_ast.body if isinstance(n, ast.FunctionDef)}
+        changed = {'read', 'authority', 'validate_authority'}
+        for name in set(old_defs) & set(current_defs) - changed - {'extended', 'inventory'}:
+            self.assertEqual(current_defs[name], old_defs[name], name)
+        self.assertTrue({'validate_authority', 'authority_observation', 'effect_guard', 'mutex_owned'} <= set(current_defs))
         def branches(tree):
             node = next(n for n in tree.body if isinstance(n, ast.If))
             result = {}
@@ -328,30 +332,35 @@ class Selftest(unittest.TestCase):
             return result
         before = branches(old_ast)
         after = branches(ast.parse((HERE / 'window_helper.py').read_text()))
-        c7_ops = branches(ast.parse(c7_source('window_executor_helper.py')))
-        self.assertEqual(set(before) | {'close'}, set(after))
-        for name in {'authority', 'quiet', 'close', 'release'}:
-            self.assertEqual(c7_ops[name], after[name], name)
-        for name in before.keys() - {'authority', 'quiet', 'release', 'prerequisites', 'preimage', 'preserve-config', 'final-binding'}:
+        delta = {'authority', 'mutex', 'mutex-check', 'clean', 'preimage', 'preserve-config',
+                 'plist-update', 'close', 'release', 'install-start', 'exit-check'}
+        for name in before.keys() - delta - {'quiet', 'prerequisites', 'final-binding'}:
             self.assertEqual(before[name], after[name], name)
+        self.assertTrue({'bootout', 'bootstrap', 'stage-bundle', 'installer-boundary', 'settlement-start'} <= set(after))
         self.assertEqual((HERE / 'window_close.py').read_text(), c7_source('window_close.py'))
         for retired in ('window_executor_state.py', 'window_executor_helper.py'):
             self.assertFalse((HERE / retired).exists(), retired)
-        print('DUAL_IDENTITY: original 15 stages/main/rollback/traps + exact declared C7 delta; core/op AST matches both baselines; window_close BYTE_IDENTICAL to #615', flush=True)
+        print('RETAINED_IDENTITY: task-base unaffected core/dispatcher + rollback recipe + C7 close; FWAV boundary delta separately tested', flush=True)
 
     def test_dry_run_and_help_identity(self):
-        original = old_source().encode()
+        original = task_base_source('window-executor-v5.sh').encode()
         for argv in ([], ['--dry-run'], ['--help'], ['invalid'], ['--dry-run', 'extra']):
-            expected = original if argv in ([], ['--dry-run']) else c7_source('window-executor-v5.sh').encode()
+            expected = original
             before = subprocess.run(['/bin/bash', '/dev/stdin', *argv], input=expected, capture_output=True)
             after = subprocess.run(['/bin/bash', str(HERE / 'window-executor-v5.sh'), *argv], capture_output=True)
-            self.assertEqual((after.returncode, after.stdout, after.stderr),
-                             (before.returncode, before.stdout, before.stderr), argv)
-        print('DRY_RUN_DIFF=EMPTY vs original; C7 help/invalid-argument output+rc: IDENTICAL', flush=True)
+            self.assertEqual(after.returncode, before.returncode, argv)
+            if argv in ([], ['--dry-run']):
+                self.assertEqual((after.stdout, after.stderr), (before.stdout, before.stderr), argv)
+            else:
+                output = after.stdout + after.stderr
+                self.assertIn(b'sraRef', output)
+                self.assertIn(b'appointmentRef', output)
+                self.assertIn(b'UNKNOWN', output)
+        print('DRY_RUN_DIFF=EMPTY; help/invalid rc retained with explicit FWAV proof requirements', flush=True)
 
     def test_split_limits_and_syntax(self):
         for name in ('window-executor-v5.sh', 'window_helper.py', 'window_helper_core.py',
-                     'window_preimage_xattr.py', 'window_close.py', 'window-selftest.py', 'test_xattrfix_r3.py'):
+                     'window_preimage_xattr.py', 'window_close.py', 'window-selftest.py', 'authority_validation/tests/test_xattrfix_r3.py'):
             data = (HERE / name).read_text()
             self.assertLessEqual(len(data.splitlines()), 500, name)
             if name.endswith('.py'):
@@ -401,7 +410,7 @@ class C7Close(unittest.TestCase):
         after = json.loads((out / 'names-after.json').read_text())
         after['captured_at'] = dt.datetime.now(dt.timezone.utc).isoformat()
         (out / 'names-after.json').write_text(json.dumps(after))
-        self.ns = dict(vars(core), authority=lambda: authority, rd=rd,
+        self.ns = dict(vars(core), authority=lambda: authority, effect_guard=lambda *args, **kwargs: None, rd=rd,
                        live=out / 'retention-fixture', close_window=close.close_window,
                        save=save, raw=lambda name, data: (rd / name).write_bytes(data))
         save('stage_11_production_verify.json', dict(status='FAIL', at=moment.isoformat()))
@@ -420,6 +429,7 @@ class C7Close(unittest.TestCase):
         (lock / 'holder').write_text('synthetic owned holder')
         self.ns['lock'] = lock
         save('mutex.json', dict(sha256=core.digest(lock / 'holder')))
+        save('stage_12_hr_watch.json', dict(status='PASS', at=moment.isoformat()))
         Consumers.operate(self, 'release')
         completion = json.loads((rd / 'completion.json').read_text())
         self.assertEqual(completion['c7ReceiptSha256'], core.digest(rd / 'c7-close.json'))
