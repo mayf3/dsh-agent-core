@@ -278,6 +278,28 @@ for inherited in list(vars(SyntheticTree)):
 
 
 class Selftest(unittest.TestCase):
+    def test_fix629_dispatch_delta(self):
+        parent = '63e195ddd79786b4d5f52a2b3f1d730c69a85b5b'
+        baseline = subprocess.check_output(['git', 'show', parent + ':scripts/fleet-window/window_helper.py'],
+                                           cwd=HERE).decode()
+        def operations(source):
+            node = next(n for n in ast.parse(source).body if isinstance(n, ast.If))
+            result = {}
+            while isinstance(node, ast.If):
+                result[ast.literal_eval(node.test.comparators[0])] = node.body
+                node = node.orelse[0]
+            return result
+        before = operations(baseline)
+        after = operations((HERE / 'window_helper.py').read_text())
+        self.assertEqual(set(before), set(after))
+        self.assertEqual(len(before['quiet']), 19)
+        # Only the seven statements from subprocess import through rc=45 retire.
+        before['quiet'] = before['quiet'][:9] + before['quiet'][16:]
+        for name in before:
+            self.assertEqual(ast.dump(ast.Module(body=before[name], type_ignores=[])),
+                             ast.dump(ast.Module(body=after[name], type_ignores=[])), name)
+        print('FIX629_DELTA: only quiet pre-stop settlement retired; all other operations AST_IDENTICAL', flush=True)
+
     def test_parser_fail_closed(self):
         paths = {'/synthetic/root': '.'}
         for data in (b'garbage\n', b'/elsewhere: com.r3.a:\n00000000\n',
@@ -319,16 +341,23 @@ class Selftest(unittest.TestCase):
             if isinstance(node, ast.FunctionDef):
                 expected = old_defs if node.name in old_defs else c7_defs
                 self.assertEqual(ast.dump(node), expected[node.name], node.name)
-        def branches(tree):
+        def branches(tree, omit_quiet_settlement=False):
             node = next(n for n in tree.body if isinstance(n, ast.If))
             result = {}
             while isinstance(node, ast.If):
-                result[ast.literal_eval(node.test.comparators[0])] = ast.dump(ast.Module(body=node.body, type_ignores=[]))
+                name = ast.literal_eval(node.test.comparators[0])
+                body = node.body
+                if name == 'quiet' and omit_quiet_settlement:
+                    # #629 option A retires only C7's seven pre-stop settle
+                    # statements, from import subprocess through rc=45.
+                    self.assertEqual(len(body), 19)
+                    body = body[:9] + body[16:]
+                result[name] = ast.dump(ast.Module(body=body, type_ignores=[]))
                 node = node.orelse[0]
             return result
         before = branches(old_ast)
         after = branches(ast.parse((HERE / 'window_helper.py').read_text()))
-        c7_ops = branches(ast.parse(c7_source('window_executor_helper.py')))
+        c7_ops = branches(ast.parse(c7_source('window_executor_helper.py')), omit_quiet_settlement=True)
         self.assertEqual(set(before) | {'close'}, set(after))
         for name in {'authority', 'quiet', 'close', 'release'}:
             self.assertEqual(c7_ops[name], after[name], name)
@@ -337,7 +366,7 @@ class Selftest(unittest.TestCase):
         self.assertEqual((HERE / 'window_close.py').read_text(), c7_source('window_close.py'))
         for retired in ('window_executor_state.py', 'window_executor_helper.py'):
             self.assertFalse((HERE / retired).exists(), retired)
-        print('DUAL_IDENTITY: original 15 stages/main/rollback/traps + exact declared C7 delta; core/op AST matches both baselines; window_close BYTE_IDENTICAL to #615', flush=True)
+        print('DUAL_IDENTITY: original stages/main/rollback/traps + C7 delta + #629 quiet settlement removal; core/op AST matches declared baselines; window_close BYTE_IDENTICAL to #615', flush=True)
 
     def test_dry_run_and_help_identity(self):
         original = old_source().encode()
