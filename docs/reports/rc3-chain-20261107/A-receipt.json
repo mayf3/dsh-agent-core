@@ -1,0 +1,39 @@
+{
+  "observed_at": "2026-11-06T23:45:38.184310+00:00",
+  "base_head": "230de798e340cc6c157e6b21822f0b1fda77e51e",
+  "source_head": "c1fad8976e50e96adb27a4c7e2dd4f97bf2e899e",
+  "source_status": "",
+  "vendor_command": [
+    "python3",
+    "/tmp/adg-vendor-rc3/tools/vendor.py",
+    "--target",
+    ".",
+    "--source-commit",
+    "c1fad8976e50e96adb27a4c7e2dd4f97bf2e899e",
+    "--prepared-by",
+    "Codex under Owner task 2026-11-07",
+    "--apply"
+  ],
+  "vendor_rc": 0,
+  "vendor_file_operations": 26,
+  "verify_command": [
+    "python3",
+    ".agents/tools/verify_governance.py",
+    "--target",
+    "."
+  ],
+  "verify_rc": 0,
+  "version": "2.0.0-rc.3",
+  "adoption": {
+    "mode": "vendored",
+    "status": "proposed",
+    "prepared_by": "Codex under Owner task 2026-11-07",
+    "prepared_at": "2026-11-06T23:45:23Z",
+    "accepted_by": null,
+    "accepted_at": null
+  },
+  "manifest_sha256": "3ce456bec3af4ee6c9f725cf8d587ed1a3e70812574633fda9bddc06016a0841",
+  "lock_sha256": "2c79ab4da7245dc1875e98300af6d2fefd75245d1be06ad3d3e9d9f86b30ad6c",
+  "limits": "Integrity of proposed adoption only; no acceptance, runtime or production claim.",
+  "mode_preservation": "vendor atomic replacement drops executable mode; restore pre-existing tracked 100755 on verify_governance.py, without byte changes"
+}

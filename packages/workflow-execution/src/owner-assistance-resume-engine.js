@@ -5,7 +5,7 @@ function sameId(left, right) {
   return typeof left === 'string' && typeof right === 'string' && left.toLowerCase() === right.toLowerCase()
 }
 
-function detailMatchesActivation(body, identity) {
+export function detailMatchesActivation(body, identity) {
   const detail = body?.detail
   const visit = detail?.current_visit
   const instance = detail?.instance
@@ -23,38 +23,79 @@ export function createOwnerAssistanceResumeOperations({
   readOwnerAssistanceResumeEvidence, resolveCallerCorrelation, getTurnReconciliation, deliverRun,
   buildInstruction, provenanceFor, duePageLimit,
 }) {
-  async function prepareAttemptPlan({ intent, existing, retryReason }) {
-    try {
+  // Only detail/evidence collection is unlocked. Principal resolution is
+  // captured under admission ownership; final equality uses canonical reads
+  // under that same ownership, without collecting Owner evidence a second time.
+  const prepareAttemptPlan = {
+    async capture({ intent, existing }) {
       const resolved = await resolvePrincipalToAgent(intent.ownerPrincipalId)
-      const read = await readInstanceDetail({
+      return { request: {
         ...(resolved?.ok && typeof resolved.agentId === 'string' ? { agentId: resolved.agentId } : {}),
         workflowInstanceId: intent.workflowInstanceId,
-      })
-      const version = read?.body?.detail?.instance?.workflow_state_version
-      if (!read?.ok || !detailMatchesActivation(read.body, intent)
-        || !Number.isInteger(version) || version < 1) return undefined
-      const plan = { preDeliveryWorkflowStateVersion: version }
-      if (retryReason === 'owner_assistance_resolved') {
-        if (typeof readOwnerAssistanceResumeEvidence !== 'function' || existing === undefined) return undefined
-        const result = await readOwnerAssistanceResumeEvidence({
-          dispatchIntentId: intent.dispatchIntentId,
-          previousAttemptId: existing.attemptId,
-          preDeliveryWorkflowStateVersion: existing.preDeliveryWorkflowStateVersion,
-        })
-        const checked = validateOwnerAssistanceResumeEvidence(result?.evidence, {
-          dispatchIntentId: intent.dispatchIntentId,
-          workflowInstanceId: intent.workflowInstanceId,
-          nodeVisitId: intent.nodeVisitId,
-          ownerPrincipalId: intent.ownerPrincipalId,
-          previousAttemptId: existing.attemptId,
-          previousPreDeliveryWorkflowStateVersion: existing.preDeliveryWorkflowStateVersion,
-          preDeliveryWorkflowStateVersion: version,
-        })
-        if (!checked.ok) return undefined
-        plan.assistanceResume = checked.evidence
+      }, reconciliation: existing === undefined ? undefined : queryTurnReconciliation(existing) }
+    },
+    async collect({ intent, existing, retryReason }, { request }) {
+      try {
+        const read = await readInstanceDetail(request)
+        const version = read?.body?.detail?.instance?.workflow_state_version
+        if (!read?.ok || !detailMatchesActivation(read.body, intent)
+          || !Number.isInteger(version) || version < 1) return undefined
+        const plan = { preDeliveryWorkflowStateVersion: version }
+        if (retryReason === 'owner_assistance_resolved') {
+          if (typeof readOwnerAssistanceResumeEvidence !== 'function' || existing === undefined) return undefined
+          const result = await readOwnerAssistanceResumeEvidence({
+            dispatchIntentId: intent.dispatchIntentId,
+            previousAttemptId: existing.attemptId,
+            preDeliveryWorkflowStateVersion: existing.preDeliveryWorkflowStateVersion,
+          })
+          if (result?.ok !== true) return undefined
+          const checked = validateOwnerAssistanceResumeEvidence(result?.evidence, {
+            dispatchIntentId: intent.dispatchIntentId,
+            workflowInstanceId: intent.workflowInstanceId,
+            nodeVisitId: intent.nodeVisitId,
+            ownerPrincipalId: intent.ownerPrincipalId,
+            previousAttemptId: existing.attemptId,
+            previousPreDeliveryWorkflowStateVersion: existing.preDeliveryWorkflowStateVersion,
+            preDeliveryWorkflowStateVersion: version,
+          })
+          if (!checked.ok) return undefined
+          plan.assistanceResume = checked.evidence
+        }
+        return plan
+      } catch { return undefined }
+    },
+    async validate({ intent, existing }, plan, { request, reconciliation }) {
+      // The due projection attests the current ACTIVE dispatch. Detail alone
+      // attests only instance/visit/assignee, so unchanged local replay or two
+      // matching collection reads cannot substitute for this canonical check.
+      if (!await currentDispatchMatches(intent)) return false
+      const read = await readInstanceDetail(request)
+      return read?.ok === true && detailMatchesActivation(read.body, intent)
+        && read.body.detail.instance.workflow_state_version === plan.preDeliveryWorkflowStateVersion
+        && (existing === undefined || JSON.stringify(queryTurnReconciliation(existing)) === JSON.stringify(reconciliation))
+    },
+  }
+
+  async function currentDispatchMatches(identity) {
+    let cursor
+    const seen = new Set()
+    for (;;) {
+      const page = await fetchDuePage({ limit: duePageLimit, ...cursor })
+      if (page?.ok !== true || !Array.isArray(page.items) || page.items.length > duePageLimit) return false
+      for (const raw of page.items) {
+        const normalized = normalizeDueIntent(raw)
+        if (!normalized.ok) return false
+        const tuple = JSON.stringify([raw.nextEligibleAt, raw.dispatchIntentId])
+        if (seen.has(tuple)) return false
+        seen.add(tuple)
       }
-      return plan
-    } catch { return undefined }
+      const matches = page.items.filter(raw => sameId(raw.dispatchIntentId, identity.dispatchIntentId))
+      if (matches.length) return matches.length === 1 && ['workflowInstanceId', 'nodeVisitId', 'ownerPrincipalId']
+        .every(key => sameId(matches[0][key], identity[key]))
+      if (page.items.length < duePageLimit) return false
+      const last = page.items.at(-1)
+      cursor = { afterNextEligibleAt: last.nextEligibleAt, afterDispatchIntentId: last.dispatchIntentId }
+    }
   }
 
   function queryTurnReconciliation(attempt) {

@@ -250,9 +250,11 @@ export async function enableJobOp(store, id, { nowMs = Date.now(), assertJob, ex
     if (job.migrationRestoreBlocked === true) {
       throw Object.assign(new Error(`job ${id} restore gate is closed`), { code: 'RESTORE_GATE_CLOSED' })
     }
-    job.enabled = true
+    if (job.enabled !== true) {
+      job.enabled = true
+      job.revisionActivatedAtMs = nowMs
+    }
     job.updatedAtMs = nowMs
-    job.revisionActivatedAtMs = nowMs
     refreshProjection(latest, id, nowMs)
     return { value: job }
   })

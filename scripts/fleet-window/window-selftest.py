@@ -55,11 +55,15 @@ def rejected(fn, label):
 
 def pure_functions(executor):
     path = executor.with_name('window_helper_core.py')
-    names = {'require', 'digest', 'regular', 'manifest', 'stamp', 'validate_authority', 'quiet_ready'}
+    names = {'require', 'digest', 'regular', 'manifest', 'stamp', 'validate_legacy_fields', 'validate_authority', 'authority_observation', 'quiet_ready', 'classify_census'}
     tree = ast.parse(path.read_text(), filename=str(path))
     selected = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in names]
     require({node.name for node in selected} == names, 'executor pure validators unavailable')
-    namespace = dict(dt=dt, hashlib=hashlib, json=json, math=math, os=os,
+    class UnqualifiedFixtureReader:
+        def observe(self):
+            raise RuntimeError('未任命: synthetic fixture has no caller/appointment proof')
+    namespace = dict(authority_reader=UnqualifiedFixtureReader(), rd=Path('/nonexistent-fwav-selftest'),
+                     dt=dt, hashlib=hashlib, json=json, math=math, os=os,
                      P=Path, re=re, stat=stat, sys=sys, time=time)
     module = ast.Module(body=selected, type_ignores=[])
     exec(compile(module, str(path), 'exec'), namespace)
@@ -185,8 +189,13 @@ def main(executor):
         save(out / 'function-bindings.json', extracted)
         save(out / 'invocation.json', {'executor': str(executor), 'executor_sha256': sha(executor),
              'selftest_sha256': sha(__file__), 'env': env, 'ancestry': ancestor_rows,
-             'code_bindings': {name: sha(executor.with_name(name)) for name in (
-                 'window_helper_core.py', 'window_helper.py', 'window_preimage_xattr.py', 'window_close.py')}})
+             'code_bindings': {name: sha(executor.parent / name) for name in (
+                 'window_helper_core.py', 'window_helper.py', 'window_preimage_xattr.py', 'window_close.py',
+                 'settle_unresolved_runtime_down.mjs', 'settle_unresolved_runtime_down.test.mjs',
+                 'anarrowed/candidate-state.mjs', 'anarrowed/candidate-child.mjs',
+                 'anarrowed/candidate-oracle.mjs', 'anarrowed/candidate-oracle.test.mjs',
+                 '../../packages/agent-router/src/reconciliation/capacity.js',
+                 'anarrowed/candidate-state.test.mjs', 'anarrowed/rollback.test.mjs')}})
         stages = []
         def stage00():
             a = dict(window_id='C7_SYNTHETIC_NOT_AUTHORIZATION', writer='isolated-selftest', writer_uid=os.getuid(),
@@ -198,14 +207,16 @@ def main(executor):
                      scopes=['source_lockfile_cleanup','production_mutex','bootout','full_preimage','install',
                              'plist_deployed_sha_only','bootstrap','verify','hr_observe'])
             moment = f['stamp']('2026-11-04T12:00:00Z')
-            check = lambda item: f['validate_authority'](item, writer_uid=os.getuid(), now_epoch=moment)
+            check = lambda item: f['validate_legacy_fields'](item, writer_uid=os.getuid(), now_epoch=moment)
             check(a)
             bad = dict(a); bad.pop('writer')
-            cases = [rejected(lambda: check(bad), 'missing-field'),
+            cases = [rejected(lambda: f['validate_authority'](a, writer_uid=os.getuid(), now_epoch=moment),
+                              'unsigned-legacy-fixture-not-authority'),
+                     rejected(lambda: check(bad), 'missing-field'),
                      rejected(lambda: check(dict(a, writer_uid=0)), 'root-writer'),
                      rejected(lambda: check(dict(a, valid_until='2026-11-04T00:00:00Z')), 'expired'),
                      rejected(lambda: check(dict(a, scopes=[])), 'missing-scope')]
-            save(out / 'stage_00.json', {'scope': 'pure authority validator only', 'synthetic': a, 'negative_cases': cases,
+            save(out / 'stage_00.json', {'scope': 'legacy fields + full authority expected refusal; positive new chain in ACC-FWAV tests', 'synthetic': a, 'negative_cases': cases,
                  'productionMutex': 'NOT_EXECUTED', 'productionAuthority': 'UNKNOWN_NOT_SUPPLIED'})
         stages.append(('stage_00_authority_mutex', stage00))
         def stage01():
@@ -288,6 +299,42 @@ def main(executor):
             save(out / 'stage_04.json', {'scope': 'real pure 180s predicate only', 'cases': cases,
                  'productionQuiet': 'NOT_EXECUTED', 'settlement': 'NOT_EXECUTED', 'liveCensus': 'UNKNOWN'})
         stages.append(('stage_04_quiet_gate', stage04))
+        def isolation_checks():
+            classify = f['classify_census']
+            records = [dict(handle='historical-old', agentId='agt_a', runtimeEpoch='previous',
+                            state='blocked', queryState='pending', initialOutcome='outcome_unknown',
+                            fenceState='active', exitObservedAt=None),
+                       dict(handle='historical-null', agentId='agt_b', runtimeEpoch='current',
+                            state='pending_unknown', queryState='pending', initialOutcome='outcome_unknown',
+                            fenceState='active', exitObservedAt=None)]
+            entries = [dict(handle=r['handle'], agentId=r['agentId'], runtimeEpoch=r['runtimeEpoch'],
+                            recoveryState=r['state'], exitObservedAt=r['exitObservedAt']) for r in records]
+            turns = dict(runtimeEpoch='current', records=records)
+            jobs = dict(occurrences=[])
+            census = dict(epoch='current', inflightTurns=[entries[1]], unresolvedLostTurns=[entries[0]],
+                          inflightOccurrences=[])
+            result = classify(census, turns, jobs)
+            require(len(result['historical']) == 2 and not result['unsafe'], 'UNKNOWN history blocked isolation')
+            require(f['quiet_ready'](180, True, True), 'readable nonempty census refused quiet')
+            reserved = dict(records[1], handle='active-worker', state='reserved', initialOutcome=None,
+                            fenceState='armed')
+            active_entry = dict(entries[1], handle=reserved['handle'], recoveryState=reserved['state'])
+            active = classify(dict(census, inflightTurns=[entries[1], active_entry]),
+                              dict(turns, records=records + [reserved]), jobs)
+            require(len(active['unsafe']) == 1, 'executable reserved turn admitted as historical')
+            occurrence = dict(occurrenceId='live-occ', jobId='job-a', runId='run-a', state='running')
+            running = classify(dict(census, inflightOccurrences=[occurrence]), turns,
+                               dict(occurrences=[occurrence]))
+            require(len(running['unsafe']) == 1, 'running scheduler occurrence admitted as historical')
+            cases = [rejected(lambda: classify(dict(census, epoch='other'), turns, jobs), 'epoch-incoherence'),
+                     rejected(lambda: classify(dict(census, unresolvedLostTurns=[]), turns, jobs), 'omitted-history')]
+            save(out / 'anarrowed-isolation.json', {'historical': result, 'active': active,
+                 'runningOccurrence': running, 'negative_cases': cases, 'productionWrite': False})
+            run('anarrowed-settlement', [NODE, '--test', executor.with_name('settle_unresolved_runtime_down.test.mjs')])
+            run('anarrowed-rollback', [NODE, '--test', executor.parent / 'anarrowed/rollback.test.mjs'])
+            run('anarrowed-candidate-state', [NODE, '--test', executor.parent / 'anarrowed/candidate-oracle.test.mjs',
+                                            executor.parent / 'anarrowed/candidate-state.test.mjs'])
+        stages.append(('anarrowed_negative_isolation', isolation_checks))
         def close_checks():
             spec = importlib.util.spec_from_file_location('c7_close_checks', executor.with_name('window_close.py'))
             module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
@@ -351,12 +398,14 @@ def main(executor):
         require(sha(executor) == invocation['executor_sha256'] and sha(__file__) == invocation['selftest_sha256'],
                 'executor/selftest changed during selftest')
         for name, digest in invocation['code_bindings'].items():
-            require(sha(executor.with_name(name)) == digest, 'executor module changed during selftest: ' + name)
+            require(sha(executor.parent / name) == digest, 'executor module changed during selftest: ' + name)
         emit('END postflight_preservation PASS C5_MATERIALS_AND_VALIDATORS')
         save(out / 'summary.json', {'status': 'PASS_ISOLATED_CHECKS_AND_STDIO_CANARY', 'completed': completed,
              'productionStageExecution': 'NOT_EXECUTED', 'productionWrite': False, 'windowGO': False,
+             'anarrowedEvidence': ['anarrowed-isolation.json', 'anarrowed-settlement.command.json',
+                                  'anarrowed-rollback.command.json', 'anarrowed-candidate-state.command.json'],
              'unknown': ['production authority/PID/plist/mutex/live census', 'full current closure rehash',
-                         'new complete runtime dual startup', 'unsampled escaped descendants', 'model/auth/business acceptance']})
+                         'production runtime startup', 'unsampled escaped descendants', 'model/auth/business acceptance']})
         emit('SELFTEST PASS_ISOLATED_CHECKS_AND_STDIO_CANARY windowGO=false')
         return 0
     except Exception as error:
@@ -377,7 +426,8 @@ if __name__ == '__main__':
     if result:
         # Safe workspace fallback even if the isolation ancestor gate refused writes.
         stop = Path(__file__).resolve().parents[2] / 'STOPPED-C7.md'
-        stop.write_text('# STOPPED-C7\n\nSelftest failed; no retry or downstream execution.\n\n'
-                        'Isolated evidence directory: ' + str(LAST_OUT or 'NOT_CREATED') + '\n'
-                        'See verbatim failure output and isolated STOPPED-C7/summary when created.\n')
+        if not stop.exists():
+            stop.write_text('# STOPPED-C7\n\nSelftest failed; no retry or downstream execution.\n\n'
+                            'Isolated evidence directory: ' + str(LAST_OUT or 'NOT_CREATED') + '\n'
+                            'See verbatim failure output and isolated STOPPED-C7/summary when created.\n')
     sys.exit(result)

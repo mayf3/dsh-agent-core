@@ -7,10 +7,13 @@
  */
 
 import { buildExecutionInstruction } from './instruction.js'
-import { createRecoveryOperation } from './recovery.js'
-import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeDispatchVersionFromDetail, judgeStaleFromDetail } from './judgment.js'
+import { createRecoveryOperation } from './recovery/operation.js'
+import { createReadbackOperations } from './recovery/readback.js'
+import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeStaleFromDetail } from './judgment.js'
 import { createOwnerAssistanceResumeOperations } from './owner-assistance-resume-engine.js'
-import { createTerminalAttemptOperations } from './terminal-attempt-operations.js'
+import { createAttemptLimitEscalation, createTerminalAttemptOperations, staleCandidates, runEndedCandidates } from './terminal-attempt-operations.js'
+import { reconcileDeliveryEvidence } from './projection.js'
+import { createAdmissionBudget } from './ledger-admission.js'
 export const DEFAULT_POLL_INTERVAL_MS = 30_000
 export const DEFAULT_MAX_ADMISSIONS_PER_POLL = 25
 
@@ -27,7 +30,7 @@ export const DUE_PAGE_LIMIT = 100
  * Injected seams: ledger, keyset due feed, exact Principal resolution, Router
  * delivery/reconciliation/correlation, and target-Agent instance detail reads.
  * Optional escalation is idempotent via the ledger; controlled recovery is
- * authorityRef-gated and never invoked by polling. No lifecycle mutation seam.
+ * authorityRef-gated or internally authorized by the blocked consumer. No lifecycle mutation seam.
  * config: maxAdmissionsPerPoll, staleNoProgressThresholdMs, retryDelayMs.
  */
 export function createWorkflowExecutionEngine({
@@ -49,6 +52,7 @@ export function createWorkflowExecutionEngine({
     if (fn === undefined) throw new TypeError(`workflow-execution: engine dep ${name} is required`)
   }
   const maxAdmissions = config.maxAdmissionsPerPoll ?? DEFAULT_MAX_ADMISSIONS_PER_POLL
+  const admissionBudget = createAdmissionBudget(maxAdmissions)
   const staleNoProgressThresholdMs = config.staleNoProgressThresholdMs ?? DEFAULT_STALE_NO_PROGRESS_THRESHOLD_MS
   if (!Number.isInteger(staleNoProgressThresholdMs) || staleNoProgressThresholdMs < 1) {
     throw new TypeError(`workflow-execution: config.staleNoProgressThresholdMs must be a positive integer (got ${JSON.stringify(config.staleNoProgressThresholdMs)})`)
@@ -68,37 +72,8 @@ export function createWorkflowExecutionEngine({
     })
   }
 
-  /** CTR-WEC1-005: call svc, then persist the idempotency fact; failed calls retry on a later pass. */
-  async function escalateAttemptLimit({ attempt, reason }) {
-    if (typeof escalateAttemptLimitDep !== 'function') return
-    const payload = {
-      workflowInstanceId: attempt.workflowInstanceId,
-      nodeVisitId: attempt.nodeVisitId,
-      attemptCount: attempt.dispatchCount ?? attempt.generation ?? 1,
-      lastAttemptId: attempt.attemptId,
-      dispatchIntentId: attempt.dispatchIntentId,
-      reason,
-    }
-    try {
-      const result = await escalateAttemptLimitDep(payload)
-      if (!result?.ok) {
-        log.warn?.(`workflow-execution: escalation call failed for ${attempt.nodeVisitId} (${result?.code ?? 'unknown'}) — retried on a later pass`)
-        return
-      }
-      const recorded = await ledger.recordEscalationRequested({
-        nodeVisitId: attempt.nodeVisitId,
-        reason,
-        attemptCount: payload.attemptCount,
-        lastAttemptId: payload.lastAttemptId,
-        dispatchIntentId: payload.dispatchIntentId,
-      })
-      if (recorded.committed) {
-        log.log?.(`workflow-execution: owner assistance opened for ${attempt.nodeVisitId} (${reason}; svc case ${result.assistanceCaseId ?? 'n/a'})`)
-      }
-    } catch (error) {
-      log.error?.(`workflow-execution: escalation error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
-    }
-  }
+  const escalateAttemptLimit = createAttemptLimitEscalation({ ledger, escalateAttemptLimit: escalateAttemptLimitDep, log })
+  const readbacks = createReadbackOperations({ ledger, readInstanceDetail, resolvePrincipalToAgent, clock, config, log })
 
   const { isAtAttemptLimit, maybeEscalateAtLimit, settleStale, reconcileTerminalCandidate } =
     createTerminalAttemptOperations({ ledger, escalateAttemptLimit })
@@ -108,7 +83,7 @@ export function createWorkflowExecutionEngine({
    * precedes Router invocation and post-invocation failures remain terminal.
    * CTR-SRE-004: unproven quiescence defers before mint, preserving eligibility.
    */
-  async function admitDueIntent(rawIntent) {
+  async function admitDueIntent(rawIntent, recordAttemptResult = () => {}) {
     const attemptResult = await ledger.beginAttemptIfAbsent({
       dispatchIntentId: rawIntent.dispatchIntentId,
       nodeVisitId: rawIntent.nodeVisitId,
@@ -136,19 +111,7 @@ export function createWorkflowExecutionEngine({
         })
         if (!delivery.ok) return { kind: 'delivery_failed', reason: `delivery_rejected:${delivery.code}` }
         // CTR-SRE-002: best-effort target-Agent dispatch baseline inside the admission lock.
-        let workflowStateVersionAtDispatch
-        try {
-          const read = await readInstanceDetail({ agentId: resolved.agentId, workflowInstanceId: attempt.workflowInstanceId })
-          if (read.ok) {
-            const judged = judgeDispatchVersionFromDetail({ body: read.body })
-            if (judged.ok) workflowStateVersionAtDispatch = judged.version
-            else log.warn?.(`workflow-execution: dispatch version probe unusable for ${attempt.nodeVisitId}: ${judged.reason}`)
-          } else {
-            log.warn?.(`workflow-execution: dispatch version probe failed for ${attempt.nodeVisitId}: ${read.code}`)
-          }
-        } catch (error) {
-          log.warn?.(`workflow-execution: dispatch version probe errored for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
-        }
+        const workflowStateVersionAtDispatch = await readbacks.sampleDispatch(attempt, resolved.agentId)
         return {
           kind: 'run_delivered',
           agentId: resolved.agentId,
@@ -165,6 +128,7 @@ export function createWorkflowExecutionEngine({
         }
       }
     }, hasQuiescentTurn, ownerResumeOps.prepareAttemptPlan, (attempt) => ownerResumeOps.canOwnerResume(attempt, ownerResumeOps.queryTurnReconciliation))
+    recordAttemptResult(attemptResult)
     if (!attemptResult.created) {
       if (attemptResult.cause === 'pre_plan_unavailable' || attemptResult.cause === 'owner_resume_proof_unavailable') {
         return { action: 'pre_plan_unavailable', nodeVisitId: rawIntent.nodeVisitId, ...(attemptResult.attempt?.attemptId === undefined ? {} : { attemptId: attemptResult.attempt.attemptId }) }
@@ -177,7 +141,8 @@ export function createWorkflowExecutionEngine({
         // CTR-WEC1-004: the fresh locked fence refused a past-limit mint.
         // Escalate once from that exact predecessor and leave.
         if (attemptResult.attempt.escalation === undefined) {
-          await escalateAttemptLimit({ attempt: attemptResult.attempt, reason: 'ATTEMPTS_EXHAUSTED' })
+          const recorded = await escalateAttemptLimit({ attempt: attemptResult.attempt, reason: 'ATTEMPTS_EXHAUSTED' })
+          if (recorded?.action === 'stale_observation') return { nodeVisitId: rawIntent.nodeVisitId, ...recorded }
         }
         return { action: 'attempt_limit_reached', nodeVisitId: rawIntent.nodeVisitId, attemptId: attemptResult.attempt.attemptId }
       }
@@ -220,7 +185,9 @@ export function createWorkflowExecutionEngine({
   /** ONE authoritative settle probe: the instance detail read AS THE TARGET
    *  AGENT (its own canonical Principal; see judgment.js invariant). */
   async function probeSettle(attempt) {
-    const read = await readInstanceDetail({ agentId: attempt.delivered.agentId, workflowInstanceId: attempt.workflowInstanceId })
+    let read
+    try { read = await readInstanceDetail({ agentId: attempt.delivered.agentId, workflowInstanceId: attempt.workflowInstanceId }) }
+    catch { return { kind: 'unavailable', reason: 'settle_check_unavailable: instance detail dependency errored' } }
     if (!read.ok) {
       return { kind: 'unavailable', reason: `settle_check_unavailable: instance detail read failed (${read.code})` }
     }
@@ -233,14 +200,25 @@ export function createWorkflowExecutionEngine({
     if (!read.ok) {
       return { kind: 'unavailable', reason: `stale_check_unavailable: instance detail read failed (${read.code})` }
     }
-    return judgeStaleFromDetail({ body: read.body, nodeVisitId: attempt.nodeVisitId, workflowStateVersionAtDispatch: attempt.workflowStateVersionAtDispatch })
+    const judged = judgeStaleFromDetail({ body: read.body, nodeVisitId: attempt.nodeVisitId, workflowStateVersionAtDispatch: attempt.workflowStateVersionAtDispatch })
+    if (judged.kind === 'recheck_required') await readbacks.schedule(attempt, 'version', 'version_changed_recheck_required')
+    return judged
   }
 
-  /** Reconcile ACTIVE attempts; skip resolution_blocked. Only positive business evidence permits stale re-entry. */
+  function reconcileDeliveries() {
+    return ledger.inspectFresh(attempts => attempts.filter(attempt => attempt.delivered === undefined
+      && (['planned', 'delivery_started'].includes(attempt.phase)
+        || attempt.judgment === 'delivery_unverified'))
+      .map(attempt => ({ ...reconcileDeliveryEvidence(attempt, resolveCallerCorrelation), observedAtMs: clock() })))
+  }
+
+  /** Reconcile ACTIVE attempts; blocked recovery uses the shared safe gate. */
   async function reconcileOnce() {
-    const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [] }
-    for (const attempt of await ledger.listActiveFresh()) {
+    const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [], staleObservations: [] }
+    let candidates = await ledger.snapshotFresh(), refreshCandidates = false
+    for (const attempt of candidates.filter(attempt => attempt.state === 'ACTIVE')) {
       if (attempt.phase !== 'planned' || attempt.retryReason !== 'owner_assistance_resolved') continue
+      refreshCandidates = true
       try {
         await ledger.continuePlannedOwnerResume(attempt.nodeVisitId,
           (fresh) => ownerResumeOps.verifyPlannedOwnerResume(fresh),
@@ -249,14 +227,17 @@ export function createWorkflowExecutionEngine({
         log.error?.(`workflow-execution: planned Owner-resume recovery failed for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
     }
-    // Cross-process failover must not reconcile a cached projection. Refresh
-    // under the ledger's existing OwnerLock before enumerating this pass.
-    for (const attempt of await ledger.listActiveFresh()) {
+    // Share selection until work may have changed it; every commit still replays under lock.
+    if (refreshCandidates) candidates = await ledger.snapshotFresh()
+    refreshCandidates = false
+    for (const attempt of candidates.filter(attempt => attempt.state === 'ACTIVE')) {
       if (attempt.phase === 'resolution_blocked') {
         summary.blocked += 1
         continue
       }
+      if (readbacks.owns(attempt)) continue
       summary.examined += 1
+      refreshCandidates = true
       try {
         const turnState = queryTurnState(attempt)
         const verdict = judgeAttempt(attempt, { turnState })
@@ -265,10 +246,14 @@ export function createWorkflowExecutionEngine({
           if (attempt.retryReason !== 'owner_assistance_resolved' && attempt.phase === 'run_delivered'
             && clock() - attempt.delivered.atMs >= staleNoProgressThresholdMs) {
             const stale = await judgeStale(attempt)
-            if (stale.kind === 'stale_confirmed' && await settleStale(attempt)) {
-              summary.staleReentry.push(attempt.nodeVisitId)
-              await maybeEscalateAtLimit(attempt)
-              continue
+            if (stale.kind === 'stale_confirmed') {
+              const recorded = await settleStale(attempt)
+              retainStaleObservation(summary, recorded)
+              if (recorded.committed) {
+                summary.staleReentry.push(attempt.nodeVisitId)
+                retainStaleObservation(summary, await maybeEscalateAtLimit(attempt))
+                continue
+              }
             }
           }
           summary.running += 1
@@ -284,11 +269,13 @@ export function createWorkflowExecutionEngine({
         }
         const recorded = await ledger.recordReconciled({
           nodeVisitId: attempt.nodeVisitId,
+          expectedAttemptId: attempt.attemptId, expectedGeneration: attempt.generation ?? 1,
           expectedPhase: attempt.phase,
           verdict: finalVerdict.state,
           judgment: finalVerdict.judgment,
           reason: finalVerdict.reason,
         })
+        retainStaleObservation(summary, recorded)
         if (!recorded.committed) {
           if (recorded.attempt.state === 'ACTIVE') summary.running += 1
           continue
@@ -299,25 +286,35 @@ export function createWorkflowExecutionEngine({
         log.error?.(`workflow-execution: reconcile error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
     }
-    // CTR-SRE-002: the terminal run_ended_no_submission class uses the same business probe.
-    for (const attempt of await ledger.listStaleCandidatesFresh(staleNoProgressThresholdMs)) {
+    if (refreshCandidates) candidates = await ledger.snapshotFresh()
+    refreshCandidates = false
+    for (const attempt of staleCandidates(candidates, staleNoProgressThresholdMs, clock())) {
       if (attempt.state !== 'NEEDS_REVIEW') continue
+      if (readbacks.owns(attempt)) continue
+      refreshCandidates = true
       try {
         const stale = await judgeStale(attempt)
-        await reconcileTerminalCandidate(attempt, stale, summary.staleReentry)
+        retainStaleObservation(summary, await reconcileTerminalCandidate(attempt, stale, summary.staleReentry))
       } catch (error) {
         log.error?.(`workflow-execution: stale re-entry check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
     }
     // CTR-WEC1-004: fast continuation uses the retry delay; durable UNKNOWN is excluded.
-    for (const attempt of await ledger.listRunEndedCandidatesFresh(retryDelayMs)) {
+    if (refreshCandidates) candidates = await ledger.snapshotFresh()
+    for (const attempt of runEndedCandidates(candidates, retryDelayMs, clock())) {
+      if (readbacks.owns(attempt)) continue
       try {
         const stale = await judgeStale(attempt)
-        await reconcileTerminalCandidate(attempt, stale, summary.staleReentry)
+        retainStaleObservation(summary, await reconcileTerminalCandidate(attempt, stale, summary.staleReentry))
       } catch (error) {
         log.error?.(`workflow-execution: run-ended continuation check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
     }
+    // Re-read terminal delivery_unverified too: late original receipts remain
+    // discoverable on every existing startup/poll, with no terminal writes.
+    summary.recoveries = await reconcileBlocked()
+    summary.readbacks = await readbacks.reconcile()
+    summary.deliveryReconciliation = await reconcileDeliveries()
     return summary
   }
 
@@ -332,7 +329,7 @@ export function createWorkflowExecutionEngine({
     const admissions = []
     const skipped = []
     let pages = 0
-    let newAttempts = 0
+    const budget = admissionBudget.begin()
     let boundReached = false
     let boundSkipped = 0
     let cursor
@@ -378,28 +375,29 @@ export function createWorkflowExecutionEngine({
           log.warn?.(`workflow-execution: skipped malformed due record (${normalized.reason})`)
           continue
         }
-        if (newAttempts >= maxAdmissions) {
+        if (!budget.take(normalized.intent.nodeVisitId)) {
           boundReached = true
           boundSkipped += 1
           continue
         }
         try {
-          const result = await admitDueIntent(normalized.intent)
+          const result = await admitDueIntent(normalized.intent, budget.recordCreated)
           admissions.push(result)
-          if (result.action !== 'already_attempted' && result.action !== 'deferred_quiescence') newAttempts += 1
+          budget.recordResult(result.action)
         } catch (error) {
           log.error?.(`workflow-execution: admission error: ${error?.message ?? error}`)
           admissions.push({ action: 'engine_error', error: String(error?.message ?? error) })
-          newAttempts += 1
+          budget.recordUnknown()
         }
       }
       if (exhausted) break
       cursor = { afterNextEligibleAt: last.nextEligibleAt, afterDispatchIntentId: last.dispatchIntentId }
     }
+    if (!drainedEarly) budget.finish()
     if (boundReached) {
-      log.warn?.(`workflow-execution: admission bound (${maxAdmissions}) reached; ${boundSkipped} due intents left unadmitted — they stay due and are re-discovered next sweep`)
+      log.warn?.(`workflow-execution: bounded admission probes (${JSON.stringify(budget.stats)}); ${boundSkipped} due intents deferred to a later probe rotation`)
     }
-    return { ok: true, reconciled, admissions, skipped, pages }
+    return { ok: true, reconciled, admissions, skipped, pages, admissionBudget: { ...budget.stats } }
   }
 
 
@@ -436,7 +434,8 @@ export function createWorkflowExecutionEngine({
   }
 
   // CTR-WAE-013: explicit control-plane recovery over the same injected seams.
-  const { recoverAttempt } = createRecoveryOperation({
+  const { recoverAttempt, reconcileBlocked } = createRecoveryOperation({
+    clock, config,
     ledger,
     resolvePrincipalToAgent,
     deliverRun,
@@ -449,6 +448,7 @@ export function createWorkflowExecutionEngine({
   return {
     pollOnce,
     reconcileOnce,
+    reconcileDeliveries,
     admitDueIntent,
     recoverAttempt,
     /** CTR-WEC1-006: coalesce kicks with the single-flight poll; a lost kick is harmless. */
@@ -488,4 +488,9 @@ export function createWorkflowExecutionEngine({
     },
     snapshot: () => ledger.snapshot(),
   }
+}
+
+/** Keep rejected old facts reviewable without appending them to the new attempt. */
+function retainStaleObservation(summary, result) {
+  if (result?.action === 'stale_observation') summary.staleObservations.push(result)
 }

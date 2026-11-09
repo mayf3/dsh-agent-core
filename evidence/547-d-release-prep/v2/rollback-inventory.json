@@ -1,0 +1,131 @@
+{
+  "six_file_backup": [
+    {
+      "path": "/Users/Shared/r129d-rollback-20261108/DEPLOY-RECEIPT.md",
+      "bytes": 6859,
+      "sha256": "e24948c9c4bb1b4de24b496d92c057bace0f7bb2ef3c8d7c92b2bfd1cfdfb2c2"
+    },
+    {
+      "path": "/Users/Shared/r129d-rollback-20261108/pack-provenance.json",
+      "bytes": 863,
+      "sha256": "3f3fb100dfbf8ba392fa000b157b123bb40ddc761d14f4dc4a5c42c305dd403c"
+    },
+    {
+      "path": "/Users/Shared/r129d-rollback-20261108/pack-provenance.pre-overlay-20261108.json",
+      "bytes": 1001,
+      "sha256": "a2df8c86f8227579c317fc6f9e599b852e9beecd506dd267fe48c4130e59476d"
+    },
+    {
+      "path": "/Users/Shared/r129d-rollback-20261108/packages_agent-router_src_reconciliation_admin-abandonment.js",
+      "bytes": 12005,
+      "sha256": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f"
+    },
+    {
+      "path": "/Users/Shared/r129d-rollback-20261108/packages_agent-router_src_reconciliation_durable-file.js",
+      "bytes": 20708,
+      "sha256": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26"
+    },
+    {
+      "path": "/Users/Shared/r129d-rollback-20261108/packages_agent-router_src_reconciliation_query.js",
+      "bytes": 10943,
+      "sha256": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4"
+    },
+    {
+      "path": "/Users/Shared/r129d-rollback-20261108/packages_agent-router_src_reconciliation_state-machine.js",
+      "bytes": 17202,
+      "sha256": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5"
+    },
+    {
+      "path": "/Users/Shared/r129d-rollback-20261108/packages_scheduler_src_occurrence-model.js",
+      "bytes": 20123,
+      "sha256": "6db88f5cee57d8a217fabde4749ffd7bf677399f348208131b2e2f2309ee9292"
+    },
+    {
+      "path": "/Users/Shared/r129d-rollback-20261108/packages_scheduler_src_store.js",
+      "bytes": 17495,
+      "sha256": "a8eacf4f16edd207b7181a5fcc47b30a4b26c9e852d335ca2746c88fd4ac3fcc"
+    }
+  ],
+  "default_backup_family": [
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261105-062306",
+      "provenance_exists": true,
+      "source_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "main_repo_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "scope": "directory/provenance only, not full backup integrity"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261105-063009",
+      "provenance_exists": true,
+      "source_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "main_repo_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "scope": "directory/provenance only, not full backup integrity"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261105-063639",
+      "provenance_exists": true,
+      "source_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "main_repo_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "scope": "directory/provenance only, not full backup integrity"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261105-064520",
+      "provenance_exists": true,
+      "source_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "main_repo_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "scope": "directory/provenance only, not full backup integrity"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261105-065323",
+      "provenance_exists": true,
+      "source_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "main_repo_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "scope": "directory/provenance only, not full backup integrity"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261105-065951",
+      "provenance_exists": true,
+      "source_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "main_repo_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "scope": "directory/provenance only, not full backup integrity"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261105-073646",
+      "provenance_exists": true,
+      "source_head_sha": "f917aeba0a676992b64bec3b0a902627524d7f09",
+      "main_repo_head_sha": "f917aeba0a676992b64bec3b0a902627524d7f09",
+      "scope": "directory/provenance only, not full backup integrity"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261105-075119",
+      "provenance_exists": true,
+      "source_head_sha": "f917aeba0a676992b64bec3b0a902627524d7f09",
+      "main_repo_head_sha": "f917aeba0a676992b64bec3b0a902627524d7f09",
+      "scope": "directory/provenance only, not full backup integrity"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261106-075814",
+      "provenance_exists": true,
+      "source_head_sha": "23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9",
+      "main_repo_head_sha": "23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9",
+      "scope": "directory/provenance only, not full backup integrity"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261106-080439",
+      "provenance_exists": true,
+      "source_head_sha": "23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9",
+      "main_repo_head_sha": "23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9",
+      "scope": "directory/provenance only, not full backup integrity"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261106-081212",
+      "provenance_exists": true,
+      "source_head_sha": "23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9",
+      "main_repo_head_sha": "23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9",
+      "scope": "directory/provenance only, not full backup integrity"
+    }
+  ],
+  "full_393_backup_verified": false,
+  "not_proof_of_global_absence": true,
+  "durable_restore_subdirectory": "not copied, not used; edited business-state proposal is outside this mandate"
+}

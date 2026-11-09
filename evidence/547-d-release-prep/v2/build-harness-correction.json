@@ -1,0 +1,10 @@
+{
+  "attempt1_script_sha256": "386c661eb01285f4d301150a2426922fea8228a3cd1cc0595fd2143c04c7e734",
+  "rc": 1,
+  "error": "broken install link node_modules/@deepseek-ai",
+  "classification": "explained packaging-check root error, not missing Harness input or source/digest inconsistency",
+  "explanation": "This declared app-only storage artifact intentionally has no sibling Harness; literal bridge is valid at the bound existing install root. First check incorrectly resolved the link at quarantine root. Binding input was already observed present. No payload was executed.",
+  "correction": "Verify each literal target at the explicit existing install root; require target stays inside exact bound app/Node/Harness root. Preserve literal links and full external binding manifests; never execute isolated tree.",
+  "new_output": "private-attempt2; failed output preserved in private/",
+  "production_writes": 0
+}

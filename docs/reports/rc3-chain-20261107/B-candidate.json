@@ -1,0 +1,26 @@
+[
+  {
+    "spec_id": "CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1",
+    "status": "accepted",
+    "spec_kind": "implementation",
+    "authority_level": "governing_spec",
+    "implementation_authority": "contracts",
+    "production_apply_authority": "none",
+    "scope": [
+      "mayf3/dsh-agent-core/scripts/verify-code-structure.mjs",
+      "focused structure-verifier regression tests",
+      "one exact scripts/trusted-cp-deploy-install.sh transition"
+    ],
+    "governed_by": [
+      "CODE_STRUCTURE_GUARDRAILS_V2",
+      "CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1"
+    ],
+    "external_authorities": [],
+    "supersedes": [],
+    "superseded_by": null,
+    "owners": [
+      "mayf3"
+    ],
+    "date": "2026-11-06"
+  }
+]

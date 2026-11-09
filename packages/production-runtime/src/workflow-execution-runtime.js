@@ -232,6 +232,7 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
     ledger,
     log,
     config: {
+      automaticRecoveryEnabled: enabled,
       ...(config.maxAdmissionsPerPoll === undefined ? {} : { maxAdmissionsPerPoll: config.maxAdmissionsPerPoll }),
       staleNoProgressThresholdMs,
       ...(retryDelayMs === undefined ? {} : { retryDelayMs }),
@@ -450,8 +451,8 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
      * runtime-component method ONLY: the control plane (Owner/operator seam)
      * may call it with an explicit authorityRef. It is deliberately NOT a
      * broker capability/tool manifest, NOT reachable from any Agent tool
-     * surface, and NOT invoked by the poller, reconcile, or any timer —
-     * there is no scheduling semantics around it at all.
+     * surface. The enabled poller also invokes this same gate through its
+     * internal accepted-rule authorization, with durable blocked checks.
      */
     recoverAttempt: (args) => engine.recoverAttempt(args),
     /** Start the poll loop (+ forum projection); no-op, honestly logged, when unconfigured. */

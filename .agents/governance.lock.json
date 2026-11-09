@@ -1,22 +1,22 @@
 {
   "schema_version": 1,
   "distribution": "development-governance-v0",
-  "version": "2.0.0-rc.1",
+  "version": "2.0.0-rc.3",
   "source_repository": "mayf3/agent-development-governance",
-  "source_commit": "6301662e18adaed88e4412394ad9bdb959d92355",
-  "distribution_manifest_sha256": "645a8c2d14cb03838dc7ecb6e3ac2f5f809bd536cf764384d0da974732e3cf23",
+  "source_commit": "c1fad8976e50e96adb27a4c7e2dd4f97bf2e899e",
+  "distribution_manifest_sha256": "3ce456bec3af4ee6c9f725cf8d587ed1a3e70812574633fda9bddc06016a0841",
   "adoption": {
     "mode": "vendored",
     "status": "accepted",
-    "prepared_by": "mayf3-authorized-chatgpt",
-    "prepared_at": "2026-09-29T03:16:20.214729Z",
+    "prepared_by": "Codex under Owner task 2026-11-07",
+    "prepared_at": "2026-11-06T23:45:23Z",
     "accepted_by": "mayf3",
-    "accepted_at": "2026-10-15T12:03:07.950464Z"
+    "accepted_at": "2026-11-07T03:20:10.813730Z"
   },
   "files": [
     {
       "path": ".agents/README.md",
-      "sha256": "b1eca5b821611fc3cbe5e60cc262cb5c9b25fe3694f8cf3914703102dd72d17d",
+      "sha256": "18d2ee74877c9871b7a086bbc8ec02ae8219146c61e6ecfc4f33038b881c98e2",
       "size": 20078
     },
     {
@@ -66,8 +66,8 @@
     },
     {
       "path": ".agents/tools/validate_spec_transition.py",
-      "sha256": "1f34e8fe1a52464a60893b4ef7ca1493aa14cac836fb1e940ec7a3c80859ce6a",
-      "size": 15168
+      "sha256": "5be5fae2ab02b87d1fc138e5da21f91f973b512e2198bcf5149a4ae03331b53e",
+      "size": 18577
     },
     {
       "path": ".agents/tools/validate_governance_route.py",

@@ -49,7 +49,7 @@ function buildEngine(ledger, { gatePage1, timeline, disposeRouterBeforeDeliver }
         timeline.push('fetch_page1_released')
         return { ok: true, items: [dueIntent()] }
       }
-      return { ok: true, items: [] }
+      return { ok: true, items: [dueIntent()] }
     },
     resolvePrincipalToAgent: async () => {
       timeline.push('resolve')
@@ -186,7 +186,7 @@ test('T42-r2 B: startup catch-up reconcile is drain-owned — stop() awaits it',
   let listCalls = 0
   const ledger = new Proxy(real, {
     get(target, prop, receiver) {
-      if (prop === 'listActiveFresh') {
+      if (prop === 'snapshotFresh') {
         return async (...args) => {
           listCalls += 1
           if (listCalls === 1) await reconcileParked

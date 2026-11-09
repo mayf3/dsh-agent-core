@@ -1,6 +1,8 @@
 # Moved unchanged from window-executor-v5.sh at c4152e9a (see R3 receipt).
 import datetime as dt, hashlib, json, math, os, pathlib, plistlib, re, shutil, stat
 import subprocess as sp, sys, time, urllib.request
+from authority_validation.checks import validate as validate_fwav
+from authority_validation.reader import RegistryReader, canonical
 P=pathlib.Path
 rd=P(sys.argv[1]); op=sys.argv[2]; args=sys.argv[3:]
 prep=P('/private/tmp/fleet-v5-prep'); inp=P('/private/tmp/fleet-binding-diag/r3')
@@ -22,7 +24,7 @@ def stamp(s):
     value=dt.datetime.fromisoformat(s.replace('Z','+00:00'))
     require(value.tzinfo is not None and value.utcoffset()==dt.timedelta(0),'authority/receipt time must be UTC')
     return value.timestamp()
-def validate_authority(a, writer_uid=None, now_epoch=None):
+def validate_legacy_fields(a, writer_uid=None, now_epoch=None):
     required=['window_id','writer','writer_uid','valid_from','valid_until','expected_old_pid','expected_old_identity',
               'expected_old_sha','expected_plist_sha256','expected_harness_stamp','expected_bindings_sha256',
               'expected_runtime_uid','expected_runtime_gid','scopes']
@@ -36,9 +38,9 @@ def validate_authority(a, writer_uid=None, now_epoch=None):
     current=time.time() if now_epoch is None else now_epoch
     require(stamp(a['valid_from'])<=current<stamp(a['valid_until']),'window authorization not current')
     return a
-def quiet_ready(age_seconds, census_clean, log_unchanged):
-    return math.isfinite(age_seconds) and age_seconds>=180 and census_clean is True and log_unchanged is True
-def read(p): return json.loads(P(p).read_text())
+def quiet_ready(age_seconds, census_available, log_unchanged):
+    return math.isfinite(age_seconds) and age_seconds>=180 and census_available is True and log_unchanged is True
+def read(p): return json_value(P(p).read_text())
 def save(name,obj):
     p=rd/name
     with open(p,'w') as f: json.dump(obj,f,ensure_ascii=False,indent=2); f.write('\n')
@@ -85,9 +87,79 @@ def manifest(file,base,expected=None):
         require(digest(p)==h,'manifest mismatch: '+str(p)); records[name]=h
     require(records,'empty manifest')
     return {'path':str(file),'sha256':digest(file),'verified':len(records),'records':records}
+authority_reader = RegistryReader()
+_held_inode = None
+_holder_release = False
+
+def authority_observation(a, requested=None, stage='admission', now_epoch=None):
+    current=time.time() if now_epoch is None else now_epoch
+    previous=read(rd/'authority-observation.json') if (rd/'authority-observation.json').is_file() else None
+    try:
+        observed=authority_reader.observe()
+        result=validate_fwav(a,observed,current,requested,stage,previous)
+    except RuntimeError:
+        raise
+    except Exception:
+        raise RuntimeError('未任命: authority observation/schema UNKNOWN') from None
+    return result
+
+def validate_authority(a, writer_uid=None, now_epoch=None):
+    try:
+        validate_legacy_fields(a,writer_uid,now_epoch)
+        authority_observation(a,now_epoch=now_epoch)
+    except RuntimeError:
+        raise
+    except Exception:
+        raise RuntimeError('未任命: authority schema UNKNOWN') from None
+    return a
+
 def authority():
     a=read(rd/'authority.json')
-    require(stamp(a['valid_from'])<=time.time()<stamp(a['valid_until']),'window authorization not current')
+    result=authority_observation(a)
+    # Original per-window receipt is an observation/high-water mark, never authority.
+    save('authority-observation.json',result)
+    return a
+
+def mutex_acquired():
+    global _held_inode
+    item=lock.lstat()
+    require(stat.S_ISDIR(item.st_mode) and not lock.is_symlink(),'mutex physical directory required')
+    _held_inode=(item.st_dev,item.st_ino,item.st_uid)
+
+def mutex_owned():
+    global _held_inode
+    item=lock.lstat()
+    actual=(item.st_dev,item.st_ino,item.st_uid)
+    require(_held_inode is not None or (rd/'mutex.json').is_file(),'own mutex proof missing')
+    require(stat.S_ISDIR(item.st_mode) and not lock.is_symlink(),'mutex physical directory required')
+    if _held_inode is not None:
+        require(actual==_held_inode,'mutex inode changed')
+    if (rd/'mutex.json').is_file() and not (_holder_release and not (lock/'holder').exists()):
+        stored=read(rd/'mutex.json')
+        require(stored.get('identity')==list(actual),'mutex acquisition inode changed')
+        require(stored['path']==str(lock) and digest(lock/'holder')==stored['sha256'],'mutex ownership changed')
+        a=read(rd/'authority.json')
+        require(('window='+a['window_id']+'\n') in (lock/'holder').read_text(),'mutex window mismatch')
+        _held_inode=actual
+
+def effect_guard(operation,target,parameters=None,*,internal=False,acquire=False):
+    global _holder_release
+    a=read(rd/'authority.json')
+    effect=dict(repo='mayf3/dsh-agent-core',host=os.uname().nodename,runtime=str(live),
+                domain='system',label='ai.agent-core.runtime',operation=operation,
+                target=str(target),parameters={} if parameters is None else parameters)
+    if acquire:
+        require(operation=='mutex.mkdir' and P(target)==lock and not (rd/'mutex.json').exists(),
+                '未任命: invalid mutex acquisition boundary')
+    else:
+        mutex_owned()
+    result=authority_observation(a,effect,operation)
+    if not acquire:
+        mutex_owned()
+    require(not internal,'缺门: internal per-write control UNKNOWN: '+operation)
+    save('authority-observation.json',result)
+    if operation=='mutex.holder.unlink':
+        _holder_release=True
     return a
 def identity(pid):
     return run(['/bin/ps','-p',str(pid),'-o','pid=','-o','uid=','-o','gid=','-o','lstart=','-o','comm=']).stdout.decode().strip()
@@ -286,7 +358,43 @@ def private_inputs(tag):
         raise
     finally:
         save(tag+'-private-input-validation.json',report)
-def census(tag):
+def classify_census(c, turns, jobs):
+    """Classify existing records only after physical runtime/worker isolation."""
+    lists=('inflightTurns','unresolvedLostTurns','inflightOccurrences')
+    require(all(isinstance(c.get(k),list) for k in lists),'census lists unavailable')
+    require(isinstance(turns.get('records'),list) and isinstance(jobs.get('occurrences'),list),
+            'census source records unavailable')
+    require(c.get('epoch')==turns.get('runtimeEpoch') and bool(c.get('epoch')),'census epoch mismatch')
+    records={r['handle']:r for r in turns['records']}
+    require(len(records)==len(turns['records']),'duplicate recovery handle')
+    entries=c['inflightTurns']+c['unresolvedLostTurns']
+    handles=[r.get('handle') for r in entries]
+    expected={r['handle'] for r in turns['records'] if r.get('queryState')!='settled'}
+    require(len(handles)==len(set(handles)) and set(handles)==expected,'census turn coverage mismatch')
+    result={'historical':[],'unsafe':[]}
+    for entry in entries:
+        row=records[entry['handle']]
+        matched=all(entry.get(k)==row.get(k) for k in ('handle','agentId','runtimeEpoch','exitObservedAt'))
+        reasons=[]
+        if row.get('state')=='blocked': reasons.append('blocked')
+        if row.get('fenceState')=='active': reasons.append('fenced')
+        if row.get('runtimeEpoch')!=c['epoch']: reasons.append('old_epoch')
+        if row.get('exitObservedAt') is None: reasons.append('exit_unproven_preserve_unknown')
+        historical=(matched and row.get('state')!='reserved' and row.get('queryState')=='pending'
+                    and row.get('initialOutcome')=='outcome_unknown' and bool(reasons))
+        item={'kind':'turn','handle':entry['handle'],'agentId':entry.get('agentId'),
+              'runtimeEpoch':entry.get('runtimeEpoch'),'reasons':reasons if historical else ['executable_or_unproven_identity']}
+        result['historical' if historical else 'unsafe'].append(item)
+    occurrences={r['occurrenceId']:r for r in jobs['occurrences']}
+    require(len(occurrences)==len(jobs['occurrences']),'duplicate occurrence identity')
+    ids=[r.get('occurrenceId') for r in c['inflightOccurrences']]
+    expected={r['occurrenceId'] for r in jobs['occurrences'] if r.get('state') in ('admitted','running')}
+    require(len(ids)==len(set(ids)) and set(ids)==expected,'census occurrence coverage mismatch')
+    for entry in c['inflightOccurrences']:
+        result['unsafe'].append({'kind':'occurrence','occurrenceId':entry['occurrenceId'],
+                                 'reason':'admitted_or_running_execution'})
+    return result
+def census(tag, require_isolation=False):
     # Original source reader ONLY. No constructor, scheduler, recovery or replay.
     paths=[prod/'control/turn-recovery-v3.json',prod/'scheduler/jobs.json']
     for p in paths: regular(p)
@@ -297,13 +405,19 @@ console.log(JSON.stringify(c));'''
     p=run([prep/'scratch/node-runtime/bin/node','--input-type=module','-e',js,*paths],
           env={'PATH':'/usr/bin:/bin','HOME':'/var/empty'})
     raw(tag+'.stdout',p.stdout); raw(tag+'.stderr',p.stderr)
-    c=json.loads(p.stdout); after=[{'sha256':digest(p),'metadata':meta(p)} for p in paths]
+    c=json.loads(p.stdout); turns=read(paths[0]); jobs=read(paths[1])
+    after=[{'sha256':digest(p),'metadata':meta(p)} for p in paths]
     require(before==after,'census store changed during read')
     require(isinstance(c.get('epoch'),str) and c['epoch'],'recovery epoch unavailable')
-    require(all(c.get(k)==[] for k in ('inflightTurns','unresolvedLostTurns','inflightOccurrences')),
-            'unresolved/inflight execution: STOP, no replay or fence clearing')
-    j=read(paths[1]); require(isinstance(j.get('occurrences'),list),'scheduler occurrences schema absent')
-    save(tag+'.json',{'at':now(),'storeHashes':before,'census':c,'readOnly':True})
+    require(all(isinstance(c.get(k),list) for k in ('inflightTurns','unresolvedLostTurns','inflightOccurrences')),
+            'census lists unavailable')
+    require(isinstance(jobs.get('occurrences'),list),'scheduler occurrences schema absent')
+    result={'at':now(),'storeHashes':before,'census':c,'readOnly':True,'nonemptyBlocksQuiet':False}
+    if require_isolation:
+        result['classification']=classify_census(c,turns,jobs)
+    save(tag+'.json',result)
+    if require_isolation:
+        require(not result['classification']['unsafe'],'executable/unproven records remain after isolation: STOP')
     return before
 def log_delta():
     s=read(rd/'restart-log-offsets.json'); chunks=[]

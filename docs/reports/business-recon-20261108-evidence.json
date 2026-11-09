@@ -1,0 +1,1698 @@
+{
+  "schema_version": 1,
+  "capture_started_at": "2026-11-08T13:25:35.704039+00:00",
+  "method": "sudo -n -u authsvc /usr/bin/python3 -B; read_bytes only; stdout persisted in isolated review worktree",
+  "atomic_cross_file_snapshot": false,
+  "business_authority": false,
+  "sources": {
+    "logs/runtime.log": {
+      "path": "/Users/authsvc/.agent-core/logs/runtime.log",
+      "owner": "authsvc",
+      "uid": 505,
+      "bytes_read": 20474680,
+      "sha256": "7a75602baca06b5699d9e01413919def97c815f90f3c26d4c819ba1958c0d056",
+      "mtime_before_read_utc": "2026-11-08T13:23:21.195087+00:00",
+      "observed_at": "2026-11-08T13:25:35.714301+00:00",
+      "line_count": 101207,
+      "exploratory_exact_string_counts": {
+        "EXECUTE_WORKFLOW_TRANSITION": 0,
+        "COMPLETED": 0,
+        "assistance_open": 0,
+        "adc-backend-dev-v1": 0
+      },
+      "selected_lines": [
+        {
+          "line": 100754,
+          "raw_line_sha256": "15aeb759ea5b6ca577bd3d3ec231b959ff4a1c483e7d8f86c9266788aa0aa1b0",
+          "text": "[production-runtime] production runtime ready (pid 396); scheduler loop online; ingress http://127.0.0.1:8790/health"
+        },
+        {
+          "line": 100942,
+          "raw_line_sha256": "21ff11bf589a39c75a2af945b5a2b7cd6d1b12c799e9c1d5bc42b07b7431e64a",
+          "text": "[production-runtime] production runtime ready (pid 23085); scheduler loop online; ingress http://127.0.0.1:8790/health"
+        },
+        {
+          "line": 101075,
+          "raw_line_sha256": "ac4565b428b61e66a418167468122562d8faf80787acd7e481c94c2f58b6a627",
+          "text": "[production-runtime] production runtime ready (pid 9036); scheduler loop online; ingress http://127.0.0.1:8790/health"
+        },
+        {
+          "line": 101183,
+          "raw_line_sha256": "1e2f6b3aeffe38e9215de7716713a8fd2437fafe1b134b1f650a1424d8ec5d5f",
+          "text": "[production-runtime] feishu ingress gate wired (PREBOUND_ONLY: pre-bound primary-workspace conversations only)"
+        },
+        {
+          "line": 101184,
+          "raw_line_sha256": "4394b70fbb30125072cb6f0d9ba885fa6cd70a7abaa6ab502d2d161f01075fac",
+          "text": "[lark-channel] [\"[ws]\",\"receive events or callbacks through persistent connection only available in self-build & Feishu app, Configured in:\\n        Developer Console(开发者后台)\\n          ->\\n        Events and Callbacks(事件与回调)\\n          ->\\n        Mode of event/callback subscription(订阅方式)\\n          ->\\n        Receive events/callbacks through persistent connection(使用 长连接 接收事件/回调)\"]"
+        },
+        {
+          "line": 101185,
+          "raw_line_sha256": "5be894afe5a9243c65f85a0bc4ac4b45c95feb829c6cbc3564fcfb2235616a60",
+          "text": "[lark-channel] [\"[ws]\",\"ws client ready\"]"
+        },
+        {
+          "line": 101186,
+          "raw_line_sha256": "bd7676676638d79b66e7c57bd83d4d8e903c81ab9b4fc52fa7d72cc311eeb0bb",
+          "text": "[feishu] channel live: first handshake done, bot identity resolved"
+        },
+        {
+          "line": 101187,
+          "raw_line_sha256": "95a56970cbbc9948fe798a3c8d8bc0b20778ca2e5b01d0eef2b22a35777e5ff3",
+          "text": "[production-runtime] feishu channel live (first handshake + bot identity resolved)"
+        },
+        {
+          "line": 101188,
+          "raw_line_sha256": "0936f4ead15974ad5bd8e63ed989a5d79101fa6ee8199ffb81c812a5a906809a",
+          "text": "[production-runtime] WARN [scheduler-history] history store: skipped 6 unparseable or invalid events.jsonl line(s) during load"
+        },
+        {
+          "line": 101189,
+          "raw_line_sha256": "262e572db43ec325b6279c8e8690a5e958838842f0c23b2314e7c1bc4f4fef49",
+          "text": "[production-runtime] development-execution surface mounted (shared, backend-abstracted)"
+        },
+        {
+          "line": 101190,
+          "raw_line_sha256": "22082a19f01dc5c3bedadbd8e295387346afa6d1fa9a12dc596e5318c837e66a",
+          "text": "[production-runtime] fixed-operation surface mounted (fixture operations only)"
+        },
+        {
+          "line": 101191,
+          "raw_line_sha256": "04d8a0d4550be4bd3cc5b38e7418ecc1df4dd35c85dc99b1b2f4f68f39798930",
+          "text": "[production-runtime] workflow-progress surface mounted (execution-resume metadata only)"
+        },
+        {
+          "line": 101192,
+          "raw_line_sha256": "3d4945a3a1800fcb4cf24b0e62066c1debceb8177401d4f19d2d640a64bd6b6b",
+          "text": "[production-runtime] workflow-execution: poll loop armed (intervalMs=30000)"
+        },
+        {
+          "line": 101193,
+          "raw_line_sha256": "a3376138a5e3857826ea7e7a5ca10accd8a84265285af751fc5cc9b16d1cb825",
+          "text": "[production-runtime] forum-projection: projection loop armed (intervalMs=30000)"
+        },
+        {
+          "line": 101194,
+          "raw_line_sha256": "ed42ed2320b2c358c80024a904a93927b75a14ae5aa488d98cf1f07733ef2abe",
+          "text": "[production-runtime] workflow-execution: poller enabled (agent agt_hr-agent, due feed limit 100)"
+        },
+        {
+          "line": 101195,
+          "raw_line_sha256": "74496ebe9878aa6043953f8b45a700f5af1a17eeedfe5f0c2ee96aa7ea87820f",
+          "text": "[production-runtime] production runtime ready (pid 16139); scheduler loop online; ingress http://127.0.0.1:8790/health"
+        },
+        {
+          "line": 101196,
+          "raw_line_sha256": "0c9c6fce8c27951140e31d523a2b8602d4edba7abe527392c04031565b120613",
+          "text": "[feishu] reply rendered as static card {\"wireBytes\":1404}"
+        },
+        {
+          "line": 101197,
+          "raw_line_sha256": "70b19b9dee44530fea554d9af7cc308ab6bba24a2c0c4dbf647838e64f9fa272",
+          "text": "[feishu] reply sent"
+        },
+        {
+          "line": 101198,
+          "raw_line_sha256": "8166dfe86b4eb2ab0a2de313f00d520f3599c6688fb8fd2bb3ba1b721f0fc13c",
+          "text": "[feishu] reply rendered as static card {\"wireBytes\":2057}"
+        },
+        {
+          "line": 101199,
+          "raw_line_sha256": "70b19b9dee44530fea554d9af7cc308ab6bba24a2c0c4dbf647838e64f9fa272",
+          "text": "[feishu] reply sent"
+        },
+        {
+          "line": 101200,
+          "raw_line_sha256": "be97566a134db1b9ac04baf0487998b89233243a85963f087ad2e67abfb87bcf",
+          "text": "[feishu] reply rendered as static card {\"wireBytes\":868}"
+        },
+        {
+          "line": 101201,
+          "raw_line_sha256": "70b19b9dee44530fea554d9af7cc308ab6bba24a2c0c4dbf647838e64f9fa272",
+          "text": "[feishu] reply sent"
+        },
+        {
+          "line": 101202,
+          "raw_line_sha256": "bcba805d0bf9bc8ffa5be16b1d5d0db0f6313daf342e728746a3af8e0fa2c9ad",
+          "text": "[feishu] reply rendered as static card {\"wireBytes\":3172}"
+        },
+        {
+          "line": 101203,
+          "raw_line_sha256": "70b19b9dee44530fea554d9af7cc308ab6bba24a2c0c4dbf647838e64f9fa272",
+          "text": "[feishu] reply sent"
+        },
+        {
+          "line": 101204,
+          "raw_line_sha256": "bd47600baffb233a3c12786926a57fdd490fa331014c3e33716f48e35d10a549",
+          "text": "[feishu] reply rendered as static card {\"wireBytes\":2290}"
+        },
+        {
+          "line": 101205,
+          "raw_line_sha256": "70b19b9dee44530fea554d9af7cc308ab6bba24a2c0c4dbf647838e64f9fa272",
+          "text": "[feishu] reply sent"
+        },
+        {
+          "line": 101206,
+          "raw_line_sha256": "fb2c30ef5d6660bd302884d6d5f583a600a4bc368e85c3b4763fe98edb891010",
+          "text": "[feishu] reply rendered as static card {\"wireBytes\":991}"
+        },
+        {
+          "line": 101207,
+          "raw_line_sha256": "70b19b9dee44530fea554d9af7cc308ab6bba24a2c0c4dbf647838e64f9fa272",
+          "text": "[feishu] reply sent"
+        }
+      ]
+    },
+    "logs/runtime.err.log": {
+      "path": "/Users/authsvc/.agent-core/logs/runtime.err.log",
+      "owner": "authsvc",
+      "uid": 505,
+      "bytes_read": 18120200,
+      "sha256": "1b6db814615186e3f53d28e70bc658f0623a5231b55fbf5a7b7d1f57c5b6059b",
+      "mtime_before_read_utc": "2026-11-08T13:24:10.990838+00:00",
+      "observed_at": "2026-11-08T13:25:35.776514+00:00",
+      "line_count": 143095,
+      "exploratory_exact_string_counts": {
+        "EXECUTE_WORKFLOW_TRANSITION": 0,
+        "COMPLETED": 0,
+        "assistance_open": 0,
+        "adc-backend-dev-v1": 2
+      },
+      "selected_lines": [
+        {
+          "line": 142900,
+          "raw_line_sha256": "93e5f44876071b511b03d3fc7a1897928941bea3e8a9bc915ad1476e81c185fb",
+          "text": "[broker] gateway mode: 48 http capabilities ready, 17 local capabilities ready"
+        },
+        {
+          "line": 142901,
+          "raw_line_sha256": "6756861f441f67530ceea7bea1be2835cee491f136a16dc369d4136d63ba13e5",
+          "text": "[product-api] listening on http://127.0.0.1:8788 (channel=mobile)"
+        },
+        {
+          "line": 142902,
+          "raw_line_sha256": "c4ec6c582b817eef9f37a80f650522689b555c49375a986b6d81aa270479e6cd",
+          "text": "[notification-ingress] listening on http://127.0.0.1:8790 (deliverReady=true storeReady=true)"
+        },
+        {
+          "line": 142903,
+          "raw_line_sha256": "b1d3ffc6fedc0f4698fbc5ff3592c9d374dddff1428d10214b33aa7956928e41",
+          "text": "[router] ERROR agent process health alert {\"type\":\"agent.process.health\",\"agentId\":\"agt_stock_agent\",\"state\":\"AGENT_PROCESS_RESTART_LOST\",\"generation\":9,\"pid\":null,\"alive\":false,\"cause\":\"RESTART_LOST_FENCE\",\"at\":\"2026-11-08T11:52:27.186Z\",\"fault\":{\"key\":\"agt_stock_agent:9\",\"firstSeenAt\":\"2026-11-08T05:56:52.974Z\",\"attempts\":1419,\"lastSeenAt\":\"2026-11-08T11:52:27.186Z\"}}"
+        },
+        {
+          "line": 142904,
+          "raw_line_sha256": "3f27598b33946804f380b272abeba8f9306579f3698e4801bb25d20c818f2ed9",
+          "text": "[router] ERROR agent process health alert {\"type\":\"agent.process.health\",\"agentId\":\"agt_lobster-agent\",\"state\":\"AGENT_PROCESS_RESTART_LOST\",\"generation\":23,\"pid\":null,\"alive\":false,\"cause\":\"RESTART_LOST_FENCE\",\"at\":\"2026-11-08T11:52:27.186Z\",\"fault\":{\"key\":\"agt_lobster-agent:23\",\"firstSeenAt\":\"2026-11-08T07:03:15.195Z\",\"attempts\":1155,\"lastSeenAt\":\"2026-11-08T11:52:27.186Z\"}}"
+        },
+        {
+          "line": 142905,
+          "raw_line_sha256": "eb984ce4792b5ebed171d48caa503e1dd1db77413ed8cd87df5443080177a03b",
+          "text": "[router] ERROR agent process health alert {\"type\":\"agent.process.health\",\"agentId\":\"agt_hr-agent\",\"state\":\"AGENT_PROCESS_RESTART_LOST\",\"generation\":70,\"pid\":null,\"alive\":false,\"cause\":\"RESTART_LOST_FENCE\",\"at\":\"2026-11-08T11:52:27.186Z\",\"fault\":{\"key\":\"agt_hr-agent:70\",\"firstSeenAt\":\"2026-11-08T07:03:15.195Z\",\"attempts\":1155,\"lastSeenAt\":\"2026-11-08T11:52:27.186Z\"}}"
+        },
+        {
+          "line": 142906,
+          "raw_line_sha256": "a5eeba51e1cd98feb9208043ba419d8592938583e2e4167d47e3bfa77734e61b",
+          "text": "[router] ERROR agent process health alert {\"type\":\"agent.process.health\",\"agentId\":\"agt_agent-dev-engineer\",\"state\":\"AGENT_PROCESS_RESTART_LOST\",\"generation\":84,\"pid\":null,\"alive\":false,\"cause\":\"RESTART_LOST_FENCE\",\"at\":\"2026-11-08T11:52:27.186Z\",\"fault\":{\"key\":\"agt_agent-dev-engineer:84\",\"firstSeenAt\":\"2026-11-08T07:03:15.195Z\",\"attempts\":1155,\"lastSeenAt\":\"2026-11-08T11:52:27.186Z\"}}"
+        },
+        {
+          "line": 142907,
+          "raw_line_sha256": "49b8c7593ce4a909173540504aaaf00e5d33636b8890efecd07349f1bb646594",
+          "text": "[router] ERROR agent process health alert {\"type\":\"agent.process.health\",\"agentId\":\"agt_needs-radar-agent\",\"state\":\"AGENT_PROCESS_RESTART_LOST\",\"generation\":23,\"pid\":null,\"alive\":false,\"cause\":\"RESTART_LOST_FENCE\",\"at\":\"2026-11-08T11:52:27.186Z\",\"fault\":{\"key\":\"agt_needs-radar-agent:23\",\"firstSeenAt\":\"2026-11-08T07:03:15.195Z\",\"attempts\":1155,\"lastSeenAt\":\"2026-11-08T11:52:27.186Z\"}}"
+        },
+        {
+          "line": 142908,
+          "raw_line_sha256": "67ed33c7c62710e5fa8b1bba2dbdaec6ac033ea8439fea1cd4103608468f296c",
+          "text": "[router] admin abandonment declared: agent agt_hr-agent declaration r129d-hr-g70s3581-restart-lost-resume-20261108 handles []"
+        },
+        {
+          "line": 142909,
+          "raw_line_sha256": "c22297b3df234312891a58d950f991dd2d837438e369b18274761eee620d87b5",
+          "text": "[router] admin abandonment declared: agent agt_hr-agent declaration r129d-hr-g70s3581-restart-lost-resume-20261108b handles [turn:60129522-4196-44bb-a644-52a255dde15d:a2:g70:s3581]"
+        },
+        {
+          "line": 142910,
+          "raw_line_sha256": "3df1768c817943e2823bbd1783fc3407ca58315f3d8d88c9b30f07fd68011456",
+          "text": "[router] channelConversation feishu:oc_a5e904510bbf4b... -> binding -> agent agt_hr-agent + session main (channel=group chat=oc_a5e904510bbf4b983d6cd97b9f7bbb74 sender=ou_eb5 text=\"【交办·M7契约】Dispatch-ID:dc062eab-f4ec-4f56-8e02-4b40c14da236"
+        },
+        {
+          "line": 142911,
+          "raw_line_sha256": "4804e7bccc86c7f33e136106f3bb6a9a280a51263c6e81f16f26916df5c91898",
+          "text": "接收\")"
+        },
+        {
+          "line": 142912,
+          "raw_line_sha256": "f46279c895247cf0aa08a901af89e96a430489554e30f75c974106ab7652079e",
+          "text": "[router] [router] spawn helper /usr/local/libexec/dsh-agent-spawn-helper -> child uid 502 gid 20"
+        },
+        {
+          "line": 142913,
+          "raw_line_sha256": "a86cb36df9891b5a848b01e67dbb7f05965667b7489945fabde0af989e2baf25",
+          "text": "[router] [router] agent agt_hr-agent ready pid=16690 (990ms)"
+        },
+        {
+          "line": 142914,
+          "raw_line_sha256": "717a39974f65e5c94e3935d524c5e2abedae4f4052b3c33b87abca6ca3a62435",
+          "text": "[router] [router] agent agt_hr-agent: session main resumed (16223 events)"
+        },
+        {
+          "line": 142915,
+          "raw_line_sha256": "add512893e0115c002ad1e9164aae5e2de30e5f9ef62e107c271f67734826640",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_dispatch_intents)"
+        },
+        {
+          "line": 142916,
+          "raw_line_sha256": "09ae4531bed05d3952b1539cf9b993cf54a33eb50384ead9a5821cdd141bb6fd",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_my_tasks)"
+        },
+        {
+          "line": 142917,
+          "raw_line_sha256": "5e516d5beff8e54371813ec0a7f0d97bd03ad9a1694a82a5528ccd166733c8d0",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_instance_detail)"
+        },
+        {
+          "line": 142918,
+          "raw_line_sha256": "aebd27efa970a88355fc7b5150898069ae9d23ec93371b204fff6b1c324462f7",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_execute)"
+        },
+        {
+          "line": 142919,
+          "raw_line_sha256": "4ebef5b04cb83750577faccc23b316ad50fb0ee55a089123a75d78603cb00fc4",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_assistance_read)"
+        },
+        {
+          "line": 142920,
+          "raw_line_sha256": "126c93cec4cfc7ffefefafa3daf612a21b4f0962a1b70aa307f70a799f4e98f7",
+          "text": "[router] route-chain {\"kind\":\"route_attempt\",\"tsWallMs\":1794138862891,\"routeChainId\":\"chain-agt_hr-agent-f55891d9e349a434\",\"agentId\":\"agt_hr-agent\",\"attemptIndex\":0,\"route\":\"luna\",\"primaryRoute\":\"luna\",\"failureClass\":\"NONE\",\"admissionProven\":\"admitted\",\"attemptOutcome\":\"success\"}"
+        },
+        {
+          "line": 142921,
+          "raw_line_sha256": "ba908a0beede5da94d2ac294fc5788503d8f10339372d7d67324666a0c77dbdb",
+          "text": "[router] route-chain {\"kind\":\"route_chain_final\",\"tsWallMs\":1794138862891,\"routeChainId\":\"chain-agt_hr-agent-f55891d9e349a434\",\"agentId\":\"agt_hr-agent\",\"primaryRoute\":\"luna\",\"finalRoute\":\"luna\",\"finalOutcome\":\"SUCCESS\",\"totalRouteAttempts\":1,\"fallbackActivated\":false,\"fallbackRoute\":null}"
+        },
+        {
+          "line": 142922,
+          "raw_line_sha256": "0b615e3e9236fab404d1c286480c7bfa41da2ed3a1cedf327729230b6fbf8cbe",
+          "text": "[router] agent agt_hr-agent (pid 16690) produced a 1035B reply"
+        },
+        {
+          "line": 142923,
+          "raw_line_sha256": "dbd1add19ea6d9c34e63839d0b04b93a0c3dc088f721bcc268af372f8b31c5a0",
+          "text": "[router] reply sent back to oc_a5e904510..."
+        },
+        {
+          "line": 142924,
+          "raw_line_sha256": "855833a1c6e84af01eac5f219cce765d4c2e399f366e4d60650142afa2b4959d",
+          "text": "[router] ERROR agent recovery escalation delivery failed {\"target\":\"itops/HUMAN_GATE\",\"agentId\":\"agt_stock_agent\",\"generation\":9,\"reason\":\"AGENT_PROCESS_RESTART_LOST\",\"count\":21,\"firstSeenAt\":1794138747190,\"ageMs\":300435,\"result\":{\"delivered\":false,\"reason\":\"R30_ESCALATION_DEPENDENCIES_UNCONFIGURED\"}}"
+        },
+        {
+          "line": 142925,
+          "raw_line_sha256": "ad865332d80a0951fc15cd58814ba8f496fd7a83156c20c96c6bf5ce4a630f72",
+          "text": "[router] ERROR agent recovery escalation delivery failed {\"target\":\"itops/HUMAN_GATE\",\"agentId\":\"agt_lobster-agent\",\"generation\":23,\"reason\":\"AGENT_PROCESS_RESTART_LOST\",\"count\":21,\"firstSeenAt\":1794138747193,\"ageMs\":300433,\"result\":{\"delivered\":false,\"reason\":\"R30_ESCALATION_DEPENDENCIES_UNCONFIGURED\"}}"
+        },
+        {
+          "line": 143034,
+          "raw_line_sha256": "472681d4e866f70546c8cf1ceac6ada22924dd51904ccb7f05e50a84f8d0d930",
+          "text": "[router] route-chain {\"kind\":\"route_chain_final\",\"tsWallMs\":1794140749247,\"routeChainId\":\"chain-agt_cto-agent-f55891d9e349a434\",\"agentId\":\"agt_cto-agent\",\"primaryRoute\":\"luna\",\"finalRoute\":\"luna\",\"finalOutcome\":\"SUCCESS\",\"totalRouteAttempts\":1,\"fallbackActivated\":false,\"fallbackRoute\":null}"
+        },
+        {
+          "line": 143035,
+          "raw_line_sha256": "9116ea481e9224ba684f9a168c1c2409ef9e82e2fd9f429f650d3d279889cabb",
+          "text": "[router] deliver accepted: agent agt_cto-agent session main requestId f587045f-f4bc-4143-8cae-... (63b3833f-ba52-4919-857b-31dcb2fc7a6b) in 5143ms"
+        },
+        {
+          "line": 143036,
+          "raw_line_sha256": "7e3f634d2615393fa2acb5ab068420371b78455ab8aad88c1dc15b207b476d36",
+          "text": "[router] [broker] execute as agent agt_arch-reviewer (capability workflow_instance_detail)"
+        },
+        {
+          "line": 143037,
+          "raw_line_sha256": "7e3f634d2615393fa2acb5ab068420371b78455ab8aad88c1dc15b207b476d36",
+          "text": "[router] [broker] execute as agent agt_arch-reviewer (capability workflow_instance_detail)"
+        },
+        {
+          "line": 143038,
+          "raw_line_sha256": "7e3f634d2615393fa2acb5ab068420371b78455ab8aad88c1dc15b207b476d36",
+          "text": "[router] [broker] execute as agent agt_arch-reviewer (capability workflow_instance_detail)"
+        },
+        {
+          "line": 143039,
+          "raw_line_sha256": "7e3f634d2615393fa2acb5ab068420371b78455ab8aad88c1dc15b207b476d36",
+          "text": "[router] [broker] execute as agent agt_arch-reviewer (capability workflow_instance_detail)"
+        },
+        {
+          "line": 143040,
+          "raw_line_sha256": "8298a13108a169343edc32300ba0e95bc310c155524ebb1f6ddafd4e14110950",
+          "text": "[router] [broker] execute as agent agt_arch-reviewer (capability workflow_submission_history)"
+        },
+        {
+          "line": 143041,
+          "raw_line_sha256": "8298a13108a169343edc32300ba0e95bc310c155524ebb1f6ddafd4e14110950",
+          "text": "[router] [broker] execute as agent agt_arch-reviewer (capability workflow_submission_history)"
+        },
+        {
+          "line": 143042,
+          "raw_line_sha256": "8298a13108a169343edc32300ba0e95bc310c155524ebb1f6ddafd4e14110950",
+          "text": "[router] [broker] execute as agent agt_arch-reviewer (capability workflow_submission_history)"
+        },
+        {
+          "line": 143043,
+          "raw_line_sha256": "8298a13108a169343edc32300ba0e95bc310c155524ebb1f6ddafd4e14110950",
+          "text": "[router] [broker] execute as agent agt_arch-reviewer (capability workflow_submission_history)"
+        },
+        {
+          "line": 143044,
+          "raw_line_sha256": "b729c3062ba0c0c7680d369049a3ee7eefb03920a237b46e7820ef44444dd6c1",
+          "text": "[router] [broker] execute as agent agt_cto-agent (capability workflow_instance_detail)"
+        },
+        {
+          "line": 143045,
+          "raw_line_sha256": "c4852f7777c985ad2245ce7289f6c9cf4f97eb3db570531f73a028ee30063824",
+          "text": "[router] [broker] execute as agent agt_cto-agent (capability workflow_submission_history)"
+        },
+        {
+          "line": 143046,
+          "raw_line_sha256": "c19575f8fce488b6a3100c8ba2db1494824bd26252da33c141160f854675e1d4",
+          "text": "[router] [broker] execute as agent agt_cto-agent (capability workflow_definition_read)"
+        },
+        {
+          "line": 143047,
+          "raw_line_sha256": "61776944989a85d9743842e28ba4235ab2030560dce4b2fd1dc8a051122daf75",
+          "text": "[router] route-chain {\"kind\":\"route_attempt\",\"tsWallMs\":1794140779660,\"routeChainId\":\"chain-agt_hr-agent-f55891d9e349a434\",\"agentId\":\"agt_hr-agent\",\"attemptIndex\":0,\"route\":\"luna\",\"primaryRoute\":\"luna\",\"failureClass\":\"NONE\",\"admissionProven\":\"admitted\",\"attemptOutcome\":\"success\"}"
+        },
+        {
+          "line": 143048,
+          "raw_line_sha256": "2344e5cc22eb0adf05a7bef9c329e7b1d9e94bde50b066e27ebeb267392787d2",
+          "text": "[router] route-chain {\"kind\":\"route_chain_final\",\"tsWallMs\":1794140779660,\"routeChainId\":\"chain-agt_hr-agent-f55891d9e349a434\",\"agentId\":\"agt_hr-agent\",\"primaryRoute\":\"luna\",\"finalRoute\":\"luna\",\"finalOutcome\":\"SUCCESS\",\"totalRouteAttempts\":1,\"fallbackActivated\":false,\"fallbackRoute\":null}"
+        },
+        {
+          "line": 143049,
+          "raw_line_sha256": "c19575f8fce488b6a3100c8ba2db1494824bd26252da33c141160f854675e1d4",
+          "text": "[router] [broker] execute as agent agt_cto-agent (capability workflow_definition_read)"
+        },
+        {
+          "line": 143050,
+          "raw_line_sha256": "fc605f45052a0f7ba80db5c8a9364c774090d5151086088819167912a9dabe07",
+          "text": "[router] [broker] execute as agent agt_arch-reviewer (capability workflow_execute)"
+        },
+        {
+          "line": 143051,
+          "raw_line_sha256": "fc605f45052a0f7ba80db5c8a9364c774090d5151086088819167912a9dabe07",
+          "text": "[router] [broker] execute as agent agt_arch-reviewer (capability workflow_execute)"
+        },
+        {
+          "line": 143052,
+          "raw_line_sha256": "fc605f45052a0f7ba80db5c8a9364c774090d5151086088819167912a9dabe07",
+          "text": "[router] [broker] execute as agent agt_arch-reviewer (capability workflow_execute)"
+        },
+        {
+          "line": 143053,
+          "raw_line_sha256": "fc605f45052a0f7ba80db5c8a9364c774090d5151086088819167912a9dabe07",
+          "text": "[router] [broker] execute as agent agt_arch-reviewer (capability workflow_execute)"
+        },
+        {
+          "line": 143054,
+          "raw_line_sha256": "1029225916b41a0786836e820ad1841ddec340822042c7ec4eb3f19d8e14712d",
+          "text": "[router] [broker] execute as agent agt_cto-agent (capability workflow_assistance_request)"
+        },
+        {
+          "line": 143055,
+          "raw_line_sha256": "4e3ff98dc0766626dc5ca9e2d70fce47dbbaabff8d537141986a62427edefa92",
+          "text": "[router] route-chain {\"kind\":\"route_attempt\",\"tsWallMs\":1794140828079,\"routeChainId\":\"chain-agt_hr-agent-f55891d9e349a434\",\"agentId\":\"agt_hr-agent\",\"attemptIndex\":0,\"route\":\"luna\",\"primaryRoute\":\"luna\",\"failureClass\":\"NONE\",\"admissionProven\":\"unproven\",\"attemptOutcome\":\"stop:outcome_unknown\"}"
+        },
+        {
+          "line": 143056,
+          "raw_line_sha256": "82bf84bf69e4a76b86feb0a7b285a797ce4adde01414adbb8662bb3057b5868a",
+          "text": "[router] route-chain {\"kind\":\"route_chain_final\",\"tsWallMs\":1794140828079,\"routeChainId\":\"chain-agt_hr-agent-f55891d9e349a434\",\"agentId\":\"agt_hr-agent\",\"primaryRoute\":\"luna\",\"finalRoute\":\"NONE\",\"finalOutcome\":\"stop:outcome_unknown\",\"totalRouteAttempts\":1,\"fallbackActivated\":false,\"fallbackRoute\":null}"
+        },
+        {
+          "line": 143057,
+          "raw_line_sha256": "4ebef5b04cb83750577faccc23b316ad50fb0ee55a089123a75d78603cb00fc4",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_assistance_read)"
+        },
+        {
+          "line": 143058,
+          "raw_line_sha256": "a9aeb4c71f4980964b6949a6a240b5b34fe315d94def76fa66b28279b1d9d366",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_assistance_action)"
+        },
+        {
+          "line": 143059,
+          "raw_line_sha256": "3bf7b2fca714827effada147420cb7fd79cf582e20d109d456ad4992b5a136e4",
+          "text": "[router] [router] agent agt_hr-agent: session cron-run-occ:18d2b4ffe491e4b2 created (0 events)"
+        },
+        {
+          "line": 143060,
+          "raw_line_sha256": "7dbff5c75d4072241f5df48e3711fd4e047fa34568a03ad930282a8e097e2635",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_global_instances)"
+        },
+        {
+          "line": 143061,
+          "raw_line_sha256": "7dbff5c75d4072241f5df48e3711fd4e047fa34568a03ad930282a8e097e2635",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_global_instances)"
+        },
+        {
+          "line": 143062,
+          "raw_line_sha256": "7dbff5c75d4072241f5df48e3711fd4e047fa34568a03ad930282a8e097e2635",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_global_instances)"
+        },
+        {
+          "line": 143063,
+          "raw_line_sha256": "7dbff5c75d4072241f5df48e3711fd4e047fa34568a03ad930282a8e097e2635",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_global_instances)"
+        },
+        {
+          "line": 143064,
+          "raw_line_sha256": "7dbff5c75d4072241f5df48e3711fd4e047fa34568a03ad930282a8e097e2635",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_global_instances)"
+        },
+        {
+          "line": 143065,
+          "raw_line_sha256": "91c62eb90dbcc05194451d2176af85fba65c7ff3eadbdc1c8ef48af795e41ae5",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability agent_resolve_principal)"
+        },
+        {
+          "line": 143066,
+          "raw_line_sha256": "91c62eb90dbcc05194451d2176af85fba65c7ff3eadbdc1c8ef48af795e41ae5",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability agent_resolve_principal)"
+        },
+        {
+          "line": 143067,
+          "raw_line_sha256": "91c62eb90dbcc05194451d2176af85fba65c7ff3eadbdc1c8ef48af795e41ae5",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability agent_resolve_principal)"
+        },
+        {
+          "line": 143068,
+          "raw_line_sha256": "91c62eb90dbcc05194451d2176af85fba65c7ff3eadbdc1c8ef48af795e41ae5",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability agent_resolve_principal)"
+        },
+        {
+          "line": 143069,
+          "raw_line_sha256": "91c62eb90dbcc05194451d2176af85fba65c7ff3eadbdc1c8ef48af795e41ae5",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability agent_resolve_principal)"
+        },
+        {
+          "line": 143070,
+          "raw_line_sha256": "91c62eb90dbcc05194451d2176af85fba65c7ff3eadbdc1c8ef48af795e41ae5",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability agent_resolve_principal)"
+        },
+        {
+          "line": 143071,
+          "raw_line_sha256": "5e516d5beff8e54371813ec0a7f0d97bd03ad9a1694a82a5528ccd166733c8d0",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_instance_detail)"
+        },
+        {
+          "line": 143072,
+          "raw_line_sha256": "5e516d5beff8e54371813ec0a7f0d97bd03ad9a1694a82a5528ccd166733c8d0",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_instance_detail)"
+        },
+        {
+          "line": 143073,
+          "raw_line_sha256": "5e516d5beff8e54371813ec0a7f0d97bd03ad9a1694a82a5528ccd166733c8d0",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_instance_detail)"
+        },
+        {
+          "line": 143074,
+          "raw_line_sha256": "5e516d5beff8e54371813ec0a7f0d97bd03ad9a1694a82a5528ccd166733c8d0",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_instance_detail)"
+        },
+        {
+          "line": 143075,
+          "raw_line_sha256": "5e516d5beff8e54371813ec0a7f0d97bd03ad9a1694a82a5528ccd166733c8d0",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_instance_detail)"
+        },
+        {
+          "line": 143076,
+          "raw_line_sha256": "5e516d5beff8e54371813ec0a7f0d97bd03ad9a1694a82a5528ccd166733c8d0",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_instance_detail)"
+        },
+        {
+          "line": 143077,
+          "raw_line_sha256": "5e516d5beff8e54371813ec0a7f0d97bd03ad9a1694a82a5528ccd166733c8d0",
+          "text": "[router] [broker] execute as agent agt_hr-agent (capability workflow_instance_detail)"
+        },
+        {
+          "line": 143078,
+          "raw_line_sha256": "92bf63c40dddf18b16d651d3388e60a7834d54d723e8bf31ecd42e7cdcd9278a",
+          "text": "[router] route-chain {\"kind\":\"route_attempt\",\"tsWallMs\":1794142445625,\"routeChainId\":\"chain-agt_hr-agent-f55891d9e349a434#strict\",\"agentId\":\"agt_hr-agent\",\"attemptIndex\":0,\"route\":\"luna\",\"primaryRoute\":\"luna\",\"failureClass\":\"NONE\",\"admissionProven\":\"admitted\",\"attemptOutcome\":\"success\",\"strictReason\":\"explicit_model_strict\"}"
+        },
+        {
+          "line": 143079,
+          "raw_line_sha256": "9e51dc767e30e6e8260eae9b3d49396c7b74a93cbccb3494dc584fcee70461cb",
+          "text": "[router] route-chain {\"kind\":\"route_chain_final\",\"tsWallMs\":1794142445626,\"routeChainId\":\"chain-agt_hr-agent-f55891d9e349a434#strict\",\"agentId\":\"agt_hr-agent\",\"primaryRoute\":\"luna\",\"finalRoute\":\"luna\",\"finalOutcome\":\"SUCCESS\",\"totalRouteAttempts\":1,\"fallbackActivated\":false,\"fallbackRoute\":null,\"strictReason\":\"explicit_model_strict\"}"
+        }
+      ],
+      "post_latest_boot_429_literal_lines": [],
+      "post_latest_boot_429_scope_note": "Only literal matches in the captured segment; absence does not establish no rate limiting in service/native traces."
+    },
+    "control/runtime-evidence.jsonl": {
+      "path": "/Users/authsvc/.agent-core/control/runtime-evidence.jsonl",
+      "owner": "authsvc",
+      "uid": 505,
+      "bytes_read": 12432316,
+      "sha256": "e076f268852785e61a02103c9230c18ed0b6f5f7225dea585570b797e60c0f83",
+      "mtime_before_read_utc": "2026-11-08T13:23:14.891038+00:00",
+      "observed_at": "2026-11-08T13:25:35.859113+00:00",
+      "line_count": 15040,
+      "exploratory_exact_string_counts": {
+        "EXECUTE_WORKFLOW_TRANSITION": 0,
+        "COMPLETED": 1,
+        "assistance_open": 147,
+        "adc-backend-dev-v1": 183
+      },
+      "selected_lines": [
+        {
+          "line": 14997,
+          "raw_line_sha256": "9f4b328df32e05f042ede1d3c329d13ede59bd85ed9348f38f3ab6dbddd4acbf",
+          "text": "{\"kind\":\"ready\",\"pid\":396,\"root\":\"/Users/authsvc/.agent-core\",\"tickMs\":500,\"defaultAgentId\":\"agt_fb7837711a9d4c3393dcffa83f49dd41\",\"agentProfile\":\"agent-core-production\",\"ts\":1794117403508}"
+        },
+        {
+          "line": 15004,
+          "raw_line_sha256": "430c44c99c499f0e6cebf204014ed49559a61d65da0b97264b2363740ac9cd8f",
+          "text": "{\"kind\":\"ready\",\"pid\":23085,\"root\":\"/Users/authsvc/.agent-core\",\"tickMs\":500,\"defaultAgentId\":\"agt_fb7837711a9d4c3393dcffa83f49dd41\",\"agentProfile\":\"agent-core-production\",\"ts\":1794121382498}"
+        },
+        {
+          "line": 15027,
+          "raw_line_sha256": "07fd87e0d6fdd2e61a6805fb61e35946e16267f3c1721f2bdeb0bd13418e9a20",
+          "text": "{\"kind\":\"ready\",\"pid\":9036,\"root\":\"/Users/authsvc/.agent-core\",\"tickMs\":500,\"defaultAgentId\":\"agt_fb7837711a9d4c3393dcffa83f49dd41\",\"agentProfile\":\"agent-core-production\",\"ts\":1794137743138}"
+        },
+        {
+          "line": 15030,
+          "raw_line_sha256": "1a90b57b84b57199337e8c2f2ae92b27dea9c8d3c6f90568aceec38417f9b78d",
+          "text": "{\"kind\":\"ready\",\"pid\":16139,\"root\":\"/Users/authsvc/.agent-core\",\"tickMs\":500,\"defaultAgentId\":\"agt_fb7837711a9d4c3393dcffa83f49dd41\",\"agentProfile\":\"agent-core-production\",\"ts\":1794138739651}"
+        },
+        {
+          "line": 15031,
+          "raw_line_sha256": "52f43d2f6883abf7495bafdf509207e960e8146021c4b6c3e529a675cc3a03e1",
+          "text": "{\"kind\":\"invocation\",\"pid\":16139,\"agentId\":\"agt_hr-agent\",\"sessionId\":\"cron-run-occ:94650d65778be6ea\",\"occurrenceId\":\"occ:94650d65778be6ea\",\"runId\":\"run:occ:94650d65778be6ea\",\"jobId\":\"b7e6a52f-d50a-493a-b8a7-9f7a60a39236\",\"requestId\":\"occ:94650d65778be6ea\",\"status\":\"ok\",\"summary\":\"## L4 治理巡查报告\\n\\n- **体检总数**\\n  - Definition 元数据：20 项\\n  - 实例投影：40 项（HR 域 20、全域 active 首屏 20）\\n  - 深度 detail：4 个自负责 meta-workflow\\n\\n- **READY_CONTRACT / FULL_AUTHORIZATION**\\n  - Context schema、submission schema、ADVANCE/RETURN 出口可见。\\n  - 未发现明确的 READY_CONTRACT/FULL_AUTHORIZATION 完整通过证据。\\n  - 4 个自负责实例均为：\\n    `authorized_actions_status=MISSING_EXECUTE_SCOPE`、`authorized_actions=[]`\\n  - 因此未执行 transition。\\n\\n- **驳回 / RETURN 边**\\n  - 已确认 Slim↔Inventory、Verify↔Slim 存在结构化 RETURN 边，schema 完整。\\n  - 未发现本轮抽检中的非法边或缺 schema 边。\\n\\n- **Agent 指令文件卫生**\\n  - 已确认至少 **32 个文件对象超限**，另有 **1 个 MEMORY.md 缺失**。\\n  - 样本包括 AGENTS.md>150、MEMORY.md>150、SOUL.md>80。\\n  - 未修改其他 Agent 文件。\\n\\n- **治理实例推进**\\n  - 合法推进：**0**\\n  - 原因：当前 meta-workflow 缺少 `INSTANCE_TASK_AND_GOVERNANCE_V1` execute scope。\\n\\n- **权限 / 运行阻塞**\\n  - Assistance 可见：`OWNER_PENDING 5`、`HUMAN_REQUIRED 2`，均未越权 resolve。\\n  - Scheduler：L4 最近失败，存在 unresolved `outcome_unknown`；2 个 fence 属于不可自助 reconcile 的 quarantine。\\n  - 论坛汇总尝试因 `transport_failure` 未送达。\\n\\n- **修复条件**\\n  1. 平台或对应 Domain Owner 补齐原 nodeVisit 的 execute scope / assignment admission；\\n  2. 保持 nodeVisit、assignee、stateVersion 不变；\\n  3. 回读 detail、schema、授权状态；\\n  4. 仅由当前 assignee 再提交 transition；\\n  5. 不清 fence、不盲目重派、不代其他 assignee 推进。\",\"error\":null,\"reconciliationHandle\":\"turn:db8d8d0d-1ef5-4e36-8749-799eb6f9de28:a2:g72:s3587\",\"deadlineAtWallMs\":null,\"evidence\":{\"eventWatermarkSeq\":720,\"promptRequestId\":\"req-72-8\",\"messageId\":\"3e4be690-1616-4800-9e07-2026713fe16c\",\"promptReceipt\":\"accepted\",\"terminationEvidence\":\"exact_terminal_then_idle\",\"phase\":\"terminal\"},\"durationMs\":101484,\"routerProcessPid\":16690,\"routerProcessAlive\":true,\"ts\":1794139151436}"
+        },
+        {
+          "line": 15032,
+          "raw_line_sha256": "8ec4fb950d9eb5a26ac4bb7652e102ff61fd132f12aa16605885fc49113d3286",
+          "text": "{\"kind\":\"invocation\",\"pid\":16139,\"agentId\":\"agt_hr-agent\",\"sessionId\":\"cron-run-occ:2fa47244bdae944a\",\"occurrenceId\":\"occ:2fa47244bdae944a\",\"runId\":\"run:occ:2fa47244bdae944a\",\"jobId\":\"064ea914-5d6e-4a13-93be-13cafa952768\",\"requestId\":\"occ:2fa47244bdae944a\",\"status\":\"outcome_unknown\",\"summary\":null,\"error\":\"prompt receipt for session cron-run-occ:2fa47244bdae944a (agent agt_hr-agent) timed out — admission unproven, outcome_unknown\",\"reconciliationHandle\":\"turn:db8d8d0d-1ef5-4e36-8749-799eb6f9de28:a2:g72:s3588\",\"deadlineAtWallMs\":null,\"evidence\":{\"method\":\"session/prompt\"},\"durationMs\":34831,\"routerProcessPid\":16690,\"routerProcessAlive\":true,\"ts\":1794140119062}"
+        },
+        {
+          "line": 15033,
+          "raw_line_sha256": "3dfa35d03f29f1aa1f298768e5a4728a2b6863b7aeb42b2bbdec8d6d93cf7605",
+          "text": "{\"kind\":\"invocation\",\"pid\":16139,\"agentId\":\"agt_hr-agent\",\"sessionId\":\"cron-run-occ:8a67a5a9ae885184\",\"occurrenceId\":\"occ:8a67a5a9ae885184\",\"runId\":\"run:occ:8a67a5a9ae885184\",\"jobId\":\"3050573b-c285-4c30-a3c9-e1236a9a08ee\",\"requestId\":\"occ:8a67a5a9ae885184\",\"status\":\"ok\",\"summary\":\"本轮严格完成 12 次读取（6 个实例各 1 次 detail、1 次 history），全部成功；未调用 scheduler、未修改或触发任何 job，未执行 transition/派发/通知。\\n\\n| 实例 | 当前状态 |\\n|---|---|\\n| d00a42b4… | terminal |\\n| d6f5a17a… | active，step_3，ACTIONABLE_NOW |\\n| fcaa8ae5… | terminal |\\n| b1c3bc70… | terminal |\\n| 7cd02846… | active，deploying，ACTIONABLE_NOW |\\n| 8121ef1d… | terminal |\\n\\n历史读取均按 `limit=100` 返回；本轮无失败项、无 UNKNOWN。未发现可依据本轮账本确认的通知触发条件，故静默结束。\",\"error\":null,\"reconciliationHandle\":\"turn:db8d8d0d-1ef5-4e36-8749-799eb6f9de28:a2:g72:s3589\",\"deadlineAtWallMs\":null,\"evidence\":{\"eventWatermarkSeq\":2957,\"promptRequestId\":\"req-72-48\",\"messageId\":\"c01aae96-963d-44e1-a024-a96c7dda8156\",\"promptReceipt\":\"accepted\",\"terminationEvidence\":\"exact_terminal_then_idle\",\"phase\":\"terminal\"},\"durationMs\":38308,\"routerProcessPid\":16690,\"routerProcessAlive\":true,\"ts\":1794140550557}"
+        },
+        {
+          "line": 15034,
+          "raw_line_sha256": "669e61786a333f1e7fddd161d80778451b7fa1b809cc077355a307e30e98a60d",
+          "text": "{\"kind\":\"deliver\",\"pid\":16139,\"requestId\":\"23a91728-fe3a-4ea4-aaea-89b02bace65a\",\"agentId\":\"agt_agent-dev-engineer\",\"sessionMode\":\"main\",\"status\":\"not_admitted\",\"reconciliationHandle\":\"turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a40:g84:s397\",\"deadlineAtWallMs\":null,\"evidence\":null,\"error\":\"agent process has an unresolved outcome_unknown turn; new prompt admission is forbidden until termination is proven\",\"ts\":1794140739682}"
+        },
+        {
+          "line": 15035,
+          "raw_line_sha256": "25aef5483a08ffac0b478c703230e3a06057ec441c74a2fbcfd27a418ff6f325",
+          "text": "{\"kind\":\"deliver\",\"pid\":16139,\"requestId\":\"fae4b09b-f2bb-4c6c-bbe3-a58ade470d3b\",\"agentId\":\"agt_arch-reviewer\",\"sessionMode\":\"main\",\"sessionId\":\"main\",\"status\":null,\"reconciliationHandle\":\"turn:db8d8d0d-1ef5-4e36-8749-799eb6f9de28:a38:g16:s167\",\"evidence\":{\"eventWatermarkSeq\":0,\"promptRequestId\":\"req-16-2\",\"messageId\":\"0bafae11-5ab7-448a-9691-168e2a2725e6\",\"promptReceipt\":\"accepted\",\"terminationEvidence\":null,\"phase\":\"running\"},\"routerProcessPid\":30035,\"routerProcessAlive\":true,\"ts\":1794140743877}"
+        },
+        {
+          "line": 15036,
+          "raw_line_sha256": "5e04cb820534ce74b09df42db64522ae003b88c6969f241f571ae4ed53dbfedd",
+          "text": "{\"kind\":\"deliver\",\"pid\":16139,\"requestId\":\"f587045f-f4bc-4143-8cae-78b021b780cf\",\"agentId\":\"agt_cto-agent\",\"sessionMode\":\"main\",\"sessionId\":\"main\",\"status\":null,\"reconciliationHandle\":\"turn:db8d8d0d-1ef5-4e36-8749-799eb6f9de28:a18:g45:s409\",\"evidence\":{\"eventWatermarkSeq\":0,\"promptRequestId\":\"req-45-2\",\"messageId\":\"63b3833f-ba52-4919-857b-31dcb2fc7a6b\",\"promptReceipt\":\"accepted\",\"terminationEvidence\":null,\"phase\":\"running\"},\"routerProcessPid\":30052,\"routerProcessAlive\":true,\"ts\":1794140749247}"
+        },
+        {
+          "line": 15037,
+          "raw_line_sha256": "a57338fef64fe478143a407c9eaa3cbcb1b61bb5b24e1759d8b04fa6c16154dd",
+          "text": "{\"kind\":\"invocation\",\"pid\":16139,\"agentId\":\"agt_hr-agent\",\"sessionId\":\"cron-run-occ:a8f9350fe23edd4f\",\"occurrenceId\":\"occ:a8f9350fe23edd4f\",\"runId\":\"run:occ:a8f9350fe23edd4f\",\"jobId\":\"b033ff62-265e-4065-87b2-d615eef06e92\",\"requestId\":\"occ:a8f9350fe23edd4f\",\"status\":\"ok\",\"summary\":\"## L3 aging 巡查结果\\n\\n已对修复类及 dev 实施线实例 fresh-read：detail、current nodeVisit、stateVersion、outgoing schema、submission/event history。`authorized_actions=[]` 仅为展示；未据此代责任人执行 transition。HR 未代 transition。\\n\\n### Aging / 责任人 / 状态\\n\\n| 实例 | 类型 | 当前责任人 | 最近真实事件 | Aging | 结论 |\\n|---|---|---|---|---:|---|\\n| `728b64a6...` | Definition 修复 | `agt_cto-agent` | 2026-11-02 12:35 | ≈5.5天 | 卡在 Definition 修复，需 CTO 自身执行 |\\n| `bd8c5b18...` | M20 delivery | `agt_agent-dev-engineer` | 2026-11-05 21:29 | ≈2天 | E2E delivery/Workflow receipt 仍缺 |\\n| `52bd45aa...` | M1-M6/D1-D9 | `agt_agent-dev-engineer` | 2026-11-06 12:09 | ≈1.5天 | 缺实现、测试、隔离 readback |\\n| `0bb10100...` | 60-stuck 治理 | `agt_agent-dev-engineer` | 2026-11-06 20:42 | ≈1天 | 缺逐实例处置与观察快照 |\\n| `a2afbd43...` | M1-M6 机制修复 | `agt_agent-dev-engineer` | 2026-11-07 11:23 | ≈13小时 | 缺实现 commit/单测/隔离证据 |\\n| `e086d50e...` | D14 plugin mismatch | `agt_agent-dev-engineer` | 2026-11-08 00:00 | 新鲜 | 仍缺真实 spawn、receipt、transition |\\n| `023a28ff...` | 无人值守续轮 | `agt_arch-reviewer` | 2026-11-08 00:01 | 新鲜 | E2E/source-proof 未闭环 |\\n| `36403d46...` | single_platform 修订 | `agt_arch-reviewer` | 2026-11-06 18:39 | ≈1.25天 | 缺发布及存量 CAS receipts |\\n| `3cdff891...` | delivery EACCES | `agt_arch-reviewer` | 2026-11-08 00:01 | 新鲜 | 缺 build/canary/readback |\\n| `0e31f767...` | admission 单点依赖 | `agt_arch-reviewer` | 2026-11-08 00:01 | 新鲜 | 缺实现、failover/canary 证据 |\\n\\n### 推进 / 阻塞\\n\\n- 已向 `agt_arch-reviewer`、`agt_cto-agent` 发出直接执行提醒，要求其本人 fresh-read 后调用 `workflow_execute`。\\n- 两条消息均有真实投递 receipt：\\n  - arch reviewer message `0bafae11-5ab7-448a-9691-168e2a2725e6`\\n  - CTO message `63b3833f-ba52-4919-857b-31dcb2fc7a6b`\\n- `agt_agent-dev-engineer` 投递被 admission 真实拒绝，未写入 prompt bytes：`not_admitted`。\\n- HR 没有代执行任何 Workflow transition；本轮没有产生新的 `workflow_execute` transition receipt。\\n- 正式 `dispatch.py` 因读取 `/Users/authsvc/.agent-core/agents.json` 权限拒绝而无法完成 M7 派发；不据此判定业务实例不存在。\\n\\n### 真实阻塞\\n\\n1. dev 实施责任人 admission 拒绝，无法摄入交办。\\n2. 多数实例历史持续记录 `EVIDENCE_INCOMPLETE`：缺实现 commit、测试输出、隔离 readback、真实下游 receipt。\\n3. 责任链尚未回传新的 Workflow transition receipt；聊天/投递 receipt 不计完成。\\n\\n**当前判定：无新增 done；责任人已明确，推进仍等待其自身合法 `workflow_execute` 或真实服务端阻塞回执。**\",\"error\":null,\"reconciliationHandle\":\"turn:db8d8d0d-1ef5-4e36-8749-799eb6f9de28:a2:g72:s3590\",\"deadlineAtWallMs\":null,\"evidence\":{\"eventWatermarkSeq\":3227,\"promptRequestId\":\"req-72-61\",\"messageId\":\"8c7a648a-2cee-4844-8975-e61edbb942a6\",\"promptReceipt\":\"accepted\",\"terminationEvidence\":\"exact_terminal_then_idle\",\"phase\":\"terminal\"},\"durationMs\":200215,\"routerProcessPid\":16690,\"routerProcessAlive\":true,\"ts\":1794140779660}"
+        },
+        {
+          "line": 15038,
+          "raw_line_sha256": "c2062439b67360c74501e07f604365ff23dcb7d3f570d7728015cf3f171ad837",
+          "text": "{\"kind\":\"deliver\",\"pid\":16139,\"requestId\":\"wfassist-c4684eec-146a-4eaa-8240-a7f919aa3825\",\"agentId\":\"agt_hr-agent\",\"sessionMode\":\"main\",\"status\":\"outcome_unknown\",\"reconciliationHandle\":\"turn:db8d8d0d-1ef5-4e36-8749-799eb6f9de28:a2:g72:s3591\",\"deadlineAtWallMs\":null,\"evidence\":{\"method\":\"session/prompt\"},\"error\":\"prompt receipt for session main (agent agt_hr-agent) timed out — admission unproven, outcome_unknown\",\"ts\":1794140828080}"
+        },
+        {
+          "line": 15039,
+          "raw_line_sha256": "ad31738819563d766054a16924a0b403a8dc916c0cca6be7150deedd6e2507b9",
+          "text": "{\"kind\":\"invocation\",\"pid\":16139,\"agentId\":\"agt_hr-agent\",\"sessionId\":\"cron-run-occ:18d2b4ffe491e4b2\",\"occurrenceId\":\"occ:18d2b4ffe491e4b2\",\"runId\":\"run:occ:18d2b4ffe491e4b2\",\"jobId\":\"064ea914-5d6e-4a13-93be-13cafa952768\",\"requestId\":\"occ:18d2b4ffe491e4b2\",\"status\":\"ok\",\"summary\":\"## M7 巡查回报\\n\\n- **GLOBAL_ACTIVE**：84 张（均为 active、非终态、`ACTIONABLE_NOW`）\\n- **对账目标**：61 张；实际多 **23 张**，未静默过滤。\\n- **definition 分组**：  \\n  `adc-backend-dev-v1` 21；`agent-file-slimming-v1` 18；`personal_quick_item_v1` 10；`hr-workflow-definition-improvement-v1` 6；`bip_article_pipeline...` 4；`bip_podcast...` 4；`retrospective-action` 4；`idea_pool_v1` 3；`family-shopping-evidence-v1` 3；`single_platform_dist_v1` 2；`hr-execution-stall-investigation-v3` 2；其余 `global-stall-governance-recovery-v1`、`hr-rd-definition-repair-v1`、`oxford...`、`family-shopping-v1`、`family-education-activities-v1`、`journal_final_delivery` 各1。\\n- **遗漏**：相对61张基线无漏项；实际盘子比基线多23张，需确认基线是否过时。\\n\\n### 本轮候选与 fresh-read\\n\\n已 fresh-read 7 张精确 `(workflowInstanceId,nodeVisitId)`：\\n\\n1. `2a5c8a00...ab6f / 2561ce5d...a9bb`（内容发布）\\n2. `e6b49415...2d8 / ad95e399...6bf0`（ADC）\\n3. `4ac69c1c...3d66 / 5bc6a659...ac34`（机制/定义）\\n4. `97cbc554...4d90 / 78ba3034...0f39`（family-education conduct）\\n5. `938ecac8...10ba / 9972fce7...2c3e`（idea_pool）\\n6. `0bb10100...43b9 / dcf6ec3a...9977`（机制）\\n7. `8197537d...0efe / ab688552...7611`（内容分发）\\n\\n### 派发结果\\n\\n- **候选数**：84\\n- **计划派发**：7（跨 definition）\\n- **实际派发**：0\\n- **message_id/chat**：无\\n- **ingest_verified**：无\\n\\n阻塞原因：`dispatch.py send` 读取 `/Users/authsvc/.agent-core/agents.json` 时遭遇 `PermissionError`。依照契约未绕过 dispatch 工具、未手写替代消息、未代 transition、未改 assignee。\\n\\n### 后续条件\\n\\n恢复 dispatch 权限后，重新 fresh-read 精确节点；每单发送后记录 message_id，15分钟核对 workflow_events 与责任人 session。无新事件按 1x/2x 间隔重发，最多3次；仍无响应则升级 Domain Owner 并标记 `ESCALATED`。\",\"error\":null,\"reconciliationHandle\":\"turn:db8d8d0d-1ef5-4e36-8749-799eb6f9de28:a2:g72:s3592\",\"deadlineAtWallMs\":null,\"evidence\":{\"eventWatermarkSeq\":5530,\"promptRequestId\":\"req-72-101\",\"messageId\":\"5a19ee94-9043-4a9e-854d-ebb052d2de51\",\"promptReceipt\":\"accepted\",\"terminationEvidence\":\"exact_terminal_then_idle\",\"phase\":\"terminal\"},\"durationMs\":166915,\"routerProcessPid\":16690,\"routerProcessAlive\":true,\"ts\":1794142445627}"
+        },
+        {
+          "line": 15040,
+          "raw_line_sha256": "2d6c78fa6bf0cfe7e0e0260b3a1e9ad53f91321bd43c12807c4c9086e0ab4187",
+          "text": "{\"kind\":\"invocation\",\"pid\":16139,\"agentId\":\"agt_hr-agent\",\"sessionId\":\"cron-run-occ:0eeb53155761d756\",\"occurrenceId\":\"occ:0eeb53155761d756\",\"runId\":\"run:occ:0eeb53155761d756\",\"jobId\":\"3050573b-c285-4c30-a3c9-e1236a9a08ee\",\"requestId\":\"occ:0eeb53155761d756\",\"status\":\"ok\",\"summary\":\"本轮已严格完成 **12 次读取**（每实例各 1 次 detail、1 次 history，参数未改），未调用 scheduler、cron-helper 或其他写操作。\\n\\n| 实例 | 当前状态 |\\n|---|---|\\n| d00a42b4…022f | 已终态；调查交接完成 |\\n| d6f5a17a…b015 | ACTIVE，step_3「研发总监执行隔离 Canary」；无提交记录 |\\n| fcaa8ae5…d3b | 已终态；Definition 修复交接完成 |\\n| b1c3bc70…325 | 已终态；Definition 修复交接完成 |\\n| 7cd02846…32f | ACTIVE，deploying；stateVersion=18；当前责任人 canonical agent 未解析；历史记录显示未完成实际 merge |\\n| 8121ef1d…5e5 | 已终态；已完成 |\\n\\n本轮无读取失败、无状态写入、无通知发送。\",\"error\":null,\"reconciliationHandle\":\"turn:db8d8d0d-1ef5-4e36-8749-799eb6f9de28:a2:g72:s3593\",\"deadlineAtWallMs\":null,\"evidence\":{\"eventWatermarkSeq\":7049,\"promptRequestId\":\"req-72-120\",\"messageId\":\"f8628ff5-e91b-4f2e-b0fe-0af851961ba7\",\"promptReceipt\":\"accepted\",\"terminationEvidence\":\"exact_terminal_then_idle\",\"phase\":\"terminal\"},\"durationMs\":40943,\"routerProcessPid\":16690,\"routerProcessAlive\":true,\"ts\":1794144194890}"
+        }
+      ],
+      "summary_limit": "Agent-authored summaries are leads/self-reports, not original Workflow events or state readbacks."
+    },
+    "scheduler/runs.jsonl": {
+      "path": "/Users/authsvc/.agent-core/scheduler/runs.jsonl",
+      "owner": "authsvc",
+      "uid": 505,
+      "bytes_read": 10485745,
+      "sha256": "4e7b967448e0f449b40ae9c6d10535671a8235a63a72f685b7f0cdb7a9e03755",
+      "mtime_before_read_utc": "2026-11-08T13:24:29.701079+00:00",
+      "observed_at": "2026-11-08T13:25:35.895488+00:00",
+      "line_count": 40935,
+      "exploratory_exact_string_counts": {
+        "EXECUTE_WORKFLOW_TRANSITION": 0,
+        "COMPLETED": 0,
+        "assistance_open": 0,
+        "adc-backend-dev-v1": 0
+      },
+      "selected_lines": [
+        {
+          "line": 40910,
+          "raw_line_sha256": "58a8d6f22f9d30311ef734133cf98ebc3ded71244e58f59426680997d5a6d37d",
+          "text": "{\"ts\":1794142278222,\"action\":\"occurrence_reserved\",\"occurrenceId\":\"occ:18d2b4ffe491e4b2\",\"runId\":\"run:occ:18d2b4ffe491e4b2\",\"jobId\":\"064ea914-5d6e-4a13-93be-13cafa952768\",\"kind\":\"natural\",\"nominal\":1794140788888,\"scheduleRevision\":6,\"payloadHash\":\"sha256:f6b08c9afe44b973dbebabbfe43b56813da8126ec26cef98bfcaf194e9f2d1f6\",\"executionDeadlineAtMs\":1794145878222}"
+        },
+        {
+          "line": 40911,
+          "raw_line_sha256": "5647a73d593d90dcbe00fe684a086e3bc1c9083c7b3cf1105719b9af60bd98c9",
+          "text": "{\"ts\":1794142278649,\"action\":\"router_admission\",\"phase\":\"attempted\",\"occurrenceId\":\"occ:18d2b4ffe491e4b2\",\"runId\":\"run:occ:18d2b4ffe491e4b2\",\"requestId\":\"occ:18d2b4ffe491e4b2\"}"
+        },
+        {
+          "line": 40912,
+          "raw_line_sha256": "c9b6f8861ea8f9fe46de505b87f3cdb54dc0cb1aa10326554dafb49fd3eff81f",
+          "text": "{\"ts\":1794142278723,\"action\":\"turn_start\",\"occurrenceId\":\"occ:18d2b4ffe491e4b2\",\"runId\":\"run:occ:18d2b4ffe491e4b2\"}"
+        },
+        {
+          "line": 40913,
+          "raw_line_sha256": "9811b1a95f6bcc7e1462fedd05f6b689f463f8943fcc4cba00773b133bb41723",
+          "text": "{\"ts\":1794142445628,\"action\":\"router_admission\",\"phase\":\"accepted\",\"occurrenceId\":\"occ:18d2b4ffe491e4b2\",\"runId\":\"run:occ:18d2b4ffe491e4b2\",\"requestId\":\"occ:18d2b4ffe491e4b2\",\"reconciliationHandle\":\"turn:db8d8d0d-1ef5-4e36-8749-799eb6f9de28:a2:g72:s3592\",\"evidence\":{\"eventWatermarkSeq\":5530,\"promptRequestId\":\"req-72-101\",\"messageId\":\"5a19ee94-9043-4a9e-854d-ebb052d2de51\",\"promptReceipt\":\"accepted\",\"terminationEvidence\":\"exact_terminal_then_idle\",\"phase\":\"terminal\"}}"
+        },
+        {
+          "line": 40914,
+          "raw_line_sha256": "cdc6a117eaa883a352780d094b35a0bae49f5d86153a70f46acb82c8ad712370",
+          "text": "{\"ts\":1794142448823,\"action\":\"outcome\",\"occurrenceId\":\"occ:18d2b4ffe491e4b2\",\"runId\":\"run:occ:18d2b4ffe491e4b2\",\"state\":\"succeeded\",\"executionOutcome\":\"succeeded\",\"deliveryStatus\":\"delivered\",\"reason\":\"invoker returned terminal success\",\"jobId\":\"064ea914-5d6e-4a13-93be-13cafa952768\"}"
+        },
+        {
+          "line": 40915,
+          "raw_line_sha256": "2e14a1d06cd1cb8f858c3e75768a277dabd61059d0abcb3f1a7cee319b351f2b",
+          "text": "{\"ts\":1794142448823,\"action\":\"delivery\",\"occurrenceId\":\"occ:18d2b4ffe491e4b2\",\"runId\":\"run:occ:18d2b4ffe491e4b2\",\"deliveryStatus\":\"delivered\"}"
+        }
+      ]
+    },
+    "scheduler/history/events.jsonl": {
+      "path": "/Users/authsvc/.agent-core/scheduler/history/events.jsonl",
+      "owner": "authsvc",
+      "uid": 505,
+      "bytes_read": 6344587,
+      "sha256": "f63948cabfb72b785dc389a47476f8b0258c9af6c7b6963adab8577767953f99",
+      "mtime_before_read_utc": "2026-11-08T13:24:10.268557+00:00",
+      "observed_at": "2026-11-08T13:25:35.926897+00:00",
+      "line_count": 10578,
+      "exploratory_exact_string_counts": {
+        "EXECUTE_WORKFLOW_TRANSITION": 0,
+        "COMPLETED": 0,
+        "assistance_open": 0,
+        "adc-backend-dev-v1": 0
+      },
+      "selected_lines": [
+        {
+          "line": 10567,
+          "raw_line_sha256": "6a1a95eff36e0ead4c740c9a883c75829784397cd96cf84d4a2263477c3a9dfd",
+          "text": "{\"seq\":10567,\"ts\":1794142278620,\"type\":\"occurrence_reserved\",\"occurrence_id\":\"occ:18d2b4ffe491e4b2\",\"run_id\":\"run:occ:18d2b4ffe491e4b2\",\"job_id\":\"064ea914-5d6e-4a13-93be-13cafa952768\",\"job_snapshot\":{\"name\":\"Harness Workflow Dispatcher - HR v8\",\"agent_id\":\"agt_hr-agent\",\"schedule\":{\"kind\":\"every\",\"everyMs\":1800000},\"delete_after_run\":false,\"payload_hash\":\"sha256:f6b08c9afe44b973dbebabbfe43b56813da8126ec26cef98bfcaf194e9f2d1f6\",\"delivery_mode\":\"announce\"},\"schedule_revision\":6,\"origin\":\"natural\",\"scheduled_at_ms\":1794140788888,\"payload_hash\":\"sha256:f6b08c9afe44b973dbebabbfe43b56813da8126ec26cef98bfcaf194e9f2d1f6\",\"idempotency_key\":\"occ:18d2b4ffe491e4b2\",\"admitted_at_ms\":1794142278222,\"retry_of_occurrence_id\":null,\"correlation_id\":\"schcorr:occ:18d2b4ffe491e4b2\",\"parent_run_id\":null,\"deadline_at_ms\":1794145878222,\"timeout_seconds\":3600,\"model\":\"opencode-go/deepseek-v4-flash\"}"
+        },
+        {
+          "line": 10568,
+          "raw_line_sha256": "17b7aab46837b852c4d8732317df1c2f356dae93a29ed07ea890111736177eea",
+          "text": "{\"seq\":10568,\"ts\":1794142279029,\"type\":\"run_state\",\"state\":\"running\",\"occurrence_id\":\"occ:18d2b4ffe491e4b2\",\"run_id\":\"run:occ:18d2b4ffe491e4b2\",\"job_id\":\"064ea914-5d6e-4a13-93be-13cafa952768\",\"started_at_ms\":1794142279029,\"start_evidence\":\"invoker-dispatch\"}"
+        },
+        {
+          "line": 10569,
+          "raw_line_sha256": "1cc9bf0751eabab9c3ff688eb49d5f61a0621dce53115f48df3d06a926222d3b",
+          "text": "{\"seq\":10569,\"ts\":1794142448917,\"type\":\"delivery_outcome\",\"delivery_status\":\"delivered\",\"occurrence_id\":\"occ:18d2b4ffe491e4b2\",\"run_id\":\"run:occ:18d2b4ffe491e4b2\",\"job_id\":\"064ea914-5d6e-4a13-93be-13cafa952768\"}"
+        },
+        {
+          "line": 10570,
+          "raw_line_sha256": "af3847e93a3b2ecba2ba5cb3fb104b0716072ef8909c27f8cd16bbad84a683c6",
+          "text": "{\"seq\":10570,\"ts\":1794142449341,\"type\":\"run_terminal\",\"occurrence_id\":\"occ:18d2b4ffe491e4b2\",\"run_id\":\"run:occ:18d2b4ffe491e4b2\",\"job_id\":\"064ea914-5d6e-4a13-93be-13cafa952768\",\"state\":\"succeeded\",\"execution_outcome\":null,\"reason\":\"invoker returned terminal success\",\"delivery_status\":\"delivered\",\"started_at_ms\":1794142278723,\"start_evidence\":\"invoker-dispatch\",\"ended_at_ms\":1794142448823,\"terminal_evidence\":null,\"run_record\":{\"run_id\":\"run:occ:18d2b4ffe491e4b2\",\"occurrence_id\":\"occ:18d2b4ffe491e4b2\",\"job_id\":\"064ea914-5d6e-4a13-93be-13cafa952768\",\"session_id\":\"cron-run-occ:18d2b4ffe491e4b2\",\"agent_id\":\"agt_hr-agent\",\"schedule_revision\":6,\"model\":\"opencode-go/deepseek-v4-flash\",\"resolved_model\":null,\"scheduled_at\":\"2026-11-08T12:26:28.888Z\",\"admitted_at\":\"2026-11-08T12:51:18.222Z\",\"started_at\":\"2026-11-08T12:51:18.723Z\",\"start_evidence\":\"invoker-dispatch\",\"ended_at\":\"2026-11-08T12:54:08.823Z\",\"duration_ms\":170601,\"outcome\":\"succeeded\",\"status_view\":\"success\",\"delivery_status\":\"delivered\",\"retry_count\":0,\"retry_of_occurrence_id\":null,\"error_code\":null,\"error_message\":null,\"correlation_id\":\"schcorr:occ:18d2b4ffe491e4b2\",\"parent_run_id\":null,\"request_id\":\"occ:18d2b4ffe491e4b2\",\"request_id_source\":\"execution-authority\",\"result\":null,\"result_status\":null,\"result_recorded\":false,\"result_error_code\":null}}"
+        },
+        {
+          "line": 10571,
+          "raw_line_sha256": "d483eb1fd10dfb51cf5ca996d367abd3639f18565d434550ffc712d8d6125af6",
+          "text": "{\"seq\":10571,\"ts\":1794142449341,\"type\":\"fence_event\",\"fence\":\"cleared\",\"reason\":\"run terminal: succeeded\",\"occurrence_id\":\"occ:18d2b4ffe491e4b2\",\"run_id\":\"run:occ:18d2b4ffe491e4b2\",\"job_id\":\"064ea914-5d6e-4a13-93be-13cafa952768\"}"
+        }
+      ]
+    },
+    "scheduler/operator-receipts.jsonl": {
+      "path": "/Users/authsvc/.agent-core/scheduler/operator-receipts.jsonl",
+      "owner": "authsvc",
+      "uid": 505,
+      "bytes_read": 6179,
+      "sha256": "ebeff6f92dacf1f961e6a80b366659d1d888811a6502e6fa478990e46c7959b3",
+      "mtime_before_read_utc": "2026-09-20T10:32:15.751147+00:00",
+      "observed_at": "2026-11-08T13:25:35.943124+00:00",
+      "line_count": 1,
+      "exploratory_exact_string_counts": {
+        "EXECUTE_WORKFLOW_TRANSITION": 0,
+        "COMPLETED": 0,
+        "assistance_open": 0,
+        "adc-backend-dev-v1": 0
+      },
+      "selected_lines": [],
+      "empty_match_meaning": "Exploratory absence only; natural provenance is proved by occurrence.kind and reservation record."
+    },
+    "workflow-execution/attempts.jsonl": {
+      "path": "/Users/authsvc/.agent-core/workflow-execution/attempts.jsonl",
+      "owner": "authsvc",
+      "uid": 505,
+      "bytes_read": 129985,
+      "sha256": "534140ea6fcd90268523f683a4460a10ed97a5c749c3a0beceec6be1af2990d4",
+      "mtime_before_read_utc": "2026-11-07T23:01:45.663160+00:00",
+      "observed_at": "2026-11-08T13:25:35.943258+00:00",
+      "line_count": 446,
+      "exploratory_exact_string_counts": {
+        "EXECUTE_WORKFLOW_TRANSITION": 0,
+        "COMPLETED": 0,
+        "assistance_open": 0,
+        "adc-backend-dev-v1": 0
+      },
+      "selected_lines": [
+        {
+          "line": 444,
+          "raw_line_sha256": "0b76049e7fbd0e0178ff4dddacbba2aebfe88b72bfb568f3f524f66a43369ee5",
+          "text": "{\"kind\":\"needs_review_recheck_started\",\"nodeVisitId\":\"e91a6d09-f928-4b21-8cc3-88e8172166ca\",\"reconciliationAttemptId\":\"wfreconcile-224b41b8-783b-4b42-9a9b-c102efcedb5b\",\"count\":1,\"workflowStateVersion\":10,\"nextEligibleAtMs\":1794092565365,\"atMs\":1794092505375,\"workflowInstanceId\":\"4a43e23f-5640-4dae-af95-c8b6fb560bcd\"}"
+        },
+        {
+          "line": 445,
+          "raw_line_sha256": "cc240ab9c5ff221836e33680eb91745fd04a6b48258ebc133d981ad10311495e",
+          "text": "{\"kind\":\"needs_review_recheck_result\",\"nodeVisitId\":\"e91a6d09-f928-4b21-8cc3-88e8172166ca\",\"reconciliationAttemptId\":\"wfreconcile-224b41b8-783b-4b42-9a9b-c102efcedb5b\",\"outcome\":\"no_transition\",\"reason\":\"completed turn settled still has current visit and no committed transition\",\"observedWorkflowStateVersion\":12,\"atMs\":1794092505411,\"workflowInstanceId\":\"4a43e23f-5640-4dae-af95-c8b6fb560bcd\"}"
+        },
+        {
+          "line": 446,
+          "raw_line_sha256": "81dd755162dec13adbe9322ef1dd8843948d801b4436a1df43c8230299f5bb30",
+          "text": "{\"kind\":\"escalation_requested\",\"nodeVisitId\":\"e91a6d09-f928-4b21-8cc3-88e8172166ca\",\"workflowInstanceId\":\"4a43e23f-5640-4dae-af95-c8b6fb560bcd\",\"atMs\":1794092505663,\"reason\":\"ATTEMPTS_EXHAUSTED\",\"attemptCount\":1,\"lastAttemptId\":\"wfeat-d420ea029bb6bff7cd4be7e3\",\"dispatchIntentId\":\"a1d83d87-036f-43ef-adf3-84aeaca82626\"}"
+        }
+      ]
+    },
+    "control/turn-recovery-v3.json": {
+      "path": "/Users/authsvc/.agent-core/control/turn-recovery-v3.json",
+      "owner": "authsvc",
+      "uid": 505,
+      "bytes_read": 8526655,
+      "sha256": "fac59e45478e9b47626aa4fc00ce69bf4cfcaace12a69fe9b1dfcaa82bff03d0",
+      "mtime_before_read_utc": "2026-11-08T13:25:32.235465+00:00",
+      "observed_at": "2026-11-08T13:25:35.946903+00:00",
+      "record_count": 5328,
+      "runtimeEpoch": "db8d8d0d-1ef5-4e36-8749-799eb6f9de28",
+      "selected_records": [
+        {
+          "snapshot_pointer": "/records/4532",
+          "stable_selector_handle": "turn:a7e296e6-22cd-4205-a366-2e915fb7f22e:a32:g9:s16",
+          "record": {
+            "handle": "turn:a7e296e6-22cd-4205-a366-2e915fb7f22e:a32:g9:s16",
+            "runtimeEpoch": "a7e296e6-22cd-4205-a366-2e915fb7f22e",
+            "agentId": "agt_stock_agent",
+            "processGeneration": 9,
+            "turnSeq": 16,
+            "sessionId": "cron-run-occ:7711b9a466fda803",
+            "callerCorrelation": {
+              "occurrenceId": "occ:7711b9a466fda803",
+              "runId": "run:occ:7711b9a466fda803",
+              "requestId": "occ:7711b9a466fda803"
+            },
+            "createdAtWallMs": 1793817882016,
+            "updatedAt": 1794138731919,
+            "admitted": true,
+            "promptRequestId": "req-9-2",
+            "messageId": "af8a4510-73ea-4b86-a65f-6d71bc4c95c8",
+            "outcome": null,
+            "state": "blocked",
+            "outcomeEvidence": null,
+            "terminationEvidence": null,
+            "settledAtWallMs": null,
+            "finalAssistantOutput": null,
+            "finalAssistantOutputEvidence": null,
+            "queryState": "pending",
+            "failureReason": "runtime_restart_ownership_unavailable",
+            "nextSafeAction": "reestablish_exact_ownership",
+            "fenceState": "active",
+            "missingEvidence": [
+              "live_generation_ownership"
+            ]
+          }
+        },
+        {
+          "snapshot_pointer": "/records/4707",
+          "stable_selector_handle": "turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a11:g23:s76",
+          "record": {
+            "handle": "turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a11:g23:s76",
+            "runtimeEpoch": "74a5adf3-2701-435e-8927-7a56a9530d2f",
+            "agentId": "agt_needs-radar-agent",
+            "processGeneration": 23,
+            "turnSeq": 76,
+            "sessionId": "cron-run-occ:de037fa16aaa6761",
+            "callerCorrelation": {
+              "occurrenceId": "occ:de037fa16aaa6761",
+              "runId": "run:occ:de037fa16aaa6761",
+              "requestId": "occ:de037fa16aaa6761"
+            },
+            "createdAtWallMs": 1793930406011,
+            "updatedAt": 1794117416944,
+            "admitted": true,
+            "promptRequestId": "req-23-2",
+            "messageId": "d350a204-bd41-4efb-b105-78b52d4e48f9",
+            "outcome": null,
+            "state": "blocked",
+            "outcomeEvidence": null,
+            "terminationEvidence": null,
+            "settledAtWallMs": null,
+            "finalAssistantOutput": null,
+            "finalAssistantOutputEvidence": null,
+            "queryState": "pending",
+            "failureReason": "runtime_restart_ownership_unavailable",
+            "nextSafeAction": "reestablish_exact_ownership",
+            "fenceState": "cleared",
+            "missingEvidence": [
+              "live_generation_ownership"
+            ]
+          }
+        },
+        {
+          "snapshot_pointer": "/records/4708",
+          "stable_selector_handle": "turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a54:g23:s43",
+          "record": {
+            "handle": "turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a54:g23:s43",
+            "runtimeEpoch": "74a5adf3-2701-435e-8927-7a56a9530d2f",
+            "agentId": "agt_lobster-agent",
+            "processGeneration": 23,
+            "turnSeq": 43,
+            "sessionId": "cron-run-occ:e58a10082809e64d",
+            "callerCorrelation": {
+              "occurrenceId": "occ:e58a10082809e64d",
+              "runId": "run:occ:e58a10082809e64d",
+              "requestId": "occ:e58a10082809e64d"
+            },
+            "createdAtWallMs": 1793930406451,
+            "updatedAt": 1794117412979,
+            "admitted": true,
+            "promptRequestId": "req-23-2",
+            "messageId": "a6aa6029-e164-4f56-a7da-cb8cb968b43c",
+            "outcome": null,
+            "state": "blocked",
+            "outcomeEvidence": null,
+            "terminationEvidence": null,
+            "settledAtWallMs": null,
+            "finalAssistantOutput": null,
+            "finalAssistantOutputEvidence": null,
+            "queryState": "pending",
+            "failureReason": "runtime_restart_ownership_unavailable",
+            "nextSafeAction": "reestablish_exact_ownership",
+            "fenceState": "cleared",
+            "missingEvidence": [
+              "live_generation_ownership"
+            ]
+          }
+        },
+        {
+          "snapshot_pointer": "/records/4710",
+          "stable_selector_handle": "turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a40:g84:s397",
+          "record": {
+            "handle": "turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a40:g84:s397",
+            "runtimeEpoch": "74a5adf3-2701-435e-8927-7a56a9530d2f",
+            "agentId": "agt_agent-dev-engineer",
+            "processGeneration": 84,
+            "turnSeq": 397,
+            "sessionId": "main",
+            "callerCorrelation": null,
+            "createdAtWallMs": 1793930548674,
+            "updatedAt": 1794117415969,
+            "admitted": true,
+            "promptRequestId": "req-84-2",
+            "messageId": "7910d081-e2c0-40d1-aed5-8ecd2d915a71",
+            "outcome": null,
+            "state": "blocked",
+            "outcomeEvidence": null,
+            "terminationEvidence": null,
+            "settledAtWallMs": null,
+            "finalAssistantOutput": null,
+            "finalAssistantOutputEvidence": null,
+            "queryState": "pending",
+            "failureReason": "runtime_restart_ownership_unavailable",
+            "nextSafeAction": "reestablish_exact_ownership",
+            "fenceState": "cleared",
+            "missingEvidence": [
+              "live_generation_ownership"
+            ]
+          }
+        },
+        {
+          "snapshot_pointer": "/records/5295",
+          "stable_selector_handle": "turn:60129522-4196-44bb-a644-52a255dde15d:a2:g70:s3581",
+          "record": {
+            "handle": "turn:60129522-4196-44bb-a644-52a255dde15d:a2:g70:s3581",
+            "runtimeEpoch": "60129522-4196-44bb-a644-52a255dde15d",
+            "agentId": "agt_hr-agent",
+            "processGeneration": 70,
+            "turnSeq": 3581,
+            "sessionId": "cron-run-occ:03a22a610f0f57f4",
+            "callerCorrelation": {
+              "occurrenceId": "occ:03a22a610f0f57f4",
+              "runId": "run:occ:03a22a610f0f57f4",
+              "requestId": "occ:03a22a610f0f57f4"
+            },
+            "createdAtWallMs": 1794102257286,
+            "updatedAt": 1794138783584,
+            "admitted": true,
+            "promptRequestId": "req-70-937",
+            "messageId": "e4f9e542-e5b9-4312-8be3-10f51e78ff8d",
+            "outcome": null,
+            "state": "blocked",
+            "outcomeEvidence": null,
+            "terminationEvidence": null,
+            "settledAtWallMs": null,
+            "finalAssistantOutput": null,
+            "finalAssistantOutputEvidence": null,
+            "queryState": "pending",
+            "failureReason": "runtime_restart_ownership_unavailable",
+            "nextSafeAction": "reestablish_exact_ownership",
+            "fenceState": "cleared",
+            "missingEvidence": [
+              "live_generation_ownership"
+            ]
+          }
+        },
+        {
+          "snapshot_pointer": "/records/5317",
+          "stable_selector_handle": "turn:db8d8d0d-1ef5-4e36-8749-799eb6f9de28:a2:g72:s3586",
+          "record": {
+            "handle": "turn:db8d8d0d-1ef5-4e36-8749-799eb6f9de28:a2:g72:s3586",
+            "runtimeEpoch": "db8d8d0d-1ef5-4e36-8749-799eb6f9de28",
+            "agentId": "agt_hr-agent",
+            "processGeneration": 72,
+            "turnSeq": 3586,
+            "sessionId": "main",
+            "callerCorrelation": null,
+            "createdAtWallMs": 1794138816425,
+            "updatedAt": 1794138862819,
+            "admitted": true,
+            "promptRequestId": "req-72-2",
+            "messageId": "244c968f-2776-45f2-87a4-a085b3849945",
+            "outcome": "completed",
+            "state": "settled",
+            "outcomeEvidence": "exact_turn_end_success",
+            "terminationEvidence": "exact_terminal_then_idle",
+            "settledAtWallMs": 1794138862819,
+            "finalAssistantOutput": null,
+            "finalAssistantOutputEvidence": {
+              "sha256": "d79510cdb2902c3559bffd92dbf01dcf11418eb32ef4f0b4c779a02a4ec0a239",
+              "originalBytes": 1035,
+              "truncated": false
+            },
+            "queryState": "settled",
+            "failureReason": null,
+            "nextSafeAction": "none",
+            "fenceState": "armed",
+            "missingEvidence": []
+          }
+        },
+        {
+          "snapshot_pointer": "/records/5325",
+          "stable_selector_handle": "turn:db8d8d0d-1ef5-4e36-8749-799eb6f9de28:a2:g72:s3592",
+          "record": {
+            "handle": "turn:db8d8d0d-1ef5-4e36-8749-799eb6f9de28:a2:g72:s3592",
+            "runtimeEpoch": "db8d8d0d-1ef5-4e36-8749-799eb6f9de28",
+            "agentId": "agt_hr-agent",
+            "processGeneration": 72,
+            "turnSeq": 3592,
+            "sessionId": "cron-run-occ:18d2b4ffe491e4b2",
+            "callerCorrelation": {
+              "occurrenceId": "occ:18d2b4ffe491e4b2",
+              "runId": "run:occ:18d2b4ffe491e4b2",
+              "requestId": "occ:18d2b4ffe491e4b2"
+            },
+            "createdAtWallMs": 1794142278730,
+            "updatedAt": 1794142445560,
+            "admitted": true,
+            "promptRequestId": "req-72-101",
+            "messageId": "5a19ee94-9043-4a9e-854d-ebb052d2de51",
+            "outcome": "completed",
+            "state": "settled",
+            "outcomeEvidence": "exact_turn_end_success",
+            "terminationEvidence": "exact_terminal_then_idle",
+            "settledAtWallMs": 1794142445560,
+            "finalAssistantOutput": null,
+            "finalAssistantOutputEvidence": {
+              "sha256": "20102f0bd54363a35df1eac32f3489000edc3973584846f4582740fcd3c0344c",
+              "originalBytes": 1973,
+              "truncated": false
+            },
+            "queryState": "settled",
+            "failureReason": null,
+            "nextSafeAction": "none",
+            "fenceState": "armed",
+            "missingEvidence": []
+          }
+        },
+        {
+          "snapshot_pointer": "/records/5327",
+          "stable_selector_handle": "turn:db8d8d0d-1ef5-4e36-8749-799eb6f9de28:a2:g72:s3594",
+          "record": {
+            "handle": "turn:db8d8d0d-1ef5-4e36-8749-799eb6f9de28:a2:g72:s3594",
+            "runtimeEpoch": "db8d8d0d-1ef5-4e36-8749-799eb6f9de28",
+            "agentId": "agt_hr-agent",
+            "processGeneration": 72,
+            "turnSeq": 3594,
+            "sessionId": "cron-run-occ:1b24a29158401f18",
+            "callerCorrelation": {
+              "occurrenceId": "occ:1b24a29158401f18",
+              "runId": "run:occ:1b24a29158401f18",
+              "requestId": "occ:1b24a29158401f18"
+            },
+            "createdAtWallMs": 1794144249694,
+            "updatedAt": 1794144332164,
+            "admitted": true,
+            "promptRequestId": "req-72-133",
+            "messageId": "6eb936f5-1c81-4cba-8613-78855a7f76bd",
+            "outcome": null,
+            "state": "reserved",
+            "outcomeEvidence": null,
+            "terminationEvidence": null,
+            "settledAtWallMs": null,
+            "finalAssistantOutput": null,
+            "finalAssistantOutputEvidence": null,
+            "queryState": "pending",
+            "failureReason": null,
+            "nextSafeAction": "none",
+            "fenceState": "armed",
+            "missingEvidence": []
+          }
+        }
+      ]
+    },
+    "scheduler/jobs.json": {
+      "path": "/Users/authsvc/.agent-core/scheduler/jobs.json",
+      "owner": "authsvc",
+      "uid": 505,
+      "bytes_read": 7889826,
+      "sha256": "e7888610e9a5c6713e88e437d76f60059fccfeedb8317c9e5f2edab9f791da67",
+      "mtime_before_read_utc": "2026-11-08T13:24:10.487739+00:00",
+      "observed_at": "2026-11-08T13:25:35.977241+00:00",
+      "version": 3,
+      "fences": {
+        "7fe938b3-a8c2-4a11-af8f-4b1071184ecd": {
+          "occurrenceId": "occ:f526a6f3b00c52b6",
+          "runId": "run:occ:f526a6f3b00c52b6",
+          "activatedAtMs": 1793359259248,
+          "reason": "outcome_unknown without termination proof (occurrence occ:f526a6f3b00c52b6)"
+        },
+        "f0fb5c6c-eaae-4689-a648-ec2c0aca1621": {
+          "occurrenceId": "occ:b9ed54f9a5203016",
+          "runId": "run:occ:b9ed54f9a5203016",
+          "activatedAtMs": 1793815346865,
+          "reason": "outcome_unknown without termination proof (occurrence occ:b9ed54f9a5203016)"
+        },
+        "stock-daily-market-brief-001": {
+          "occurrenceId": "occ:7711b9a466fda803",
+          "runId": "run:occ:7711b9a466fda803",
+          "activatedAtMs": 1793817841323,
+          "reason": "outcome_unknown without termination proof (occurrence occ:7711b9a466fda803)"
+        },
+        "dc05c538-56c1-4357-a663-e97a9b8c91c1": {
+          "occurrenceId": "occ:32241497085eb742",
+          "runId": "run:occ:32241497085eb742",
+          "activatedAtMs": 1793831210751,
+          "reason": "outcome_unknown without termination proof (occurrence occ:32241497085eb742)"
+        },
+        "796b6d6c-1fcb-47f1-87c6-36fc02cf55ed": {
+          "occurrenceId": "occ:4ba50e031291558c",
+          "runId": "run:occ:4ba50e031291558c",
+          "activatedAtMs": 1793832718635,
+          "reason": "outcome_unknown without termination proof (occurrence occ:4ba50e031291558c)"
+        },
+        "f8ae88ba-6833-4104-bfbb-f39d9e999ea9": {
+          "occurrenceId": "occ:de037fa16aaa6761",
+          "runId": "run:occ:de037fa16aaa6761",
+          "activatedAtMs": 1793930402419,
+          "reason": "outcome_unknown without termination proof (occurrence occ:de037fa16aaa6761)"
+        },
+        "f0f5fef6-410b-4b0d-a6ad-a55e7297bde4": {
+          "occurrenceId": "occ:e58a10082809e64d",
+          "runId": "run:occ:e58a10082809e64d",
+          "activatedAtMs": 1793930403347,
+          "reason": "outcome_unknown without termination proof (occurrence occ:e58a10082809e64d)"
+        },
+        "4f1b8327-f01c-4a24-a526-4f252b0025de": {
+          "occurrenceId": "occ:428cc021106f5586",
+          "runId": "run:occ:428cc021106f5586",
+          "activatedAtMs": 1794038401265,
+          "reason": "outcome_unknown without termination proof (occurrence occ:428cc021106f5586)"
+        },
+        "cdcba8f3-b961-417a-86b4-bd47735bf1dd": {
+          "occurrenceId": "occ:03a22a610f0f57f4",
+          "runId": "run:occ:03a22a610f0f57f4",
+          "activatedAtMs": 1794102256304,
+          "reason": "outcome_unknown without termination proof (occurrence occ:03a22a610f0f57f4)"
+        },
+        "aefae23a-a59e-4069-96c6-6586a752469b": {
+          "occurrenceId": "occ:b06ed5982d4e8af0",
+          "runId": "run:occ:b06ed5982d4e8af0",
+          "activatedAtMs": 1794102348685,
+          "reason": "outcome_unknown without termination proof (occurrence occ:b06ed5982d4e8af0)"
+        }
+      },
+      "selected_jobs": [
+        {
+          "snapshot_pointer": "/jobs/1",
+          "record": {
+            "id": "c2d6875c-6503-408b-94a8-fa9ee512d258",
+            "name": "Harness HR 每日档案同步",
+            "agentId": "agt_hr-agent",
+            "enabled": true,
+            "scheduleRevision": 2,
+            "schedule": {
+              "kind": "cron",
+              "expr": "50 0 * * *",
+              "tz": "Asia/Shanghai"
+            },
+            "delivery": {
+              "mode": "none"
+            },
+            "createdAtMs": 1788140260148,
+            "updatedAtMs": 1788140352468,
+            "revisionActivatedAtMs": 1788140352468,
+            "state": {
+              "lastRunAtMs": 1794070458183,
+              "lastRunStatus": "succeeded",
+              "lastStatus": "succeeded",
+              "lastDurationMs": 256675,
+              "lastDeliveryStatus": "not-requested",
+              "consecutiveErrors": 0,
+              "nextRunAtMs": 1794156600000
+            },
+            "retry": {
+              "auto": true
+            },
+            "deleteAfterRun": false
+          }
+        },
+        {
+          "snapshot_pointer": "/jobs/20",
+          "record": {
+            "id": "b115cb96-8a4f-49be-9baa-519223022b59",
+            "name": "HR 内容 Workflow 派发试运行",
+            "agentId": "agt_hr-agent",
+            "enabled": false,
+            "scheduleRevision": 4,
+            "schedule": {
+              "kind": "every",
+              "everyMs": 1800000,
+              "anchorMs": 1788833211135
+            },
+            "delivery": {
+              "mode": "announce",
+              "channel": "feishu",
+              "to": "chat:oc_a5e904510bbf4b983d6cd97b9f7bbb74",
+              "bestEffort": true
+            },
+            "createdAtMs": 1788833211135,
+            "updatedAtMs": 1789900335695,
+            "revisionActivatedAtMs": 1789779023244,
+            "state": {
+              "lastRunAtMs": 1789900335577,
+              "lastRunStatus": "failed",
+              "lastStatus": "failed",
+              "lastDurationMs": 3554974917,
+              "lastError": "auto-janitor(policy 2026-10-29 owner authz): no turn-registry record => admission unproven, did not execute; rerun at next slot (recurring job)",
+              "lastDeliveryStatus": "unknown",
+              "consecutiveErrors": 1
+            },
+            "logicalKey": "agt_hr-agent:hr-workflow-auto-dispatch",
+            "retry": {
+              "auto": true
+            },
+            "deleteAfterRun": false
+          }
+        },
+        {
+          "snapshot_pointer": "/jobs/41",
+          "record": {
+            "id": "0a008790-1cb2-4911-af8c-92c58df75f2c",
+            "name": "Harness Workflow Dispatcher - HR v5",
+            "agentId": "agt_hr-agent",
+            "enabled": false,
+            "scheduleRevision": 3,
+            "schedule": {
+              "kind": "every",
+              "everyMs": 1800000,
+              "anchorMs": 1790246499726
+            },
+            "delivery": {
+              "mode": "announce",
+              "channel": "feishu",
+              "to": "chat:oc_a5e904510bbf4b983d6cd97b9f7bbb74",
+              "bestEffort": true
+            },
+            "createdAtMs": 1790160523396,
+            "updatedAtMs": 1791684796193,
+            "revisionActivatedAtMs": 1790246499726,
+            "state": {
+              "lastRunAtMs": 1793359226469,
+              "lastRunStatus": "failed",
+              "lastStatus": "failed",
+              "lastDurationMs": 1782737532,
+              "lastError": "auto-janitor(policy 2026-10-29 owner authz): no turn-registry record => admission unproven, did not execute; rerun at next slot (recurring job)",
+              "lastDeliveryStatus": "unknown",
+              "consecutiveErrors": 1
+            },
+            "logicalKey": "agt_hr-agent:hr-workflow-dispatcher-v5",
+            "retry": {
+              "auto": true
+            },
+            "deleteAfterRun": false
+          }
+        },
+        {
+          "snapshot_pointer": "/jobs/46",
+          "record": {
+            "id": "f136b336-1e02-4d7f-ad52-b8c78e7b9305",
+            "name": "Harness Workflow Dispatcher - HR v6",
+            "agentId": "agt_hr-agent",
+            "enabled": false,
+            "scheduleRevision": 1,
+            "schedule": {
+              "kind": "every",
+              "everyMs": 1800000,
+              "anchorMs": 1791706939987
+            },
+            "delivery": {
+              "mode": "announce",
+              "channel": "feishu",
+              "to": "chat:oc_a5e904510bbf4b983d6cd97b9f7bbb74",
+              "bestEffort": true
+            },
+            "createdAtMs": 1791706939987,
+            "updatedAtMs": 1792597017669,
+            "revisionActivatedAtMs": 1791706958371,
+            "state": {
+              "lastRunAtMs": 1793359227014,
+              "lastRunStatus": "failed",
+              "lastStatus": "failed",
+              "lastDurationMs": 1627480374,
+              "lastError": "auto-janitor(policy 2026-10-29 owner authz): no turn-registry record => admission unproven, did not execute; rerun at next slot (recurring job)",
+              "lastDeliveryStatus": "unknown",
+              "consecutiveErrors": 1
+            },
+            "logicalKey": "agt_hr-agent:hr-workflow-dispatcher-v6",
+            "retry": {
+              "auto": true
+            },
+            "deleteAfterRun": false
+          }
+        },
+        {
+          "snapshot_pointer": "/jobs/47",
+          "record": {
+            "id": "064ea914-5d6e-4a13-93be-13cafa952768",
+            "name": "Harness Workflow Dispatcher - HR v8",
+            "agentId": "agt_hr-agent",
+            "enabled": true,
+            "scheduleRevision": 6,
+            "schedule": {
+              "kind": "every",
+              "everyMs": 1800000,
+              "anchorMs": 1791818788888
+            },
+            "delivery": {
+              "mode": "announce",
+              "channel": "feishu",
+              "to": "chat:oc_a5e904510bbf4b983d6cd97b9f7bbb74",
+              "bestEffort": true
+            },
+            "createdAtMs": 1791818788888,
+            "updatedAtMs": 1793577759262,
+            "revisionActivatedAtMs": 1793577746177,
+            "state": {
+              "lastRunAtMs": 1794142448823,
+              "lastRunStatus": "succeeded",
+              "lastStatus": "succeeded",
+              "lastDurationMs": 170100,
+              "lastDeliveryStatus": "delivered",
+              "lastDelivered": true,
+              "consecutiveErrors": 0,
+              "nextRunAtMs": 1794144388888
+            },
+            "logicalKey": "agt_hr-agent:hr-workflow-dispatcher-v7",
+            "retry": {
+              "auto": true
+            },
+            "deleteAfterRun": false
+          }
+        },
+        {
+          "snapshot_pointer": "/jobs/53",
+          "record": {
+            "id": "3050573b-c285-4c30-a3c9-e1236a9a08ee",
+            "name": "HR 目标Agent停滞调查 Canary 监控",
+            "agentId": "agt_hr-agent",
+            "enabled": true,
+            "scheduleRevision": 10,
+            "schedule": {
+              "kind": "every",
+              "everyMs": 3600000,
+              "anchorMs": 1792892096410
+            },
+            "delivery": {
+              "mode": "announce",
+              "channel": "feishu",
+              "to": "chat:oc_a5e904510bbf4b983d6cd97b9f7bbb74",
+              "bestEffort": true
+            },
+            "createdAtMs": 1792892096410,
+            "updatedAtMs": 1793029982452,
+            "revisionActivatedAtMs": 1793029982452,
+            "state": {
+              "lastRunAtMs": 1794144201195,
+              "lastRunStatus": "succeeded",
+              "lastStatus": "succeeded",
+              "lastDurationMs": 47235,
+              "lastDeliveryStatus": "delivered",
+              "lastDelivered": true,
+              "consecutiveErrors": 0,
+              "nextRunAtMs": 1794147801195
+            },
+            "logicalKey": "agt_hr-agent:hr-execution-stall-canary-monitor-v1",
+            "retry": {
+              "auto": false
+            },
+            "deleteAfterRun": false
+          }
+        },
+        {
+          "snapshot_pointer": "/jobs/55",
+          "record": {
+            "id": "aefae23a-a59e-4069-96c6-6586a752469b",
+            "name": "HR L0 存活层心跳探活",
+            "agentId": "agt_hr-agent",
+            "enabled": true,
+            "scheduleRevision": 1,
+            "schedule": {
+              "kind": "every",
+              "everyMs": 300000,
+              "anchorMs": 1793593169470
+            },
+            "delivery": {
+              "mode": "none"
+            },
+            "createdAtMs": 1793593169470,
+            "updatedAtMs": 1793593169470,
+            "revisionActivatedAtMs": 1793593169470,
+            "state": {
+              "lastRunAtMs": 1794102348685,
+              "lastRunStatus": "outcome_unknown",
+              "lastStatus": "outcome_unknown",
+              "lastError": "restart_unresolved: no termination proof at recovery",
+              "lastDeliveryStatus": "unknown",
+              "consecutiveErrors": 0
+            },
+            "logicalKey": "agt_hr-agent:layered-scheduler-v1:l0-liveness",
+            "retry": {
+              "auto": true
+            },
+            "deleteAfterRun": false
+          }
+        },
+        {
+          "snapshot_pointer": "/jobs/56",
+          "record": {
+            "id": "cdcba8f3-b961-417a-86b4-bd47735bf1dd",
+            "name": "HR L2 阻塞诊断层",
+            "agentId": "agt_hr-agent",
+            "enabled": true,
+            "scheduleRevision": 1,
+            "schedule": {
+              "kind": "every",
+              "everyMs": 3600000,
+              "anchorMs": 1793593169624
+            },
+            "delivery": {
+              "mode": "announce",
+              "channel": "feishu",
+              "to": "chat:oc_a5e904510bbf4b983d6cd97b9f7bbb74",
+              "bestEffort": true
+            },
+            "createdAtMs": 1793593169624,
+            "updatedAtMs": 1793593169624,
+            "revisionActivatedAtMs": 1793593169624,
+            "state": {
+              "lastRunAtMs": 1794102256304,
+              "lastRunStatus": "outcome_unknown",
+              "lastStatus": "outcome_unknown",
+              "lastError": "restart_unresolved: no termination proof at recovery",
+              "lastDeliveryStatus": "unknown",
+              "consecutiveErrors": 0
+            },
+            "logicalKey": "agt_hr-agent:layered-scheduler-v1:l2-blockage-diagnosis",
+            "retry": {
+              "auto": true
+            },
+            "deleteAfterRun": false
+          }
+        },
+        {
+          "snapshot_pointer": "/jobs/57",
+          "record": {
+            "id": "b033ff62-265e-4065-87b2-d615eef06e92",
+            "name": "HR L3 修复执行层",
+            "agentId": "agt_hr-agent",
+            "enabled": true,
+            "scheduleRevision": 1,
+            "schedule": {
+              "kind": "every",
+              "everyMs": 7200000,
+              "anchorMs": 1793593169791
+            },
+            "delivery": {
+              "mode": "announce",
+              "channel": "feishu",
+              "to": "chat:oc_a5e904510bbf4b983d6cd97b9f7bbb74",
+              "bestEffort": true
+            },
+            "createdAtMs": 1793593169791,
+            "updatedAtMs": 1793593169791,
+            "revisionActivatedAtMs": 1793593169791,
+            "state": {
+              "lastRunAtMs": 1794140781700,
+              "lastRunStatus": "succeeded",
+              "lastStatus": "succeeded",
+              "lastDurationMs": 202223,
+              "lastDeliveryStatus": "delivered",
+              "lastDelivered": true,
+              "consecutiveErrors": 0,
+              "nextRunAtMs": 1794147981700
+            },
+            "logicalKey": "agt_hr-agent:layered-scheduler-v1:l3-repair-execution",
+            "retry": {
+              "auto": true
+            },
+            "deleteAfterRun": false
+          }
+        },
+        {
+          "snapshot_pointer": "/jobs/58",
+          "record": {
+            "id": "b7e6a52f-d50a-493a-b8a7-9f7a60a39236",
+            "name": "HR L4 治理层",
+            "agentId": "agt_hr-agent",
+            "enabled": true,
+            "scheduleRevision": 1,
+            "schedule": {
+              "kind": "every",
+              "everyMs": 14400000,
+              "anchorMs": 1793593169925
+            },
+            "delivery": {
+              "mode": "announce",
+              "channel": "feishu",
+              "to": "chat:oc_a5e904510bbf4b983d6cd97b9f7bbb74",
+              "bestEffort": true
+            },
+            "createdAtMs": 1793593169925,
+            "updatedAtMs": 1793593169925,
+            "revisionActivatedAtMs": 1793593169925,
+            "state": {
+              "lastRunAtMs": 1794139153481,
+              "lastRunStatus": "succeeded",
+              "lastStatus": "succeeded",
+              "lastDurationMs": 103523,
+              "lastDeliveryStatus": "delivered",
+              "lastDelivered": true,
+              "consecutiveErrors": 0,
+              "nextRunAtMs": 1794154769925
+            },
+            "logicalKey": "agt_hr-agent:layered-scheduler-v1:l4-governance",
+            "retry": {
+              "auto": true
+            },
+            "deleteAfterRun": false
+          }
+        }
+      ],
+      "selected_occurrences": [
+        {
+          "snapshot_pointer": "/occurrences/5540",
+          "record": {
+            "recordSchemaVersion": 3,
+            "occurrenceId": "occ:03a22a610f0f57f4",
+            "jobId": "cdcba8f3-b961-417a-86b4-bd47735bf1dd",
+            "ownerAgentId": "agt_hr-agent",
+            "scheduleRevision": 1,
+            "kind": "natural",
+            "runId": "run:occ:03a22a610f0f57f4",
+            "idempotencyKey": "occ:03a22a610f0f57f4",
+            "requestId": "occ:03a22a610f0f57f4",
+            "payloadHash": "sha256:54d1b5854ff7ea5f7c0ee4c1dffbdbaa962a531d5af027afad437244a7657bbb",
+            "state": "outcome_unknown",
+            "admittedAt": 1794102256304,
+            "executionDeadlineAtMs": 1794103156304,
+            "history": [
+              {
+                "at": 1794102256304,
+                "from": null,
+                "to": "admitted",
+                "reason": "natural occurrence reserved"
+              },
+              {
+                "at": 1794102257263,
+                "from": "admitted",
+                "to": "running",
+                "reason": "turn start evidence from invoker seam"
+              },
+              {
+                "at": 1794102747078,
+                "from": "running",
+                "to": "outcome_unknown",
+                "reason": "restart_unresolved: no termination proof at recovery"
+              }
+            ],
+            "nominalScheduledAt": 1794100769624,
+            "startedAt": 1794102257263,
+            "nativeSessionId": "cron-run-occ:03a22a610f0f57f4",
+            "deliveryStatus": "unknown"
+          }
+        },
+        {
+          "snapshot_pointer": "/occurrences/5541",
+          "record": {
+            "recordSchemaVersion": 3,
+            "occurrenceId": "occ:b06ed5982d4e8af0",
+            "jobId": "aefae23a-a59e-4069-96c6-6586a752469b",
+            "ownerAgentId": "agt_hr-agent",
+            "scheduleRevision": 1,
+            "kind": "natural",
+            "runId": "run:occ:b06ed5982d4e8af0",
+            "idempotencyKey": "occ:b06ed5982d4e8af0",
+            "requestId": "occ:b06ed5982d4e8af0",
+            "payloadHash": "sha256:c553e90fe57587b70389f7924abbb45b4d223b15416b7df016e4d968802900df",
+            "state": "outcome_unknown",
+            "admittedAt": 1794102348685,
+            "executionDeadlineAtMs": 1794102648685,
+            "history": [
+              {
+                "at": 1794102348685,
+                "from": null,
+                "to": "admitted",
+                "reason": "natural occurrence reserved"
+              },
+              {
+                "at": 1794102349138,
+                "from": "admitted",
+                "to": "running",
+                "reason": "turn start evidence from invoker seam"
+              },
+              {
+                "at": 1794102747078,
+                "from": "running",
+                "to": "outcome_unknown",
+                "reason": "restart_unresolved: no termination proof at recovery"
+              }
+            ],
+            "nominalScheduledAt": 1794102269470,
+            "startedAt": 1794102349138,
+            "nativeSessionId": "cron-run-occ:b06ed5982d4e8af0",
+            "deliveryStatus": "unknown"
+          }
+        },
+        {
+          "snapshot_pointer": "/occurrences/5598",
+          "record": {
+            "recordSchemaVersion": 3,
+            "occurrenceId": "occ:18d2b4ffe491e4b2",
+            "jobId": "064ea914-5d6e-4a13-93be-13cafa952768",
+            "ownerAgentId": "agt_hr-agent",
+            "scheduleRevision": 6,
+            "kind": "natural",
+            "runId": "run:occ:18d2b4ffe491e4b2",
+            "idempotencyKey": "occ:18d2b4ffe491e4b2",
+            "requestId": "occ:18d2b4ffe491e4b2",
+            "payloadHash": "sha256:f6b08c9afe44b973dbebabbfe43b56813da8126ec26cef98bfcaf194e9f2d1f6",
+            "state": "succeeded",
+            "admittedAt": 1794142278222,
+            "executionDeadlineAtMs": 1794145878222,
+            "history": [
+              {
+                "at": 1794142278222,
+                "from": null,
+                "to": "admitted",
+                "reason": "natural occurrence reserved"
+              },
+              {
+                "at": 1794142278723,
+                "from": "admitted",
+                "to": "running",
+                "reason": "turn start evidence from invoker seam"
+              },
+              {
+                "at": 1794142448823,
+                "from": "running",
+                "to": "succeeded",
+                "reason": "invoker returned terminal success"
+              }
+            ],
+            "nominalScheduledAt": 1794140788888,
+            "startedAt": 1794142278723,
+            "nativeSessionId": "cron-run-occ:18d2b4ffe491e4b2",
+            "endedAt": 1794142448823,
+            "executionOutcome": "succeeded",
+            "deliveryStatus": "delivered"
+          }
+        }
+      ]
+    },
+    "scheduler/history/runs-202611.json": {
+      "path": "/Users/authsvc/.agent-core/scheduler/history/runs-202611.json",
+      "owner": "authsvc",
+      "uid": 505,
+      "bytes_read": 2396959,
+      "sha256": "6527d8e864e3afd8cad4903848e5735daac6edee5ea2b9f24318ef2d1e64b714",
+      "mtime_before_read_utc": "2026-11-08T13:24:10.286981+00:00",
+      "observed_at": "2026-11-08T13:25:36.003563+00:00",
+      "selected_records": [
+        {
+          "snapshot_pointer": "/records/2102",
+          "record": {
+            "run_id": "run:occ:18d2b4ffe491e4b2",
+            "occurrence_id": "occ:18d2b4ffe491e4b2",
+            "job_id": "064ea914-5d6e-4a13-93be-13cafa952768",
+            "session_id": "cron-run-occ:18d2b4ffe491e4b2",
+            "agent_id": "agt_hr-agent",
+            "schedule_revision": 6,
+            "model": "opencode-go/deepseek-v4-flash",
+            "resolved_model": null,
+            "scheduled_at": "2026-11-08T12:26:28.888Z",
+            "admitted_at": "2026-11-08T12:51:18.222Z",
+            "started_at": "2026-11-08T12:51:18.723Z",
+            "start_evidence": "invoker-dispatch",
+            "ended_at": "2026-11-08T12:54:08.823Z",
+            "duration_ms": 170601,
+            "outcome": "succeeded",
+            "status_view": "success",
+            "delivery_status": "delivered",
+            "retry_count": 0,
+            "retry_of_occurrence_id": null,
+            "error_code": null,
+            "error_message": null,
+            "correlation_id": "schcorr:occ:18d2b4ffe491e4b2",
+            "parent_run_id": null,
+            "request_id": "occ:18d2b4ffe491e4b2",
+            "request_id_source": "execution-authority",
+            "result": null,
+            "result_status": null,
+            "result_recorded": false,
+            "result_error_code": null
+          }
+        }
+      ]
+    }
+  },
+  "capture_finished_at": "2026-11-08T13:25:36.018984+00:00"
+}

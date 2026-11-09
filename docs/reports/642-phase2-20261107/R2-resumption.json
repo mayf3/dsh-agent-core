@@ -1,0 +1,95 @@
+{
+  "schema_version": 2,
+  "observed_at": "2026-11-07T03:28:32.996759+00:00",
+  "repository": "mayf3/dsh-agent-core",
+  "worktree": "/private/tmp/rc3-chain",
+  "branch": "docs/v3-succession-final",
+  "head_before_evidence_commit": "2e67e98a7295dc78d18dad51bf673a0c3be9d009",
+  "reviewed_semantic_head": "7f36750bf08d308cd7f648153e24c0b0e528e4c6",
+  "integration_base_observed": "3c1bcf98bc40a2c34cca24f241c87d1b12cea216",
+  "authorization": {
+    "source": "current user message relaying regulatory ruling, 2026-11-07",
+    "kind": "attributable transcription with punctuation normalized",
+    "text": "R2续派(机械失败自动继续): R1本体工作已提交(2e67e98a)且治理门全rc0, 仅最终证据检查卡住: docs/reports/642-phase2-20261107/atomic-lifecycle.diff 是 unified diff 的verbatim归档, 其空上下文行在unified diff格式中天然为单空格行, 触发 git diff --cached --check 的尾随空格告警。该归档必须保持字节忠实, 不得为过检而改写。处置(监管裁定): 该文件豁免检查，运行 git diff --cached --check -- . \":(exclude)docs/reports/642-phase2-20261107/atomic-lifecycle.diff\" 要求rc0，并在收据中记录豁免坐标与理由(unified diff格式固有空白, verbatim保真优先)。其余staged文件全量过检不得豁免。完成收据RECEIPT-642-PHASE2.md(六条件逐条坐标+工具rc0原文+豁免说明+最终提交SHA)，一并commit(证据+收据)，push更新PR#642，不合并。旧结构CLI尚不支持退役后HEAD如实写入收据known-limits(verifier适配是合并后独立任务, Owner已定)。失败即停。",
+    "allowed_effects": [
+      "single-file whitespace exemption",
+      "receipt and evidence-only commit",
+      "push existing PR branch"
+    ],
+    "forbidden_effects": [
+      "archive byte changes",
+      "exemption of any other staged path",
+      "merge",
+      "product or production changes"
+    ],
+    "abort_condition": "any failed required check stops dependent work"
+  },
+  "archive": {
+    "path": "docs/reports/642-phase2-20261107/atomic-lifecycle.diff",
+    "bytes": 16951,
+    "blob": "5b3faccd0f0942f26dc06f2e67b664ba2cdd9e27",
+    "sha256": "9c4699326c9c4d8e32bd5fe2fc61602ead994285118a89d3cff788341abf2af8",
+    "byte_identical_to": [
+      "index",
+      "git diff 2e67e98a7295dc78d18dad51bf673a0c3be9d009^ 2e67e98a7295dc78d18dad51bf673a0c3be9d009"
+    ],
+    "single_space_context_lines": [
+      39,
+      72,
+      74,
+      120,
+      122,
+      145,
+      154,
+      160,
+      237,
+      246,
+      248,
+      263,
+      268,
+      270
+    ],
+    "reason": "unified diff context prefixes require these spaces; verbatim fidelity takes precedence under the explicit single-file exemption"
+  },
+  "preserved_original_evidence_sha256": {
+    "C-proposal.command.json": "9be8bf81bdc1ce922ee67a91395efefed1ba50b8e42a49842520b799fc527849",
+    "C-proposal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "C-proposal.stdout": "c3818f43df038552f7d7d1dc117724d51075c8e299d3ad50719056de841272ab",
+    "adoption-base.json": "096f01608c9e06a7b6e3b3cb839b57995d8366a4c1ccedf0632002b609934365",
+    "adoption-candidate.json": "096f01608c9e06a7b6e3b3cb839b57995d8366a4c1ccedf0632002b609934365",
+    "adoption-export-provenance.json": "a61bab46ced44a655a75689940060d2a46e8bc0e8096c7e5b46ac25c76f5ff6d",
+    "adoption-transition.command.json": "6404d857b9182bd7ba179b5df43aa38d9f9d44f2f370860fcf47ca71aa3fa29e",
+    "adoption-transition.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "adoption-transition.stdout": "48389e14b5b157630071792865037946c006066af9299d52375bb2da7473df68",
+    "atomic-lifecycle.diff": "9c4699326c9c4d8e32bd5fe2fc61602ead994285118a89d3cff788341abf2af8",
+    "coordinates.json": "7b011ffcba7ba5a32a5a97dca3fa30a646950778ebe24c9e08119463faddd98f",
+    "diff-check.command.json": "83721c263f35fda1bf5ad0720315c63d8f952dc1bafd3d565a941dcc6ba498cf",
+    "diff-check.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "diff-check.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "distribution-manifest.json": "3ce456bec3af4ee6c9f725cf8d587ed1a3e70812574633fda9bddc06016a0841",
+    "governance-accepted.command.json": "27511ad08b977ad6ece1ca7bc3226ff9b9b980a245f433089592a0ce02127b2c",
+    "governance-accepted.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "governance-accepted.stdout": "c8671db6c5d33b2e2c051a17143acc9bb5736cf8788e72feed4728b5cb32f332",
+    "manifest-parity.json": "a98265708f288cc05cae73c8bfebe143773c55a5a8654a2c1b0411a2ef40a550",
+    "owner-comment-6701500077.json": "d6be97f08f155da4f664fe04fc79f32d5dfbe5e958e8adc6f40263a1ce12d187",
+    "phase2-native.command.json": "6953f845e12bae2c6902f8d6d23e19ba92f39924404b2ef987e2aac65b65f318",
+    "phase2-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "phase2-native.stdout": "ae0b95e857d3a772615ddd46c8dd5944a17e74c37537480df905af1549aeb252",
+    "preservation.json": "f81dd05aa68709b9ff37329a9aa88f21ab460e0ccffe3a8f8d39f8d033bb8192",
+    "structure-tool-increment.command.json": "30145eb91534b219d81a98e1f9b8eaa0a132b63a7f33b4767881f12e08a8df89",
+    "structure-tool-increment.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "structure-tool-increment.stdout": "3d5c24748f1b996a3b1b65817adb159112d346f13ec8badf9306019a6cf64644"
+  },
+  "source_delta_from_lifecycle": [],
+  "historical_stop_records": "preserved unmodified and untracked",
+  "old_structure_cli": "unsupported for retired HEAD; adaptation is a separate post-main task by Owner decision",
+  "final_independent_review": "PENDING_REGULATOR; auxiliary read-only audit is not the regulator review",
+  "delivery_commit_locator": [
+    "git",
+    "log",
+    "-1",
+    "--format=%H",
+    "--",
+    "RECEIPT-642-PHASE2.md"
+  ]
+}

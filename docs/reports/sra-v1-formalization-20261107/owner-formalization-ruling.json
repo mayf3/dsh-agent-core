@@ -1,0 +1,10 @@
+{
+  "ts": "2026-11-07 15:16",
+  "id": "owner-20261107-sra-formalization",
+  "items": [
+    "一、SRA V1批准制度设计, 授权完成正式接受事务: 认可PR#648 HEAD 61b97d32六节语义; 首次接受由Owner授权(不授权监管会话以未来Captain身份自行接受); 责任链完成: 草案→SPEC_FORMAT_V0正式governing Spec(合法Spec ID/frontmatter/docs/specs/路径)→保留六合同与全部安全边界不扩权→转换后精确HEAD独立差量审查→Owner裁定+reviewed HEAD+accepted HEAD绑定完成合法接受/合并/权威索引更新; 不得直接标记根目录草案生效; 无合法权限须Owner本人接受, 候选监管会话不得自授权限",
+    "二、首任Captain条件任命: DISPATCH-REGISTRY提名的监管会话=唯一首任候选; 五条件全满足后原合法任命责任链完成正式任命不再请批: ①唯一确认Principal/Session/跨会话身份(uid502单独不代表身份) ②能力+独立于候选作者/生产writer/独立verifier ③现行体系认可任命签发撤销审计路径 ④实际控制验证拒绝越界/过期/撤销/缺门/错SHA/错执行者 ⑤SRA接受合main+控制资格独立验证; 范围=本机既有fleet runtime STANDARD_RECOVERABLE, 不转委托不扩权不激活新特权控制器; validFrom以可归属生效收据为准; validUntil=2026-12-07T16:00:00Z; 不自动续期; 条件未齐=NOMINATED_NOT_APPOINTED不得签发",
+    "三、生产权限保持独立: SRA accepted/Captain appointed/control effective/Mandate issued=四种不同事实; W7不自动获批; G01-G16全过+installer及真实生产状态独立资格+新机制实际生效后Captain才签发; OPERATION_ALLOWED_NOW=NO",
+    "四、避免重复审批: 本授权覆盖格式转换/差量审查/资格核验/控制适配/条件满足后任命登记; 普通缺证与机械修复自主推进; 无法确认唯一Principal或现行控制不承认或需新增特权→只提交具体新增差量"
+  ]
+}

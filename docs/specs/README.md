@@ -95,7 +95,7 @@ runtime change, credential change, or real HR dispatch.
 
 | Spec ID | Status in this branch | Kind | Scope | Supersedes on acceptance |
 |---|---|---|---|---|
-| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3` | accepted 2026-10-15; current after main merge (2.0.0-rc.1, fixed 6301662e; docs-only, separate from #497 CI) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` |
+| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3` | accepted 2026-10-15; explicit rc.3 update accepted 2026-11-07 under §14 (source c1fad897; PR #642 comment-6701500077; final review/main activation pending); historical rc.1 pin retained | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` |
 | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` | superseded by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3`; historical acceptance 2026-09-05 retained | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1` |
 | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1` | superseded (by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2`) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` |
 | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` | superseded (by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1`) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` |
@@ -103,11 +103,24 @@ runtime change, credential change, or real HR dispatch.
 
 Other existing Specs remain at their stable filenames and keep their current lifecycle until explicitly reviewed.
 
+## Structure policy whole-authority succession
+
+| Authority | Lifecycle in this branch | Effect |
+|---|---|---|
+| [CODE_STRUCTURE_GUARDRAILS_V3](../../.agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md) | accepted by Owner 2026-11-07; exact reviewed semantics `7f36750b`; PR #642 comment-6701500077, ruling `owner-20261107-642-643-1377` | whole successor to V2 and TE_V1, reciprocal native links; active only after independent final-HEAD review and main merge |
+| [CODE_STRUCTURE_GUARDRAILS_V2](../../.agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md) | superseded by V3 in the same lifecycle transaction | preserved historical policy and V1 predecessor link |
+| [CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1](CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md) | superseded by V3 in the same lifecycle transaction | complete effective exception absorbed; exact tuple, visible debt and history preserved |
+
+The existing verifier still requires the V2/TE predecessor lifecycle. Its V3
+adaptation and #603 revalidation are separately authorized post-main tasks.
+No new Current Decision is created; the Decision index has no structure-policy
+entry. This index and the local README point to the native structural authority.
+
 ## Structure verifier implementation authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| [CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1](CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md) | accepted under Owner delegation; effective on main merge | contracts after accepted in implementation base; production apply none | verifier CLI coordinates, byte-preserving V1 registry validation, computed visible baseline-debt output, affected-surface candidate gating, fail-closed configuration, and regression acceptance for local `CODE_STRUCTURE_GUARDRAILS_V2` |
+| [CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1](CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md) | accepted under Owner delegation; effective on main merge | contracts after accepted in implementation base; production apply none | verifier CLI coordinates, byte-preserving V1 registry validation, computed visible baseline-debt output, affected-surface candidate gating, fail-closed configuration, and regression acceptance for historical local `CODE_STRUCTURE_GUARDRAILS_V2`, wholly inherited by accepted V3; existing runner adaptation pending a separate post-main task |
 
 ## Agent primary Workspace authority
 
@@ -378,10 +391,11 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | [`AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V3`](AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V3.md) | accepted by Codex root under explicit mayf3 delegation at reviewed semantic head `b9d9d808e02d7b34ad44dd70597f505b9b947ef7`; paired Svc semantic head `ea8ec3f4fdb8d9e7b4b24c1136074dfb26f3e5e7`; independent review SHA `02e1da3a…bb1183`; lifecycle-only final-head recheck required before merge | contracts after both paired authority branches merge; production apply none | transparent passthrough of optional Svc `admissionObservation` in existing workflow create response; no request, Scheduler, `list_ready`, WEC/WAE, GCR, or READY-row change |
 | [`AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1`](AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1.md) | superseded by accepted V2; historical acceptance retained | historical contracts; no longer current | preserved V1 contracts and acceptance provenance | `AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2` |
 | [`AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2`](AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2.md) | accepted under ROOT_OWNER_ACCEPTANCE.json after independent semantic review | contracts after paired lifecycle commit pair is in implementation base; production apply none | Core broker/execution companion for Svc-owned intake and review singletons, late real Context binding, and bounded case-read STOP projection | `AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1` |
-| [`AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3`](AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3.md) | accepted as paired whole successor | contracts; production apply none | reuses existing WAE ledger/quiescence for intake/review; no second queue or attempt reset | `AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2` |
+| [`AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3`](AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3.md) | superseded by PPR V1 → PPR V2; historical acceptance retained | historical contracts; no longer current; production apply none | reuses existing WAE ledger/quiescence for intake/review; no second queue or attempt reset | `AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2` |
 | [`AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V2`](AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V2.md) | superseded by accepted V3; historical acceptance retained | historical contracts; no longer current | preserved V2 contracts and acceptance provenance | `AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V3` |
 | [`AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V3`](AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V3.md) | accepted under ROOT_OWNER_ACCEPTANCE.json after independent semantic review | contracts after paired lifecycle commit pair is in implementation base; production apply none | managed trusted routing through existing model-visible write operations, including late real Context binding; no parallel write tool | `AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V2` |
-| [`AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3`](AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3.md) | accepted as paired whole successor | contracts; production apply none | existing WEC policy and bounded mechanisms for separate intake/review execution | `AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V2` |
+| [`AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3`](AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3.md) | superseded by WEC V4; historical acceptance retained | contracts; production apply none | existing WEC policy and bounded mechanisms for separate intake/review execution | `AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V2` |
+| [`AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4`](AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V4.md) | superseded by accepted WEC V5 (2026-11-08, PR #664); historical acceptance retained | historical contracts; no longer current; production apply none | complete WEC successor; two bounded unlocked remote collection reads with fresh locked validation | `AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3` |
 | [`AGENT_CORE_WORKFLOW_GOVERNANCE_CHILD_RETURN_V2`](AGENT_CORE_WORKFLOW_GOVERNANCE_CHILD_RETURN_V2.md) | accepted as paired whole successor | contracts; production apply none | opted-in intake/review singletons; ACC-GCR-003 acceptance row is the single explicitly declared inherited semantic difference | `AGENT_CORE_WORKFLOW_GOVERNANCE_CHILD_RETURN_V1` |
 | [`AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V4`](AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V4.md) | accepted as paired whole successor | contracts; production apply none | preserves optional `admissionObservation` passthrough and READY-only projection; no Core wait ledger or new `list_ready` coordinates | `AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V3` |
 | `AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1` | accepted 2026-09-24 at reviewed head `e3393e7c`; pending latest-main integration | contracts (production apply none) | shared backend-abstracted development_execute: system-owned execution ledger, repo/worktree authority, codex exec adapter (workspace-write, CODEX_HOME operator credential), failure matrix A-G |
@@ -411,3 +425,46 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Lifecycle | Scope | Activation |
 |---|---|---|---|
 | [AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3](AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md) | accepted by mayf3 2026-10-15; V2 superseded | exact upstream PR #21 fixes plus local bounded-development routing; no product implementation or production effect | docs-only activation separately approved from #497 CI; effective after final-head review and main merge |
+
+
+## Standing Operational Delegation V1 — 总委托框架
+
+| Spec | Lifecycle | Authority role | Discovery / control binding |
+|---|---|---|---|
+| [AGENT_CORE_STANDING_OPERATIONAL_DELEGATION_V1](AGENT_CORE_STANDING_OPERATIONAL_DELEGATION_V1.md) | Owner mayf3 authorized acceptance recorded 2026-11-07; reviewed proposed `3f5fb808`; activation requires independent final-HEAD review and main merge | existing lawful responsibility chains / A-B-C Spec acceptance / conditional Captain and SRA operation framework; implementation none; no operation issued here | [Owner provenance](../reports/standing-delegation-formal-20261107/source-provenance.json), [§8 controls](../reports/standing-delegation-formal-20261107/control-bindings.md), [acceptance transaction](../reports/standing-delegation-formal-20261107/acceptance-transaction.md) |
+
+本件是总委托框架，下面 SRA V1 是标准发布子机制；两者互补，`supersedes: []`，不替代任何
+既有权威。main 文档激活、Auth 唯一主体、Captain 任命、控制生效和单窗 Mandate 分开核验；
+本地台账/索引/JSON不单独产生签发权。具体控制缺口保留在清单，不声明本轮已适配。
+
+## Standing Release Authorization V1
+
+| Spec | Lifecycle | Implementation / production authority | Acceptance binding |
+|---|---|---|---|
+| [AGENT_CORE_WORKFLOW_HUMAN_GATE_PROTOCOL_V1](AGENT_CORE_WORKFLOW_HUMAN_GATE_PROTOCOL_V1.md) | Owner mayf3 authorized acceptance transaction recorded 2026-11-09 under standing delegation §3B (policy semantics Owner-decided via owner-20261108-three-unified items[3] and backlog-convergence items[3]); reviewed head `9c08ddcc` (PR #627), non-author review FAIL→author-chain fix→delta recheck B1/B2 PASS `FROZEN_BLOCKER_UNION=[]`; original 2026-11-06 task directive carried NOT_LOCATED | contracts; HUMAN_GATE request structuring only — a gate request grants no execution power | upstream (non-authoritative): agent-control#1352 comment 6622750077 |
+| [AGENT_CORE_FLEET_WINDOW_AUTHORITY_VALIDATION_V1](AGENT_CORE_FLEET_WINDOW_AUTHORITY_VALIDATION_V1.md) | Owner mayf3 authorized acceptance transaction recorded 2026-11-09 under standing delegation §3C; reviewed head `f3e8340a` (PR #685), non-author independent review PASS_WITH_TBD (`FROZEN_BLOCKER_UNION=[]`, receipt `docs/reports/fleet-window-authority-v1-20261109/independent-review.md`); factual UNKNOWNs (caller/reader/rollback/wiring/installed-loaded-profile) carried as open facts, all acceptance methods NOT_EXECUTED until evidenced | contracts; implementation of the six-refusal validation wiring on the B fleet-window entry; production apply none; D-side adaptation out of scope (source repo unlocated per PR #684 Δ0) | upstream (non-authoritative): PR #683 census §3 Δ1/Δ2, PR #684 Δ0, appointment registration CAPTAIN-APPT-REG-20261109-01 |
+| [AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1](AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1.md) | Owner mayf3 authorized acceptance transaction recorded 2026-11-07; **ACTIVE_ON_MAIN=YES** (2026-11-09; non-author independent final-HEAD review PASS at main `9529e9a5f042a52f0e2355a3b1dc027339be374f`, spec blob `750504f2d9c27202543a70c6e68d3aba1001928e` unchanged since merge `55f442c7`; contract semantic delta NONE; reviewer session `01a1be9e-29d8-7143-b23a-e62c2600674f`) | implementation none; conditional controlled operation only after original §§1/6 appointment/effectiveness/control qualification and complete §§3/4 per-window Mandate; no window issued here | `rulings[id=owner-20261107-sra-formalization]`; PR #648 semantic source `61b97d326e337057cd1f71c0a6ff0dc37ab72ec2`; reviewed proposed head `8fdd5e9dc4f9cf525188d6ac19f986e0191e9604`; [transaction receipt](../reports/sra-v1-formalization-20261107/acceptance-transaction.md) |
+
+The root draft is retained as historical source and links to this unique formal
+Spec. This transaction does not appoint a Captain, qualify controls, issue W7,
+activate a deployment controller/profile, or perform production operations.
+
+## R4 recovery succession transaction
+
+| Authority | Branch lifecycle | Implementation | Activation / preserved boundary |
+|---|---|---|---|
+| [PPR V1](AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V1.md) | superseded → PPR V2 (accepted 2026-11-08, PR #664) | historical contracts; no longer current; production none | direct successor PPR V2; ordinary generation=1 closed-proof obligations and historical acceptance retained |
+| [WAE V3](AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3.md) | superseded → PPR V1 → PPR V2 | historical | full body and acceptance retained |
+| [Recovery Liveness V1](AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1.md) | superseded → PPR V1 → PPR V2 | historical | full body and historical scoped effects carried |
+| [RBAH V1](AGENT_CORE_READBACK_AGING_HANDOFF_V1.md) | accepted limited semantic; dependency pointers migrated | none; production none | WEC/Svc companion gates remain; no new reason implementation |
+| [RTH V1](AGENT_CORE_REFUSAL_TERMINAL_HANDOFF_V1.md) | accepted limited proposal semantics; NEW, supersedes [] | none; production none | main merged PR #658 (`b6ddc2a6`); owning Core whole successors accepted in PR #664; paired Svc formal acceptance in implementation base still required before new protocol implementation |
+| [AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V5](AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V5.md) | accepted 2026-11-08; whole successor to WEC V4; bounded unlocked-read timing | implementation contracts; production none | `rulings[id=owner-20261108-three-unified].items[1]`; PR #664 merged `e8d6d333`; semantic source `e6e32698`; reviewed head `e6e32698` |
+| [AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V2](AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V2.md) | accepted 2026-11-08; whole successor to PPR V1; inherits WAE V3 + Recovery Liveness V1; bounded planned admission + refusal terminal | implementation contracts; production none | `rulings[id=owner-20261108-three-unified].items[1]`; PR #664 merged `e8d6d333`; semantic source `e6e32698`; reviewed head `e6e32698` |
+
+Branch statuses do not establish active main authority before those ordered merges.
+
+## Routing configuration generation policy authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| [AGENT_CORE_ROUTING_CONFIG_GENERATION_POLICY_V1](AGENT_CORE_ROUTING_CONFIG_GENERATION_POLICY_V1.md) | accepted 2026-11-08 under Owner mayf3 delegated ruling; NEW, supersedes []; effective after main merge | implementation contracts after exact accepted revision enters implementation base; production none | `$.rulings[id=owner-20261108-phase-receipt-deltas].items[4]`; reviewed head `cad041d8`; exact-content generation publication and bounded trusted-generation continuation; implementation requires separate RE_PREFLIGHT |

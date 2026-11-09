@@ -11,12 +11,64 @@ if op=='authority':
                             'writerPid':int(args[1]),'productionAcceptance':'NOT_YET_EXECUTED'})
 elif op=='mutex':
     a=authority(); require(lock.parent.is_dir() and not lock.parent.is_symlink(),'mutex parent absent/unsafe')
+    effect_guard('mutex.mkdir',str(lock),{'mode':0o700},acquire=True)
     lock.mkdir(mode=0o700) # EEXIST stops; never disposes another writer's lock.
+    mutex_acquired()
     holder='pid=%s\nuid=%s\ncmd=window-executor-v5.sh\nwindow=%s\nstarted=%s\n'%(args[0],a['writer_uid'],a['window_id'],now())
-    (lock/'holder').write_text(holder); os.chmod(lock/'holder',0o600)
-    save('mutex.json',{'path':str(lock),'holder':holder,'sha256':digest(lock/'holder')})
+    effect_guard('mutex.holder.write',str(lock/'holder'),{'content':holder})
+    (lock/'holder').write_text(holder)
+    effect_guard('mutex.holder.chmod',str(lock/'holder'),{'mode':0o600})
+    os.chmod(lock/'holder',0o600)
+    save('mutex.json',{'path':str(lock),'holder':holder,'sha256':digest(lock/'holder'),
+                       'identity':list((lock.stat().st_dev,lock.stat().st_ino,lock.stat().st_uid))})
+    authority()
+    require(digest(lock/'holder')==read(rd/'mutex.json')['sha256'],'mutex ownership changed after acquisition')
 elif op=='mutex-check':
     authority(); require(digest(lock/'holder')==read(rd/'mutex.json')['sha256'],'mutex ownership changed')
+elif op=='stage-bundle':
+    authority()
+    template='/private/tmp/fleet-binding-window-v5.XXXXXX'
+    argv=['/usr/bin/mktemp','-d',template]
+    effect_guard('staging.mktemp',template,{'argv':argv},internal=True)
+    b=P(run(argv).stdout.decode().strip())
+    for src,dst,flags in ((inp/'window-installer',b/'scripts',['-RP']),
+                          (inp/'payload',b/'payload',['-RP']),
+                          (inp/'WINDOW_INPUTS.sha256',b/'WINDOW_INPUTS.sha256',[])):
+        argv=['/bin/cp',*flags,str(src),str(dst)]
+        effect_guard('staging.copy',str(dst),{'argv':argv},internal=True)
+        run(argv)
+    for operation,argv in (('staging.chown',['/usr/sbin/chown','-R','root:wheel',str(b)]),
+                           ('staging.chmod',['/bin/chmod','-R','go-w',str(b)])):
+        effect_guard(operation,str(b),{'argv':argv},internal=True)
+        run(argv)
+    print(b)
+elif op=='bootout':
+    authority(); old=read(rd/'old-process.json')
+    require(read(rd/'old-workers-at-bootout.json') is not None,'before-stop evidence missing')
+    require(identity(old['pid'])==old['identity'],'old identity changed at bootout boundary')
+    require(digest(plist)==read(rd/'plist-preimage.json')['sha256'],'plist drift at bootout boundary')
+    argv=['/bin/launchctl','bootout','system',str(plist)]
+    effect_guard('runtime.bootout',str(plist),{'argv':argv})
+    save('bootout-invocation.json',{'at':now(),'argv':argv,'result':'UNKNOWN'})
+    run(argv)
+elif op=='bootstrap':
+    authority(); service_absent()
+    require(read(rd/'final-binding.json').get('config')=='PRODUCTION_PREIMAGE_PRESERVED',
+            'final-binding evidence missing before bootstrap')
+    require(digest(plist)==read(rd/'plist-after.json')['sha256'],'plist drift before bootstrap')
+    argv=['/bin/launchctl','bootstrap','system',str(plist)]
+    effect_guard('runtime.bootstrap',str(plist),{'argv':argv})
+    save('bootstrap-invocation.json',{'at':now(),'argv':argv,'result':'UNKNOWN'})
+    run(argv)
+elif op=='settlement-start':
+    effect_guard('settlement.commit',str(prod),{'sourceRoot':str(source),'receiptDir':str(rd)},internal=True)
+elif op=='installer-boundary':
+    b=P(args[0]); regular(b/'scripts/trusted-cp-deploy-install.sh')
+    effect_guard('installer.execute',str(live),{'bundle':str(b),'source':str(source),
+                 'harness':str(harness),'sha':sha,'tree':tree},internal=True)
+elif op=='stop-state':
+    print('proved' if (rd/'old-exit.json').exists() else
+          'attempted' if (rd/'bootout-invocation.json').exists() else 'not_attempted')
 elif op=='integrity':
     specs=[(prep/'MANIFEST.sha256',prep,'b28eda4cc2eb47bbaf0834a144c40194d6b2f633542a7ef09192b84288ace3e6'),
            (inp/'MANIFEST.sha256',inp,'cccad3a8d13073877b895080992338aa9d0243d6da79a896ff492752b97a632c'),
@@ -32,7 +84,9 @@ elif op=='clean':
     require(source.resolve()==source and source.stat().st_uid==os.getuid(),'not authorized staging worktree owner')
     data=run(['/usr/bin/git','-C',source,'ls-files','--others','--exclude-standard','-z']).stdout
     raw('untracked-before.nul',data); records=[]
-    backup=rd/'untracked-lockfiles'; backup.mkdir(mode=0o700)
+    backup=rd/'untracked-lockfiles'
+    effect_guard('source.backup.mkdir',str(backup),{'mode':0o700})
+    backup.mkdir(mode=0o700)
     # Full enumeration and ALL verified backups before the first deletion.
     for b in data.split(b'\0'):
         if not b: continue
@@ -40,7 +94,12 @@ elif op=='clean':
         if P(name).name!='pnpm-lock.yaml': continue
         p=source/name; regular(p)
         require(p.resolve().is_relative_to(source),'lockfile escapes authorized source')
-        dst=backup/name; dst.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
+        dst=backup/name
+        for parent in reversed([dst.parent,*dst.parent.parents]):
+            if (parent==backup or backup in parent.parents) and not parent.exists():
+                effect_guard('source.backup.mkdir',str(parent),{'mode':0o700})
+                parent.mkdir(mode=0o700)
+        effect_guard('source.copy2',str(dst),{'source':str(p)},internal=True)
         shutil.copy2(p,dst); h=digest(p); require(digest(dst)==h,'lockfile backup mismatch')
         records.append({'path':str(p),'backup':str(dst),'sha256':h,'metadata':meta(p)})
     save('lockfile-backups.json',records)
@@ -48,6 +107,7 @@ elif op=='clean':
         p=P(row['path']); require(digest(p)==row['sha256'] and meta(p)==row['metadata'],'lockfile drift before deletion')
         current=run(['/usr/bin/git','-C',source,'ls-files','--others','--exclude-standard','-z']).stdout.split(b'\0')
         require(os.fsencode(str(p.relative_to(source))) in current,'lockfile no longer untracked')
+        effect_guard('source.unlink',str(p),{'sha256':row['sha256']})
         p.unlink()
     status=run(['/usr/bin/git','-C',source,'status','--porcelain=v1','--untracked-files=all']).stdout
     raw('source-status-after.txt',status); require(not status,'other dirty/untracked content; STOP for itemized disposition')
@@ -125,11 +185,11 @@ elif op=='quiet':
     m=meta(log); age=time.time()-m['mtime_ns']/1e9
     save('quiet-last.json',{'at':now(),'path':str(log),'ageSeconds':age,'metadata':m})
     if age<180: sys.exit(10) # only bounded polling condition, never a failed gate retry
-    # Observation only: mtime quiet is not exact termination evidence. Never
-    # settle pending records to manufacture a clean census before old exit.
-    # Keep the existing fail-closed census; exact settlement belongs to 05b.
+    # Observation only. H01's sealed historical artifact is retained outside
+    # this pipeline; quiet never authorizes settlement or proves turn exit.
     c=census('quiet-census'); require(quiet_ready(age,True,meta(log)==m),'log changed during census')
-    save('quiet-pass.json',{'at':now(),'ageSeconds':age,'logMetadata':m,'censusHashes':c})
+    save('quiet-pass.json',{'at':now(),'ageSeconds':age,'logMetadata':m,'censusHashes':c,
+                           'readOnly':True,'nonemptyCensusAllowed':True,'settlementExecuted':False})
 elif op=='before-stop':
     authority(); old=read(rd/'old-process.json')
     require(identity(old['pid'])==old['identity'],'old identity changed before bootout')
@@ -141,6 +201,7 @@ elif op=='before-stop':
     workers.update({r['pid']:r for r in old_workers(old['pid'])})
     save('old-workers-at-bootout.json',list(workers.values()))
 elif op=='exit-check':
+    authority()
     absent=service_absent(pending=True); table=process_table(); old=read(rd/'old-workers-at-bootout.json')
     remain=[r for r in old if r['pid'] in table] # reused PID is UNKNOWN, not proof of exit
     remain.extend(r for r in table.values() if str(live) in r['rest'])
@@ -151,13 +212,19 @@ elif op=='exit-check':
     for port in (8788,8790):
         p=sp.run(['/usr/sbin/lsof','-nP','-iTCP:'+str(port),'-sTCP:LISTEN','-Fp'],stdout=sp.PIPE,stderr=sp.PIPE,timeout=10)
         require(p.returncode==1 and not p.stdout and not p.stderr,'old port not released or readback unavailable')
-    census('post-bootout-census')
-    save('old-exit.json',{'at':now(),'supervisor':absent,'oldProcesses':old,'remaining':[]})
+    save('old-exit-physical.json',{'at':now(),'supervisor':absent,'oldProcesses':old,'remaining':[],
+                                  'portsAbsent':[8788,8790]})
+    census('post-bootout-census',require_isolation=True)
+    save('old-exit.json',{'at':now(),'supervisor':absent,'oldProcesses':old,'remaining':[],
+                         'portsAbsent':[8788,8790],'classificationReceipt':'post-bootout-census.json'})
 elif op=='preimage':
-    authority(); service_absent(); save('private-inputs-at-install.json',private_inputs('stage-06'))
+    authority(); old=read(rd/'old-process.json')
+    require(pid_from(launch())==old['pid'] and identity(old['pid'])==old['identity'],
+            'old runtime must remain alive while preparing full preimage')
     before=inventory(live); save('preimage-live-inventory.json',before)
     acl=acl_listing(live); raw('preimage-acl-listing.private.txt',acl)
     target=rd/'preimage-full'; require(not target.exists(),'preimage destination exists')
+    effect_guard('preimage.ditto',str(target),{'source':str(live),'flags':['--rsrc','--extattr','--acl']},internal=True)
     run(['/usr/bin/ditto','--rsrc','--extattr','--acl',live,target],timeout=3600)
     reconcile_xattrs(live,target,before[XATTRS_KEY])
     require(inventory(target)==before and inventory(live)==before,'full preimage copy differs')
@@ -171,12 +238,24 @@ elif op=='preimage':
     save('external-preimage-metadata.json',external)
     save('rollback-preimage.json',{'at':now(),'fullTree':str(target),'fullTreeRootMetadata':meta(live),
          'plist':str(rd/'plist.preimage'),'loadedEnv':str(rd/'old-loaded-env.private.txt'),
-         'externalMetadata':str(rd/'external-preimage-metadata.json'),'businessSnapshotRestoreAllowed':False})
+         'externalMetadata':str(rd/'external-preimage-metadata.json'),'businessSnapshotRestoreAllowed':False,
+         'preparedBeforeBootout':True})
+    require(pid_from(launch())==old['pid'] and identity(old['pid'])==old['identity'],
+            'old runtime changed during preimage preparation')
+elif op=='preimage-recheck':
+    authority(); service_absent()
+    require(read(rd/'rollback-preimage.json').get('preparedBeforeBootout') is True,'pre-bootout preimage missing')
+    require(inventory(live)==read(rd/'preimage-live-inventory.json'),'live preimage drift after bootout')
+    require(acl_listing(live)==(rd/'preimage-acl-listing.private.txt').read_bytes(),'preimage ACL drift after bootout')
+    save('private-inputs-at-install.json',private_inputs('stage-06'))
+    save('preimage-recheck.json',{'at':now(),'oldRuntimeStopped':True,'inventoryUnchanged':True,
+                                 'aclUnchanged':True,'fullCopyExecuted':False})
 elif op=='install-start':
     authority(); service_absent()
+    require(read(rd/'preimage-recheck.json').get('oldRuntimeStopped') is True,'stopped preimage recheck missing')
     require(digest(plist)==read(rd/'plist-preimage.json')['sha256'],'plist drift before install')
     require(inventory(live)==read(rd/'preimage-live-inventory.json'),'live preimage drift before install')
-    census('immediate-pre-install-census')
+    census('immediate-pre-install-census',require_isolation=True)
     r=live.parent/'agent-core-install-mutation-receipt.json'
     save('install-start.json',{'at':now(),'epoch':time.time(),'previousMutationReceiptSha256':digest(r) if r.is_file() else None})
 elif op=='install-failed':
@@ -226,6 +305,7 @@ elif op=='preserve-config':
         if dst.exists() or dst.is_symlink(): continue # copied with its ancestor
         require(not src.is_symlink(),'omitted config symlink needs explicit review: '+k)
         require(not dst.exists() and not dst.is_symlink(),'config destination appeared')
+        effect_guard('config.ditto',str(dst),{'source':str(src),'flags':['--rsrc','--extattr','--acl']},internal=True)
         run(['/usr/bin/ditto','--rsrc','--extattr','--acl',src,dst],timeout=3600)
         carried.append(k)
     require(inventory(dest)==expected,'carried config does not match stopped preimage')
@@ -269,9 +349,19 @@ elif op=='plist-update':
     require(digest(plist)==old['sha256'],'plist changed before authorized SHA-only edit')
     doc=plistlib.loads(plist.read_bytes()); doc['EnvironmentVariables']['AGENT_CORE_DEPLOYED_SHA']=sha
     tmp=plist.with_name(plist.name+'.v5-'+authority()['window_id'])
-    with open(tmp,'xb') as f: plistlib.dump(doc,f,sort_keys=False)
-    m=old['metadata']; os.chown(tmp,m['uid'],m['gid']); os.chmod(tmp,int(m['mode'],8))
-    run(['/usr/bin/plutil','-lint',tmp]); os.replace(tmp,plist)
+    data=plistlib.dumps(doc,sort_keys=False)
+    effect_guard('plist.create',str(tmp),{'flags':'xb'})
+    with open(tmp,'xb',buffering=0) as f:
+        effect_guard('plist.write',str(tmp),{'sha256':hashlib.sha256(data).hexdigest(),'bytes':len(data)})
+        require(f.write(data)==len(data),'incomplete plist write; no retry')
+    m=old['metadata']
+    effect_guard('plist.chown',str(tmp),{'uid':m['uid'],'gid':m['gid']})
+    os.chown(tmp,m['uid'],m['gid'])
+    effect_guard('plist.chmod',str(tmp),{'mode':int(m['mode'],8)})
+    os.chmod(tmp,int(m['mode'],8))
+    run(['/usr/bin/plutil','-lint',tmp])
+    effect_guard('plist.replace',str(plist),{'source':str(tmp)})
+    os.replace(tmp,plist)
     back=plistlib.loads(plist.read_bytes()); expected=old['document']; expected['EnvironmentVariables']['AGENT_CORE_DEPLOYED_SHA']=sha
     require(back==expected,'plist delta exceeds deployed SHA')
     save('plist-after.json',{'sha256':digest(plist),'document':back,'metadata':meta(plist)})
@@ -338,6 +428,7 @@ elif op=='phase':
     with open(rd/'phase-events.jsonl','a') as f: f.write(json.dumps(event)+'\n')
 elif op=='close':
     a=authority()
+    effect_guard('window.close',str(rd))
     verified=read(rd/'stage_11_production_verify.json')
     require(verified['status']=='PASS','production verification did not PASS; no close plan')
     result=close_window(a,read(rd/'c7-names-before.json'),live,verified['at'])
@@ -345,8 +436,17 @@ elif op=='close':
     raw('c7-delete-candidates.nul',b''.join(os.fsencode(r['path'])+b'\0' for r in result['retention']['delete_candidates']))
     save('c7-delete-candidates.json',result['retention']['delete_candidates'])
 elif op=='release':
+    a=authority(); closed=read(rd/'c7-close.json')
+    require(closed['window_id']==a['window_id'] and closed['names']['mapped_diff_empty'] is True,
+            'safe close evidence missing; retain mutex')
+    require(read(rd/'stage_11_production_verify.json')['status']=='PASS' and
+            read(rd/'stage_12_hr_watch.json')['status']=='PASS','successful terminal stages missing; retain mutex')
     require(digest(lock/'holder')==read(rd/'mutex.json')['sha256'],'cannot release changed mutex')
-    (lock/'holder').unlink(); lock.rmdir()
+    effect_guard('mutex.release',str(lock),{'closeSha256':digest(rd/'c7-close.json')})
+    effect_guard('mutex.holder.unlink',str(lock/'holder'))
+    (lock/'holder').unlink()
+    effect_guard('mutex.rmdir',str(lock))
+    lock.rmdir()
     save('completion.json',{'at':now(),'window':'PASS_CONFIGURED_CHECKS','productionExecution':'EXECUTED',
                            'authentication':'NOT_TESTED','businessSuccess':'UNKNOWN','hrCriterion':'broker execute observed',
                            'c7ReceiptSha256':digest(rd/'c7-close.json'),'retentionDeletion':'NOT_EXECUTED_LIST_ONLY'})
