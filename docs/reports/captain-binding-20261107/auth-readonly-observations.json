@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "targetDesignation": "release-captain-agent-core-20261107",
+  "skill": {
+    "path": "/Users/yanfenma/.openclaw/skills/auth-service/SKILL.md",
+    "lookupPath": "/Users/yanfenma/.openclaw/skills/auth-service/scripts/lookup-principal.py",
+    "lookupSHA256": "316371a934bdcc8c9ad06f924808c166ae257be583aad5cfd71416359adf3874"
+  },
+  "observations": [
+    {
+      "id": "OBS-CB-AUTH-001",
+      "method": "PGOPTIONS='-c default_transaction_read_only=on' python3 <lookupPath> --json release-captain-agent-core-20261107 --include-disabled",
+      "rawRC": 0,
+      "stdout": "[]\n",
+      "limitations": "Skill wrapper omits subprocess RC/stderr; empty result alone is insufficient. Supplemented by OBS-CB-AUTH-002/003."
+    },
+    {
+      "id": "OBS-CB-AUTH-002",
+      "observedAtUTC": "2026-11-07T12:57:24.406737+00:00",
+      "querySHA256": "8c328cd25f1a8cb84833b8ef0cf94f15293787eb0009d44ee62657046b94051e",
+      "rawRC": 0,
+      "stderr": "",
+      "database": "agent_dev_center",
+      "dbUser": "auth_ro",
+      "serverAddress": "::1",
+      "serverPort": 5432,
+      "transactionReadOnly": "on",
+      "defaultTransactionReadOnly": "on",
+      "exactAgentId": "release-captain-agent-core-20261107",
+      "statusFilter": "NONE",
+      "rows": []
+    },
+    {
+      "id": "OBS-CB-AUTH-003",
+      "observedAtUTC": "2026-11-07T12:58:53.288492+00:00",
+      "querySHA256": "db15c9d507494b72684215acbd1f1cf2a1b069c8a31a21aa30a32f10287f96f7",
+      "rawRC": 0,
+      "stderr": "",
+      "rawStdout": "BEGIN\n{\"observedAtUTC\" : \"2026-11-07T12:58:53.17589\", \"database\" : \"agent_dev_center\", \"dbUser\" : \"auth_ro\", \"serverAddress\" : \"::1\", \"serverPort\" : 5432, \"transactionReadOnly\" : \"on\"}\n[]\n[{\"schema\":\"public\",\"enum_name\":\"PrincipalType\",\"enumlabel\":\"agent\"}, {\"schema\":\"public\",\"enum_name\":\"PrincipalType\",\"enumlabel\":\"service\"}]\n[{\"indexname\":\"machine_principals_pkey\",\"indexdef\":\"CREATE UNIQUE INDEX machine_principals_pkey ON public.machine_principals USING btree (id)\"}, {\"indexname\":\"machine_principals_agent_id_key\",\"indexdef\":\"CREATE UNIQUE INDEX machine_principals_agent_id_key ON public.machine_principals USING btree (agent_id)\"}, {\"indexname\":\"machine_principals_external_ref_key\",\"indexdef\":\"CREATE UNIQUE INDEX machine_principals_external_ref_key ON public.machine_principals USING btree (external_ref)\"}]\nCOMMIT",
+      "query": "BEGIN READ ONLY;\nSELECT json_build_object('observedAtUTC',timezone('UTC',clock_timestamp()),'database',current_database(),'dbUser',current_user,'serverAddress',inet_server_addr(),'serverPort',inet_server_port(),'transactionReadOnly',current_setting('transaction_read_only'));\nSELECT coalesce(json_agg(row_to_json(p)), '[]'::json) FROM (SELECT id,agent_id,display_name,status,principal_type,owner_user_id,external_ref,disabled_at,created_at FROM machine_principals WHERE agent_id IN ('release-captain-agent-core-20261107','agt_release-captain-agent-core-20261107') OR external_ref IN ('release-captain-agent-core-20261107','agt_release-captain-agent-core-20261107') OR display_name='release-captain-agent-core-20261107' ORDER BY id) p;\nSELECT json_agg(row_to_json(e)) FROM (SELECT n.nspname AS schema,t.typname AS enum_name,e.enumlabel FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace JOIN pg_enum e ON e.enumtypid=t.oid WHERE t.typname='PrincipalType' ORDER BY e.enumsortorder) e;\nSELECT json_agg(row_to_json(i)) FROM (SELECT indexname,indexdef FROM pg_indexes WHERE schemaname='public' AND tablename='machine_principals' AND indexdef LIKE 'CREATE UNIQUE%') i;\nCOMMIT;\n",
+      "execution": "Imported the skill's connection configuration in memory; psql -X -v ON_ERROR_STOP=1 -t -A with default_transaction_read_only=on, 20s timeout. No credential values recorded."
+    }
+  ],
+  "conclusion": {
+    "existence": "NO_MATCH_AT_BOUND_LOCAL_DATABASE_COORDINATE",
+    "principalUUID": null,
+    "actualPrincipalType": null,
+    "creationRequest": "PENDING_OWNER_CONFIRMATION",
+    "sessionBinding": "UNKNOWN",
+    "productionMutationPerformed": false
+  },
+  "limitations": [
+    "No claim about any other database/host or unidentified alias.",
+    "Role designation, principal UUID, principal type, agentId, UID and Session are distinct.",
+    "agent/service enum and unique indexes describe the observed schema; they do not prove identity, canonical lifecycle, capability, authorization or SRA control effectiveness."
+  ]
+}

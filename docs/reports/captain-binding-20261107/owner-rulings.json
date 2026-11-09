@@ -1,0 +1,39 @@
+{
+  "observedAtUTC": "2026-11-07T12:59:26.612624+00:00",
+  "source": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json",
+  "canonicalAlgorithm": "UTF-8 json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':')) then SHA256",
+  "records": [
+    {
+      "selector": "$.rulings[id=owner-20261107-five-decisions]",
+      "observedIndex": 8,
+      "canonicalSHA256": "95290062529cf24c31d3c7f6c748a22e5e369d14458cf623f562eee5c90cedc8",
+      "value": {
+        "ts": "2026-11-07 20:54",
+        "id": "owner-20261107-five-decisions",
+        "items": [
+          "①Captain principal=A(专用release-captain-agent-core-20261107): 先auth-service身份绑定核验→任命登记(validUntil 2026-12-07T16:00Z)→§6.5控制生效验证(负向: 越界/过期/缺门拒绝)→生效",
+          "②两缺口边界确认(PR#653评估采纳): aging与refused-terminal为两独立提案共用机制; 按此起草/推进",
+          "③#643 aging提案正式接受——**限定: 仅限提案语义; WEC/Svc配套权威正式接受前不得实施新reason或用于生产**(实施闸门保留)",
+          "④planned恢复合同立项: docs-first起草走审查(接受仍需Owner)"
+        ]
+      }
+    },
+    {
+      "selector": "$.rulings[id=owner-20261107-sra-formalization]",
+      "observedIndex": 3,
+      "canonicalSHA256": "f6ace2b1e1621da830421e57a9b886faac75de8f4bf7a895d0ecf0832438a129",
+      "value": {
+        "ts": "2026-11-07 15:16",
+        "id": "owner-20261107-sra-formalization",
+        "items": [
+          "一、SRA V1批准制度设计, 授权完成正式接受事务: 认可PR#648 HEAD 61b97d32六节语义; 首次接受由Owner授权(不授权监管会话以未来Captain身份自行接受); 责任链完成: 草案→SPEC_FORMAT_V0正式governing Spec(合法Spec ID/frontmatter/docs/specs/路径)→保留六合同与全部安全边界不扩权→转换后精确HEAD独立差量审查→Owner裁定+reviewed HEAD+accepted HEAD绑定完成合法接受/合并/权威索引更新; 不得直接标记根目录草案生效; 无合法权限须Owner本人接受, 候选监管会话不得自授权限",
+          "二、首任Captain条件任命: DISPATCH-REGISTRY提名的监管会话=唯一首任候选; 五条件全满足后原合法任命责任链完成正式任命不再请批: ①唯一确认Principal/Session/跨会话身份(uid502单独不代表身份) ②能力+独立于候选作者/生产writer/独立verifier ③现行体系认可任命签发撤销审计路径 ④实际控制验证拒绝越界/过期/撤销/缺门/错SHA/错执行者 ⑤SRA接受合main+控制资格独立验证; 范围=本机既有fleet runtime STANDARD_RECOVERABLE, 不转委托不扩权不激活新特权控制器; validFrom以可归属生效收据为准; validUntil=2026-12-07T16:00:00Z; 不自动续期; 条件未齐=NOMINATED_NOT_APPOINTED不得签发",
+          "三、生产权限保持独立: SRA accepted/Captain appointed/control effective/Mandate issued=四种不同事实; W7不自动获批; G01-G16全过+installer及真实生产状态独立资格+新机制实际生效后Captain才签发; OPERATION_ALLOWED_NOW=NO",
+          "四、避免重复审批: 本授权覆盖格式转换/差量审查/资格核验/控制适配/条件满足后任命登记; 普通缺证与机械修复自主推进; 无法确认唯一Principal或现行控制不承认或需新增特权→只提交具体新增差量"
+        ]
+      }
+    }
+  ],
+  "sourceWasModified": false,
+  "limitation": "Selected Owner records only; nomination/appointment/control effectiveness remain separate facts."
+}
