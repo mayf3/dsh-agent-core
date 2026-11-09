@@ -21,3 +21,22 @@
 1. 窗口执行一律引用本目录脚本（Git SHA 钉定），禁止使用 /tmp 或会话工作区副本
 2. 任何节点修改须经 selftest + 回执后合入本目录
 3. 入口 C 流程见 ../../docs SOP-DEPLOY-MASTER（b7ctl 档案）
+
+## FWAV V1 源码适配
+
+`authority_validation/` 消费 accepted FWAV V1 的六类拒绝合同；执行器和 helper
+在实际效果前重读同一授权观察，并保留原 mutex、phase FAIL、STOP 和诊断出口。
+`reader.py` 只读原 registry；当前缺受信 caller/currentness/防回退适配，默认拒绝，
+不能用 JSON 中的身份/布尔值取得资格。未证明内部逐写控制的 installer、settlement、
+复制/递归命令在 dispatch 前拒绝。source/隔离 PASS 不等于 installed/loaded/profile/EFFECTIVE。
+
+隔离验收入口（不运行窗口或原 canary selftest）：
+
+```sh
+python3 -B scripts/fleet-window/authority_validation/tests/test_fwav.py
+python3 -B scripts/fleet-window/authority_validation/tests/test_xattrfix_r3.py
+```
+
+旧 xattr 测试移入该测试目录，以保持本层直接子项数不增加；其 fixture root
+改为临时目录。原带真实 isolated canary 的 `--selftest` 仍是单独环境中的检查，
+本次只核其受影响的纯函数入口。ACC001 按原 AUTHOR 固定坐标核验；本次允许面另核。
