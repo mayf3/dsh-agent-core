@@ -55,11 +55,15 @@ def rejected(fn, label):
 
 def pure_functions(executor):
     path = executor.with_name('window_helper_core.py')
-    names = {'require', 'digest', 'regular', 'manifest', 'stamp', 'validate_authority', 'quiet_ready', 'classify_census'}
+    names = {'require', 'digest', 'regular', 'manifest', 'stamp', 'validate_legacy_fields', 'validate_authority', 'authority_observation', 'quiet_ready', 'classify_census'}
     tree = ast.parse(path.read_text(), filename=str(path))
     selected = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in names]
     require({node.name for node in selected} == names, 'executor pure validators unavailable')
-    namespace = dict(dt=dt, hashlib=hashlib, json=json, math=math, os=os,
+    class UnqualifiedFixtureReader:
+        def observe(self):
+            raise RuntimeError('未任命: synthetic fixture has no caller/appointment proof')
+    namespace = dict(authority_reader=UnqualifiedFixtureReader(), rd=Path('/nonexistent-fwav-selftest'),
+                     dt=dt, hashlib=hashlib, json=json, math=math, os=os,
                      P=Path, re=re, stat=stat, sys=sys, time=time)
     module = ast.Module(body=selected, type_ignores=[])
     exec(compile(module, str(path), 'exec'), namespace)
@@ -203,14 +207,16 @@ def main(executor):
                      scopes=['source_lockfile_cleanup','production_mutex','bootout','full_preimage','install',
                              'plist_deployed_sha_only','bootstrap','verify','hr_observe'])
             moment = f['stamp']('2026-11-04T12:00:00Z')
-            check = lambda item: f['validate_authority'](item, writer_uid=os.getuid(), now_epoch=moment)
+            check = lambda item: f['validate_legacy_fields'](item, writer_uid=os.getuid(), now_epoch=moment)
             check(a)
             bad = dict(a); bad.pop('writer')
-            cases = [rejected(lambda: check(bad), 'missing-field'),
+            cases = [rejected(lambda: f['validate_authority'](a, writer_uid=os.getuid(), now_epoch=moment),
+                              'unsigned-legacy-fixture-not-authority'),
+                     rejected(lambda: check(bad), 'missing-field'),
                      rejected(lambda: check(dict(a, writer_uid=0)), 'root-writer'),
                      rejected(lambda: check(dict(a, valid_until='2026-11-04T00:00:00Z')), 'expired'),
                      rejected(lambda: check(dict(a, scopes=[])), 'missing-scope')]
-            save(out / 'stage_00.json', {'scope': 'pure authority validator only', 'synthetic': a, 'negative_cases': cases,
+            save(out / 'stage_00.json', {'scope': 'legacy fields + full authority expected refusal; positive new chain in ACC-FWAV tests', 'synthetic': a, 'negative_cases': cases,
                  'productionMutex': 'NOT_EXECUTED', 'productionAuthority': 'UNKNOWN_NOT_SUPPLIED'})
         stages.append(('stage_00_authority_mutex', stage00))
         def stage01():
