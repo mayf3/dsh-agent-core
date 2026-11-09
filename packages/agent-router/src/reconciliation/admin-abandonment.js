@@ -95,6 +95,18 @@ function stampCandidate(candidate, { declarationId, declaredAt, withAcceptance }
   }
 }
 
+/**
+ * R131 succession (#1374 2026-11-10): a declaration-only marker (auto
+ * fence-repair chains stamp WITHOUT the owner decision) must stay
+ * completable by the SAME declarationId re-invocation carrying the explicit
+ * owner risk acceptance — otherwise a pre-staged declaration can never
+ * legally accept and the record stays quarantined forever. Idempotency keys
+ * on the ACCEPTANCE AUDIT (never restamped), not on the marker alone.
+ */
+function hasAcceptanceAudit(candidate) {
+  return (candidate.audit ?? []).some(entry => entry?.kind === 'owner_risk_acceptance_unproven_termination')
+}
+
 export const adminAbandonmentMethods = {
   /**
    * Admission projection: the agent's active fence that must block a NEW
@@ -167,8 +179,12 @@ export const adminAbandonmentMethods = {
    * KNOWN declarationId (retry): only records of the original scope may be
    * completed — a turn that became unknown after the operation completed is
    * NEVER adopted by a retry (it stays fenced until its own explicit
-   * declaration). Already-stamped records are never restamped. Rebinding a
-   * known declarationId to a different Agent fails loud.
+   * declaration). R131 succession: completion is keyed on the ACCEPTANCE
+   * AUDIT — a declaration-only marker (auto-repair chains stamp without the
+   * owner decision) is completable by the same declarationId re-invocation
+   * carrying `ownerRiskAcceptance: true`; already-accepted records are never
+   * restamped. Rebinding a known declarationId to a different Agent fails
+   * loud.
    *
    * ownerRiskAcceptance (spec AGENT_PROCESS_ADMIN_TURN_ABANDONMENT_V1 D6):
    * strictly `true` | undefined. When true, every stamped record also gets a
@@ -202,8 +218,15 @@ export const adminAbandonmentMethods = {
       for (const handle of known.handles) {
         const record = this.records.get(handle)
         if (record === undefined
-            || record.initialOutcome !== 'outcome_unknown' || record.fenceState === 'cleared'
-            || (record.adminAbandonment ?? null) !== null) continue
+            || record.initialOutcome !== 'outcome_unknown' || record.fenceState === 'cleared') continue
+        // R131 succession: completion keys on the ACCEPTANCE AUDIT. A
+        // declaration-only marker no longer blocks the same-declarationId
+        // re-invocation when the explicit owner decision arrives — that is
+        // the designed scope completion ("re-invocation completes exactly
+        // that scope"). Already-accepted records are never restamped;
+        // declaration-only retries without an owner decision stay no-ops.
+        const alreadyStamped = (record.adminAbandonment ?? null) !== null
+        if (alreadyStamped && (hasAcceptanceAudit(record) || ownerRiskAcceptance !== true)) continue
         this.mutateRecord(record, (candidate) => {
           stampCandidate(candidate, { declarationId, declaredAt: known.declaredAt, withAcceptance: ownerRiskAcceptance })
         })
