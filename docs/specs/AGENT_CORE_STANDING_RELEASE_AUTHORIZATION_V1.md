@@ -24,7 +24,8 @@ acceptance_authority_basis: >-
   Captain are not the acceptance authority. The acceptance commit is bound
   by its Git object and exact FINAL_ACCEPTED_HEAD in PR 648. No personal
   Owner review of the converted exact head is claimed.
-acceptance_final_head_review: PENDING_REGULATOR
+acceptance_final_head_review: PASS (non-author independent, final head 9529e9a5f042a52f0e2355a3b1dc027339be374f,
+  contract semantic delta NONE, session 01a1be9e-29d8-7143-b23a-e62c2600674f)
 activation_boundary: main merge after independent final-HEAD review by regulator
 spec_kind: invariant
 authority_level: governing_spec
@@ -62,7 +63,7 @@ formalization_ruling_canonical_sha256: f6ace2b1e1621da830421e57a9b886faac75de8f4
 # Agent Core Standing Release Authorization V1
 
 <!-- BEGIN SRA_ACCEPTANCE_LIFECYCLE -->
-> **当前生命周期：Owner mayf3 授权正式接受事务已记录；main 生效待监管独立最终 HEAD 审查 PASS 后合并。**
+> **当前生命周期：ACTIVE_ON_MAIN。** Owner mayf3 授权正式接受事务已记录（2026-11-07，PR #648 合并 `55f442c7`）；非作者独立最终 HEAD 审查 PASS（2026-11-09，审查头 `9529e9a5`，spec blob `750504f2` 自合并未变，合同语义差量 NONE）。本激活行不签发任何窗口、不任命 Captain、不改变 §§1/6 任命/生效/控制资格与 §§3/4 逐窗 Mandate 的前置要求；OPERATION 仍需其各自独立事实成立。
 > 接受权威是上述 Owner 裁定；转换作者/事务 worker 不是接受权威。接受 reviewed HEAD 为 `8fdd5e9dc4f9cf525188d6ac19f986e0191e9604`，独审原文及事务绑定见 [接受收据](../reports/sra-v1-formalization-20261107/acceptance-transaction.md)。
 > 原文保全的 proposed/ACCEPTED=NO 等起草时点标记是历史记录；本事务不任命 Captain、不证明控制生效、不签发 W7 或任何窗口，不做生产操作。
 <!-- END SRA_ACCEPTANCE_LIFECYCLE -->
