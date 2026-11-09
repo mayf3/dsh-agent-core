@@ -23,7 +23,7 @@
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync } from 'node:fs'
+import { mkdtempSync, existsSync, appendFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { readFileSync } from 'node:fs'
@@ -44,7 +44,7 @@ function invoker(handler) {
   return invokeAgent
 }
 
-function env({ now = 1_000, invoke, jobsPath } = {}) {
+function env({ now = 1_000, invoke, deliver, jobsPath } = {}) {
   const dir = jobsPath ? join(jobsPath, '..') : mkdtempSync(join(tmpdir(), 'scheduler-transport-'))
   const path = jobsPath ?? join(dir, 'jobs.json')
   const clock = { value: now }
@@ -53,7 +53,7 @@ function env({ now = 1_000, invoke, jobsPath } = {}) {
   const scheduler = new Scheduler({
     store,
     invoker: seam ?? invoker(() => ({ status: 'ok', summary: 'done' })),
-    deliver: createRecordingDelivery(),
+    deliver: deliver ?? createRecordingDelivery(),
     concurrency: 5,
     nowMs: () => clock.value,
   })
@@ -92,23 +92,43 @@ async function makeDailyJob(ctx, name, { withDelivery = true } = {}) {
 }
 
 test('1. partial tool write → TRANSPORT → retry occurrence compensates without duplicate artifact/notification', async () => {
-  // Simulated idempotent job task (the payload's own semantics: existing
-  // valid artifact → skip rewrite; notification already sent → skip duplicate).
-  const effects = { artifactWrites: 0, notifications: 0, gapFilled: false }
-  const invoke = invoker((request, count) => {
+  // R131 QA review fix: the compensation consumer and the notification entry
+  // must be REAL — artifact + dedupe ledger live on disk (the consumer
+  // re-reads them on the retry turn), and the notification entry is the
+  // engine's actual deliver() seam (createRecordingDelivery), not an
+  // in-test counter the system under test never touches.
+  const dir = mkdtempSync(join(tmpdir(), 'scheduler-transport-comp-'))
+  const artifactPath = join(dir, 'artifact.md')
+  const ledgerPath = join(dir, 'compensation-ledger.jsonl')
+  const writeFileOnce = (path, entry) => {
+    const prev = existsSync(path) ? readFileSync(path, 'utf8').split('\n').filter((l) => l.length > 0) : []
+    if (prev.includes(entry)) return false
+    appendFileSync(path, entry + '\n')
+    return true
+  }
+  const effects = { artifactWrites: 0, ledgerAppends: 0 }
+  let engineDeliverCalls = 0
+  const deliver = createRecordingDelivery()
+  const origDeliver = deliver.deliver ?? deliver
+  const countingDeliver = typeof deliver === 'function'
+    ? async (...args) => { engineDeliverCalls += 1; return origDeliver(...args) }
+    : Object.assign(async (...args) => { engineDeliverCalls += 1; return origDeliver(...args) }, deliver)
+  const invoke = invoker(async (request, count) => {
     if (count === 1) {
       // First turn: performs the tool write + notification, then transport dies.
       effects.artifactWrites += 1
-      effects.notifications += 1
+      if (writeFileOnce(artifactPath, 'artifact:v1')) effects.ledgerAppends += 1
+      if (writeFileOnce(ledgerPath, `notified|${request.occurrenceId}`)) effects.ledgerAppends += 1
       return TRANSPORT
     }
-    // Retry turn: the job's compensation logic — exactly-once by identity.
-    if (effects.artifactWrites === 0) effects.artifactWrites += 1
-    if (effects.notifications === 0) effects.notifications += 1
-    effects.gapFilled = true
+    // Retry turn: the job's compensation logic reads the REAL on-disk state
+    // and dedupes by it — exactly-once by identity, not by memory.
+    if (!existsSync(artifactPath)) { effects.artifactWrites += 1; writeFileOnce(artifactPath, 'artifact:v1') }
+    writeFileOnce(ledgerPath, `notified|${request.occurrenceId}`)
+    effects.gapFilled = existsSync(artifactPath)
     return { status: 'ok', summary: 'compensated: gap filled, no duplicates' }
   })
-  const ctx = env({ invoke })
+  const ctx = env({ invoke, deliver: countingDeliver })
   await ctx.scheduler.start({ autoStart: false, catchup: false })
   const job = await makeDailyJob(ctx, 'daily-summary-compensation')
 
@@ -116,6 +136,8 @@ test('1. partial tool write → TRANSPORT → retry occurrence compensates witho
   const rowsAfterFail = ctx.scheduler.listOccurrences(job.id)
   const failed = rowsAfterFail.find((r) => r.state === 'failed')
   assert.ok(failed, 'natural occurrence settled failed on TRANSPORT')
+  const failedDeliverCalls = engineDeliverCalls
+  const artifactAfterFail = readFileSync(artifactPath, 'utf8')
 
   // Past the 30s first retry backoff → retry occurrence runs the compensation.
   await runDue(ctx, 62_000)
@@ -125,10 +147,12 @@ test('1. partial tool write → TRANSPORT → retry occurrence compensates witho
   assert.equal(succeededRetry.retryOfOccurrenceId, failed.occurrenceId, 'retry references its failed predecessor')
   assert.equal(rows.filter((r) => r.state === 'failed').length, 1, 'failed occurrence retained (original history kept)')
 
-  // Exactly-once business effects across the whole chain.
+  // Exactly-once business effects, verified on real disk + real deliver seam.
   assert.equal(effects.artifactWrites, 1, 'artifact written exactly once (no duplicate)')
-  assert.equal(effects.notifications, 1, 'notification sent exactly once (no duplicate)')
-  assert.equal(effects.gapFilled, true, 'gap eventually filled')
+  const ledgerLines = readFileSync(ledgerPath, 'utf8').split('\n').filter((l) => l.length > 0)
+  assert.equal(ledgerLines.length, 2, 'dedupe ledger holds exactly the first-turn writes (no retry duplicate)')
+  assert.equal(artifactAfterFail, readFileSync(artifactPath, 'utf8'), 'retry did not rewrite the artifact')
+  assert.equal(engineDeliverCalls, failedDeliverCalls + 1, 'notification entry (engine deliver) fired once more — for the succeeded retry only, no duplicate for the failed one')
   // Budget separation: one invokeAgent per occurrence — the scheduler never
   // multiplies the model client's retries.
   assert.equal(invoke.calls.length, rows.length, 'one invocation per occurrence')
