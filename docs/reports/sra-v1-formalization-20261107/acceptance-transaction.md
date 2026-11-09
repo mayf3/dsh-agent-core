@@ -12,14 +12,19 @@ INDEPENDENT_REVIEW_RESULT = PASS
 SEMANTIC_DELTA_AFTER_REVIEW = NONE
 FROZEN_BLOCKER_UNION = []
 STATUS_TRANSITION = proposed -> accepted
-AUTHORITY_ACTIVE_ON_MAIN = NO_PENDING_REGULATOR_REVIEW_AND_MERGE
+AUTHORITY_ACTIVE_ON_MAIN = YES (activation recorded 2026-11-09; independent non-author final-HEAD review PASS:
+  review final head 9529e9a5f042a52f0e2355a3b1dc027339be374f, spec git blob 750504f2d9c27202543a70c6e68d3aba1001928e unchanged
+  since merge 55f442c74414dc723306a6d8e0cdba73d78eb8da; contract/security-boundary semantic delta vs reviewed
+  proposed 8fdd5e9dc4f9cf525188d6ac19f986e0191e9604 = NONE (+32/-1 lifecycle-status lines only, Owner-brief-authorized);
+  reviewer: non-author independent Codex session 01a1be9e-29d8-7143-b23a-e62c2600674f, FINAL_VERDICT=PASS,
+  FROZEN_BLOCKER_UNION=[])
 IMPLEMENTATION_ALLOWED = NO
 CAPTAIN_APPOINTED_NOW = NO
 CONTROL_QUALIFICATION_VERIFIED_NOW = NO
 WINDOW_ISSUED_NOW = NONE
 OPERATION_ALLOWED_NOW = NO
 MERGE_EXECUTOR = regulator after independent final accepted HEAD review PASS
-NEXT_ACTION = commit lifecycle transaction / independent final-HEAD delta recheck / push and update PR #648 / STOP for regulator
+NEXT_ACTION = DONE (final-HEAD review PASS recorded; activation status flipped by regulator-side chain writer; this commit is the activation record)
 ```
 
 Owner 原件：`/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json`；selector `$.rulings[id=owner-20261107-sra-formalization]`，`items[0]`；canonical SHA256=`f6ace2b1e1621da830421e57a9b886faac75de8f4bf7a895d0ecf0832438a129`。接受写入前已再次直接读取并与 [快照](owner-formalization-ruling.json) 逐值比较相等。算法与首次观察见 [转换收据](conversion-receipt.md)。接受所依据的六节语义为 [PR #648](https://github.com/mayf3/dsh-agent-core/pull/648) 的源 HEAD `61b97d326e337057cd1f71c0a6ff0dc37ab72ec2`。
