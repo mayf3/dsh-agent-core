@@ -20,3 +20,20 @@
 1. 窗口执行一律引用本目录脚本（Git SHA 钉定），禁止使用 /tmp 或会话工作区副本
 2. 任何节点修改须经 selftest + 回执后合入本目录
 3. 入口 C 流程见 ../../docs SOP-DEPLOY-MASTER（b7ctl 档案）
+
+## #629 stage04 观察边界（方案 A，2026-11-09）
+
+`window_helper.py` 的 `quiet` 只核对授权、旧进程身份、日志 mtime 与只读 census，
+并向本次 RD 写观察收据；不再执行 `settle-all-pending.sealed.mjs`，也不再追加
+`/tmp/fleet-v5-prep/settle-at-quiet.log`。mtime≥180s 不是 exact termination 证据；
+不得通过结算制造 clean census。停机后的逐条 exact termination-only settlement
+仍仅属于既有 stage05b，保留业务 UNKNOWN，且需要独立有效窗口授权。
+
+本修复保留 `census()` 的三空硬门：非空、不可读或证据漂移均不能得到 quiet PASS。
+runner 仍对 rc=1/10 最多轮询 80×30s，耗尽返回42；未放宽成 mandate V2 stage04
+允许非空的完整实现，亦未修正其他窗口就绪差距。`--dry-run` 的历史边界文本仍为
+150s，实际 quiet 门为180s。当前修改仅闭合停机前 settle 副作用，不代表窗口 GO。
+
+本次有界 selftest：`python3 -B scripts/fleet-window/test_quiet_observation.py`。
+它仅以内存替身运行实际 quiet/census AST，不启动 helper/runner/deploy 入口或子进程，
+不读取生产路径。权威坐标、验证结果与限制见 [`RECEIPT-FIX-629.md`](../../RECEIPT-FIX-629.md)。

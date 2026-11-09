@@ -125,16 +125,9 @@ elif op=='quiet':
     m=meta(log); age=time.time()-m['mtime_ns']/1e9
     save('quiet-last.json',{'at':now(),'path':str(log),'ageSeconds':age,'metadata':m})
     if age<180: sys.exit(10) # only bounded polling condition, never a failed gate retry
-    # supervisor: settle unresolved turns NOW (runtime up but mtime-quiet = no turn
-    # events in flight, so no re-persistence race); census must then read clean.
-    # H1 fix (2026-11-06): execute ONLY the root-sealed copy (0444) with hash pin;
-    # the /tmp working copy is never executed by this pipeline. H01 #1355.
-    import subprocess as sp
-    sealed=P('/usr/local/v5-boot-isolation/settle-all-pending.sealed.mjs'); regular(sealed)
-    require(digest(sealed)=='f0bbe6218d6b9d83ba64aedfb2e4219b1a2345e8f12767c93d388dbf3761ef49','settle script seal drift: H01 #1355')
-    r=sp.run(['sudo','-n','/usr/local/libexec/agent-core/node-runtime/bin/node',str(sealed)],capture_output=True,text=True)
-    open('/tmp/fleet-v5-prep/settle-at-quiet.log','a').write(r.stdout+r.stderr)
-    if r.returncode!=0: sys.exit(45)
+    # Observation only: mtime quiet is not exact termination evidence. Never
+    # settle pending records to manufacture a clean census before old exit.
+    # Keep the existing fail-closed census; exact settlement belongs to 05b.
     c=census('quiet-census'); require(quiet_ready(age,True,meta(log)==m),'log changed during census')
     save('quiet-pass.json',{'at':now(),'ageSeconds':age,'logMetadata':m,'censusHashes':c})
 elif op=='before-stop':
