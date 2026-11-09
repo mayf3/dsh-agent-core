@@ -22,6 +22,25 @@
 2. 任何节点修改须经 selftest + 回执后合入本目录
 3. 入口 C 流程见 ../../docs SOP-DEPLOY-MASTER（b7ctl 档案）
 
+## #629 stage04 观察边界（方案 A，2026-11-09）
+
+`window_helper.py` 的 `quiet` 只核对授权、旧进程身份、日志 mtime 与只读 census，
+并向本次 RD 写观察收据；不再执行 `settle-all-pending.sealed.mjs`，也不再追加
+`/tmp/fleet-v5-prep/settle-at-quiet.log`。mtime≥180s 不是 exact termination 证据；
+不得通过结算制造 clean census。停机后的逐条 exact termination-only settlement
+仍仅属于既有 stage05b，保留业务 UNKNOWN，且需要独立有效窗口授权。
+
+#629 原修复保留三空硬门；合并 main 后以 main 的现行观察/隔离分类实现为准：
+quiet 可观察非空 census，收据记录 `nonemptyBlocksQuiet=false`，不结算、不清 fence，
+保留业务 UNKNOWN；读取不可验证或证据漂移仍拒绝。停机后的 `require_isolation=True`
+分类门独立保留，不能用 quiet PASS 代替。runner 仍对 rc=1/10 最多轮询 80×30s，
+耗尽返回42；quiet 实际门为180s，`--dry-run` 历史文本仍为150s。
+历史修复范围见原收据；本次合并不代表窗口 GO。
+
+本次有界 selftest：`python3 -B scripts/fleet-window/test_quiet_observation.py`。
+它仅以内存替身运行实际 quiet/census AST，不启动 helper/runner/deploy 入口或子进程，
+不读取生产路径。权威坐标、验证结果与限制见 [`RECEIPT-FIX-629.md`](../../RECEIPT-FIX-629.md)。
+
 ## FWAV V1 源码适配
 
 `authority_validation/` 消费 accepted FWAV V1 的六类拒绝合同；执行器和 helper
