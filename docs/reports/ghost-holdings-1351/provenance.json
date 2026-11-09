@@ -1,0 +1,111 @@
+{
+  "captured_at": "2026-11-08T10:56:00.191244+00:00",
+  "repository": "mayf3/dsh-agent-core",
+  "worktree": "/Users/yanfenma/workspace/project/worktrees/h1351-gates",
+  "branch": "docs/1351-gates-spec",
+  "authoring_base": "1d3cef866f2bac545a4aa62ca53f5b0e178dd2a1",
+  "svc_reference": "b5096782f666ad22aa3508fdbf9562278a977c0f",
+  "input_snapshots": [
+    {
+      "source": "BRIEF-1351-SPEC-AUTHOR.md",
+      "snapshot": "docs/reports/ghost-holdings-1351/BRIEF-1351-SPEC-AUTHOR.md",
+      "sha256": "281a29776623bb3e821e468e0e3293ac5b02fe8b9c00877c8bad460f4692c643",
+      "bytes": 2166
+    },
+    {
+      "source": "STOPPED-1351-GATES.md",
+      "snapshot": "docs/reports/ghost-holdings-1351/STOPPED-1351-GATES.md",
+      "sha256": "8b48a8c8e6c3c9248975a3ecee4ccf5fa92bdcd61e75b3067879a9a5e3aca3f4",
+      "bytes": 9054
+    }
+  ],
+  "issue_snapshot_sha256": "79d9f4edf01101c85bca4c3e9a2dcaa0aec7028b96d3c3cef96ab9174debd3c3",
+  "authority_files": [
+    {
+      "path": "AGENTS.md",
+      "blob": "f068abfda1c7f461755dc1b05828bfb4f7163ae2",
+      "sha256": "4cb49c5f6bbb6e0389505c9eb4efefbe7a7f128710731da9ff2ebbf4f5c61f9a"
+    },
+    {
+      "path": ".agents/README.md",
+      "blob": "e3493fbf67f4cb2641c7990478d7c008c1dd9ca5",
+      "sha256": "18d2ee74877c9871b7a086bbc8ec02ae8219146c61e6ecfc4f33038b881c98e2"
+    },
+    {
+      "path": ".agents/local/README.md",
+      "blob": "f5b70bb201550fbe1852cf3c3c7b02d9714286a2",
+      "sha256": "31f8456a417aac5e0623bd7bef676357586420234ab95d15237a5f39b443343d"
+    },
+    {
+      "path": ".agents/skills/spec-governance/SKILL.md",
+      "blob": "229a047aed012fa27a9e94cda6a5c16538e8e2e3",
+      "sha256": "a26f27a6f37a40984d8f80be0eea67bcf99d5055b96d840a3116a58e9603be4f"
+    },
+    {
+      "path": ".agents/skills/spec-governance/modes/AUTHOR.md",
+      "blob": "9b489cc404ac6b8f32f11464fd27257b7ebc97aa",
+      "sha256": "317b28afb24b4dd657671215de705bf9f631842c38b1add60c7847ff4d986327"
+    },
+    {
+      "path": ".agents/protocol/SPEC_FORMAT_V0.md",
+      "blob": "26d90d7866161b0bd784165d2ca513531c9bfd54",
+      "sha256": "027b7600e240d33602e3e75ece381e82d097fdf3d5aa6f907fe46ccfff249ec4"
+    },
+    {
+      "path": "docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md",
+      "blob": "f260b482564a561cf97f1b94676b048f67bd2f90",
+      "sha256": "c8d2627086cb202dcf0e70d9e0d0a9aeb174ea1d74b0b9cfd54339d28c33fe9b"
+    },
+    {
+      "path": "docs/decisions/README.md",
+      "blob": "c4708e25e36dce2f91436352bfc00ba08e999b32",
+      "sha256": "0a64bf62cedac37ba8f39d6f81b90f2d7a117ee64c8f427e73537590e271fd0e"
+    },
+    {
+      "path": "docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md",
+      "blob": "0c3f6f6005794edec2faf666e4fb035a9c87b009",
+      "sha256": "fcc3603d8f1ab7b1ab10eda7088a56fb2e5095792336311d63a92f74fba6e160"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_STANDING_OPERATIONAL_DELEGATION_V1.md",
+      "blob": "6dea1c041266653cfaee9559f3686d5a135d5a46",
+      "sha256": "c49ff7a5e00643043280c9f839c3c17e4a17a169b2a829741a685a632a9e9e99"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V5.md",
+      "blob": "b65e597573eec7b0ec29d5f57a463eb7422a2a19",
+      "sha256": "e2160a5eff748d03daa199b08517bb89e1efaa64008020e27d0344385adf331a"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V2.md",
+      "blob": "66e969ee63596addb071f15662a1780d4ad8a701",
+      "sha256": "db24bb0e3d5eda569dbbba45b7b0bf80b7766caf74af2036f5e3832b57e29dd2"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2.md",
+      "blob": "0c2d4940633268775e92f34191ae0bdc5d547d19",
+      "sha256": "c2e26f825dc8cfbf9e2cd03acae885a2dd12781220046600414f80c2c9c2cddf"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1.md",
+      "blob": "a190c4496a889432ace9e874e0dc50ca8005ca9a",
+      "sha256": "9e10326829b49ea70c4a5eab299a9b21b8b8601cbdcdfafe06638500adc5dad9"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2.md",
+      "blob": "46ae89e6e944d2148907bee2417ad7706a40d1ff",
+      "sha256": "f8e8b0d48f8e2a682897c98f5003a1ffbd608ed722fb653a01bde81417767e7b"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V3.md",
+      "blob": "a8213199a6e653b34dda982aad942d8d37a535d8",
+      "sha256": "62d85acb81a94cbc0c56047264cb575a95a595c1403be4b004e05a2153d9e063"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V4.md",
+      "blob": "a98792d6289872201e9d9eb4db68b6cb3169b363",
+      "sha256": "1c062722dcdbf1b6663b049c3843bc832896838f0ea5703e6dd14ad9215a1224"
+    }
+  ],
+  "limitation": "Source/authority references only; previous surface mapping reused verbatim, not newly verified runtime or accepted four-gate contracts."
+}

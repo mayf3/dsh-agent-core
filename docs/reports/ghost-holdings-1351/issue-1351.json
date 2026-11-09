@@ -1,0 +1,23 @@
+{
+  "repository": "mayf3/agent-control",
+  "issue_number": 1351,
+  "retrieval": "GitHub connector fetch_issue + fetch_issue_comments during this authoring turn; per-call clock not separately collected",
+  "issue": {
+    "url": "https://github.com/mayf3/agent-control/issues/1351",
+    "title": "[PROD-BREAKFIX GHOST] agent 离册不留债：删除前 holdings 门禁 + 幽灵身份巡检 + 域 owner 活性校验 + 离职过户 runbook",
+    "body": "## 生产实录（2026-11-01）\n幽灵 principal `agent-d5b3aeb2`（8-23 创建 AUTH 身份，后从 gateway 注册表删除）：名下残留 **5 张活跃实例**（single_platform_dist ×3 publishing、bip_article_pipeline ×1、bip_podcast_v1 ×1）+ **single_platform 域 DOMAIN_OWNER**。治理链死锁：唯一能改派的 owner 是幽灵自己。今日人工修复（owner 过户给文章发布管家，receipt 已留档），其余待接管。\n\n## 需要的四道闸\n1. **删除门禁（GC gate）**：gateway 注册表删除/禁用 agent 前，强制检查 svc-workflow 侧 holdings（活跃实例 assignee + domain/global role bindings），非空则拒绝删除或强制先过户——删除侧控制\n2. **幽灵巡检（检测）**：巡检器新增一项：全量 principals 中，凡持有活跃实例 assignee 或 enabled 域/全局角色的，逐一对照在册 registry，不在册即告警并列出 holdings——检测侧（现有 watchdog 已能标 NOT_IN_REGISTRY，需覆盖 role 维度）\n3. **owner 活性校验**：domain_role_bindings 写入/启用时校验 principal 在册且 enabled，幽灵不得持 owner（引擎或 provisioning 侧）\n4. **离职过户 runbook**：agent 正常退役 = 标准过户流程（实例→对口角色、owner→对口角色），可做成 HR 域的一个小 workflow\n\n## 验收\n- 删除一个持有实例的 agent → 被门禁拦截\n- 巡检报告含幽灵 holdings 清单\n- 新设 owner 若不在册 → 被拒",
+    "user": "mayf3",
+    "created_at": "2026-11-01T10:57:31Z",
+    "updated_at": "2026-11-08T02:49:12Z"
+  },
+  "comments": [
+    {
+      "id": 6716360936,
+      "url": "https://github.com/mayf3/agent-control/issues/1351#issuecomment-6716360936",
+      "body": "## backlog 收敛·当前状态（2026-11-08，per Owner 收敛指令②）\n\n**三处置区分**（避免实现面混叠）：\n\n- **紧急停权** = disable principal：保留身份与其全部 holdings，活跃实例保持可见/fenced，恢复路径 = 重新 enable。GC 删除门禁**不得**拦截 disable，否则紧急止血会复现本 issue 实录的死锁形态。\n- **交接** = 过户本身：实例 assignee → 对口角色、domain owner → 对口角色。可独立发生（本单实录 `agent-d5b3aeb2` 的人工过户即此路径），也是退役的前置步骤。\n- **退役** = 过户完成 + 身份离册/归档：删除门禁只在过户未完成时拒绝\"删除/离册\"动作；过户完成后放行。\n\n**四道闸 ↔ 三处置映射**：\n1. GC 删除门禁 → 仅约束退役终点（删除/离册），不约束 disable；\n2. 幽灵巡检 → 检测侧兜底，覆盖三处置任何遗漏（现有 watchdog NOT_IN_REGISTRY 需扩 role 维度）；\n3. owner 活性校验 → 写入侧预防，三处置路径共同受益；\n4. 离职过户 runbook → 退役/交接的标准载体（HR 域小 workflow）。\n\n**缺口/责任/下一动作**：实现授权面 = gateway 注册表删除路径 + watchdog 扩维 + svc 引擎/provisioning 写入校验。当前无 in-flight worker；按 backlog 收敛长期规则进入优先队列，待在飞 #1370 语义核对完成后按容量接续派发。验收标准不变（正文三条）。\n",
+      "user": "mayf3",
+      "created_at": null,
+      "updated_at": null
+    }
+  ]
+}
