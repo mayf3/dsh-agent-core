@@ -11,15 +11,16 @@ scope:
   - human-gate-read-and-event-consumption
   - verified-human-answer-to-authorized-owner-resolution
   - existing-owner-assistance-single-resume
-date: 2026-11-06
-revision: proposal-2
+date: 2026-11-09
+revision: proposal-3-blocker-repair
 candidate_base: f6a1f77a8b7b878bcb9821a68836925755ca7076
+authority_reference_main: a242f8e1b622bdbc9a2d3518ecbcc6f976478a2b
 governed_by:
   - AGENT_CORE_PRODUCT_ARCHITECTURE_V1
   - AGENT_WORKSPACE_SESSION_MODEL_V3
   - AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2
   - AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3
-  - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3
+  - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V5
 external_authorities: []
 supersedes: []
 superseded_by: null
@@ -53,7 +54,10 @@ owners:
 
 ## 3. Authority and dependencies
 
-权威坐标固定为 `candidate_base` 中的本地 accepted authorities，优先级按本地治理：
+原 authoring 坐标保留为 `candidate_base`。本轮有效 WEC 权威改绑到
+`authority_reference_main` 的 accepted WEC V5（V3→V4→V5 整权后继），其余原输入
+不变；优先级按本地治理。该固定 main 快照只读核对，不表示 WEC5 已进入本分支的旧
+实施 base；后续实施仍须核对实际 base 中的 accepted 权威。文件哈希与读取方法见回执。
 
 | 本地权威 | 本协议继承的含义 |
 |---|---|
@@ -61,8 +65,8 @@ owners:
 | D-008 / `AGENT_WORKSPACE_SESSION_MODEL_V3` §14 | Agent 通知进入目标 canonical main；通知不复制 Workflow task authority |
 | Owner Workflows V2 §§1/6/8–9 | Svc owns intent/case/effect/receipt/STOP；ACK 不满足义务；Core 不 resolve case；UNKNOWN readback-only；无 Core case/phase engine |
 | WAE V3 `CTR-WAE-001b` | 原 due feed 完整 keyset sweep、无持久 cursor/queue/lease；不得以通知流代替可执行任务发现 |
-| WEC V3 `CTR-WEC1-005` | 一次稳定 `wfassist-<caseId>` Owner wake；admission ACK 与业务完成分离；只有显式 Owner 升级产生 HUMAN_REQUIRED |
-| WEC V3 `CTR-WEC1-008` | 显式授权 resolve 的精确 Svc 凭证、settled 前驱与单次 permit 消费 |
+| WEC V5 携带的 `CTR-WEC1-005` | 一次稳定 `wfassist-<caseId>` Owner wake；admission ACK 与业务完成分离；只有显式 Owner 升级产生 HUMAN_REQUIRED |
+| WEC V5 携带的 `CTR-WEC1-008`、`CTR-WEC4-010` / `ACC-WEC4-003` | 原精确 Svc 凭证、settled 前驱与单次 permit 消费；两类远端 collection 锁外执行，重获同锁后 current ledger replay、fresh 权威终检、单次 append；A 采集等待不阻塞无关 B |
 
 交办输入：[任务 #1374](https://github.com/mayf3/agent-control/issues/1374)、
 [Owner 议题 #1352](https://github.com/mayf3/agent-control/issues/1352) 和
@@ -72,8 +76,13 @@ owners:
 作者 `mayf3`，创建/更新时间 `2026-11-04T04:42:18Z`（2026-11-04 12:42:18 +08），
 正文标注“监管代记”。三点持久裁定是：通知 HUMAN_GATE 群（附实例上下文与已尝试清单）；
 仅 Owner 指定的域 owner 可代答/resolve，普通 Agent 不得代 Owner 意志；24h 无 resolve
-则升级再提醒，不自动降级或关闭实例。2026-11-06 Owner 裁定④的本次交办进一步明确
-未 resolve 处置期限及普通/managed 路径分拆；修订映射与核验方法见 `RECEIPT-627-REVISION.md`。
+则升级再提醒，不自动降级或关闭实例。2026-11-06 原任务指令④及其 Brief 本轮为
+`NOT_LOCATED`（不可读不等于不存在），不凭旧路径/哈希重建原文。2026-11-08 持久
+DISPATCH-REGISTRY 的 `$.rulings[id=owner-20261108-three-unified].items[3]` 与
+`$.rulings[id=owner-20261108-backlog-convergence].items[3]` 已本地只读核实：仅常设授权
+§7 所列新风险/新决策才最小差量 HUMAN_GATE，#1352 复用已裁定不重请。此政策语义
+重锚定不重决产品裁定；原提案的期限、路径约束与依赖边界保留，不冒充上述来源原文。
+可读摘录、持久路径、哈希、历史评论核验和局限见 `RECEIPT-627-REVISION.md`。
 
 `external_authorities: []` 表示本轮没有核得可绑定的 Svc HUMAN_GATE accepted authority
 及其 exact revision，不表示不存在跨仓依赖。Svc 持久 obligation producer/后继由 #1378
@@ -101,6 +110,10 @@ owners:
   author、created/updated time、issue URL 与正文，三项裁定均有持久记录。API 来源、
   正文 SHA-256 与核验时间见 `RECEIPT-627-REVISION.md`；这仅证明裁定记录存在，
   不证明 HUMAN_GATE 收件、Svc 计时/提醒或 resolve 接线已经实现。
+- `OBS-HG-004`：2026-11-09 在隔离 `/private/tmp/review-627/repo` 本地只读核对
+  `authority_reference_main` 的 accepted WEC5 及其携带的 CTR-WEC1-008、CTR-WEC4-010、
+  ACC-WEC4-003；同时读取上述 DISPATCH-REGISTRY 两条 ruling。方法、源文件哈希与
+  最小摘录见回执；未访问生产，未重新访问 GitHub 评论，原指令④仍为 NOT_LOCATED。
 
 ## 6. Claims and assumptions
 
@@ -124,6 +137,10 @@ relation 仅为设计推断，充分性限于 §10 逐步拒绝反例。§11 所
 `EVD-HG-003`：`OBS-HG-003` SUPPORTS §3 三项 Owner 裁定的持久来源；目标为
 DEC-HG-002/003、CTR-HG-002/003/008 的 authoring 输入，坐标为精确 comment ID、
 作者、时间和回执正文哈希。足以撤销旧“待核验”缺口，不足以证明跨仓 acceptance 或运行效果。
+
+`EVD-HG-004`：`OBS-HG-004` SUPPORTS §3 当前 WEC 权威、CTR-HG-007/ACC-HG-007 的
+锁时序与已裁定不重请的来源重锚定；坐标为固定 main SHA、registry path/selector、
+回执摘录及哈希。足以复核本次文档修复，不证明原指令④原文、并发改善或产品/运行验收。
 
 ## 8. Decisions (proposed)
 
@@ -189,14 +206,15 @@ pending/settled 的同 request ACK 仍只证明 admission。不得换 key/Sessio
 关系及既有 CAS/receipt 条件；通知 recipient、答复人和 `resolverPrincipalId` 各自记录，
 不得混同。无权限的答复人不能借 Core、Agent credential、Owner 字段或“回复”获得授权。
 
-按本次 Owner 裁定④给定的路径事实，消费前必须分拆两类，不能把普通路径外推到 managed：
+保留原提案的路径约束（原指令④ NOT_LOCATED，来源重锚定见 §3/回执）；消费前
+必须分拆两类，不能把普通路径外推到 managed：
 
 | case 路径 | 合法推进约束 / Core 消费边界 |
 |---|---|
 | 普通 Assistance case（非 opted-in managed） | 既有 `owner_action` 支持 `HUMAN_REQUIRED→RESOLVED`；仍需指定域 owner 的真实 caller、显式授权、当前状态/CAS 与实际 receipt/readback。只有该合法 resolve 凭证及 WEC008 全部证明成立时，Core 才可消费一次 resume |
 | opted-in managed case | 必须走 `require_effect`，关联真实 `STARTED` 的 `REVIEW` effect，遵守既有 managed admission/receipt/STOP guard。在现有可达路径下，直接 Owner resolve 被 managed guard 拦截，不能因“有权 Owner”而绕过。HUMAN_REQUIRED 后的 managed 合法后继由 Svc 的 #1378/#1352 责任线闭合；本 Core 合同只描述消费面，不创建或承诺该后继已可达 |
 
-以上路径约束是本次交办输入，不构成 Svc 实现/运行验收。Core 不代行 resolve，不从
+以上路径约束保留为提案消费边界，不作为已核得原指令④原文或 Svc 实现/运行验收。Core 不代行 resolve，不从
 通知/答复构造 resolved Event，也不新增 HUMAN_REQUIRED 旁路。实际路径若不允许该
 状态或所需输入，则维持待处置并报告 UNKNOWN/缺权威，交 Svc 所属 accepted authority
 闭合；不得通过放宽现有 managed guard 解决。只有已提交、可读回的合法 resolve
@@ -261,11 +279,27 @@ known delivery 且 fresh Router reconciliation 正面证明 `settled`。pending/
 unavailable/ambiguous（包括 `run_outcome_unknown`）均拒绝；stale-path quiescence
 替代证据不能用于这里。原 attempt 自身落盘的 `preDeliveryWorkflowStateVersion` 不得后补。
 
-Core 持既有 admission lock，fresh pre-plan read 验证同一 ACTIVE dispatch/instance/visit/
-assignee；要求 `baseline < requestEventSequence < resolutionEventSequence <= workflowStateVersion`，
-且证据版本等于新计划 fresh pre-plan version。一次 locked durable `attempt_planned`
-同时产生 N+1 并消费 permit，落盘新 baseline、相同 identity、`previousAttemptId`、
-`retryReason:owner_assistance_resolved` 及原样 `assistanceResume`。不增第二份消费账本。
+沿 WEC5 携带的 CTR-WEC4-010：先在既有 admission lock 内 replay ledger，捕获 detached
+context（精确 tuple、前驱/不存在、generation、state/phase、baseline、settled proof、
+eligibility、budget、已消费 case/Event 及 replay 坐标），不占用 generation 或消费 permit。
+释放锁，在锁外完成两类远端 collection：fresh pre-plan read 与 Owner-resume evidence
+read；响应须绑定原 tuple、前驱、baseline、Svc version 与 Event sequence。A 等待任一
+采集时，无关 eligible B 必须能取得锁完成正常 admission。
+
+随后重获同一 admission lock → replay CURRENT durable ledger → 比较全部相关本地前置
+条件 → 在该锁内 commit-preparation 坐标取得 fresh trusted 权威终检 → 单次 append。
+终检须正面确认当前同一 ACTIVE dispatch、非终态 instance、current visit、assignee 及
+workflow-state version 均等于锁外结果；仅 local revision、结果 TTL 或两份旧 read 相同
+不足，不能以在锁内重跑整套 collection 替代。无关 ledger append 保留；相关前驱、预算、
+eligibility、permit consumption 或外部身份/版本变化、缺失/不可验证均丢弃旧结果，本轮
+零 plan、零 permit consumption、零 delivery；沿原 refusal/正常 sweep，不改 refusal code
+或重试政策、不把旧结果换 baseline/前驱再用。
+
+仍要求 `baseline < requestEventSequence < resolutionEventSequence <= workflowStateVersion`，
+证据版本等于锁外 fresh pre-plan version 并经终检确认相等。全部通过才一次 locked durable
+`attempt_planned` 同时产生 N+1 并消费 permit，落盘该 pre-plan version 为新 baseline、
+相同 identity、`previousAttemptId`、`retryReason:owner_assistance_resolved` 及原样
+`assistanceResume`。不增第二份消费账本，其余 resolution/WAL/delivery 的原锁纪律不变。
 
 一个 resolve 最多授权一次 next generation，非“每收到一次消息执行一次”。case/Event pair/
 due row/restart 重放均不可再次 mint；多个旧 case 不能连续推动后续 generation。generation
@@ -336,7 +370,7 @@ receipt/readback 证据前，完整 P1-A 仍不得宣称 `SOURCE_VERIFIED` 或�
 | ACC-HG-004 / CTR-HG-004 | 普通 case 走 owner_action HUMAN_REQUIRED→RESOLVED；对比 opted-in managed 直接 Owner resolve、缺/伪 STARTED REVIEW effect；另测撤权/换 Owner/非法状态/CAS drift | 隔离真实 Svc 命令/DB 与 managed effect fixture | 路径分类、真实 caller/Domain 检查、guard 拒绝、require_effect 与真实 STARTED REVIEW effect、命令 receipt/Event、前后 readback | 普通合法 resolve 产生实际关联 receipt；managed 直接 resolve 被现有 guard 拦，合法后继只能按 Svc accepted 合同验证，缺失则 UNKNOWN/零推进 | 外推普通路径、Core 自 resolve、借 credential、放宽 managed guard、伪 effect、无 receipt 成功 |
 | ACC-HG-005 / CTR-HG-005 | 校验封闭投影，缺字段/乱序/重复/丢事件后重读；>100 due rows 首100已 attempted | 隔离 Svc 只读/事件面 + Core sweep | exact DTO/schema、授权范围、恢复后责任、cursor 原值及101+发现记录 | 缺证据拒绝；事件非唯一正确性路径；原 WAE sweep 保持 | 自签投影、跨域枚举、漏责任、页上限/持久 case cursor、修改 due DTO |
 | ACC-HG-006 / CTR-HG-006 | 对比 resolution link 与原 WEC008 DTO；普通/policy ingress、错 resolver/version/case | 隔离真实 Svc evidence seam | 原 receipt/Event join、exact request/response、身份/版本值 | 仅既有两种 ingress、原 DTO、精确关联被接受 | 第三种 human ingress、混淆 assignee/Owner、缺/假证明授权 |
-| ACC-HG-007 / CTR-HG-007 | settled 正例与 UNKNOWN/pending/legacy baseline/换 tuple/STOP 反例；并发/重复/replay/旧cases | 隔离实际 Core engine/ledger + Svc | fresh Router settled、lock 内 reads、sequence、原 planned append、delivery count | 一个 resolve 最多一个 N+1；原 budget/STOP 保持 | 双消费、新 permit store、补 baseline、UNKNOWN resume、自动续跑 |
+| ACC-HG-007 / CTR-HG-007 | settled 正例与 UNKNOWN/pending/legacy baseline/换 tuple/STOP 反例；分别 barrier 暂停 A 的远端 pre-plan/evidence collection，令无关 B admission；真实独立双 writer 共享 ledger；采集后注入相关本地/外部 drift；并发/重复/replay/旧 cases | 隔离实际 Core engine/ledger/OwnerLock + Svc，按 WEC5 携带的 ACC-WEC4-003 | 两次 collection 锁外 barrier、同锁获取/释放、current replay、fresh 权威终检及 sequence/version 等值、全部 durable lines、delivery count、等待耗时含终检、implementation SHA | 两个 interval 中 B 均在解除 A barrier 前完成；A 仅在终检通过后单次 append；一个 resolve 最多一个 N+1；原 budget/STOP 与全部 writer append 保持，相关 drift 零 plan/消费/delivery | B 被 A collection 阻塞、锁内重跑整套采集、漏报终检等待、无权威等值终检、丢 append、双消费、新 permit store、补/换 baseline、UNKNOWN resume、自动续跑 |
 | ACC-HG-008 / CTR-HG-008 | 第 1 小时回复且验证成功但未 resolve，推进至原 24h；到期前后 Core/Svc 重启、丢事件/通知失败后恢复重发现；晚到/response loss；crash before/after plan、before/after delivery_started | 隔离 paired fixture；可控时钟/故障与 Svc 现有责任/通知机制 | 原 escalationAt/resolutionDueAt、1h 验证记录、24h 未 resolve readback、持久升级提醒及发送/失败结果、恢复重发现、原 receipt、exact correlation、ledger replay/投递计数 | 回复/ACK/验证不取消责任；未 resolve 到期持久升级再提醒，重启/通知失败不丢责任不改期限；到期不授权；UNKNOWN readback-only；仅 WEC008 正面 never_existed 可同 attempt 恢复 | 仅 OVERDUE/日志/易失提醒、回复即取消责任、deadline 重置、失败假送达或丢责任、自动 resolve、未知换 key/重放、STOP 被消息清除 |
 
 ## 12. Alternatives and disposition
