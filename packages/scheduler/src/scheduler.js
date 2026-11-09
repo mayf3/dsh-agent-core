@@ -1,6 +1,6 @@
 import { normalizeJob, toPublicJob } from './job-model.js'
 import { applyTransition, rebuildFences } from './occurrence-model.js'
-import { classifyAdmissionFailure, createAdmissionIsolation, recordStaleSupersession } from './watchdog/admission-isolation.js'
+import { classifyAdmissionFailure, createAdmissionIsolation, recordStaleSupersession, recordRetryBudgetExhausted } from './watchdog/admission-isolation.js'
 import {
   DEFAULT_AT_CATCHUP_GRACE_MS,
   deriveJobStateSummary,
@@ -281,6 +281,9 @@ export class Scheduler {
         }
         if (retry?.staleRevision) {
           await recordStaleSupersession(this.store, this._admissionIsolation.staleRetryNoted, job, retry, now)
+        }
+        if (retry?.budgetExhausted) {
+          await recordRetryBudgetExhausted(this.store, this._admissionIsolation.staleRetryNoted, job, retry, now)
         }
         const natural = naturalCandidate({
           job,

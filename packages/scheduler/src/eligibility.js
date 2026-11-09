@@ -30,6 +30,14 @@ import { isUnresolvedUnknown } from './occurrence-model.js'
 export const ONE_SHOT_RETRY_BACKOFF_MS = [30 * 1000, 60 * 1000, 300 * 1000]
 /** Recurring retry backoff (default policy, D-007 §7.5 — explicit opt-in only). */
 export const RECURRING_RETRY_BACKOFF_MS = [30 * 1000, 60 * 1000, 5 * 60 * 1000, 15 * 60 * 1000, 60 * 60 * 1000]
+/**
+ * Scheduler-side retry chain budget (R131, #1374 comment 6742827890): the
+ * maximum number of scheduler-minted retries after one natural occurrence —
+ * a TOTAL round-level budget, deliberately separate from the model client's
+ * per-request retry policy (which resets per occurrence/session). Mirrors the
+ * production-proven chain length (HR L4 2026-11-09: natural + 3 retries).
+ */
+export const RETRY_CHAIN_BUDGET = 3
 /** Native at-one-shot catch-up grace: a missed `at` slot older than this is stale. */
 export const DEFAULT_AT_CATCHUP_GRACE_MS = 15 * 60 * 1000
 
@@ -177,6 +185,22 @@ export function retryCandidate({ job, occurrences, nowMs }) {
       terminal,
       retryOfOccurrenceId: terminal.occurrenceId,
       predecessorScheduleRevision: terminal.scheduleRevision,
+    }
+  }
+  // R131 (#1374 comment 6742827890): the retry chain must carry a FINITE
+  // budget, separate from the model client's per-turn retry policy — the
+  // client budget resets inside every new occurrence/session, so without a
+  // chain cap a persistently failing auto-retry job would loop forever AND
+  // starve its own natural slots (the tick `continue`s on any mintable
+  // retry). Budget exhaustion is durable-evidenced by the engine
+  // (retry_budget_exhausted) and falls through to the natural schedule.
+  if (chain >= RETRY_CHAIN_BUDGET) {
+    return {
+      exhausted: true,
+      budgetExhausted: true,
+      chain,
+      terminal,
+      retryOfOccurrenceId: terminal.occurrenceId,
     }
   }
   const endedAt = terminal.endedAt ?? terminal.admittedAt

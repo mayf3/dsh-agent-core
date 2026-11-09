@@ -62,6 +62,27 @@ export async function recordStaleSupersession(store, notedSet, job, retry, now) 
 }
 
 /**
+ * R131 (#1374 comment 6742827890): durable receipt when a job's scheduler
+ * retry chain hits the finite round-level budget (RETRY_CHAIN_BUDGET). The
+ * engine then falls through to the natural schedule; this event is the
+ * MISSED_RUN_EXPLAINABLE evidence that the remaining gap moved back to the
+ * natural slots (it is NOT a completion of the failed obligation).
+ * Deduped per engine session per (jobId, predecessor), same append-proof
+ * discipline as recordStaleSupersession.
+ */
+export async function recordRetryBudgetExhausted(store, notedSet, job, retry, now) {
+  const notedKey = `budget:${job.id}:${retry.retryOfOccurrenceId}`
+  if (notedSet.has(notedKey)) return
+  const receipt = await store.appendRunEvent({
+    ts: now, action: 'retry_budget_exhausted', jobId: job.id,
+    retryOfOccurrenceId: retry.retryOfOccurrenceId,
+    chain: retry.chain,
+    jobScheduleRevision: job.scheduleRevision,
+  })
+  if (receipt?.ok === true) notedSet.add(notedKey)
+}
+
+/**
  * C-SH-002 durable receipt for a RETRY candidate's admission failure (the
  * candidate has no nominal slot, so the slot-accounting channel cannot carry
  * it): a retry-specific evidence event with the canonical retry identity and
