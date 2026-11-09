@@ -1,0 +1,43 @@
+{
+  "source": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json",
+  "observed_at_utc": "2026-11-07T07:13:34.320006+00:00",
+  "source_file_sha256": "f379f2b380eaea907dde806db45af6e26b0ae53858884b1a965519ae7b78bcbc",
+  "canonicalization": "UTF-8 json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':')); no trailing newline",
+  "records": [
+    {
+      "selector": "$.rulings[id=owner-20261107-preauth-v2]",
+      "observed_index": 1,
+      "canonical_sha256": "087461a2a7424088b258940393ef4f9ad5939e59d0a1e420dfc57efd2829c006",
+      "record": {
+        "ts": "2026-11-07 14:43",
+        "id": "owner-20261107-preauth-v2",
+        "items": [
+          "核心原则: Owner定长期边界+重大新决策; 合法受托维护者做既定语义接受+合规发布签发; 执行Agent实现; 已授权工作不因新commit/Session/窗口/PR/worker更换重复请批",
+          "Spec接受委托: Owner已决定且语义无实质变化的规范继任→明确授权+可归属+独立于作者的维护者按现行规则正式接受; 先核身份/权限/委托范围/可接受Spec类型; 独审PASS≠自动接受; 执行者不得自我签发",
+          "常设发布签发委托: 期限范围明确的Standing Release Authorization+Release Captain签发符合accepted Contracts的标准可恢复生产发布; 每次仍须完整Execution Mandate(精确候选+预期旧版/installer/harness/闭包/生产状态+在飞+外部效果边界/认证+consumer兼容/唯一执行者+独立verifier+时窗+最大尝试/回滚证明+STOP条件+终收据); 条件全过Captain签发不逐单请批; 须现行合法授权体系承认+可执行控制, 不能只靠提示词/自写JSON",
+          "stage10通用原则: 标准可恢复发布在旧runtime+已派发外部操作终止或有效隔离+全部技术与合同门通过后, stage10 bootstrap可作停机containment结束点; 只恢复原有合法自然准入, 不清历史UNKNOWN/不绕fence/不重放/不放宽认证; 需bootstrap后继续全局暂停的发布非标准类, 须另行证明机制",
+          "授权失败处理: 普通缺陷/测试失败/installer未资格/构建不兼容/缺证→原责任链自行补齐重验; 缺证禁依赖操作但不把已授权修复停成WAITING_OWNER; 仅未授权语义变化/危险迁移/扩权/无法安全回退/超发布策略重大风险才找Owner",
+          "实施边界: 复用现有HR/Root/ITOps/QA/Issue/PR/Mandate/Runbook/Receipt; 不建第二套审批平台; 委托与发布控制真正生效前现行生产禁令继续; 不追认来源未知部署; 不自动签发W7",
+          "行动指令: 原治理责任链先完成受托角色+签发范围+技术强制门适配→可执行委托版本提交合法接受→之后日常发布自主推进"
+        ]
+      }
+    },
+    {
+      "selector": "$.rulings[id=owner-20261107-preauth-v2-supplement]",
+      "observed_index": 2,
+      "canonical_sha256": "6b734043df5d6f0314ac426450ad449a1c0afd601721aa27a16ef570cf0bbada",
+      "record": {
+        "ts": "2026-11-07 15:10",
+        "id": "owner-20261107-preauth-v2-supplement",
+        "items": [
+          "①首任Captain未确定: uid502仅候选不直接授予签发权; DISPATCH-REGISTRY只证任务归属不能替代正式身份及权限委托; 须核定具体受托Principal/职责分离/授权范围/有效期/撤销方式/实际工具执行控制; 作者、发布执行者与独立验证者不得同一身份完成全链签发和验收",
+          "②首次SRA接受不得循环授权: 原责任链起草+独立审查→由现有合法授权签发者(mayf3)正式接受; 候选Captain不得自行接受SRA; 首次委托生效后Captain才能在范围内签发后续Mandate",
+          "③W7只作首单候选: installer/auth/状态兼容/真实生产前态/回退/stage10/独立验证全部必需门完成后按SRA标准类判断; 任何关键门UNKNOWN不得自动签发",
+          "④不再扩大审批系统: 复用现有Spec/PR/Mandate/Receipt及既有权限控制",
+          "生产禁令不变: OPERATION_ALLOWED_NOW=NO"
+        ]
+      }
+    }
+  ],
+  "authority_effect": "Read-only source snapshot; no acceptance, appointment, issuance or registry mutation"
+}

@@ -1,0 +1,30 @@
+{
+  "source": "scripts/fleet-window/window_helper_core.py",
+  "source_sha256": "655ef82e19e294c6519b285b6ec13b7679cbd8dd3c3b5f82e594612b8e1e73ac",
+  "method": "AST extraction of require/stamp/validate_authority only; module not imported",
+  "production_calls": 0,
+  "network_calls": 0,
+  "executed_at_scope": "isolated synthetic pure functions",
+  "results": [
+    {
+      "case": "no_appointment_or_captain",
+      "result": "ACCEPTED_BY_PURE_VALIDATOR"
+    },
+    {
+      "case": "extra_forbidden_scope",
+      "result": "ACCEPTED_BY_PURE_VALIDATOR"
+    },
+    {
+      "case": "self_asserted_nonexistent_expired_appointment",
+      "result": "ACCEPTED_BY_PURE_VALIDATOR"
+    },
+    {
+      "case": "expired_window_control",
+      "result": "REJECTED_BY_PURE_VALIDATOR",
+      "reason": "window authorization not current"
+    }
+  ],
+  "limitation": "Not full executor, actual admission, production effect or future-control qualification",
+  "observed_at_utc": "2026-11-07T07:17:21.648575+00:00",
+  "raw_rc": 0
+}

@@ -1,0 +1,90 @@
+{
+  "started_at_utc": "2026-11-07T07:30:41.589071+00:00",
+  "finished_at_utc": "2026-11-07T07:30:41.645015+00:00",
+  "worktree": "/private/tmp/fleet-captain-design-docs",
+  "scope": "R3b receipt and STOPPED bytes only plus docs path/JSON/whitespace; reuse prior R2 full checks",
+  "reused_checker": "docs/reports/captain-design-20261107/static-checks.md",
+  "reused_checker_sha256": "e1362f2d7f18eab0dc9ef04b36d63aac753cb22be9a2d61dac14d375665a1d32",
+  "method": "AST select visible_lines, links and LINK from R2 checker without executing its full-check body; validate affected local links, R2 stdout inclusion, hashes, JSON and git diff whitespace",
+  "input_sha256": {
+    "RECEIPT-CAPTAIN-DESIGN.md": "d34ce7b33495972c60cca70e9ba4d65fed21b1ece8aa42ded544380d59f2f94a",
+    "STOPPED-CAPTAIN-DESIGN.md": "a8733182c58398e1e66d4d742aff94ad68fe5af75570af6043d02a60798c3acd"
+  },
+  "raw_rc": 0,
+  "stdout": "PASS R3b receipt/STOPPED affected bytes: fenced parser, local links=22, whitespace, complete verbatim R2 stdout and actual receipt hash\nPASS R1 proposal and R2 checks.json unchanged; no full checks/probe re-execution\nPASS docs-only path scope and report JSON parsing\n{\"argv\": [\"git\", \"diff\", \"--check\"], \"raw_rc\": 0, \"stdout\": \"\", \"stderr\": \"\"}\n{\"argv\": [\"git\", \"diff\", \"--cached\", \"--check\"], \"raw_rc\": 0, \"stdout\": \"\", \"stderr\": \"\"}\nR3B_AFFECTED_CHECKS_PASS raw_rc=0\n",
+  "stderr": "",
+  "excluded_fences": [
+    {
+      "path": "RECEIPT-CAPTAIN-DESIGN.md",
+      "start": 3,
+      "end": 25,
+      "reason": "fenced code"
+    },
+    {
+      "path": "RECEIPT-CAPTAIN-DESIGN.md",
+      "start": 67,
+      "end": 76,
+      "reason": "fenced code"
+    },
+    {
+      "path": "STOPPED-CAPTAIN-DESIGN.md",
+      "start": 5,
+      "end": 10,
+      "reason": "fenced code"
+    },
+    {
+      "path": "STOPPED-CAPTAIN-DESIGN.md",
+      "start": 12,
+      "end": 26,
+      "reason": "fenced code"
+    },
+    {
+      "path": "STOPPED-CAPTAIN-DESIGN.md",
+      "start": 34,
+      "end": 38,
+      "reason": "fenced code"
+    },
+    {
+      "path": "STOPPED-CAPTAIN-DESIGN.md",
+      "start": 42,
+      "end": 49,
+      "reason": "fenced code"
+    },
+    {
+      "path": "STOPPED-CAPTAIN-DESIGN.md",
+      "start": 78,
+      "end": 83,
+      "reason": "fenced code"
+    },
+    {
+      "path": "STOPPED-CAPTAIN-DESIGN.md",
+      "start": 93,
+      "end": 107,
+      "reason": "fenced code"
+    },
+    {
+      "path": "STOPPED-CAPTAIN-DESIGN.md",
+      "start": 120,
+      "end": 122,
+      "reason": "fenced code"
+    },
+    {
+      "path": "STOPPED-CAPTAIN-DESIGN.md",
+      "start": 137,
+      "end": 140,
+      "reason": "fenced code"
+    },
+    {
+      "path": "STOPPED-CAPTAIN-DESIGN.md",
+      "start": 166,
+      "end": 182,
+      "reason": "fenced code"
+    },
+    {
+      "path": "STOPPED-CAPTAIN-DESIGN.md",
+      "start": 194,
+      "end": 201,
+      "reason": "fenced code"
+    }
+  ]
+}
