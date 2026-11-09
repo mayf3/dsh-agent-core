@@ -1,0 +1,117 @@
+{
+ "schema_version": 3,
+ "purpose": "v3 extension: add spawn.js (656367cd child-exit settlement fix) to the landing candidate; same-counterexample RED->GREEN with the ORIGINAL author's test files (byte-identical from git 656367cd)",
+ "composition": {
+  "red_2file": {
+   "event-correlation.js": "1e6340b3... (Git656 candidate)",
+   "state-machine.js": "53f02f66... (Git656 = base)",
+   "spawn.js": "add4e95e... (installed defective, binary kind check)"
+  },
+  "green_3file": {
+   "event-correlation.js": "1e6340b3... (Git656 candidate)",
+   "state-machine.js": "53f02f66... (Git656 = base)",
+   "spawn.js": "ca97f2c4... (Git656 blob 3e9fa7c4, byte-identical to base)"
+  },
+  "tests": "correlation.test.js + late-settlement.test.js copied byte-identical from git 656367cd",
+  "note": "base 6ad69d1f already contains the 656 fix (656 is a base ancestor); RED is produced by overriding spawn.js with the installed defective copy; the worktree was restored to clean base after every run"
+ },
+ "runs": [
+  {
+   "name": "red-2file-candidate.log",
+   "node": "production runtime v25.6.1 sha256 c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b",
+   "exit": 1,
+   "tests": "55",
+   "fail": 9,
+   "observed": {
+    "utc": "2026-11-09T01:22:40.524050+00:00",
+    "beijing": "2026-11-09T09:22:40.524050+08:00"
+   }
+  },
+  {
+   "name": "green-3file-candidate.log",
+   "node": "production runtime v25.6.1 sha256 c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b",
+   "exit": 0,
+   "tests": 55,
+   "fail": 0,
+   "observed": {
+    "utc": "2026-11-09T01:23:19.853322+00:00",
+    "beijing": "2026-11-09T09:23:19.853322+08:00"
+   }
+  },
+  {
+   "name": "green-3file-candidate-devnode.log",
+   "node": "dev v26.7.0 (/opt/homebrew/bin/node)",
+   "exit": 0,
+   "tests": 55,
+   "fail": 0,
+   "observed": {
+    "utc": "2026-11-09T04:27:21.079583+00:00",
+    "beijing": "2026-11-09T12:27:21.079583+08:00"
+   }
+  },
+  {
+   "name": "regression-full-lifecycle.log",
+   "node": "production runtime v25.6.1 sha256 c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b",
+   "exit": 1,
+   "tests": 223,
+   "pass": 218,
+   "fail": 4,
+   "note": "full process-lifecycle dir with BASE test files on GREEN tree",
+   "observed": {
+    "utc": "2026-11-09T01:24:00.179159+00:00",
+    "beijing": "2026-11-09T09:24:00.179159+08:00"
+   }
+  },
+  {
+   "name": "baseline-pure-base.log",
+   "node": "production runtime v25.6.1 sha256 c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b",
+   "exit": 1,
+   "tests": 223,
+   "pass": 218,
+   "fail": 4,
+   "note": "pure base tree (all src+tests restored): failure set IDENTICAL to candidate run -> all 4 pre-existing, none candidate-caused",
+   "observed": {
+    "utc": "2026-11-09T01:24:19.607009+00:00",
+    "beijing": "2026-11-09T09:24:19.607009+08:00"
+   }
+  },
+  {
+   "name": "baseline-pure-base-devnode.log",
+   "node": "dev v26.7.0",
+   "exit": 1,
+   "tests": 223,
+   "pass": 218,
+   "fail": 4,
+   "note": "same 4 pre-existing failures on dev node too (not node-build-specific)",
+   "observed": {
+    "utc": "2026-11-09T01:24:58.233634+00:00",
+    "beijing": "2026-11-09T09:24:58.233634+08:00"
+   }
+  }
+ ],
+ "redFailures": [
+  "EXIT_REASON {\"kind\":\"aborted\",\"reason\":{\"kind\":\"disposed\"}}: frozen parser evidence uses exact outcome precedence",
+  "EXIT_REASON {\"kind\":\"blocked\"}: frozen parser evidence uses exact outcome precedence",
+  "EXIT_REASON {\"kind\":\"max-tokens\"}: frozen parser evidence uses exact outcome precedence",
+  "EXIT_REASON {\"kind\":\"interrupted\"}: frozen parser evidence uses exact outcome precedence",
+  "EXIT_REASON {\"kind\":\"future-reason\"}: frozen parser evidence uses exact outcome precedence",
+  "EXIT_REASON undefined: frozen parser evidence uses exact outcome precedence",
+  "EXIT_REASON null: frozen parser evidence uses exact outcome precedence",
+  "EXIT_REASON \"completed\": frozen parser evidence uses exact outcome precedence",
+  "NON_OUTCOME_CORRELATION: unrelated aborted events and stale idle cannot release the original fence"
+ ],
+ "redFingerprint": {
+  "file": "late-settlement.test.js",
+  "case": "EXIT_REASON {\"kind\":\"aborted\",\"reason\":{\"kind\":\"disposed\"}}",
+  "actual": "late_completed",
+  "expected": "terminated_without_outcome",
+  "meaning": "timeout -> aborted terminal -> child exit before idle FABRICATES success under the 2-file candidate"
+ },
+ "artifacts": {
+  "spawn.js.diff": "1ec1c08a05b5dbc164334a6c9cbdf9a27108a110a8788198846d13011dab7750",
+  "delta.json": "dc31a1084e049be1f852eba0d9b0e3144166b6897cfbc040cdca3fad7b367945",
+  "candidate-manifest.json": "69943b500021ec0aca14bc43765ac58d4c3ff8f55ad7719858b30f759f112889",
+  "regenerate-candidate-manifest.py": "e9ed5b500c4d0cd6195a2c1e9c6c6470f53847adde5abdeb35a6aa73026c430b"
+ },
+ "limits": "Source-tree composition test: the installed app pack is not bootable as a copy (27 symlinks into production/Harness). The RED/GREEN exercises the REAL AgentProcess + REAL spawn.js onChildExit via the original author's fault-injection harness on the base source tree, with the exact candidate files overridden. It does not itself execute the production runtime process; production-level re-verification stays in the runbook after controlled install."
+}
