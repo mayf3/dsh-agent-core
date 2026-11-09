@@ -1,0 +1,2158 @@
+{
+  "schemaVersion": 1,
+  "preparedAt": "2026-11-08T23:19:50.539549+08:00",
+  "coordinate": {
+    "worktree": "/Users/yanfenma/workspace/project/worktrees/recon-m7-writer",
+    "branch": "recon/m7-root-writer",
+    "startHead": "6ad69d1fa6fa8c7dcfb3b5b61207c7d21a80ecef",
+    "timezone": "Asia/Shanghai"
+  },
+  "mandate": {
+    "brief": {
+      "path": "/Users/yanfenma/workspace/project/worktrees/recon-m7-writer/BRIEF-M7-ROOTWRITER-HUNT.md",
+      "size": 2013,
+      "sha256": "2909e984b4a4138d946d3f94e84ef3e5d8136d5601e8c121a7fe565e6dfdf6b4"
+    },
+    "productionWritesAllowed": false,
+    "mergeAllowed": false,
+    "requestedPriorInput": {
+      "name": "STOPPED-M7-RESOLVER.md",
+      "status": "NOT_FOUND",
+      "fourSourceConclusion": "user-provided summary only; original not independently reviewed",
+      "searched": [
+        "current worktree and git all-ref path history",
+        "project/worktrees",
+        "workspace/artifacts",
+        "/private/tmp",
+        "Documents/Codex",
+        "~/.agents",
+        "~/.agent-core",
+        "~/.openclaw (sudo directory enumeration)",
+        "~/.zcode",
+        "/Users/authsvc/.agent-core/workspaces",
+        "/Users/authsvc/.agent-core/homes"
+      ]
+    }
+  },
+  "method": {
+    "statPollSeconds": 0.1,
+    "psPollSecondsApprox": 0.35,
+    "burstWindow": "23:15:45 to 23:17:00, ps delay .015s plus command execution time",
+    "psArgv": [
+      "/bin/ps",
+      "-axo",
+      "pid=,ppid=,uid=,lstart=,args=",
+      "-ww"
+    ],
+    "fsUsageArgv": [
+      "sudo",
+      "-n",
+      "/usr/bin/fs_usage",
+      "-w",
+      "-f",
+      "filesys",
+      "-t",
+      "480",
+      "Python"
+    ],
+    "lsof": "sudo -n /usr/sbin/lsof -nP <registry>; rc1 empty at both mutation snapshots",
+    "threadIdSemantics": "local man fs_usage: Wide mode will append the thread id to the process name",
+    "sessionReadScope": "Only selected agents sessions/**/session.jsonl with file mtime >=1794090000; literal full Dispatch-ID match, no dispatch.py execution",
+    "observerRootSnapshotPids": [
+      93326,
+      94441,
+      95008,
+      97023
+    ],
+    "instrumentation": [
+      "watch.py",
+      "watch-sweep.py",
+      "burst.py",
+      "trace.py",
+      "snapshot.py"
+    ],
+    "filter": "Persist only relevant writer ps chains, registry/temp write/open trace, fixed registry fields and source/line hashes; false-positive ps readers excluded"
+  },
+  "snapshots": {
+    "before": {
+      "observedAt": "2026-11-08T23:11:42.782730+08:00",
+      "observerPid": 93326,
+      "observerUid": 0,
+      "registry": {
+        "path": "/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json",
+        "uid": 0,
+        "gid": 20,
+        "mode": "0o600",
+        "inode": 361255566,
+        "mtime_ns": 1794150083116934258,
+        "size": 2128268,
+        "sha256": "82bd10bc69faabc4c9560c38177a1e0bfe8832772f58c0da96753541f1f42b1e"
+      },
+      "sentCount": 1012,
+      "statuses": {
+        "None": 495,
+        "DELIVERED": 377,
+        "FAILED": 139,
+        "UNKNOWN": 1
+      },
+      "sources": [
+        {
+          "path": "/Users/yanfenma/Library/LaunchAgents/com.r124-wait-sweep.plist",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 357825362,
+          "mtime_ns": 1794034412387848046,
+          "size": 838,
+          "sha256": "46a517e4a2eb8544fea09c2314fb124abfeb04618a4daa52e13ad27d25fa1064"
+        },
+        {
+          "path": "/Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o755",
+          "inode": 358876192,
+          "mtime_ns": 1794045741840245926,
+          "size": 39212,
+          "sha256": "9dd3989842f2252f29d02d2f89c980d90b043a6554e66e7e6b96db726a4549a7"
+        },
+        {
+          "path": "/Users/yanfenma/Library/Logs/r124-wait-sweep.log",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 357825393,
+          "mtime_ns": 1794150083119365481,
+          "size": 3341,
+          "sha256": "3c014b08e7ed2e1639c942c1b0cb27e55e80a6578bb6106273345323ab0fcb28"
+        },
+        {
+          "path": "/Users/yanfenma/Library/Logs/r124-wait-sweep.err.log",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 357825394,
+          "mtime_ns": 1794034417917250168,
+          "size": 514,
+          "sha256": "46696ecfb3ec887a1cc81f941a5a54edb61936f1b9701a60faa249423269af36"
+        },
+        {
+          "path": "/Users/yanfenma/.local/services/workflow-audit/audit_deterministic.py",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 352302056,
+          "mtime_ns": 1793805345681291392,
+          "size": 5747,
+          "sha256": "2ca7afd62fb9138f3302742721dc86107977359fe69a7ac889160b5dcc097cce"
+        },
+        {
+          "path": "/Users/yanfenma/Library/LaunchAgents/com.workflow-audit.deterministic.plist",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 352302202,
+          "mtime_ns": 1793805365831527714,
+          "size": 730,
+          "sha256": "34d102bdda5eb1d70f7ae46f794894f3f3969d333b36ebedbd8a781d23aea69c"
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.audit-heartbeat",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 352301846,
+          "mtime_ns": 1794150073565900853,
+          "size": 26,
+          "sha256": "d6d5c9d342982617ca86b049a6f17ae4fc73fe073d229eb8ed0a5fc62c1ff16c"
+        }
+      ],
+      "sweepLog": {
+        "lines": 127,
+        "noDue": 121,
+        "tail": [
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items"
+        ]
+      },
+      "heartbeat": "2026-11-08T23:01:13.565852",
+      "localRawSnapshot": {
+        "path": "/private/tmp/m7-rootwriter-20261108-2x3kyfey/before.json",
+        "size": 24577,
+        "sha256": "7b66290bb37dd4281ca2e91a789be27f2f69a641da5f8dc778c47492dce6c0f7"
+      },
+      "latestEntries": [
+        {
+          "sentIndex": 1009,
+          "agent": "agt_article-publisher-agent",
+          "dispatchId": "401e4e17-23d5-4767-8902-2900c792bdae",
+          "tag": "agt_article-publisher-ag-401e4e17",
+          "status": "DELIVERED",
+          "createdAt": "2026-11-08T21:30:49+0800",
+          "createdEpoch": 1794144649.08587,
+          "at": "2026-11-08T21:30+08:00",
+          "messageId": "om_x100b6033d609d8a0dd28bf290ce49b3",
+          "errorClass": "ok",
+          "exitCode": 0,
+          "attempts": [
+            {
+              "at": "2026-11-08T21:30:52+0800",
+              "status": "DELIVERED",
+              "errorClass": "ok",
+              "messageId": "om_x100b6033d609d8a0dd28bf29"
+            }
+          ]
+        },
+        {
+          "sentIndex": 1010,
+          "agent": "agt_hr-agent",
+          "dispatchId": "17c3d91e-cfc0-4fd6-8cf5-c1126d79a91e",
+          "tag": "agt_hr-agent-17c3d91e",
+          "status": "DELIVERED",
+          "createdAt": "2026-11-08T21:31:08+0800",
+          "createdEpoch": 1794144668.83391,
+          "at": "2026-11-08T21:31+08:00",
+          "messageId": "om_x100b6033d7288ca4df4109834928dad",
+          "errorClass": "ok",
+          "exitCode": 0,
+          "attempts": [
+            {
+              "at": "2026-11-08T21:31:10+0800",
+              "status": "DELIVERED",
+              "errorClass": "ok",
+              "messageId": "om_x100b6033d7288ca4df410983"
+            }
+          ]
+        },
+        {
+          "sentIndex": 1011,
+          "agent": "agt_article-publisher-agent",
+          "dispatchId": "02ef50bc-f5c1-4117-b2de-2ee89bc7cc24",
+          "tag": "agt_article-publisher-ag-02ef50bc",
+          "status": "DELIVERED",
+          "createdAt": "2026-11-08T22:51:23+0800",
+          "createdEpoch": 1794149483.446622,
+          "at": "2026-11-08T22:51+08:00",
+          "messageId": "om_x100b603c882e70a0c1ce2352444593a",
+          "errorClass": "ok",
+          "exitCode": 0,
+          "attempts": [
+            {
+              "at": "2026-11-08T22:51:26+0800",
+              "status": "DELIVERED",
+              "errorClass": "ok",
+              "messageId": "om_x100b603c882e70a0c1ce2352"
+            }
+          ]
+        }
+      ],
+      "waitStatusCounts": {
+        "ARCHIVED_LEGACY": 5,
+        "CONSUMED": 5
+      },
+      "waitReceipts": [
+        {
+          "tag": "r124-demo",
+          "status": "ARCHIVED_LEGACY",
+          "dueMs": null,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T14:53:47+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T14:53:47+0800",
+              "sendOk": true,
+              "dispatchId": null,
+              "verify": "no dispatch id parsed from consume output",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "archived",
+              "at": "2026-11-07T14:54:13+0800",
+              "reason": "legacy manual-ledger entry; replaced by registry-native wait with real consume"
+            }
+          ]
+        },
+        {
+          "tag": "r123-article-approval-2a5c8a00",
+          "status": "ARCHIVED_LEGACY",
+          "dueMs": null,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T14:53:47+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T14:53:47+0800",
+              "sendOk": true,
+              "dispatchId": null,
+              "verify": "no dispatch id parsed from consume output",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "archived",
+              "at": "2026-11-07T14:54:13+0800",
+              "reason": "legacy manual-ledger entry; replaced by registry-native wait with real consume"
+            }
+          ]
+        },
+        {
+          "tag": "r123-cto-channel-recovery",
+          "status": "ARCHIVED_LEGACY",
+          "dueMs": null,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T14:53:47+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T14:53:47+0800",
+              "sendOk": true,
+              "dispatchId": null,
+              "verify": "no dispatch id parsed from consume output",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "archived",
+              "at": "2026-11-07T14:54:13+0800",
+              "reason": "legacy manual-ledger entry; replaced by registry-native wait with real consume"
+            }
+          ]
+        },
+        {
+          "tag": "r124-qa-blind-variant",
+          "status": "ARCHIVED_LEGACY",
+          "dueMs": null,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T14:53:47+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T14:53:47+0800",
+              "sendOk": true,
+              "dispatchId": null,
+              "verify": "no dispatch id parsed from consume output",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "archived",
+              "at": "2026-11-07T14:54:13+0800",
+              "reason": "legacy manual-ledger entry; replaced by registry-native wait with real consume"
+            }
+          ]
+        },
+        {
+          "tag": "r123-journal-agentid-migration",
+          "status": "ARCHIVED_LEGACY",
+          "dueMs": null,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T14:53:47+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T14:53:48+0800",
+              "sendOk": true,
+              "dispatchId": null,
+              "verify": "no dispatch id parsed from consume output",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "archived",
+              "at": "2026-11-07T14:54:13+0800",
+              "reason": "legacy manual-ledger entry; replaced by registry-native wait with real consume"
+            }
+          ]
+        },
+        {
+          "tag": "r124-qa-blind-variant-exec",
+          "status": "CONSUMED",
+          "dueMs": 1794036000000.0,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T15:08:38+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T15:09:25+0800",
+              "sendOk": false,
+              "dispatchId": "7463ed78-d3b1-4cf2-8b38-133bbef8c155",
+              "verify": "ingested=NOT_EVIDENCE | correlation=weak（无 Dispatch-ID 关联）——弱匹配不作为摄入证据（exit 3）",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "requeued",
+              "at": "2026-11-07T15:13:38+0800",
+              "reason": "launchd PATH 缺 node 致 send FAILED(cli_error)；send_msg 已 PATH 硬化，重排队由机制自动重试"
+            },
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T15:24:27+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T15:25:24+0800",
+              "sendOk": true,
+              "dispatchId": "90518ff4-65f3-4f28-9e8c-0eaf61578f10",
+              "verify": "ingested=True | correlation=strong(Dispatch-ID=90518ff4-65f3-4f28-9e8c-0eaf61578f10) | session=main | session_wake=15:25:24 | status=DELIVERED",
+              "status": "CONSUMED"
+            }
+          ]
+        },
+        {
+          "tag": "r123-article-approval-evidence",
+          "status": "CONSUMED",
+          "dueMs": 1794042000000.0,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T17:11:15+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T17:12:02+0800",
+              "sendOk": true,
+              "dispatchId": "4f817b76-9639-417a-9054-0bdf9050c391",
+              "verify": "ingested=True | correlation=strong(Dispatch-ID=4f817b76-9639-417a-9054-0bdf9050c391) | session=main | session_wake=17:11:58 | status=DELIVERED",
+              "status": "CONSUMED"
+            }
+          ]
+        },
+        {
+          "tag": "r123-cto-channel-probe",
+          "status": "CONSUMED",
+          "dueMs": 1794099600000.0,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-08T09:12:13+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-08T09:13:01+0800",
+              "sendOk": true,
+              "dispatchId": "bc8dcedc-f6c2-4e75-8124-3da3ee8cfdfb",
+              "verify": "ingested=True | correlation=strong(Dispatch-ID=bc8dcedc-f6c2-4e75-8124-3da3ee8cfdfb) | session=main | session_wake=09:12:53 | status=DELIVERED",
+              "status": "CONSUMED"
+            }
+          ]
+        },
+        {
+          "tag": "r123-journal-agentid-migration-v2",
+          "status": "CONSUMED",
+          "dueMs": 1794099600000.0,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-08T09:12:13+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-08T09:13:50+0800",
+              "sendOk": true,
+              "dispatchId": "0d22cb6e-519b-476b-bd7d-ebba700d94e4",
+              "verify": "ingested=True | correlation=strong(Dispatch-ID=0d22cb6e-519b-476b-bd7d-ebba700d94e4) | session=main | session_wake=09:13:32 | status=DELIVERED",
+              "status": "CONSUMED"
+            }
+          ]
+        },
+        {
+          "tag": "r124-qa-reverify-16728bf7",
+          "status": "CONSUMED",
+          "dueMs": 1794035400000.0,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T15:24:27+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T15:26:15+0800",
+              "sendOk": true,
+              "dispatchId": "77ed223d-466c-4c62-8127-61b43a3defbf",
+              "verify": "ingested=NOT_EVIDENCE | correlation=weak（无 Dispatch-ID 关联）——弱匹配不作为摄入证据（exit 3）",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "readback_correction",
+              "at": "2026-11-07T16:25:18+0800",
+              "note": "I1.3 读回修正：sweep verify 于 15:26 判 FAILED_VERIFY（sleep45 早于 QA 摄入）；fresh-read verify@15:36 = ingested=True strong / session_wake 15:35:02。原效果真实存在，按读回修正归属，未重放、未新建请求"
+            }
+          ]
+        }
+      ],
+      "sessionMatches": [
+        {
+          "agent": "agt_article-publisher-agent",
+          "dispatchId": "02ef50bc-f5c1-4117-b2de-2ee89bc7cc24",
+          "path": "/Users/authsvc/.agent-core/homes/agt_article-publisher-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_cba6cccee1a9ea30d10cf29757f80d34--/main/session.jsonl",
+          "line": 7562,
+          "rawLineSha256": "a06df3463d95b131882c17809b7fce668535d426210c10e3f6ad8f2c7b845839",
+          "type": "agent/inbox/spliced",
+          "seq": 63543,
+          "time": 1794149490241,
+          "dataKeys": [
+            "target",
+            "start",
+            "inserted"
+          ]
+        },
+        {
+          "agent": "agt_article-publisher-agent",
+          "dispatchId": "02ef50bc-f5c1-4117-b2de-2ee89bc7cc24",
+          "path": "/Users/authsvc/.agent-core/homes/agt_article-publisher-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_cba6cccee1a9ea30d10cf29757f80d34--/main/session.jsonl",
+          "line": 7566,
+          "rawLineSha256": "41966188db8745831e15987bcd4ef5bf26490ddbfef0d46bf2eb35ed336b47d6",
+          "type": "user/message",
+          "seq": 63547,
+          "time": 1794149491638,
+          "dataKeys": [
+            "content",
+            "source",
+            "role",
+            "id"
+          ]
+        },
+        {
+          "agent": "agt_hr-agent",
+          "dispatchId": "17c3d91e-cfc0-4fd6-8cf5-c1126d79a91e",
+          "path": "/Users/authsvc/.agent-core/homes/agt_hr-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74--/main/session.jsonl",
+          "line": 2223,
+          "rawLineSha256": "6b29029485d63d8cde5bac88f599d38152372d1a4ebd3a0695fef438e8e4b83a",
+          "type": "agent/inbox/spliced",
+          "seq": 17485,
+          "time": 1794144673330,
+          "dataKeys": [
+            "target",
+            "start",
+            "inserted"
+          ]
+        },
+        {
+          "agent": "agt_hr-agent",
+          "dispatchId": "17c3d91e-cfc0-4fd6-8cf5-c1126d79a91e",
+          "path": "/Users/authsvc/.agent-core/homes/agt_hr-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74--/main/session.jsonl",
+          "line": 2227,
+          "rawLineSha256": "91dea36198c9bba148ef0c069964f9cac08875522682e6bcb10cf1bcab61307c",
+          "type": "user/message",
+          "seq": 17489,
+          "time": 1794144674448,
+          "dataKeys": [
+            "content",
+            "source",
+            "role",
+            "id"
+          ]
+        },
+        {
+          "agent": "agt_hr-agent",
+          "dispatchId": "bc8dcedc-f6c2-4e75-8124-3da3ee8cfdfb",
+          "path": "/Users/authsvc/.agent-core/homes/agt_hr-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74--/main/session.jsonl",
+          "line": 1972,
+          "rawLineSha256": "cd7c14600654257b15169da0f46df4f1f9d1b207319fa6da5afc6b44efa21d8a",
+          "type": "agent/inbox/spliced",
+          "seq": 15663,
+          "time": 1794100337858,
+          "dataKeys": [
+            "target",
+            "start",
+            "inserted"
+          ]
+        },
+        {
+          "agent": "agt_hr-agent",
+          "dispatchId": "bc8dcedc-f6c2-4e75-8124-3da3ee8cfdfb",
+          "path": "/Users/authsvc/.agent-core/homes/agt_hr-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74--/main/session.jsonl",
+          "line": 1976,
+          "rawLineSha256": "4030414965ffe17c00c1fbc93d36598bacb962dc1174828823870abf55e09e90",
+          "type": "user/message",
+          "seq": 15667,
+          "time": 1794100341039,
+          "dataKeys": [
+            "content",
+            "source",
+            "role",
+            "id"
+          ]
+        }
+      ],
+      "launchctlSweepRaw": {
+        "argv": [
+          "/bin/launchctl",
+          "print",
+          "gui/502/com.r124-wait-sweep"
+        ],
+        "rc": 0,
+        "stdout": "gui/502/com.r124-wait-sweep = {\n\tactive count = 0\n\tpath = /Users/yanfenma/Library/LaunchAgents/com.r124-wait-sweep.plist\n\ttype = LaunchAgent\n\tstate = not running\n\n\tprogram = /usr/bin/sudo\n\targuments = {\n\t\t/usr/bin/sudo\n\t\t-n\n\t\t/usr/bin/python3\n\t\t/Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py\n\t\twait-sweep\n\t}\n\n\tstdout path = /Users/yanfenma/Library/Logs/r124-wait-sweep.log\n\tstderr path = /Users/yanfenma/Library/Logs/r124-wait-sweep.err.log\n\tinherited environment = {\n\t\tSSH_AUTH_SOCK => /var/run/com.apple.launchd.FNAUUPrzzm/Listeners\n\t}\n\n\tdefault environment = {\n\t\tPATH => /usr/bin:/bin:/usr/sbin:/sbin\n\t}\n\n\tenvironment = {\n\t\tOSLogRateLimit => 64\n\t\tXPC_SERVICE_NAME => com.r124-wait-sweep\n\t}\n\n\tdomain = gui/502 [100003]\n\tasid = 100003\n\tminimum runtime = 10\n\texit timeout = 5\n\truns = 35\n\tlast exit code = 0\n\n\tresource coalition = {\n\t\tID = 1090\n\t\ttype = resource\n\t\tstate = active\n\t\tactive count = 1\n\t\tname = com.r124-wait-sweep\n\t}\n\n\tjetsam coalition = {\n\t\tID = 1091\n\t\ttype = jetsam\n\t\tstate = active\n\t\tactive count = 1\n\t\tname = com.r124-wait-sweep\n\t}\n\n\tspawn type = daemon (3)\n\tjetsam priority = 40\n\tjetsam memory limit (active) = (unlimited)\n\tjetsam memory limit (inactive) = (unlimited)\n\tjetsamproperties category = daemon\n\tjetsam thread limit = 32\n\tcpumon = default\n\trun interval = 900 seconds\n\n\tproperties = runatload | inferred program | managed LWCR | has LWCR\n}\n",
+        "stderr": ""
+      }
+    },
+    "afterSend": {
+      "observedAt": "2026-11-08T23:12:54.777710+08:00",
+      "observerPid": 94441,
+      "observerUid": 0,
+      "registry": {
+        "path": "/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json",
+        "uid": 0,
+        "gid": 20,
+        "mode": "0o600",
+        "inode": 361267858,
+        "mtime_ns": 1794150760469253757,
+        "size": 2136326,
+        "sha256": "1b0b2a4619af109341e782e4678869c0df46d6139057b29d188248bf76a0d52e"
+      },
+      "sentCount": 1014,
+      "statuses": {
+        "None": 495,
+        "DELIVERED": 379,
+        "FAILED": 139,
+        "UNKNOWN": 1
+      },
+      "sources": [
+        {
+          "path": "/Users/yanfenma/Library/LaunchAgents/com.r124-wait-sweep.plist",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 357825362,
+          "mtime_ns": 1794034412387848046,
+          "size": 838,
+          "sha256": "46a517e4a2eb8544fea09c2314fb124abfeb04618a4daa52e13ad27d25fa1064"
+        },
+        {
+          "path": "/Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o755",
+          "inode": 358876192,
+          "mtime_ns": 1794045741840245926,
+          "size": 39212,
+          "sha256": "9dd3989842f2252f29d02d2f89c980d90b043a6554e66e7e6b96db726a4549a7"
+        },
+        {
+          "path": "/Users/yanfenma/Library/Logs/r124-wait-sweep.log",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 357825393,
+          "mtime_ns": 1794150083119365481,
+          "size": 3341,
+          "sha256": "3c014b08e7ed2e1639c942c1b0cb27e55e80a6578bb6106273345323ab0fcb28"
+        },
+        {
+          "path": "/Users/yanfenma/Library/Logs/r124-wait-sweep.err.log",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 357825394,
+          "mtime_ns": 1794034417917250168,
+          "size": 514,
+          "sha256": "46696ecfb3ec887a1cc81f941a5a54edb61936f1b9701a60faa249423269af36"
+        },
+        {
+          "path": "/Users/yanfenma/.local/services/workflow-audit/audit_deterministic.py",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 352302056,
+          "mtime_ns": 1793805345681291392,
+          "size": 5747,
+          "sha256": "2ca7afd62fb9138f3302742721dc86107977359fe69a7ac889160b5dcc097cce"
+        },
+        {
+          "path": "/Users/yanfenma/Library/LaunchAgents/com.workflow-audit.deterministic.plist",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 352302202,
+          "mtime_ns": 1793805365831527714,
+          "size": 730,
+          "sha256": "34d102bdda5eb1d70f7ae46f794894f3f3969d333b36ebedbd8a781d23aea69c"
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.audit-heartbeat",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 352301846,
+          "mtime_ns": 1794150073565900853,
+          "size": 26,
+          "sha256": "d6d5c9d342982617ca86b049a6f17ae4fc73fe073d229eb8ed0a5fc62c1ff16c"
+        }
+      ],
+      "sweepLog": {
+        "lines": 127,
+        "noDue": 121,
+        "tail": [
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items"
+        ]
+      },
+      "heartbeat": "2026-11-08T23:01:13.565852",
+      "localRawSnapshot": {
+        "path": "/private/tmp/m7-rootwriter-20261108-2x3kyfey/after-send.json",
+        "size": 24622,
+        "sha256": "fe07b20b19872e18f3a89fdd028331e5faf2a03974bf01859aecf1cfe66e99c1"
+      },
+      "latestEntries": [
+        {
+          "sentIndex": 1011,
+          "agent": "agt_article-publisher-agent",
+          "dispatchId": "02ef50bc-f5c1-4117-b2de-2ee89bc7cc24",
+          "tag": "agt_article-publisher-ag-02ef50bc",
+          "status": "DELIVERED",
+          "createdAt": "2026-11-08T22:51:23+0800",
+          "createdEpoch": 1794149483.446622,
+          "at": "2026-11-08T22:51+08:00",
+          "messageId": "om_x100b603c882e70a0c1ce2352444593a",
+          "errorClass": "ok",
+          "exitCode": 0,
+          "attempts": [
+            {
+              "at": "2026-11-08T22:51:26+0800",
+              "status": "DELIVERED",
+              "errorClass": "ok",
+              "messageId": "om_x100b603c882e70a0c1ce2352"
+            }
+          ]
+        },
+        {
+          "sentIndex": 1012,
+          "agent": "agt_build-in-public-agent",
+          "dispatchId": "9bb647ff-7edd-4f52-b2c8-daa99b052f6e",
+          "tag": "agt_build-in-public-agen-9bb647ff",
+          "status": "DELIVERED",
+          "createdAt": "2026-11-08T23:12:14+0800",
+          "createdEpoch": 1794150734.358615,
+          "at": "2026-11-08T23:12+08:00",
+          "messageId": "om_x100b603d5bf0a0a4c0f1c85d4b777aa",
+          "errorClass": "ok",
+          "exitCode": 0,
+          "attempts": [
+            {
+              "at": "2026-11-08T23:12:21+0800",
+              "status": "DELIVERED",
+              "errorClass": "ok",
+              "messageId": "om_x100b603d5bf0a0a4c0f1c85d"
+            }
+          ]
+        },
+        {
+          "sentIndex": 1013,
+          "agent": "agt_article-publisher-agent",
+          "dispatchId": "57daddf5-9345-4c18-8b08-8f22ab617eda",
+          "tag": "agt_article-publisher-ag-57daddf5",
+          "status": "DELIVERED",
+          "createdAt": "2026-11-08T23:12:35+0800",
+          "createdEpoch": 1794150755.698189,
+          "at": "2026-11-08T23:12+08:00",
+          "messageId": "om_x100b603d58aa4ca8c1f20677a75b3bb",
+          "errorClass": "ok",
+          "exitCode": 0,
+          "attempts": [
+            {
+              "at": "2026-11-08T23:12:40+0800",
+              "status": "DELIVERED",
+              "errorClass": "ok",
+              "messageId": "om_x100b603d58aa4ca8c1f20677"
+            }
+          ]
+        }
+      ],
+      "waitStatusCounts": {
+        "ARCHIVED_LEGACY": 5,
+        "CONSUMED": 5
+      },
+      "waitReceipts": [
+        {
+          "tag": "r124-demo",
+          "status": "ARCHIVED_LEGACY",
+          "dueMs": null,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T14:53:47+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T14:53:47+0800",
+              "sendOk": true,
+              "dispatchId": null,
+              "verify": "no dispatch id parsed from consume output",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "archived",
+              "at": "2026-11-07T14:54:13+0800",
+              "reason": "legacy manual-ledger entry; replaced by registry-native wait with real consume"
+            }
+          ]
+        },
+        {
+          "tag": "r123-article-approval-2a5c8a00",
+          "status": "ARCHIVED_LEGACY",
+          "dueMs": null,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T14:53:47+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T14:53:47+0800",
+              "sendOk": true,
+              "dispatchId": null,
+              "verify": "no dispatch id parsed from consume output",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "archived",
+              "at": "2026-11-07T14:54:13+0800",
+              "reason": "legacy manual-ledger entry; replaced by registry-native wait with real consume"
+            }
+          ]
+        },
+        {
+          "tag": "r123-cto-channel-recovery",
+          "status": "ARCHIVED_LEGACY",
+          "dueMs": null,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T14:53:47+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T14:53:47+0800",
+              "sendOk": true,
+              "dispatchId": null,
+              "verify": "no dispatch id parsed from consume output",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "archived",
+              "at": "2026-11-07T14:54:13+0800",
+              "reason": "legacy manual-ledger entry; replaced by registry-native wait with real consume"
+            }
+          ]
+        },
+        {
+          "tag": "r124-qa-blind-variant",
+          "status": "ARCHIVED_LEGACY",
+          "dueMs": null,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T14:53:47+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T14:53:47+0800",
+              "sendOk": true,
+              "dispatchId": null,
+              "verify": "no dispatch id parsed from consume output",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "archived",
+              "at": "2026-11-07T14:54:13+0800",
+              "reason": "legacy manual-ledger entry; replaced by registry-native wait with real consume"
+            }
+          ]
+        },
+        {
+          "tag": "r123-journal-agentid-migration",
+          "status": "ARCHIVED_LEGACY",
+          "dueMs": null,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T14:53:47+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T14:53:48+0800",
+              "sendOk": true,
+              "dispatchId": null,
+              "verify": "no dispatch id parsed from consume output",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "archived",
+              "at": "2026-11-07T14:54:13+0800",
+              "reason": "legacy manual-ledger entry; replaced by registry-native wait with real consume"
+            }
+          ]
+        },
+        {
+          "tag": "r124-qa-blind-variant-exec",
+          "status": "CONSUMED",
+          "dueMs": 1794036000000.0,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T15:08:38+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T15:09:25+0800",
+              "sendOk": false,
+              "dispatchId": "7463ed78-d3b1-4cf2-8b38-133bbef8c155",
+              "verify": "ingested=NOT_EVIDENCE | correlation=weak（无 Dispatch-ID 关联）——弱匹配不作为摄入证据（exit 3）",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "requeued",
+              "at": "2026-11-07T15:13:38+0800",
+              "reason": "launchd PATH 缺 node 致 send FAILED(cli_error)；send_msg 已 PATH 硬化，重排队由机制自动重试"
+            },
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T15:24:27+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T15:25:24+0800",
+              "sendOk": true,
+              "dispatchId": "90518ff4-65f3-4f28-9e8c-0eaf61578f10",
+              "verify": "ingested=True | correlation=strong(Dispatch-ID=90518ff4-65f3-4f28-9e8c-0eaf61578f10) | session=main | session_wake=15:25:24 | status=DELIVERED",
+              "status": "CONSUMED"
+            }
+          ]
+        },
+        {
+          "tag": "r123-article-approval-evidence",
+          "status": "CONSUMED",
+          "dueMs": 1794042000000.0,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T17:11:15+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T17:12:02+0800",
+              "sendOk": true,
+              "dispatchId": "4f817b76-9639-417a-9054-0bdf9050c391",
+              "verify": "ingested=True | correlation=strong(Dispatch-ID=4f817b76-9639-417a-9054-0bdf9050c391) | session=main | session_wake=17:11:58 | status=DELIVERED",
+              "status": "CONSUMED"
+            }
+          ]
+        },
+        {
+          "tag": "r123-cto-channel-probe",
+          "status": "CONSUMED",
+          "dueMs": 1794099600000.0,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-08T09:12:13+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-08T09:13:01+0800",
+              "sendOk": true,
+              "dispatchId": "bc8dcedc-f6c2-4e75-8124-3da3ee8cfdfb",
+              "verify": "ingested=True | correlation=strong(Dispatch-ID=bc8dcedc-f6c2-4e75-8124-3da3ee8cfdfb) | session=main | session_wake=09:12:53 | status=DELIVERED",
+              "status": "CONSUMED"
+            }
+          ]
+        },
+        {
+          "tag": "r123-journal-agentid-migration-v2",
+          "status": "CONSUMED",
+          "dueMs": 1794099600000.0,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-08T09:12:13+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-08T09:13:50+0800",
+              "sendOk": true,
+              "dispatchId": "0d22cb6e-519b-476b-bd7d-ebba700d94e4",
+              "verify": "ingested=True | correlation=strong(Dispatch-ID=0d22cb6e-519b-476b-bd7d-ebba700d94e4) | session=main | session_wake=09:13:32 | status=DELIVERED",
+              "status": "CONSUMED"
+            }
+          ]
+        },
+        {
+          "tag": "r124-qa-reverify-16728bf7",
+          "status": "CONSUMED",
+          "dueMs": 1794035400000.0,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T15:24:27+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T15:26:15+0800",
+              "sendOk": true,
+              "dispatchId": "77ed223d-466c-4c62-8127-61b43a3defbf",
+              "verify": "ingested=NOT_EVIDENCE | correlation=weak（无 Dispatch-ID 关联）——弱匹配不作为摄入证据（exit 3）",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "readback_correction",
+              "at": "2026-11-07T16:25:18+0800",
+              "note": "I1.3 读回修正：sweep verify 于 15:26 判 FAILED_VERIFY（sleep45 早于 QA 摄入）；fresh-read verify@15:36 = ingested=True strong / session_wake 15:35:02。原效果真实存在，按读回修正归属，未重放、未新建请求"
+            }
+          ]
+        }
+      ],
+      "sessionMatches": [
+        {
+          "agent": "agt_article-publisher-agent",
+          "dispatchId": "02ef50bc-f5c1-4117-b2de-2ee89bc7cc24",
+          "path": "/Users/authsvc/.agent-core/homes/agt_article-publisher-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_cba6cccee1a9ea30d10cf29757f80d34--/main/session.jsonl",
+          "line": 7562,
+          "rawLineSha256": "a06df3463d95b131882c17809b7fce668535d426210c10e3f6ad8f2c7b845839",
+          "type": "agent/inbox/spliced",
+          "seq": 63543,
+          "time": 1794149490241,
+          "dataKeys": [
+            "target",
+            "start",
+            "inserted"
+          ]
+        },
+        {
+          "agent": "agt_article-publisher-agent",
+          "dispatchId": "02ef50bc-f5c1-4117-b2de-2ee89bc7cc24",
+          "path": "/Users/authsvc/.agent-core/homes/agt_article-publisher-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_cba6cccee1a9ea30d10cf29757f80d34--/main/session.jsonl",
+          "line": 7566,
+          "rawLineSha256": "41966188db8745831e15987bcd4ef5bf26490ddbfef0d46bf2eb35ed336b47d6",
+          "type": "user/message",
+          "seq": 63547,
+          "time": 1794149491638,
+          "dataKeys": [
+            "content",
+            "source",
+            "role",
+            "id"
+          ]
+        },
+        {
+          "agent": "agt_hr-agent",
+          "dispatchId": "17c3d91e-cfc0-4fd6-8cf5-c1126d79a91e",
+          "path": "/Users/authsvc/.agent-core/homes/agt_hr-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74--/main/session.jsonl",
+          "line": 2223,
+          "rawLineSha256": "6b29029485d63d8cde5bac88f599d38152372d1a4ebd3a0695fef438e8e4b83a",
+          "type": "agent/inbox/spliced",
+          "seq": 17485,
+          "time": 1794144673330,
+          "dataKeys": [
+            "target",
+            "start",
+            "inserted"
+          ]
+        },
+        {
+          "agent": "agt_hr-agent",
+          "dispatchId": "17c3d91e-cfc0-4fd6-8cf5-c1126d79a91e",
+          "path": "/Users/authsvc/.agent-core/homes/agt_hr-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74--/main/session.jsonl",
+          "line": 2227,
+          "rawLineSha256": "91dea36198c9bba148ef0c069964f9cac08875522682e6bcb10cf1bcab61307c",
+          "type": "user/message",
+          "seq": 17489,
+          "time": 1794144674448,
+          "dataKeys": [
+            "content",
+            "source",
+            "role",
+            "id"
+          ]
+        },
+        {
+          "agent": "agt_hr-agent",
+          "dispatchId": "bc8dcedc-f6c2-4e75-8124-3da3ee8cfdfb",
+          "path": "/Users/authsvc/.agent-core/homes/agt_hr-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74--/main/session.jsonl",
+          "line": 1972,
+          "rawLineSha256": "cd7c14600654257b15169da0f46df4f1f9d1b207319fa6da5afc6b44efa21d8a",
+          "type": "agent/inbox/spliced",
+          "seq": 15663,
+          "time": 1794100337858,
+          "dataKeys": [
+            "target",
+            "start",
+            "inserted"
+          ]
+        },
+        {
+          "agent": "agt_hr-agent",
+          "dispatchId": "bc8dcedc-f6c2-4e75-8124-3da3ee8cfdfb",
+          "path": "/Users/authsvc/.agent-core/homes/agt_hr-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74--/main/session.jsonl",
+          "line": 1976,
+          "rawLineSha256": "4030414965ffe17c00c1fbc93d36598bacb962dc1174828823870abf55e09e90",
+          "type": "user/message",
+          "seq": 15667,
+          "time": 1794100341039,
+          "dataKeys": [
+            "content",
+            "source",
+            "role",
+            "id"
+          ]
+        }
+      ],
+      "launchctlSweepRaw": {
+        "argv": [
+          "/bin/launchctl",
+          "print",
+          "gui/502/com.r124-wait-sweep"
+        ],
+        "rc": 0,
+        "stdout": "gui/502/com.r124-wait-sweep = {\n\tactive count = 0\n\tpath = /Users/yanfenma/Library/LaunchAgents/com.r124-wait-sweep.plist\n\ttype = LaunchAgent\n\tstate = not running\n\n\tprogram = /usr/bin/sudo\n\targuments = {\n\t\t/usr/bin/sudo\n\t\t-n\n\t\t/usr/bin/python3\n\t\t/Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py\n\t\twait-sweep\n\t}\n\n\tstdout path = /Users/yanfenma/Library/Logs/r124-wait-sweep.log\n\tstderr path = /Users/yanfenma/Library/Logs/r124-wait-sweep.err.log\n\tinherited environment = {\n\t\tSSH_AUTH_SOCK => /var/run/com.apple.launchd.FNAUUPrzzm/Listeners\n\t}\n\n\tdefault environment = {\n\t\tPATH => /usr/bin:/bin:/usr/sbin:/sbin\n\t}\n\n\tenvironment = {\n\t\tOSLogRateLimit => 64\n\t\tXPC_SERVICE_NAME => com.r124-wait-sweep\n\t}\n\n\tdomain = gui/502 [100003]\n\tasid = 100003\n\tminimum runtime = 10\n\texit timeout = 5\n\truns = 35\n\tlast exit code = 0\n\n\tresource coalition = {\n\t\tID = 1090\n\t\ttype = resource\n\t\tstate = active\n\t\tactive count = 1\n\t\tname = com.r124-wait-sweep\n\t}\n\n\tjetsam coalition = {\n\t\tID = 1091\n\t\ttype = jetsam\n\t\tstate = active\n\t\tactive count = 1\n\t\tname = com.r124-wait-sweep\n\t}\n\n\tspawn type = daemon (3)\n\tjetsam priority = 40\n\tjetsam memory limit (active) = (unlimited)\n\tjetsam memory limit (inactive) = (unlimited)\n\tjetsamproperties category = daemon\n\tjetsam thread limit = 32\n\tcpumon = default\n\trun interval = 900 seconds\n\n\tproperties = runatload | inferred program | managed LWCR | has LWCR\n}\n",
+        "stderr": ""
+      }
+    },
+    "afterSweep": {
+      "observedAt": "2026-11-08T23:16:43.784542+08:00",
+      "observerPid": 97023,
+      "observerUid": 0,
+      "registry": {
+        "path": "/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json",
+        "uid": 0,
+        "gid": 20,
+        "mode": "0o600",
+        "inode": 361270191,
+        "mtime_ns": 1794150983453776766,
+        "size": 2136326,
+        "sha256": "1b0b2a4619af109341e782e4678869c0df46d6139057b29d188248bf76a0d52e"
+      },
+      "sentCount": 1014,
+      "statuses": {
+        "None": 495,
+        "DELIVERED": 379,
+        "FAILED": 139,
+        "UNKNOWN": 1
+      },
+      "sources": [
+        {
+          "path": "/Users/yanfenma/Library/LaunchAgents/com.r124-wait-sweep.plist",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 357825362,
+          "mtime_ns": 1794034412387848046,
+          "size": 838,
+          "sha256": "46a517e4a2eb8544fea09c2314fb124abfeb04618a4daa52e13ad27d25fa1064"
+        },
+        {
+          "path": "/Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o755",
+          "inode": 358876192,
+          "mtime_ns": 1794045741840245926,
+          "size": 39212,
+          "sha256": "9dd3989842f2252f29d02d2f89c980d90b043a6554e66e7e6b96db726a4549a7"
+        },
+        {
+          "path": "/Users/yanfenma/Library/Logs/r124-wait-sweep.log",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 357825393,
+          "mtime_ns": 1794150983459350342,
+          "size": 3366,
+          "sha256": "ee2ec98f09ed163e3071538f2589a577a716680d9bd7f9d454c68904d06ff538"
+        },
+        {
+          "path": "/Users/yanfenma/Library/Logs/r124-wait-sweep.err.log",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 357825394,
+          "mtime_ns": 1794034417917250168,
+          "size": 514,
+          "sha256": "46696ecfb3ec887a1cc81f941a5a54edb61936f1b9701a60faa249423269af36"
+        },
+        {
+          "path": "/Users/yanfenma/.local/services/workflow-audit/audit_deterministic.py",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 352302056,
+          "mtime_ns": 1793805345681291392,
+          "size": 5747,
+          "sha256": "2ca7afd62fb9138f3302742721dc86107977359fe69a7ac889160b5dcc097cce"
+        },
+        {
+          "path": "/Users/yanfenma/Library/LaunchAgents/com.workflow-audit.deterministic.plist",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 352302202,
+          "mtime_ns": 1793805365831527714,
+          "size": 730,
+          "sha256": "34d102bdda5eb1d70f7ae46f794894f3f3969d333b36ebedbd8a781d23aea69c"
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.audit-heartbeat",
+          "uid": 502,
+          "gid": 20,
+          "mode": "0o644",
+          "inode": 352301846,
+          "mtime_ns": 1794150073565900853,
+          "size": 26,
+          "sha256": "d6d5c9d342982617ca86b049a6f17ae4fc73fe073d229eb8ed0a5fc62c1ff16c"
+        }
+      ],
+      "sweepLog": {
+        "lines": 128,
+        "noDue": 122,
+        "tail": [
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items",
+          "WAIT_SWEEP: no due items"
+        ]
+      },
+      "heartbeat": "2026-11-08T23:01:13.565852",
+      "localRawSnapshot": {
+        "path": "/private/tmp/m7-rootwriter-20261108-2x3kyfey/after-sweep.json",
+        "size": 24622,
+        "sha256": "b895d7a95ce3c00d85215908147ace2c06391c71515271b194115dfd183603f8"
+      },
+      "latestEntries": [
+        {
+          "sentIndex": 1011,
+          "agent": "agt_article-publisher-agent",
+          "dispatchId": "02ef50bc-f5c1-4117-b2de-2ee89bc7cc24",
+          "tag": "agt_article-publisher-ag-02ef50bc",
+          "status": "DELIVERED",
+          "createdAt": "2026-11-08T22:51:23+0800",
+          "createdEpoch": 1794149483.446622,
+          "at": "2026-11-08T22:51+08:00",
+          "messageId": "om_x100b603c882e70a0c1ce2352444593a",
+          "errorClass": "ok",
+          "exitCode": 0,
+          "attempts": [
+            {
+              "at": "2026-11-08T22:51:26+0800",
+              "status": "DELIVERED",
+              "errorClass": "ok",
+              "messageId": "om_x100b603c882e70a0c1ce2352"
+            }
+          ]
+        },
+        {
+          "sentIndex": 1012,
+          "agent": "agt_build-in-public-agent",
+          "dispatchId": "9bb647ff-7edd-4f52-b2c8-daa99b052f6e",
+          "tag": "agt_build-in-public-agen-9bb647ff",
+          "status": "DELIVERED",
+          "createdAt": "2026-11-08T23:12:14+0800",
+          "createdEpoch": 1794150734.358615,
+          "at": "2026-11-08T23:12+08:00",
+          "messageId": "om_x100b603d5bf0a0a4c0f1c85d4b777aa",
+          "errorClass": "ok",
+          "exitCode": 0,
+          "attempts": [
+            {
+              "at": "2026-11-08T23:12:21+0800",
+              "status": "DELIVERED",
+              "errorClass": "ok",
+              "messageId": "om_x100b603d5bf0a0a4c0f1c85d"
+            }
+          ]
+        },
+        {
+          "sentIndex": 1013,
+          "agent": "agt_article-publisher-agent",
+          "dispatchId": "57daddf5-9345-4c18-8b08-8f22ab617eda",
+          "tag": "agt_article-publisher-ag-57daddf5",
+          "status": "DELIVERED",
+          "createdAt": "2026-11-08T23:12:35+0800",
+          "createdEpoch": 1794150755.698189,
+          "at": "2026-11-08T23:12+08:00",
+          "messageId": "om_x100b603d58aa4ca8c1f20677a75b3bb",
+          "errorClass": "ok",
+          "exitCode": 0,
+          "attempts": [
+            {
+              "at": "2026-11-08T23:12:40+0800",
+              "status": "DELIVERED",
+              "errorClass": "ok",
+              "messageId": "om_x100b603d58aa4ca8c1f20677"
+            }
+          ]
+        }
+      ],
+      "waitStatusCounts": {
+        "ARCHIVED_LEGACY": 5,
+        "CONSUMED": 5
+      },
+      "waitReceipts": [
+        {
+          "tag": "r124-demo",
+          "status": "ARCHIVED_LEGACY",
+          "dueMs": null,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T14:53:47+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T14:53:47+0800",
+              "sendOk": true,
+              "dispatchId": null,
+              "verify": "no dispatch id parsed from consume output",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "archived",
+              "at": "2026-11-07T14:54:13+0800",
+              "reason": "legacy manual-ledger entry; replaced by registry-native wait with real consume"
+            }
+          ]
+        },
+        {
+          "tag": "r123-article-approval-2a5c8a00",
+          "status": "ARCHIVED_LEGACY",
+          "dueMs": null,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T14:53:47+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T14:53:47+0800",
+              "sendOk": true,
+              "dispatchId": null,
+              "verify": "no dispatch id parsed from consume output",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "archived",
+              "at": "2026-11-07T14:54:13+0800",
+              "reason": "legacy manual-ledger entry; replaced by registry-native wait with real consume"
+            }
+          ]
+        },
+        {
+          "tag": "r123-cto-channel-recovery",
+          "status": "ARCHIVED_LEGACY",
+          "dueMs": null,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T14:53:47+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T14:53:47+0800",
+              "sendOk": true,
+              "dispatchId": null,
+              "verify": "no dispatch id parsed from consume output",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "archived",
+              "at": "2026-11-07T14:54:13+0800",
+              "reason": "legacy manual-ledger entry; replaced by registry-native wait with real consume"
+            }
+          ]
+        },
+        {
+          "tag": "r124-qa-blind-variant",
+          "status": "ARCHIVED_LEGACY",
+          "dueMs": null,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T14:53:47+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T14:53:47+0800",
+              "sendOk": true,
+              "dispatchId": null,
+              "verify": "no dispatch id parsed from consume output",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "archived",
+              "at": "2026-11-07T14:54:13+0800",
+              "reason": "legacy manual-ledger entry; replaced by registry-native wait with real consume"
+            }
+          ]
+        },
+        {
+          "tag": "r123-journal-agentid-migration",
+          "status": "ARCHIVED_LEGACY",
+          "dueMs": null,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T14:53:47+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T14:53:48+0800",
+              "sendOk": true,
+              "dispatchId": null,
+              "verify": "no dispatch id parsed from consume output",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "archived",
+              "at": "2026-11-07T14:54:13+0800",
+              "reason": "legacy manual-ledger entry; replaced by registry-native wait with real consume"
+            }
+          ]
+        },
+        {
+          "tag": "r124-qa-blind-variant-exec",
+          "status": "CONSUMED",
+          "dueMs": 1794036000000.0,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T15:08:38+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T15:09:25+0800",
+              "sendOk": false,
+              "dispatchId": "7463ed78-d3b1-4cf2-8b38-133bbef8c155",
+              "verify": "ingested=NOT_EVIDENCE | correlation=weak（无 Dispatch-ID 关联）——弱匹配不作为摄入证据（exit 3）",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "requeued",
+              "at": "2026-11-07T15:13:38+0800",
+              "reason": "launchd PATH 缺 node 致 send FAILED(cli_error)；send_msg 已 PATH 硬化，重排队由机制自动重试"
+            },
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T15:24:27+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T15:25:24+0800",
+              "sendOk": true,
+              "dispatchId": "90518ff4-65f3-4f28-9e8c-0eaf61578f10",
+              "verify": "ingested=True | correlation=strong(Dispatch-ID=90518ff4-65f3-4f28-9e8c-0eaf61578f10) | session=main | session_wake=15:25:24 | status=DELIVERED",
+              "status": "CONSUMED"
+            }
+          ]
+        },
+        {
+          "tag": "r123-article-approval-evidence",
+          "status": "CONSUMED",
+          "dueMs": 1794042000000.0,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T17:11:15+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T17:12:02+0800",
+              "sendOk": true,
+              "dispatchId": "4f817b76-9639-417a-9054-0bdf9050c391",
+              "verify": "ingested=True | correlation=strong(Dispatch-ID=4f817b76-9639-417a-9054-0bdf9050c391) | session=main | session_wake=17:11:58 | status=DELIVERED",
+              "status": "CONSUMED"
+            }
+          ]
+        },
+        {
+          "tag": "r123-cto-channel-probe",
+          "status": "CONSUMED",
+          "dueMs": 1794099600000.0,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-08T09:12:13+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-08T09:13:01+0800",
+              "sendOk": true,
+              "dispatchId": "bc8dcedc-f6c2-4e75-8124-3da3ee8cfdfb",
+              "verify": "ingested=True | correlation=strong(Dispatch-ID=bc8dcedc-f6c2-4e75-8124-3da3ee8cfdfb) | session=main | session_wake=09:12:53 | status=DELIVERED",
+              "status": "CONSUMED"
+            }
+          ]
+        },
+        {
+          "tag": "r123-journal-agentid-migration-v2",
+          "status": "CONSUMED",
+          "dueMs": 1794099600000.0,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-08T09:12:13+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-08T09:13:50+0800",
+              "sendOk": true,
+              "dispatchId": "0d22cb6e-519b-476b-bd7d-ebba700d94e4",
+              "verify": "ingested=True | correlation=strong(Dispatch-ID=0d22cb6e-519b-476b-bd7d-ebba700d94e4) | session=main | session_wake=09:13:32 | status=DELIVERED",
+              "status": "CONSUMED"
+            }
+          ]
+        },
+        {
+          "tag": "r124-qa-reverify-16728bf7",
+          "status": "CONSUMED",
+          "dueMs": 1794035400000.0,
+          "consumption": [
+            {
+              "phase": "claimed",
+              "at": "2026-11-07T15:24:27+0800"
+            },
+            {
+              "phase": "consumed",
+              "at": "2026-11-07T15:26:15+0800",
+              "sendOk": true,
+              "dispatchId": "77ed223d-466c-4c62-8127-61b43a3defbf",
+              "verify": "ingested=NOT_EVIDENCE | correlation=weak（无 Dispatch-ID 关联）——弱匹配不作为摄入证据（exit 3）",
+              "status": "FAILED_VERIFY"
+            },
+            {
+              "phase": "readback_correction",
+              "at": "2026-11-07T16:25:18+0800",
+              "note": "I1.3 读回修正：sweep verify 于 15:26 判 FAILED_VERIFY（sleep45 早于 QA 摄入）；fresh-read verify@15:36 = ingested=True strong / session_wake 15:35:02。原效果真实存在，按读回修正归属，未重放、未新建请求"
+            }
+          ]
+        }
+      ],
+      "sessionMatches": [
+        {
+          "agent": "agt_article-publisher-agent",
+          "dispatchId": "02ef50bc-f5c1-4117-b2de-2ee89bc7cc24",
+          "path": "/Users/authsvc/.agent-core/homes/agt_article-publisher-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_cba6cccee1a9ea30d10cf29757f80d34--/main/session.jsonl",
+          "line": 7562,
+          "rawLineSha256": "a06df3463d95b131882c17809b7fce668535d426210c10e3f6ad8f2c7b845839",
+          "type": "agent/inbox/spliced",
+          "seq": 63543,
+          "time": 1794149490241,
+          "dataKeys": [
+            "target",
+            "start",
+            "inserted"
+          ]
+        },
+        {
+          "agent": "agt_article-publisher-agent",
+          "dispatchId": "02ef50bc-f5c1-4117-b2de-2ee89bc7cc24",
+          "path": "/Users/authsvc/.agent-core/homes/agt_article-publisher-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_cba6cccee1a9ea30d10cf29757f80d34--/main/session.jsonl",
+          "line": 7566,
+          "rawLineSha256": "41966188db8745831e15987bcd4ef5bf26490ddbfef0d46bf2eb35ed336b47d6",
+          "type": "user/message",
+          "seq": 63547,
+          "time": 1794149491638,
+          "dataKeys": [
+            "content",
+            "source",
+            "role",
+            "id"
+          ]
+        },
+        {
+          "agent": "agt_hr-agent",
+          "dispatchId": "17c3d91e-cfc0-4fd6-8cf5-c1126d79a91e",
+          "path": "/Users/authsvc/.agent-core/homes/agt_hr-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74--/main/session.jsonl",
+          "line": 2223,
+          "rawLineSha256": "6b29029485d63d8cde5bac88f599d38152372d1a4ebd3a0695fef438e8e4b83a",
+          "type": "agent/inbox/spliced",
+          "seq": 17485,
+          "time": 1794144673330,
+          "dataKeys": [
+            "target",
+            "start",
+            "inserted"
+          ]
+        },
+        {
+          "agent": "agt_hr-agent",
+          "dispatchId": "17c3d91e-cfc0-4fd6-8cf5-c1126d79a91e",
+          "path": "/Users/authsvc/.agent-core/homes/agt_hr-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74--/main/session.jsonl",
+          "line": 2227,
+          "rawLineSha256": "91dea36198c9bba148ef0c069964f9cac08875522682e6bcb10cf1bcab61307c",
+          "type": "user/message",
+          "seq": 17489,
+          "time": 1794144674448,
+          "dataKeys": [
+            "content",
+            "source",
+            "role",
+            "id"
+          ]
+        },
+        {
+          "agent": "agt_hr-agent",
+          "dispatchId": "bc8dcedc-f6c2-4e75-8124-3da3ee8cfdfb",
+          "path": "/Users/authsvc/.agent-core/homes/agt_hr-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74--/main/session.jsonl",
+          "line": 1972,
+          "rawLineSha256": "cd7c14600654257b15169da0f46df4f1f9d1b207319fa6da5afc6b44efa21d8a",
+          "type": "agent/inbox/spliced",
+          "seq": 15663,
+          "time": 1794100337858,
+          "dataKeys": [
+            "target",
+            "start",
+            "inserted"
+          ]
+        },
+        {
+          "agent": "agt_hr-agent",
+          "dispatchId": "bc8dcedc-f6c2-4e75-8124-3da3ee8cfdfb",
+          "path": "/Users/authsvc/.agent-core/homes/agt_hr-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74--/main/session.jsonl",
+          "line": 1976,
+          "rawLineSha256": "4030414965ffe17c00c1fbc93d36598bacb962dc1174828823870abf55e09e90",
+          "type": "user/message",
+          "seq": 15667,
+          "time": 1794100341039,
+          "dataKeys": [
+            "content",
+            "source",
+            "role",
+            "id"
+          ]
+        }
+      ],
+      "launchctlSweepRaw": {
+        "argv": [
+          "/bin/launchctl",
+          "print",
+          "gui/502/com.r124-wait-sweep"
+        ],
+        "rc": 0,
+        "stdout": "gui/502/com.r124-wait-sweep = {\n\tactive count = 0\n\tpath = /Users/yanfenma/Library/LaunchAgents/com.r124-wait-sweep.plist\n\ttype = LaunchAgent\n\tstate = not running\n\n\tprogram = /usr/bin/sudo\n\targuments = {\n\t\t/usr/bin/sudo\n\t\t-n\n\t\t/usr/bin/python3\n\t\t/Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py\n\t\twait-sweep\n\t}\n\n\tstdout path = /Users/yanfenma/Library/Logs/r124-wait-sweep.log\n\tstderr path = /Users/yanfenma/Library/Logs/r124-wait-sweep.err.log\n\tinherited environment = {\n\t\tSSH_AUTH_SOCK => /var/run/com.apple.launchd.FNAUUPrzzm/Listeners\n\t}\n\n\tdefault environment = {\n\t\tPATH => /usr/bin:/bin:/usr/sbin:/sbin\n\t}\n\n\tenvironment = {\n\t\tOSLogRateLimit => 64\n\t\tXPC_SERVICE_NAME => com.r124-wait-sweep\n\t}\n\n\tdomain = gui/502 [100003]\n\tasid = 100003\n\tminimum runtime = 10\n\texit timeout = 5\n\truns = 36\n\tlast exit code = 0\n\n\tresource coalition = {\n\t\tID = 1090\n\t\ttype = resource\n\t\tstate = active\n\t\tactive count = 1\n\t\tname = com.r124-wait-sweep\n\t}\n\n\tjetsam coalition = {\n\t\tID = 1091\n\t\ttype = jetsam\n\t\tstate = active\n\t\tactive count = 1\n\t\tname = com.r124-wait-sweep\n\t}\n\n\tspawn type = daemon (3)\n\tjetsam priority = 40\n\tjetsam memory limit (active) = (unlimited)\n\tjetsam memory limit (inactive) = (unlimited)\n\tjetsamproperties category = daemon\n\tjetsam thread limit = 32\n\tcpumon = default\n\trun interval = 900 seconds\n\n\tproperties = runatload | inferred program | managed LWCR | has LWCR\n}\n",
+        "stderr": ""
+      }
+    }
+  },
+  "sendProcessAndMtimeRaw": [
+    {
+      "at": "2026-11-08T23:09:19.308325+08:00",
+      "kind": "START",
+      "observerPid": 91391,
+      "registry": "/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json",
+      "stat": {
+        "inode": 361255566,
+        "mtime_ns": 1794150083116934258,
+        "ctime_ns": 1794150083118721769,
+        "uid": 0,
+        "mode": "0o600",
+        "size": 2128268
+      },
+      "deadlineSeconds": 600,
+      "pollSeconds": 0.1,
+      "psEverySeconds": 0.35
+    },
+    {
+      "at": "2026-11-08T23:12:12.323062+08:00",
+      "kind": "PROCESS",
+      "pid": 93744,
+      "chain": [
+        "93744 93739     0 Sun Nov  8 23:12:11 2026     /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python dispatch.py send --agent Build in Public 主理人 --instances 89f19a8b-da6a-4eed-819b-730b49aa670c,2a5c8a00-8716-4bae-8ac4-a37fea07ab6f --task 【M7 交办｜#1374 comment 6723131197：distribution→verification 合法提交（你就是原固定负责人）】你就是 actor（Build in Public 主理人，d5b3aeb2，89f19a8b/2a5c8a00 distribution 节点原 assignee）。\\012Owner 已确认：distribution 完成条件=创建并登记分发子实例——**已满足**（六个子实例已由域 OWNER 文章发布管家创建并登记）。你的原合同职责=fresh-read 后提交 distribution → verification。不要重建子实例、不要申请 membership、不要由其他角色代推进。\\012\\012权威坐标（fresh-read 用）：\\012- 89f19a8b-da6a-4eed-819b-730b49aa670c：sv=29，distribution 节点\\012- 2a5c8a00-8716-4bae-8ac4-a37fea07ab6f：sv=37，distribution 节点\\012- 六子实例：9975aa98(掘金/89f)、407141d7(CSDN/89f)、06905ef3(知乎/89f)、ead8fc1f(掘金/2a)、5f5fa1e4(CSDN/2a)、b08748ff(知乎/2a)\\012执行：\\0121. fresh-read 两实例（instance_detail）确认 sv 与子实例映射未变；已变则以服务端为准重新对齐。\\0122. 按原合同对两实例分别提交 distribution → verification transition（expectedWorkflowStateVersion 用 fresh-read 值）。\\0123. 服务端若仍拒绝：逐字记录错误码/明细/关联 request id，交原责任链，不得笼统归因\"等平台授权\"（子实例已登记，该理由不成立）。\\0124. 成功则回传两笔 transition 回执与新节点。\\012边界：不重建子实例、不碰 membership、不冒用他人身份、三平台外发维持停门。\\012回传格式：两实例各自 {fresh-read sv, transition 回执或精确错误}。 --acceptance 两实例 transition 回执或逐字错误",
+        "93739 93735     0 Sun Nov  8 23:12:11 2026     sudo -n python3 dispatch.py send --agent Build in Public 主理人 --instances 89f19a8b-da6a-4eed-819b-730b49aa670c,2a5c8a00-8716-4bae-8ac4-a37fea07ab6f --task 【M7 交办｜#1374 comment 6723131197：distribution→verification 合法提交（你就是原固定负责人）】你就是 actor（Build in Public 主理人，d5b3aeb2，89f19a8b/2a5c8a00 distribution 节点原 assignee）。\\012Owner 已确认：distribution 完成条件=创建并登记分发子实例——**已满足**（六个子实例已由域 OWNER 文章发布管家创建并登记）。你的原合同职责=fresh-read 后提交 distribution → verification。不要重建子实例、不要申请 membership、不要由其他角色代推进。\\012\\012权威坐标（fresh-read 用）：\\012- 89f19a8b-da6a-4eed-819b-730b49aa670c：sv=29，distribution 节点\\012- 2a5c8a00-8716-4bae-8ac4-a37fea07ab6f：sv=37，distribution 节点\\012- 六子实例：9975aa98(掘金/89f)、407141d7(CSDN/89f)、06905ef3(知乎/89f)、ead8fc1f(掘金/2a)、5f5fa1e4(CSDN/2a)、b08748ff(知乎/2a)\\012执行：\\0121. fresh-read 两实例（instance_detail）确认 sv 与子实例映射未变；已变则以服务端为准重新对齐。\\0122. 按原合同对两实例分别提交 distribution → verification transition（expectedWorkflowStateVersion 用 fresh-read 值）。\\0123. 服务端若仍拒绝：逐字记录错误码/明细/关联 request id，交原责任链，不得笼统归因\"等平台授权\"（子实例已登记，该理由不成立）。\\0124. 成功则回传两笔 transition 回执与新节点。\\012边界：不重建子实例、不碰 membership、不冒用他人身份、三平台外发维持停门。\\012回传格式：两实例各自 {fresh-read sv, transition 回执或精确错误}。 --acceptance 两实例 transition 回执或逐字错误",
+        "93735 81031   502 Sun Nov  8 23:12:11 2026     /bin/zsh -c . '/Users/yanfenma/.zcode/cli/exec/shell-snapshots/snapshot-zsh-1794149351785-0gcxb3.sh' 2>/dev/null || true\\012. '/Users/yanfenma/.zcode/cli/exec/bash-startup/sess_3b90e82d-ebf5-4a7c-bf7f-77be17c1d490/embedded-search-startup-ece10396eb339e47.sh'\\012cat > /tmp/bip-task.txt <<'EOF'\\012【M7 交办｜#1374 comment 6723131197：distribution→verification 合法提交（你就是原固定负责人）】你就是 actor（Build in Public 主理人，d5b3aeb2，89f19a8b/2a5c8a00 distribution 节点原 assignee）。\\012Owner 已确认：distribution 完成条件=创建并登记分发子实例——**已满足**（六个子实例已由域 OWNER 文章发布管家创建并登记）。你的原合同职责=fresh-read 后提交 distribution → verification。不要重建子实例、不要申请 membership、不要由其他角色代推进。\\012\\012权威坐标（fresh-read 用）：\\012- 89f19a8b-da6a-4eed-819b-730b49aa670c：sv=29，distribution 节点\\012- 2a5c8a00-8716-4bae-8ac4-a37fea07ab6f：sv=37，distribution 节点\\012- 六子实例：9975aa98(掘金/89f)、407141d7(CSDN/89f)、06905ef3(知乎/89f)、ead8fc1f(掘金/2a)、5f5fa1e4(CSDN/2a)、b08748ff(知乎/2a)\\012执行：\\0121. fresh-read 两实例（instance_detail）确认 sv 与子实例映射未变；已变则以服务端为准重新对齐。\\0122. 按原合同对两实例分别提交 distribution → verification transition（expectedWorkflowStateVersion 用 fresh-read 值）。\\0123. 服务端若仍拒绝：逐字记录错误码/明细/关联 request id，交原责任链，不得笼统归因\"等平台授权\"（子实例已登记，该理由不成立）。\\0124. 成功则回传两笔 transition 回执与新节点。\\012边界：不重建子实例、不碰 membership、不冒用他人身份、三平台外发维持停门。\\012回传格式：两实例各自 {fresh-read sv, transition 回执或精确错误}。\\012EOF\\012cd ~/.agents/skills/dispatch/scripts && sudo -n python3 dispatch.py send --agent \"Build in Public 主理人\" --instances 89f19a8b-da6a-4eed-819b-730b49aa670c,2a5c8a00-8716-4bae-8ac4-a37fea07ab6f --task \"$(cat /tmp/bip-task.txt)\" --acceptance \"两实例 transition 回执或逐字错误\" 2>&1 | tail -2\\012__zcode_status=$?\\012if [ \"$__zcode_status\" -eq 0 ]; then pwd -P > '/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/zcode-a3c8109b-d865-4087-90d3-e8cea5b75499-cwd'; fi\\012exit \"$__zcode_status\"",
+        "81031 81019   502 Sun Nov  8 22:48:30 2026     zcode-cli     ",
+        "81019 81002   502 Sun Nov  8 22:48:25 2026     zcode-host-local-1                  ",
+        "81002     1   502 Sun Nov  8 22:48:23 2026     ZCode",
+        "    1     0     0 Sun Nov  8 13:56:24 2026     /sbin/launchd"
+      ]
+    },
+    {
+      "at": "2026-11-08T23:12:14.506913+08:00",
+      "kind": "REGISTRY_CHANGE",
+      "before": {
+        "inode": 361255566,
+        "mtime_ns": 1794150083116934258,
+        "ctime_ns": 1794150083118721769,
+        "uid": 0,
+        "mode": "0o600",
+        "size": 2128268
+      },
+      "after": {
+        "inode": 361267478,
+        "mtime_ns": 1794150734405732334,
+        "ctime_ns": 1794150734409052396,
+        "uid": 0,
+        "mode": "0o600",
+        "size": 2132790
+      }
+    },
+    {
+      "at": "2026-11-08T23:12:15.594198+08:00",
+      "kind": "LSOF",
+      "rc": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "at": "2026-11-08T23:12:17.602313+08:00",
+      "kind": "END",
+      "elapsedSeconds": 178.2926942080012,
+      "final": {
+        "inode": 361267478,
+        "mtime_ns": 1794150734405732334,
+        "ctime_ns": 1794150734409052396,
+        "uid": 0,
+        "mode": "0o600",
+        "size": 2132790
+      },
+      "changeObserved": true
+    }
+  ],
+  "sweepProcessAndMtimeRaw": [
+    {
+      "at": "2026-11-08T23:12:56.830762+08:00",
+      "kind": "START",
+      "observerPid": 94471,
+      "registry": "/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json",
+      "stat": {
+        "inode": 361267858,
+        "mtime_ns": 1794150760469253757,
+        "ctime_ns": 1794150760470543849,
+        "uid": 0,
+        "mode": "0o600",
+        "size": 2136326
+      },
+      "deadlineSeconds": 360,
+      "pollSeconds": 0.1,
+      "psEverySeconds": 0.35
+    },
+    {
+      "at": "2026-11-08T23:16:23.406336+08:00",
+      "kind": "PROCESS",
+      "pid": 96687,
+      "chain": [
+        "96687     1     0 Sun Nov  8 23:16:23 2026     /usr/bin/sudo -n /usr/bin/python3 /Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py wait-sweep",
+        "    1     0     0 Sun Nov  8 13:56:24 2026     /sbin/launchd"
+      ]
+    },
+    {
+      "at": "2026-11-08T23:16:23.406812+08:00",
+      "kind": "PROCESS",
+      "pid": 96689,
+      "chain": [
+        "96689 96687     0 Sun Nov  8 23:16:23 2026     /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python /Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py wait-sweep",
+        "96687     1     0 Sun Nov  8 23:16:23 2026     /usr/bin/sudo -n /usr/bin/python3 /Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py wait-sweep",
+        "    1     0     0 Sun Nov  8 13:56:24 2026     /sbin/launchd"
+      ]
+    },
+    {
+      "at": "2026-11-08T23:16:23.509102+08:00",
+      "kind": "REGISTRY_CHANGE",
+      "before": {
+        "inode": 361267858,
+        "mtime_ns": 1794150760469253757,
+        "ctime_ns": 1794150760470543849,
+        "uid": 0,
+        "mode": "0o600",
+        "size": 2136326
+      },
+      "after": {
+        "inode": 361270191,
+        "mtime_ns": 1794150983453776766,
+        "ctime_ns": 1794150983458971756,
+        "uid": 0,
+        "mode": "0o600",
+        "size": 2136326
+      }
+    },
+    {
+      "at": "2026-11-08T23:16:24.183406+08:00",
+      "kind": "LSOF",
+      "rc": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "at": "2026-11-08T23:16:26.510460+08:00",
+      "kind": "END",
+      "elapsedSeconds": 209.67812458299886,
+      "final": {
+        "inode": 361270191,
+        "mtime_ns": 1794150983453776766,
+        "ctime_ns": 1794150983458971756,
+        "uid": 0,
+        "mode": "0o600",
+        "size": 2136326
+      },
+      "changeObserved": true
+    }
+  ],
+  "burstPsRaw": [
+    {
+      "at": "2026-11-08T23:16:23.232263+08:00",
+      "pid": 96687,
+      "chain": [
+        "96687     1     0 Sun Nov  8 23:16:23 2026     /usr/bin/sudo -n /usr/bin/python3 /Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py wait-sweep",
+        "    1     0     0 Sun Nov  8 13:56:24 2026     /sbin/launchd"
+      ]
+    },
+    {
+      "at": "2026-11-08T23:16:23.232591+08:00",
+      "pid": 96689,
+      "chain": [
+        "96689 96687     0 Sun Nov  8 23:16:23 2026     /usr/bin/python3 /Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py wait-sweep",
+        "96687     1     0 Sun Nov  8 23:16:23 2026     /usr/bin/sudo -n /usr/bin/python3 /Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py wait-sweep",
+        "    1     0     0 Sun Nov  8 13:56:24 2026     /sbin/launchd"
+      ]
+    },
+    {
+      "at": "2026-11-08T23:16:23.304066+08:00",
+      "pid": 96689,
+      "chain": [
+        "96689 96687     0 Sun Nov  8 23:16:23 2026     /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python /Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py wait-sweep",
+        "96687     1     0 Sun Nov  8 23:16:23 2026     /usr/bin/sudo -n /usr/bin/python3 /Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py wait-sweep",
+        "    1     0     0 Sun Nov  8 13:56:24 2026     /sbin/launchd"
+      ]
+    }
+  ],
+  "fsUsageTargetRaw": [
+    "23:11:42.732765  open              F=3        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000134   Python.1533795",
+    "23:11:42.782551  open              F=3        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000112   Python.1533795",
+    "23:12:14.310726  open              F=3        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000051   Python.1536229",
+    "23:12:14.335831  open              F=3        (RWC________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json.lock                                                      0.000972   Python.1536229",
+    "23:12:14.336026  open              F=4        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000042   Python.1536229",
+    "23:12:14.358409  open              F=4        (RWC__E__F__X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-tyl34rh5.tmp                                                                0.000280   Python.1536229",
+    "23:12:14.405183    WrData[S]       D=0x01bf5bc6  B=0x1f000  /dev/disk3s5  /System/Volumes/Data/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-tyl34rh5.tmp                                   0.000032 W Python.1536229",
+    "23:12:14.405726    WrData[S]       D=0x01a96be6  B=0xe1000  /dev/disk3s5  /System/Volumes/Data/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-tyl34rh5.tmp                                   0.000088 W Python.1536229",
+    "23:12:14.405879    WrData[S]       D=0x01a96cc7  B=0x100000 /dev/disk3s5  /System/Volumes/Data/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-tyl34rh5.tmp                                   0.000113 W Python.1536229",
+    "23:12:14.405920    WrData[S]       D=0x01a96dc7  B=0x9000   /dev/disk3s5  /System/Volumes/Data/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-tyl34rh5.tmp                                   0.000024 W Python.1536229",
+    "23:12:14.408344  rename                                 /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-tyl34rh5.tmp                                                                         0.002371   Python.1536229",
+    "23:12:14.408420  chmod             <rw------->          /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                                    0.000054   Python.1536229",
+    "23:12:20.991114  open              F=3        (RWC________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json.lock                                                      0.000069   Python.1536229",
+    "23:12:20.991228  open              F=4        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000033   Python.1536229",
+    "23:12:21.012494  open              F=4        (RWC__E__F__X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-0_qz2_iy.tmp                                                                0.000149   Python.1536229",
+    "23:12:21.049653    WrData[S]       D=0x0067acca  B=0x1f000  /dev/disk3s5  /System/Volumes/Data/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-0_qz2_iy.tmp                                   0.000037 W Python.1536229",
+    "23:12:21.050046    WrData[S]       D=0x02225a26  B=0xe1000  /dev/disk3s5  /System/Volumes/Data/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-0_qz2_iy.tmp                                   0.000087 W Python.1536229",
+    "23:12:21.050171    WrData[S]       D=0x02225b07  B=0x100000 /dev/disk3s5  /System/Volumes/Data/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-0_qz2_iy.tmp                                   0.000094 W Python.1536229",
+    "23:12:21.050234    WrData[S]       D=0x02225c07  B=0x9000   /dev/disk3s5  /System/Volumes/Data/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-0_qz2_iy.tmp                                   0.000028 W Python.1536229",
+    "23:12:21.050637  rename                                 /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-0_qz2_iy.tmp                                                                         0.000328   Python.1536229",
+    "23:12:21.050673  chmod             <rw------->          /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                                    0.000027   Python.1536229",
+    "23:12:35.655432  open              F=3        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000067   Python.1538891",
+    "23:12:35.681110  open              F=3        (RWC________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json.lock                                                      0.000262   Python.1538891",
+    "23:12:35.681190  open              F=4        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000031   Python.1538891",
+    "23:12:35.698048  open              F=4        (RWC__E__F__X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-_r8_xzq_.tmp                                                                0.000469   Python.1538891",
+    "23:12:35.736622    WrData[S]       D=0x008d11a9  B=0x1f000  /dev/disk3s5  /System/Volumes/Data/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-_r8_xzq_.tmp                                   0.000039 W Python.1538891",
+    "23:12:35.737097    WrData[S]       D=0x01635b48  B=0xe1000  /dev/disk3s5  /System/Volumes/Data/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-_r8_xzq_.tmp                                   0.000109 W Python.1538891",
+    "23:12:35.737256    WrData[S]       D=0x01635c29  B=0x100000 /dev/disk3s5  /System/Volumes/Data/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-_r8_xzq_.tmp                                   0.000114 W Python.1538891",
+    "23:12:35.737299    WrData[S]       D=0x01635d29  B=0xa000   /dev/disk3s5  /System/Volumes/Data/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-_r8_xzq_.tmp                                   0.000026 W Python.1538891",
+    "23:12:35.739841  rename                                 /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-_r8_xzq_.tmp                                                                         0.001200   Python.1538891",
+    "23:12:35.739976  chmod             <rw------->          /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                                    0.000089   Python.1538891",
+    "23:12:37.095761  open              F=3        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000132   Python.1539130",
+    "23:12:40.407895  open              F=3        (RWC________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json.lock                                                      0.000136   Python.1538891",
+    "23:12:40.408062  open              F=4        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000051   Python.1538891",
+    "23:12:40.431787  open              F=4        (RWC__E__F__X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-a_x9j9cy.tmp                                                                0.000185   Python.1538891",
+    "23:12:40.468550    WrData[S]       D=0x0077ef41  B=0x1f000  /dev/disk3s5  /System/Volumes/Data/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-a_x9j9cy.tmp                                   0.000048 W Python.1538891",
+    "23:12:40.468773    WrData[S]       D=0x0324b964  B=0xe1000  /dev/disk3s5  /System/Volumes/Data/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-a_x9j9cy.tmp                                   0.000158 W Python.1538891",
+    "23:12:40.468944    WrData[S]       D=0x0324ba45  B=0x100000 /dev/disk3s5  /System/Volumes/Data/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-a_x9j9cy.tmp                                   0.000110 W Python.1538891",
+    "23:12:40.468976    WrData[S]       D=0x0324bb45  B=0xa000   /dev/disk3s5  /System/Volumes/Data/Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-a_x9j9cy.tmp                                   0.000017 W Python.1538891",
+    "23:12:40.469698  rename                                 /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-a_x9j9cy.tmp                                                                         0.000652   Python.1538891",
+    "23:12:40.469747  chmod             <rw------->          /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                                    0.000037   Python.1538891",
+    "23:12:49.235083  open              F=3        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000035   Python.1539911",
+    "23:12:54.761590  open              F=3        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000072   Python.1540174",
+    "23:12:54.776950  open              F=3        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000053   Python.1540174",
+    "23:13:39.661847  open              F=3        (RWC________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json.lock                                                      0.000680   Python.1542773",
+    "23:13:39.661907  open              F=4        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000019   Python.1542773",
+    "23:13:39.784689  open              F=3        (RWC________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json.lock                                                      0.000042   Python.1542787",
+    "23:13:39.784724  open              F=4        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000011   Python.1542787",
+    "23:13:58.672995  open              F=3        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000024   Python.1543778",
+    "23:13:58.679802  open              F=3        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000042   Python.1543778",
+    "23:14:25.886432  open              F=3        (RWC________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json.lock                                                      0.000077   Python.1545603",
+    "23:14:25.886496  open              F=4        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000030   Python.1545603",
+    "23:14:26.044451  open              F=3        (RWC________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json.lock                                                      0.000075   Python.1545644",
+    "23:14:26.044505  open              F=4        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000028   Python.1545644",
+    "23:15:11.258682  open              F=3        (RWC________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json.lock                                                      0.000034   Python.1548587",
+    "23:15:11.258712  open              F=4        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000016   Python.1548587",
+    "23:15:11.331201  open              F=3        (RWC________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json.lock                                                      0.000058   Python.1548599",
+    "23:15:11.331317  open              F=4        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000037   Python.1548599",
+    "23:15:56.503730  open              F=3        (RWC________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json.lock                                                      0.000072   Python.1551282",
+    "23:15:56.503847  open              F=4        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000025   Python.1551282",
+    "23:15:56.627050  open              F=3        (RWC________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json.lock                                                      0.000043   Python.1551297",
+    "23:15:56.627081  open              F=4        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000013   Python.1551297",
+    "23:16:23.403795  open              F=4        (RWC________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json.lock                                                      0.000065   Python.1553711",
+    "23:16:23.403847  open              F=5        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000030   Python.1553711",
+    "23:16:23.422521  open              F=5        (RWC__E__F__X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-v9m251px.tmp                                                                0.005587   Python.1553711",
+    "23:16:23.451678    WrData[ST1]     D=0x05939a83  B=0x2000   /dev/disk3s5  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-v9m251px.tmp                                                       0.000039 W Python.1553711",
+    "23:16:23.451827    WrData[ST1]     D=0x0616d0eb  B=0xfe000  /dev/disk3s5  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-v9m251px.tmp                                                       0.000112 W Python.1553711",
+    "23:16:23.451967    WrData[ST1]     D=0x0616d1e9  B=0x100000 /dev/disk3s5  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-v9m251px.tmp                                                       0.000099 W Python.1553711",
+    "23:16:23.451994    WrData[ST1]     D=0x0616d2e9  B=0xa000   /dev/disk3s5  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-v9m251px.tmp                                                       0.000017 W Python.1553711",
+    "23:16:23.456707  rename                                 /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/.reg-v9m251px.tmp                                                                         0.004665   Python.1553711",
+    "23:16:23.456833  chmod             <rw------->          /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                                    0.000092   Python.1553711",
+    "23:16:43.759447  open              F=3        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000071   Python.1555172",
+    "23:16:43.782379  open              F=3        (R__________X___)  /Users/yanfenma/workspace/artifacts/production-backlog-remediation-20261031/lark-cli-registry.json                                                           0.000047   Python.1555172"
+  ],
+  "sourceExcerpts": [
+    {
+      "path": "/Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py",
+      "sourceSha256": "9dd3989842f2252f29d02d2f89c980d90b043a6554e66e7e6b96db726a4549a7",
+      "startLine": 99,
+      "endLine": 117,
+      "rawLines": [
+        "import os",
+        "def load_reg_locked():",
+        "    \"\"\"独占锁 + 读取 registry；返回 (lockfd, reg)。调用方负责 os.close(fd)。\"\"\"",
+        "    fd = os.open(LOCK, os.O_CREAT | os.O_RDWR, 0o600)",
+        "    fcntl.flock(fd, fcntl.LOCK_EX)",
+        "    reg = json.loads(REG.read_text()) if REG.exists() else {'sent': [], 'chatMap': {}}",
+        "    return fd, reg",
+        "def read_reg():",
+        "    \"\"\"无锁读取（仅解析类只读场景；RMW 必须走 load_reg_locked）。\"\"\"",
+        "    return json.loads(REG.read_text()) if REG.exists() else {'sent': [], 'chatMap': {}}",
+        "def record(reg, entry=None):",
+        "    if entry is not None:",
+        "        reg['sent'].append(entry)",
+        "    fd, tmp = tempfile.mkstemp(dir=str(REG.parent), prefix='.reg-', suffix='.tmp')",
+        "    with os.fdopen(fd, 'w') as f:",
+        "        json.dump(reg, f, ensure_ascii=False, indent=1)",
+        "        f.flush(); os.fsync(f.fileno())",
+        "    os.replace(tmp, REG)",
+        "    os.chmod(REG, 0o600)"
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py",
+      "sourceSha256": "9dd3989842f2252f29d02d2f89c980d90b043a6554e66e7e6b96db726a4549a7",
+      "startLine": 188,
+      "endLine": 203,
+      "rawLines": [
+        "    return False, '', 'api_error', f'{code}: {msg}'",
+        "",
+        "def send_msg(chat, text, key):",
+        "    try:",
+        "        # launchd/调度器最小环境无 node（lark-cli shebang=/usr/bin/env node）——显式补 PATH",
+        "        env = {**os.environ, 'PATH': '/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin'}",
+        "        r = subprocess.run(['/usr/local/bin/lark-cli','im','+messages-send','--as','user','--chat-id',chat,'--text',text,'--idempotency-key',key],",
+        "                           capture_output=True, text=True, timeout=30, env=env)",
+        "        exit_code = r.returncode",
+        "        ok, mid, eclass, edetail = classify(r.stdout, r.stderr, r.returncode)",
+        "    except subprocess.TimeoutExpired as e:",
+        "        exit_code, ok, mid, eclass, edetail = -1, False, '', 'transport_timeout', f'timeout after 30s: {e}'",
+        "    # transport_timeout = 结果 UNKNOWN（服务端可能已受理）→ 永不自动重发",
+        "    status = 'DELIVERED' if ok else ('UNKNOWN' if eclass == 'transport_timeout' else 'FAILED')",
+        "    return {'key': key, 'ok': ok, 'messageId': mid, 'errorClass': eclass,",
+        "            'errorDetail': edetail, 'exitCode': exit_code, 'status': status}"
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py",
+      "sourceSha256": "9dd3989842f2252f29d02d2f89c980d90b043a6554e66e7e6b96db726a4549a7",
+      "startLine": 213,
+      "endLine": 221,
+      "rawLines": [
+        "def record(reg, entry=None):",
+        "    if entry is not None:",
+        "        reg['sent'].append(entry)",
+        "    fd, tmp = tempfile.mkstemp(dir=str(REG.parent), prefix='.reg-', suffix='.tmp')",
+        "    with os.fdopen(fd, 'w') as f:",
+        "        json.dump(reg, f, ensure_ascii=False, indent=1)",
+        "        f.flush(); os.fsync(f.fileno())",
+        "    os.replace(tmp, REG)",
+        "    os.chmod(REG, 0o600)"
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py",
+      "sourceSha256": "9dd3989842f2252f29d02d2f89c980d90b043a6554e66e7e6b96db726a4549a7",
+      "startLine": 533,
+      "endLine": 567,
+      "rawLines": [
+        "def cmd_wait_sweep():",
+        "    \"\"\"到期消费扫描（供既有调度器调用）：WAITING 且到期 → 执行 consume 命令 → verify 摄入 → 落状态。\"\"\"",
+        "    now_ms = time.time() * 1000",
+        "    fd, reg = load_reg_locked()",
+        "    fired = []",
+        "    try:",
+        "        for w in reg.get('waits', []):",
+        "            # R125-C02 迭代：FAILED_VERIFY 有界自动重试（≤3 次，15 分钟 backoff）——",
+        "            # 持久对账不依赖人工 requeue；UNKNOWN 不自动重试（先读回核效果）。",
+        "            retryable = False",
+        "            if w.get('status') == 'FAILED_VERIFY' and w.get('consume','').strip():",
+        "                cons = [c for c in (w.get('consumption') or []) if c.get('phase') == 'consumed']",
+        "                attempts = sum(1 for c in cons if c.get('status') == 'FAILED_VERIFY')",
+        "                last_ms = 0",
+        "                for c in cons[::-1]:",
+        "                    if c.get('status') == 'FAILED_VERIFY':",
+        "                        try:",
+        "                            import datetime as _dt",
+        "                            last_ms = _dt.datetime.fromisoformat(c.get('at')).timestamp() * 1000",
+        "                        except Exception:",
+        "                            last_ms = 0",
+        "                        break",
+        "                retryable = attempts < 3 and (now_ms - last_ms) >= 15 * 60 * 1000",
+        "            if (w.get('status') == 'WAITING' and w.get('dueMs') is not None and w.get('consume','').strip() and w.get('dueMs') <= now_ms) or retryable:",
+        "                w['status'] = 'CONSUMING'; w.setdefault('consumption', []).append({'phase':'claimed','at':time.strftime('%Y-%m-%dT%H:%M:%S%z'), **({'retryAttempt': attempts + 1} if retryable else {})})",
+        "                fired.append(dict(w))",
+        "        record(reg)",
+        "    finally:",
+        "        os.close(fd)",
+        "    results = []",
+        "    for w in fired:",
+        "        # R125-C02 反例修复：单项失败/超时不得让同批健康后续留在无人消费的 CONSUMING。",
+        "        env = {**os.environ, 'PATH': '/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin'}",
+        "        try:",
+        "            r = subprocess.run(['bash','-c',w.get('consume','')], capture_output=True, text=True, timeout=120, env=env)"
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/.agents/skills/dispatch/scripts/dispatch.py",
+      "sourceSha256": "9dd3989842f2252f29d02d2f89c980d90b043a6554e66e7e6b96db726a4549a7",
+      "startLine": 620,
+      "endLine": 627,
+      "rawLines": [
+        "                tgt['status'] = status",
+        "                record(reg)",
+        "        finally:",
+        "            os.close(fd)",
+        "        results.append((w.get('tag'), status))",
+        "    for t, s in results:",
+        "        print(f'WAIT_SWEEP {t} -> {s}')",
+        "    if not results: print('WAIT_SWEEP: no due items')"
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/.local/services/workflow-audit/audit_deterministic.py",
+      "sourceSha256": "2ca7afd62fb9138f3302742721dc86107977359fe69a7ac889160b5dcc097cce",
+      "startLine": 28,
+      "endLine": 32,
+      "rawLines": [
+        "    r = sh(f\"PGPASSWORD='{pw_line}' psql -h localhost -p 5432 -U svc_wf -d svc_workflow_dogfood_clean -tAc \\\"{sql}\\\"\", 20)",
+        "    return r.stdout.strip()",
+        "",
+        "run_id = f\"det-{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}\"",
+        "open(HEARTBEAT, \"w\").write(datetime.datetime.now().isoformat())"
+      ]
+    }
+  ],
+  "otherReadOnlyFindings": {
+    "rootCrontab": {
+      "argv": [
+        "/usr/bin/crontab",
+        "-l"
+      ],
+      "rc": 1,
+      "stdout": "",
+      "stderr": "crontab: no crontab for root\n"
+    },
+    "uid502Crontab": "independent investigator found no dispatch/wait-sweep entries",
+    "sudoOperatorProbe": "uid502 operator sudo -n id returned uid=0(root); sudo -n -l included (ALL) NOPASSWD: ALL; not HR delegation authorization",
+    "unifiedLogProbe": {
+      "argv": [
+        "sudo",
+        "-n",
+        "/usr/bin/log",
+        "show",
+        "--start",
+        "2026-11-08 22:50:30",
+        "--end",
+        "2026-11-08 22:52:00",
+        "--style",
+        "compact",
+        "--info",
+        "--predicate",
+        "process == \"sudo\" AND eventMessage CONTAINS \"dispatch.py\""
+      ],
+      "rc": 0,
+      "stdout": "Timestamp               Ty Process[PID:TID]\n",
+      "meaning": "empty result, not attribution evidence"
+    }
+  },
+  "samplerProvenance": [
+    {
+      "path": "/private/tmp/m7-rootwriter-20261108-2x3kyfey/watch.py",
+      "size": 2133,
+      "sha256": "20637278cd1c125d0b30de39e2a8f19ea02be2cadea77de423a0f64ff3c7130d"
+    },
+    {
+      "path": "/private/tmp/m7-rootwriter-20261108-2x3kyfey/watch-sweep.py",
+      "size": 2139,
+      "sha256": "1c224f3f3df7367513e29b7351ecabdf1c264d67ad7838d90a94cf04d33841a3"
+    },
+    {
+      "path": "/private/tmp/m7-rootwriter-20261108-2x3kyfey/burst.py",
+      "size": 1141,
+      "sha256": "7cf341b158aff8b9a92a21c031e922f33611c6830d7c9d762f967dd28690915d"
+    },
+    {
+      "path": "/private/tmp/m7-rootwriter-20261108-2x3kyfey/trace.py",
+      "size": 985,
+      "sha256": "d3035b394b13626477554b3d882069dff4310039431c5d5a105bd6923a1988f2"
+    },
+    {
+      "path": "/private/tmp/m7-rootwriter-20261108-2x3kyfey/snapshot.py",
+      "size": 3098,
+      "sha256": "938438ad56e3ee8f535fbaebc7abd0519a46dda0f08e713b4f7f5fe37d8e6da3"
+    },
+    {
+      "path": "/private/tmp/m7-rootwriter-20261108-2x3kyfey/watch.jsonl",
+      "size": 31390,
+      "sha256": "7873b428a38293474ff062928773bafcfbbb50f97f70ca7eafd7ae93c607a9fa"
+    },
+    {
+      "path": "/private/tmp/m7-rootwriter-20261108-2x3kyfey/watch-sweep.jsonl",
+      "size": 54379,
+      "sha256": "c262ad7a87f884107e0305090ea837789958c65f5ff8489e24b40b11216a39ca"
+    },
+    {
+      "path": "/private/tmp/m7-rootwriter-20261108-2x3kyfey/burst.jsonl",
+      "size": 1249,
+      "sha256": "5ee3dc9f5a338f36e33726c76465f9bb2ca7194d99478e6d4d59d480cba389f6"
+    }
+  ],
+  "sendRequestBinding": {
+    "observedAt": "2026-11-08T23:19:12.950493+08:00",
+    "pid": 93744,
+    "dispatchId": "9bb647ff-7edd-4f52-b2c8-daa99b052f6e",
+    "agent": "agt_build-in-public-agent",
+    "instances": [
+      "89f19a8b-da6a-4eed-819b-730b49aa670c",
+      "2a5c8a00-8716-4bae-8ac4-a37fea07ab6f"
+    ],
+    "psTaskSha256": "94026e80615cc31702322d23583a1d7fdc503bbfe4e70141e8b492ea2090e1cd",
+    "psTaskIsSubstringOfRecordedRequestText": true,
+    "storedRequestHash": "fce7825add69e39b1f8dfe14c77542207149b015b83262b9a6bed5e1099563ad",
+    "recomputedRequestHash": "fce7825add69e39b1f8dfe14c77542207149b015b83262b9a6bed5e1099563ad",
+    "status": "DELIVERED"
+  },
+  "samplerLifecycle": {
+    "fsUsageRaw": {
+      "path": "/private/tmp/m7-rootwriter-20261108-2x3kyfey/fs-usage.txt",
+      "size": 104754,
+      "sha256": "7c0ffa1b7011d3f596bb2bf284a1c159893c3486631ba7801d2abcabb6584c1e"
+    },
+    "fsUsageEnd": "END 2026-11-08T23:18:53.559328+08:00 rc=0",
+    "publishedTraceCutoff": "23:16:44; later events omitted from fixed snapshot analysis",
+    "burstEnd": "2026-11-08T23:17:00.093402+08:00",
+    "psObserversEndedNaturally": true
+  }
+}
