@@ -10,8 +10,8 @@ PREP=/private/tmp/fleet-v5-prep
 INPUT=/private/tmp/fleet-binding-diag/r3
 SOURCE=/private/tmp/fleet-roll-src
 HARNESS=/tmp/v5-rebuild/harness-src
-SHA=f6a1f77a8b7b878bcb9821a68836925755ca7076
-TREE=08d7ea7108e8d92417b33db52523e5bd545ddce3
+SHA=75ece578301b014a23b987568d1eb8af96795300
+TREE=7a68ac22c8eef6340131dacafe1c0f2aa5dfa0d6
 LIVE=/usr/local/libexec/agent-core
 PLIST=/Library/LaunchDaemons/ai.agent-core.runtime.plist
 SERVICE=system/ai.agent-core.runtime
@@ -38,6 +38,10 @@ Execution requires the window writer's current JSON authority. Required fields:
   expected_bindings_sha256, expected_runtime_uid, expected_runtime_gid,
   scopes: [source_lockfile_cleanup, production_mutex, bootout, full_preimage,
            install, plist_deployed_sha_only, bootstrap, verify, hr_observe]
+  sraRef, issuerRef, appointmentRef, callerRef, participants, conflictMatrix,
+  requestedEffects, candidateRef, controlVersion, profileRef, attempt,
+  releaseClass=STANDARD_RECOVERABLE, standardCriteria[1..5], exclusions, stageRequirements
+  (accepted FWAV V1; all declarations require independent authenticated observations).
   c7: {naming_scope, before_path, before_sha256, after_path, renames,
        generations_newest_first, protected_generations, protection_basis}
 See C7-INPUTS.md for the manually inventoried snapshots and explicit generation order.
@@ -46,6 +50,9 @@ Candidate state loading uses sanitized copies and the candidate's real runtime.
 Quiet observes only; unresolved historical UNKNOWN is carried with Agent fences.
 The full preimage copy precedes bootout; downtime only rechecks inventory.
 The authority documents an actual authorization; creating JSON grants none.
+The original registry reader has no qualified caller/freshness binding in B,
+so execute currently refuses; fixtures are Python-only external-boundary injection.
+Unqualified internal installer/settlement/recursive writes refuse before dispatch.
 No defaults for old PID, loaded identity, authority, expiry, or bindings hashes.
 Static private inputs retain exact bytes/custody gates. Live jobs/incidents
 (including outbox) use schema/agent identity/binding validation and private
@@ -149,7 +156,10 @@ stop_on_error() {
   local rc=$1 line=$2
   trap - ERR INT TERM
   set +e
-  [ -z "$RD" ] || helper user phase "$STAGE" FAIL "rc=$rc" "line=$line"
+  if [ -n "$RD" ]; then
+    STOP_STATE=$(helper user stop-state) || STOP_STATE=UNKNOWN
+    helper user phase "$STAGE" FAIL "rc=$rc" "line=$line"
+  fi
   rollback_recipe
   exit "$rc"
 }
@@ -162,12 +172,7 @@ stage_00_authority_mutex() {
 stage_01_integrity_clean() {
   helper user integrity
   # Bundle is staged before downtime; original WINDOW_INPUTS is preserved.
-  WINDOW_BUNDLE=$(sudo -n /usr/bin/mktemp -d /private/tmp/fleet-binding-window-v5.XXXXXX)
-  sudo -n /bin/cp -RP "$INPUT/window-installer" "$WINDOW_BUNDLE/scripts"
-  sudo -n /bin/cp -RP "$INPUT/payload" "$WINDOW_BUNDLE/payload"
-  sudo -n /bin/cp "$INPUT/WINDOW_INPUTS.sha256" "$WINDOW_BUNDLE/WINDOW_INPUTS.sha256"
-  sudo -n /usr/sbin/chown -R root:wheel "$WINDOW_BUNDLE"
-  sudo -n /bin/chmod -R go-w "$WINDOW_BUNDLE"
+  WINDOW_BUNDLE=$(helper root stage-bundle)
   helper root bundle "$WINDOW_BUNDLE"
   sudo -n /bin/bash -n "$WINDOW_BUNDLE/scripts/trusted-cp-deploy-install.sh"
   helper user clean
@@ -197,8 +202,8 @@ stage_04_quiet_gate() {
 }
 stage_05_old_exit() {
   helper root before-stop
+  helper root bootout
   STOP_STATE=attempted
-  sudo -n /bin/launchctl bootout system "$PLIST"
   local i rc
   for ((i=0;i<30;i++)); do
     rc=0; helper root exit-check || rc=$?
@@ -213,6 +218,7 @@ stage_05b_settle_unresolved() {
   # Evidence: all worker child processes verifiably exited (stage_05 proved old exit);
   # semantics: per AGENT_DELIVERY_RESILIENCE_D009_ALIGNMENT_V1;
   # exact termination-only -> terminated_without_outcome; business outcome stays UNKNOWN.
+  helper root settlement-start
   printf '%s\n' 'stage_05b: settling unresolved turns while runtime is down'
   sudo -n /usr/local/libexec/agent-core/node-runtime/bin/node \
     "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/settle_unresolved_runtime_down.mjs" \
@@ -228,6 +234,7 @@ stage_07_pinned_install() {
   printf '%s\n' "argv: /bin/bash $WINDOW_BUNDLE/scripts/trusted-cp-deploy-install.sh $SOURCE $HARNESS $SOURCE" \
     "env: EXPECTED_SOURCE_SHA=$SHA EXPECTED_SOURCE_TREE=$TREE GENERATION_LABEL_SHA=$SHA R3_BINDING_PAYLOAD=$WINDOW_BUNDLE/payload" \
     "mutex: PRODUCTION_DEPLOY_LOCK_INHERITED_FROM=^pid=$$\$" > "$RD/install-invocation.txt"
+  helper root installer-boundary "$WINDOW_BUNDLE"
   INSTALL_STATE=started
   # Preserve BOTH pipeline statuses. Do not run the installer in an if/function
   # context that disables its own errexit; it is a separate /bin/bash process.
@@ -260,7 +267,7 @@ stage_08_install_receipt() {
 stage_09_final_binding() { helper root final-binding; }
 stage_10_plist_bootstrap() {
   helper root plist-update
-  sudo -n /bin/launchctl bootstrap system "$PLIST"
+  helper root bootstrap
   # Boot stabilization, never an automatic bootstrap retry.
   sleep 25
 }
