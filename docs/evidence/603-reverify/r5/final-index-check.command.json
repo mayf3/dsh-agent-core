@@ -1,0 +1,38 @@
+{
+  "name": "final-index-check",
+  "argv": [
+    "env",
+    "-u",
+    "HTTP_PROXY",
+    "-u",
+    "HTTPS_PROXY",
+    "-u",
+    "http_proxy",
+    "-u",
+    "https_proxy",
+    "-u",
+    "ALL_PROXY",
+    "-u",
+    "all_proxy",
+    "-u",
+    "NO_PROXY",
+    "-u",
+    "no_proxy",
+    "-u",
+    "NODE_USE_ENV_PROXY",
+    "python3",
+    "docs/evidence/603-reverify/r5/check-cached-whitespace.py"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "started_at": "2026-11-07T05:10:12.349656+00:00",
+  "head": "87735ecee0e0ebfaa575f889785d7c5037ab9145",
+  "checked_index_tree": "2f6d479cc93f885005ff743785a6b5a75909c0c0",
+  "capture_directory": "/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/h603-r5-delivery-s_p58p7g",
+  "scope": "R5 final index or docs commit; no production effects",
+  "ended_at": "2026-11-07T05:10:13.688350+00:00",
+  "rc": 0,
+  "sha256": {
+    "stdout": "be7360a1a27657dc1ec830f499b1187741a30a3bb03862937162e24bd6d04259",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

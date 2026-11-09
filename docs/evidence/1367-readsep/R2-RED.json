@@ -1,0 +1,13 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "packages/workflow-execution/test/observation-cas/diagnostic-read.test.js"
+  ],
+  "source": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "test_sha256": "78fbf975307a07d0884483cce1854cd2f97f372d83825b5c3de4df379fac4afd",
+  "expected_rc": 1,
+  "actual_rc": 1,
+  "timestamp_utc": "2026-11-07T11:04:22.474281+00:00",
+  "expected": "six contract assertion failures, three passing mutation/corruption controls; no fixture errors"
+}

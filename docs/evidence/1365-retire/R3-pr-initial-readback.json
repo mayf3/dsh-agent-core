@@ -1,0 +1,47 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "url": "https://github.com/mayf3/dsh-agent-core/pull/666",
+    "number": 666,
+    "state": "open",
+    "merged": false,
+    "mergeable": true,
+    "draft": false,
+    "body": "Refs mayf3/agent-control#1365 (#1363 D02).\n\n旧 development backend 或历史损坏会在完整退役执行器构造时阻断无关 Workflow 启动。此改动惰性提供现有 Engine，并让默认退役构造不初始化 backend/可写 ledger；status/result 才通过现有 static replay 读取历史。旧 start/continue/cancel 继续明确拒绝，损坏历史查询仍明确失败。无新管理器、历史格式、权限或生产 opt-out。\n\n验证：\n- R2 RED：旧源码五例预期失败，逐项诊断匹配 5/5、capture rc0；修复后 GREEN 5/5。R1/R2 原始停止和证据保留。\n- R3 真实 `/usr/local/bin/node` v25.6.1 (x64)：原受影响套件 71/71、其他面四文件定向抽查 91/91，child/capture rc0，无 skip/cancel。R2 v26.7.0 的 14 个版本守卫失败已由新运行关闭；未修改产品守卫或伪造版本。\n- 结构门 rc0：0 candidate violations，28 visible baseline debts，`CANDIDATE_DELTA_PASS_WITH_BASELINE_DEBT`。\n- 独立受影响契约与最终文档增量审查 PASS；无 open blocker/SPEC_GAP。\n\nSource commit: `739fdd3434626b9b215fe1b1557689dfc1eea61b`，完整 tree 等于验证对象 `91662c3cab497518cc875447f6641b5b2f56aa4d` 的 `474a2dc0e647492bf5d4ceade39c69b69202947c`。\nBase snapshot: `b6ddc2a67ba041b8b13ed33d331104cf809d4985`；fresh main `e8d6d333743f812945d47b96ace61b817f35f9cf` 的正交 Workflow 变化未集成，未声称已测试合并结果。未 rebase。\n\n完整 RED/GREEN 原文、版本切换坐标、哈希、DONE_WHEN 对照见 [RECEIPT-1365-RETIRE.md](https://github.com/mayf3/dsh-agent-core/blob/fix/retire-executor-decouple/RECEIPT-1365-RETIRE.md) 和 `docs/evidence/1365-retire/`。发布事实在创建 PR 后回填。\n\n仅源码/离线机制交付；不合并，不部署，零生产写入。",
+    "title": "fix: decouple retired development executor from Workflow startup",
+    "base": "main",
+    "base_sha": "e8d6d333743f812945d47b96ace61b817f35f9cf",
+    "head": "fix/retire-executor-decouple",
+    "head_sha": "6a3f822174cf446eba24b9f42738db54ddc74af6",
+    "head_repo_id": 1334326230,
+    "head_repo_full_name": "mayf3/dsh-agent-core",
+    "merge_commit_sha": "652c6023ae36f513857ad1d5e2e76388aa36c032",
+    "user": {
+      "login": "mayf3",
+      "name": "mayf3",
+      "email": null,
+      "avatar_url": "https://avatars.githubusercontent.com/u/5518571?v=4",
+      "id": 5518571
+    },
+    "requested_reviewers": null,
+    "requested_team_reviewers": null,
+    "diff": null,
+    "comments": null,
+    "created_at": "2026-11-07T23:41:53Z",
+    "updated_at": "2026-11-07T23:41:59Z",
+    "closed_at": null,
+    "merged_at": null,
+    "commits": 2,
+    "changed_files": 29,
+    "additions": 5960,
+    "deletions": 13,
+    "display_url": "https://github.com/mayf3/dsh-agent-core/pull/666",
+    "display_title": "fix: decouple retired development executor from Workflow startup"
+  },
+  "isError": false
+}

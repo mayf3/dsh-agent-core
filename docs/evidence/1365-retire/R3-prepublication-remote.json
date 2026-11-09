@@ -1,0 +1,14 @@
+{
+  "command": [
+    "git",
+    "ls-remote",
+    "origin",
+    "refs/heads/main",
+    "refs/heads/fix/retire-executor-decouple"
+  ],
+  "started_utc": "2026-11-07T23:40:48.971008+00:00",
+  "ended_utc": "2026-11-07T23:40:49.768824+00:00",
+  "actual_rc": 0,
+  "stdout": "e8d6d333743f812945d47b96ace61b817f35f9cf\trefs/heads/main\n",
+  "stderr": ""
+}

@@ -1,0 +1,27 @@
+{
+  "recorded_at": "2026-11-08T04:01:25.189783+00:00",
+  "worktree": "/Users/yanfenma/workspace/project/worktrees/h1370-impl",
+  "branch": "fix/1370-generation-policy-impl",
+  "head": "95a8e1cb512fc99dc018209d837250dd51b4d08f",
+  "authority": "AGENT_CORE_ROUTING_CONFIG_GENERATION_POLICY_V1@95a8e1cb512fc99dc018209d837250dd51b4d08f",
+  "node": "/usr/local/bin/node v25.6.1",
+  "install": {
+    "command": "env PATH=\"/usr/local/bin:$PATH\" npm install --no-package-lock --no-audit --no-fund",
+    "exit_code": 0
+  },
+  "baseline": {
+    "command": "/usr/local/bin/node --test packages/agent-router/test/route-chain/*.test.js",
+    "exit_code": 1,
+    "tests": 180,
+    "pass": 177,
+    "fail": 3,
+    "skipped": 0
+  },
+  "product_edits": false,
+  "production_writes": 0,
+  "post_stop_environment": {
+    "tracked_node_modules_symlink_restored": true,
+    "original_target": "/private/tmp/dsh-ekr-p1-new/node_modules",
+    "installed_dependencies_preserved_at": "/private/tmp/h1370-impl-dependencies-nbpbsmqp/node_modules"
+  }
+}

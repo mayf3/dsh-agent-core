@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: 1365 Workflow starts and polls with missing backend and history; retired writes refuse, history stays read-only
+ok 1 - 1365 Workflow starts and polls with missing backend and history; retired writes refuse, history stays read-only
+  ---
+  duration_ms: 106.140333
+  type: 'test'
+  ...
+# Subtest: 1365 Workflow starts and polls with corrupt backend with intact history; retired writes refuse, history stays read-only
+ok 2 - 1365 Workflow starts and polls with corrupt backend with intact history; retired writes refuse, history stays read-only
+  ---
+  duration_ms: 91.908125
+  type: 'test'
+  ...
+# Subtest: 1365 Workflow starts and polls with corrupt history; retired writes refuse, history stays read-only
+ok 3 - 1365 Workflow starts and polls with corrupt history; retired writes refuse, history stays read-only
+  ---
+  duration_ms: 92.42725
+  type: 'test'
+  ...
+# Subtest: 1365 Workflow starts and polls with corrupt backend and history; retired writes refuse, history stays read-only
+ok 4 - 1365 Workflow starts and polls with corrupt backend and history; retired writes refuse, history stays read-only
+  ---
+  duration_ms: 91.221667
+  type: 'test'
+  ...
+# Subtest: 1365 default Engine also defers damaged history and ignores damaged backend
+ok 5 - 1365 default Engine also defers damaged history and ignores damaged backend
+  ---
+  duration_ms: 2.208959
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 468.913541

@@ -7,6 +7,7 @@ import { dirname } from 'node:path'
 import { RECONCILIATION_CAPS } from './capacity.js'
 import { validatedIngressCorrelation } from './ingress-correlation.js'
 import { MAX_ADMIN_ABANDONMENT_DECLARATIONS } from './admin-abandonment.js'
+import { isLegacyUnprovenFenceClear } from './state-machine.js'
 
 export const DURABLE_RECOVERY_VERSION = 3
 
@@ -207,14 +208,17 @@ function assertDurableRecord(raw) {
   const pendingUnknown = new Set([
     'pending_unknown', 'recovery_claimed', 'shutdown_requested', 'exit_observed',
   ])
+  const legacyUnprovenClear = isLegacyUnprovenFenceClear(raw)
   if ((raw.queryState === 'settled') !== (raw.settlementResult !== null)
-      || (raw.queryState === 'pending' && (raw.state === 'settled' || raw.fenceState === 'cleared'))
+      || (raw.queryState === 'pending'
+        && (raw.state === 'settled' || (raw.fenceState === 'cleared' && !legacyUnprovenClear)))
       || (raw.queryState === 'settled' && !['settled', 'blocked'].includes(raw.state))
-      || (raw.fenceState === 'cleared' && raw.queryState !== 'settled')
+      || (raw.fenceState === 'cleared' && raw.queryState !== 'settled' && !legacyUnprovenClear)
       || (raw.state === 'reserved' && (raw.queryState !== 'pending' || raw.fenceState !== 'armed'))
       || (pendingUnknown.has(raw.state)
         && (raw.queryState !== 'pending' || raw.initialOutcome !== 'outcome_unknown' || raw.fenceState !== 'active'))
-      || (raw.state === 'blocked' && (raw.fenceState !== 'active' || raw.failureReason === null))
+      || (raw.state === 'blocked'
+        && ((raw.fenceState !== 'active' && !legacyUnprovenClear) || raw.failureReason === null))
       || (raw.state === 'recovery_claimed' && raw.reapClaim?.phase !== 'claimed')
       || (raw.state === 'shutdown_requested' && raw.reapClaim?.phase !== 'shutdown_committed')
       || (raw.state === 'exit_observed'
@@ -297,7 +301,10 @@ function decodeIssuance(entries, discriminatorSeq) {
 
 function durableRecord(record) {
   const output = record.finalAssistantOutput
-  const finalAssistantOutputEvidence = output === null || output === undefined ? null : {
+  // Decoded durable records intentionally contain no answer text. Retain their
+  // validated digest when a later write serializes that record again.
+  const finalAssistantOutputEvidence = output === null || output === undefined
+    ? structuredClone(record.finalAssistantOutputEvidence ?? null) : {
     sha256: createHash('sha256').update(String(output.text ?? ''), 'utf8').digest('hex'),
     originalBytes: output.originalBytes ?? Buffer.byteLength(String(output.text ?? ''), 'utf8'),
     truncated: output.truncated === true,

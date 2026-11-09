@@ -1,0 +1,2363 @@
+{
+  "observed_at_utc": "2026-11-07T15:48:50.853103+00:00",
+  "results": [
+    {
+      "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46",
+      "command": [
+        "du",
+        "-xk",
+        "-d",
+        "2",
+        "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46"
+      ],
+      "rc": 1,
+      "rows": [
+        {
+          "allocated_kib": 5746996,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46"
+        },
+        {
+          "allocated_kib": 1664504,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/fs"
+        },
+        {
+          "allocated_kib": 1664496,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/fs/usr"
+        },
+        {
+          "allocated_kib": 1630268,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/restore-proof"
+        },
+        {
+          "allocated_kib": 1630244,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/restore-proof/trusted"
+        },
+        {
+          "allocated_kib": 1630244,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/preimage-full"
+        },
+        {
+          "allocated_kib": 1548628,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/preimage-full/harness"
+        },
+        {
+          "allocated_kib": 506512,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source"
+        },
+        {
+          "allocated_kib": 437368,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/.git"
+        },
+        {
+          "allocated_kib": 230848,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/observations"
+        },
+        {
+          "allocated_kib": 83208,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source"
+        },
+        {
+          "allocated_kib": 81596,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/preimage-full/node-runtime"
+        },
+        {
+          "allocated_kib": 41384,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/.git"
+        },
+        {
+          "allocated_kib": 36808,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/packages"
+        },
+        {
+          "allocated_kib": 25784,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/docs"
+        },
+        {
+          "allocated_kib": 16396,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/.agents"
+        },
+        {
+          "allocated_kib": 9692,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/packages"
+        },
+        {
+          "allocated_kib": 4520,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/examples"
+        },
+        {
+          "allocated_kib": 4252,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/docs"
+        },
+        {
+          "allocated_kib": 2812,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/scripts"
+        },
+        {
+          "allocated_kib": 2560,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/apps"
+        },
+        {
+          "allocated_kib": 2336,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/scripts"
+        },
+        {
+          "allocated_kib": 2056,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/deployment-artifacts"
+        },
+        {
+          "allocated_kib": 492,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/vendor"
+        },
+        {
+          "allocated_kib": 440,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/isolated"
+        },
+        {
+          "allocated_kib": 436,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/selected"
+        },
+        {
+          "allocated_kib": 344,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/.agents"
+        },
+        {
+          "allocated_kib": 316,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/selected/lib"
+        },
+        {
+          "allocated_kib": 316,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/isolated/lib"
+        },
+        {
+          "allocated_kib": 300,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/python"
+        },
+        {
+          "allocated_kib": 248,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/native"
+        },
+        {
+          "allocated_kib": 216,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/.github"
+        },
+        {
+          "allocated_kib": 184,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/tmp/node-addon-native-custom-loader-0"
+        },
+        {
+          "allocated_kib": 184,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/tmp"
+        },
+        {
+          "allocated_kib": 124,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/original/scripts"
+        },
+        {
+          "allocated_kib": 124,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/original"
+        },
+        {
+          "allocated_kib": 104,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/examples"
+        },
+        {
+          "allocated_kib": 68,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/website"
+        },
+        {
+          "allocated_kib": 44,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/evidence"
+        },
+        {
+          "allocated_kib": 24,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/restore-proof/prod"
+        },
+        {
+          "allocated_kib": 24,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/external-preimage"
+        },
+        {
+          "allocated_kib": 20,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/vendor"
+        },
+        {
+          "allocated_kib": 12,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/bundle-integration"
+        },
+        {
+          "allocated_kib": 12,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/preimage-full/config"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/sandbox"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/profile-integration"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/profile-production"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/profile-demo"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/profile-integration-agent"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/bundle-agent-switch"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/bundle-memory"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/bundle-broker"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/profile-memory"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/app-source/bundle-demo"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/fs/Users"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/bin"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/patches"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/external-preimage/homes"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/external-preimage/scheduler"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/external-preimage/workspaces"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/external-preimage/logs"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/external-preimage/bindings"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/external-preimage/control"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/preimage-full/home"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/preimage-full/app"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/home"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/.claude"
+        }
+      ],
+      "stderr": "du: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/restore-proof/prod/control/incident-backups: Permission denied\ndu: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/restore-proof/prod/control/scheduler-watchdog: Permission denied\ndu: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/restore-proof/trusted/.cache: Permission denied\ndu: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/apps/cli/lib: Permission denied\ndu: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/external-preimage/control/incident-backups: Permission denied\ndu: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/external-preimage/control/scheduler-watchdog: Permission denied\ndu: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/fs/usr/local/libexec/agent-core/config: Permission denied\ndu: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/fs/usr/local/libexec/agent-core/.cache: Permission denied\ndu: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/fs/Users/authsvc/.agent-core: Permission denied\ndu: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/preimage-full/.cache: Permission denied\n"
+    },
+    {
+      "path": "/private/tmp/sw-367",
+      "command": [
+        "du",
+        "-xk",
+        "-d",
+        "2",
+        "/private/tmp/sw-367"
+      ],
+      "rc": 0,
+      "rows": [
+        {
+          "allocated_kib": 558212,
+          "path": "/private/tmp/sw-367/target/debug"
+        },
+        {
+          "allocated_kib": 558212,
+          "path": "/private/tmp/sw-367/target"
+        },
+        {
+          "allocated_kib": 558212,
+          "path": "/private/tmp/sw-367"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/migrations"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/contracts/workflow-http"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/contracts"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/tests/25_workflow_assistance"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/tests/16_definition_service_audit_fix"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/tests/definition_input_contract"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/tests/prerequisites"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/tests/current_task_input"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/tests/17_workflow_runtime"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/tests/common"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/tests/governance_child"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/tests/owner_obligations"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/tests"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/.agents/tools"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/.agents/protocol"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/.agents/schemas"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/.agents/local"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/.agents/templates"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/.agents/skills"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/.agents"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/docs/investigations"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/docs/evidence"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/docs/archive"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/docs/audits"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/docs/specs"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/docs/contracts"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/docs/runbooks"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/docs/product"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/docs/architecture"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/docs/deployment"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/docs/migration"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/docs/reports"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/docs"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/sdk/typescript"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/sdk"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/scripts/canary"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/scripts/assistance-v1"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/scripts"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/.git/objects"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/.git/info"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/.git/logs"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/.git/hooks"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/.git/refs"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/.git"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/src/bin"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/src/auth"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/src/http"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/src/application"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/src/domain"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/src/store"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-367/src"
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/gcr-svc-target",
+      "command": [
+        "du",
+        "-xk",
+        "-d",
+        "2",
+        "/private/tmp/gcr-svc-target"
+      ],
+      "rc": 0,
+      "rows": [
+        {
+          "allocated_kib": 496328,
+          "path": "/private/tmp/gcr-svc-target/debug/deps"
+        },
+        {
+          "allocated_kib": 496328,
+          "path": "/private/tmp/gcr-svc-target/debug"
+        },
+        {
+          "allocated_kib": 496328,
+          "path": "/private/tmp/gcr-svc-target"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/gcr-svc-target/debug/incremental"
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/sw-1347-evidence",
+      "command": [
+        "du",
+        "-xk",
+        "-d",
+        "2",
+        "/private/tmp/sw-1347-evidence"
+      ],
+      "rc": 0,
+      "rows": [
+        {
+          "allocated_kib": 488504,
+          "path": "/private/tmp/sw-1347-evidence"
+        },
+        {
+          "allocated_kib": 488500,
+          "path": "/private/tmp/sw-1347-evidence/target-candidate/debug"
+        },
+        {
+          "allocated_kib": 488500,
+          "path": "/private/tmp/sw-1347-evidence/target-candidate"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-1347-evidence/validation-source/tests"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-1347-evidence/validation-source"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-1347-evidence/pgdata/pg_multixact"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-1347-evidence/pgdata/pg_wal"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-1347-evidence/pgdata/pg_stat"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-1347-evidence/pgdata/pg_logical"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-1347-evidence/pgdata/pg_subtrans"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-1347-evidence/pgdata/pg_xact"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-1347-evidence/pgdata/global"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-1347-evidence/pgdata/base"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-1347-evidence/pgdata"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-1347-evidence/worker-corrected/tests"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-1347-evidence/worker-corrected"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-1347-evidence/names-candidate"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-1347-evidence/names-baseline"
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/sw-aa-r4-evidence",
+      "command": [
+        "du",
+        "-xk",
+        "-d",
+        "2",
+        "/private/tmp/sw-aa-r4-evidence"
+      ],
+      "rc": 0,
+      "rows": [
+        {
+          "allocated_kib": 328276,
+          "path": "/private/tmp/sw-aa-r4-evidence/target/debug"
+        },
+        {
+          "allocated_kib": 328276,
+          "path": "/private/tmp/sw-aa-r4-evidence/target"
+        },
+        {
+          "allocated_kib": 328276,
+          "path": "/private/tmp/sw-aa-r4-evidence"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/pgdata/pg_multixact"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/pgdata/pg_wal"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/pgdata/pg_stat"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/pgdata/pg_logical"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/pgdata/pg_subtrans"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/pgdata/pg_xact"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/pgdata/global"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/pgdata/base"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/pgdata"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/dumps"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/stopped-source"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/matrix-red"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/frozen-overlay/authorized_actions_r4"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/frozen-overlay"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/red"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/schema/baseline-sdk"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/schema/candidate-source"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/schema"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/matrix-red-corrected"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/naming-audit/baseline"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/naming-audit/method-probes"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/naming-audit/provenance"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/naming-audit"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/red-overlay"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-aa-r4-evidence/extended-red"
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/sw-d6-fix",
+      "command": [
+        "du",
+        "-xk",
+        "-d",
+        "2",
+        "/private/tmp/sw-d6-fix"
+      ],
+      "rc": 0,
+      "rows": [
+        {
+          "allocated_kib": 326088,
+          "path": "/private/tmp/sw-d6-fix/target/debug"
+        },
+        {
+          "allocated_kib": 326088,
+          "path": "/private/tmp/sw-d6-fix/target"
+        },
+        {
+          "allocated_kib": 326088,
+          "path": "/private/tmp/sw-d6-fix"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/migrations"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/contracts/workflow-http"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/contracts"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/tests/25_workflow_assistance"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/tests/16_definition_service_audit_fix"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/tests/definition_input_contract"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/tests/prerequisites"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/tests/authorized_actions_r4"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/tests/current_task_input"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/tests/17_workflow_runtime"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/tests/common"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/tests/governance_child"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/tests/owner_obligations"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/tests"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/.agents/tools"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/.agents/protocol"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/.agents/schemas"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/.agents/local"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/.agents/templates"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/.agents/skills"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/.agents"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/docs/investigations"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/docs/evidence"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/docs/archive"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/docs/audits"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/docs/specs"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/docs/contracts"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/docs/runbooks"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/docs/product"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/docs/architecture"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/docs/deployment"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/docs/migration"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/docs/reports"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/docs"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/sdk/typescript"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/sdk"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/scripts/canary"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/scripts/assistance-v1"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/scripts"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/src/bin"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/src/auth"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/src/http"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/src/application"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/src/domain"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/src/store"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/sw-d6-fix/src"
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/dsh-548-r2-iwl_bczh",
+      "command": [
+        "du",
+        "-xk",
+        "-d",
+        "2",
+        "/private/tmp/dsh-548-r2-iwl_bczh"
+      ],
+      "rc": 0,
+      "rows": [
+        {
+          "allocated_kib": 319108,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh"
+        },
+        {
+          "allocated_kib": 68960,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed"
+        },
+        {
+          "allocated_kib": 68952,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master"
+        },
+        {
+          "allocated_kib": 68920,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin"
+        },
+        {
+          "allocated_kib": 36688,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed/packages"
+        },
+        {
+          "allocated_kib": 36680,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master/packages"
+        },
+        {
+          "allocated_kib": 36656,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/packages"
+        },
+        {
+          "allocated_kib": 16336,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed/.agents"
+        },
+        {
+          "allocated_kib": 16336,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master/.agents"
+        },
+        {
+          "allocated_kib": 16328,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/.agents"
+        },
+        {
+          "allocated_kib": 4520,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/examples"
+        },
+        {
+          "allocated_kib": 4520,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed/examples"
+        },
+        {
+          "allocated_kib": 4520,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master/examples"
+        },
+        {
+          "allocated_kib": 4240,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/docs"
+        },
+        {
+          "allocated_kib": 4240,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed/docs"
+        },
+        {
+          "allocated_kib": 4240,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master/docs"
+        },
+        {
+          "allocated_kib": 2560,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/apps"
+        },
+        {
+          "allocated_kib": 2560,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed/apps"
+        },
+        {
+          "allocated_kib": 2560,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master/apps"
+        },
+        {
+          "allocated_kib": 2336,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/scripts"
+        },
+        {
+          "allocated_kib": 2336,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed/scripts"
+        },
+        {
+          "allocated_kib": 2336,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master/scripts"
+        },
+        {
+          "allocated_kib": 492,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/vendor"
+        },
+        {
+          "allocated_kib": 492,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed/vendor"
+        },
+        {
+          "allocated_kib": 492,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master/vendor"
+        },
+        {
+          "allocated_kib": 364,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/evidence"
+        },
+        {
+          "allocated_kib": 300,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/python"
+        },
+        {
+          "allocated_kib": 300,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed/python"
+        },
+        {
+          "allocated_kib": 300,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master/python"
+        },
+        {
+          "allocated_kib": 248,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/native"
+        },
+        {
+          "allocated_kib": 248,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed/native"
+        },
+        {
+          "allocated_kib": 248,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master/native"
+        },
+        {
+          "allocated_kib": 216,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/.github"
+        },
+        {
+          "allocated_kib": 216,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed/.github"
+        },
+        {
+          "allocated_kib": 216,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master/.github"
+        },
+        {
+          "allocated_kib": 68,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/website"
+        },
+        {
+          "allocated_kib": 68,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed/website"
+        },
+        {
+          "allocated_kib": 68,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master/website"
+        },
+        {
+          "allocated_kib": 28,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/green-fixtures"
+        },
+        {
+          "allocated_kib": 28,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/fixtures"
+        },
+        {
+          "allocated_kib": 28,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/fixtures.r2-archive"
+        },
+        {
+          "allocated_kib": 16,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/green-fixtures/--tmp-dsh-548-r2-iwl_bczh-green-fixtures-synthetic-project--"
+        },
+        {
+          "allocated_kib": 16,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/fixtures/--private-tmp-dsh-548-r2-iwl_bczh-fixtures-synthetic-project--"
+        },
+        {
+          "allocated_kib": 16,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/fixtures.r2-archive/--tmp-dsh-548-r2-iwl_bczh-fixtures-synthetic-project--"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/patches"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed/patches"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master/patches"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/green-fixtures/synthetic-project"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/pin/.claude"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master-fixed/.claude"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/scratch"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/master/.claude"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/scratch-green"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/fixtures/synthetic-project"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/dsh-548-r2-iwl_bczh/fixtures.r2-archive/synthetic-project"
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/darwinx64-fix",
+      "command": [
+        "du",
+        "-xk",
+        "-d",
+        "2",
+        "/private/tmp/darwinx64-fix"
+      ],
+      "rc": 0,
+      "rows": [
+        {
+          "allocated_kib": 263828,
+          "path": "/private/tmp/darwinx64-fix"
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/fleet-w6-s04",
+      "command": [
+        "du",
+        "-xk",
+        "-d",
+        "2",
+        "/private/tmp/fleet-w6-s04"
+      ],
+      "rc": 0,
+      "rows": [
+        {
+          "allocated_kib": 166996,
+          "path": "/private/tmp/fleet-w6-s04"
+        },
+        {
+          "allocated_kib": 166644,
+          "path": "/private/tmp/fleet-w6-s04/r2-evidence"
+        },
+        {
+          "allocated_kib": 113848,
+          "path": "/private/tmp/fleet-w6-s04/r2-evidence/old-assembled-app"
+        },
+        {
+          "allocated_kib": 184,
+          "path": "/private/tmp/fleet-w6-s04/r2-evidence/tmp"
+        },
+        {
+          "allocated_kib": 36,
+          "path": "/private/tmp/fleet-w6-s04/r1-preserved"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/fleet-w6-s04/r2-evidence/old-r2-output"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/fleet-w6-s04/cold-r2-sibling/--private-tmp-fleet-w6-s04-cold-r2-sibling--"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/fleet-w6-s04/cold-r2-sibling"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/fleet-w6-s04/cold-r2-codex/--private-tmp-fleet-w6-s04-cold-r2-codex--"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/fleet-w6-s04/cold-r2-codex"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/fleet-w6-s04/r2-evidence/old-scratch-app"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/fleet-w6-s04/build-tmp"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/fleet-w6-s04/build-home"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/fleet-w6-s04/recorder-home"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/fleet-w6-s04/build-cache"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/fleet-w6-s04/tmp"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/fleet-w6-s04/r2-evidence/old-r3-attempt-02"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/fleet-w6-s04/r2-evidence/recorder-home"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/fleet-w6-s04/r2-evidence/old-scratch-harness"
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/dsh-523-impl",
+      "command": [
+        "du",
+        "-xk",
+        "-d",
+        "2",
+        "/private/tmp/dsh-523-impl"
+      ],
+      "rc": 0,
+      "rows": [
+        {
+          "allocated_kib": 134448,
+          "path": "/private/tmp/dsh-523-impl"
+        },
+        {
+          "allocated_kib": 80244,
+          "path": "/private/tmp/dsh-523-impl/node_modules"
+        },
+        {
+          "allocated_kib": 33308,
+          "path": "/private/tmp/dsh-523-impl/node_modules/sherpa-onnx-darwin-arm64"
+        },
+        {
+          "allocated_kib": 29564,
+          "path": "/private/tmp/dsh-523-impl/node_modules/@larksuiteoapi"
+        },
+        {
+          "allocated_kib": 23284,
+          "path": "/private/tmp/dsh-523-impl/.git"
+        },
+        {
+          "allocated_kib": 22824,
+          "path": "/private/tmp/dsh-523-impl/.git/objects"
+        },
+        {
+          "allocated_kib": 16632,
+          "path": "/private/tmp/dsh-523-impl/docs"
+        },
+        {
+          "allocated_kib": 9360,
+          "path": "/private/tmp/dsh-523-impl/packages"
+        },
+        {
+          "allocated_kib": 6672,
+          "path": "/private/tmp/dsh-523-impl/docs/specs"
+        },
+        {
+          "allocated_kib": 6128,
+          "path": "/private/tmp/dsh-523-impl/docs/evidence"
+        },
+        {
+          "allocated_kib": 3184,
+          "path": "/private/tmp/dsh-523-impl/node_modules/protobufjs"
+        },
+        {
+          "allocated_kib": 2728,
+          "path": "/private/tmp/dsh-523-impl/node_modules/@types"
+        },
+        {
+          "allocated_kib": 2404,
+          "path": "/private/tmp/dsh-523-impl/node_modules/axios"
+        },
+        {
+          "allocated_kib": 2324,
+          "path": "/private/tmp/dsh-523-impl/scripts"
+        },
+        {
+          "allocated_kib": 2056,
+          "path": "/private/tmp/dsh-523-impl/deployment-artifacts"
+        },
+        {
+          "allocated_kib": 1896,
+          "path": "/private/tmp/dsh-523-impl/node_modules/koffi"
+        },
+        {
+          "allocated_kib": 1880,
+          "path": "/private/tmp/dsh-523-impl/node_modules/@deepseek-ai"
+        },
+        {
+          "allocated_kib": 1760,
+          "path": "/private/tmp/dsh-523-impl/docs/reports"
+        },
+        {
+          "allocated_kib": 1516,
+          "path": "/private/tmp/dsh-523-impl/docs/investigations"
+        },
+        {
+          "allocated_kib": 1500,
+          "path": "/private/tmp/dsh-523-impl/packages/agent-router"
+        },
+        {
+          "allocated_kib": 1484,
+          "path": "/private/tmp/dsh-523-impl/packages/scheduler"
+        },
+        {
+          "allocated_kib": 1476,
+          "path": "/private/tmp/dsh-523-impl/packages/broker"
+        },
+        {
+          "allocated_kib": 1336,
+          "path": "/private/tmp/dsh-523-impl/packages/production-runtime"
+        },
+        {
+          "allocated_kib": 1212,
+          "path": "/private/tmp/dsh-523-impl/node_modules/@koromix"
+        },
+        {
+          "allocated_kib": 1100,
+          "path": "/private/tmp/dsh-523-impl/scripts/lib"
+        },
+        {
+          "allocated_kib": 588,
+          "path": "/private/tmp/dsh-523-impl/deployment-artifacts/original-router-proof-executor"
+        },
+        {
+          "allocated_kib": 528,
+          "path": "/private/tmp/dsh-523-impl/packages/workflow-execution"
+        },
+        {
+          "allocated_kib": 496,
+          "path": "/private/tmp/dsh-523-impl/node_modules/qs"
+        },
+        {
+          "allocated_kib": 480,
+          "path": "/private/tmp/dsh-523-impl/packages/product-api"
+        },
+        {
+          "allocated_kib": 436,
+          "path": "/private/tmp/dsh-523-impl/packages/execution-history"
+        },
+        {
+          "allocated_kib": 432,
+          "path": "/private/tmp/dsh-523-impl/packages/feishu-connector"
+        },
+        {
+          "allocated_kib": 400,
+          "path": "/private/tmp/dsh-523-impl/deployment-artifacts/hr-s256-trusted-cut-v1"
+        },
+        {
+          "allocated_kib": 356,
+          "path": "/private/tmp/dsh-523-impl/deployment-artifacts/b7-e32-pre-tx-closure-v1"
+        },
+        {
+          "allocated_kib": 308,
+          "path": "/private/tmp/dsh-523-impl/node_modules/@protobufjs"
+        },
+        {
+          "allocated_kib": 300,
+          "path": "/private/tmp/dsh-523-impl/.agents"
+        },
+        {
+          "allocated_kib": 296,
+          "path": "/private/tmp/dsh-523-impl/packages/agent-memory"
+        },
+        {
+          "allocated_kib": 256,
+          "path": "/private/tmp/dsh-523-impl/docs/decisions"
+        },
+        {
+          "allocated_kib": 248,
+          "path": "/private/tmp/dsh-523-impl/node_modules/undici-types"
+        },
+        {
+          "allocated_kib": 248,
+          "path": "/private/tmp/dsh-523-impl/packages/notification-ingress"
+        },
+        {
+          "allocated_kib": 244,
+          "path": "/private/tmp/dsh-523-impl/packages/agent-credential-provisioning"
+        },
+        {
+          "allocated_kib": 216,
+          "path": "/private/tmp/dsh-523-impl/node_modules/mime-db"
+        },
+        {
+          "allocated_kib": 216,
+          "path": "/private/tmp/dsh-523-impl/deployment-artifacts/b7-e31-partial-stage-closure-v1"
+        },
+        {
+          "allocated_kib": 200,
+          "path": "/private/tmp/dsh-523-impl/node_modules/object-inspect"
+        },
+        {
+          "allocated_kib": 196,
+          "path": "/private/tmp/dsh-523-impl/node_modules/ws"
+        },
+        {
+          "allocated_kib": 164,
+          "path": "/private/tmp/dsh-523-impl/node_modules/croner"
+        },
+        {
+          "allocated_kib": 160,
+          "path": "/private/tmp/dsh-523-impl/node_modules/long"
+        },
+        {
+          "allocated_kib": 156,
+          "path": "/private/tmp/dsh-523-impl/node_modules/math-intrinsics"
+        },
+        {
+          "allocated_kib": 152,
+          "path": "/private/tmp/dsh-523-impl/packages/agent-provisioning"
+        },
+        {
+          "allocated_kib": 136,
+          "path": "/private/tmp/dsh-523-impl/packages/demo-server"
+        },
+        {
+          "allocated_kib": 132,
+          "path": "/private/tmp/dsh-523-impl/deployment-artifacts/wda-structural-diagnostics-v1"
+        },
+        {
+          "allocated_kib": 124,
+          "path": "/private/tmp/dsh-523-impl/deployment-artifacts/b7-e33-presealed-recovery-v1"
+        },
+        {
+          "allocated_kib": 104,
+          "path": "/private/tmp/dsh-523-impl/node_modules/sherpa-onnx-node"
+        },
+        {
+          "allocated_kib": 104,
+          "path": "/private/tmp/dsh-523-impl/packages/development-execution"
+        },
+        {
+          "allocated_kib": 100,
+          "path": "/private/tmp/dsh-523-impl/node_modules/form-data"
+        },
+        {
+          "allocated_kib": 96,
+          "path": "/private/tmp/dsh-523-impl/packages/agent-identity-capabilities"
+        },
+        {
+          "allocated_kib": 88,
+          "path": "/private/tmp/dsh-523-impl/node_modules/es-errors"
+        },
+        {
+          "allocated_kib": 88,
+          "path": "/private/tmp/dsh-523-impl/packages/session-history"
+        },
+        {
+          "allocated_kib": 88,
+          "path": "/private/tmp/dsh-523-impl/packages/agent-definition"
+        },
+        {
+          "allocated_kib": 84,
+          "path": "/private/tmp/dsh-523-impl/node_modules/call-bind-apply-helpers"
+        },
+        {
+          "allocated_kib": 84,
+          "path": "/private/tmp/dsh-523-impl/node_modules/asynckit"
+        },
+        {
+          "allocated_kib": 84,
+          "path": "/private/tmp/dsh-523-impl/docs/reviews"
+        },
+        {
+          "allocated_kib": 80,
+          "path": "/private/tmp/dsh-523-impl/examples"
+        },
+        {
+          "allocated_kib": 76,
+          "path": "/private/tmp/dsh-523-impl/node_modules/lodash.pickby"
+        },
+        {
+          "allocated_kib": 76,
+          "path": "/private/tmp/dsh-523-impl/docs/superpowers"
+        },
+        {
+          "allocated_kib": 72,
+          "path": "/private/tmp/dsh-523-impl/node_modules/has-symbols"
+        },
+        {
+          "allocated_kib": 72,
+          "path": "/private/tmp/dsh-523-impl/packages/scheduler-router"
+        },
+        {
+          "allocated_kib": 72,
+          "path": "/private/tmp/dsh-523-impl/deployment-artifacts/workflow-dispatch-recovery-v1"
+        },
+        {
+          "allocated_kib": 68,
+          "path": "/private/tmp/dsh-523-impl/node_modules/function-bind"
+        },
+        {
+          "allocated_kib": 68,
+          "path": "/private/tmp/dsh-523-impl/node_modules/get-intrinsic"
+        },
+        {
+          "allocated_kib": 68,
+          "path": "/private/tmp/dsh-523-impl/packages/fixed-operation"
+        },
+        {
+          "allocated_kib": 68,
+          "path": "/private/tmp/dsh-523-impl/packages/workspace-bootstrap"
+        },
+        {
+          "allocated_kib": 64,
+          "path": "/private/tmp/dsh-523-impl/node_modules/has-tostringtag"
+        },
+        {
+          "allocated_kib": 64,
+          "path": "/private/tmp/dsh-523-impl/node_modules/lodash.merge"
+        },
+        {
+          "allocated_kib": 64,
+          "path": "/private/tmp/dsh-523-impl/node_modules/es-object-atoms"
+        },
+        {
+          "allocated_kib": 64,
+          "path": "/private/tmp/dsh-523-impl/.git/hooks"
+        },
+        {
+          "allocated_kib": 60,
+          "path": "/private/tmp/dsh-523-impl/node_modules/agent-base"
+        },
+        {
+          "allocated_kib": 60,
+          "path": "/private/tmp/dsh-523-impl/node_modules/dunder-proto"
+        },
+        {
+          "allocated_kib": 60,
+          "path": "/private/tmp/dsh-523-impl/node_modules/get-proto"
+        },
+        {
+          "allocated_kib": 60,
+          "path": "/private/tmp/dsh-523-impl/node_modules/debug"
+        },
+        {
+          "allocated_kib": 56,
+          "path": "/private/tmp/dsh-523-impl/node_modules/side-channel-list"
+        },
+        {
+          "allocated_kib": 56,
+          "path": "/private/tmp/dsh-523-impl/node_modules/side-channel"
+        },
+        {
+          "allocated_kib": 56,
+          "path": "/private/tmp/dsh-523-impl/node_modules/https-proxy-agent"
+        },
+        {
+          "allocated_kib": 52,
+          "path": "/private/tmp/dsh-523-impl/node_modules/follow-redirects"
+        },
+        {
+          "allocated_kib": 52,
+          "path": "/private/tmp/dsh-523-impl/.agents/tools"
+        },
+        {
+          "allocated_kib": 52,
+          "path": "/private/tmp/dsh-523-impl/.agents/local"
+        },
+        {
+          "allocated_kib": 52,
+          "path": "/private/tmp/dsh-523-impl/.agents/templates"
+        },
+        {
+          "allocated_kib": 48,
+          "path": "/private/tmp/dsh-523-impl/node_modules/call-bound"
+        },
+        {
+          "allocated_kib": 48,
+          "path": "/private/tmp/dsh-523-impl/node_modules/side-channel-weakmap"
+        },
+        {
+          "allocated_kib": 48,
+          "path": "/private/tmp/dsh-523-impl/node_modules/gopd"
+        },
+        {
+          "allocated_kib": 48,
+          "path": "/private/tmp/dsh-523-impl/node_modules/side-channel-map"
+        },
+        {
+          "allocated_kib": 48,
+          "path": "/private/tmp/dsh-523-impl/scripts/availability-recovery"
+        },
+        {
+          "allocated_kib": 44,
+          "path": "/private/tmp/dsh-523-impl/evidence"
+        },
+        {
+          "allocated_kib": 44,
+          "path": "/private/tmp/dsh-523-impl/node_modules/es-define-property"
+        },
+        {
+          "allocated_kib": 44,
+          "path": "/private/tmp/dsh-523-impl/node_modules/es-set-tostringtag"
+        },
+        {
+          "allocated_kib": 44,
+          "path": "/private/tmp/dsh-523-impl/docs/runbooks"
+        },
+        {
+          "allocated_kib": 44,
+          "path": "/private/tmp/dsh-523-impl/examples/v0-vertical-slice"
+        },
+        {
+          "allocated_kib": 44,
+          "path": "/private/tmp/dsh-523-impl/scripts/scheduler"
+        },
+        {
+          "allocated_kib": 44,
+          "path": "/private/tmp/dsh-523-impl/scripts/dsh-codex-reasoning-effort-v1"
+        },
+        {
+          "allocated_kib": 40,
+          "path": "/private/tmp/dsh-523-impl/node_modules/hasown"
+        },
+        {
+          "allocated_kib": 40,
+          "path": "/private/tmp/dsh-523-impl/.agents/protocol"
+        },
+        {
+          "allocated_kib": 40,
+          "path": "/private/tmp/dsh-523-impl/deployment-artifacts/scheduler-watchdog-routing-v1"
+        },
+        {
+          "allocated_kib": 40,
+          "path": "/private/tmp/dsh-523-impl/deployment-artifacts/product-434-hr-runtime-retirement-v1"
+        },
+        {
+          "allocated_kib": 36,
+          "path": "/private/tmp/dsh-523-impl/node_modules/@standard-schema"
+        },
+        {
+          "allocated_kib": 36,
+          "path": "/private/tmp/dsh-523-impl/examples/code-structure"
+        },
+        {
+          "allocated_kib": 32,
+          "path": "/private/tmp/dsh-523-impl/.agents/schemas"
+        },
+        {
+          "allocated_kib": 32,
+          "path": "/private/tmp/dsh-523-impl/deployment-artifacts/scheduler-control-plane-reliability-v1"
+        },
+        {
+          "allocated_kib": 28,
+          "path": "/private/tmp/dsh-523-impl/node_modules/combined-stream"
+        },
+        {
+          "allocated_kib": 28,
+          "path": "/private/tmp/dsh-523-impl/node_modules/mime-types"
+        },
+        {
+          "allocated_kib": 28,
+          "path": "/private/tmp/dsh-523-impl/.agents/skills"
+        },
+        {
+          "allocated_kib": 28,
+          "path": "/private/tmp/dsh-523-impl/.git/logs"
+        },
+        {
+          "allocated_kib": 24,
+          "path": "/private/tmp/dsh-523-impl/node_modules/proxy-from-env"
+        },
+        {
+          "allocated_kib": 24,
+          "path": "/private/tmp/dsh-523-impl/node_modules/delayed-stream"
+        },
+        {
+          "allocated_kib": 24,
+          "path": "/private/tmp/dsh-523-impl/.git/refs"
+        },
+        {
+          "allocated_kib": 20,
+          "path": "/private/tmp/dsh-523-impl/deployment-artifacts/w0-deploy-disk-budget-v1"
+        },
+        {
+          "allocated_kib": 20,
+          "path": "/private/tmp/dsh-523-impl/deployment-artifacts/c11r3-restart-safe-v1"
+        },
+        {
+          "allocated_kib": 20,
+          "path": "/private/tmp/dsh-523-impl/vendor/proxy-agent-negotiate"
+        },
+        {
+          "allocated_kib": 20,
+          "path": "/private/tmp/dsh-523-impl/vendor"
+        },
+        {
+          "allocated_kib": 16,
+          "path": "/private/tmp/dsh-523-impl/node_modules/ms"
+        },
+        {
+          "allocated_kib": 16,
+          "path": "/private/tmp/dsh-523-impl/node_modules/lodash.identity"
+        },
+        {
+          "allocated_kib": 16,
+          "path": "/private/tmp/dsh-523-impl/docs/audits"
+        },
+        {
+          "allocated_kib": 16,
+          "path": "/private/tmp/dsh-523-impl/packages/agent-switch"
+        },
+        {
+          "allocated_kib": 16,
+          "path": "/private/tmp/dsh-523-impl/deployment-artifacts/c11r1-late-outcome-selfheal-v1"
+        },
+        {
+          "allocated_kib": 12,
+          "path": "/private/tmp/dsh-523-impl/bundle-integration"
+        },
+        {
+          "allocated_kib": 12,
+          "path": "/private/tmp/dsh-523-impl/packages/owner-guard"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/dsh-523-impl/profile-integration"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/dsh-523-impl/profile-production"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/dsh-523-impl/profile-demo"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/dsh-523-impl/profile-integration-agent"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/dsh-523-impl/bundle-agent-switch"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/dsh-523-impl/bundle-memory"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/dsh-523-impl/bundle-broker"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/dsh-523-impl/profile-memory"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/dsh-523-impl/bundle-demo"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/dsh-523-impl/.git/info"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/dsh-523-impl/node_modules/.bin"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/dsh-523-impl/node_modules/@agent-core"
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/dsh-548-r5-evidence",
+      "command": [
+        "du",
+        "-xk",
+        "-d",
+        "2",
+        "/private/tmp/dsh-548-r5-evidence"
+      ],
+      "rc": 0,
+      "rows": [
+        {
+          "allocated_kib": 124868,
+          "path": "/private/tmp/dsh-548-r5-evidence"
+        },
+        {
+          "allocated_kib": 68944,
+          "path": "/private/tmp/dsh-548-r5-evidence/base"
+        },
+        {
+          "allocated_kib": 36680,
+          "path": "/private/tmp/dsh-548-r5-evidence/base/packages"
+        },
+        {
+          "allocated_kib": 16336,
+          "path": "/private/tmp/dsh-548-r5-evidence/base/.agents"
+        },
+        {
+          "allocated_kib": 4520,
+          "path": "/private/tmp/dsh-548-r5-evidence/base/examples"
+        },
+        {
+          "allocated_kib": 4240,
+          "path": "/private/tmp/dsh-548-r5-evidence/base/docs"
+        },
+        {
+          "allocated_kib": 2560,
+          "path": "/private/tmp/dsh-548-r5-evidence/base/apps"
+        },
+        {
+          "allocated_kib": 2336,
+          "path": "/private/tmp/dsh-548-r5-evidence/base/scripts"
+        },
+        {
+          "allocated_kib": 492,
+          "path": "/private/tmp/dsh-548-r5-evidence/base/vendor"
+        },
+        {
+          "allocated_kib": 300,
+          "path": "/private/tmp/dsh-548-r5-evidence/base/python"
+        },
+        {
+          "allocated_kib": 248,
+          "path": "/private/tmp/dsh-548-r5-evidence/base/native"
+        },
+        {
+          "allocated_kib": 216,
+          "path": "/private/tmp/dsh-548-r5-evidence/base/.github"
+        },
+        {
+          "allocated_kib": 68,
+          "path": "/private/tmp/dsh-548-r5-evidence/base/website"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/dsh-548-r5-evidence/base/patches"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/dsh-548-r5-evidence/base/.claude"
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/dsh-548-r4-evidence",
+      "command": [
+        "du",
+        "-xk",
+        "-d",
+        "2",
+        "/private/tmp/dsh-548-r4-evidence"
+      ],
+      "rc": 0,
+      "rows": [
+        {
+          "allocated_kib": 124860,
+          "path": "/private/tmp/dsh-548-r4-evidence"
+        },
+        {
+          "allocated_kib": 68952,
+          "path": "/private/tmp/dsh-548-r4-evidence/base"
+        },
+        {
+          "allocated_kib": 36680,
+          "path": "/private/tmp/dsh-548-r4-evidence/base/packages"
+        },
+        {
+          "allocated_kib": 16336,
+          "path": "/private/tmp/dsh-548-r4-evidence/base/.agents"
+        },
+        {
+          "allocated_kib": 4520,
+          "path": "/private/tmp/dsh-548-r4-evidence/base/examples"
+        },
+        {
+          "allocated_kib": 4240,
+          "path": "/private/tmp/dsh-548-r4-evidence/base/docs"
+        },
+        {
+          "allocated_kib": 2560,
+          "path": "/private/tmp/dsh-548-r4-evidence/base/apps"
+        },
+        {
+          "allocated_kib": 2336,
+          "path": "/private/tmp/dsh-548-r4-evidence/base/scripts"
+        },
+        {
+          "allocated_kib": 492,
+          "path": "/private/tmp/dsh-548-r4-evidence/base/vendor"
+        },
+        {
+          "allocated_kib": 300,
+          "path": "/private/tmp/dsh-548-r4-evidence/base/python"
+        },
+        {
+          "allocated_kib": 248,
+          "path": "/private/tmp/dsh-548-r4-evidence/base/native"
+        },
+        {
+          "allocated_kib": 216,
+          "path": "/private/tmp/dsh-548-r4-evidence/base/.github"
+        },
+        {
+          "allocated_kib": 68,
+          "path": "/private/tmp/dsh-548-r4-evidence/base/website"
+        },
+        {
+          "allocated_kib": 4,
+          "path": "/private/tmp/dsh-548-r4-evidence/base/patches"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/dsh-548-r4-evidence/scratch"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/dsh-548-r4-evidence/base/.claude"
+        }
+      ],
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/fleet-v5-candidate",
+      "command": [
+        "du",
+        "-xk",
+        "-d",
+        "2",
+        "/private/tmp/fleet-v5-candidate"
+      ],
+      "rc": 0,
+      "rows": [
+        {
+          "allocated_kib": 123524,
+          "path": "/private/tmp/fleet-v5-candidate"
+        },
+        {
+          "allocated_kib": 81696,
+          "path": "/private/tmp/fleet-v5-candidate/.git"
+        },
+        {
+          "allocated_kib": 42244,
+          "path": "/private/tmp/fleet-v5-candidate/.git/objects"
+        },
+        {
+          "allocated_kib": 39084,
+          "path": "/private/tmp/fleet-v5-candidate/.git/c3"
+        },
+        {
+          "allocated_kib": 25784,
+          "path": "/private/tmp/fleet-v5-candidate/docs"
+        },
+        {
+          "allocated_kib": 13796,
+          "path": "/private/tmp/fleet-v5-candidate/docs/evidence"
+        },
+        {
+          "allocated_kib": 9692,
+          "path": "/private/tmp/fleet-v5-candidate/packages"
+        },
+        {
+          "allocated_kib": 6796,
+          "path": "/private/tmp/fleet-v5-candidate/docs/specs"
+        },
+        {
+          "allocated_kib": 3088,
+          "path": "/private/tmp/fleet-v5-candidate/docs/reports"
+        },
+        {
+          "allocated_kib": 2812,
+          "path": "/private/tmp/fleet-v5-candidate/scripts"
+        },
+        {
+          "allocated_kib": 2056,
+          "path": "/private/tmp/fleet-v5-candidate/deployment-artifacts"
+        },
+        {
+          "allocated_kib": 1544,
+          "path": "/private/tmp/fleet-v5-candidate/packages/scheduler"
+        },
+        {
+          "allocated_kib": 1532,
+          "path": "/private/tmp/fleet-v5-candidate/packages/agent-router"
+        },
+        {
+          "allocated_kib": 1516,
+          "path": "/private/tmp/fleet-v5-candidate/docs/investigations"
+        },
+        {
+          "allocated_kib": 1492,
+          "path": "/private/tmp/fleet-v5-candidate/packages/broker"
+        },
+        {
+          "allocated_kib": 1356,
+          "path": "/private/tmp/fleet-v5-candidate/packages/production-runtime"
+        },
+        {
+          "allocated_kib": 1100,
+          "path": "/private/tmp/fleet-v5-candidate/scripts/lib"
+        },
+        {
+          "allocated_kib": 712,
+          "path": "/private/tmp/fleet-v5-candidate/packages/workflow-execution"
+        },
+        {
+          "allocated_kib": 588,
+          "path": "/private/tmp/fleet-v5-candidate/deployment-artifacts/original-router-proof-executor"
+        },
+        {
+          "allocated_kib": 480,
+          "path": "/private/tmp/fleet-v5-candidate/packages/product-api"
+        },
+        {
+          "allocated_kib": 436,
+          "path": "/private/tmp/fleet-v5-candidate/packages/execution-history"
+        },
+        {
+          "allocated_kib": 432,
+          "path": "/private/tmp/fleet-v5-candidate/packages/feishu-connector"
+        },
+        {
+          "allocated_kib": 400,
+          "path": "/private/tmp/fleet-v5-candidate/deployment-artifacts/hr-s256-trusted-cut-v1"
+        },
+        {
+          "allocated_kib": 388,
+          "path": "/private/tmp/fleet-v5-candidate/scripts/fleet-window"
+        },
+        {
+          "allocated_kib": 356,
+          "path": "/private/tmp/fleet-v5-candidate/deployment-artifacts/b7-e32-pre-tx-closure-v1"
+        },
+        {
+          "allocated_kib": 344,
+          "path": "/private/tmp/fleet-v5-candidate/.agents"
+        },
+        {
+          "allocated_kib": 296,
+          "path": "/private/tmp/fleet-v5-candidate/packages/agent-memory"
+        },
+        {
+          "allocated_kib": 284,
+          "path": "/private/tmp/fleet-v5-candidate/docs/decisions"
+        },
+        {
+          "allocated_kib": 248,
+          "path": "/private/tmp/fleet-v5-candidate/packages/notification-ingress"
+        },
+        {
+          "allocated_kib": 244,
+          "path": "/private/tmp/fleet-v5-candidate/packages/agent-credential-provisioning"
+        },
+        {
+          "allocated_kib": 216,
+          "path": "/private/tmp/fleet-v5-candidate/deployment-artifacts/b7-e31-partial-stage-closure-v1"
+        },
+        {
+          "allocated_kib": 152,
+          "path": "/private/tmp/fleet-v5-candidate/packages/agent-provisioning"
+        },
+        {
+          "allocated_kib": 136,
+          "path": "/private/tmp/fleet-v5-candidate/packages/demo-server"
+        },
+        {
+          "allocated_kib": 132,
+          "path": "/private/tmp/fleet-v5-candidate/deployment-artifacts/wda-structural-diagnostics-v1"
+        },
+        {
+          "allocated_kib": 124,
+          "path": "/private/tmp/fleet-v5-candidate/deployment-artifacts/b7-e33-presealed-recovery-v1"
+        },
+        {
+          "allocated_kib": 104,
+          "path": "/private/tmp/fleet-v5-candidate/examples"
+        },
+        {
+          "allocated_kib": 104,
+          "path": "/private/tmp/fleet-v5-candidate/scripts/availability-recovery"
+        },
+        {
+          "allocated_kib": 104,
+          "path": "/private/tmp/fleet-v5-candidate/packages/development-execution"
+        },
+        {
+          "allocated_kib": 96,
+          "path": "/private/tmp/fleet-v5-candidate/packages/agent-identity-capabilities"
+        },
+        {
+          "allocated_kib": 92,
+          "path": "/private/tmp/fleet-v5-candidate/.agents/local"
+        },
+        {
+          "allocated_kib": 92,
+          "path": "/private/tmp/fleet-v5-candidate/packages/scheduler-router"
+        },
+        {
+          "allocated_kib": 88,
+          "path": "/private/tmp/fleet-v5-candidate/packages/session-history"
+        },
+        {
+          "allocated_kib": 88,
+          "path": "/private/tmp/fleet-v5-candidate/packages/agent-definition"
+        },
+        {
+          "allocated_kib": 84,
+          "path": "/private/tmp/fleet-v5-candidate/docs/reviews"
+        },
+        {
+          "allocated_kib": 76,
+          "path": "/private/tmp/fleet-v5-candidate/docs/superpowers"
+        },
+        {
+          "allocated_kib": 72,
+          "path": "/private/tmp/fleet-v5-candidate/deployment-artifacts/workflow-dispatch-recovery-v1"
+        },
+        {
+          "allocated_kib": 68,
+          "path": "/private/tmp/fleet-v5-candidate/packages/fixed-operation"
+        },
+        {
+          "allocated_kib": 68,
+          "path": "/private/tmp/fleet-v5-candidate/packages/workspace-bootstrap"
+        },
+        {
+          "allocated_kib": 60,
+          "path": "/private/tmp/fleet-v5-candidate/examples/code-structure"
+        },
+        {
+          "allocated_kib": 56,
+          "path": "/private/tmp/fleet-v5-candidate/.agents/tools"
+        },
+        {
+          "allocated_kib": 52,
+          "path": "/private/tmp/fleet-v5-candidate/.agents/templates"
+        },
+        {
+          "allocated_kib": 48,
+          "path": "/private/tmp/fleet-v5-candidate/docs/runbooks"
+        },
+        {
+          "allocated_kib": 44,
+          "path": "/private/tmp/fleet-v5-candidate/evidence"
+        },
+        {
+          "allocated_kib": 44,
+          "path": "/private/tmp/fleet-v5-candidate/examples/v0-vertical-slice"
+        },
+        {
+          "allocated_kib": 44,
+          "path": "/private/tmp/fleet-v5-candidate/scripts/scheduler"
+        },
+        {
+          "allocated_kib": 44,
+          "path": "/private/tmp/fleet-v5-candidate/scripts/dsh-codex-reasoning-effort-v1"
+        },
+        {
+          "allocated_kib": 44,
+          "path": "/private/tmp/fleet-v5-candidate/scripts/governance"
+        },
+        {
+          "allocated_kib": 40,
+          "path": "/private/tmp/fleet-v5-candidate/.agents/protocol"
+        },
+        {
+          "allocated_kib": 40,
+          "path": "/private/tmp/fleet-v5-candidate/deployment-artifacts/scheduler-watchdog-routing-v1"
+        },
+        {
+          "allocated_kib": 40,
+          "path": "/private/tmp/fleet-v5-candidate/deployment-artifacts/product-434-hr-runtime-retirement-v1"
+        },
+        {
+          "allocated_kib": 32,
+          "path": "/private/tmp/fleet-v5-candidate/.agents/schemas"
+        },
+        {
+          "allocated_kib": 32,
+          "path": "/private/tmp/fleet-v5-candidate/deployment-artifacts/scheduler-control-plane-reliability-v1"
+        },
+        {
+          "allocated_kib": 28,
+          "path": "/private/tmp/fleet-v5-candidate/.agents/skills"
+        },
+        {
+          "allocated_kib": 20,
+          "path": "/private/tmp/fleet-v5-candidate/deployment-artifacts/w0-deploy-disk-budget-v1"
+        },
+        {
+          "allocated_kib": 20,
+          "path": "/private/tmp/fleet-v5-candidate/deployment-artifacts/c11r3-restart-safe-v1"
+        },
+        {
+          "allocated_kib": 20,
+          "path": "/private/tmp/fleet-v5-candidate/vendor/proxy-agent-negotiate"
+        },
+        {
+          "allocated_kib": 20,
+          "path": "/private/tmp/fleet-v5-candidate/vendor"
+        },
+        {
+          "allocated_kib": 16,
+          "path": "/private/tmp/fleet-v5-candidate/docs/audits"
+        },
+        {
+          "allocated_kib": 16,
+          "path": "/private/tmp/fleet-v5-candidate/packages/agent-switch"
+        },
+        {
+          "allocated_kib": 16,
+          "path": "/private/tmp/fleet-v5-candidate/deployment-artifacts/c11r1-late-outcome-selfheal-v1"
+        },
+        {
+          "allocated_kib": 12,
+          "path": "/private/tmp/fleet-v5-candidate/bundle-integration"
+        },
+        {
+          "allocated_kib": 12,
+          "path": "/private/tmp/fleet-v5-candidate/packages/owner-guard"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/fleet-v5-candidate/profile-integration"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/fleet-v5-candidate/profile-production"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/fleet-v5-candidate/profile-demo"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/fleet-v5-candidate/profile-integration-agent"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/fleet-v5-candidate/bundle-agent-switch"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/fleet-v5-candidate/bundle-memory"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/fleet-v5-candidate/bundle-broker"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/fleet-v5-candidate/profile-memory"
+        },
+        {
+          "allocated_kib": 8,
+          "path": "/private/tmp/fleet-v5-candidate/bundle-demo"
+        },
+        {
+          "allocated_kib": 0,
+          "path": "/private/tmp/fleet-v5-candidate/.git/refs"
+        }
+      ],
+      "stderr": ""
+    }
+  ]
+}

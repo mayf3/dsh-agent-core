@@ -1,0 +1,16 @@
+{
+  "command": [
+    "git",
+    "push",
+    "-u",
+    "origin",
+    "fix/retire-executor-decouple"
+  ],
+  "cwd": "/private/tmp/h1365-retire",
+  "head": "6a3f822174cf446eba24b9f42738db54ddc74af6",
+  "started_utc": "2026-11-07T23:41:40.888261+00:00",
+  "ended_utc": "2026-11-07T23:41:43.738305+00:00",
+  "actual_rc": 0,
+  "stdout": "branch 'fix/retire-executor-decouple' set up to track 'origin/fix/retire-executor-decouple'.\n",
+  "stderr": "remote: \nremote: Create a pull request for 'fix/retire-executor-decouple' on GitHub by visiting:        \nremote:      https://github.com/mayf3/dsh-agent-core/pull/new/fix/retire-executor-decouple        \nremote: \nTo https://github.com/mayf3/dsh-agent-core.git\n * [new branch]        fix/retire-executor-decouple -> fix/retire-executor-decouple\n"
+}

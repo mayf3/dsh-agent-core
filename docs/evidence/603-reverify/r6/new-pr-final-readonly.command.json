@@ -1,0 +1,27 @@
+{
+  "name": "new-pr-final-readonly",
+  "argv": [
+    "gh",
+    "pr",
+    "list",
+    "--repo",
+    "mayf3/dsh-agent-core",
+    "--state",
+    "all",
+    "--head",
+    "ac-ctr-s4-reverify",
+    "--json",
+    "number,title,state,headRefName,headRefOid,baseRefName,url"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "purpose": "Post-failure read-only reconciliation only; no delivery continuation",
+  "started_at": "2026-11-07T05:17:15.414879+00:00",
+  "rc": 0,
+  "ended_at": "2026-11-07T05:17:15.966400+00:00",
+  "stdout_base64": "W10K",
+  "stdout_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+  "stdout_text": "[]\n",
+  "stderr_base64": "",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_text": ""
+}

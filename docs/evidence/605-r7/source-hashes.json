@@ -1,0 +1,15 @@
+{
+  "packages/agent-router/src/reconciliation/admin-abandonment.js": "62237fb500694f95d894f0f75516ee97fee05cd961971156783120bcbe059710",
+  "packages/agent-router/src/reconciliation/durable-file.js": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c",
+  "packages/agent-router/src/reconciliation/query.js": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63",
+  "packages/agent-router/src/reconciliation/state-machine.js": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f",
+  "packages/agent-router/test/process-lifecycle/timeout.test.js": "7fff46af7ce99a06edf618250af63d22880ed613b4168faa0f01a6d762df4099",
+  "packages/agent-router/test/process-lifecycle/unknown-fence-repair.test.js": "5b6d522685edc20e6e9e829d5a09c438ffabe145f0135be94af36a3de0c03dcb",
+  "packages/agent-router/test/runtime-hygiene/recovery-compat.test.js": "afb1159d62ccd79028d3eb402e2a219def9a28e28202aa0ef3be3a53d9f6cf97",
+  "packages/scheduler/src/occurrence-model.js": "9d4faed6f2ccd8843c5be6fd5baff070efb449ec3ff56c318a2f88ca99e7474a",
+  "packages/scheduler/src/store.js": "db512f94c11cf2f3fadaa7b56850ddda762a94afb1b577a762c49c0a724b4f03",
+  "packages/scheduler/test/occurrence-model.test.js": "04606579da789bb2df88a1b4a1825eab35c7bf846faf25eb279b31dc8ea667d7",
+  "scripts/availability-recovery/compat-reader-matrix.test.mjs": "901fb28e7dcc21f833eced367e57f207ab911f7db25ba2a4515aebf04670d4d4",
+  "scripts/availability-recovery/compat-store-facts.mjs": "b8ca69db9a4d452559ef1e777a1af28d7efa6a33922ce06fc14fafbc0c710701",
+  "scripts/availability-recovery/compat-store-facts.test.mjs": "f75dad4eb4ccced561411dc669d27dfa8fa16538e868b989c3cae191ab1edcf6"
+}

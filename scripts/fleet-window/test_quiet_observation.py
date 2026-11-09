@@ -128,14 +128,20 @@ class QuietObservation(unittest.TestCase):
         self.assertEqual(self.commands, [])
         self.assert_unchanged()
 
-    def test_each_nonempty_list_still_refuses_without_settlement(self):
+    def test_each_nonempty_list_is_observed_without_settlement(self):
         for key in ('inflightTurns', 'unresolvedLostTurns', 'inflightOccurrences'):
             with self.subTest(key=key):
                 self.setUp()
                 self.census[key] = [{'identity': 'unproven'}]
-                with self.assertRaisesRegex(RuntimeError, 'unresolved/inflight execution'):
-                    self.observe()
-                self.assertNotIn('quiet-pass.json', self.receipts)
+                self.observe()
+                recorded = self.receipts['quiet-census.json']
+                self.assertEqual(recorded['census'], self.census)
+                self.assertTrue(recorded['readOnly'])
+                self.assertFalse(recorded['nonemptyBlocksQuiet'])
+                passed = self.receipts['quiet-pass.json']
+                self.assertTrue(passed['readOnly'])
+                self.assertTrue(passed['nonemptyCensusAllowed'])
+                self.assertFalse(passed['settlementExecuted'])
                 self.assert_unchanged()
 
     def test_unreadable_store_refuses(self):

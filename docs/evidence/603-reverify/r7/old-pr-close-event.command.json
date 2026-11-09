@@ -1,0 +1,24 @@
+{
+  "name": "old-pr-close-event",
+  "argv": [
+    "gh",
+    "api",
+    "repos/mayf3/dsh-agent-core/issues/603/events",
+    "--jq",
+    "[.[] | select(.event==\"closed\") | {id,event,created_at,actor:.actor.login,commit_id,url}]"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "started_at": "2026-11-07T05:28:05.903412+00:00",
+  "head": "c87a78b175c5a5da5d661ee2ef8435021bbdceef",
+  "index_tree_before_command": "8835f604c7ce7a1ab23a78f2607d1e4db3008f6e",
+  "environment": "Inherited unless argv explicitly clears keys; no Secret values recorded",
+  "ended_at": "2026-11-07T05:28:06.550721+00:00",
+  "rc": 0,
+  "encoding": "base64 is authoritative verbatim output; text is a UTF-8 display",
+  "stdout_base64": "W3siYWN0b3IiOiJtYXlmMyIsImNvbW1pdF9pZCI6bnVsbCwiY3JlYXRlZF9hdCI6IjIwMjYtMTEtMDdUMDU6Mjc6NTdaIiwiZXZlbnQiOiJjbG9zZWQiLCJpZCI6MzU0MTU4Mjk4NzQsInVybCI6Imh0dHBzOi8vYXBpLmdpdGh1Yi5jb20vcmVwb3MvbWF5ZjMvZHNoLWFnZW50LWNvcmUvaXNzdWVzL2V2ZW50cy8zNTQxNTgyOTg3NCJ9XQo=",
+  "stdout_sha256": "91bbc6c3c0050d5246c6908a13cd2d244b7a4b5d8d1e32e2fe164dd1e6dd1417",
+  "stdout_text": "[{\"actor\":\"mayf3\",\"commit_id\":null,\"created_at\":\"2026-11-07T05:27:57Z\",\"event\":\"closed\",\"id\":35415829874,\"url\":\"https://api.github.com/repos/mayf3/dsh-agent-core/issues/events/35415829874\"}]\n",
+  "stderr_base64": "",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_text": ""
+}

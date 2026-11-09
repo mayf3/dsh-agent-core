@@ -1,0 +1,496 @@
+TAP version 13
+# Subtest: workflow_execute: create_instance binding freezes WITH the accepted executionClass companion
+ok 1 - workflow_execute: create_instance binding freezes WITH the accepted executionClass companion
+  ---
+  duration_ms: 7.163417
+  type: 'test'
+  ...
+# Subtest: workflow_execute create_instance: READY and WAITING admission observations pass through unchanged
+ok 2 - workflow_execute create_instance: READY and WAITING admission observations pass through unchanged
+  ---
+  duration_ms: 145.342333
+  type: 'test'
+  ...
+# Subtest: WEC companion: legacy create (absent executionClass) maps to a body with NO executionClass key — legacy wire byte-identical
+ok 3 - WEC companion: legacy create (absent executionClass) maps to a body with NO executionClass key — legacy wire byte-identical
+  ---
+  duration_ms: 43.1485
+  type: 'test'
+  ...
+# Subtest: WEC companion: executionClass BUSINESS and NON_BUSINESS_TEST are forwarded verbatim
+ok 4 - WEC companion: executionClass BUSINESS and NON_BUSINESS_TEST are forwarded verbatim
+  ---
+  duration_ms: 40.195416
+  type: 'test'
+  ...
+# Subtest: WEC companion: executionClass null / unknown value fail closed as invalid_arguments BEFORE any transport
+ok 5 - WEC companion: executionClass null / unknown value fail closed as invalid_arguments BEFORE any transport
+  ---
+  duration_ms: 4.591583
+  type: 'test'
+  ...
+# Subtest: WEC companion: svc class error families preserve verbatim (not_domain_owner / invalid_input / idempotency_conflict)
+ok 6 - WEC companion: svc class error families preserve verbatim (not_domain_owner / invalid_input / idempotency_conflict)
+  ---
+  duration_ms: 68.037917
+  type: 'test'
+  ...
+# Subtest: return-policy declarer: workflow_execute declares the 409 return_policy_exhausted service code
+ok 7 - return-policy declarer: workflow_execute declares the 409 return_policy_exhausted service code
+  ---
+  duration_ms: 0.993917
+  type: 'test'
+  ...
+# Subtest: return-policy declarer: svc 409 return_policy_exhausted passes through the transition seam verbatim (code/status/detail/requestId; no retry)
+ok 8 - return-policy declarer: svc 409 return_policy_exhausted passes through the transition seam verbatim (code/status/detail/requestId; no retry)
+  ---
+  duration_ms: 14.445875
+  type: 'test'
+  ...
+# Subtest: return-policy declarer: an UNdeclared transition service code still fails closed to http_4xx
+ok 9 - return-policy declarer: an UNdeclared transition service code still fails closed to http_4xx
+  ---
+  duration_ms: 16.238917
+  type: 'test'
+  ...
+# Subtest: Broker exposes only the validated operation selector as a trusted native discriminator
+ok 10 - Broker exposes only the validated operation selector as a trusted native discriminator
+  ---
+  duration_ms: 2.238958
+  type: 'test'
+  ...
+# Subtest: workflow_execute is the only instance-execution write tool; workflow_transition remains absent
+ok 11 - workflow_execute is the only instance-execution write tool; workflow_transition remains absent
+  ---
+  duration_ms: 9.654833
+  type: 'test'
+  ...
+# Subtest: workflow_execute operation=create_instance: authorized POST preserves body, scope, trusted IK; identity fields never reach the wire
+ok 12 - workflow_execute operation=create_instance: authorized POST preserves body, scope, trusted IK; identity fields never reach the wire
+  ---
+  duration_ms: 113.457625
+  type: 'test'
+  ...
+# Subtest: workflow_execute operation=create_instance: optional externalReference/externalUrl forwarded when present
+ok 13 - workflow_execute operation=create_instance: optional externalReference/externalUrl forwarded when present
+  ---
+  duration_ms: 61.8585
+  type: 'test'
+  ...
+# Subtest: workflow_execute: every write call gets a FRESH trusted IK and the broker never retries
+ok 14 - workflow_execute: every write call gets a FRESH trusted IK and the broker never retries
+  ---
+  duration_ms: 51.033458
+  type: 'test'
+  ...
+# Subtest: workflow_execute operation=create_instance: declared failures preserve the formal error envelope
+ok 15 - workflow_execute operation=create_instance: declared failures preserve the formal error envelope
+  ---
+  duration_ms: 54.899084
+  type: 'test'
+  ...
+# Subtest: workflow_execute: per-operation strict validation fails fast before any credential or HTTP work
+ok 16 - workflow_execute: per-operation strict validation fails fast before any credential or HTTP work
+  ---
+  duration_ms: 2.014958
+  type: 'test'
+  ...
+# Subtest: CTR-011: the real defineTool host accepts workflow_execute; coarse required schema blocks neither operation
+ok 17 - CTR-011: the real defineTool host accepts workflow_execute; coarse required schema blocks neither operation
+  ---
+  duration_ms: 16.454458
+  type: 'test'
+  ...
+# Subtest: workflow_execute: cancel_instance + archive_instance freeze the deployed svc-workflow bindings
+ok 18 - workflow_execute: cancel_instance + archive_instance freeze the deployed svc-workflow bindings
+  ---
+  duration_ms: 0.791041
+  type: 'test'
+  ...
+# Subtest: workflow_execute operation=cancel_instance: posts reason to the cancel path with trusted IK; outcome forwarded
+ok 19 - workflow_execute operation=cancel_instance: posts reason to the cancel path with trusted IK; outcome forwarded
+  ---
+  duration_ms: 8.947708
+  type: 'test'
+  ...
+# Subtest: workflow_execute operation=archive_instance: 409 lifecycle fail-closed code preserved verbatim
+ok 20 - workflow_execute operation=archive_instance: 409 lifecycle fail-closed code preserved verbatim
+  ---
+  duration_ms: 6.695208
+  type: 'test'
+  ...
+# Subtest: P1-B create_instance: lost response then new attempts preserve SUCCEEDED effect
+ok 21 - P1-B create_instance: lost response then new attempts preserve SUCCEEDED effect
+  ---
+  duration_ms: 428.656959
+  type: 'test'
+  ...
+# {"operation":"create_instance","outcome":"SUCCEEDED","attempts":[{"attemptId":"wfeat-78ce25d4b4df4a8a7995a6c1","generation":1},{"attemptId":"wfeat-03ae48b05e3cf4d431746519","generation":2},{"attemptId":"wfeat-b6a457ad3b1e12c7c2e9a690","generation":3}],"effectId":"00000013-0000-4000-8000-000000000000","stableKey":"[\\"00000001-0000-4000-8000-000000000000\\",\\"00000007-0000-4000-8000-000000000000\\",\\"00000008-0000-4000-8000-000000000000\\",\\"supplier\\",1]","businessExecutions":1,"guardedPosts":3,"limitations":"real Core ledger/context/gateway + loopback HTTP; Svc table is a fixture; admission eligibility and quiescence seeded; no live DB/process/production proof"}
+# Subtest: P1-B create_instance: lost response then new attempts preserve UNKNOWN effect
+ok 22 - P1-B create_instance: lost response then new attempts preserve UNKNOWN effect
+  ---
+  duration_ms: 187.298417
+  type: 'test'
+  ...
+# {"operation":"create_instance","outcome":"UNKNOWN","attempts":[{"attemptId":"wfeat-78ce25d4b4df4a8a7995a6c1","generation":1},{"attemptId":"wfeat-03ae48b05e3cf4d431746519","generation":2},{"attemptId":"wfeat-b6a457ad3b1e12c7c2e9a690","generation":3}],"effectId":"00000013-0000-4000-8000-000000000000","stableKey":"[\\"00000001-0000-4000-8000-000000000000\\",\\"00000007-0000-4000-8000-000000000000\\",\\"00000008-0000-4000-8000-000000000000\\",\\"supplier\\",1]","businessExecutions":1,"guardedPosts":1,"limitations":"real Core ledger/context/gateway + loopback HTTP; Svc table is a fixture; admission eligibility and quiescence seeded; no live DB/process/production proof"}
+# Subtest: P1-B resolve_current_governance_review: lost response then new attempts preserve SUCCEEDED effect
+ok 23 - P1-B resolve_current_governance_review: lost response then new attempts preserve SUCCEEDED effect
+  ---
+  duration_ms: 205.333708
+  type: 'test'
+  ...
+# {"operation":"resolve_current_governance_review","outcome":"SUCCEEDED","attempts":[{"attemptId":"wfeat-78ce25d4b4df4a8a7995a6c1","generation":1},{"attemptId":"wfeat-03ae48b05e3cf4d431746519","generation":2},{"attemptId":"wfeat-b6a457ad3b1e12c7c2e9a690","generation":3}],"effectId":"00000013-0000-4000-8000-000000000000","stableKey":"[\\"00000001-0000-4000-8000-000000000000\\",\\"00000007-0000-4000-8000-000000000000\\",\\"00000008-0000-4000-8000-000000000000\\",\\"review\\",1]","businessExecutions":1,"guardedPosts":3,"limitations":"real Core ledger/context/gateway + loopback HTTP; Svc table is a fixture; admission eligibility and quiescence seeded; no live DB/process/production proof"}
+# Subtest: P1-B resolve_current_governance_review: lost response then new attempts preserve UNKNOWN effect
+ok 24 - P1-B resolve_current_governance_review: lost response then new attempts preserve UNKNOWN effect
+  ---
+  duration_ms: 192.011291
+  type: 'test'
+  ...
+# {"operation":"resolve_current_governance_review","outcome":"UNKNOWN","attempts":[{"attemptId":"wfeat-78ce25d4b4df4a8a7995a6c1","generation":1},{"attemptId":"wfeat-03ae48b05e3cf4d431746519","generation":2},{"attemptId":"wfeat-b6a457ad3b1e12c7c2e9a690","generation":3}],"effectId":"00000013-0000-4000-8000-000000000000","stableKey":"[\\"00000001-0000-4000-8000-000000000000\\",\\"00000007-0000-4000-8000-000000000000\\",\\"00000008-0000-4000-8000-000000000000\\",\\"review\\",1]","businessExecutions":1,"guardedPosts":1,"limitations":"real Core ledger/context/gateway + loopback HTTP; Svc table is a fixture; admission eligibility and quiescence seeded; no live DB/process/production proof"}
+# Subtest: P1-B escalate_to_human: lost response then new attempts preserve SUCCEEDED effect
+ok 25 - P1-B escalate_to_human: lost response then new attempts preserve SUCCEEDED effect
+  ---
+  duration_ms: 181.487459
+  type: 'test'
+  ...
+# {"operation":"escalate_to_human","outcome":"SUCCEEDED","attempts":[{"attemptId":"wfeat-78ce25d4b4df4a8a7995a6c1","generation":1},{"attemptId":"wfeat-03ae48b05e3cf4d431746519","generation":2},{"attemptId":"wfeat-b6a457ad3b1e12c7c2e9a690","generation":3}],"effectId":"00000013-0000-4000-8000-000000000000","stableKey":"[\\"00000001-0000-4000-8000-000000000000\\",\\"00000007-0000-4000-8000-000000000000\\",\\"00000008-0000-4000-8000-000000000000\\",\\"review\\",1]","businessExecutions":1,"guardedPosts":3,"limitations":"real Core ledger/context/gateway + loopback HTTP; Svc table is a fixture; admission eligibility and quiescence seeded; no live DB/process/production proof"}
+# Subtest: P1-B escalate_to_human: lost response then new attempts preserve UNKNOWN effect
+ok 26 - P1-B escalate_to_human: lost response then new attempts preserve UNKNOWN effect
+  ---
+  duration_ms: 160.005209
+  type: 'test'
+  ...
+# {"operation":"escalate_to_human","outcome":"UNKNOWN","attempts":[{"attemptId":"wfeat-78ce25d4b4df4a8a7995a6c1","generation":1},{"attemptId":"wfeat-03ae48b05e3cf4d431746519","generation":2},{"attemptId":"wfeat-b6a457ad3b1e12c7c2e9a690","generation":3}],"effectId":"00000013-0000-4000-8000-000000000000","stableKey":"[\\"00000001-0000-4000-8000-000000000000\\",\\"00000007-0000-4000-8000-000000000000\\",\\"00000008-0000-4000-8000-000000000000\\",\\"review\\",1]","businessExecutions":1,"guardedPosts":1,"limitations":"real Core ledger/context/gateway + loopback HTTP; Svc table is a fixture; admission eligibility and quiescence seeded; no live DB/process/production proof"}
+# Subtest: Owner obligation read is a closed, read-only capability
+ok 27 - Owner obligation read is a closed, read-only capability
+  ---
+  duration_ms: 3.300833
+  type: 'test'
+  ...
+# Subtest: managed create uses exact slot + one same-caller detail CAS, preserving original response
+ok 28 - managed create uses exact slot + one same-caller detail CAS, preserving original response
+  ---
+  duration_ms: 198.279417
+  type: 'test'
+  ...
+# Subtest: dependency leaf cannot fork and UNKNOWN cannot write or fall through
+ok 29 - dependency leaf cannot fork and UNKNOWN cannot write or fall through
+  ---
+  duration_ms: 75.561334
+  type: 'test'
+  ...
+# Subtest: successful create after RETURN verifies original semantic intent without creating a new effect
+ok 30 - successful create after RETURN verifies original semantic intent without creating a new effect
+  ---
+  duration_ms: 37.536167
+  type: 'test'
+  ...
+# Subtest: successful create cannot credit changed business body, target, or unknown arguments
+ok 31 - successful create cannot credit changed business body, target, or unknown arguments
+  ---
+  duration_ms: 36.383667
+  type: 'test'
+  ...
+# Subtest: managed REVIEW uses actual admission + same-caller detail without inventing DELIVERED
+ok 32 - managed REVIEW uses actual admission + same-caller detail without inventing DELIVERED
+  ---
+  duration_ms: 12.026166
+  type: 'test'
+  ...
+# Subtest: managed REVIEW independently rejects each wrong Owner/lineage/proof/CAS and caller collision
+ok 33 - managed REVIEW independently rejects each wrong Owner/lineage/proof/CAS and caller collision
+  ---
+  duration_ms: 89.466125
+  type: 'test'
+  ...
+# Subtest: managed escalation retains explicit stale CAS and the existing business payload
+ok 34 - managed escalation retains explicit stale CAS and the existing business payload
+  ---
+  duration_ms: 20.447292
+  type: 'test'
+  ...
+# Subtest: own resolve replay uses immutable original proof and explicit old CAS without new ADMISSIBLE
+ok 35 - own resolve replay uses immutable original proof and explicit old CAS without new ADMISSIBLE
+  ---
+  duration_ms: 18.688917
+  type: 'test'
+  ...
+# Subtest: own resolve replay rejects changed message, changed allowed descriptor and wrong case
+ok 36 - own resolve replay rejects changed message, changed allowed descriptor and wrong case
+  ---
+  duration_ms: 35.717542
+  type: 'test'
+  ...
+# Subtest: own resolve replay cannot synthesize missing proof or trust mismatched immutable lineage
+ok 37 - own resolve replay cannot synthesize missing proof or trust mismatched immutable lineage
+  ---
+  duration_ms: 24.78275
+  type: 'test'
+  ...
+# Subtest: a claimed replay must bind the same original command, result and effect
+ok 38 - a claimed replay must bind the same original command, result and effect
+  ---
+  duration_ms: 39.146084
+  type: 'test'
+  ...
+# Subtest: only authoritative not-managed permits fallback; opaque 404/storage and malformed relations do not
+ok 39 - only authoritative not-managed permits fallback; opaque 404/storage and malformed relations do not
+  ---
+  duration_ms: 63.14975
+  type: 'test'
+  ...
+# Subtest: Svc rejection or malformed success is not retried or claimed as success
+ok 40 - Svc rejection or malformed success is not retried or claimed as success
+  ---
+  duration_ms: 19.55725
+  type: 'test'
+  ...
+# Subtest: missing resolver for a proven workflow turn fails closed; generic managed assistance cannot bypass
+ok 41 - missing resolver for a proven workflow turn fails closed; generic managed assistance cannot bypass
+  ---
+  duration_ms: 5.670833
+  type: 'test'
+  ...
+# Subtest: read capability rejects extra arguments and invalid UUID before transport
+ok 42 - read capability rejects extra arguments and invalid UUID before transport
+  ---
+  duration_ms: 8.392334
+  type: 'test'
+  ...
+# Subtest: unmanaged REVIEW preserves DELIVERED/OUTSTANDING legacy requirement
+ok 43 - unmanaged REVIEW preserves DELIVERED/OUTSTANDING legacy requirement
+  ---
+  duration_ms: 12.623834
+  type: 'test'
+  ...
+# Subtest: opaque service slot keys are URL encoded, never model selected or concatenated as paths
+ok 44 - opaque service slot keys are URL encoded, never model selected or concatenated as paths
+  ---
+  duration_ms: 12.269666
+  type: 'test'
+  ...
+# Subtest: managed and leaf turns cannot open nested assistance through the separate existing request tool
+ok 45 - managed and leaf turns cannot open nested assistance through the separate existing request tool
+  ---
+  duration_ms: 28.957958
+  type: 'test'
+  ...
+# Subtest: existing write manifests preserve managed refusal codes through the child invoke mapper
+ok 46 - existing write manifests preserve managed refusal codes through the child invoke mapper
+  ---
+  duration_ms: 1.56775
+  type: 'test'
+  ...
+# Subtest: managed INTAKE transition forwards full Context unchanged through existing wire without discovery joins
+ok 47 - managed INTAKE transition forwards full Context unchanged through existing wire without discovery joins
+  ---
+  duration_ms: 21.103208
+  type: 'test'
+  ...
+# Subtest: Context omission preserves ordinary and managed transition body, receipt and trusted idempotency
+ok 48 - Context omission preserves ordinary and managed transition body, receipt and trusted idempotency
+  ---
+  duration_ms: 19.865
+  type: 'test'
+  ...
+# Subtest: present Context rejects null/nonobjects and unknown arguments before HTTP
+ok 49 - present Context rejects null/nonobjects and unknown arguments before HTTP
+  ---
+  duration_ms: 21.982792
+  type: 'test'
+  ...
+# Subtest: present Context cannot use unmanaged, unproven, stale, stopped or non-INTAKE provenance
+ok 50 - present Context cannot use unmanaged, unproven, stale, stopped or non-INTAKE provenance
+  ---
+  duration_ms: 33.951458
+  type: 'test'
+  ...
+# Subtest: managed Context preserves actual Svc gate/schema/CAS errors without local guessing or retries
+ok 51 - managed Context preserves actual Svc gate/schema/CAS errors without local guessing or retries
+  ---
+  duration_ms: 30.943291
+  type: 'test'
+  ...
+# Subtest: current review resolve is registered with the declared exact operation schema
+ok 52 - current review resolve is registered with the declared exact operation schema
+  ---
+  duration_ms: 6.888292
+  type: 'test'
+  ...
+# Subtest: HTTP manifest validates trusted response reads, response checks and projection paths
+ok 53 - HTTP manifest validates trusted response reads, response checks and projection paths
+  ---
+  duration_ms: 6.118625
+  type: 'test'
+  ...
+# Subtest: gateway registration rejects unresolved or undeclared read sources and argument bindings
+ok 54 - gateway registration rejects unresolved or undeclared read sources and argument bindings
+  ---
+  duration_ms: 1.914292
+  type: 'test'
+  ...
+# Subtest: gateway reads the exact current proof then resolves as the same actual caller with separate scopes
+ok 55 - gateway reads the exact current proof then resolves as the same actual caller with separate scopes
+  ---
+  duration_ms: 198.640125
+  type: 'test'
+  ...
+# Subtest: invalid current-review invocation fails before source GET or resolve POST
+ok 56 - invalid current-review invocation fails before source GET or resolve POST
+  ---
+  duration_ms: 13.109709
+  type: 'test'
+  ...
+# Subtest: read-scope denial uses the same actual credential and sends no detail GET or resolve POST
+ok 57 - read-scope denial uses the same actual credential and sends no detail GET or resolve POST
+  ---
+  duration_ms: 68.734625
+  type: 'test'
+  ...
+# Subtest: pre-existing reserved target is rejected before any authorization or source read
+ok 58 - pre-existing reserved target is rejected before any authorization or source read
+  ---
+  duration_ms: 4.694542
+  type: 'test'
+  ...
+# Subtest: failed authoritative read never reaches resolve POST
+ok 59 - failed authoritative read never reaches resolve POST
+  ---
+  duration_ms: 25.742333
+  type: 'test'
+  ...
+# Subtest: source 404 preserves its declared error and never reaches resolve POST
+ok 60 - source 404 preserves its declared error and never reaches resolve POST
+  ---
+  duration_ms: 25.980917
+  type: 'test'
+  ...
+# Subtest: unknown resolve POST outcome is never replayed or followed by a read
+ok 61 - unknown resolve POST outcome is never replayed or followed by a read
+  ---
+  duration_ms: 26.965667
+  type: 'test'
+  ...
+# Subtest: stale version and inconsistent current-review detail stop after one GET and before POST
+ok 62 - stale version and inconsistent current-review detail stop after one GET and before POST
+  ---
+  duration_ms: 41.302292
+  type: 'test'
+  ...
+# Subtest: Domain Owner assistance read/action are split by least-privilege scope
+ok 63 - Domain Owner assistance read/action are split by least-privilege scope
+  ---
+  duration_ms: 7.421458
+  type: 'test'
+  ...
+# Subtest: governance bind is a closed typed workflow.execute mutation
+ok 64 - governance bind is a closed typed workflow.execute mutation
+  ---
+  duration_ms: 3.134167
+  type: 'test'
+  ...
+# Subtest: Domain Owner assistance actions reuse authoritative svc endpoints and idempotency
+ok 65 - Domain Owner assistance actions reuse authoritative svc endpoints and idempotency
+  ---
+  duration_ms: 1.275
+  type: 'test'
+  ...
+# Subtest: assistance capabilities are part of the default broker surface exactly once
+ok 66 - assistance capabilities are part of the default broker surface exactly once
+  ---
+  duration_ms: 0.174167
+  type: 'test'
+  ...
+# Subtest: system execution policy now opens OWNER_PENDING instead of auto-human escalation
+ok 67 - system execution policy now opens OWNER_PENDING instead of auto-human escalation
+  ---
+  duration_ms: 0.410542
+  type: 'test'
+  ...
+# Subtest: bind_governance forwards only typed fields with trusted idempotency and preserves binding receipt
+ok 68 - bind_governance forwards only typed fields with trusted idempotency and preserves binding receipt
+  ---
+  duration_ms: 114.28425
+  type: 'test'
+  ...
+# Subtest: lost bind response is reconciled through exact case detail without another mutation
+ok 69 - lost bind response is reconciled through exact case detail without another mutation
+  ---
+  duration_ms: 91.820417
+  type: 'test'
+  ...
+# Subtest: resolve transports arbitrary supportingPayload unchanged for existing unlinked cases
+ok 70 - resolve transports arbitrary supportingPayload unchanged for existing unlinked cases
+  ---
+  duration_ms: 24.074083
+  type: 'test'
+  ...
+# Subtest: resolve exposes only the statically declared typed review projection
+ok 71 - resolve exposes only the statically declared typed review projection
+  ---
+  duration_ms: 15.431167
+  type: 'test'
+  ...
+# Subtest: resolve projects typed review copy-on-write and preserves input and siblings
+ok 72 - resolve projects typed review copy-on-write and preserves input and siblings
+  ---
+  duration_ms: 24.86475
+  type: 'test'
+  ...
+# Subtest: resolve creates absent supportingPayload only in the projected body
+ok 73 - resolve creates absent supportingPayload only in the projected body
+  ---
+  duration_ms: 18.112375
+  type: 'test'
+  ...
+# Subtest: resolve rejects malformed typed/container input before credential or HTTP
+ok 74 - resolve rejects malformed typed/container input before credential or HTTP
+  ---
+  duration_ms: 1.939917
+  type: 'test'
+  ...
+# Subtest: resolve rejects any pre-existing projection target as binding_error before HTTP
+ok 75 - resolve rejects any pre-existing projection target as binding_error before HTTP
+  ---
+  duration_ms: 1.7985
+  type: 'test'
+  ...
+# Subtest: atomic create-bind is closed, validates UUIDs and forwards one trusted-key request unchanged
+ok 76 - atomic create-bind is closed, validates UUIDs and forwards one trusted-key request unchanged
+  ---
+  duration_ms: 7.384208
+  type: 'test'
+  ...
+# Subtest: assistance request is a least-privilege assignee surface on the existing svc endpoint
+ok 77 - assistance request is a least-privilege assignee surface on the existing svc endpoint
+  ---
+  duration_ms: 14.199792
+  type: 'test'
+  ...
+# Subtest: assistance request declares the assignee-request error family from svc error.rs
+ok 78 - assistance request declares the assignee-request error family from svc error.rs
+  ---
+  duration_ms: 4.313917
+  type: 'test'
+  ...
+# Subtest: assistance request is part of the default broker surface exactly once
+ok 79 - assistance request is part of the default broker surface exactly once
+  ---
+  duration_ms: 0.372208
+  type: 'test'
+  ...
+# Subtest: request payload stays bounded and non-authoritative
+ok 80 - request payload stays bounded and non-authoritative
+  ---
+  duration_ms: 5.927584
+  type: 'test'
+  ...
+1..80
+# tests 80
+# suites 0
+# pass 80
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1757.3415

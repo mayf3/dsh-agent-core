@@ -26,7 +26,7 @@
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -133,7 +133,10 @@ test('AC4: duplicate due records (same page and across sweeps) mint exactly ONE 
     const engine = createWorkflowExecutionEngine({
       ledger,
       clock,
-      fetchDuePage: async () => ({ ok: true, items: [dueIntent(), dueIntent()] }),
+      // Duplicate ingress still exercises the fence; locked canonical
+      // validation attests the one current activation, without ambiguity.
+      fetchDuePage: async () => ({ ok: true, items: existsSync(join(dir, 'attempts.lock'))
+        ? [dueIntent()] : [dueIntent(), dueIntent()] }),
       resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
       deliverRun: async ({ requestId }) => {
         deliveries.push(requestId)

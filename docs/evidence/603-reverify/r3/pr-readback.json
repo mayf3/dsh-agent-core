@@ -1,0 +1,12 @@
+{
+  "observed_at": "2026-11-07T04:48:22.995Z",
+  "number": 603,
+  "state": "open",
+  "merged": false,
+  "head": "ac-ctr-s4-runtime-prep",
+  "head_sha": "815ac7c94b1775eec3aa57f19ca8a3842f592217",
+  "base": "main",
+  "base_sha": "26178b4f459cdc2737724f6614b5e2bc9bdc77b0",
+  "url": "https://github.com/mayf3/dsh-agent-core/pull/603",
+  "isError": false
+}

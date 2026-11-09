@@ -1,0 +1,6 @@
+(version 1)
+(allow default)
+(deny file-write*)
+(allow file-write* (subpath "/Users/yanfenma/workspace/project/worktrees/h547-store-diag/docs/evidence/h547-store-diag/private/v5/scratch-3"))
+(deny network*)
+(deny process-fork)

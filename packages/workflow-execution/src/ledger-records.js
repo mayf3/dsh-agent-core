@@ -1,4 +1,4 @@
-import { UUID_RE, AGENT_ID_RE, ATTEMPT_ID_RE } from './attempt-identity.js'
+import { UUID_RE, AGENT_ID_RE, ATTEMPT_ID_RE, validateObservationIdentity, staleObservation } from './attempt-identity.js'
 import { continuePlannedOwnerResume as continuePlannedOwnerResumeMutation } from './owner-assistance-resume-ledger.js'
 import { buildStaleSupersededEvent } from './ledger-events.js'
 import { normalizeProgressCheckpoint } from './progress.js'
@@ -61,22 +61,28 @@ export async function recordProgressCheckpoint(ledger, io, { nodeVisitId, attemp
   })
 }
 
-export async function recordReconciled(ledger, io, { nodeVisitId, expectedPhase, verdict, judgment, reason }) {
+export async function recordReconciled(ledger, io, { nodeVisitId, expectedAttemptId, expectedGeneration, expectedPhase, verdict, judgment, reason }) {
   if (verdict !== 'SETTLED' && verdict !== 'NEEDS_REVIEW') {
     throw new TypeError(`workflow-execution: reconciled verdict must be SETTLED | NEEDS_REVIEW (got ${JSON.stringify(verdict)})`)
   }
   if (typeof expectedPhase !== 'string' || expectedPhase === '') throw new TypeError('workflow-execution: reconciled expectedPhase is required')
   if (typeof judgment !== 'string' || judgment === '') throw new TypeError('workflow-execution: reconciled judgment is required')
   if (typeof reason !== 'string' || reason === '') throw new TypeError('workflow-execution: reconciled reason is required')
+  const observation = { kind: 'reconciled', nodeVisitId, expectedAttemptId, expectedGeneration, expectedPhase, verdict, judgment, reason }
+  validateObservationIdentity(observation)
   return ledger.mutate(() => {
     const current = io.attempt(nodeVisitId)
     if (current === undefined) {
       throw new Error(`workflow-execution: no attempt exists for nodeVisit ${nodeVisitId.toLowerCase()} — beginAttemptIfAbsent first`)
     }
-    if (current.state !== 'ACTIVE') io.terminalGuard(current, { kind: 'reconciled', nodeVisitId })
+    const stale = staleObservation(current, observation)
+    if (stale) return stale
+    // A competing writer may have settled this ACTIVE observation already.
+    // Reject its changed phase before attempting any terminal write.
     if (current.phase !== expectedPhase) {
       return { committed: false, attempt: { ...current }, cause: 'attempt_changed' }
     }
+    if (current.state !== 'ACTIVE') io.terminalGuard(current, { kind: 'reconciled', nodeVisitId })
     const record = io.recordForActive(nodeVisitId, (event) => {
       event.kind = 'reconciled'
       event.verdict = verdict
@@ -92,24 +98,28 @@ export async function recordReconciled(ledger, io, { nodeVisitId, expectedPhase,
 /**
  * WORKFLOW_STALE_REENTRY_V1 CTR-SRE-002: settle ONE stale attempt as the
  * re-entry marker (terminal SETTLED / judgment 'stale_no_progress'). The
- * `expected` snapshot (state + phase + delivered.atMs) is the CAS guard:
+ * Attempt identity plus `expected` state/phase/delivered.atMs are the CAS guard:
  * two pollers may both probe stale, only the one whose snapshot still
  * matches the fresh replay wins; the loser gets { committed: false } —
  * never a double settlement, never a corrupt append.
  */
-export async function recordStaleSuperseded(ledger, io, { nodeVisitId, expected, observedWorkflowStateVersion }) {
+export async function recordStaleSuperseded(ledger, io, { nodeVisitId, expectedAttemptId, expectedGeneration, expected, observedWorkflowStateVersion }) {
   if (expected === null || typeof expected !== 'object') throw new TypeError('workflow-execution: stale supersession expected snapshot is required')
   if (typeof expected.state !== 'string' || typeof expected.phase !== 'string') throw new TypeError('workflow-execution: stale supersession expected.state/phase are required')
   if (!Number.isInteger(expected.deliveredAtMs)) throw new TypeError('workflow-execution: stale supersession expected.deliveredAtMs must be an integer')
+  const observation = { kind: 'stale_superseded', nodeVisitId, expectedAttemptId, expectedGeneration, expected: { ...expected }, observedWorkflowStateVersion }
+  validateObservationIdentity(observation)
   return ledger.mutate(() => {
     const current = io.attempt(nodeVisitId)
     if (current === undefined) {
       throw new Error(`workflow-execution: no attempt exists for nodeVisit ${nodeVisitId.toLowerCase()} — beginAttemptIfAbsent first`)
     }
-    const matches = current.state === expected.state
-      && current.phase === expected.phase
+    const stale = staleObservation(current, observation)
+    if (stale) return stale
+    const matches = current.state === observation.expected.state
+      && current.phase === observation.expected.phase
       && current.delivered !== undefined
-      && current.delivered.atMs === expected.deliveredAtMs
+      && current.delivered.atMs === observation.expected.deliveredAtMs
     if (!matches) {
       return { committed: false, attempt: { ...current }, cause: 'attempt_changed' }
     }
@@ -129,13 +139,17 @@ export async function recordStaleSuperseded(ledger, io, { nodeVisitId, expected,
  * anything. Requires an existing terminal attempt — escalation rides the
  * attempt's own terminal evidence, never an ACTIVE attempt.
  */
-export async function recordEscalationRequested(ledger, io, { nodeVisitId, reason, attemptCount, lastAttemptId, dispatchIntentId }) {
+export async function recordEscalationRequested(ledger, io, { nodeVisitId, expectedAttemptId, expectedGeneration, reason, attemptCount, lastAttemptId, dispatchIntentId }) {
   if (typeof reason !== 'string' || reason === '') throw new TypeError('workflow-execution: escalation reason is required')
+  const observation = { kind: ESCALATION_REQUESTED_KIND, nodeVisitId, expectedAttemptId, expectedGeneration, reason, attemptCount, lastAttemptId, dispatchIntentId }
+  validateObservationIdentity(observation)
   return ledger.mutate(() => {
     const current = io.attempt(nodeVisitId)
     if (current === undefined) {
       throw new Error(`workflow-execution: no attempt exists for nodeVisit ${nodeVisitId.toLowerCase()} — escalation rides an existing attempt`)
     }
+    const stale = staleObservation(current, observation)
+    if (stale) return stale
     if (current.state === 'ACTIVE') {
       throw new Error(`workflow-execution: refusing escalation_requested for nodeVisit ${nodeVisitId.toLowerCase()} — attempt is ACTIVE`)
     }
@@ -157,6 +171,34 @@ export async function recordEscalationRequested(ledger, io, { nodeVisitId, reaso
     io.appendEvent(event)
     io.applyEvent(event)
     return { committed: true, attempt: { ...io.attempt(nodeVisitId) } }
+  })
+}
+
+/** Public terminal wrappers also bind unlocked callers to their original snapshot.
+ * Private admission/recovery appenders already read and write under one lock. */
+export async function recordDeliveryFailed(ledger, io, observation) {
+  const { nodeVisitId, reason } = observation
+  if (typeof reason === 'string' && reason.startsWith('resolve_failed:')) {
+    throw new TypeError('workflow-execution: delivery_failed cannot carry a resolve_failed: reason (V2) — use recordResolutionBlocked')
+  }
+  return recordTerminalObservation(ledger, io, { ...observation, kind: 'delivery_failed' },
+    () => io.recordDeliveryFailed(nodeVisitId, reason))
+}
+
+export async function recordRecoveryRefused(ledger, io, observation) {
+  const { nodeVisitId, authorityRef, refused } = observation
+  if (typeof authorityRef !== 'string' || authorityRef === '') throw new TypeError('workflow-execution: authorityRef is required')
+  if (typeof refused !== 'string' || refused === '') throw new TypeError('workflow-execution: refused is required')
+  return recordTerminalObservation(ledger, io, { ...observation, kind: 'recovery_refused' },
+    () => io.recordRecoveryRefused(nodeVisitId, authorityRef, refused))
+}
+
+async function recordTerminalObservation(ledger, io, observation, record) {
+  validateObservationIdentity(observation)
+  return ledger.mutate(() => {
+    const current = io.attempt(observation.nodeVisitId)
+    if (current === undefined) throw new Error(`workflow-execution: no attempt exists for nodeVisit ${observation.nodeVisitId}`)
+    return staleObservation(current, observation) ?? { committed: true, ...record() }
   })
 }
 
@@ -201,10 +243,11 @@ export async function mutateWithRecord(ledger, io, nodeVisitId, fn) {
       return call(...args)
     }
     const record = {
-      recoveryAuthorized: guard((authorityRef) => io.recordRecoveryAuthorized(nodeVisitId, authorityRef)),
+      recoveryAuthorized: guard((authorityRef, audit) => io.recordRecoveryAuthorized(nodeVisitId, authorityRef, audit)),
+      recoveryChecked: guard((fields) => io.recordRecoveryCheck(nodeVisitId, fields)),
       resolutionBlocked: guard((code) => io.recordResolutionBlocked(nodeVisitId, code)),
       deliveryStarted: guard(() => io.recordDeliveryStarted(nodeVisitId)),
-      recoveryRefused: guard((authorityRef, refused) => io.recordRecoveryRefused(nodeVisitId, authorityRef, refused)),
+      recoveryRefused: guard((authorityRef, refused, audit) => io.recordRecoveryRefused(nodeVisitId, authorityRef, refused, audit)),
       runDelivered: guard((fields) => io.recordRunDelivered(nodeVisitId, fields)),
       deliveryFailed: guard((reason) => io.recordDeliveryFailed(nodeVisitId, reason)),
     }

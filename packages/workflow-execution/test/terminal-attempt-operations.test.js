@@ -42,7 +42,7 @@ test('under-cap stale terminal candidate settles; non-confirmed candidates do no
     escalateAttemptLimit: async (input) => escalations.push(input),
   })
   const attempt = {
-    nodeVisitId: NODE_VISIT, generation: 2, state: 'NEEDS_REVIEW', phase: 'reconciled',
+    nodeVisitId: NODE_VISIT, attemptId: 'wfeat-000000000000000000000002', generation: 2, state: 'NEEDS_REVIEW', phase: 'reconciled',
     delivered: { atMs: 10 }, workflowStateVersionAtDispatch: 7,
   }
   const staleReentry = []
@@ -53,7 +53,7 @@ test('under-cap stale terminal candidate settles; non-confirmed candidates do no
 
   await operations.reconcileTerminalCandidate(attempt, { kind: 'stale_confirmed' }, staleReentry)
   assert.deepEqual(staleWrites, [{
-    nodeVisitId: NODE_VISIT,
+    nodeVisitId: NODE_VISIT, expectedAttemptId: attempt.attemptId, expectedGeneration: attempt.generation,
     expected: { state: 'NEEDS_REVIEW', phase: 'reconciled', deliveredAtMs: 10 },
     observedWorkflowStateVersion: 7,
   }])

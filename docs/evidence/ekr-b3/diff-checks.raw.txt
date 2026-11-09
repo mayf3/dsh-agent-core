@@ -1,0 +1,9 @@
+COMMAND: git diff --check
+RC: 0
+STDOUT: ''
+STDERR: ''
+
+COMMAND: git diff --cached --check
+RC: 0
+STDOUT: ''
+STDERR: ''

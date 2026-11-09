@@ -1,0 +1,55 @@
+{
+  "verifiedUtc": "2026-11-04T17:46:50.869505+00:00",
+  "artifacts": [
+    {
+      "path": "docs/evidence/ekr-b3/candidate.diff",
+      "sha256": "c3b22f8177c3a5c6f628d4416a809b08cf831ccc7abc04bf4132b1fb5fcb81fe",
+      "verified": true
+    },
+    {
+      "path": "docs/evidence/ekr-b3/diff-checks.raw.txt",
+      "sha256": "fc52d6a626203a334f0dc4f14e538bead167b6d3470001ef82c1756ffb39874e",
+      "verified": true
+    },
+    {
+      "path": "docs/evidence/ekr-b3/fault-injection.raw.txt",
+      "sha256": "f8d4f4395a11b707f990e9d3c7950e7bdbfd4641f7d96116e2a9faf7e25955f5",
+      "verified": true
+    },
+    {
+      "path": "docs/evidence/ekr-b3/independent-review.raw.txt",
+      "sha256": "4a18abd5552abf62ec523507061670cbf511c54ad8653ca08d43f5d801a36ae8",
+      "verified": true
+    },
+    {
+      "path": "docs/evidence/ekr-b3/independent-review.txt",
+      "sha256": "a2ca961d79a71af164eaaca8da1633ea6ad24d2493b64a783034789707c08d2c",
+      "verified": true
+    },
+    {
+      "path": "docs/evidence/ekr-b3/review-protocol.raw.txt",
+      "sha256": "c7543372e5988131905deb1609989181cd528f9236eb1c31c55f606f31562279",
+      "verified": true
+    },
+    {
+      "path": "docs/evidence/ekr-b3/scheduler-router.raw.txt",
+      "sha256": "6577fe2dfb08ffc8e4641077cd944748182357f522424d98cec365f809cf52b7",
+      "verified": true
+    },
+    {
+      "path": "docs/evidence/ekr-b3/scheduler.raw.txt",
+      "sha256": "f575e4c14e7c48712fee290a3cddf7f2b59882c17cf209fa9b453116c5b15f5b",
+      "verified": true
+    },
+    {
+      "path": "docs/evidence/ekr-b3/structure.raw.txt",
+      "sha256": "f4f732b515e1ca01362f07936cb5f4073f3f2ce8bcbc21111669add82f6bca35",
+      "verified": true
+    },
+    {
+      "path": "docs/evidence/ekr-b3/workflow.raw.txt",
+      "sha256": "fbef4930e21e343997d97bd0071694e0371ddb2ee9682f54592f0c2f57b03be2",
+      "verified": true
+    }
+  ]
+}

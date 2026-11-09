@@ -1,0 +1,37 @@
+✔ profile table carries the production entry beside the legacy demo ones (2.846791ms)
+✔ profile is required — no silent demo default in the production package (0.763ms)
+✔ provisionAgentHome installs profile copies + farm links idempotently (125.471709ms)
+✔ harness resolution is worktree-aware and cliBin fails loud without a checkout (53.59575ms)
+✔ target-home plugin provisioning is exact, idempotent and leaves the shared profile byte-unchanged (52.992375ms)
+✔ same-version legacy dsh-codex 0.2.3 is not reused without pinned artifact provenance (11.755083ms)
+✔ plugin missing, plugin mismatch, DSH mismatch and credential boundaries fail loud (8.428417ms)
+✔ modified 0.2.3 artifact requires an exact digest and source stamp (109.665792ms)
+✔ readHarnessIdentity prefers git: a working git repo ignores the .source-stamp entirely (354.931209ms)
+✔ readHarnessIdentity: no .git + valid stamp (dirtyCount = 0) resolves the stamp commit (52.53275ms)
+✔ readHarnessIdentity: no .git + stamp dirtyCount != 0 fails loud (identity not exact) (135.656708ms)
+✔ readHarnessIdentity: malformed stamps fail loud (extra/missing keys, bad types, non-JSON) (605.492542ms)
+✔ readHarnessIdentity: no .git and no .source-stamp fails loud (44.38025ms)
+✔ stamp identity feeds the dshVersion/dshCommit pin check unchanged (mismatch is fail-loud, never a hop class) (172.05775ms)
+✔ ensureSymlink accepts realpath-equivalent links without rewriting (fleet EACCES class 2026-09-12) (24.616833ms)
+✔ DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite: provisioning stays PATH_ONLY — no parent-side credential probe anywhere (0.481458ms)
+✔ FLEET_SHARED_CODEX_AUTH A2/A4: canonical store resolves per deployment root; the yanfenma-domain constant stays frozen (0.126208ms)
+✔ FLEET_SHARED_CODEX_AUTH A4: cross-surface credential references are refused — one OAuth lineage per security surface (0.11525ms)
+✔ FLEET_SHARED_CODEX_AUTH A4: persistOpenAICodexCredentialFile refuses drift shapes and foreign deployment pins (7.042916ms)
+✔ DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite: stale foreign credential reference is idempotently rewritten to the own-domain canonical before the child starts (37.061167ms)
+✔ FLEET_SHARED_CODEX_AUTH A4: provisioning a production-layout home refuses a foreign surface canonical even without an explicit deploymentRoot (27.345583ms)
+✔ DEFAULT_MODEL_ROUTING_CONFIG_V1: fresh-home MINIMAL_SETTINGS defaults to the canonical Luna route and keeps OpenCode Go registrable (20.7205ms)
+✔ GPT6-P1: persistOpenAICodexCredentialFile writes the route reasoning effort into the plugin config block (1.485208ms)
+✔ GPT6-P2: absent reasoningEffort keeps the block byte-identical to the legacy shape (1.5045ms)
+✔ GPT6-P3: an out-of-vocabulary reasoningEffort fails loud (reasoning_effort_invalid) (0.943791ms)
+✔ GPT6-P4: the committed catalog fixture IS the frozen 0.87.1 artifact bytes (self-verifying pin) (0.173ms)
+✔ GPT6-P5: provisioning the GPT-6 tuple without pi-ai 0.87.1 fails loud (pi_ai_identity_mismatch) (5.1285ms)
+✔ GPT6-P6: a wrong pi-ai version or wrong catalog bytes is refused — no clamp, no registry guess (6.114334ms)
+✔ GPT6-P7: the exact 0.87.1 artifact identity provisions the GPT-6 tuple and the link is kept (6.490709ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2132.778667

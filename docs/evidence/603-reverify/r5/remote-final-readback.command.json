@@ -1,0 +1,20 @@
+{
+  "name": "remote-final-readback",
+  "phase": "read-only post-failure reconciliation, not a continued delivery gate",
+  "argv": [
+    "git",
+    "ls-remote",
+    "origin",
+    "refs/heads/main",
+    "refs/heads/ac-ctr-s4-reverify",
+    "refs/heads/ac-ctr-s4-runtime-prep"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "started_at": "2026-11-07T05:11:31.205003+00:00",
+  "ended_at": "2026-11-07T05:11:31.984229+00:00",
+  "rc": 0,
+  "sha256": {
+    "stdout": "fec430a57bef719f80cd9220b90f958415afb7018b6c21233719d15d9ee39f9e",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

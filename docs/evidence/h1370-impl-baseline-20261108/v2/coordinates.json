@@ -1,0 +1,34 @@
+{
+  "started_at": "2026-11-08T06:35:30.955566+00:00",
+  "finished_at": "2026-11-08T06:35:38.741358+00:00",
+  "cwd": "/Users/yanfenma/workspace/project/worktrees/h1370-impl",
+  "head": "95a8e1cb512fc99dc018209d837250dd51b4d08f",
+  "command": "/usr/local/bin/node --test packages/agent-router/test/route-chain/*.test.js",
+  "NGC_HARNESS_ROOT": "/Users/yanfenma/workspace/github/deepseek-harness",
+  "harness_head": "514ab7b0029141b88c807704764d0d3e1eea1da4",
+  "node": "v25.6.1",
+  "exit_code": 1,
+  "install.log": {
+    "bytes": 25,
+    "sha256": "2c40dcedf18155ec3db9ca5a647250c7782598c6d0023e0fc361c1170803a91a"
+  },
+  "baseline-route.log": {
+    "bytes": 33788,
+    "sha256": "59dc2a85c9d755b604449de8392ef2da92ea410765c2c99ec6f182f05727cd27"
+  },
+  "pairing_readback_at": "2026-11-08T06:37:15.420528+00:00",
+  "pairing-readback.log": {
+    "bytes": 2527,
+    "sha256": "42ff4a9301e105383a98a47e91f158e446aec2660a8d2a79a067a840e1e35f13"
+  },
+  "counts": {
+    "tests": 180,
+    "pass": 177,
+    "fail": 3,
+    "skipped": 0,
+    "cancelled": 0,
+    "todo": 0
+  },
+  "product_implementation_started": false,
+  "node_modules": "local directory retained in worktree; tracked former symlink removal appears as D; index unchanged"
+}

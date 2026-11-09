@@ -38,11 +38,21 @@ Execution requires the window writer's current JSON authority. Required fields:
   expected_bindings_sha256, expected_runtime_uid, expected_runtime_gid,
   scopes: [source_lockfile_cleanup, production_mutex, bootout, full_preimage,
            install, plist_deployed_sha_only, bootstrap, verify, hr_observe]
+  sraRef, issuerRef, appointmentRef, callerRef, participants, conflictMatrix,
+  requestedEffects, candidateRef, controlVersion, profileRef, attempt,
+  releaseClass=STANDARD_RECOVERABLE, standardCriteria[1..5], exclusions, stageRequirements
+  (accepted FWAV V1; all declarations require independent authenticated observations).
   c7: {naming_scope, before_path, before_sha256, after_path, renames,
        generations_newest_first, protected_generations, protection_basis}
 See C7-INPUTS.md for the manually inventoried snapshots and explicit generation order.
 Selftest uses /usr/local/v5-boot-isolation only; production stages are NOT_EXECUTED.
+Candidate state loading uses sanitized copies and the candidate's real runtime.
+Quiet observes only; unresolved historical UNKNOWN is carried with Agent fences.
+The full preimage copy precedes bootout; downtime only rechecks inventory.
 The authority documents an actual authorization; creating JSON grants none.
+The original registry reader has no qualified caller/freshness binding in B,
+so execute currently refuses; fixtures are Python-only external-boundary injection.
+Unqualified internal installer/settlement/recursive writes refuse before dispatch.
 No defaults for old PID, loaded identity, authority, expiry, or bindings hashes.
 Static private inputs retain exact bytes/custody gates. Live jobs/incidents
 (including outbox) use schema/agent identity/binding validation and private
@@ -67,11 +77,17 @@ BEGIN stage_02_fresh_read [§1–2,4 + r5] source/Harness; plist/env/old PID; st
 END   stage_02_fresh_read
 BEGIN stage_03_dual_prerequisites [§3] accepted canary + full runtime; complete file/link membership; candidate binding
 END   stage_03_dual_prerequisites
-BEGIN stage_04_quiet_gate [§4 + r4] mtime >=150s AND read-only recovery census; unresolved/inflight/unknown refuses
+BEGIN stage_03b_candidate_state [A4] candidate real runtime + sanitized state copies; UNKNOWN preserved; Agent-scoped fence; no replay/overwrite
+END   stage_03b_candidate_state
+BEGIN stage_06a_preimage_before_stop [A5] full current tree/config/plist/env/metadata + reused copies while old runtime is alive
+END   stage_06a_preimage_before_stop
+BEGIN stage_04_quiet_gate [A1] mtime >=180s + read-only census receipt; nonempty allowed; no settlement
 END   stage_04_quiet_gate
-BEGIN stage_05_old_exit [§4–5] final census; bootout; old PID + worker exit; supervisor absent
+BEGIN stage_05_old_exit [A2] bootout; exact PID/worker/ports/supervisor absent; classify historical vs executable/unproven; only latter STOP
 END   stage_05_old_exit
-BEGIN stage_06_full_preimage [§5–6 + r5] live schema/identity/bindings + diff receipt; full current tree/config/plist/env/metadata + reused copies
+BEGIN stage_05b_settle_unresolved [A3] same-epoch exact exit evidence only; no conflict; preserve unproven UNKNOWN + carry-forward receipt; remainder nonblocking
+END   stage_05b_settle_unresolved
+BEGIN stage_06_full_preimage [A5] post-bootout inventory/ACL drift recheck + live schema/identity/bindings receipt; no ditto
 END   stage_06_full_preimage
 BEGIN stage_07_pinned_install [§5] root-owned physical WINDOW_BUNDLE; pinned THREE arguments + R3_BINDING_PAYLOAD; real rc
 END   stage_07_pinned_install
@@ -126,10 +142,12 @@ rollback_recipe() {
 For a required restore, the authorized window writer must:
 1. Stop/isolate the exact failed new instance and workers; record termination and supervisor absence first. Never replay UNKNOWN requests.
 2. Preserve the failed FULL tree at a NEW unique failed-* evidence path; never overwrite/delete earlier evidence.
-3. Verify preimage_bak against preimage-live-inventory.json and preimage-full; restore the COMPLETE app/harness/Node/config/home tree and matching plist/env. Do not overwrite current business jobs/bindings/incidents/runs/fences/credentials with old snapshots.
+3. Before selecting old code, run the read-only --rollback-check in an isolated NEW receipt directory with --candidate-root pointing at the verified old closure and --turn-recovery-store/--jobs-store pointing at CURRENT business state. Both actual old readers must accept that state. Missing/incompatible version-3 reader or evidence means STOP: V3-aware forward fix only. Never strip fields, downgrade, or overwrite current business jobs/bindings/incidents/runs/fences/credentials with old snapshots.
+   Guard entrypoint: scripts/fleet-window/anarrowed/candidate-state.mjs --rollback-check --candidate-root /VERIFIED/OLD/CLOSURE --turn-recovery-store /CURRENT/control/turn-recovery-v3.json --jobs-store /CURRENT/scheduler/jobs.json --receipt-dir /NEW/ISOLATED/RECEIPTS
+   Only after guard PASS, verify preimage_bak against preimage-live-inventory.json and preimage-full; restore the COMPLETE compatible app/harness/Node/config/home tree and matching plist/env, preserving current business state.
 4. RESTORE-R1: read .preimage-reused-subtrees. Restore each missing node-runtime/harness/.cache only from this run's verified preimage-full copy; verify hashes, symlinks, UID/GID/mode/ACL before any start. A simple mv of an incomplete BAK is insufficient.
 5. RESTORE-R2 only when this run completed §5b: within window authorization, re-pin /Users/authsvc/.agent-core/control/scheduler-watchdog and control/incident-backups to GID 20; read back metadata using external-preimage-metadata.json. Do not restore their stale contents.
-6. Only bootstrap a verified complete old closure. Recheck exact PID/SHA/env/listener ownership/health; old business UNKNOWN remains UNKNOWN.
+6. Only bootstrap a verified complete old closure after the current-state compatibility guard PASS; incompatible old code must remain stopped. Recheck exact PID/SHA/env/listener ownership/health; old business UNKNOWN remains UNKNOWN.
 Missing preimage/reuse/permissions/termination proof: STOP and have the supervisor append evidence to #605; no lock clearing or identity switching.
 RECIPE
 }
@@ -138,7 +156,10 @@ stop_on_error() {
   local rc=$1 line=$2
   trap - ERR INT TERM
   set +e
-  [ -z "$RD" ] || helper user phase "$STAGE" FAIL "rc=$rc" "line=$line"
+  if [ -n "$RD" ]; then
+    STOP_STATE=$(helper user stop-state) || STOP_STATE=UNKNOWN
+    helper user phase "$STAGE" FAIL "rc=$rc" "line=$line"
+  fi
   rollback_recipe
   exit "$rc"
 }
@@ -151,35 +172,38 @@ stage_00_authority_mutex() {
 stage_01_integrity_clean() {
   helper user integrity
   # Bundle is staged before downtime; original WINDOW_INPUTS is preserved.
-  WINDOW_BUNDLE=$(sudo -n /usr/bin/mktemp -d /private/tmp/fleet-binding-window-v5.XXXXXX)
-  sudo -n /bin/cp -RP "$INPUT/window-installer" "$WINDOW_BUNDLE/scripts"
-  sudo -n /bin/cp -RP "$INPUT/payload" "$WINDOW_BUNDLE/payload"
-  sudo -n /bin/cp "$INPUT/WINDOW_INPUTS.sha256" "$WINDOW_BUNDLE/WINDOW_INPUTS.sha256"
-  sudo -n /usr/sbin/chown -R root:wheel "$WINDOW_BUNDLE"
-  sudo -n /bin/chmod -R go-w "$WINDOW_BUNDLE"
+  WINDOW_BUNDLE=$(helper root stage-bundle)
   helper root bundle "$WINDOW_BUNDLE"
   sudo -n /bin/bash -n "$WINDOW_BUNDLE/scripts/trusted-cp-deploy-install.sh"
   helper user clean
 }
 stage_02_fresh_read() { helper user sources; helper root fresh; }
 stage_03_dual_prerequisites() { helper user prerequisites; }
+stage_03b_candidate_state() {
+  sudo -n "$PREP/scratch/node-runtime/bin/node" \
+    "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/anarrowed/candidate-state.mjs" \
+    --candidate-root "$PREP/scratch" \
+    --turn-recovery-store /Users/authsvc/.agent-core/control/turn-recovery-v3.json \
+    --jobs-store /Users/authsvc/.agent-core/scheduler/jobs.json \
+    --receipt-dir "$RD/candidate-state"
+}
+stage_06a_preimage_before_stop() { helper root preimage; }
 stage_04_quiet_gate() {
   local i rc
   for ((i=0;i<80;i++)); do
     rc=0
     helper root quiet || rc=$?
     if [ "$rc" -eq 0 ]; then return 0; fi
-    # supervisor: live fleet census is transiently dirty between HR rounds — retry rc=1 (census) like rc=10 (mtime); budget-bounded
-    [ "$rc" -eq 10 ] || [ "$rc" -eq 1 ] || return "$rc"
-    printf 'Waiting for 180s mtime quiet + clean census; poll=%s/80\n' "$((i+1))"
+    [ "$rc" -eq 10 ] || return "$rc"
+    printf 'Waiting for 180s mtime quiet; read-only census may be nonempty; poll=%s/80\n' "$((i+1))"
     sleep 30
   done
   return 42
 }
 stage_05_old_exit() {
   helper root before-stop
+  helper root bootout
   STOP_STATE=attempted
-  sudo -n /bin/launchctl bootout system "$PLIST"
   local i rc
   for ((i=0;i<30;i++)); do
     rc=0; helper root exit-check || rc=$?
@@ -194,12 +218,14 @@ stage_05b_settle_unresolved() {
   # Evidence: all worker child processes verifiably exited (stage_05 proved old exit);
   # semantics: per AGENT_DELIVERY_RESILIENCE_D009_ALIGNMENT_V1;
   # exact termination-only -> terminated_without_outcome; business outcome stays UNKNOWN.
+  helper root settlement-start
   printf '%s\n' 'stage_05b: settling unresolved turns while runtime is down'
   sudo -n /usr/local/libexec/agent-core/node-runtime/bin/node \
     "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/settle_unresolved_runtime_down.mjs" \
-    --source-root "$SOURCE" --stage-05-receipt-dir "$RD" || return 45
+    --source-root "$SOURCE" --stage-05-receipt-dir "$RD" \
+    | tee "$RD/settle-runtime-down.json" || return 45
 }
-stage_06_full_preimage() { helper root preimage; }
+stage_06_full_preimage() { helper root preimage-recheck; }
 stage_07_pinned_install() {
   helper user sources
   helper root bundle "$WINDOW_BUNDLE"
@@ -208,6 +234,7 @@ stage_07_pinned_install() {
   printf '%s\n' "argv: /bin/bash $WINDOW_BUNDLE/scripts/trusted-cp-deploy-install.sh $SOURCE $HARNESS $SOURCE" \
     "env: EXPECTED_SOURCE_SHA=$SHA EXPECTED_SOURCE_TREE=$TREE GENERATION_LABEL_SHA=$SHA R3_BINDING_PAYLOAD=$WINDOW_BUNDLE/payload" \
     "mutex: PRODUCTION_DEPLOY_LOCK_INHERITED_FROM=^pid=$$\$" > "$RD/install-invocation.txt"
+  helper root installer-boundary "$WINDOW_BUNDLE"
   INSTALL_STATE=started
   # Preserve BOTH pipeline statuses. Do not run the installer in an if/function
   # context that disables its own errexit; it is a separate /bin/bash process.
@@ -240,7 +267,7 @@ stage_08_install_receipt() {
 stage_09_final_binding() { helper root final-binding; }
 stage_10_plist_bootstrap() {
   helper root plist-update
-  sudo -n /bin/launchctl bootstrap system "$PLIST"
+  helper root bootstrap
   # Boot stabilization, never an automatic bootstrap retry.
   sleep 25
 }
@@ -283,7 +310,8 @@ main() {
   printf 'WINDOW V5 execution start; receipts=%s\n' "$RD"
   local f
   for f in stage_00_authority_mutex stage_01_integrity_clean stage_02_fresh_read \
-    stage_03_dual_prerequisites stage_04_quiet_gate stage_05_old_exit \
+    stage_03_dual_prerequisites stage_03b_candidate_state stage_06a_preimage_before_stop \
+    stage_04_quiet_gate stage_05_old_exit \
     stage_05b_settle_unresolved \
     stage_06_full_preimage stage_07_pinned_install stage_08_install_receipt \
     stage_09_final_binding stage_10_plist_bootstrap stage_11_production_verify \

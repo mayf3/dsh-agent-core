@@ -1,0 +1,10 @@
+{
+  "recordedAt": "2026-11-05T19:36:15.962424+00:00",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "node": "v26.7.0",
+  "sourceHead": "171ecf8482ddf9df61233880f3cf24cbaa0f3816",
+  "rawOutputsEmbeddedVerbatim": true,
+  "baselineFilesUnchanged": true,
+  "productSourceUnchanged": true,
+  "newTestSha256": "a22d4ce2cf2119d869d1d0e26206b8a8a29709498ecb6cdda145291a7eb048ce"
+}

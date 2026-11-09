@@ -1,0 +1,32 @@
+{
+  "schema_version": 2,
+  "mode": "PREFLIGHT",
+  "repository": "mayf3/dsh-agent-core",
+  "base_head": "bb67ce5ae53908c299e751d3904793b9f4d08240",
+  "observed_at": "2026-11-07T15:45:01.757606+00:00",
+  "authority_action": "REUSE",
+  "plan_level": "BRIEF",
+  "assurance_level": "DURABLE",
+  "route_stage": "OPERATION",
+  "implementation_authority": "not_applicable",
+  "authorization": "Owner BRIEF-DISK-STAGE1 plus CTR-SOD-002; explicit investigation/docs/branch/push/PR only",
+  "primary_authority": "BRIEF-DISK-STAGE1; AGENT_CORE_STANDING_OPERATIONAL_DELEGATION_V1 CTR-SOD-002 in base",
+  "allowed": [
+    "filesystem metadata and capacity read",
+    "sanitized reference investigation",
+    "receipts in current worktree",
+    "docs/disk-stage1 push and PR base main"
+  ],
+  "forbidden": [
+    "delete",
+    "move",
+    "production/config/DB/Secret/active-Agent content mutation",
+    "merge",
+    "sudo",
+    "run existing scheduled task"
+  ],
+  "done_when": "inventory covers five Owner items with 20 ranked conditional candidates, unknowns and independent review; branch pushed and PR created, unmerged",
+  "expansion_trigger": "production effects, Secret/DB/active-Agent content reads, delete or new long-lived GC policy implementation",
+  "sampling_limit": "Live filesystem cannot be atomically frozen under read-only mandate; timestamp interval and df before/after bound drift; no APFS snapshot creation",
+  "isolation": "/private/tmp/h-disk-inventory"
+}

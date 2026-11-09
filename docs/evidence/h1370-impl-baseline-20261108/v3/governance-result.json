@@ -1,0 +1,14 @@
+{
+  "command": [
+    "python3",
+    ".agents/tools/verify_governance.py",
+    "--target",
+    ".",
+    "--require-accepted"
+  ],
+  "head": "ece5cce6c51cbf0c3768be534b6e35822a86688b",
+  "base": "95a8e1cb512fc99dc018209d837250dd51b4d08f",
+  "exit_code": 0,
+  "sha256": "c8671db6c5d33b2e2c051a17143acc9bb5736cf8788e72feed4728b5cb32f332",
+  "time": "2026-11-08T07:01:45.591719+00:00"
+}

@@ -1,0 +1,62 @@
+TAP version 13
+# Subtest: 1367 traces: invalid_json is reported without event-file repair
+ok 1 - 1367 traces: invalid_json is reported without event-file repair
+  ---
+  duration_ms: 57.004292
+  type: 'test'
+  ...
+# {"surface":"traces","kind":"invalid_json","before":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","after":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","calls":{"mutate":0,"repair":0,"load":1,"lock":1,"append":0}}
+# Subtest: 1367 attention: invalid_json is reported without event-file repair
+ok 2 - 1367 attention: invalid_json is reported without event-file repair
+  ---
+  duration_ms: 41.256916
+  type: 'test'
+  ...
+# {"surface":"attention","kind":"invalid_json","before":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","after":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","calls":{"mutate":0,"repair":0,"load":1,"lock":1,"append":0}}
+# Subtest: 1367 traces: missing_newline is reported without event-file repair
+ok 3 - 1367 traces: missing_newline is reported without event-file repair
+  ---
+  duration_ms: 46.193625
+  type: 'test'
+  ...
+# {"surface":"traces","kind":"missing_newline","before":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","after":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","calls":{"mutate":0,"repair":0,"load":1,"lock":1,"append":0}}
+# Subtest: 1367 attention: missing_newline is reported without event-file repair
+ok 4 - 1367 attention: missing_newline is reported without event-file repair
+  ---
+  duration_ms: 45.743084
+  type: 'test'
+  ...
+# {"surface":"attention","kind":"missing_newline","before":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","after":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","calls":{"mutate":0,"repair":0,"load":1,"lock":1,"append":0}}
+# Subtest: 1367 fresh-reader family: no mutate/repair, current cross-instance prefix, absent file stays absent
+ok 5 - 1367 fresh-reader family: no mutate/repair, current cross-instance prefix, absent file stays absent
+  ---
+  duration_ms: 114.20925
+  type: 'test'
+  ...
+# Subtest: 1367 real mutation still repairs invalid_json under the existing lock
+ok 6 - 1367 real mutation still repairs invalid_json under the existing lock
+  ---
+  duration_ms: 52.488584
+  type: 'test'
+  ...
+# Subtest: 1367 real mutation still repairs missing_newline under the existing lock
+ok 7 - 1367 real mutation still repairs missing_newline under the existing lock
+  ---
+  duration_ms: 51.275333
+  type: 'test'
+  ...
+# Subtest: 1367 non-tail corruption remains fail-loud and unchanged
+ok 8 - 1367 non-tail corruption remains fail-loud and unchanged
+  ---
+  duration_ms: 47.4715
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 506.988208

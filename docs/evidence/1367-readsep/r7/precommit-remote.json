@@ -1,0 +1,15 @@
+{
+  "command": [
+    "git",
+    "ls-remote",
+    "origin",
+    "refs/heads/main",
+    "refs/heads/fix/diagnostic-read-separation"
+  ],
+  "cwd": "/private/tmp/h1367-readsep",
+  "started_at_utc": "2026-11-07T12:11:33.535892+00:00",
+  "finished_at_utc": "2026-11-07T12:11:34.354036+00:00",
+  "actual_rc": 0,
+  "stdout_sha256": "3a8734e73cd7574837326fe8ccbea5fd37e8764ec141982620f9d62aba08306e",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -1,0 +1,32 @@
+{
+  "archived_at_utc": "2026-11-07T11:35:12.044233+00:00",
+  "source": "functions.exec nested exec_command result chunk c3ffd8, combined output field; transcribed verbatim, not re-executed",
+  "requested_argv": [
+    "python3",
+    "/private/tmp/h1367-r5-capture.py",
+    "docs/evidence/1367-readsep/R5-precommit-pr-list",
+    "gh",
+    "pr",
+    "list",
+    "--repo",
+    "mayf3/dsh-agent-core",
+    "--state",
+    "all",
+    "--head",
+    "fix/diagnostic-read-separation",
+    "--json",
+    "number,url,state,baseRefName,headRefName,headRefOid"
+  ],
+  "actual_wrapper_rc": 1,
+  "failing_precommand": [
+    "git",
+    "write-tree"
+  ],
+  "failing_precommand_rc": 128,
+  "requested_gh_command_executed": false,
+  "failure_time_exact": "NOT_CAPTURED; after invocation and before parent exec result, preceding 2026-11-07T11:33:46.482061+00:00 local readback",
+  "combined_output_sha256": "153cc0fb838349b5f2f0fa9ef2363bd0963e4d9d278bc1857e5c35dcc31bd765",
+  "cause": "Two independent capture wrappers were launched concurrently; each ran git write-tree to collect pre-index coordinates. One failed acquiring the shared worktree index lock. This is an agent packaging-wrapper error, not a network/ref/PR query result.",
+  "delivery_after_failure": "STOPPED; no retry, lock removal, commit, push or PR create",
+  "head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648"
+}

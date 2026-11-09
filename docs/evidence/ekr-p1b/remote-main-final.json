@@ -1,0 +1,8 @@
+{
+  "method": "GitHub connector github_fetch_commit(main)",
+  "observedAt": "2026-11-05T19:33:57.361Z",
+  "sha": "f6a1f77a8b7b878bcb9821a68836925755ca7076",
+  "url": "https://github.com/mayf3/dsh-agent-core/commit/f6a1f77a8b7b878bcb9821a68836925755ca7076",
+  "isError": false,
+  "provenance": "Current connector structuredContent.commit metadata only; commit diff intentionally omitted"
+}

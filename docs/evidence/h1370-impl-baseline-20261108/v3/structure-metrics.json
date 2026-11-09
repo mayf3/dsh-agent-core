@@ -1,0 +1,103 @@
+{
+  "base": "95a8e1cb512fc99dc018209d837250dd51b4d08f",
+  "head": "ece5cce6c51cbf0c3768be534b6e35822a86688b",
+  "file_metrics": [
+    {
+      "path": "packages/agent-router/src/route-chain.js",
+      "lines": 500,
+      "sha256": "fddd89b4f130430dc6f7aa3cbbbed152d91d2e48d99f714db82cd4beb9e830ef",
+      "depth_from_package": 2
+    },
+    {
+      "path": "packages/production-runtime/src/compose.js",
+      "lines": 468,
+      "sha256": "d15506778bf60160ac5305c237090bbba549eb968027e18923b2ca9035664ec8",
+      "depth_from_package": 2
+    },
+    {
+      "path": "packages/production-runtime/src/identity/model-routing/composition.js",
+      "lines": 33,
+      "sha256": "b9256adc082b67ddde3d9d090bba15a629f1682c0f8defe6b3545a07c0f7bd89",
+      "depth_from_package": 4
+    },
+    {
+      "path": "packages/production-runtime/src/identity/model-routing/generation.js",
+      "lines": 109,
+      "sha256": "1ff9bc2a3b5d24ba6d55eb14d405ab39b5ada3454447c3073c11fd90bcaba2ec",
+      "depth_from_package": 4
+    },
+    {
+      "path": "packages/production-runtime/src/identity/model-routing/inputs.js",
+      "lines": 87,
+      "sha256": "5a9ff83eb595ff232688214cfa170c5c5da64810afaa64358cba14f49ec292a8",
+      "depth_from_package": 4
+    },
+    {
+      "path": "packages/production-runtime/src/identity/model-routing/validator.js",
+      "lines": 496,
+      "sha256": "eadb3af9e803da702aab492b79a03ff704d55c5cf321c8dd9924677bce1e2be7",
+      "depth_from_package": 4
+    },
+    {
+      "path": "packages/production-runtime/src/model-overrides.js",
+      "lines": 10,
+      "sha256": "6e854ea24047c0fbb46a283c68d48a0d2c898afddd391c68e1fe5e523865857e",
+      "depth_from_package": 2
+    },
+    {
+      "path": "packages/production-runtime/test/identity/model-routing/composition.test.js",
+      "lines": 189,
+      "sha256": "d6c5a673ef19b71c34f969b025326a3cb161f5308cc373c71f4899ff80d2a4e0",
+      "depth_from_package": 4
+    },
+    {
+      "path": "packages/production-runtime/test/identity/model-routing/context.test.js",
+      "lines": 94,
+      "sha256": "a3d4a6af9fb160158da60b51a839e241b31fbea365cea0176bd810b026c50cf9",
+      "depth_from_package": 4
+    },
+    {
+      "path": "packages/production-runtime/test/identity/model-routing/generation.test.js",
+      "lines": 241,
+      "sha256": "a3702f261ed76d3563f2fa647e5260619b8c3429a0f916e57afc841ce1913d4c",
+      "depth_from_package": 4
+    },
+    {
+      "path": "packages/production-runtime/test/identity/model-routing/publication.test.js",
+      "lines": 86,
+      "sha256": "7f667c1401ff48236dfc397965d153955a59041e8340d8e9b4ea263b3cf7fd1c",
+      "depth_from_package": 4
+    },
+    {
+      "path": "packages/production-runtime/test/identity/model-routing/support.js",
+      "lines": 55,
+      "sha256": "cea783e609b433117cca1549b3c1344d02308288bb4bc464a7cf34061618c335",
+      "depth_from_package": 4
+    }
+  ],
+  "changed_child_sets": [
+    {
+      "directory": "packages/production-runtime/src/identity",
+      "base_children": 4,
+      "head_children": 5
+    },
+    {
+      "directory": "packages/production-runtime/src/identity/model-routing",
+      "base_children": 0,
+      "head_children": 4
+    },
+    {
+      "directory": "packages/production-runtime/test/identity",
+      "base_children": 3,
+      "head_children": 4
+    },
+    {
+      "directory": "packages/production-runtime/test/identity/model-routing",
+      "base_children": 0,
+      "head_children": 5
+    }
+  ],
+  "max_file_lines": 500,
+  "max_affected_width": 5,
+  "notes": "Manual deterministic metrics only; V3 semantic independent review remains separate. Unchanged inherited top-level width debt not represented as conformance."
+}

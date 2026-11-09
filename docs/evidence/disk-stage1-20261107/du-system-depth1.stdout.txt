@@ -1,0 +1,16 @@
+33701936	/usr
+0	/.resolve
+4212	/bin
+2096	/sbin
+4072508	/Library
+751359257	/System
+63869664	/private
+0	/.vol
+578557208	/Users
+34060772	/Applications
+15022772	/opt
+5	/dev
+512	/Volumes
+0	/.nofollow
+0	/cores
+1480650942	/

@@ -1,0 +1,16 @@
+#1364 observations [{"round":1,"probes":25,"failures":25,"attempts":0,"deliveries":0},{"round":2,"probes":1,"failures":0,"attempts":1,"deliveries":1},{"round":3,"probes":25,"failures":25,"attempts":1,"deliveries":1}]
+✔ #1364 RED/GREEN: 25 stable pre-plan failures cannot starve the healthy 26th intent for three polls (654.832ms)
+✔ #1364 control: 24 stable pre-plan failures leave the healthy 25th reachable (266.522416ms)
+✔ #1364 bounded rotation passes 250 abnormal heads across pages and returns to repaired heads (3188.962334ms)
+✔ #1364 scan cap also bounds already-attempted ledger probes; refusals are not new attempts (503.732834ms)
+✔ #1364 minted delivery failures still consume the actual new-attempt budget (102.952625ms)
+✔ #1364 unknown post-mint exception halts probes but preserves exhaustive discovery and the fence (155.205875ms)
+✔ #1364 incomplete discovery commits no probe rotation; the next sweep retries from page one (541.613459ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5465.737041

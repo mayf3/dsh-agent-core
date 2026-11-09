@@ -1,0 +1,202 @@
+{
+  "captured_at": "2026-11-08T07:05:43.301991+00:00",
+  "semantic_head": "ece5cce6c51cbf0c3768be534b6e35822a86688b",
+  "files": [
+    {
+      "path": "baseline-route.log",
+      "bytes": 31896,
+      "sha256": "21b7af30696c046f3095f5a2a5b9c0f4af91ba5626b214113ffc995d1f7f60e6"
+    },
+    {
+      "path": "coordinates.json",
+      "bytes": 1028,
+      "sha256": "547764abe77f4b2a18de6996d17affbbdca30a018eafa444e5f1174e526cba20"
+    },
+    {
+      "path": "install.log",
+      "bytes": 236,
+      "sha256": "6e7b05696c84cbcf5a1addbdddad8d861799f2e9d4e6c70a37e96d987704253c"
+    },
+    {
+      "path": "v2/baseline-route.log",
+      "bytes": 33788,
+      "sha256": "59dc2a85c9d755b604449de8392ef2da92ea410765c2c99ec6f182f05727cd27"
+    },
+    {
+      "path": "v2/coordinates.json",
+      "bytes": 1229,
+      "sha256": "7db900b2aae6dd00b6e115c48ddfa641bd24482be7a2e714b90c7d95bd9e94d0"
+    },
+    {
+      "path": "v2/install-result.json",
+      "bytes": 168,
+      "sha256": "d3d0a77ec4b0b64dd0edba0abe9bffe390e9df25fedfbf6475e168c5e40809df"
+    },
+    {
+      "path": "v2/install.log",
+      "bytes": 25,
+      "sha256": "2c40dcedf18155ec3db9ca5a647250c7782598c6d0023e0fc361c1170803a91a"
+    },
+    {
+      "path": "v2/pairing-readback.log",
+      "bytes": 2527,
+      "sha256": "42ff4a9301e105383a98a47e91f158e446aec2660a8d2a79a067a840e1e35f13"
+    },
+    {
+      "path": "v3/baseline-route.log",
+      "bytes": 29495,
+      "sha256": "831bba88cbb3629bcdd8083c1094d5600a3d62cc69ad9b8a59e9beb9455f7129"
+    },
+    {
+      "path": "v3/coordinates.json",
+      "bytes": 700,
+      "sha256": "ed86680f71b21d40fa771b19e514ce3228ec46811c730597b0507df73f50f3e6"
+    },
+    {
+      "path": "v3/diff-check-result.json",
+      "bytes": 408,
+      "sha256": "b9e97666b090b7d6c6dc1ed651b6f80a6fb927b55b95f44ff08e1cb10e8efdf2"
+    },
+    {
+      "path": "v3/diff-check.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "v3/environment-receipt.json",
+      "bytes": 1141,
+      "sha256": "f7dc603ccfedcea8a2de78278fa219bfca6653eed979295add77e0607f9c7e31"
+    },
+    {
+      "path": "v3/final-regression-result.json",
+      "bytes": 1164,
+      "sha256": "e521897d2d7a7e5f1eef5ba8613a8e38a856d98bfde60f88895973b94ea46167"
+    },
+    {
+      "path": "v3/final-regression.log",
+      "bytes": 65986,
+      "sha256": "403aef5d564b1fcc129eced7ec2e80512833f896dc1aa1ecb71d07fe1ff560ce"
+    },
+    {
+      "path": "v3/generation-tests-result.json",
+      "bytes": 302,
+      "sha256": "d6df554eba4bf7a9b05a9d41e0e1c9b645e58cbbd8647221c7207c44042e5254"
+    },
+    {
+      "path": "v3/generation-tests.log",
+      "bytes": 5568,
+      "sha256": "e1b1aa6a185eb6ef463e0a6331d0b266beeb51ca078de97741ac83324e067bb5"
+    },
+    {
+      "path": "v3/governance-result.json",
+      "bytes": 382,
+      "sha256": "d0b12e0d0cd6ee3e10d6462dcd289bad747467337060aa1e1ce200840ee73718"
+    },
+    {
+      "path": "v3/governance.log",
+      "bytes": 78,
+      "sha256": "c8671db6c5d33b2e2c051a17143acc9bb5736cf8788e72feed4728b5cb32f332"
+    },
+    {
+      "path": "v3/independent-recheck-result.json",
+      "bytes": 856,
+      "sha256": "50a30a7fc232013629c89c95ea5d5a872725c9c8863705637222f60e03bdbfd0"
+    },
+    {
+      "path": "v3/independent-recheck.log",
+      "bytes": 25734,
+      "sha256": "14bb89764f9f714ebd6c8fed7cb8d71b41108f3b9d7396e1b338c7203f82bb3a"
+    },
+    {
+      "path": "v3/independent-review.md",
+      "bytes": 9083,
+      "sha256": "ab7d7d47b5bd7469b9f1e1b7795128c4d27c1517b6ae90612766a2b19356e2c2"
+    },
+    {
+      "path": "v3/paired-regression-result.json",
+      "bytes": 1097,
+      "sha256": "c52aec17b6274ecf40bbc2474994699b9de985e73c16b8861f91968182827c7f"
+    },
+    {
+      "path": "v3/paired-regression.log",
+      "bytes": 44901,
+      "sha256": "bc17723ae2d5768fbc7590b032802b32cda58d45181acfbfbf49c57037cb4776"
+    },
+    {
+      "path": "v3/prior-STOPPED-1370-IMPL.md",
+      "bytes": 13891,
+      "sha256": "9eaeab247a6c9015d87dd692bdf40084eafe3141d4a0dabbcc74675c7808b2f8"
+    },
+    {
+      "path": "v3/provisioning-canonical-checkout-result.json",
+      "bytes": 875,
+      "sha256": "fdcd13480ee8b8ce2e9602e23a196f623bde4f9457f1aba48e19f0cd2422031d"
+    },
+    {
+      "path": "v3/provisioning-canonical-checkout.log",
+      "bytes": 3407,
+      "sha256": "47af424a2586f40bf9b0d1d5ec9945401361b889f42d8f6845f7b3aa66341880"
+    },
+    {
+      "path": "v3/proxy-free-regression-result.json",
+      "bytes": 868,
+      "sha256": "40f8ae97a882032fcaf1525f8fb449ca2a63995005ae22f0cb757c3de75416ce"
+    },
+    {
+      "path": "v3/proxy-free-regression.log",
+      "bytes": 59566,
+      "sha256": "0e6781f4f9c0027944ba15377ee5c9a96df8feecaf8eb9ea53a148a6a7400884"
+    },
+    {
+      "path": "v3/regression-result.json",
+      "bytes": 749,
+      "sha256": "0d9efb8e2c5085b7fca923cce8ac102704f3f65d0cfb16d497f31a8ea15217d6"
+    },
+    {
+      "path": "v3/regression.log",
+      "bytes": 39268,
+      "sha256": "ddd4f701faae6ea80ee28ae76e4ca40dc624b5dab48347078c254bc33724debc"
+    },
+    {
+      "path": "v3/review-before-harness.log",
+      "bytes": 2674,
+      "sha256": "34856bf3450728644d11b9135e45f6e42eb35ea8cc677fe8b94c479a758351c3"
+    },
+    {
+      "path": "v3/route-loader-default-generation-result.json",
+      "bytes": 613,
+      "sha256": "c824a0e217fd8f13777f1c7a60cb2ef14347c5db96c035201db8bbac34dceaaf"
+    },
+    {
+      "path": "v3/route-loader-default-generation.log",
+      "bytes": 49599,
+      "sha256": "5ab73617805075959d69436a91b2a512e8be818e5763053420266e1c01380973"
+    },
+    {
+      "path": "v3/structure-metrics.json",
+      "bytes": 3661,
+      "sha256": "a320cff8682c4748bc10bce6a295fa3b16aa8616b6c71a3a7fff119de38a7d4d"
+    },
+    {
+      "path": "v3/structure-runner-result.json",
+      "bytes": 480,
+      "sha256": "f3d7e096b566334e44490be525fb6b2ee4c16e1339b2abc2e565f78ebc4c38fd"
+    },
+    {
+      "path": "v3/structure-runner.log",
+      "bytes": 68938,
+      "sha256": "f51bcbf4f1d82b250199e724a844605bc75fd2639960da6e730ecd5a31418041"
+    },
+    {
+      "path": "v3/verification-install-result.json",
+      "bytes": 350,
+      "sha256": "379b16fcfe2a2c47f323ebd287a704cd83817bbe7c73c2cef682509b93ad0ebe"
+    },
+    {
+      "path": "v3/verification-install.log",
+      "bytes": 25,
+      "sha256": "bb696fb8ed2176c00bf448272357c4347c32580e004e87f73ba22de801264e29"
+    }
+  ],
+  "self_excluded": true
+}

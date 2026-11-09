@@ -1,0 +1,15 @@
+{
+  "command": [
+    "git",
+    "-C",
+    "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+svc-workflow/ac-1301-7cd-revise-fix",
+    "rev-parse",
+    "--show-toplevel",
+    "HEAD"
+  ],
+  "observed_at": "2026-11-07T15:50:31.264902+00:00",
+  "rc": 0,
+  "stdout": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+svc-workflow/ac-1301-7cd-revise-fix\ne068dd0621068201dc1794133a7952b933e18dfe\n",
+  "stderr": "",
+  "branch": "fix/revise-updated-at-7cd02846\n"
+}

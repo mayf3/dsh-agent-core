@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "/usr/bin/sandbox-exec",
+    "-f",
+    "/Users/yanfenma/workspace/project/worktrees/h547-store-diag/docs/evidence/h547-store-diag/sandbox-v5.sb",
+    "/opt/homebrew/bin/node",
+    "/Users/yanfenma/workspace/project/worktrees/h547-store-diag/docs/evidence/h547-store-diag/qa-v5.mjs",
+    "/Users/yanfenma/workspace/project/worktrees/h547-store-diag/docs/evidence/h547-store-diag/private/v5/reader",
+    "/Users/yanfenma/workspace/project/worktrees/h547-store-diag/docs/evidence/h547-store-diag/private/v3/pass-1",
+    "/Users/yanfenma/workspace/project/worktrees/h547-store-diag/docs/evidence/h547-store-diag/private/v5/scratch-3"
+  ],
+  "started_at_utc": "2026-11-08T07:51:21.973444+00:00",
+  "ended_at_utc": "2026-11-08T07:51:26.049449+00:00",
+  "rc": 0,
+  "stdout_bytes": 112559,
+  "stdout_sha256": "c5380e46323ecd4eff82fd60c8672a4d9a8debc551c0e63778a5bdec0f9879f5",
+  "stderr": "",
+  "runner_sha256": "bdb78f2e039f1220323fad0d89ef4fcb810a8c16fd1c5a5945f89cccd0ae99d5",
+  "sandbox_profile_sha256": "9e7b0ff26917ed0be427c38186231d42e233c0b45aacdc826e2095ea0ae0d4da",
+  "restrictions": "macOS sandbox denies all filesystem writes except precreated empty scratch-3; network and process fork denied; source unmodified; no Node permission model because it disables fsync"
+}

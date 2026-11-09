@@ -1,0 +1,22 @@
+{
+  "name": "remote-source-readback",
+  "argv": [
+    "git",
+    "ls-remote",
+    "--exit-code",
+    "origin",
+    "refs/heads/ac-ctr-s4-reverify"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "started_at": "2026-11-07T04:58:30.322614+00:00",
+  "head": "87735ecee0e0ebfaa575f889785d7c5037ab9145",
+  "environment": "Inherited network environment; no proxy values recorded. Nine-key cleanup applies to test/gate subprocesses.",
+  "ended_at": "2026-11-07T04:58:31.145791+00:00",
+  "rc": 0,
+  "stdout": "remote-source-readback.stdout.log",
+  "stderr": "remote-source-readback.stderr.log",
+  "sha256": {
+    "stdout": "e7d3215027a107a91323878e4402757ee758c19c2799f2e5065e2bf30f527585",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

@@ -307,19 +307,19 @@ export function createRouteChainExecutor({
   }
 
   async function executeChain(mode, agentId, { sessionId, message, opts, deadlineMs, strictReason }) {
-    const recordAttempt = entry => record(entry, opts?.websiteControl)
     let snapshot
+    const recordAttempt = entry => record({ ...entry, ...(snapshot?.configGeneration ? { configGeneration: snapshot.configGeneration } : {}) }, opts?.websiteControl)
     try {
       snapshot = (typeof resolveRouteChain === 'function' ? resolveRouteChain(agentId) : undefined)
         ?? defaultSnapshot(agentId)
     } catch (cause) {
-      // Config invalid at the process-boundary snapshot: fail loud with zero
-      // attempts (the final block keeps the turn-level journal truthful).
+      // Refused generation: zero attempts, with non-secret publication attribution.
       recordAttempt({
         kind: 'route_chain_final', tsWallMs: Date.now(), agentId,
         routeChainId: 'invalid', primaryRoute: 'NONE', finalRoute: 'NONE',
         finalOutcome: 'stop:unknown_failure_class', totalRouteAttempts: 0,
         fallbackActivated: false, fallbackRoute: null, configInvalid: true,
+        ...(cause.configGeneration ? { configGeneration: cause.configGeneration } : {}),
       })
       throw cause
     }

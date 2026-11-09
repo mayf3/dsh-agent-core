@@ -1,0 +1,14 @@
+{
+  "command": [
+    "git",
+    "diff",
+    "--check",
+    "95a8e1cb512fc99dc018209d837250dd51b4d08f",
+    "ece5cce6c51cbf0c3768be534b6e35822a86688b"
+  ],
+  "head": "ece5cce6c51cbf0c3768be534b6e35822a86688b",
+  "base": "95a8e1cb512fc99dc018209d837250dd51b4d08f",
+  "exit_code": 0,
+  "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "time": "2026-11-08T07:01:48.043375+00:00"
+}

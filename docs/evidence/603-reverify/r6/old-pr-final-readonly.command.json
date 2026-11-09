@@ -1,0 +1,24 @@
+{
+  "name": "old-pr-final-readonly",
+  "argv": [
+    "gh",
+    "pr",
+    "view",
+    "603",
+    "--repo",
+    "mayf3/dsh-agent-core",
+    "--json",
+    "number,url,state,headRefName,headRefOid,baseRefName,mergedAt,closedAt"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "purpose": "Post-failure read-only reconciliation only; no delivery continuation",
+  "started_at": "2026-11-07T05:17:14.818531+00:00",
+  "rc": 0,
+  "ended_at": "2026-11-07T05:17:15.414261+00:00",
+  "stdout_base64": "eyJiYXNlUmVmTmFtZSI6Im1haW4iLCJjbG9zZWRBdCI6bnVsbCwiaGVhZFJlZk5hbWUiOiJhYy1jdHItczQtcnVudGltZS1wcmVwIiwiaGVhZFJlZk9pZCI6IjgxNWFjN2M5NGIxNzc1ZWVjM2FhNTdmMTljYThhMzg0MmY1OTIyMTciLCJtZXJnZWRBdCI6bnVsbCwibnVtYmVyIjo2MDMsInN0YXRlIjoiT1BFTiIsInVybCI6Imh0dHBzOi8vZ2l0aHViLmNvbS9tYXlmMy9kc2gtYWdlbnQtY29yZS9wdWxsLzYwMyJ9Cg==",
+  "stdout_sha256": "9fc2d16a23c4c5e790f2d1397cf296eb0007ae9984fba27e47bcff1aefb72527",
+  "stdout_text": "{\"baseRefName\":\"main\",\"closedAt\":null,\"headRefName\":\"ac-ctr-s4-runtime-prep\",\"headRefOid\":\"815ac7c94b1775eec3aa57f19ca8a3842f592217\",\"mergedAt\":null,\"number\":603,\"state\":\"OPEN\",\"url\":\"https://github.com/mayf3/dsh-agent-core/pull/603\"}\n",
+  "stderr_base64": "",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_text": ""
+}

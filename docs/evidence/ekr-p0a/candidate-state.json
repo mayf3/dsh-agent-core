@@ -1,0 +1,163 @@
+{
+  "recordedAt": "2026-11-04T16:52:35.260733+00:00",
+  "worktree": "/private/tmp/dsh-ekr-p0a",
+  "branch": "ac-ekr-p0a",
+  "baseSha": "8011b5a5e776fa92eba79c1ede067b9e762311f9",
+  "headSha": "8011b5a5e776fa92eba79c1ede067b9e762311f9",
+  "candidateCommitted": false,
+  "candidateStagedPatchSha256": "a313182152e5212f4462b44df206086a78198249eb8b71aae61e9cc9e6e5a464",
+  "files": [
+    {
+      "path": "BRIEF-EKR-P0A.md",
+      "bytes": 4776,
+      "lines": 43,
+      "sha256": "3e9164fcdb61ba6eb16e99d1c9b5586b00ed5453d3015acacde888530043f123"
+    },
+    {
+      "path": "packages/production-runtime/test/workflow-progress-runtime.test.js",
+      "bytes": 6679,
+      "lines": 193,
+      "sha256": "8e3b11babe6dd93c99928324841fa3c8ea273a15fdec0e3e6cc3923788bd3d69"
+    },
+    {
+      "path": "packages/workflow-execution/src/attempt-identity.js",
+      "bytes": 2992,
+      "lines": 56,
+      "sha256": "59f5d7d5a02fca8227f598314bce470f77106a66cdda275c4744a874488c3a2b"
+    },
+    {
+      "path": "packages/workflow-execution/src/engine.js",
+      "bytes": 23621,
+      "lines": 473,
+      "sha256": "e2d1366fefc2e6fadb90796cea25f3c8281583027a0b31b7b4b3899ed05709b2"
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger-records.js",
+      "bytes": 14143,
+      "lines": 257,
+      "sha256": "1d367ee50395d97bcb194772e2dcdb1b38502bd040925c83726c2506b65a4493"
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger.js",
+      "bytes": 22708,
+      "lines": 477,
+      "sha256": "cb2a759e5190c5cd7d01bcf9a3cbe7538b623756e215a83a87a9eaaf61ac9935"
+    },
+    {
+      "path": "packages/workflow-execution/src/terminal-attempt-operations.js",
+      "bytes": 2983,
+      "lines": 69,
+      "sha256": "aa6bf9d5fce328d190a5839ca44e436f21528951336587c3dc69c54e7bf411f6"
+    },
+    {
+      "path": "packages/workflow-execution/test-support/observation-identity.js",
+      "bytes": 217,
+      "lines": 4,
+      "sha256": "2247c4c9923ed17c50f8ec2c5e64b45639d517b311244ceae721d494750a360d"
+    },
+    {
+      "path": "packages/workflow-execution/test/execution-control.test.js",
+      "bytes": 18306,
+      "lines": 362,
+      "sha256": "2121aa0a9b94f8e45abdf0846e78920a7d1c06186e5798a70e5964fdc920d9ac"
+    },
+    {
+      "path": "packages/workflow-execution/test/ledger.test.js",
+      "bytes": 15486,
+      "lines": 319,
+      "sha256": "4aa6888c3e0d7cb5eab5a9dbb1623aeea64f1174d29fe61ca82c78afa71ffb6f"
+    },
+    {
+      "path": "packages/workflow-execution/test/managed-obligation.test.js",
+      "bytes": 2984,
+      "lines": 48,
+      "sha256": "4a44acc41b5bb9708796006e48c24b8fa0a17fe854e11afe5cda84a82738d7e0"
+    },
+    {
+      "path": "packages/workflow-execution/test/observation-cas/engine-races.test.js",
+      "bytes": 7798,
+      "lines": 150,
+      "sha256": "d00a2c3f3a3947176ec43e23f87717f519bea67d2f8eacf66cf0bd85bb1e6f23"
+    },
+    {
+      "path": "packages/workflow-execution/test/observation-cas/fixture.js",
+      "bytes": 6990,
+      "lines": 139,
+      "sha256": "bb6377aad0ba32f448c32099813dd17b1f29be2acd84a3404efe60a0a5a3a3bb"
+    },
+    {
+      "path": "packages/workflow-execution/test/observation-cas/ledger-identity.test.js",
+      "bytes": 7205,
+      "lines": 143,
+      "sha256": "5bb48fa2050c1d61148e702f297ae0a22b33c4a0229f9d0c1e08dd524bcda037"
+    },
+    {
+      "path": "packages/workflow-execution/test/observation-cas/observer-process.js",
+      "bytes": 1069,
+      "lines": 22,
+      "sha256": "0d91f9cbeeca67670c8e37590d87c57b0132b9ed704bf36f7c3b6196549b916a"
+    },
+    {
+      "path": "packages/workflow-execution/test/observation-cas/process-race.test.js",
+      "bytes": 2092,
+      "lines": 43,
+      "sha256": "591a04462b81d4e7ab0f6d531c9bbd37d781fe0f72f6179eefa1c5b09ae1528f"
+    },
+    {
+      "path": "packages/workflow-execution/test/observation-cas/stale-guards.test.js",
+      "bytes": 5506,
+      "lines": 95,
+      "sha256": "43706e41f57f71c74ce5fbdf762687aeb644356b18e8d21ffa49df649941506c"
+    },
+    {
+      "path": "packages/workflow-execution/test/observation-cas/stale-reentry.test.js",
+      "bytes": 22877,
+      "lines": 472,
+      "sha256": "e9168c644b3228715d3fb2c68eb25b5b862b3cb3e35767548c331dd9eb814f6e"
+    },
+    {
+      "path": "packages/workflow-execution/test/owner-assistance-resume-engine.test.js",
+      "bytes": 21618,
+      "lines": 416,
+      "sha256": "89d90e4f0930c0a70c96516ccbccfd7c9b9077fabd32e56c40437a1cacce01c9"
+    },
+    {
+      "path": "packages/workflow-execution/test/progress-checkpoint.test.js",
+      "bytes": 5974,
+      "lines": 179,
+      "sha256": "cd85aee5b6b8ed712fb5d3dc696a3e85f94ede4736c1d76f7d45ffc735792be7"
+    },
+    {
+      "path": "packages/workflow-execution/test/recovery.test.js",
+      "bytes": 22289,
+      "lines": 449,
+      "sha256": "d3935d778d2f8bfde073a6aace13526dad6ce70380283def5e158da7dab66c9e"
+    },
+    {
+      "path": "packages/workflow-execution/test/runtime-wiring.test.js",
+      "bytes": 28574,
+      "lines": 487,
+      "sha256": "38cf2835782d1d07634aa8752b059f808a2bf2f1ce6d59bf2376994a0672076a"
+    },
+    {
+      "path": "packages/workflow-execution/test/stale-quiescence.test.js",
+      "bytes": 12555,
+      "lines": 280,
+      "sha256": "d102de4ff0064bfae7503a95b0d840e42d466020fbefe60eec69f60e2621a5d2"
+    },
+    {
+      "path": "packages/workflow-execution/test/terminal-attempt-operations.test.js",
+      "bytes": 2897,
+      "lines": 75,
+      "sha256": "1881ee44565db2fedeccdd96ecad141fe3f166abb3d854195f33e7a9acdb4bf0"
+    }
+  ],
+  "tests": "NOT_RUN",
+  "structureVerifier": "NOT_RUN",
+  "workingDiffCheck": 0,
+  "cachedDiffCheck": 2,
+  "productionWrites": 0,
+  "push": false,
+  "prUrl": null,
+  "merge": false
+}

@@ -1,0 +1,62 @@
+{
+  "gate": "broker",
+  "cwd": "/private/tmp/h1367-readsep",
+  "source_parent": "84b1e612aa31f4caa5a0de0ca39e3abca545bcef",
+  "integration_base": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "command": [
+    "/usr/local/bin/node",
+    "--test",
+    "--test-reporter=tap",
+    "packages/broker/test/workflow-assistance-capability.test.js",
+    "packages/broker/test/workflow-assistance-request.test.js",
+    "packages/broker/test/gateway/workflow-assistance-current-review.test.js",
+    "packages/broker/test/capabilities/workflow-execution/execution-class.test.js",
+    "packages/broker/test/capabilities/workflow-execution/legacy-execute.test.js",
+    "packages/broker/test/capabilities/workflow-execution/owner-obligation.test.js",
+    "packages/broker/test/capabilities/workflow-execution/owner-obligation-attempt.test.js"
+  ],
+  "environment_recipe": "env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u all_proxy -u NO_PROXY -u no_proxy -u NODE_USE_ENV_PROXY /usr/local/bin/node --test --test-reporter=tap packages/broker/test/workflow-assistance-capability.test.js packages/broker/test/workflow-assistance-request.test.js packages/broker/test/gateway/workflow-assistance-current-review.test.js packages/broker/test/capabilities/workflow-execution/execution-class.test.js packages/broker/test/capabilities/workflow-execution/legacy-execute.test.js packages/broker/test/capabilities/workflow-execution/owner-obligation.test.js packages/broker/test/capabilities/workflow-execution/owner-obligation-attempt.test.js",
+  "unset_keys": [
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "ALL_PROXY",
+    "all_proxy",
+    "NO_PROXY",
+    "no_proxy",
+    "NODE_USE_ENV_PROXY"
+  ],
+  "environment_scope": "test child only; parent unchanged",
+  "node_runtime": {
+    "execPath": "/usr/local/Cellar/node/25.6.1_1/bin/node",
+    "version": "v25.6.1",
+    "arch": "x64",
+    "proxyKeysPresent": []
+  },
+  "started_at_utc": "2026-11-07T12:09:55.234580+00:00",
+  "completed_at_utc": "2026-11-07T12:09:57.224615+00:00",
+  "expected_rc": 0,
+  "actual_rc": 0,
+  "counts": {
+    "tests": 80,
+    "pass": 80,
+    "fail": 0,
+    "skipped": 0
+  },
+  "raw_sha256": "abc395652c081645d4007209cac5534bd2f74e81e138958279e24c12aed51633",
+  "file_sha256": {
+    "packages/production-runtime/src/workflow/capability-runtime.js": "53dbddaa6cdbf140da020515c1a2b45beb7712715f3c4c4624ad65708c576ada",
+    "packages/workflow-execution/src/ledger.js": "7999048f35828027660b580763dd8b42a48b644dc01366f9fe6cfb0e903ed2a2",
+    "packages/workflow-execution/src/engine.js": "d9dfaf86dd5b52d351f4bdf44b971f68a89be8f86c5586c71fbd59dda63a7dd4",
+    "packages/workflow-execution/test/observation-cas/diagnostic-read.test.js": "4b29cb5577be6f836becb6ad016216e5d4c189051146368fd6554fbb7f216580",
+    "packages/workflow-execution/test/observation-cas/diagnostic-missing-trace.test.js": "72e23f26b5adde0a8351db9fd4c684b80d4b347a0db7105e096b4abc15f8bebb",
+    "packages/broker/test/workflow-assistance-capability.test.js": "f6edef0c6b8ccb2ee095aa2e9d8b43962f45483870cbdd8ff241b648a8eab3d4",
+    "packages/broker/test/workflow-assistance-request.test.js": "4eaa5aab12e77cdf783ff67d444f23409676e3daacb955d0e572160c7a0881ee",
+    "packages/broker/test/gateway/workflow-assistance-current-review.test.js": "403fccc4333aa5429c1ff0640ba0392662e4bb9ba629acbfa22857a65a2edb2a",
+    "packages/broker/test/capabilities/workflow-execution/execution-class.test.js": "afb2fbf3326b5779a33902d8a73208793201455afc4d861f068b9e1e3d82aa23",
+    "packages/broker/test/capabilities/workflow-execution/legacy-execute.test.js": "8ccb2a74feea8ae71d402294f08a44c9f91e199e1602ba4b2301c8ce55d39147",
+    "packages/broker/test/capabilities/workflow-execution/owner-obligation.test.js": "826d30a9094c7b531727b116796d5aeba3248da59ccaf122bafe2f3c99ea1dd3",
+    "packages/broker/test/capabilities/workflow-execution/owner-obligation-attempt.test.js": "a22d4ce2cf2119d869d1d0e26206b8a8a29709498ecb6cdda145291a7eb048ce"
+  }
+}

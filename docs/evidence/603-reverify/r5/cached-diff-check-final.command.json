@@ -1,0 +1,38 @@
+{
+  "name": "cached-diff-check-final",
+  "argv": [
+    "env",
+    "-u",
+    "HTTP_PROXY",
+    "-u",
+    "HTTPS_PROXY",
+    "-u",
+    "http_proxy",
+    "-u",
+    "https_proxy",
+    "-u",
+    "ALL_PROXY",
+    "-u",
+    "all_proxy",
+    "-u",
+    "NO_PROXY",
+    "-u",
+    "no_proxy",
+    "-u",
+    "NODE_USE_ENV_PROXY",
+    "python3",
+    "docs/evidence/603-reverify/r5/check-cached-whitespace.py"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "started_at": "2026-11-07T05:09:30.653595+00:00",
+  "head": "87735ecee0e0ebfaa575f889785d7c5037ab9145",
+  "environment": "Inherited; no secret or proxy values recorded",
+  "ended_at": "2026-11-07T05:09:32.106411+00:00",
+  "rc": 0,
+  "stdout": "cached-diff-check-final.stdout.log",
+  "stderr": "cached-diff-check-final.stderr.log",
+  "sha256": {
+    "stdout": "ace0d1473d06a51668a277f04ae4e579b5f6f823a6f75d76b1b1c9efda95fb2c",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

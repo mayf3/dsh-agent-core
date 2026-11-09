@@ -1,0 +1,1643 @@
+{
+  "at": "2026-11-07T04:08:13.713Z",
+  "base": "4f7df01bcf087075c114901a96a7a54573110f61",
+  "reproduction": "R4 after snapshot removed by fixture; new isolated replay of exact constructor and epoch",
+  "beforePath": "/private/tmp/h605-r5-evidence/before/control/turn-recovery-v3.json",
+  "afterPath": "/private/tmp/h605-r5-evidence/after-router-open.json",
+  "beforeSHA256": "1488d505a69c65c417af96be0da05fb40b52fb2adc2c1cbd3d88d4dd3e85864a",
+  "afterSHA256": "e881a68d0d00cf06b2f2337951751d6448c607727d71901ef2bba15b780499a1",
+  "matchesR4After": false,
+  "admission": {
+    "ready": true,
+    "reason": null
+  },
+  "recordCountBefore": 5227,
+  "recordCountAfter": 5227,
+  "protectedRecordsEqual": [
+    {
+      "index": 5124,
+      "equal": true
+    },
+    {
+      "index": 5125,
+      "equal": true
+    },
+    {
+      "index": 5127,
+      "equal": true
+    }
+  ],
+  "changeCount": 255,
+  "categories": {
+    "/runtimeEpoch": {
+      "count": 1,
+      "kinds": {
+        "replace": 1
+      }
+    },
+    "/runtimeEpochs/*": {
+      "count": 180,
+      "kinds": {
+        "replace": 180
+      }
+    },
+    "/records/*/updatedAt": {
+      "count": 1,
+      "kinds": {
+        "replace": 1
+      }
+    },
+    "/records/*/bytes": {
+      "count": 66,
+      "kinds": {
+        "replace": 66
+      }
+    },
+    "/records/*/finalAssistantOutputEvidence": {
+      "count": 7,
+      "kinds": {
+        "replace": 7
+      }
+    }
+  },
+  "changes": [
+    {
+      "path": "/runtimeEpoch",
+      "kind": "replace",
+      "before": "60129522-4196-44bb-a644-52a255dde15d",
+      "after": "compat-cold"
+    },
+    {
+      "path": "/runtimeEpochs/0",
+      "kind": "replace",
+      "before": "60129522-4196-44bb-a644-52a255dde15d",
+      "after": "compat-cold"
+    },
+    {
+      "path": "/runtimeEpochs/77",
+      "kind": "replace",
+      "before": "5044bdf8-21d4-42ea-9c68-1b2a52221c9f",
+      "after": "60129522-4196-44bb-a644-52a255dde15d"
+    },
+    {
+      "path": "/runtimeEpochs/78",
+      "kind": "replace",
+      "before": "175341bd-0d87-44d6-8784-220eba1108ac",
+      "after": "baaf7f41-e11a-4767-bdaa-5ee305b8703e"
+    },
+    {
+      "path": "/runtimeEpochs/79",
+      "kind": "replace",
+      "before": "e77c67ab-c717-4107-aca6-e74fd020e3e5",
+      "after": "c3896f43-0e73-48a0-980e-161376797a14"
+    },
+    {
+      "path": "/runtimeEpochs/80",
+      "kind": "replace",
+      "before": "f3c79864-5136-4818-a04f-2b53a6d39ecd",
+      "after": "4bbd28be-44d9-4348-8026-a202ffd8b035"
+    },
+    {
+      "path": "/runtimeEpochs/81",
+      "kind": "replace",
+      "before": "8f63d931-1e67-422c-8804-a31a68218c05",
+      "after": "b1b1ce3a-4ea3-4149-9af1-e6d2a15e9b1e"
+    },
+    {
+      "path": "/runtimeEpochs/82",
+      "kind": "replace",
+      "before": "524b24eb-19c6-4994-b7d4-74d48bf75940",
+      "after": "f8ee85a6-e0a3-455b-8cb0-35fe96a37de3"
+    },
+    {
+      "path": "/runtimeEpochs/83",
+      "kind": "replace",
+      "before": "c7712de0-c1d1-44ec-bec5-134616cb9f70",
+      "after": "e97053e2-48ae-4fcd-8aac-6fb85199fcc5"
+    },
+    {
+      "path": "/runtimeEpochs/84",
+      "kind": "replace",
+      "before": "14885151-9a8b-4bc2-8916-1f38b029ba79",
+      "after": "52c8aee7-9fd0-42a2-8708-d370f4b1198d"
+    },
+    {
+      "path": "/runtimeEpochs/85",
+      "kind": "replace",
+      "before": "d61584ea-50bb-4fbb-a6d9-1fe025fa14e5",
+      "after": "c49737eb-d10b-4a17-9c1a-5167e0376ede"
+    },
+    {
+      "path": "/runtimeEpochs/86",
+      "kind": "replace",
+      "before": "b3efdd42-dd6b-470f-8e8f-8d2a2a8b1c8a",
+      "after": "6499da07-97af-4dac-99fb-603c8affc36e"
+    },
+    {
+      "path": "/runtimeEpochs/87",
+      "kind": "replace",
+      "before": "bd928e69-3efb-4430-bac5-083dfb7dcf86",
+      "after": "0276dbb7-96d0-48ac-8321-3dc1235da769"
+    },
+    {
+      "path": "/runtimeEpochs/88",
+      "kind": "replace",
+      "before": "ae35c7d7-79e9-46ee-baf3-a35f9400fe7e",
+      "after": "71138802-aef7-4bc0-9083-aec976d0f10f"
+    },
+    {
+      "path": "/runtimeEpochs/89",
+      "kind": "replace",
+      "before": "ca6dd612-1bff-4ee6-95e2-431c08c50a2b",
+      "after": "abdee2c9-f631-418c-bf15-52b4dcdb4dc2"
+    },
+    {
+      "path": "/runtimeEpochs/90",
+      "kind": "replace",
+      "before": "a5d08f8b-a679-4314-aaaf-36bebb3fe504",
+      "after": "b073cc5a-9ff1-476b-9cff-4d4f9bf3f58e"
+    },
+    {
+      "path": "/runtimeEpochs/91",
+      "kind": "replace",
+      "before": "dbe2550c-eb3d-492f-bdf0-ee29d02f3fc3",
+      "after": "e609e764-8feb-4465-9617-dfcfbfe6fd59"
+    },
+    {
+      "path": "/runtimeEpochs/92",
+      "kind": "replace",
+      "before": "c01fce97-f290-4d59-8a74-da2d0e08b340",
+      "after": "5e240676-0dbd-41c7-9e75-c23299c646b6"
+    },
+    {
+      "path": "/runtimeEpochs/93",
+      "kind": "replace",
+      "before": "e6bcaf03-c2c1-452c-93df-877cec4d5145",
+      "after": "7da3c945-3093-4a1c-8f19-315e1895d801"
+    },
+    {
+      "path": "/runtimeEpochs/94",
+      "kind": "replace",
+      "before": "d9d30c1c-0d39-436a-9bfd-3734e7c292f4",
+      "after": "597faed7-e27f-44e4-8964-b57b1145a5eb"
+    },
+    {
+      "path": "/runtimeEpochs/95",
+      "kind": "replace",
+      "before": "fa2d449c-4504-469e-a809-f15861398d03",
+      "after": "c438d318-c0b9-458e-b5b6-f4f49754565a"
+    },
+    {
+      "path": "/runtimeEpochs/96",
+      "kind": "replace",
+      "before": "aa061846-2ed5-404d-b180-62d69cf49b26",
+      "after": "46d55fb9-0d10-4e03-8f5d-1c4055c63775"
+    },
+    {
+      "path": "/runtimeEpochs/97",
+      "kind": "replace",
+      "before": "bc82f4c7-5404-4a10-84d9-0e9aa1f8930f",
+      "after": "419a1016-ca9e-487f-b8e6-495defcd1b6d"
+    },
+    {
+      "path": "/runtimeEpochs/98",
+      "kind": "replace",
+      "before": "0f355cd5-75ef-429a-ace8-81c7ed9c37cd",
+      "after": "3b3d71c3-5e36-4f44-ab05-d410dba49d68"
+    },
+    {
+      "path": "/runtimeEpochs/99",
+      "kind": "replace",
+      "before": "244cb735-70a0-4414-98d1-0f4034c3a303",
+      "after": "a4cfa14f-7472-42b3-951f-8ca6f0ac7623"
+    },
+    {
+      "path": "/runtimeEpochs/100",
+      "kind": "replace",
+      "before": "902b6c6f-5cc8-4e52-9339-5929af5ecf06",
+      "after": "ab09ada3-b249-44e6-9d11-051ad3e53b68"
+    },
+    {
+      "path": "/runtimeEpochs/101",
+      "kind": "replace",
+      "before": "1709ff0e-f03f-45b1-a7f9-b84a30cb7423",
+      "after": "508dc225-7847-4a19-92a2-b1c15be56c0d"
+    },
+    {
+      "path": "/runtimeEpochs/102",
+      "kind": "replace",
+      "before": "35a84910-c950-48de-b6c0-da50d27b6947",
+      "after": "532047b6-c4a6-41d8-a9df-3502e620fceb"
+    },
+    {
+      "path": "/runtimeEpochs/103",
+      "kind": "replace",
+      "before": "d9f56cd3-3419-449d-b159-3d68c425bf69",
+      "after": "1cfce167-010f-4be9-861f-7d39a5477ea0"
+    },
+    {
+      "path": "/runtimeEpochs/104",
+      "kind": "replace",
+      "before": "4d6c32e8-f6f3-4ff8-bed6-97dff5ea1207",
+      "after": "e9df1a32-eb2d-4742-be9e-ccf505b90aab"
+    },
+    {
+      "path": "/runtimeEpochs/105",
+      "kind": "replace",
+      "before": "ff16df1d-7a2d-487f-9ac3-1202ddd3ccaf",
+      "after": "dfd4cbc5-3a90-455d-8910-ad1268cfe47e"
+    },
+    {
+      "path": "/runtimeEpochs/106",
+      "kind": "replace",
+      "before": "a87e712c-8953-474e-a194-c49495a44437",
+      "after": "8c58446a-5943-4940-ad08-c8b3b23f3ce3"
+    },
+    {
+      "path": "/runtimeEpochs/107",
+      "kind": "replace",
+      "before": "13a74f19-c09b-433a-8ff3-3b283612990e",
+      "after": "a6e1dc69-9820-433d-90f1-86f18d5a669f"
+    },
+    {
+      "path": "/runtimeEpochs/108",
+      "kind": "replace",
+      "before": "b5e640bc-a008-40a7-8c86-984f1111d495",
+      "after": "40eb0b1b-ac57-448c-bdd6-b184f23a88cb"
+    },
+    {
+      "path": "/runtimeEpochs/109",
+      "kind": "replace",
+      "before": "31bbe81f-deaf-44fc-ad42-59f6b1fcd319",
+      "after": "5bc53ffa-985d-425a-a4ad-b46e31d0e726"
+    },
+    {
+      "path": "/runtimeEpochs/110",
+      "kind": "replace",
+      "before": "97c42178-8e5f-4d19-a3a3-e7f18b0983a7",
+      "after": "9b7af699-9f0c-41fc-9302-5ca63b666e0d"
+    },
+    {
+      "path": "/runtimeEpochs/111",
+      "kind": "replace",
+      "before": "eb02b784-a928-4372-82ce-70e8d1b342a7",
+      "after": "aad5d12d-a829-4a9f-a4f1-5b59ef6bd141"
+    },
+    {
+      "path": "/runtimeEpochs/112",
+      "kind": "replace",
+      "before": "9543112a-b7b2-4ba3-af3b-fde794ecce56",
+      "after": "fea0e7f5-9bdd-47ca-af78-c19e1eaad82b"
+    },
+    {
+      "path": "/runtimeEpochs/113",
+      "kind": "replace",
+      "before": "b09764c6-62bb-4fd9-bb21-3406e48d2782",
+      "after": "52da88de-2af5-4e8b-bf91-29764ad896d0"
+    },
+    {
+      "path": "/runtimeEpochs/114",
+      "kind": "replace",
+      "before": "ab16dca9-d4a3-4f0f-acae-c4fbb72ca209",
+      "after": "5fe43b2a-e369-4e3a-81a8-e78a0037bb96"
+    },
+    {
+      "path": "/runtimeEpochs/115",
+      "kind": "replace",
+      "before": "eaec0506-585b-4166-9bd4-2a887a0ce0d0",
+      "after": "18afdbc2-744d-4844-b0e8-136b0ec50ec6"
+    },
+    {
+      "path": "/runtimeEpochs/116",
+      "kind": "replace",
+      "before": "20a94217-1db9-4c38-9135-09716f38b4f5",
+      "after": "68b875bb-6ccd-4490-843c-bc704fefaff9"
+    },
+    {
+      "path": "/runtimeEpochs/117",
+      "kind": "replace",
+      "before": "e5b66cca-ffa0-4644-91e5-7cec9a9f47ac",
+      "after": "verify-r21"
+    },
+    {
+      "path": "/runtimeEpochs/118",
+      "kind": "replace",
+      "before": "61297af1-5920-4bbb-bf7e-c8e2bc13f8ef",
+      "after": "ae165412-e2c4-4b32-86d9-90a63f73d7a0"
+    },
+    {
+      "path": "/runtimeEpochs/119",
+      "kind": "replace",
+      "before": "0f5b3783-ba25-4c5c-aa8b-d0afdf8d9fd6",
+      "after": "e3e90765-ef24-4790-a062-1aff9aea70a7"
+    },
+    {
+      "path": "/runtimeEpochs/120",
+      "kind": "replace",
+      "before": "4b6b584d-c8e0-433e-b9b2-c115cf9efa75",
+      "after": "a12a4cee-ab31-4ebb-82dc-0e49c5232ecc"
+    },
+    {
+      "path": "/runtimeEpochs/121",
+      "kind": "replace",
+      "before": "168e1e7f-e494-4c04-93ef-e6d8e4386a05",
+      "after": "1b11af68-0901-4642-992b-af3a4bbdc7ad"
+    },
+    {
+      "path": "/runtimeEpochs/122",
+      "kind": "replace",
+      "before": "c24a6956-0835-40c3-9b09-2668e38fd34a",
+      "after": "0efad57b-a7e0-4ed4-ac2f-53470c297ecb"
+    },
+    {
+      "path": "/runtimeEpochs/123",
+      "kind": "replace",
+      "before": "6c392fae-6283-454a-bc39-02b28cbf2a8d",
+      "after": "92fcaf84-cdd0-47fa-92cf-8fa1b4cc13f0"
+    },
+    {
+      "path": "/runtimeEpochs/124",
+      "kind": "replace",
+      "before": "ac4a2ae1-37f1-4530-bc1a-4aa2f76b7752",
+      "after": "79b58562-9ff5-4700-abc9-160cf5d56bbc"
+    },
+    {
+      "path": "/runtimeEpochs/125",
+      "kind": "replace",
+      "before": "ed073763-70fe-47b5-a883-de3b13e7783d",
+      "after": "b7be22a1-5bc5-499a-a0d6-8ff365c5cc84"
+    },
+    {
+      "path": "/runtimeEpochs/126",
+      "kind": "replace",
+      "before": "eba2c480-916d-4656-abc8-653de874d390",
+      "after": "2c66cf85-81b3-4d1e-ad03-7abaabe8cfc3"
+    },
+    {
+      "path": "/runtimeEpochs/127",
+      "kind": "replace",
+      "before": "b5b8f7e7-91a8-4286-b5b6-9e888f5c83dc",
+      "after": "e72ea932-f73d-4872-9be9-657eef4221b0"
+    },
+    {
+      "path": "/runtimeEpochs/128",
+      "kind": "replace",
+      "before": "a5373102-4005-4c1f-bf8f-8a85f6835985",
+      "after": "1438354a-9b26-4739-9641-fdcf156e4c61"
+    },
+    {
+      "path": "/runtimeEpochs/129",
+      "kind": "replace",
+      "before": "f881ea6d-bf5d-4920-b430-d6f34f36b5e9",
+      "after": "41174f61-f3b4-4b89-bd87-6047f1b43ff6"
+    },
+    {
+      "path": "/runtimeEpochs/130",
+      "kind": "replace",
+      "before": "a4eb494c-7b59-426c-96cb-d6d21f2731ed",
+      "after": "ff7a49ee-1361-4f77-b517-ddc99b80df54"
+    },
+    {
+      "path": "/runtimeEpochs/131",
+      "kind": "replace",
+      "before": "a82aea11-f569-488f-bef4-81b42e1b27f7",
+      "after": "4cf30080-249b-4bd9-813d-12df0f22b0c4"
+    },
+    {
+      "path": "/runtimeEpochs/132",
+      "kind": "replace",
+      "before": "eb392666-e7fc-411f-8327-d2afe04c41d3",
+      "after": "d49c12e5-e560-4ddf-9ad2-8eb9ebd4b948"
+    },
+    {
+      "path": "/runtimeEpochs/133",
+      "kind": "replace",
+      "before": "88fbc572-fbf5-437c-ad90-f9c9d8545001",
+      "after": "354d6085-ee11-4a4b-a618-7c3b78bc3ad6"
+    },
+    {
+      "path": "/runtimeEpochs/134",
+      "kind": "replace",
+      "before": "1d6da066-f07e-49b8-be3d-5ec4afbe9b1b",
+      "after": "d4f76ca3-5d88-419b-84ec-7177eda177f1"
+    },
+    {
+      "path": "/runtimeEpochs/135",
+      "kind": "replace",
+      "before": "40b193ce-09ac-45b3-84f7-bfa0b2c08420",
+      "after": "4c0842ff-a0c4-427a-a51c-4e76d07ded81"
+    },
+    {
+      "path": "/runtimeEpochs/136",
+      "kind": "replace",
+      "before": "68608c63-43b3-4332-be76-00b9970eb1e2",
+      "after": "3c06a42c-fb90-46dd-9654-7f8885aeb035"
+    },
+    {
+      "path": "/runtimeEpochs/137",
+      "kind": "replace",
+      "before": "1835cd94-147e-4d9b-8f0d-1f6cbf4e0773",
+      "after": "399b2554-89b3-467a-8f83-590318c2622d"
+    },
+    {
+      "path": "/runtimeEpochs/138",
+      "kind": "replace",
+      "before": "db3a0f65-4327-49e3-9303-b8a94d227b52",
+      "after": "9c2e28e6-812d-4fa0-9ba2-a69c681ba2a0"
+    },
+    {
+      "path": "/runtimeEpochs/139",
+      "kind": "replace",
+      "before": "246ab5ed-eb9c-4e18-9076-1923671ee6da",
+      "after": "74dd8cd1-10e4-4c24-bf97-a285032c3279"
+    },
+    {
+      "path": "/runtimeEpochs/140",
+      "kind": "replace",
+      "before": "6f0925d2-3ed6-4dab-af1d-90bf7bfa75ac",
+      "after": "eb6e6c98-499b-4c97-bf72-41c142defd6a"
+    },
+    {
+      "path": "/runtimeEpochs/141",
+      "kind": "replace",
+      "before": "a69971dd-6e13-44a0-91c5-60fc21626dba",
+      "after": "be11cbaf-6303-4a02-b274-55aa6a807f82"
+    },
+    {
+      "path": "/runtimeEpochs/142",
+      "kind": "replace",
+      "before": "98a6cc99-49ea-48a1-b7bf-64f07551e6e8",
+      "after": "805735f4-7ccd-46f6-99da-0466f3d28f5b"
+    },
+    {
+      "path": "/runtimeEpochs/143",
+      "kind": "replace",
+      "before": "20629feb-16f0-4959-9ef8-c38e997ae749",
+      "after": "9b285f87-9535-42e6-9cc2-7aba73d3ae69"
+    },
+    {
+      "path": "/runtimeEpochs/144",
+      "kind": "replace",
+      "before": "f278ccf4-4c38-45c0-8d16-ab44a0177ab7",
+      "after": "4aa8e498-8977-425b-bc34-8f29049262dc"
+    },
+    {
+      "path": "/runtimeEpochs/145",
+      "kind": "replace",
+      "before": "e955f0f1-56b4-4558-86da-d61bc5b81d98",
+      "after": "bb47d3fd-d503-47ee-8058-5a706d169037"
+    },
+    {
+      "path": "/runtimeEpochs/146",
+      "kind": "replace",
+      "before": "d50dc087-15c1-418b-b9ca-fdc7e3d7b8ed",
+      "after": "102c431a-ab65-4290-b51e-fc6a4f4e635f"
+    },
+    {
+      "path": "/runtimeEpochs/147",
+      "kind": "replace",
+      "before": "d4c8f100-095b-4bca-b158-f3be2acf061a",
+      "after": "74a2466e-0b02-459a-98e0-1e30173d2539"
+    },
+    {
+      "path": "/runtimeEpochs/148",
+      "kind": "replace",
+      "before": "2cf99cb0-4b20-4012-8b6e-602c4fa33dd9",
+      "after": "71394d3d-59f6-4b73-8068-800327cdbf58"
+    },
+    {
+      "path": "/runtimeEpochs/149",
+      "kind": "replace",
+      "before": "05e4ee76-3157-473a-92d4-72c23a99b45c",
+      "after": "fba70dc6-22ba-4d89-a26c-abbd721457c6"
+    },
+    {
+      "path": "/runtimeEpochs/150",
+      "kind": "replace",
+      "before": "39ffef44-fbfa-42c7-abca-8e9c7060e493",
+      "after": "18fa4967-d761-4827-96c5-df1604310015"
+    },
+    {
+      "path": "/runtimeEpochs/151",
+      "kind": "replace",
+      "before": "d3eac51f-2bac-40b4-a3c3-bf720f636de3",
+      "after": "4afc53f2-54d1-4f66-ad1d-fb8492e13219"
+    },
+    {
+      "path": "/runtimeEpochs/152",
+      "kind": "replace",
+      "before": "4cebda45-6492-4b1b-b423-8d5a20493b02",
+      "after": "46018abc-0d04-4c05-88e6-44b8b0f293b1"
+    },
+    {
+      "path": "/runtimeEpochs/153",
+      "kind": "replace",
+      "before": "dc57c287-0fde-45a6-9d71-96bfd10b02cc",
+      "after": "8b3a9cb3-a14d-4483-ad76-400e0dc061d3"
+    },
+    {
+      "path": "/runtimeEpochs/154",
+      "kind": "replace",
+      "before": "9ca5ffb1-83a0-4e6d-8cdf-f1707d1c7df0",
+      "after": "e1319a50-29da-41f1-83d3-e13089db479c"
+    },
+    {
+      "path": "/runtimeEpochs/155",
+      "kind": "replace",
+      "before": "9725db44-b519-440e-b072-f03afdb5b387",
+      "after": "93b31cc9-1649-4a0b-9e96-50b850cc4c2d"
+    },
+    {
+      "path": "/runtimeEpochs/156",
+      "kind": "replace",
+      "before": "439e29db-b980-41cc-9da9-008dee2ce2f7",
+      "after": "e8b6ee0d-5667-4136-b0da-bc223daedcba"
+    },
+    {
+      "path": "/runtimeEpochs/157",
+      "kind": "replace",
+      "before": "32a655f4-be30-44c6-bc11-2af1fa713666",
+      "after": "29005f49-30c9-489a-a187-0fe7353c0f74"
+    },
+    {
+      "path": "/runtimeEpochs/158",
+      "kind": "replace",
+      "before": "3d706ca4-43d2-4116-bd7d-596c9b14f7c3",
+      "after": "a28e30c1-591a-4ace-9126-eb73150bff09"
+    },
+    {
+      "path": "/runtimeEpochs/159",
+      "kind": "replace",
+      "before": "4b6aa0c0-16f4-4fcc-89a3-e46d0f079d65",
+      "after": "0d19cc80-8e54-424c-9162-1b790a3ca247"
+    },
+    {
+      "path": "/runtimeEpochs/160",
+      "kind": "replace",
+      "before": "23031a9c-2423-41d9-a405-fa19e4a10ab5",
+      "after": "f6ed3c57-da92-47db-979d-892432aac129"
+    },
+    {
+      "path": "/runtimeEpochs/161",
+      "kind": "replace",
+      "before": "98e69172-d16a-460f-b002-da716112a41c",
+      "after": "51a03eae-f5b1-428c-8c92-e87ce2333aa4"
+    },
+    {
+      "path": "/runtimeEpochs/162",
+      "kind": "replace",
+      "before": "5f5a04fd-d19a-4f1f-88a2-54db518836c6",
+      "after": "3ba0093f-3093-4eca-b6e4-03bab29e022d"
+    },
+    {
+      "path": "/runtimeEpochs/163",
+      "kind": "replace",
+      "before": "67debde8-5eb3-4ce3-a32c-9735c13c44bf",
+      "after": "f10bab53-8b42-49f5-9ac9-ab6f9dbed236"
+    },
+    {
+      "path": "/runtimeEpochs/164",
+      "kind": "replace",
+      "before": "b811d4d3-2a3b-4250-a5c5-802148177a73",
+      "after": "925293af-2b89-4dfc-b2e3-14719408c951"
+    },
+    {
+      "path": "/runtimeEpochs/165",
+      "kind": "replace",
+      "before": "d9cc8daf-c574-4c54-99d2-d81b95b492e5",
+      "after": "cd8ebe28-d8b8-42c8-930f-1c750a161eb3"
+    },
+    {
+      "path": "/runtimeEpochs/166",
+      "kind": "replace",
+      "before": "2ef39d3e-b023-4b88-911b-d6a5d5276ec8",
+      "after": "0959b0d7-e567-4d97-9338-98c8cf0db8d0"
+    },
+    {
+      "path": "/runtimeEpochs/167",
+      "kind": "replace",
+      "before": "0959b0d7-e567-4d97-9338-98c8cf0db8d0",
+      "after": "2ef39d3e-b023-4b88-911b-d6a5d5276ec8"
+    },
+    {
+      "path": "/runtimeEpochs/168",
+      "kind": "replace",
+      "before": "cd8ebe28-d8b8-42c8-930f-1c750a161eb3",
+      "after": "d9cc8daf-c574-4c54-99d2-d81b95b492e5"
+    },
+    {
+      "path": "/runtimeEpochs/169",
+      "kind": "replace",
+      "before": "925293af-2b89-4dfc-b2e3-14719408c951",
+      "after": "b811d4d3-2a3b-4250-a5c5-802148177a73"
+    },
+    {
+      "path": "/runtimeEpochs/170",
+      "kind": "replace",
+      "before": "f10bab53-8b42-49f5-9ac9-ab6f9dbed236",
+      "after": "67debde8-5eb3-4ce3-a32c-9735c13c44bf"
+    },
+    {
+      "path": "/runtimeEpochs/171",
+      "kind": "replace",
+      "before": "3ba0093f-3093-4eca-b6e4-03bab29e022d",
+      "after": "5f5a04fd-d19a-4f1f-88a2-54db518836c6"
+    },
+    {
+      "path": "/runtimeEpochs/172",
+      "kind": "replace",
+      "before": "51a03eae-f5b1-428c-8c92-e87ce2333aa4",
+      "after": "98e69172-d16a-460f-b002-da716112a41c"
+    },
+    {
+      "path": "/runtimeEpochs/173",
+      "kind": "replace",
+      "before": "f6ed3c57-da92-47db-979d-892432aac129",
+      "after": "23031a9c-2423-41d9-a405-fa19e4a10ab5"
+    },
+    {
+      "path": "/runtimeEpochs/174",
+      "kind": "replace",
+      "before": "0d19cc80-8e54-424c-9162-1b790a3ca247",
+      "after": "4b6aa0c0-16f4-4fcc-89a3-e46d0f079d65"
+    },
+    {
+      "path": "/runtimeEpochs/175",
+      "kind": "replace",
+      "before": "a28e30c1-591a-4ace-9126-eb73150bff09",
+      "after": "3d706ca4-43d2-4116-bd7d-596c9b14f7c3"
+    },
+    {
+      "path": "/runtimeEpochs/176",
+      "kind": "replace",
+      "before": "29005f49-30c9-489a-a187-0fe7353c0f74",
+      "after": "32a655f4-be30-44c6-bc11-2af1fa713666"
+    },
+    {
+      "path": "/runtimeEpochs/177",
+      "kind": "replace",
+      "before": "e8b6ee0d-5667-4136-b0da-bc223daedcba",
+      "after": "439e29db-b980-41cc-9da9-008dee2ce2f7"
+    },
+    {
+      "path": "/runtimeEpochs/178",
+      "kind": "replace",
+      "before": "93b31cc9-1649-4a0b-9e96-50b850cc4c2d",
+      "after": "9725db44-b519-440e-b072-f03afdb5b387"
+    },
+    {
+      "path": "/runtimeEpochs/179",
+      "kind": "replace",
+      "before": "e1319a50-29da-41f1-83d3-e13089db479c",
+      "after": "9ca5ffb1-83a0-4e6d-8cdf-f1707d1c7df0"
+    },
+    {
+      "path": "/runtimeEpochs/180",
+      "kind": "replace",
+      "before": "8b3a9cb3-a14d-4483-ad76-400e0dc061d3",
+      "after": "dc57c287-0fde-45a6-9d71-96bfd10b02cc"
+    },
+    {
+      "path": "/runtimeEpochs/181",
+      "kind": "replace",
+      "before": "46018abc-0d04-4c05-88e6-44b8b0f293b1",
+      "after": "4cebda45-6492-4b1b-b423-8d5a20493b02"
+    },
+    {
+      "path": "/runtimeEpochs/182",
+      "kind": "replace",
+      "before": "4afc53f2-54d1-4f66-ad1d-fb8492e13219",
+      "after": "d3eac51f-2bac-40b4-a3c3-bf720f636de3"
+    },
+    {
+      "path": "/runtimeEpochs/183",
+      "kind": "replace",
+      "before": "18fa4967-d761-4827-96c5-df1604310015",
+      "after": "39ffef44-fbfa-42c7-abca-8e9c7060e493"
+    },
+    {
+      "path": "/runtimeEpochs/184",
+      "kind": "replace",
+      "before": "fba70dc6-22ba-4d89-a26c-abbd721457c6",
+      "after": "05e4ee76-3157-473a-92d4-72c23a99b45c"
+    },
+    {
+      "path": "/runtimeEpochs/185",
+      "kind": "replace",
+      "before": "71394d3d-59f6-4b73-8068-800327cdbf58",
+      "after": "2cf99cb0-4b20-4012-8b6e-602c4fa33dd9"
+    },
+    {
+      "path": "/runtimeEpochs/186",
+      "kind": "replace",
+      "before": "74a2466e-0b02-459a-98e0-1e30173d2539",
+      "after": "d4c8f100-095b-4bca-b158-f3be2acf061a"
+    },
+    {
+      "path": "/runtimeEpochs/187",
+      "kind": "replace",
+      "before": "102c431a-ab65-4290-b51e-fc6a4f4e635f",
+      "after": "d50dc087-15c1-418b-b9ca-fdc7e3d7b8ed"
+    },
+    {
+      "path": "/runtimeEpochs/188",
+      "kind": "replace",
+      "before": "bb47d3fd-d503-47ee-8058-5a706d169037",
+      "after": "e955f0f1-56b4-4558-86da-d61bc5b81d98"
+    },
+    {
+      "path": "/runtimeEpochs/189",
+      "kind": "replace",
+      "before": "4aa8e498-8977-425b-bc34-8f29049262dc",
+      "after": "f278ccf4-4c38-45c0-8d16-ab44a0177ab7"
+    },
+    {
+      "path": "/runtimeEpochs/190",
+      "kind": "replace",
+      "before": "9b285f87-9535-42e6-9cc2-7aba73d3ae69",
+      "after": "20629feb-16f0-4959-9ef8-c38e997ae749"
+    },
+    {
+      "path": "/runtimeEpochs/191",
+      "kind": "replace",
+      "before": "805735f4-7ccd-46f6-99da-0466f3d28f5b",
+      "after": "98a6cc99-49ea-48a1-b7bf-64f07551e6e8"
+    },
+    {
+      "path": "/runtimeEpochs/192",
+      "kind": "replace",
+      "before": "be11cbaf-6303-4a02-b274-55aa6a807f82",
+      "after": "a69971dd-6e13-44a0-91c5-60fc21626dba"
+    },
+    {
+      "path": "/runtimeEpochs/193",
+      "kind": "replace",
+      "before": "eb6e6c98-499b-4c97-bf72-41c142defd6a",
+      "after": "6f0925d2-3ed6-4dab-af1d-90bf7bfa75ac"
+    },
+    {
+      "path": "/runtimeEpochs/194",
+      "kind": "replace",
+      "before": "74dd8cd1-10e4-4c24-bf97-a285032c3279",
+      "after": "246ab5ed-eb9c-4e18-9076-1923671ee6da"
+    },
+    {
+      "path": "/runtimeEpochs/195",
+      "kind": "replace",
+      "before": "9c2e28e6-812d-4fa0-9ba2-a69c681ba2a0",
+      "after": "db3a0f65-4327-49e3-9303-b8a94d227b52"
+    },
+    {
+      "path": "/runtimeEpochs/196",
+      "kind": "replace",
+      "before": "399b2554-89b3-467a-8f83-590318c2622d",
+      "after": "1835cd94-147e-4d9b-8f0d-1f6cbf4e0773"
+    },
+    {
+      "path": "/runtimeEpochs/197",
+      "kind": "replace",
+      "before": "3c06a42c-fb90-46dd-9654-7f8885aeb035",
+      "after": "68608c63-43b3-4332-be76-00b9970eb1e2"
+    },
+    {
+      "path": "/runtimeEpochs/198",
+      "kind": "replace",
+      "before": "4c0842ff-a0c4-427a-a51c-4e76d07ded81",
+      "after": "40b193ce-09ac-45b3-84f7-bfa0b2c08420"
+    },
+    {
+      "path": "/runtimeEpochs/199",
+      "kind": "replace",
+      "before": "d4f76ca3-5d88-419b-84ec-7177eda177f1",
+      "after": "1d6da066-f07e-49b8-be3d-5ec4afbe9b1b"
+    },
+    {
+      "path": "/runtimeEpochs/200",
+      "kind": "replace",
+      "before": "354d6085-ee11-4a4b-a618-7c3b78bc3ad6",
+      "after": "88fbc572-fbf5-437c-ad90-f9c9d8545001"
+    },
+    {
+      "path": "/runtimeEpochs/201",
+      "kind": "replace",
+      "before": "d49c12e5-e560-4ddf-9ad2-8eb9ebd4b948",
+      "after": "eb392666-e7fc-411f-8327-d2afe04c41d3"
+    },
+    {
+      "path": "/runtimeEpochs/202",
+      "kind": "replace",
+      "before": "4cf30080-249b-4bd9-813d-12df0f22b0c4",
+      "after": "a82aea11-f569-488f-bef4-81b42e1b27f7"
+    },
+    {
+      "path": "/runtimeEpochs/203",
+      "kind": "replace",
+      "before": "ff7a49ee-1361-4f77-b517-ddc99b80df54",
+      "after": "a4eb494c-7b59-426c-96cb-d6d21f2731ed"
+    },
+    {
+      "path": "/runtimeEpochs/204",
+      "kind": "replace",
+      "before": "41174f61-f3b4-4b89-bd87-6047f1b43ff6",
+      "after": "f881ea6d-bf5d-4920-b430-d6f34f36b5e9"
+    },
+    {
+      "path": "/runtimeEpochs/205",
+      "kind": "replace",
+      "before": "1438354a-9b26-4739-9641-fdcf156e4c61",
+      "after": "a5373102-4005-4c1f-bf8f-8a85f6835985"
+    },
+    {
+      "path": "/runtimeEpochs/206",
+      "kind": "replace",
+      "before": "e72ea932-f73d-4872-9be9-657eef4221b0",
+      "after": "b5b8f7e7-91a8-4286-b5b6-9e888f5c83dc"
+    },
+    {
+      "path": "/runtimeEpochs/207",
+      "kind": "replace",
+      "before": "2c66cf85-81b3-4d1e-ad03-7abaabe8cfc3",
+      "after": "eba2c480-916d-4656-abc8-653de874d390"
+    },
+    {
+      "path": "/runtimeEpochs/208",
+      "kind": "replace",
+      "before": "b7be22a1-5bc5-499a-a0d6-8ff365c5cc84",
+      "after": "ed073763-70fe-47b5-a883-de3b13e7783d"
+    },
+    {
+      "path": "/runtimeEpochs/209",
+      "kind": "replace",
+      "before": "79b58562-9ff5-4700-abc9-160cf5d56bbc",
+      "after": "ac4a2ae1-37f1-4530-bc1a-4aa2f76b7752"
+    },
+    {
+      "path": "/runtimeEpochs/210",
+      "kind": "replace",
+      "before": "92fcaf84-cdd0-47fa-92cf-8fa1b4cc13f0",
+      "after": "6c392fae-6283-454a-bc39-02b28cbf2a8d"
+    },
+    {
+      "path": "/runtimeEpochs/211",
+      "kind": "replace",
+      "before": "0efad57b-a7e0-4ed4-ac2f-53470c297ecb",
+      "after": "c24a6956-0835-40c3-9b09-2668e38fd34a"
+    },
+    {
+      "path": "/runtimeEpochs/212",
+      "kind": "replace",
+      "before": "1b11af68-0901-4642-992b-af3a4bbdc7ad",
+      "after": "168e1e7f-e494-4c04-93ef-e6d8e4386a05"
+    },
+    {
+      "path": "/runtimeEpochs/213",
+      "kind": "replace",
+      "before": "a12a4cee-ab31-4ebb-82dc-0e49c5232ecc",
+      "after": "4b6b584d-c8e0-433e-b9b2-c115cf9efa75"
+    },
+    {
+      "path": "/runtimeEpochs/214",
+      "kind": "replace",
+      "before": "e3e90765-ef24-4790-a062-1aff9aea70a7",
+      "after": "0f5b3783-ba25-4c5c-aa8b-d0afdf8d9fd6"
+    },
+    {
+      "path": "/runtimeEpochs/215",
+      "kind": "replace",
+      "before": "ae165412-e2c4-4b32-86d9-90a63f73d7a0",
+      "after": "61297af1-5920-4bbb-bf7e-c8e2bc13f8ef"
+    },
+    {
+      "path": "/runtimeEpochs/216",
+      "kind": "replace",
+      "before": "verify-r21",
+      "after": "e5b66cca-ffa0-4644-91e5-7cec9a9f47ac"
+    },
+    {
+      "path": "/runtimeEpochs/217",
+      "kind": "replace",
+      "before": "68b875bb-6ccd-4490-843c-bc704fefaff9",
+      "after": "20a94217-1db9-4c38-9135-09716f38b4f5"
+    },
+    {
+      "path": "/runtimeEpochs/218",
+      "kind": "replace",
+      "before": "18afdbc2-744d-4844-b0e8-136b0ec50ec6",
+      "after": "eaec0506-585b-4166-9bd4-2a887a0ce0d0"
+    },
+    {
+      "path": "/runtimeEpochs/219",
+      "kind": "replace",
+      "before": "5fe43b2a-e369-4e3a-81a8-e78a0037bb96",
+      "after": "ab16dca9-d4a3-4f0f-acae-c4fbb72ca209"
+    },
+    {
+      "path": "/runtimeEpochs/220",
+      "kind": "replace",
+      "before": "52da88de-2af5-4e8b-bf91-29764ad896d0",
+      "after": "b09764c6-62bb-4fd9-bb21-3406e48d2782"
+    },
+    {
+      "path": "/runtimeEpochs/221",
+      "kind": "replace",
+      "before": "fea0e7f5-9bdd-47ca-af78-c19e1eaad82b",
+      "after": "9543112a-b7b2-4ba3-af3b-fde794ecce56"
+    },
+    {
+      "path": "/runtimeEpochs/222",
+      "kind": "replace",
+      "before": "aad5d12d-a829-4a9f-a4f1-5b59ef6bd141",
+      "after": "eb02b784-a928-4372-82ce-70e8d1b342a7"
+    },
+    {
+      "path": "/runtimeEpochs/223",
+      "kind": "replace",
+      "before": "9b7af699-9f0c-41fc-9302-5ca63b666e0d",
+      "after": "97c42178-8e5f-4d19-a3a3-e7f18b0983a7"
+    },
+    {
+      "path": "/runtimeEpochs/224",
+      "kind": "replace",
+      "before": "5bc53ffa-985d-425a-a4ad-b46e31d0e726",
+      "after": "31bbe81f-deaf-44fc-ad42-59f6b1fcd319"
+    },
+    {
+      "path": "/runtimeEpochs/225",
+      "kind": "replace",
+      "before": "40eb0b1b-ac57-448c-bdd6-b184f23a88cb",
+      "after": "b5e640bc-a008-40a7-8c86-984f1111d495"
+    },
+    {
+      "path": "/runtimeEpochs/226",
+      "kind": "replace",
+      "before": "a6e1dc69-9820-433d-90f1-86f18d5a669f",
+      "after": "13a74f19-c09b-433a-8ff3-3b283612990e"
+    },
+    {
+      "path": "/runtimeEpochs/227",
+      "kind": "replace",
+      "before": "8c58446a-5943-4940-ad08-c8b3b23f3ce3",
+      "after": "a87e712c-8953-474e-a194-c49495a44437"
+    },
+    {
+      "path": "/runtimeEpochs/228",
+      "kind": "replace",
+      "before": "dfd4cbc5-3a90-455d-8910-ad1268cfe47e",
+      "after": "ff16df1d-7a2d-487f-9ac3-1202ddd3ccaf"
+    },
+    {
+      "path": "/runtimeEpochs/229",
+      "kind": "replace",
+      "before": "e9df1a32-eb2d-4742-be9e-ccf505b90aab",
+      "after": "4d6c32e8-f6f3-4ff8-bed6-97dff5ea1207"
+    },
+    {
+      "path": "/runtimeEpochs/230",
+      "kind": "replace",
+      "before": "1cfce167-010f-4be9-861f-7d39a5477ea0",
+      "after": "d9f56cd3-3419-449d-b159-3d68c425bf69"
+    },
+    {
+      "path": "/runtimeEpochs/231",
+      "kind": "replace",
+      "before": "532047b6-c4a6-41d8-a9df-3502e620fceb",
+      "after": "35a84910-c950-48de-b6c0-da50d27b6947"
+    },
+    {
+      "path": "/runtimeEpochs/232",
+      "kind": "replace",
+      "before": "508dc225-7847-4a19-92a2-b1c15be56c0d",
+      "after": "1709ff0e-f03f-45b1-a7f9-b84a30cb7423"
+    },
+    {
+      "path": "/runtimeEpochs/233",
+      "kind": "replace",
+      "before": "ab09ada3-b249-44e6-9d11-051ad3e53b68",
+      "after": "902b6c6f-5cc8-4e52-9339-5929af5ecf06"
+    },
+    {
+      "path": "/runtimeEpochs/234",
+      "kind": "replace",
+      "before": "a4cfa14f-7472-42b3-951f-8ca6f0ac7623",
+      "after": "244cb735-70a0-4414-98d1-0f4034c3a303"
+    },
+    {
+      "path": "/runtimeEpochs/235",
+      "kind": "replace",
+      "before": "3b3d71c3-5e36-4f44-ab05-d410dba49d68",
+      "after": "0f355cd5-75ef-429a-ace8-81c7ed9c37cd"
+    },
+    {
+      "path": "/runtimeEpochs/236",
+      "kind": "replace",
+      "before": "419a1016-ca9e-487f-b8e6-495defcd1b6d",
+      "after": "bc82f4c7-5404-4a10-84d9-0e9aa1f8930f"
+    },
+    {
+      "path": "/runtimeEpochs/237",
+      "kind": "replace",
+      "before": "46d55fb9-0d10-4e03-8f5d-1c4055c63775",
+      "after": "aa061846-2ed5-404d-b180-62d69cf49b26"
+    },
+    {
+      "path": "/runtimeEpochs/238",
+      "kind": "replace",
+      "before": "c438d318-c0b9-458e-b5b6-f4f49754565a",
+      "after": "fa2d449c-4504-469e-a809-f15861398d03"
+    },
+    {
+      "path": "/runtimeEpochs/239",
+      "kind": "replace",
+      "before": "597faed7-e27f-44e4-8964-b57b1145a5eb",
+      "after": "d9d30c1c-0d39-436a-9bfd-3734e7c292f4"
+    },
+    {
+      "path": "/runtimeEpochs/240",
+      "kind": "replace",
+      "before": "7da3c945-3093-4a1c-8f19-315e1895d801",
+      "after": "e6bcaf03-c2c1-452c-93df-877cec4d5145"
+    },
+    {
+      "path": "/runtimeEpochs/241",
+      "kind": "replace",
+      "before": "5e240676-0dbd-41c7-9e75-c23299c646b6",
+      "after": "c01fce97-f290-4d59-8a74-da2d0e08b340"
+    },
+    {
+      "path": "/runtimeEpochs/242",
+      "kind": "replace",
+      "before": "e609e764-8feb-4465-9617-dfcfbfe6fd59",
+      "after": "dbe2550c-eb3d-492f-bdf0-ee29d02f3fc3"
+    },
+    {
+      "path": "/runtimeEpochs/243",
+      "kind": "replace",
+      "before": "b073cc5a-9ff1-476b-9cff-4d4f9bf3f58e",
+      "after": "a5d08f8b-a679-4314-aaaf-36bebb3fe504"
+    },
+    {
+      "path": "/runtimeEpochs/244",
+      "kind": "replace",
+      "before": "abdee2c9-f631-418c-bf15-52b4dcdb4dc2",
+      "after": "ca6dd612-1bff-4ee6-95e2-431c08c50a2b"
+    },
+    {
+      "path": "/runtimeEpochs/245",
+      "kind": "replace",
+      "before": "71138802-aef7-4bc0-9083-aec976d0f10f",
+      "after": "ae35c7d7-79e9-46ee-baf3-a35f9400fe7e"
+    },
+    {
+      "path": "/runtimeEpochs/246",
+      "kind": "replace",
+      "before": "0276dbb7-96d0-48ac-8321-3dc1235da769",
+      "after": "bd928e69-3efb-4430-bac5-083dfb7dcf86"
+    },
+    {
+      "path": "/runtimeEpochs/247",
+      "kind": "replace",
+      "before": "6499da07-97af-4dac-99fb-603c8affc36e",
+      "after": "b3efdd42-dd6b-470f-8e8f-8d2a2a8b1c8a"
+    },
+    {
+      "path": "/runtimeEpochs/248",
+      "kind": "replace",
+      "before": "c49737eb-d10b-4a17-9c1a-5167e0376ede",
+      "after": "d61584ea-50bb-4fbb-a6d9-1fe025fa14e5"
+    },
+    {
+      "path": "/runtimeEpochs/249",
+      "kind": "replace",
+      "before": "52c8aee7-9fd0-42a2-8708-d370f4b1198d",
+      "after": "14885151-9a8b-4bc2-8916-1f38b029ba79"
+    },
+    {
+      "path": "/runtimeEpochs/250",
+      "kind": "replace",
+      "before": "e97053e2-48ae-4fcd-8aac-6fb85199fcc5",
+      "after": "c7712de0-c1d1-44ec-bec5-134616cb9f70"
+    },
+    {
+      "path": "/runtimeEpochs/251",
+      "kind": "replace",
+      "before": "f8ee85a6-e0a3-455b-8cb0-35fe96a37de3",
+      "after": "524b24eb-19c6-4994-b7d4-74d48bf75940"
+    },
+    {
+      "path": "/runtimeEpochs/252",
+      "kind": "replace",
+      "before": "b1b1ce3a-4ea3-4149-9af1-e6d2a15e9b1e",
+      "after": "8f63d931-1e67-422c-8804-a31a68218c05"
+    },
+    {
+      "path": "/runtimeEpochs/253",
+      "kind": "replace",
+      "before": "4bbd28be-44d9-4348-8026-a202ffd8b035",
+      "after": "f3c79864-5136-4818-a04f-2b53a6d39ecd"
+    },
+    {
+      "path": "/runtimeEpochs/254",
+      "kind": "replace",
+      "before": "c3896f43-0e73-48a0-980e-161376797a14",
+      "after": "e77c67ab-c717-4107-aca6-e74fd020e3e5"
+    },
+    {
+      "path": "/runtimeEpochs/255",
+      "kind": "replace",
+      "before": "baaf7f41-e11a-4767-bdaa-5ee305b8703e",
+      "after": "175341bd-0d87-44d6-8784-220eba1108ac"
+    },
+    {
+      "path": "/records/4394/updatedAt",
+      "kind": "replace",
+      "before": 1793936571782,
+      "after": 1794024493602
+    },
+    {
+      "path": "/records/5161/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5162/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5163/bytes",
+      "kind": "replace",
+      "before": 1261,
+      "after": 1361
+    },
+    {
+      "path": "/records/5163/finalAssistantOutputEvidence",
+      "kind": "replace",
+      "before": {
+        "sha256": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+        "originalBytes": 2,
+        "truncated": false
+      },
+      "after": null
+    },
+    {
+      "path": "/records/5164/bytes",
+      "kind": "replace",
+      "before": 1164,
+      "after": 1200
+    },
+    {
+      "path": "/records/5165/bytes",
+      "kind": "replace",
+      "before": 1164,
+      "after": 1200
+    },
+    {
+      "path": "/records/5166/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5167/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5168/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5169/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5170/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5171/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5172/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5173/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5174/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5175/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5176/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5177/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5178/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5179/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5180/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5181/bytes",
+      "kind": "replace",
+      "before": 1443,
+      "after": 1479
+    },
+    {
+      "path": "/records/5182/bytes",
+      "kind": "replace",
+      "before": 1443,
+      "after": 1479
+    },
+    {
+      "path": "/records/5183/bytes",
+      "kind": "replace",
+      "before": 1443,
+      "after": 1479
+    },
+    {
+      "path": "/records/5184/bytes",
+      "kind": "replace",
+      "before": 1443,
+      "after": 1479
+    },
+    {
+      "path": "/records/5185/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5186/bytes",
+      "kind": "replace",
+      "before": 1443,
+      "after": 1479
+    },
+    {
+      "path": "/records/5187/bytes",
+      "kind": "replace",
+      "before": 1443,
+      "after": 1479
+    },
+    {
+      "path": "/records/5188/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5189/bytes",
+      "kind": "replace",
+      "before": 2545,
+      "after": 2581
+    },
+    {
+      "path": "/records/5190/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5191/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5192/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5193/bytes",
+      "kind": "replace",
+      "before": 3955,
+      "after": 1633
+    },
+    {
+      "path": "/records/5193/finalAssistantOutputEvidence",
+      "kind": "replace",
+      "before": {
+        "sha256": "875057036fde12b65953ff57f04782148f7958c0c985ca6cb8ca4abae4f88fe6",
+        "originalBytes": 2424,
+        "truncated": false
+      },
+      "after": null
+    },
+    {
+      "path": "/records/5194/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5195/bytes",
+      "kind": "replace",
+      "before": 1856,
+      "after": 1634
+    },
+    {
+      "path": "/records/5195/finalAssistantOutputEvidence",
+      "kind": "replace",
+      "before": {
+        "sha256": "7dc31f8ddb2e69d89e3a54e3fde62552f944e0b36f5e8b15023bc583c9daa937",
+        "originalBytes": 324,
+        "truncated": false
+      },
+      "after": null
+    },
+    {
+      "path": "/records/5196/bytes",
+      "kind": "replace",
+      "before": 3786,
+      "after": 1636
+    },
+    {
+      "path": "/records/5196/finalAssistantOutputEvidence",
+      "kind": "replace",
+      "before": {
+        "sha256": "a9fc8633427c3acbdbe5f2313507d11582f452eec8d15daf97ea04d34cff52f1",
+        "originalBytes": 2252,
+        "truncated": false
+      },
+      "after": null
+    },
+    {
+      "path": "/records/5197/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5198/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5199/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5200/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5201/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5202/bytes",
+      "kind": "replace",
+      "before": 1294,
+      "after": 1330
+    },
+    {
+      "path": "/records/5203/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5204/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5205/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5206/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5207/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5208/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5209/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5210/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5211/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5212/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5213/bytes",
+      "kind": "replace",
+      "before": 1367,
+      "after": 1403
+    },
+    {
+      "path": "/records/5214/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5215/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5216/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5217/bytes",
+      "kind": "replace",
+      "before": 1496,
+      "after": 1532
+    },
+    {
+      "path": "/records/5218/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5219/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5220/bytes",
+      "kind": "replace",
+      "before": 2807,
+      "after": 1637
+    },
+    {
+      "path": "/records/5220/finalAssistantOutputEvidence",
+      "kind": "replace",
+      "before": {
+        "sha256": "897b00362733eedae3060ee4416307d74eabe8cc60ae29226f8e868f6f61dcdc",
+        "originalBytes": 1272,
+        "truncated": false
+      },
+      "after": null
+    },
+    {
+      "path": "/records/5221/bytes",
+      "kind": "replace",
+      "before": 3033,
+      "after": 1637
+    },
+    {
+      "path": "/records/5221/finalAssistantOutputEvidence",
+      "kind": "replace",
+      "before": {
+        "sha256": "624f20dc61025297b60fda4cf0335b112e8af9bcf0600bc5a0ae2bff406c9e2a",
+        "originalBytes": 1498,
+        "truncated": false
+      },
+      "after": null
+    },
+    {
+      "path": "/records/5222/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5223/bytes",
+      "kind": "replace",
+      "before": 1885,
+      "after": 1636
+    },
+    {
+      "path": "/records/5223/finalAssistantOutputEvidence",
+      "kind": "replace",
+      "before": {
+        "sha256": "1b1375bf27c9a4ea0d9dfabe94dd25ba99980655d4df1fa1512e7108a71f2b73",
+        "originalBytes": 351,
+        "truncated": false
+      },
+      "after": null
+    },
+    {
+      "path": "/records/5224/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5225/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    },
+    {
+      "path": "/records/5226/bytes",
+      "kind": "replace",
+      "before": 1295,
+      "after": 1331
+    }
+  ],
+  "classification": "b: historical answer digest evidence lost; repaired before matrix",
+  "repaired": {
+    "at": "2026-11-07T04:10:45.360Z",
+    "path": "/private/tmp/h605-r5-evidence/after-router-open-repaired.json",
+    "sha256": "9a3d78035cf763129926c99b85261b5a7f88735226851c5de069454e3832894c",
+    "allBusinessEvidenceFactsPreserved": true,
+    "protected3Equal": true,
+    "recordCount": 5227,
+    "digestsRetained": 7
+  },
+  "epochSet": {
+    "before": 256,
+    "after": 256,
+    "added": [
+      "compat-cold"
+    ],
+    "removed": [
+      "5044bdf8-21d4-42ea-9c68-1b2a52221c9f"
+    ]
+  }
+}

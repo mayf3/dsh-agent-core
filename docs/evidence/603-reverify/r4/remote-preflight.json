@@ -1,0 +1,16 @@
+{
+  "observed_during": "R4 preflight",
+  "main": {
+    "sha": "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed",
+    "url": "https://github.com/mayf3/dsh-agent-core/commit/1ff1e81cbd74a51761dab46a5fcee532c41fe4ed"
+  },
+  "pr": {
+    "number": 603,
+    "state": "open",
+    "merged": false,
+    "head": "ac-ctr-s4-runtime-prep",
+    "base": "main",
+    "url": "https://github.com/mayf3/dsh-agent-core/pull/603"
+  },
+  "original_pr_body_preserved": "pr-body-before.md"
+}

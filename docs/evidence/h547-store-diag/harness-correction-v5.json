@@ -1,0 +1,33 @@
+{
+  "time_utc": "2026-11-08T07:49:08.183051+00:00",
+  "classification": "EXPLAINED_LOCAL_HARNESS_PERMISSION_ERROR; NOT_V5_STOP_TRIGGER",
+  "product_constructor_executed": false,
+  "validation_checks_passed": 10,
+  "production_write_attempted": false,
+  "capture_hashes_unchanged": true,
+  "explanation": "Node permission path for a directory absent at process startup permitted mkdir but did not grant child-file writes in that invocation. Scratch existed empty afterward; a separate minimal copyFileSync probe under the same permission on the now-existing directory succeeded. No product constructor had executed.",
+  "correction": "Preserve attempt1 stdout/rc/runner hash and failed scratch; precreate a separate empty scratch-2 before starting Node, grant only it, allow runner to accept an empty scratch, then continue under v5.",
+  "probe": {
+    "node_permission_write_dir": true,
+    "node_permission_write_child": true,
+    "copyFileSync": "LOCAL_COPY_PASS",
+    "destination": "private/v5/scratch/probe-copy.json"
+  },
+  "raw_stdout": "qa-v5-attempt1.stdout.json",
+  "receipt": "qa-run-v5-attempt1-receipt.json",
+  "attempt2": {
+    "constructor_result": {
+      "ready": false,
+      "reason": "durable_store_unavailable"
+    },
+    "cause_probe": {
+      "step": "fsync_file",
+      "code": "ERR_ACCESS_DENIED",
+      "message": "fsync API is disabled when Permission Model is enabled."
+    },
+    "classification": "EXPLAINED_LOCAL_HARNESS_FSYNC_RESTRICTION; NOT_PRODUCTION_OR_DATA_FAILURE",
+    "store_source_modified": false,
+    "raw_snapshot_hash_unchanged": true,
+    "correction": "Use macOS sandbox-exec: deny all file writes except exact precreated scratch, deny network and process fork, permit fsync in scratch. Retain original attempt2 output and code."
+  }
+}

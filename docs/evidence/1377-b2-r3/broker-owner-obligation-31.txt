@@ -1,0 +1,48 @@
+$ EKR_SOURCE_SHA=77b9644b2a6ff70cb6af2cf00bb134502a0eef8b node --test packages/broker/test/capabilities/workflow-execution/owner-obligation-attempt.test.js packages/broker/test/capabilities/workflow-execution/owner-obligation.test.js
+✔ P1-B create_instance: lost response then new attempts preserve SUCCEEDED effect (187.353042ms)
+ℹ {"operation":"create_instance","outcome":"SUCCEEDED","attempts":[{"attemptId":"wfeat-78ce25d4b4df4a8a7995a6c1","generation":1},{"attemptId":"wfeat-03ae48b05e3cf4d431746519","generation":2},{"attemptId":"wfeat-b6a457ad3b1e12c7c2e9a690","generation":3}],"effectId":"00000013-0000-4000-8000-000000000000","stableKey":"[\"00000001-0000-4000-8000-000000000000\",\"00000007-0000-4000-8000-000000000000\",\"00000008-0000-4000-8000-000000000000\",\"supplier\",1]","businessExecutions":1,"guardedPosts":3,"limitations":"real Core ledger/context/gateway + loopback HTTP; Svc table is a fixture; admission eligibility and quiescence seeded; no live DB/process/production proof"}
+✔ P1-B create_instance: lost response then new attempts preserve UNKNOWN effect (167.118ms)
+ℹ {"operation":"create_instance","outcome":"UNKNOWN","attempts":[{"attemptId":"wfeat-78ce25d4b4df4a8a7995a6c1","generation":1},{"attemptId":"wfeat-03ae48b05e3cf4d431746519","generation":2},{"attemptId":"wfeat-b6a457ad3b1e12c7c2e9a690","generation":3}],"effectId":"00000013-0000-4000-8000-000000000000","stableKey":"[\"00000001-0000-4000-8000-000000000000\",\"00000007-0000-4000-8000-000000000000\",\"00000008-0000-4000-8000-000000000000\",\"supplier\",1]","businessExecutions":1,"guardedPosts":1,"limitations":"real Core ledger/context/gateway + loopback HTTP; Svc table is a fixture; admission eligibility and quiescence seeded; no live DB/process/production proof"}
+✔ P1-B resolve_current_governance_review: lost response then new attempts preserve SUCCEEDED effect (158.081ms)
+ℹ {"operation":"resolve_current_governance_review","outcome":"SUCCEEDED","attempts":[{"attemptId":"wfeat-78ce25d4b4df4a8a7995a6c1","generation":1},{"attemptId":"wfeat-03ae48b05e3cf4d431746519","generation":2},{"attemptId":"wfeat-b6a457ad3b1e12c7c2e9a690","generation":3}],"effectId":"00000013-0000-4000-8000-000000000000","stableKey":"[\"00000001-0000-4000-8000-000000000000\",\"00000007-0000-4000-8000-000000000000\",\"00000008-0000-4000-8000-000000000000\",\"review\",1]","businessExecutions":1,"guardedPosts":3,"limitations":"real Core ledger/context/gateway + loopback HTTP; Svc table is a fixture; admission eligibility and quiescence seeded; no live DB/process/production proof"}
+✔ P1-B resolve_current_governance_review: lost response then new attempts preserve UNKNOWN effect (158.657791ms)
+ℹ {"operation":"resolve_current_governance_review","outcome":"UNKNOWN","attempts":[{"attemptId":"wfeat-78ce25d4b4df4a8a7995a6c1","generation":1},{"attemptId":"wfeat-03ae48b05e3cf4d431746519","generation":2},{"attemptId":"wfeat-b6a457ad3b1e12c7c2e9a690","generation":3}],"effectId":"00000013-0000-4000-8000-000000000000","stableKey":"[\"00000001-0000-4000-8000-000000000000\",\"00000007-0000-4000-8000-000000000000\",\"00000008-0000-4000-8000-000000000000\",\"review\",1]","businessExecutions":1,"guardedPosts":1,"limitations":"real Core ledger/context/gateway + loopback HTTP; Svc table is a fixture; admission eligibility and quiescence seeded; no live DB/process/production proof"}
+✔ P1-B escalate_to_human: lost response then new attempts preserve SUCCEEDED effect (189.33925ms)
+ℹ {"operation":"escalate_to_human","outcome":"SUCCEEDED","attempts":[{"attemptId":"wfeat-78ce25d4b4df4a8a7995a6c1","generation":1},{"attemptId":"wfeat-03ae48b05e3cf4d431746519","generation":2},{"attemptId":"wfeat-b6a457ad3b1e12c7c2e9a690","generation":3}],"effectId":"00000013-0000-4000-8000-000000000000","stableKey":"[\"00000001-0000-4000-8000-000000000000\",\"00000007-0000-4000-8000-000000000000\",\"00000008-0000-4000-8000-000000000000\",\"review\",1]","businessExecutions":1,"guardedPosts":3,"limitations":"real Core ledger/context/gateway + loopback HTTP; Svc table is a fixture; admission eligibility and quiescence seeded; no live DB/process/production proof"}
+✔ P1-B escalate_to_human: lost response then new attempts preserve UNKNOWN effect (159.824208ms)
+ℹ {"operation":"escalate_to_human","outcome":"UNKNOWN","attempts":[{"attemptId":"wfeat-78ce25d4b4df4a8a7995a6c1","generation":1},{"attemptId":"wfeat-03ae48b05e3cf4d431746519","generation":2},{"attemptId":"wfeat-b6a457ad3b1e12c7c2e9a690","generation":3}],"effectId":"00000013-0000-4000-8000-000000000000","stableKey":"[\"00000001-0000-4000-8000-000000000000\",\"00000007-0000-4000-8000-000000000000\",\"00000008-0000-4000-8000-000000000000\",\"review\",1]","businessExecutions":1,"guardedPosts":1,"limitations":"real Core ledger/context/gateway + loopback HTTP; Svc table is a fixture; admission eligibility and quiescence seeded; no live DB/process/production proof"}
+✔ Owner obligation read is a closed, read-only capability (0.667459ms)
+✔ managed create uses exact slot + one same-caller detail CAS, preserving original response (27.315542ms)
+✔ dependency leaf cannot fork and UNKNOWN cannot write or fall through (8.795875ms)
+✔ successful create after RETURN verifies original semantic intent without creating a new effect (7.044375ms)
+✔ successful create cannot credit changed business body, target, or unknown arguments (7.068792ms)
+✔ managed REVIEW uses actual admission + same-caller detail without inventing DELIVERED (4.260209ms)
+✔ managed REVIEW independently rejects each wrong Owner/lineage/proof/CAS and caller collision (48.74575ms)
+✔ managed escalation retains explicit stale CAS and the existing business payload (8.366541ms)
+✔ own resolve replay uses immutable original proof and explicit old CAS without new ADMISSIBLE (3.459958ms)
+✔ own resolve replay rejects changed message, changed allowed descriptor and wrong case (10.370833ms)
+✔ own resolve replay cannot synthesize missing proof or trust mismatched immutable lineage (20.58925ms)
+✔ a claimed replay must bind the same original command, result and effect (20.285ms)
+✔ only authoritative not-managed permits fallback; opaque 404/storage and malformed relations do not (44.977917ms)
+✔ Svc rejection or malformed success is not retried or claimed as success (8.257084ms)
+✔ missing resolver for a proven workflow turn fails closed; generic managed assistance cannot bypass (10.31125ms)
+✔ read capability rejects extra arguments and invalid UUID before transport (1.413833ms)
+✔ unmanaged REVIEW preserves DELIVERED/OUTSTANDING legacy requirement (2.654166ms)
+✔ opaque service slot keys are URL encoded, never model selected or concatenated as paths (4.051417ms)
+✔ managed and leaf turns cannot open nested assistance through the separate existing request tool (17.329708ms)
+✔ existing write manifests preserve managed refusal codes through the child invoke mapper (0.283834ms)
+✔ managed INTAKE transition forwards full Context unchanged through existing wire without discovery joins (11.934542ms)
+✔ Context omission preserves ordinary and managed transition body, receipt and trusted idempotency (19.19425ms)
+✔ present Context rejects null/nonobjects and unknown arguments before HTTP (17.996084ms)
+✔ present Context cannot use unmanaged, unproven, stale, stopped or non-INTAKE provenance (45.939958ms)
+✔ managed Context preserves actual Svc gate/schema/CAS errors without local guessing or retries (17.58775ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1102.216458
+
+exit_code: 0

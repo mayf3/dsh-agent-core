@@ -1,0 +1,38 @@
+$ node --check packages/production-runtime/src/workflow-execution-runtime.js
+exit_code: 0
+
+$ node --check packages/workflow-execution/src/engine.js
+exit_code: 0
+
+$ node --check packages/workflow-execution/src/ledger-events.js
+exit_code: 0
+
+$ node --check packages/workflow-execution/src/ledger-records.js
+exit_code: 0
+
+$ node --check packages/workflow-execution/src/ledger.js
+exit_code: 0
+
+$ node --check packages/workflow-execution/src/owner-assistance-resume-engine.js
+exit_code: 0
+
+$ node --check packages/workflow-execution/src/recovery/operation.js
+exit_code: 0
+
+$ node --check packages/workflow-execution/src/recovery/automatic-ledger.js
+exit_code: 0
+
+$ node --check packages/workflow-execution/src/recovery/automatic.js
+exit_code: 0
+
+$ node --check packages/workflow-execution/test/observation-cas/blocked-recovery-process.js
+exit_code: 0
+
+$ node --check packages/workflow-execution/test/observation-cas/blocked-recovery-restart.test.js
+exit_code: 0
+
+$ node --check packages/workflow-execution/test/observation-cas/blocked-recovery.test.js
+exit_code: 0
+
+$ git diff --check
+exit_code: 0

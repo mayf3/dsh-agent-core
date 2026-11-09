@@ -1,0 +1,13 @@
+COMMAND: ["node", "--test", "--test-concurrency=1", "--test-name-pattern=^MATRIX decode$", "scripts/availability-recovery/compat-reader-matrix.test.mjs"]
+decoded Router=5227/93 Scheduler=59/5002/7 unverifiableHistory=5002; all original facts/fences and input hashes unchanged
+✔ MATRIX decode (215.87275ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 269.6245
+
+rc=0

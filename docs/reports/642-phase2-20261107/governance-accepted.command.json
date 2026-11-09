@@ -1,0 +1,12 @@
+{
+  "command": [
+    "python3",
+    ".agents/tools/verify_governance.py",
+    "--target",
+    ".",
+    "--require-accepted"
+  ],
+  "exit_code": 0,
+  "observed_at": "2026-11-07T03:20:46.322784+00:00",
+  "candidate_tree": "c3a0197cb67c1fdc14af9a3184e46e8d9976e209"
+}

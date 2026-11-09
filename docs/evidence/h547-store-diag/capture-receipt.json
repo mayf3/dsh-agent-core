@@ -1,0 +1,182 @@
+{
+  "started_at_utc": "2026-11-08T06:49:02.827313+00:00",
+  "commands": [
+    {
+      "argv": [
+        "sudo",
+        "-n",
+        "-u",
+        "authsvc",
+        "/bin/ls",
+        "-1",
+        "/Users/authsvc/.agent-core/control"
+      ],
+      "started_at_utc": "2026-11-08T06:49:02.827615+00:00",
+      "ended_at_utc": "2026-11-08T06:49:02.839710+00:00",
+      "rc": 0,
+      "stdout_bytes": 3410,
+      "stdout_sha256": "5419c6149fe9a1ac484ce393f74e9a1df299e20b1a8c5a1aecd53f734a8a4760"
+    },
+    {
+      "argv": [
+        "sudo",
+        "-n",
+        "-u",
+        "authsvc",
+        "/usr/bin/stat",
+        "-f",
+        "%N|%d|%i|%z|%m|%c|%u|%g|%p|%HT",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.invalid-dualwrite-20261002-090004.json",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.abandonment-declarations.json",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.abandonment-declarations.json.bak-pre-cto-gen23-20261104",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.abandonment-declarations.stale-090035.json",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.bak-pre-R100-settlement-20261106",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.bak-pre-cto-abandon-stamp-20261104",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.bak-pre-epoch-fix2-20261106",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.bak-pre-epoch-trim-20261106",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.bak-pre-invariant-fix-20261106",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.bak-pre-r129-fence-repair-20261108",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.faults.json",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.pre-byterepair-20260930",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.pre-overlap-repair-20260920-140206",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.quarantine-overlap-20260920-210448",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.pendingcleared-20261002-090237.json",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.pre-canonical-fence-clear-20261022-204355",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.pre-fence-clear-20261002-085258.json",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.pre-fleet-unblock-20261002-111745.json",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.pre-hr-abandon-20261002-082134.json",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.pre-hr-cron-clear-20261023-190209",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.pre-shopping-fence-clear-20261019-075224.json"
+      ],
+      "started_at_utc": "2026-11-08T06:49:02.839787+00:00",
+      "ended_at_utc": "2026-11-08T06:49:02.863909+00:00",
+      "rc": 0,
+      "stdout_bytes": 3618,
+      "stdout_sha256": "dc364a5db81d12abd6347bcc05cdb44cd401ed68f16a367117aebb99e4b290fb"
+    },
+    {
+      "argv": [
+        "sudo",
+        "-n",
+        "-u",
+        "authsvc",
+        "/bin/cat",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.invalid-dualwrite-20261002-090004.json"
+      ],
+      "started_at_utc": "2026-11-08T06:49:02.863970+00:00",
+      "ended_at_utc": "2026-11-08T06:49:02.880197+00:00",
+      "rc": 0,
+      "stdout_bytes": 2508184,
+      "stdout_sha256": "757c1edacfbdea455cd1c8a84b22f5f0bc32b9d85834b49e7834a24c8b47751a"
+    },
+    {
+      "argv": [
+        "sudo",
+        "-n",
+        "-u",
+        "authsvc",
+        "/bin/cat",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json"
+      ],
+      "started_at_utc": "2026-11-08T06:49:02.882237+00:00",
+      "ended_at_utc": "2026-11-08T06:49:02.896287+00:00",
+      "rc": 0,
+      "stdout_bytes": 8505790,
+      "stdout_sha256": "85c4b0ce0957c03d6074edd7624ae33e8c2678feb9796087d27c5b7f7cd4b508"
+    },
+    {
+      "argv": [
+        "sudo",
+        "-n",
+        "-u",
+        "authsvc",
+        "/bin/cat",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.abandonment-declarations.json"
+      ],
+      "started_at_utc": "2026-11-08T06:49:02.902504+00:00",
+      "ended_at_utc": "2026-11-08T06:49:02.914078+00:00",
+      "rc": 0,
+      "stdout_bytes": 3137,
+      "stdout_sha256": "28ba4a74693d23ad0fc3338d77d2f5c72a35c1ae43970dfb2b4f854d6c727cc1"
+    },
+    {
+      "argv": [
+        "sudo",
+        "-n",
+        "-u",
+        "authsvc",
+        "/bin/cat",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.abandonment-declarations.json.bak-pre-cto-gen23-20261104"
+      ],
+      "started_at_utc": "2026-11-08T06:49:02.914517+00:00",
+      "ended_at_utc": "2026-11-08T06:49:02.926101+00:00",
+      "rc": 0,
+      "stdout_bytes": 149,
+      "stdout_sha256": "1fdd2f8b55b49912dc29a659b980e8b5e30ddd9d875629222765b19711b10534"
+    },
+    {
+      "argv": [
+        "sudo",
+        "-n",
+        "-u",
+        "authsvc",
+        "/bin/cat",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.abandonment-declarations.stale-090035.json"
+      ],
+      "started_at_utc": "2026-11-08T06:49:02.926386+00:00",
+      "ended_at_utc": "2026-11-08T06:49:02.937070+00:00",
+      "rc": 0,
+      "stdout_bytes": 483,
+      "stdout_sha256": "d0b9858b0fbdba7b97000e9f64d1b1a61f06bd5de29e4b8b415c9a1f87008569"
+    },
+    {
+      "argv": [
+        "sudo",
+        "-n",
+        "-u",
+        "authsvc",
+        "/bin/cat",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.bak-pre-R100-settlement-20261106"
+      ],
+      "started_at_utc": "2026-11-08T06:49:02.937344+00:00",
+      "ended_at_utc": "2026-11-08T06:49:02.952798+00:00",
+      "rc": 0,
+      "stdout_bytes": 8305897,
+      "stdout_sha256": "889b15175f77ccf1f68fd905dacbef4a79e1be4d4b046846a271a02b35d79e9d"
+    },
+    {
+      "argv": [
+        "sudo",
+        "-n",
+        "-u",
+        "authsvc",
+        "/bin/cat",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.bak-pre-cto-abandon-stamp-20261104"
+      ],
+      "started_at_utc": "2026-11-08T06:49:02.958813+00:00",
+      "ended_at_utc": "2026-11-08T06:49:02.974883+00:00",
+      "rc": 0,
+      "stdout_bytes": 8070664,
+      "stdout_sha256": "88c8c485790c04c3348c45d316d2ed8c97ee3e867474c069ef274bd18e1f5cd6"
+    },
+    {
+      "argv": [
+        "sudo",
+        "-n",
+        "-u",
+        "authsvc",
+        "/bin/cat",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.bak-pre-epoch-fix2-20261106"
+      ],
+      "started_at_utc": "2026-11-08T06:49:02.980745+00:00",
+      "ended_at_utc": "2026-11-08T06:49:02.992776+00:00",
+      "rc": 1,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "status": "STOPPED",
+  "ended_at_utc": "2026-11-08T06:49:02.992836+00:00",
+  "error": "read-only command failed rc=1: ['/bin/cat', '/Users/authsvc/.agent-core/control/turn-recovery-v3.json.bak-pre-epoch-fix2-20261106']; cat: /Users/authsvc/.agent-core/control/turn-recovery-v3.json.bak-pre-epoch-fix2-20261106: Permission denied\n"
+}

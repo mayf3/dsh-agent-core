@@ -1,0 +1,80 @@
+{
+  "observed_at": "2026-11-07T04:51:43.820694+00:00",
+  "worktree": "/private/tmp/h603-reverify",
+  "branch": "ac-ctr-s4-reverify",
+  "parent_head": "91e224bc079f26cef285cba6da0872cb640ed330",
+  "base_head": "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed",
+  "verification_snapshot": "0f25ce5270c0964476184af509c5857acbdf1527",
+  "verification_tree": "63534a3f954004da8967cd1284df8915d11d5603",
+  "inherited_key_presence": {
+    "HTTP_PROXY": true,
+    "HTTPS_PROXY": true,
+    "http_proxy": true,
+    "https_proxy": true,
+    "ALL_PROXY": true,
+    "all_proxy": true,
+    "NO_PROXY": true,
+    "no_proxy": true,
+    "NODE_USE_ENV_PROXY": false
+  },
+  "unset_keys": [
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "ALL_PROXY",
+    "all_proxy",
+    "NO_PROXY",
+    "no_proxy",
+    "NODE_USE_ENV_PROXY"
+  ],
+  "clean_subprocess_readback": {
+    "node": "v25.6.1",
+    "execPath": "/usr/local/Cellar/node/25.6.1_1/bin/node",
+    "presence": {
+      "HTTP_PROXY": false,
+      "HTTPS_PROXY": false,
+      "http_proxy": false,
+      "https_proxy": false,
+      "ALL_PROXY": false,
+      "all_proxy": false,
+      "NO_PROXY": false,
+      "no_proxy": false,
+      "NODE_USE_ENV_PROXY": false
+    }
+  },
+  "host_environment_changed": false,
+  "guard_or_dependencies_changed": false,
+  "files": {
+    "packages/production-runtime/src/compose.js": {
+      "sha256": "5767d595754b8dd457fb55bbfa76ba39b29162c4e61433cdaf398f18406d4df7",
+      "blob": "400f993f2a95f9c5c772adce359f74d7b45930a8",
+      "equals_r2": true
+    },
+    "packages/production-runtime/src/scheduler/auto-reconcile-runtime.js": {
+      "sha256": "568ce16199b42abdc1b763f9c08ff7a681b032455c9f1e84be16b48ca238f207",
+      "blob": "3183257f02e48348eda263044fd9558ece9d4889",
+      "equals_r2": true
+    },
+    "packages/production-runtime/src/scheduler/composition-runtime.js": {
+      "sha256": "e966a414b0a21d6f864ea24f5c7836011525ba790d2a7114797f9b3d6e849c6a",
+      "blob": "21d72b5a982c73270e3a2019f5964cfde4215e37",
+      "equals_r2": true
+    },
+    "packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js": {
+      "sha256": "a05c08c5f7f7ddf9df4495cce34e26e7dc1ff70b641ca47e8f455bdff4b90ae4",
+      "blob": "c9e39c59cf0a0640f392c93cfb3a4a51c2bbe94d",
+      "equals_r2": true
+    },
+    "packages/production-runtime/test/workflow-execution-shutdown.test.js": {
+      "sha256": "203c818496c86a6c0a1aa19c8837d5c803eb769a6a8363ce6f7e8c1fcd2187a0",
+      "blob": "44432921f3961b2c0ddee3b8d71e5d93cef89ed4",
+      "equals_r2": true
+    },
+    "scripts/trusted-cp-deploy-install.sh": {
+      "sha256": "dba2f136af78b6d89bf58d1b9ab0c15259efa3bf4f4d4f904e9494fd11d7741e",
+      "blob": "356899a8ec0726f245790379429f97dfc6ea3bfb",
+      "equals_r2": true
+    }
+  }
+}

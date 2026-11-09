@@ -1,0 +1,264 @@
+{
+  "gate": "V3_PHASE2_NATIVE",
+  "result": "PASS",
+  "exit_code": 0,
+  "observed_at": "2026-11-07T03:20:45.541498+00:00",
+  "base_commit": "7f36750bf08d308cd7f648153e24c0b0e528e4c6",
+  "candidate_tree": "c3a0197cb67c1fdc14af9a3184e46e8d9976e209",
+  "command": [
+    "python3",
+    "scripts/governance/validate_v3_phase2.py",
+    "--base",
+    "7f36750bf08d308cd7f648153e24c0b0e528e4c6",
+    "--head",
+    "c3a0197cb67c1fdc14af9a3184e46e8d9976e209"
+  ],
+  "records": {
+    ".agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md": {
+      "before_blob": "f3cea29603385bc5c8eda6d0b6f423f9ee58daef",
+      "after_blob": "c8869a9902d32bae3233fefab19a7523dcb89d23",
+      "before_sha256": "15cb71d19f8621e4acc230831f9e2b52cabacaf34b37be4ba9dbd454f33872e6",
+      "after_sha256": "dce819190e6ace659c6b5f60687118f548859a66b43d6eba6f86b1198f7cc5b0"
+    },
+    "docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md": {
+      "before_blob": "1a7cd389b7972944f5b08cb583a8de3044b17b51",
+      "after_blob": "1e86dca11cc8131f16de0055ffd2449149f0c32c",
+      "before_sha256": "89ef981a6f98aefe09bf8fd7d7bd183f1f8c0bca826674577f0d6d862139f81d",
+      "after_sha256": "f46c6a40a7374fd4c565e52ff96f182a60e908908db1e9f0d7ca065378a1fe6d"
+    },
+    ".agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md": {
+      "before_blob": "db276b2afc5329e72e7fdc9a7a4c9d983cf39b8d",
+      "after_blob": "1a9914a39d63aacf41b93329c7548d423643850c",
+      "before_sha256": "40bd14c6e061fdfa7f28b3e1378c8052a414809af72fc9002b0b95395e780b6c",
+      "after_sha256": "466ed526fdf9607400b4912c62c08e9b9399ad9d89776005b9cc4321c0051c48"
+    },
+    ".agents/governance.lock.json": {
+      "before_blob": "38618a4c08cc1a6c9fc8e8f44ca87b06b3229ae2",
+      "after_blob": "59a9da8bcd6a567a71ec3096b6066bf69c5b9d52",
+      "before_sha256": "2c79ab4da7245dc1875e98300af6d2fefd75245d1be06ad3d3e9d9f86b30ad6c",
+      "after_sha256": "0cb6acb6e7839ee2b6d0312653e6c5efc680512a36bf44a842db3aa79dc5a8b5"
+    },
+    "docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md": {
+      "before_blob": "b73637ca3235dc181f65cd23005d5fb87585b2f1",
+      "after_blob": "482fd3931da0bb7a9a2d233ac41c1daa0b9e8085",
+      "before_sha256": "d909aae065559d26206929b904ce5fcff6a0b7314fae6486832e64ed17ebe4eb",
+      "after_sha256": "1264d680f0b425be4f7abace4a7f263a5f0f347bb6c08ac721ba57a8fa1494f1"
+    },
+    ".agents/local/README.md": {
+      "before_blob": "81b4ff5477abae63aede634434ebe1f177c85678",
+      "after_blob": "c2b6e9ea255e436c602f0e5ae04dd3108da91956",
+      "before_sha256": "4f6b441d80a6ad37cf326a3fec0564c5f6b63c1ab459f075d373cb9dbac9a0ad",
+      "after_sha256": "ebd1a2f0a39ebfd17b6a17035ad63ff35c59f5e7384ebc3597687b3c3fac8d5a"
+    },
+    "docs/specs/README.md": {
+      "before_blob": "5f15bf6f445a3858d25bb9126cdb31345f1d2102",
+      "after_blob": "88adfbc7789fe8680a163603919e90c365f163de",
+      "before_sha256": "db546d678968e4930033aac5ac74aa0ada0bebd40f4581021063ec1d3a29db30",
+      "after_sha256": "a91396b3796d9a20074b8114cab286f8b2b366303dc97bf05a55da4e41b713f0"
+    }
+  },
+  "native_V2": {
+    "RULE_ID": "CODE_STRUCTURE_GUARDRAILS_V2",
+    "RULE_KIND": "repository-local binding rule (carried by .agents/local/, not a docs/specs authority)",
+    "LIFECYCLE": "SUPERSEDED",
+    "EFFECTIVE_RULE": "CODE_STRUCTURE_GUARDRAILS_V2 upon this accepted transaction merging into main",
+    "SUPERSEDES": "CODE_STRUCTURE_GUARDRAILS_V1 (effective upon merge into main)",
+    "IMPLEMENTATION_CONTRACTS": "CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1",
+    "ENFORCEMENT": "machine verifier (scripts/verify-code-structure.mjs) + manual review",
+    "BASELINE_COMMIT": "d506f81105e8aa05177a01b817ebe11dcc076ba5 (unchanged from V1)",
+    "ACCEPTANCE_ACTORS": "mayf3 or an explicitly authorized maintainer recorded in the acceptance PR",
+    "REGISTRY_APPROVAL_ACTORS": "[mayf3] (a different actor requires an accepted rule change; prose alone cannot extend this list)",
+    "SUPERSEDED_BY": "CODE_STRUCTURE_GUARDRAILS_V3"
+  },
+  "raw_TE": {
+    "spec_id": "CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1",
+    "status": "superseded",
+    "spec_kind": "implementation",
+    "authority_level": "governing_spec",
+    "implementation_authority": "contracts",
+    "production_apply_authority": "none",
+    "scope": [
+      "mayf3/dsh-agent-core/scripts/verify-code-structure.mjs",
+      "focused structure-verifier regression tests",
+      "one exact scripts/trusted-cp-deploy-install.sh transition"
+    ],
+    "governed_by": [
+      "CODE_STRUCTURE_GUARDRAILS_V2",
+      "CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1"
+    ],
+    "external_authorities": [],
+    "supersedes": [],
+    "superseded_by": "CODE_STRUCTURE_GUARDRAILS_V3",
+    "owners": [
+      "mayf3"
+    ],
+    "date": "2026-11-06"
+  },
+  "raw_V3": {
+    "spec_id": "CODE_STRUCTURE_GUARDRAILS_V3",
+    "status": "accepted",
+    "accepted_by": "mayf3",
+    "accepted_date": "2026-11-07",
+    "accepted_recorded_at": "2026-11-07T03:20:10.813730Z",
+    "accepted_reviewed_semantic_head": "7f36750bf08d308cd7f648153e24c0b0e528e4c6",
+    "acceptance_authority": "https://github.com/mayf3/dsh-agent-core/pull/642#issuecomment-6701500077",
+    "acceptance_ruling_id": "owner-20261107-642-643-1377",
+    "acceptance_final_head_review": "PENDING_REGULATOR",
+    "spec_kind": "invariant",
+    "authority_level": "repository_local_rule",
+    "rule_kind": "repository-local binding rule",
+    "implementation_authority": "none",
+    "production_apply_authority": "none",
+    "scope": [
+      "mayf3/dsh-agent-core repository-local structural policy",
+      "the previously accepted exact installer transition and visible split debt"
+    ],
+    "governed_by": [],
+    "external_authorities": [],
+    "supersedes": [
+      "CODE_STRUCTURE_GUARDRAILS_V2",
+      "CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1"
+    ],
+    "superseded_by": null,
+    "owners": [
+      "mayf3"
+    ],
+    "date": "2026-11-07"
+  },
+  "carried_sha256": {
+    "V2_POLICY": "34a8d8d8fe23c12f82a8ab302faca2d0df668084abd8ac8b110d3ab878cc65e7",
+    "TE_CONTRACTS": "6a57bd485b76eabe0c3656fb85c6ce09968dcd12e09064036475545beb8e8b87"
+  },
+  "negative_controls": [
+    {
+      "path": ".agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md",
+      "expected_error": "V2 not retired",
+      "observed_errors": [
+        "V2 not retired",
+        "V2 delta exceeds native lifecycle fields"
+      ]
+    },
+    {
+      "path": "docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md",
+      "expected_error": "TE not retired",
+      "observed_errors": [
+        "TE not retired",
+        "TE delta exceeds raw lifecycle fields"
+      ]
+    },
+    {
+      "path": ".agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md",
+      "expected_error": "V3 not accepted",
+      "observed_errors": [
+        "V3 not accepted",
+        "V3 non-lifecycle metadata drift"
+      ]
+    },
+    {
+      "path": ".agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md",
+      "expected_error": "acceptance coordinate: accepted_by",
+      "observed_errors": [
+        "acceptance coordinate: accepted_by"
+      ]
+    },
+    {
+      "path": ".agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md",
+      "expected_error": "acceptance coordinate: accepted_reviewed_semantic_head",
+      "observed_errors": [
+        "acceptance coordinate: accepted_reviewed_semantic_head"
+      ]
+    },
+    {
+      "path": ".agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md",
+      "expected_error": "carried block drift: V2_POLICY",
+      "observed_errors": [
+        "V3 reviewed body drift",
+        "carried block drift: V2_POLICY"
+      ]
+    },
+    {
+      "path": ".agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md",
+      "expected_error": "carried block drift: TE_CONTRACTS",
+      "observed_errors": [
+        "V3 reviewed body drift",
+        "carried block drift: TE_CONTRACTS"
+      ]
+    },
+    {
+      "path": ".agents/governance.lock.json",
+      "expected_error": "lock still proposed",
+      "observed_errors": [
+        "lock exceeds exact acceptance update",
+        "lock still proposed",
+        "readoption provenance: 00c8fec7f375e12fbe1577d1f8f4791922559f0df630f46d793441c9154254ec"
+      ]
+    },
+    {
+      "path": ".agents/local/README.md",
+      "expected_error": "local current rule pointer",
+      "observed_errors": [
+        "local current rule pointer"
+      ]
+    },
+    {
+      "path": ".agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md",
+      "expected_error": "V2 reciprocal backlink",
+      "observed_errors": [
+        "V2 reciprocal backlink",
+        "V2 delta exceeds native lifecycle fields"
+      ]
+    },
+    {
+      "path": ".agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md",
+      "expected_error": "V2 reciprocal backlink",
+      "observed_errors": [
+        "V2 reciprocal backlink",
+        "V2 delta exceeds native lifecycle fields"
+      ]
+    },
+    {
+      "path": "docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md",
+      "expected_error": "TE reciprocal backlink",
+      "observed_errors": [
+        "TE reciprocal backlink",
+        "TE delta exceeds raw lifecycle fields"
+      ]
+    },
+    {
+      "path": "docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md",
+      "expected_error": "TE reciprocal backlink",
+      "observed_errors": [
+        "TE reciprocal backlink",
+        "TE delta exceeds raw lifecycle fields"
+      ]
+    },
+    {
+      "path": ".agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md",
+      "expected_error": "V3 reciprocal predecessor set",
+      "observed_errors": [
+        "V3 reciprocal predecessor set",
+        "V3 non-lifecycle metadata drift"
+      ]
+    },
+    {
+      "path": ".agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md",
+      "expected_error": "V3 reciprocal predecessor set",
+      "observed_errors": [
+        "V3 reciprocal predecessor set",
+        "V3 non-lifecycle metadata drift"
+      ]
+    }
+  ],
+  "negative_control_count": 15,
+  "preserved_paths": [
+    "scripts/governance/validate_v3_succession.py",
+    ".agents/tools/validate_spec_transition.py",
+    ".agents/tools/verify_governance.py",
+    ".agents/structure-registry.json",
+    "scripts/verify-code-structure.mjs",
+    "docs/specs/CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md",
+    ".agents/local/CODE_STRUCTURE_GUARDRAILS_V1.md",
+    "docs/decisions/README.md"
+  ],
+  "limits": "Actual native structural lifecycle and explicit lock/readoption/index closure. Not governing-Spec-only CLI certification; no final independent review, main activation, verifier adaptation or production acceptance."
+}

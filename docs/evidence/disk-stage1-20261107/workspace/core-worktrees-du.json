@@ -1,0 +1,15 @@
+{
+  "command": [
+    "du",
+    "-x",
+    "-k",
+    "-d",
+    "1",
+    "/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees"
+  ],
+  "started_at": "2026-11-07T15:46:05.691360+00:00",
+  "ended_at": "2026-11-07T15:46:06.335362+00:00",
+  "rc": 0,
+  "stdout": "15780\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/night-gpt6-luna-source-closure\n15716\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/mobile-staged-dep-link-authority-v1\n38284\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/c11r1-trusted-late-outcome-selfheal\n11404\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/953-diagnostic-round2\n15072\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/execution-history-correlation-v1\n16036\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/hr-restart-fence-spec-v1\n15476\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/wec-v1\n15228\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/a4-shared-codex-deployment-root\n19352\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/b7-v22-packet-repair-20261002\n18932\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/a5-fresh-main\n21048\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/ac633-input-contract-wiring\n15264\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/deploy-2097e4f\n19296\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/b7-v21-packet-repair-20261002\n13960\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/watchdog-historical-outbox-delivery-isolation-v1\n15684\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/des-v1\n16440\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/hr-r4-adversarial-fixtures-v1\n18944\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/b7-refreeze-source-20261001\n19768\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/b9-fleet-send-entitlement-e2e-v1\n16008\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/wec-scheduler-verifier-parity-v1\n16156\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/delivery-first-release-governance-v1\n14024\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/watchdog-historical-outbox-main-integration\n16256\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/des-real-backend-dogfood-v1\n15264\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/router-gen-safety\n15236\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/spec-amendment-accept\n19508\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/b7-v23-packet-repair-20261002\n16108\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/hr-agent-fence-incident\n19208\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/b7-closure-runtime-arch-gate-20261002\n469452\t/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees\n",
+  "stderr": ""
+}

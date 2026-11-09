@@ -1,0 +1,51 @@
+{
+  "gate": "GREEN",
+  "cwd": "/private/tmp/h1365-retire",
+  "command": [
+    "/opt/homebrew/bin/node",
+    "--test",
+    "--test-reporter=tap",
+    "packages/development-execution/test/development-retirement.test.js"
+  ],
+  "runtime": {
+    "version": "v26.7.0",
+    "execPath": "/opt/homebrew/Cellar/node/26.7.0/bin/node",
+    "arch": "arm64",
+    "proxyKeysPresent": []
+  },
+  "started_utc": "2026-11-07T23:31:27.567705+00:00",
+  "ended_utc": "2026-11-07T23:31:28.132955+00:00",
+  "child_unset_keys": [
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "ALL_PROXY",
+    "all_proxy",
+    "NO_PROXY",
+    "no_proxy",
+    "NODE_USE_ENV_PROXY"
+  ],
+  "parent_env_unchanged": true,
+  "git_head": "b6ddc2a67ba041b8b13ed33d331104cf809d4985",
+  "expected_rc": 0,
+  "actual_rc": 0,
+  "expected_fail": 0,
+  "counts": {
+    "tests": 5,
+    "pass": 5,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "diagnostic_checks": [],
+  "capture_valid": true,
+  "raw_sha256": "82a9c86d2764a0e00b4f17196c7e6baea95e24800f874e6b18a71862a46ed505",
+  "file_sha256": {
+    "packages/development-execution/src/engine.js": "d281bbc0e2822f8e7748fae32d55aa5da3a0e78eb37286f1e3845b4a6710226a",
+    "packages/production-runtime/src/development-execution-runtime.js": "62a9ac87887bfb4a7246793dea7f451f8094d4250e5573ddf3ccc29f0eef43af",
+    "packages/production-runtime/src/workflow/capability-runtime.js": "53dbddaa6cdbf140da020515c1a2b45beb7712715f3c4c4624ad65708c576ada",
+    "packages/development-execution/test/development-retirement.test.js": "ca3fa6c78d1a4583f2b5798a899e026683204a203af2a807f15ca7f974968c8b",
+    "packages/development-execution/test/run-retirement-gates.py": "ece661c02609a08bd96d893eb3351ad7fe5da3f07f12f230f80cdeaa18acbd87"
+  }
+}

@@ -1,0 +1,50 @@
+Independent reviewer: /root/authority_check
+Review target: initial uncommitted implementation over base 95a8e1cb512fc99dc018209d837250dd51b4d08f
+Observation: isolated fixture, no production state, no credentials or network.
+Executed command: /usr/local/bin/node --input-type=module [stdin below]
+Actual exit code: 0
+Observation preceded RCG-B1 repair; this is a retained historical failure, not a post-repair run.
+Persisted at: 2026-11-08T06:58:12.258077+00:00
+
+--- stdin ---
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { createRoutingConfigRuntime } from './packages/production-runtime/src/identity/model-routing/generation.js';
+import { readHarnessIdentity } from './packages/agent-provisioning/src/index.js';
+const dir = mkdtempSync(join(tmpdir(), 'rcg-review-harness-'));
+try {
+  const file = join(dir, 'overrides.json');
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({ version: 'fixture-v1' }));
+  writeFileSync(join(dir, '.source-stamp'), JSON.stringify({ commit: 'a'.repeat(40), dirtyCount: 0 }));
+  const route = { routeKind: 'builtin', provider: 'fixture', model: 'm0', credentialReadiness: 'fixture' };
+  const c = { version: 3, routeCatalog: { r0: route }, overrides: { A: { model: { primary: 'r0', fallbacks: [] } }, B: { model: { primary: 'r0', fallbacks: [] } } } };
+  writeFileSync(file, JSON.stringify(c));
+  const runtime = createRoutingConfigRuntime({ file, registeredAgentIds: ['A','B'], readContext: () => ({ options: {}, globalRoute: { provider: 'fixture', model: 'global' }, layers: { harnessRoot: dir, agentProfile: 'fixture' } }) });
+  const before = readHarnessIdentity(dir);
+  const g0 = runtime.resolveChain('A');
+  writeFileSync(join(dir, '.source-stamp'), JSON.stringify({ commit: 'b'.repeat(40), dirtyCount: 0 }));
+  c.overrides.B.model.primary = 'missing';
+  writeFileSync(file, JSON.stringify(c));
+  const actual = runtime.resolveChain('A');
+  console.log(JSON.stringify({ before, after: readHarnessIdentity(dir), sameGeneration: actual.generationId === g0.generationId, decision: actual.configGeneration.decision, closureUnchanged: actual.configGeneration.closureUnchanged, model: actual.routes[0].model }, null, 2));
+} finally { rmSync(dir, {recursive:true,force:true}); }
+
+--- stdout (unmodified) ---
+{
+  "before": {
+    "version": "fixture-v1",
+    "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "after": {
+    "version": "fixture-v1",
+    "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "sameGeneration": true,
+  "decision": "continue",
+  "closureUnchanged": true,
+  "model": "m0"
+}
+
+--- stderr ---
+(empty)

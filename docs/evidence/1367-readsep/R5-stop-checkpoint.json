@@ -1,0 +1,52 @@
+{
+  "timestamp_utc": "2026-11-07T11:35:50.118942+00:00",
+  "head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "branch": "fix/diagnostic-read-separation",
+  "base_head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "R4_reviewed_index_tree": "07ff18450ba8099edf7e655fa8bdc4b500154cac",
+  "index_diff_from_R4_tree": [],
+  "staged_path_count": 47,
+  "index_sha256": "211ee36c1613149a9d694b28ead8393907679200f57486e777e64cc73f0cd55a",
+  "index_lock_exists": false,
+  "recent_reflog": [
+    "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648 checkout: moving from 2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648 to fix/diagnostic-read-separation",
+    "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648 "
+  ],
+  "network_probe_rc": 0,
+  "full_remote_refs_rc": 0,
+  "PR_list_wrapper_rc": 1,
+  "nested_git_write_tree_rc": 128,
+  "PR_list_command_executed": false,
+  "commit_push_pr_executed": false,
+  "production_effects": false,
+  "postfailure_archival_only": true,
+  "next_action": "STOP",
+  "compiled_receipt_and_brief_hashes": {
+    "BRIEF-1367-READSEP.md": "b10fa9e00a5d07f7d99c5c8c2f549eb2b8ff81ba4311a403a7ad01f2ae162d62",
+    "RECEIPT-1367-READSEP.md": "36468a6ae3cf2b4d17ce714e0125d11b1de6c25252b454569592b514a52b57b8",
+    "STOPPED-1367-READSEP.md": "fbc6e6f71e2873f93dc23d3e354b91cb6ec93508f969ad172835fdd4639c04c1"
+  },
+  "R5_archival_sha256": {
+    "docs/evidence/1367-readsep/R5-entry.json": "083c7388261f961f90f687ac5ee006d870fd18590a5008d61b0de3fecc1bab8d",
+    "docs/evidence/1367-readsep/R5-network-probe.json": "313b54a484f33d639ab825528ba73f027453689ea49613eb6c6784e202b357da",
+    "docs/evidence/1367-readsep/R5-network-probe.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "docs/evidence/1367-readsep/R5-network-probe.stdout": "4d809c219da115213846d99de0e249c6abd6cec28a0e32711e43e009e9bc554f",
+    "docs/evidence/1367-readsep/R5-precommit-pr-list-wrapper.json": "428f6532a1ecbd9cb9534954f568272207100ce3864a24ffe544aff0e59d8a7b",
+    "docs/evidence/1367-readsep/R5-precommit-pr-list-wrapper.log": "153cc0fb838349b5f2f0fa9ef2363bd0963e4d9d278bc1857e5c35dcc31bd765",
+    "docs/evidence/1367-readsep/R5-precommit-remote.json": "77aff1d123afb4680c62e42f8a933cb96754055817a8987ff04d2ebdea1b3979",
+    "docs/evidence/1367-readsep/R5-precommit-remote.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "docs/evidence/1367-readsep/R5-precommit-remote.stdout": "4d809c219da115213846d99de0e249c6abd6cec28a0e32711e43e009e9bc554f"
+  },
+  "preserved_R4_receipt_sha256": "0c84a5f2f76b246f64f63e4c7d4ba551a04868adbec5feae33dbbf4ad074a24f",
+  "independent_stop_review": {
+    "reviewer": "/root/r5_audit",
+    "result": "PASS; no correction",
+    "path": "docs/evidence/1367-readsep/R5-STOP-REVIEW.md",
+    "sha256": "31a1e2df189192d8cfa41c01900336d3428fd1fefa591b42ed5e47a9b2017bad",
+    "reviewed_compiled_sha256": {
+      "RECEIPT-1367-READSEP.md": "36468a6ae3cf2b4d17ce714e0125d11b1de6c25252b454569592b514a52b57b8",
+      "BRIEF-1367-READSEP.md": "b10fa9e00a5d07f7d99c5c8c2f549eb2b8ff81ba4311a403a7ad01f2ae162d62",
+      "STOPPED-1367-READSEP.md": "fbc6e6f71e2873f93dc23d3e354b91cb6ec93508f969ad172835fdd4639c04c1"
+    }
+  }
+}

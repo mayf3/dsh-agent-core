@@ -1,3 +1,4 @@
+import { expectedIdentity } from '../test-support/observation-identity.js'
 /**
  * WORKFLOW_EXECUTION_CONTROL_V1 — agent-core slice tests (CTR-WEC1-001..006).
  *
@@ -103,13 +104,13 @@ test('CTR-WEC1-004: the fence refuses a mint past maxAttemptsPerVisit (default 3
     let r = await ledger.beginAttemptIfAbsent(seed)
     assert.equal(r.created, true)
     await ledger.recordRunDelivered({ nodeVisitId: VISIT, agentId: AGENT, requestId: attemptIdFor(VISIT), sessionId: 'main' })
-    await ledger.recordStaleSuperseded({ nodeVisitId: VISIT, expected: { state: 'ACTIVE', phase: 'run_delivered', deliveredAtMs: ledger.get(VISIT).delivered.atMs }, observedWorkflowStateVersion: 1 })
+    await ledger.recordStaleSuperseded({ ...expectedIdentity(ledger.get(VISIT)), nodeVisitId: VISIT, expected: { state: 'ACTIVE', phase: 'run_delivered', deliveredAtMs: ledger.get(VISIT).delivered.atMs }, observedWorkflowStateVersion: 1 })
     // generation 2 → deliver → stale-supersede
     r = await ledger.beginAttemptIfAbsent(seed, undefined, () => true)
     assert.equal(r.created, true)
     assert.equal(r.attempt.generation, 2)
     await ledger.recordRunDelivered({ nodeVisitId: VISIT, agentId: AGENT, requestId: attemptIdFor(VISIT, 2), sessionId: 'main' })
-    await ledger.recordStaleSuperseded({ nodeVisitId: VISIT, expected: { state: 'ACTIVE', phase: 'run_delivered', deliveredAtMs: ledger.get(VISIT).delivered.atMs }, observedWorkflowStateVersion: 1 })
+    await ledger.recordStaleSuperseded({ ...expectedIdentity(ledger.get(VISIT)), nodeVisitId: VISIT, expected: { state: 'ACTIVE', phase: 'run_delivered', deliveredAtMs: ledger.get(VISIT).delivered.atMs }, observedWorkflowStateVersion: 1 })
     // generation 3 would exceed maxAttemptsPerVisit=2 → clean refusal
     r = await ledger.beginAttemptIfAbsent(seed)
     assert.equal(r.created, false)
@@ -251,7 +252,7 @@ test('Case 3: run_ended_no_submission re-enters after the retry delay; Case 7: o
     // the conservative 1h stale clock still applies to it (well within this
     // assertion's time window).
     await ledger.recordReconciled({
-      nodeVisitId: VISIT, expectedPhase: 'run_delivered',
+      ...expectedIdentity(ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered',
       verdict: 'NEEDS_REVIEW', judgment: 'run_outcome_unknown', reason: 'timeout',
     })
     t = ledger.get(VISIT).reconciledAtMs + 5_000 // past the 1s retry delay, far below the 1h stale clock
@@ -314,7 +315,7 @@ test('Case 9: restart — the trace projection recovers from the replayed ledger
     })
     await first.recordRunDelivered({ nodeVisitId: VISIT, agentId: AGENT, requestId: attemptIdFor(VISIT), sessionId: 'main', reconciliationHandle: 'turn:h9' })
     await first.recordReconciled({
-      nodeVisitId: VISIT, expectedPhase: 'run_delivered',
+      ...expectedIdentity(first.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered',
       verdict: 'NEEDS_REVIEW', judgment: 'run_ended_no_submission', reason: 'run ended',
     })
 

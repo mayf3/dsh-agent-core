@@ -1,0 +1,23 @@
+{
+  "name": "push-source",
+  "argv": [
+    "git",
+    "push",
+    "--porcelain",
+    "-u",
+    "origin",
+    "ac-ctr-s4-reverify"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "started_at": "2026-11-07T04:57:37.726901+00:00",
+  "head": "87735ecee0e0ebfaa575f889785d7c5037ab9145",
+  "environment": "Inherited network environment; no proxy values recorded. Nine-key cleanup applies to test/gate subprocesses.",
+  "ended_at": "2026-11-07T04:57:39.866967+00:00",
+  "rc": 0,
+  "stdout": "push-source.stdout.log",
+  "stderr": "push-source.stderr.log",
+  "sha256": {
+    "stdout": "16b3072faf8f93ef9abe82513775283093f809b28154799289019a61afcce8aa",
+    "stderr": "6622d36e1de003446521051b4b7b79960fd70b4c08604246f9c86bf25860d255"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "worktree": "/private/tmp/h603-reverify",
+  "branch": "ac-ctr-s4-reverify",
+  "head": "91e224bc079f26cef285cba6da0872cb640ed330",
+  "verification_snapshot": "0f25ce5270c0964476184af509c5857acbdf1527",
+  "verification_tree": "63534a3f954004da8967cd1284df8915d11d5603",
+  "source_bytes_equal_r2": true,
+  "node": "v25.6.1",
+  "node_path": "/usr/local/bin/node",
+  "node_realpath": "/usr/local/Cellar/node/25.6.1_1/bin/node",
+  "inherited_proxy_key_presence": {
+    "HTTP_PROXY": true,
+    "HTTPS_PROXY": true,
+    "http_proxy": true,
+    "https_proxy": true,
+    "ALL_PROXY": true,
+    "all_proxy": true
+  },
+  "unset_keys": [
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "ALL_PROXY",
+    "all_proxy"
+  ],
+  "host_environment_changed": false,
+  "recognized_proxy_keys": [
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "NO_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "no_proxy",
+    "ALL_PROXY",
+    "all_proxy",
+    "NODE_USE_ENV_PROXY"
+  ],
+  "recognized_key_presence_observed_after_gate": {
+    "HTTP_PROXY": true,
+    "HTTPS_PROXY": true,
+    "NO_PROXY": true,
+    "http_proxy": true,
+    "https_proxy": true,
+    "no_proxy": true,
+    "ALL_PROXY": true,
+    "all_proxy": true,
+    "NODE_USE_ENV_PROXY": false
+  },
+  "remaining_keys_after_six_key_prefix": [
+    "NO_PROXY",
+    "no_proxy"
+  ],
+  "full_clean_prefix_not_executed": true
+}

@@ -1,0 +1,242 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-11-07T22:17:33.354022+00:00",
+  "scope": "Read-only preflight and documentation; zero Auth business writes",
+  "target_label": "release-captain-agent-core-20261107",
+  "worktree": "/private/tmp/h-captain-auth",
+  "branch": "docs/captain-auth-create",
+  "base_head": "80fc43bd626ceaf5a680f9355ac9c8b209cdd82b",
+  "owner_authority": {
+    "source": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json",
+    "selector": "$.rulings[id=owner-20261108-three-unified]",
+    "item_index": 0,
+    "canonical_sha256": "00f1fb2995d5f83a3bb9f50f442754fadb13f46274c2f1cbafd5f90253d5b218",
+    "canonical_algorithm": "UTF-8 json.dumps(ensure_ascii=False, sort_keys=True, separators=(comma,colon)); SHA256"
+  },
+  "actor": {
+    "uid": 502,
+    "gid": 20,
+    "os_user": "yanfenma",
+    "auth_principal": "NOT_AUTHENTICATED",
+    "management_permission": "NOT_HELD_IN_CURRENT_CONTEXT"
+  },
+  "credential_metadata": {
+    "path": "/Users/yanfenma/.openclaw/credentials/broker-provisioning-v2-secret",
+    "is_regular_file": true,
+    "uid": 505,
+    "gid": 601,
+    "owner_name": "authsvc",
+    "group_name": "authsvc",
+    "mode": "0600",
+    "nonempty": true,
+    "readable_by_current_actor": false,
+    "credential_content_read": false,
+    "credential_content_hashed": false
+  },
+  "declared_service": {
+    "plist": "/Library/LaunchDaemons/com.auth-service.plist",
+    "plist_sha256": "ce944332a414d9cf79cf18ba4059fd5a91111e56e4728748e3b4998cf4849c9e",
+    "label": "com.auth-service",
+    "user": "authsvc",
+    "group": "authsvc",
+    "program_arguments": [
+      "/usr/local/bin/node",
+      "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/dist/src/server.js",
+      "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/dist/src/server.js",
+      "/Users/yanfenma/workspace/project/production-auth-service-session-trace-v2-r2-4e68f83ee4d3/dist/src/server.js"
+    ],
+    "working_directory": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15",
+    "launchctl_observation": {
+      "method": "launchctl print system/com.auth-service; selected fields only",
+      "state": "running",
+      "pid": 62443,
+      "last_exit_code": 0
+    },
+    "declared_checkout_head": "0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15",
+    "declared_checkout_git_status_short": "",
+    "running_process_loaded_byte_identity": "NOT_VERIFIED"
+  },
+  "public_health_observation": {
+    "observed_at": "2026-11-07T22:14:44.571898+00:00",
+    "method": "GET",
+    "url": "http://127.0.0.1:4001/api/health",
+    "http_status": 200,
+    "response": {
+      "ok": true,
+      "service": "auth-service",
+      "version": "1.0.0",
+      "issuer": "auth-service",
+      "audience": "agent-platform",
+      "authContractMode": "v1",
+      "authContractVersion": "1.15.0",
+      "authContractDigest": "78e51dc942356da289840dbae1c79c753925f0acc7ea566e55c06614545cb291",
+      "timestamp": "2026-11-07T22:14:44.571Z"
+    },
+    "proves": "public health only; not management authorization or target existence"
+  },
+  "historical_admin_lead": {
+    "source": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/docs/audits/runtime-reconciliation/RECEIPT_20260724000100_PROVISIONING_BOOTSTRAP.md",
+    "source_date": "2026-07-26",
+    "principal_uuid": "857b20c3-8d84-497d-950a-7b185a116687",
+    "client_id": "mc_prov_N9NO0yYvw_3fR1ucqusIqw",
+    "audience": "svc-auth",
+    "scope": "auth.identity.provision",
+    "current_status": "UNKNOWN",
+    "current_uniqueness": "UNKNOWN",
+    "credential_validity": "UNKNOWN"
+  },
+  "bounded_mechanism_inventory": {
+    "method": "directory names plus readable policy/source inspection; no executor invocation",
+    "directories": [
+      "/usr/local/libexec",
+      "/etc/sudoers.d"
+    ],
+    "sudoers_entries": [
+      "b7-release-executor",
+      "hr-recovery-executor",
+      "hr-recovery-full",
+      "lw-pilot-executor"
+    ],
+    "unreadable_policy_files": [
+      "/etc/sudoers.d/hr-recovery-executor",
+      "/etc/sudoers.d/hr-recovery-full",
+      "/etc/sudoers.d/lw-pilot-executor"
+    ],
+    "conclusion": "No usable attributable Auth management actor/entrypoint was established for this task; this is not an exhaustive impossibility proof"
+  },
+  "request_counters": {
+    "public_health_get": 1,
+    "token_mint": 0,
+    "protected_identity_read": 0,
+    "principal_post": 0,
+    "client_post": 0,
+    "grant_write": 0,
+    "direct_db_query": 0,
+    "direct_db_write": 0,
+    "runtime_8788_call": 0,
+    "executor_invocation": 0
+  },
+  "target_state": {
+    "exists": "UNKNOWN",
+    "principal_uuid": "UNKNOWN",
+    "created_at": "UNKNOWN",
+    "creator": "NOT_EXECUTED",
+    "principal_type": "NOT_SELECTED",
+    "auth_status": "UNKNOWN",
+    "canonical_agent_pair": "NOT_ESTABLISHED",
+    "session_binding": "NOT_ESTABLISHED",
+    "creation_result": "NOT_EXECUTED",
+    "appointment": "NOT_APPOINTED_BY_THIS_TASK",
+    "control_effective": "NOT_VERIFIED",
+    "production_allowed": false
+  },
+  "source_files": [
+    {
+      "path": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/src/server.ts",
+      "sha256": "500280c4feb5bb909efeb92eae9c2792da876a97448ae146936d505f9cb3554a",
+      "git_blob": "b61c94c8fa00fdc850ebfea4534b73d954f2d77b"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/src/routes/idempotent.ts",
+      "sha256": "8a85e4d4733330fac248a93bf9ae0ca1603ac42387cdfb5bfa0738bc2a75053e",
+      "git_blob": "6084288df4816a7cc6020dde212e17edcad138e3"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/src/lib/oauth/v1/idempotent.ts",
+      "sha256": "ad5e4c1304dfd5d203089672954c347348d0aeade126eff2b5af1673d5c953d8",
+      "git_blob": "b139ceb1fc09a76ba872f5aefa1428723344a12f"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/src/middleware/v1-management-auth.ts",
+      "sha256": "1e8474da9239d4d350e59aa6cd41e4c8c7c62398e5b946418755fe3a9a8ca707",
+      "git_blob": "bc6963e0936cebf8e2b07ee2eef38770e4bcb9e7"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/dist/src/routes/idempotent.js",
+      "sha256": "bb2417f54aeab2b0daee86527c0bcab8f17d149465ad5a061e1ed6a719137de2",
+      "git_blob": null
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/dist/src/lib/oauth/v1/idempotent.js",
+      "sha256": "651c82be4996893b55f0835dc4439a0a36ddb854c9d9fdef2d10f214e6e7ef33",
+      "git_blob": null
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/dist/src/middleware/v1-management-auth.js",
+      "sha256": "e256cb6f4c3e31effcac4ba1f62ad358aebf647fce81a00102336c91ec8c85ed",
+      "git_blob": null
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/prisma/schema.prisma",
+      "sha256": "c7414655f8c82031ec01f29315be4f7f1ecc9ec35517d2fbdcffbfa2460f3db8",
+      "git_blob": "0f4ed129203b3797134dda9c10c5b5c26e25cd07"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/contract-bundles/minimal-auth-v1/audience-registry.json",
+      "sha256": "4dfdbdbff8a7977eeed6c6037b4cb8ada367174960273f8079b9326318a270a8",
+      "git_blob": "842592f571ac211a50eb024ac256a278ac8e5d28"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/docs/contracts/minimal-auth-v2/MINIMAL_AUTH_FOUNDATION_V2.md",
+      "sha256": "18d2a7644cd76a731fac67296aa89d55e209b675bb3999ad3304b2c0c254c53c",
+      "git_blob": "576b7a75e4be278f20fee71ee4ba5e263bd958c7"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/docs/contracts/minimal-auth-v1/README.md",
+      "sha256": "46ed9533dc041b75d84cd96bd1961fa75ef90b73c0b4060c21a2d6e8f7b76a60",
+      "git_blob": "7493e093031e5db05b6235c70f04d0143989fcb5"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/docs/specs/AUTH_SERVICE_OWNERLESS_AGENT_PRINCIPAL_V1.md",
+      "sha256": "0f4214640b9e4b2ed093f7e0bf8959dffdba3e69e2aad0bc2be664e3d33f9cba",
+      "git_blob": "e51f5dc1a1e92469ec773c7f50959a6f356f4355"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/docs/specs/AUTH_SERVICE_CANONICAL_IDENTITY_FOUNDATION_V1.md",
+      "sha256": "3a3afbb334f3885408f8218970503bfa2ae8f92678d48a2ef45a785de88682e5",
+      "git_blob": "532108751decdf363ff1c614debe5eed0f432ec4"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/docs/specs/AUTH_SERVICE_CANONICAL_SUBJECT_ENROLLMENT_AND_SOURCE_BINDING_V1.md",
+      "sha256": "a7c5d16d90ea5395d3990068c7e9b5c0e0fb31afb8803a734d02b87365f4a912",
+      "git_blob": "3af9bdc75eb09de65ed136bfad2b619f1fe97ce7"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/production-auth-service-0227f9d6b16dbc306c5fd0a7c1edc95cf5a77c15/docs/audits/runtime-reconciliation/RECEIPT_20260724000100_PROVISIONING_BOOTSTRAP.md",
+      "sha256": "2a748dbe3a8c3ec064e3f7531b266edc98d8331b0c62450ea26c995b504babe3",
+      "git_blob": "7b2b392fc52b0fad3d4106f1c2f40ce356288e17"
+    },
+    {
+      "path": "/private/tmp/h-captain-auth/docs/specs/AGENT_CORE_STANDING_OPERATIONAL_DELEGATION_V1.md",
+      "sha256": "c49ff7a5e00643043280c9f839c3c17e4a17a169b2a829741a685a632a9e9e99",
+      "git_blob": "6dea1c041266653cfaee9559f3686d5a135d5a46"
+    },
+    {
+      "path": "/private/tmp/h-captain-auth/docs/specs/AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1.md",
+      "sha256": "a0b5959ce5a3ef0007c86b486670598216f11c3c62eaac70693dbc7f3cfb3427",
+      "git_blob": "750504f2d9c27202543a70c6e68d3aba1001928e"
+    },
+    {
+      "path": "/private/tmp/h-captain-auth/docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md",
+      "sha256": "fcc3603d8f1ab7b1ab10eda7088a56fb2e5095792336311d63a92f74fba6e160",
+      "git_blob": "0c3f6f6005794edec2faf666e4fb035a9c87b009"
+    },
+    {
+      "path": "/private/tmp/h-captain-auth/docs/specs/AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2.md",
+      "sha256": "c2e26f825dc8cfbf9e2cd03acae885a2dd12781220046600414f80c2c9c2cddf",
+      "git_blob": "0c2d4940633268775e92f34191ae0bdc5d547d19"
+    },
+    {
+      "path": "/private/tmp/h-captain-auth/.agents/local/README.md",
+      "sha256": "31f8456a417aac5e0623bd7bef676357586420234ab95d15237a5f39b443343d",
+      "git_blob": "f5b70bb201550fbe1852cf3c3c7b02d9714286a2"
+    }
+  ],
+  "limitations": [
+    "No authenticated admin/target read was executed.",
+    "Historical administrator coordinates do not establish current permission, uniqueness or credential validity.",
+    "Declared source/build artifact inspection does not prove the running process loaded those exact bytes.",
+    "No database rows, grants or lifecycle activation state were inspected.",
+    "No conclusion that all existing Auth administrators cannot complete the operation."
+  ]
+}

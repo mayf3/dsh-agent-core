@@ -1,0 +1,44 @@
+[
+  {
+    "command": [
+      "node",
+      "--test",
+      "packages/production-runtime/test/workflow-owner-assistance-wake.test.js",
+      "packages/production-runtime/test/owner-assistance-resume-evidence.test.js",
+      "packages/workflow-execution/test/owner-assistance-resume.test.js",
+      "packages/workflow-execution/test/owner-assistance-resume-engine.test.js",
+      "packages/broker/test/capabilities/workflow-execution/owner-obligation.test.js"
+    ],
+    "cwd": "/private/tmp/dsh-ekr-p1-new",
+    "sourceSha": "f6a1f77a8b7b878bcb9821a68836925755ca7076",
+    "startedAt": "2026-11-05T19:32:28.583568+00:00",
+    "finishedAt": "2026-11-05T19:32:30.826990+00:00",
+    "rc": 0,
+    "raw": "docs/evidence/ekr-p1b/baseline-five.raw.txt",
+    "sha256": "c3b7cccba172f865acd25dd151221d2072f6dfb3b2b72fa1fc3a4c75317c5896",
+    "testFiles": {
+      "packages/production-runtime/test/workflow-owner-assistance-wake.test.js": "8492701b5d5eb6244b47ed155e581fc161a99dd3663ad48dc34b6a5934d3a7f8",
+      "packages/production-runtime/test/owner-assistance-resume-evidence.test.js": "39ba851f82bbf9ca9954eae322411f7bb31b37d42b1dfb8ed0d558d85e334bd0",
+      "packages/workflow-execution/test/owner-assistance-resume.test.js": "01e768c48b49380fab76504e1839aaff707a4698e76f14be67598d0f7f734642",
+      "packages/workflow-execution/test/owner-assistance-resume-engine.test.js": "89d90e4f0930c0a70c96516ccbccfd7c9b9077fabd32e56c40437a1cacce01c9",
+      "packages/broker/test/capabilities/workflow-execution/owner-obligation.test.js": "826d30a9094c7b531727b116796d5aeba3248da59ccaf122bafe2f3c99ea1dd3"
+    }
+  },
+  {
+    "command": [
+      "node",
+      "--test",
+      "packages/broker/test/capabilities/workflow-execution/owner-obligation-attempt.test.js"
+    ],
+    "cwd": "/private/tmp/dsh-ekr-p1-new",
+    "sourceSha": "171ecf8482ddf9df61233880f3cf24cbaa0f3816",
+    "startedAt": "2026-11-05T19:33:08.600204+00:00",
+    "finishedAt": "2026-11-05T19:33:09.792803+00:00",
+    "rc": 0,
+    "raw": "docs/evidence/ekr-p1b/focused.raw.txt",
+    "sha256": "35afbef2766e5afafae1095878c23a543477a1f21e8301fdd6b2537b2f72a053",
+    "testFiles": {
+      "packages/broker/test/capabilities/workflow-execution/owner-obligation-attempt.test.js": "a22d4ce2cf2119d869d1d0e26206b8a8a29709498ecb6cdda145291a7eb048ce"
+    }
+  }
+]

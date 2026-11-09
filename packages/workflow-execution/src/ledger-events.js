@@ -1,4 +1,6 @@
+import { applyRecoveryCheck, validateAutomaticAudit } from './recovery/automatic-ledger.js'
 import { validateOwnerAssistanceResumeEvidence } from './owner-assistance-resume.js'
+import { applyReadbackEvent } from './recovery/readback-ledger.js'
 
 /**
  * @agent-core/workflow-execution/src/ledger-events.js — the event vocabulary
@@ -142,6 +144,7 @@ export function applyLedgerEvent(attempts, event) {
         ownerPrincipalId: event.ownerPrincipalId.toLowerCase(),
         state: 'ACTIVE',
         phase: 'planned',
+        ...(event.deliveryProtocol === undefined ? {} : { deliveryProtocol: event.deliveryProtocol }),
         ...(Number.isInteger(event.preDeliveryWorkflowStateVersion)
           ? { preDeliveryWorkflowStateVersion: event.preDeliveryWorkflowStateVersion }
           : {}),
@@ -159,6 +162,12 @@ export function applyLedgerEvent(attempts, event) {
       })
       return
     }
+    case 'recovery_checked':
+      applyRecoveryCheck(current, event)
+      return
+    case 'readback_checked':
+      applyReadbackEvent(current, event)
+      return
     case 'delivery_started':
       if (current?.state !== 'ACTIVE') terminalRefusal(current, event)
       // V2 CTR-WAE-012: at most ONE delivery_started per attempt — a second
@@ -187,6 +196,7 @@ export function applyLedgerEvent(attempts, event) {
       current.lastBlockedAtMs = event.atMs
       return
     case 'recovery_authorized':
+      validateAutomaticAudit(current, event.authorization)
       if (current?.state !== 'ACTIVE') terminalRefusal(current, event)
       if (current.phase !== 'resolution_blocked') {
         throw new Error(`workflow-execution: refusing recovery_authorized for nodeVisit ${nodeVisitId} — attempt is not pre-admission blocked (phase ${current.phase})`)
@@ -199,6 +209,7 @@ export function applyLedgerEvent(attempts, event) {
       current.lastAuthorityRef = event.authorityRef
       return
     case 'recovery_refused':
+      validateAutomaticAudit(current, event.authorization)
       if (current?.state !== 'ACTIVE') terminalRefusal(current, event)
       if (current.phase !== 'resolution_blocked') {
         throw new Error(`workflow-execution: refusing recovery_refused for nodeVisit ${nodeVisitId} — attempt is not pre-admission blocked (phase ${current.phase})`)
@@ -399,21 +410,23 @@ export function buildResolutionBlockedEvent(current, nodeVisitId, code) {
   return { kind: 'resolution_blocked', code }
 }
 
-export function buildRecoveryAuthorizedEvent(current, nodeVisitId, authorityRef) {
+export function buildRecoveryAuthorizedEvent(current, nodeVisitId, authorityRef, authorization) {
+  validateAutomaticAudit(current, authorization)
   if (typeof authorityRef !== 'string' || authorityRef === '') throw new TypeError('workflow-execution: authorityRef is required')
   if (current.phase !== 'resolution_blocked') {
     throw new Error(`workflow-execution: refusing recovery_authorized for nodeVisit ${nodeVisitId.toLowerCase()} — attempt is not pre-admission blocked (phase ${current.phase})`)
   }
-  return { kind: 'recovery_authorized', authorityRef }
+  return { kind: 'recovery_authorized', authorityRef, ...(authorization === undefined ? {} : { authorization }) }
 }
 
-export function buildRecoveryRefusedEvent(current, nodeVisitId, authorityRef, refused) {
+export function buildRecoveryRefusedEvent(current, nodeVisitId, authorityRef, refused, authorization) {
+  validateAutomaticAudit(current, authorization)
   if (typeof authorityRef !== 'string' || authorityRef === '') throw new TypeError('workflow-execution: authorityRef is required')
   if (typeof refused !== 'string' || refused === '') throw new TypeError('workflow-execution: refused is required')
   if (current.phase !== 'resolution_blocked') {
     throw new Error(`workflow-execution: refusing recovery_refused for nodeVisit ${nodeVisitId.toLowerCase()} — attempt is not pre-admission blocked (phase ${current.phase})`)
   }
-  return { kind: 'recovery_refused', authorityRef, refused }
+  return { kind: 'recovery_refused', authorityRef, refused, ...(authorization === undefined ? {} : { authorization }) }
 }
 
 export function buildStaleSupersededEvent(current, nodeVisitId, observedWorkflowStateVersion) {

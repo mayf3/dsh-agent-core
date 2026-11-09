@@ -1,0 +1,70 @@
+{
+  "observed_at_utc": "2026-11-07T13:08:56.362913+00:00",
+  "base_head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "current_main": "9df5bd2fdea17f04bcd1762cd6800c350efcf9c3",
+  "unchanged_authority_and_refusal_entries": [
+    {
+      "path": ".agents/README.md",
+      "base_tree_entry": "e3493fbf67f4cb2641c7990478d7c008c1dd9ca5",
+      "current_tree_entry": "e3493fbf67f4cb2641c7990478d7c008c1dd9ca5"
+    },
+    {
+      "path": ".agents/local/README.md",
+      "base_tree_entry": "c2b6e9ea255e436c602f0e5ae04dd3108da91956",
+      "current_tree_entry": "c2b6e9ea255e436c602f0e5ae04dd3108da91956"
+    },
+    {
+      "path": ".agents/governance.lock.json",
+      "base_tree_entry": "59a9da8bcd6a567a71ec3096b6066bf69c5b9d52",
+      "current_tree_entry": "59a9da8bcd6a567a71ec3096b6066bf69c5b9d52"
+    },
+    {
+      "path": "docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md",
+      "base_tree_entry": "f260b482564a561cf97f1b94676b048f67bd2f90",
+      "current_tree_entry": "f260b482564a561cf97f1b94676b048f67bd2f90"
+    },
+    {
+      "path": "docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md",
+      "base_tree_entry": "0c3f6f6005794edec2faf666e4fb035a9c87b009",
+      "current_tree_entry": "0c3f6f6005794edec2faf666e4fb035a9c87b009"
+    },
+    {
+      "path": "docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V3.md",
+      "base_tree_entry": "fd4ee0df516fd1cda800e586dd05cab8bfc355eb",
+      "current_tree_entry": "fd4ee0df516fd1cda800e586dd05cab8bfc355eb"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1.md",
+      "base_tree_entry": "232b890c1b8f01c9d2fbcd9a1f6b8acfb401a816",
+      "current_tree_entry": "232b890c1b8f01c9d2fbcd9a1f6b8acfb401a816"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3.md",
+      "base_tree_entry": "f7623521fd031f661ecc74fe61cf9ec52e69ba13",
+      "current_tree_entry": "f7623521fd031f661ecc74fe61cf9ec52e69ba13"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3.md",
+      "base_tree_entry": "ffa4defa97973b8c25240c2a4e7191dc6fee4167",
+      "current_tree_entry": "ffa4defa97973b8c25240c2a4e7191dc6fee4167"
+    },
+    {
+      "path": "packages/workflow-execution/src/recovery",
+      "base_tree_entry": "b21d23ad4864c5e53008f0a77b5245dabe3ad9b7",
+      "current_tree_entry": "b21d23ad4864c5e53008f0a77b5245dabe3ad9b7"
+    }
+  ],
+  "result": "BOUNDED",
+  "current_aging": {
+    "revision": "9df5bd2fdea17f04bcd1762cd6800c350efcf9c3",
+    "path": "docs/specs/AGENT_CORE_READBACK_AGING_HANDOFF_V1.md",
+    "sha256": "c9f01d33499e20665f5102960381848dd8a4f539e050f30d6b44539c52ccf39e",
+    "status": "accepted",
+    "implementation_authority": "none",
+    "production_apply_authority": "none",
+    "restriction": "Proposal semantics only; WEC/Svc companion authority acceptance still required."
+  },
+  "historical_observation_correction": "R1 proposal section 3.1 and source-provenance @ 2026-11-07T12:58:52.877453+00:00 pin #643 head 7b5d79c3 proposed/unmerged. Current main includes #643 Owner-limited acceptance. Preserve R1 bytes; do not reuse its PR state as current.",
+  "impact": "#654 diagnostic readers and #643 aging lifecycle do not authorize refused-terminal reason, historical-object reception or B2 terminal append. No product implementation authorized.",
+  "reviewer": "/root/proposal_review; independent bounded-impact review PASS"
+}

@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/usr/local/bin/node",
+    "scripts/verify-code-structure.mjs",
+    "--base",
+    "95a8e1cb512fc99dc018209d837250dd51b4d08f",
+    "--head",
+    "ece5cce6c51cbf0c3768be534b6e35822a86688b",
+    "--json"
+  ],
+  "head": "ece5cce6c51cbf0c3768be534b6e35822a86688b",
+  "base": "95a8e1cb512fc99dc018209d837250dd51b4d08f",
+  "exit_code": 0,
+  "sha256": "f51bcbf4f1d82b250199e724a844605bc75fd2639960da6e730ecd5a31418041",
+  "time": "2026-11-08T07:01:48.024320+00:00"
+}

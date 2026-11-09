@@ -1,0 +1,28 @@
+{
+  "name": "stage-prepublication",
+  "argv": [
+    "git",
+    "add",
+    "--",
+    "BRIEF-603-REVERIFY.md",
+    "ASSESSMENT-603-REVERIFY.md",
+    "RECEIPT-603-REVERIFY.md",
+    "STOPPED-603-REVERIFY.md",
+    "docs/evidence/603-reverify/r5",
+    "docs/evidence/603-reverify/r6",
+    "docs/evidence/603-reverify/r7"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "started_at": "2026-11-07T05:24:40.466453+00:00",
+  "head": "f1b1466b2645ec861c80bcb934db410ff544e6ca",
+  "environment": "Inherited unless argv explicitly clears keys; no Secret values recorded",
+  "ended_at": "2026-11-07T05:24:40.518574+00:00",
+  "rc": 0,
+  "encoding": "base64 is authoritative verbatim output; text is a UTF-8 display",
+  "stdout_base64": "",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_text": "",
+  "stderr_base64": "",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_text": ""
+}

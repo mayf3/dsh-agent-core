@@ -1,0 +1,67 @@
+{
+  "observed_at": "2026-11-07T15:46:21.330592+00:00",
+  "read_only": true,
+  "method": "lstat + getattrlist FSOPT_NOFOLLOW|PACK_INVAL_ATTRS|ATTR_CMN_EXTENDED (0x29), CMNEXT 0x1308",
+  "files": [
+    {
+      "path": "/private/tmp/h-disk-inventory/.agents/README.md",
+      "dev": 16777229,
+      "inode": 359373067,
+      "nlink": 1,
+      "logical_bytes": 20078,
+      "allocated_bytes": 20480,
+      "mtime_utc": "2026-11-07T15:42:31.118977+00:00",
+      "birthtime_utc": "2026-11-07T15:42:31.118611+00:00",
+      "stat_flags": 0,
+      "attr": {
+        "status": "OK",
+        "returned_fork_mask": "0x1308",
+        "length": 52,
+        "private_bytes": 20480,
+        "clone_id": 359373067,
+        "extended_flags": 0,
+        "clone_refcount": 1
+      }
+    },
+    {
+      "path": "/Users/yanfenma/.codex/sessions",
+      "dev": 16777229,
+      "inode": 415002,
+      "nlink": 3,
+      "logical_bytes": 96,
+      "allocated_bytes": 0,
+      "mtime_utc": "2026-03-22T14:20:59.359028+00:00",
+      "birthtime_utc": "2026-03-22T14:20:59.358914+00:00",
+      "stat_flags": 0,
+      "attr": {
+        "status": "OK",
+        "returned_fork_mask": "0x1308",
+        "length": 52,
+        "private_bytes": 0,
+        "clone_id": 415002,
+        "extended_flags": 2,
+        "clone_refcount": 0
+      }
+    },
+    {
+      "path": "/Volumes/My PSSD",
+      "dev": 16777237,
+      "inode": 4,
+      "nlink": 1,
+      "logical_bytes": 524288,
+      "allocated_bytes": 524288,
+      "mtime_utc": "1970-01-01T00:00:00+00:00",
+      "birthtime_utc": "1970-01-01T00:00:00+00:00",
+      "stat_flags": 0,
+      "attr": {
+        "status": "OK",
+        "returned_fork_mask": "0x1308",
+        "length": 52,
+        "private_bytes": 0,
+        "clone_id": 0,
+        "extended_flags": 0,
+        "clone_refcount": 0
+      }
+    }
+  ]
+}

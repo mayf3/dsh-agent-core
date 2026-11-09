@@ -1,0 +1,29 @@
+[
+  {
+    "command": [
+      "gh",
+      "pr",
+      "view",
+      "648",
+      "--repo",
+      "mayf3/dsh-agent-core",
+      "--json",
+      "number,url,state,headRefOid,headRefName,baseRefName"
+    ],
+    "rc": 0,
+    "stdout": "{\"baseRefName\":\"main\",\"headRefName\":\"docs/standing-release-auth-v1\",\"headRefOid\":\"61b97d326e337057cd1f71c0a6ff0dc37ab72ec2\",\"number\":648,\"state\":\"OPEN\",\"url\":\"https://github.com/mayf3/dsh-agent-core/pull/648\"}\n",
+    "stderr": "",
+    "observed_at_utc": "2026-11-07T07:21:55.558271+00:00"
+  },
+  {
+    "command": [
+      "gh",
+      "api",
+      "repos/mayf3/dsh-agent-core/git/ref/heads/main"
+    ],
+    "rc": 0,
+    "stdout": "{\"ref\":\"refs/heads/main\",\"node_id\":\"REF_kwDOT4gz1q9yZWZzL2hlYWRzL21haW4\",\"url\":\"https://api.github.com/repos/mayf3/dsh-agent-core/git/refs/heads/main\",\"object\":{\"sha\":\"f6e332d7568b01c5253618449bfef5839102c851\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/mayf3/dsh-agent-core/git/commits/f6e332d7568b01c5253618449bfef5839102c851\"}}",
+    "stderr": "",
+    "observed_at_utc": "2026-11-07T07:21:55.558650+00:00"
+  }
+]

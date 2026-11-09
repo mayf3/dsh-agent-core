@@ -1,0 +1,39 @@
+{
+  "observed_at": "2026-11-07T04:48:55.336853+00:00",
+  "head": "91e224bc079f26cef285cba6da0872cb640ed330",
+  "branch": "ac-ctr-s4-reverify",
+  "status": "## ac-ctr-s4-reverify\n M BRIEF-603-REVERIFY.md\n M packages/production-runtime/src/compose.js\n M packages/production-runtime/src/scheduler/auto-reconcile-runtime.js\n M packages/production-runtime/src/scheduler/composition-runtime.js\n M packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js\n M packages/production-runtime/test/workflow-execution-shutdown.test.js\n M scripts/trusted-cp-deploy-install.sh\n?? RECEIPT-603-REVERIFY.md\n?? STOPPED-603-REVERIFY.md\n?? docs/evidence/603-reverify/\n",
+  "source_bytes_equal_r2": true,
+  "log_integrity": {
+    "docs/evidence/603-reverify/r2/changed-runtime.stdout.log": {
+      "bytes": 16668,
+      "sha256": "e85b02077794a5111c30c28446d10e21b66e63b2bda9a089c0912ae22c543814"
+    },
+    "docs/evidence/603-reverify/r2/changed-runtime.stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "docs/evidence/603-reverify/r2/structure.stdout.log": {
+      "bytes": 67709,
+      "sha256": "0a57b28a5f641d4f698300ef08ad7dfefebd30642bcf4026615a2a8355800b3c"
+    },
+    "docs/evidence/603-reverify/r2/structure.stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "docs/evidence/603-reverify/r3/changed-runtime.stdout.log": {
+      "bytes": 16633,
+      "sha256": "322961da1758057ceef5526e234a66575c30f78056cf784123d37005f6f3e65c"
+    },
+    "docs/evidence/603-reverify/r3/changed-runtime.stderr.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "receipt_sha256": "7ebe8d9bb0bff3da3e7bdc091dc08517f759385dda3b2af21b0f885820d5fade",
+  "stop_sha256": "dc9efe1d2a1c250c73a50e2fe6c87a70489a8aaa528eb1b81202e444e7f2eb1f",
+  "commit": "NOT_ATTEMPTED",
+  "push": "NOT_ATTEMPTED",
+  "pr_update": "NOT_ATTEMPTED",
+  "merge": "NOT_ATTEMPTED"
+}

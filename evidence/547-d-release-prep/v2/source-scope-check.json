@@ -1,0 +1,3178 @@
+{
+  "schema_version": 2,
+  "started_at": "2026-11-08T08:28:31.974937+00:00",
+  "ended_at": "2026-11-08T08:28:33.007518+00:00",
+  "source_repository": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+  "base": "393a0afccedc5cce7be8b492c82d68d8d52206f6",
+  "requested_source": "95a8e1cb512fc99dc018209d837250dd51b4d08f",
+  "lineage": "42487e65b36f049811b0e83f90178510a3da28b7",
+  "current_overlay": "08102a550cf2f5e14646c6858786d7fe7a50c61d",
+  "source_selection_count": 434,
+  "base_selection_count": 355,
+  "selected_source_delta_count": 214,
+  "delta_outside_six_lineage_count": 208,
+  "delta": [
+    {
+      "path": "packages/agent-credential-provisioning/src/rotation-seam.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "43a0c29fc170bd3243a56f56fd23acb26c6111f9",
+        "bytes": 23392,
+        "sha256": "f7c4a0db66ce47886353c4fe787311bd286503d57efaf18781b355ba3c2d5939"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "5c1e74a5b3ed2156343626d23ad48d86aea2d44e",
+        "bytes": 24936,
+        "sha256": "3d8db0d051363ab713d4e400c3cbc7796907b2d9f3ea8a16a601812046263def"
+      }
+    },
+    {
+      "path": "packages/agent-credential-provisioning/src/store-document.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "bb70e773400cb432e114c8f7194bbf3d5e1a341d",
+        "bytes": 5488,
+        "sha256": "09ad5674a7e37b6e4de594ada4e6fb8ac26ed2237b1b70890d78afaa67bb75d3"
+      }
+    },
+    {
+      "path": "packages/agent-credential-provisioning/src/store-reader-owner.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a9add61f086d9b6844985e054ca4622874636f2f",
+        "bytes": 6196,
+        "sha256": "8760ac3ccd4eb04ba23740469b8d81db4e86a0e2c30b439af4067986c862d1f5"
+      }
+    },
+    {
+      "path": "packages/agent-credential-provisioning/src/store-trust.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "436820dcb31c2ebb0657a2217460cb30ab7cda18",
+        "bytes": 1794,
+        "sha256": "ee93af61dee4786b64d094320d5352cb1be02cb7ccc52c1b7dc11fda0954b278"
+      }
+    },
+    {
+      "path": "packages/agent-credential-provisioning/src/store-writer.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "20b9f1079ecfb573bbd53a4e99e6898de9904cef",
+        "bytes": 23740,
+        "sha256": "36cb9af0625d7f8f1944d888b57e5bb809d12b17f4d368d489bad23b3c5fe4fe"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "afb61ac50a64dae9ab8053bd4c21838177d94668",
+        "bytes": 19852,
+        "sha256": "0ddea2fca430c74c2f06341b27977f4dac8942bb8501194e3abe5d7fd64fbfa2"
+      }
+    },
+    {
+      "path": "packages/agent-memory/package.json",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "617ff73616f6fc50cd565d026ad4b9c12e23ca81",
+        "bytes": 728,
+        "sha256": "591a6ed957d88ddc642b0a7d8f3528a35139b92ba1ddcc720f6774581dc6a05d"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "5cc67a20bf28874ee245a2e48c8baf794bf71800",
+        "bytes": 843,
+        "sha256": "150af14dc4460e6914e2a926808d72cb5d2a06ef71843b06b30eee8204d225d7"
+      }
+    },
+    {
+      "path": "packages/agent-memory/src/codec.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "e49ef47bd3316d80086a729f8738917fa32072eb",
+        "bytes": 12634,
+        "sha256": "274209c682982a886ea0470a8fee4b5479c7de0ac44dac0043cae7b5a16786cc"
+      }
+    },
+    {
+      "path": "packages/agent-memory/src/document.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "c63645078be0e8def568cff61f82737697aa5f00",
+        "bytes": 13097,
+        "sha256": "e62e9be9ac2b5c2611b696d40c6647c4cc7c39cde83f57e57e9cbb744e7dde1d"
+      }
+    },
+    {
+      "path": "packages/agent-memory/src/history.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "e12fe55486116b4d8704dda06094bf3b35db59e7",
+        "bytes": 20054,
+        "sha256": "d13101982fd8f8824490e03e019696668a51454f1f409a22d0cd47d62c7fad1f"
+      }
+    },
+    {
+      "path": "packages/agent-memory/src/index.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "31071f7c501b98f3934adaa3a2dc1eea1b4a359c",
+        "bytes": 28676,
+        "sha256": "691371f0b2b4036d7d6ec6365501541b150d22dedc10e63d7257865058fde20f"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "6e11b599e703c1ec194d8341a85d3e218d2ec464",
+        "bytes": 16357,
+        "sha256": "5153fd3197d35325959d495baab4e53fec6ffbc42b56c53c7c139d541754479a"
+      }
+    },
+    {
+      "path": "packages/agent-memory/src/inspect-cli.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "b63c319f6bba0c3f25b48715db97fa48f188fdc0",
+        "bytes": 2362,
+        "sha256": "450d8c81034bfcf3432efbf1dd96ff41fb72c49b965aa14a1c4b4fd55f53cc77"
+      }
+    },
+    {
+      "path": "packages/agent-memory/src/inspect.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "352db4a1ae20a882e27bb8677f2f3fdd5fac9f9b",
+        "bytes": 13764,
+        "sha256": "f6cc23110148db9ba729595b6c5439f2af31862869bd126ca14fdcc0112e508c"
+      }
+    },
+    {
+      "path": "packages/agent-memory/src/memory.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "476d4a4f6c89d8bda1c33690e1be0623ee3a1f3d",
+        "bytes": 16415,
+        "sha256": "239cd5ed488886ee9c66900112e7203ce7b6a9432efa1365d550787a2bfeabcc"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "281219fac7b02c63e8b45b700c28af330932a946",
+        "bytes": 14868,
+        "sha256": "b3505985494de0d47efac3faccf6aa20840f35dc1f582bd220c19f9044ec5d50"
+      }
+    },
+    {
+      "path": "packages/agent-memory/src/migration-cli.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "e2b1481259f16de6653bee0a2323c42580302795",
+        "bytes": 6714,
+        "sha256": "1ac2bf5535b5277313c34ad50cf4b4f055f72d8b70ec641c76db024a6f4c50c6"
+      }
+    },
+    {
+      "path": "packages/agent-memory/src/migration.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "91632f510c39d03a780d6a7546d8e718d85ffeec",
+        "bytes": 9443,
+        "sha256": "dbe56177af9e30af3d29f4a73db0ce4bd5dbb80e31e107c7cef77dab393a19b2"
+      }
+    },
+    {
+      "path": "packages/agent-memory/src/tools.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "c35dc3ca70402354a4ae0687d5c515d680cf4d4d",
+        "bytes": 10775,
+        "sha256": "469dfbe2778375ad539b9ef11e01aa26f96c26a7411d57095e6cd1fa14bc38ac"
+      }
+    },
+    {
+      "path": "packages/agent-provisioning/src/trusted-native-tool-policy.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "300ff9ce6605505c51b6d31d6cd86bce3bedeb66",
+        "bytes": 8664,
+        "sha256": "474b618c2e13b5171dc6bac5ecc560e436dd1cf868b0917712d438d5be892c08"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/binding-resolution.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "0f687f5d0b0f59f9566b2cf9b9368108f5d69c01",
+        "bytes": 14092,
+        "sha256": "615f8cab77dbed9ff89e4c92cfaf7055afc028240b4525cb212ba60aaeb4f738"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "172859f387a44828c892cd090dcc15e8b081bc66",
+        "bytes": 15514,
+        "sha256": "830f6995eda887fcef24ae424a67c0bc1e1ac5891568530ff5dd07b3114dccdd"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/conversation/surface.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "7eb074b7ef267905d4fd8fe52e9f279178db0d35",
+        "bytes": 2053,
+        "sha256": "08deaada5571030b5d4ce67f458d3b01cc06bdbf42b61d2197311240e4fe1210"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "4fabc2538517f717bc9549c96b8a389b738ead6a",
+        "bytes": 2203,
+        "sha256": "5cb13ddaa5bbeed3fe308d6b948e90b06f8ae092dacf6ee229cec9e79322f550"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/deadline-config.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "1c02218262c09dbb25cc5aa371f0a8f899c0970d",
+        "bytes": 10949,
+        "sha256": "dde4a7a2c8c90f92d5944a32720407fc51a32fa3865b86178cba0ae542600485"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "ddf2e186321c2337d8340326978803a970185fb7",
+        "bytes": 11295,
+        "sha256": "027d59f199c8f909a99fc7776de5e39a650b4ff6c940b300c67d7325f6aa02f0"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/index.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "c885546986abe148eeabfb1edd357f9441f6cba0",
+        "bytes": 26976,
+        "sha256": "bd19c4f1465fda669986adf1ff82416a70ddba5283a650f30c6bde0fcd952603"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "d0a8ca89965ab01718c34f3db93660d5bb2e1fd3",
+        "bytes": 23438,
+        "sha256": "662e24874af853ac0f641594ca6e844ead3bf0de36d0beac9b9e477d931d5df6"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/ingress-delivery.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "fae7b3ada0436c24770a23924493e3ef35b2c8dc",
+        "bytes": 27146,
+        "sha256": "01eab5d3e535f2b05fd15960e396376a2db339676a2a5f57993a189c868484f6"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "38654a6b93f91a95bd557fa633f86c6811cd2e05",
+        "bytes": 26328,
+        "sha256": "ac67ebb3d06592d49badfdabb79476f564a37914af529411efa94542319fb147"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/operator-exact-generation-recovery.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "0436691db7941e9b11473d1c927cee1c037bc3ed",
+        "bytes": 3707,
+        "sha256": "12b94a3ea713b37044e78698ba13797419ae4f6c5f4d027c684be8e2e7181941"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/agent-router/src/parent-rpc-relay.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "eec0870fe54a3fb1bcc3661311033b36963fba78",
+        "bytes": 7822,
+        "sha256": "1ac2e0e03a405d8d84a0dc52116c0b84318009726f8a0457032341d8875e021a"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "5f9764f9ebd10b48df731e527a43f83a1f1f2425",
+        "bytes": 8952,
+        "sha256": "faf18a6ae6c1b4a6385582d05cd2400332ebb86cd9cb5d38d8ed5f14b5532cc5"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process-registry-death-evidence.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "09a4feb078ddf4b50b252f679da4be5ec884c200",
+        "bytes": 2177,
+        "sha256": "7bca9a0b112827dea87278546e88cac8eee54b04efbb969172f906bc7fcc0d27"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process-registry-native-policy.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "5dd6fabfd5f45a96b20af656381d82fec4ef070a",
+        "bytes": 2684,
+        "sha256": "707aad35e702d4c078e49dc740d50323fbaa507037877bfd5f3e271d6f877861"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process-registry-route-gate.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "092779dc0b0eb1be6bc75fb7cf5b1a49df4701fc",
+        "bytes": 8427,
+        "sha256": "949343251aad7feda52b24c4856b3fae938dbc2e7486508ddea6a25665e7b566"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "ab08339590439239d9d916f201684353ed9d3c37",
+        "bytes": 9055,
+        "sha256": "d8b43e1b8ae58b5cbe7b8ad343c4e4ddbdf47d7adf6458932d4c33ddc72b6c49"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process-registry-startup.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "85f4bcd6f8370f3a34ef9550f072cf0ffaf7f5ff",
+        "bytes": 4736,
+        "sha256": "675ae69f454a8a9c0ae27e549a2f404a10fbaee25e24d4befa8f7ac8e5ac3a49"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "5a8a2d6fc14dd9cbac44d4204486901bac71f80e",
+        "bytes": 5414,
+        "sha256": "e772509df54011cee65bed188c6c1033164f2a4ecfb6c8681292e34e8348a92d"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process-registry.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "f6ee247622a50f92c99582c4e3966af05ff24d35",
+        "bytes": 21813,
+        "sha256": "87abee00c4c4911bca44b002ecfdc1815eb680f8c1fd18444d32ba06c38334ae"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "ae4453fac408d0958ba5ce93b5fae082756de3c2",
+        "bytes": 23759,
+        "sha256": "7804105ab44df8aa774220756907a494f87dcbd9729c0b94db558a1884907e56"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process/agent-process.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "6237247e9f6918c7efb4295e842a0098427d9e9f",
+        "bytes": 15487,
+        "sha256": "473003ddfb1fc7b1d560863f6edce8feb8105a291d3155f70a49cbd9cde30088"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "16de984aa6df189c951215323b877a00759bc058",
+        "bytes": 16483,
+        "sha256": "c78824fbb2ea637afed66afdac855a521e2e681547f809ac0979f383fa12309b"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process/delivery-readiness.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "d146068a66d9cf30b298949ca2b0ef6391a4b88d",
+        "bytes": 2706,
+        "sha256": "11d51efbfddfa1733db0a7af6d2b1f2a27d56d0f26d6ecbd3e32207b50588004"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process/delivery-resilience.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "07fc4247753378954f590c9391295192a76e3492",
+        "bytes": 8305,
+        "sha256": "6e8394df4bc7243f7169878f1858ee16ff32881baf4b836dce52ecdada4b4d98"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process/event-correlation.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "b414f0b311a0557bfb71645607daeeb86677fe15",
+        "bytes": 19407,
+        "sha256": "47693d4d79af4e0643078e4f178bd341457b8418c07892d1a65d846f07af58bc"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "dc7b309a2c9293af4c956f407e33725223d2fe5a",
+        "bytes": 20446,
+        "sha256": "13a207e2cce2218f7ec0aa8740b9f5a3a748857faea5b13c37f52e422700ed45"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process/native-goal-admission.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "4ffb4fa5ef9e1318222afa32694d0f2c245778f0",
+        "bytes": 5681,
+        "sha256": "a2e874b44b7f896911afad556e3c68a333c22acb1cc8b19c765588b0857084ae"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process/prompt-write.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "2180ae13e4f7a6b84489779efa698a873834287e",
+        "bytes": 2621,
+        "sha256": "d385831bfdbdce34d9c533c9ca74a7c6f2f426ebadc4a421db1c5fb9d0b90efb"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process/provider-errors.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a89c0cf94394adf911083c259359099a95481085",
+        "bytes": 3298,
+        "sha256": "3e25f3269b39a0e253949c022d7845709a255d62d74fb2cb98750bc4766578b6"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "d98f780228395c301b7b5ee40daa25a8581c473c",
+        "bytes": 3833,
+        "sha256": "a3b951e8e8569e1f66466ba074bd822d0ce54a8510a6efadf08920124b60034c"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process/rpc-channel.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "c010dd0306529299d4a63c08424e801c12e550fe",
+        "bytes": 18554,
+        "sha256": "23810dad5218da19e67a9a3c1f13103eab8dc390e074e35ee9ed5ae4d84cb7ee"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "0aefee7fff67701a94c6b89b5ce395271501621c",
+        "bytes": 19749,
+        "sha256": "1d666fc19bec8ed2b2c82f83628ef2f1c1eb5e901153228f801f5db1f4f676eb"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process/scheduler-receipt.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "56432d0ba7f6f58d362d3097a598112b77749e52",
+        "bytes": 1646,
+        "sha256": "a516017b5c46288ec6405186264c54a33da14f6b355b83272b7ee814a5427926"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process/spawn.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "7d6524e528c80897c61d2e0c4c9e5e42c504f879",
+        "bytes": 10166,
+        "sha256": "add4e95e3318b98f8157c8c2dc3d5e29db219839a2b50484a2f5f3a7a8fc0063"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "3e9fa7c43885db973e653818fa103ad3aca903ae",
+        "bytes": 10237,
+        "sha256": "ca97f2c4aa9112e920c21fbff5b60136e9d54de8bbe08d636213428c4fbaa9e9"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process/state-machine.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "3a1e70ea5c478e6e1be34f2caed5e00ac4f6fd13",
+        "bytes": 3313,
+        "sha256": "6e079adcc807c772e2a360db9c4e4efcd06070397ef196f53f9173ab9b643342"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "9310579a21bac2d783edab1b61d18752712d60e7",
+        "bytes": 3720,
+        "sha256": "53f02f66ce09da9957373e97148a7a498bb07c8ddef50bc1161f5ea9f7e30ad4"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process/turn-execution.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "05b3b5783f32e606120ccd1874713a2ae19ea48d",
+        "bytes": 20939,
+        "sha256": "d1e5ec10b20599aeeff3c5adb040469777c9df02424b7122f938628b68549cc6"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "1a66988334beeae0bd8b503e636b391afa74fcb7",
+        "bytes": 21588,
+        "sha256": "ded45c75a665f5bc4b9fac9f6204fa9a3b5be7eabea97533e112eac1f7e1968d"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/process/website-inquiry-admission.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "87be41a5f8d58ff828011926789ddec301c609e5",
+        "bytes": 3312,
+        "sha256": "4d42380c9c7856cce232cd2e938e9cada0fcb7e1826ab7affd72aac1788983a6"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/r22-reliability-observability.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "c6fa7b9e3434ff48f037ec0b3f0c2999a6f86376",
+        "bytes": 4221,
+        "sha256": "9684f07af0128851487f8394a46490e471e2e0a444e82f29649b70f882037e2c"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/agent-router/src/r28-recovery-control.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "d16e6db227e17fc4a8d48f2a2740536873c72af7",
+        "bytes": 2065,
+        "sha256": "e66906cbc1c6c94a665f37690d0aac1f87164f762273eaddd25522234a8bb864"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/agent-router/src/r28-recovery-state-machine.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "0d20ed816d4686e12f8b897ca6a387a0551f7cd0",
+        "bytes": 4779,
+        "sha256": "f4936bfafb70b8f9cfa9d5af246105235ac0ec7fc2b3ae01b0e810e8a505af79"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/agent-router/src/r30-escalation.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "28235612399f82d9c5ac00feb1e0ea3d0d91a00a",
+        "bytes": 2986,
+        "sha256": "51d2dffdb4b054241f591acfa87a74b62ce0f5482ceac9bde11feaa1abdd9ff1"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/agent-router/src/r38-artifact-binding.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "c94bfb2ba7914597b34cb0fccea9cffb10ae2c62",
+        "bytes": 2321,
+        "sha256": "74191c2babb9f08fae97f3a40861efbffabbf287278503316c64ac7216b28bde"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/admin-abandonment.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "1d38667ca0d96be6414beded0fc25acac7977af8",
+        "bytes": 12005,
+        "sha256": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "7796bb35bea802782977ce83c7017d0e8103ac34",
+        "bytes": 12388,
+        "sha256": "62237fb500694f95d894f0f75516ee97fee05cd961971156783120bcbe059710"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/admission.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "7810e610005c541718895e6417ed84bc5fd40f19",
+        "bytes": 920,
+        "sha256": "a601a83e936b75d1ded8b4f300f119b4d270734cafda15ae80b3894bdef5ca8c"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/delivery-failures.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "6f584051646cb1176e384c2ad8db6b3e394fc378",
+        "bytes": 4993,
+        "sha256": "4277fea7b9295be9c7de408ceed8ee19bfcbe7a289739c68e03ffde5360aeeea"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/durable-file.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "cfe474377e8c18b0b943a220418a6665fa78cbd5",
+        "bytes": 20708,
+        "sha256": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "6ac4cc21bb89d4f15aad0ddadc140d4ab7632ae5",
+        "bytes": 21137,
+        "sha256": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/operator-authorization.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "cedcbf74f3c3210bbe2332eea3956bba695b1eb0",
+        "bytes": 3641,
+        "sha256": "0ff39f72d92f64a06e5f93506074ca154f86036816fbb660246112004ff727e7"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/operator-candidate.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "901abf321a57b809766a45a965e0b8f3859106b4",
+        "bytes": 7803,
+        "sha256": "119fa94db6c906812071c955fe1a33d7a16a6f6b4127d37bd01bdd8f0490f23c"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/operator-files.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "f778c575f16bc8d57b5b774844dfc187c86cd390",
+        "bytes": 1359,
+        "sha256": "9495e593f5034ab388c16c724cb84034e408eb256e8913f6c39df66aa2c6d0e8"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/query.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "ae0d0cef1e5dc435c409c0566948f60c4f2f2c72",
+        "bytes": 10943,
+        "sha256": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "6d691342f874890237b2d3aabd68e7a3cd380537",
+        "bytes": 11151,
+        "sha256": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/state-machine.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "15adafc487637a64196e9c88c1ffc1571f486d32",
+        "bytes": 17202,
+        "sha256": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "cd8f621f36d2e35e4822b670e966617cc3cd346d",
+        "bytes": 18433,
+        "sha256": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/store.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "77c1e6e89bc84f8025e95405c3a99eced1081f75",
+        "bytes": 24680,
+        "sha256": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "60838cefbd2745848c54a091355897a72e27cf12",
+        "bytes": 23311,
+        "sha256": "9c5fa22a8fb62f1064a4362918f217fd9fa4ad83acd35d1d3a137e60c27ac410"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/route-chain.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "dbc588059f0fefc55579bfa06a435a8bfefb7c92",
+        "bytes": 22920,
+        "sha256": "261e8ca076a768679b9fc79d3a91eebccec04af3050e26cec0a590f27d93cb7a"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "bbcd86575572ddf2126777538b85a7a336eb0527",
+        "bytes": 23760,
+        "sha256": "88e3e92e8fe2efeb60fad75b4bdce3950020fc41b791072799a56d1b9cbed9c4"
+      }
+    },
+    {
+      "path": "packages/agent-router/src/workflow-recovery-chain.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "6db06779b07814bd6fdda797fc48cedcd96548dd",
+        "bytes": 1085,
+        "sha256": "3d1cf784125b33957c2e52097be6774718f69382b40ba8818db4e06f869c7e48"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/broker/package.json",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "03ee19bfb57dfe2f3dc42e92eec49fea260f4f75",
+        "bytes": 963,
+        "sha256": "835296e41f62321b53c79d95da5300a21160e6d3c39f209cefcc5a6485f15d0e"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "5bd268ff1f04aa20da6bb1c3afc467ad683e4f99",
+        "bytes": 969,
+        "sha256": "a6940e5bd9ede7dbf356ffe5f13ad05c05290b2c4bb2f916367281b7c8f61fc3"
+      }
+    },
+    {
+      "path": "packages/broker/src/agent-session-status-result.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "64969b01a9dd5218c01a6edd4d3e53393dd7906b",
+        "bytes": 3847,
+        "sha256": "0f3cb9592f4f6dcc17b9f2ccf7c36ef6293b9132b8c65eaa7f6cdce6118b6ada"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/agent-session-messaging.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "74118c89a6515449e7026686f76c4cb48689d558",
+        "bytes": 8085,
+        "sha256": "96bd1db8cf9beda69f014a0581a0a74166e697b1d1eb3982112480a5481c1bd6"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "bb81781fddd33db4a7f79f34ae1296fd3619b5cb",
+        "bytes": 9635,
+        "sha256": "563376e4d6baad2d8977291e113f453c470417ff5081593a6399bee6c7ef7605"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/manifests.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "7469873fd8bbe13fabba411fc64ab826d4de4d27",
+        "bytes": 1946,
+        "sha256": "a5d3f87b0a458af740d46aa7b54c8734a2bfe70a3ba37a56bcef2fdbf6640df7"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a9421461476c227eaba0778ee5320d1b7d07c712",
+        "bytes": 2033,
+        "sha256": "d721e5d5701a92036d48bb426dd9ad20c36690e3f53376e220d156dd82a66467"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-assistance.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "0107c885a14104ad5f11d1876b70332df6923095",
+        "bytes": 11568,
+        "sha256": "7db1ed7eb671459d2545b63eb00ce485050b07d98fc4fe236ddd83a2e661107d"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-definition-authoring.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "96254d6f31fb7eb3e38a50199418e5445625a035",
+        "bytes": 13851,
+        "sha256": "c95d4e45c827ae2026318052fc17ae7b2a87e634f49ee31d377883f8bf76ac0d"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-definition-read.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "3d8deef376d731ca3aa638514987b241e663806e",
+        "bytes": 7533,
+        "sha256": "049358d75a3e2b8082afe172cb77c338da8506e79327e06479645a82b49fc478"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-definition-read/complete-contract.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "b50a9745c73a3a3b0d8070b490ff31ba9222d777",
+        "bytes": 4700,
+        "sha256": "bb0ae8d2eb401bbf31e20642b4cee6b225d35a9d8c8e3158664b1c2bc4af336c"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-definition-read/complete-delivery.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a3d592b220142eda7924dcfd8fcce79f23a91870",
+        "bytes": 1516,
+        "sha256": "21a3668cf9ec31c6ed83419dc019eaddf19df84be3140cedef09e75668449201"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-definition-read/complete-reader.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "960f6a98e15d9738efc6cc6ff48bddd02c4e093c",
+        "bytes": 5387,
+        "sha256": "6591b405b6d4653717b947171ab9ee42ca2267bf5ab45b7cda9eb6144e8b62a5"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-definition-read/complete-relay.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "2b21bfc5aecaaddd346d6f6d0e3798ea44281df2",
+        "bytes": 1101,
+        "sha256": "e0a520e2c9ca9a695715d00eac788beb178e4dfcb47063cdb6741e4fe1be0375"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-definition-read/index.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "375e111afe0a2525923fba5763a328ecdc93f453",
+        "bytes": 15044,
+        "sha256": "9ff89e4513233a9c8c5dd3cb79861b69d3a77443548c51e6ce6e845e824f42b4"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-execute.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "b01a374dd83bcb6069e90452c341b61239d6344e",
+        "bytes": 14594,
+        "sha256": "14a1c178ee81ce924a8cfbfe20e5f18e64a43a230ce11b6cf31f06738a54ba6c"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-human-principal-projection.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "3f5b0de6069df72a3873587f4415c2e43848fb28",
+        "bytes": 4434,
+        "sha256": "f86b406f144edc2b3dde459069f391cb20c0193f5da8a8500abbb022625fd96b"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-linear-authoring.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "9a03f6dace11c34c39aea2256fae7ce972294ffe",
+        "bytes": 3768,
+        "sha256": "5bee9fd3405a1b7047c6238e4db912f63a228170f8d915794d24744ed9a44990"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-progress.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "f13c52ba3e86d9516f9c7b0a8ef1f1cf5fce9b00",
+        "bytes": 2351,
+        "sha256": "16835b17b73e3d8560cfd9f99c6c6546c1eb95bf683a762122ff70d4f18c1296"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "4383c028eafc0e3150917e8704ec9aa395358723",
+        "bytes": 47766,
+        "sha256": "207fa11372b6f7164a8a4b77ab31dba40c6cf6d63d6042b765162a48b9599482"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow/assistance.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "0e0495ede9a73e5f9508625311fcad9f92e4c9c6",
+        "bytes": 22839,
+        "sha256": "b3630230fbba79f62c320daab0040249e2ab9976ed1e33d0ca0a620f9525f388"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow/definition-authoring.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a5f4c14732457e48e1228f9e149f9155afa6a7ac",
+        "bytes": 13854,
+        "sha256": "0861c06a3819d3ddef35326de5b80713d1f7cf357a1d4de3520cf84b865d2959"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow/dispatch.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "3d53e8176d80c216b9c6a5934be451a54e51d159",
+        "bytes": 13585,
+        "sha256": "5f00af03d19ab8835587e2660f7b2ce60f0d9cf6b7ca03ae87943c375d830847"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow/domains.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "cc21ac0f74ec5ec27ec38c99a81ff33514ca1c93",
+        "bytes": 17741,
+        "sha256": "dbc7360094b2ab6f77e3ab8bc5f856acf4d2416a716bf78f44a4ea5981de407c"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow/execute.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "37380892f8db942de348eef48cc02e308eaf45a6",
+        "bytes": 15282,
+        "sha256": "64d34965076a11f7c48ef18d5d12e2f8f1b24cbbf1d49f4845e52c3c0d5f386e"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow/human-principal-projection.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "3f5b0de6069df72a3873587f4415c2e43848fb28",
+        "bytes": 4434,
+        "sha256": "f86b406f144edc2b3dde459069f391cb20c0193f5da8a8500abbb022625fd96b"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow/index.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a19ffe91a49de315da959b9c1245d6ba87f50776",
+        "bytes": 1653,
+        "sha256": "4438d4c8f28e5a944a7592bf755dfe8c441903645f4979b25a44fee6b68f63d8"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow/linear-authoring.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "9a03f6dace11c34c39aea2256fae7ce972294ffe",
+        "bytes": 3768,
+        "sha256": "5bee9fd3405a1b7047c6238e4db912f63a228170f8d915794d24744ed9a44990"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow/owner-obligation-guard.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "ca18afbcdace210b6a7d5d3483fabe0528636f58",
+        "bytes": 11885,
+        "sha256": "112c21754c4229b2f107306a95be9cb80a0be9b0e6870fdaaa582a4449489918"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow/owner-obligation.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "857d38ad6daf7033c10c951458dd7d4caa800fc9",
+        "bytes": 3212,
+        "sha256": "5ffba18433ab1b7705423446c84dc6a5dd67a7c6004e1ed898c15a118833e6ff"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow/owner-operation-registry.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "243f78cd8d70de3d356d1b9eb303efc631297006",
+        "bytes": 3476,
+        "sha256": "71ee45072103bc54a90c4c50c26189c0ba2704cd54a19aa52fc30c67d5df121d"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow/progress.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "f13c52ba3e86d9516f9c7b0a8ef1f1cf5fce9b00",
+        "bytes": 2351,
+        "sha256": "16835b17b73e3d8560cfd9f99c6c6546c1eb95bf683a762122ff70d4f18c1296"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow/reads.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "060fce6409c76dd266ca09febf1efe75fbc70ce8",
+        "bytes": 17556,
+        "sha256": "6154cdb918f20c8e759593a3291fe06f1d54c536ddfdc9b86474aad1b920f715"
+      }
+    },
+    {
+      "path": "packages/broker/src/error-detail-sanitizer.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "25e02239255f95c55e59454bd32703550e3ad5b0",
+        "bytes": 6318,
+        "sha256": "6eb3307c8d20bced15464fcfac677d9cc6f1b5c44a65d17771a5b5e0f8470c6f"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/broker/src/gateway.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "117622fd308c12744de458e5b20feb8c205c50fb",
+        "bytes": 19925,
+        "sha256": "db27861583543379b877803bb2d91056f2e4831b85224aacc504076de616f8a3"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "42dc6507526164b30ca62762f55b696573100689",
+        "bytes": 21939,
+        "sha256": "7c1c4ea632e3523dc177aaf28bfcb48a7e58983d326006f7a7c8447b69c4298d"
+      }
+    },
+    {
+      "path": "packages/broker/src/index.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "6dd9bbd5254bfe17ed65113d6123e93b11ae50af",
+        "bytes": 19840,
+        "sha256": "90bbcac4715020b55d1a9d1c699bd78a8d394c2762ae872a6d7d377718cf1a42"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "f6aa517717513df68b849db722c20c7b7e832379",
+        "bytes": 20308,
+        "sha256": "b31d7221c19aadd4fd6872fb40bb8bb2c157d5959ac947cd3564d823ab232382"
+      }
+    },
+    {
+      "path": "packages/broker/src/mapping.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "bdd781ea6fadd18aa57f5e31abb73500d7c41af8",
+        "bytes": 13374,
+        "sha256": "c171a809abbebbdeafb2c99a17451008d025149b3f542386bce9aba4fcd75edf"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a341cafd183d487449bf4e04ceaa47f217fb1a70",
+        "bytes": 14429,
+        "sha256": "c2accac5e4062d26f137975282147f4d4bf3faa1dade5601b9c79b303c71e9fd"
+      }
+    },
+    {
+      "path": "packages/broker/src/registry.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "6f436d79a2d4e042651482931f7b984290cef331",
+        "bytes": 12335,
+        "sha256": "60932debd3ac865bc414f972e420315071be14ce469ce9c7b77c096b06e327d1"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "1795f8e8b6684c318cbbe97cf48594267af2a021",
+        "bytes": 12163,
+        "sha256": "612682536a83dfa5e4e9274cea0173718de89bc5c17ba140a68a3a3faf2039b0"
+      }
+    },
+    {
+      "path": "packages/broker/src/relay.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "f1f34ae93d2c32656de8a97e0627cf439d0f02ab",
+        "bytes": 21825,
+        "sha256": "42e2de5e914d86928a8648a9d49434a2a92bd25548278a60dd9c13661dcb6880"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "b2e1b27d29a76578196997cdf2942c9494316354",
+        "bytes": 22313,
+        "sha256": "cb6bde534c19d6aa4f166757bd7f59d36ba8c84f57e00ed7c41b31c39cb5a123"
+      }
+    },
+    {
+      "path": "packages/broker/src/schema.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "effd34acf161a77a83a96fc43f9749e6c1ef93a7",
+        "bytes": 22865,
+        "sha256": "ff0ee4cbae21121e0b5af55048227b3a5bf25a331d4af7749f16a2434fa939d8"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "248b592b6114ff6b83a1457d954296ebda164251",
+        "bytes": 23102,
+        "sha256": "c5558234bf79ac6d122c1eed7055e58369c98b7e730886c656f58d5802d9010f"
+      }
+    },
+    {
+      "path": "packages/broker/src/transport.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "84e643a73e88bf2841424b9b75919018e9035f0f",
+        "bytes": 29704,
+        "sha256": "c22f0a344a2e4595dc900cdc7851f6ee284b682ae4f6371f0cf29b4464be9663"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "de44b2fdd6ce52b1a29561884ffa29e232881ccd",
+        "bytes": 313,
+        "sha256": "973db6fbf232e47d9dc238d4406f5575c0e055b74ca0e0b2272fc3fb8ba2214d"
+      }
+    },
+    {
+      "path": "packages/broker/src/transport/binding.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "b946c760b3806688011d9339a644749ee916835d",
+        "bytes": 5096,
+        "sha256": "04f7c568b2a4429d1745d2f1f77ccee087ed4ab4f5d4fb1e47f5bdf9a86b654a"
+      }
+    },
+    {
+      "path": "packages/broker/src/transport/body-projection.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "6ff1f86f662649a620e187833d5a1e4d8701b0e9",
+        "bytes": 14419,
+        "sha256": "fcaf7d263a7fd858532a986827f6dfac779b965a4f14a1f5fdb93a354cb15601"
+      }
+    },
+    {
+      "path": "packages/broker/src/transport/control.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "ca0176133c59698a67758d031f8568a82e8dc2d3",
+        "bytes": 2954,
+        "sha256": "c108742df177e941fa5508761f5fd2a98724cf92136503a8f4f945e95234b956"
+      }
+    },
+    {
+      "path": "packages/broker/src/transport/error-detail-sanitizer.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "25e02239255f95c55e59454bd32703550e3ad5b0",
+        "bytes": 6318,
+        "sha256": "6eb3307c8d20bced15464fcfac677d9cc6f1b5c44a65d17771a5b5e0f8470c6f"
+      }
+    },
+    {
+      "path": "packages/broker/src/transport/errors.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "61da3af527e539d33e0c1ecd13e1aba637d17764",
+        "bytes": 5409,
+        "sha256": "ac4b0e191324cb0e42b12aa01971db94fb8be62627202e52ae276231f84b9f94"
+      }
+    },
+    {
+      "path": "packages/broker/src/transport/http.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "cebf5fbe43b8d19cfbb15f6860610dccaa0f751c",
+        "bytes": 14032,
+        "sha256": "bea23aee2b2e774105a87f638c94c543c0d92b17127856e75c48d9d846beef8b"
+      }
+    },
+    {
+      "path": "packages/broker/src/transport/token.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "b240c913fb4a0b4ee345894142f1a91a8c6ba072",
+        "bytes": 5286,
+        "sha256": "f62e70b33121dfed188ad94c6f418791094f79e3acea7c39e301452310f79e56"
+      }
+    },
+    {
+      "path": "packages/demo-server/src/delivery-readiness.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "17ad95292e616a203ef17e1d5b3b1919ba214cab",
+        "bytes": 1037,
+        "sha256": "c6e4b16a143e9f806a0093a6f3674c71ef340d9e303da4a29f051921ad8e1c1d"
+      }
+    },
+    {
+      "path": "packages/demo-server/src/index.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "27436e5c8c07604432b2e9690628ccba14b7efe8",
+        "bytes": 10011,
+        "sha256": "0819237cd98b0cff5a43eb8c462684217c2ac99e8024136ce82c5572732b6065"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "13b688d2d5d473ed924a970ad376f6d6a89d71e2",
+        "bytes": 14946,
+        "sha256": "1cbf3f4f1f71b85abe2ddbe1b530099fa02158ad6601273d5712f293c9a5fecc"
+      }
+    },
+    {
+      "path": "packages/demo-server/src/native-goal-admission.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "c06eec9621a9c5f37b3819092f197ede2c919997",
+        "bytes": 5218,
+        "sha256": "e0fc77815a0632aaccbc6c314a58655e74873ff09fc1024193929962e9843dc8"
+      }
+    },
+    {
+      "path": "packages/demo-server/src/session-seam.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "50d18a6335401ec4937b02b3520e201916cd9c7f",
+        "bytes": 12394,
+        "sha256": "0a8d1f4caf163bb85e5f821bb78550b44c2edd34371a5baf1dd62b2b45b4baf8"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "7ebef72c059a5606120485055e1fdfac64778412",
+        "bytes": 13294,
+        "sha256": "03ebb5cca74028883154421a61b33105ccd803da8fbcdaabddd07a6b1f1d9992"
+      }
+    },
+    {
+      "path": "packages/demo-server/src/website-admission.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "c65b239025c6f9339bf8c554720af06fa958ccb5",
+        "bytes": 1233,
+        "sha256": "55a38ac82605a4622d6ce3aef7b39c9635f0ac8b8ef502933bd104d37193713d"
+      }
+    },
+    {
+      "path": "packages/demo-server/src/website-custody.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "75117b6f8aa7553a0e7bc05668166e9cd2eca3b5",
+        "bytes": 6133,
+        "sha256": "93b218d25eeef6f7afad4025876a7abb4207a2c1f01afbd7ad74d890579d147b"
+      }
+    },
+    {
+      "path": "packages/development-execution/src/engine.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "6d3f596d8a873f74d959796ce05e3374781dc8d4",
+        "bytes": 21986,
+        "sha256": "65d2965cdb14067cc770eb4cb8b1b3aff32f578e60c026c1e75e6fb8e2107dbe"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "9a5d4cea2f305b1d8c9fcd62eb305ad1e6fe1a77",
+        "bytes": 22300,
+        "sha256": "d281bbc0e2822f8e7748fae32d55aa5da3a0e78eb37286f1e3845b4a6710226a"
+      }
+    },
+    {
+      "path": "packages/execution-history/src/boundary.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "23a77e38df6dbdfdb3719268219c4f8c8f14e37a",
+        "bytes": 4616,
+        "sha256": "736712fde7c9016df46f7e39b8531ad32f4e2c76ded5787e519d0dac9f18b8aa"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "db55b00dc7f4509174f45f685c94305d421340f9",
+        "bytes": 4897,
+        "sha256": "a2b2e453cf343fb3bb1ccdb96cd4cacc224bee3f0961750e16d135ad77edb343"
+      }
+    },
+    {
+      "path": "packages/execution-history/src/correlate/workflow-root.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "cc1116322e8d57d1dbaaa146ed2db20b8bcb4bff",
+        "bytes": 8839,
+        "sha256": "5533c3a1e0d35877ac947bc4fa8c0a3ffe5a8aabaf173f387c2eb1f6622b5327"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "384f63271e3df036d3caeee33a5650a6759fb207",
+        "bytes": 9539,
+        "sha256": "043f8792796838bb1bab08dc5397a6ca8a77e99119ec7f1655d8c42bd10a883b"
+      }
+    },
+    {
+      "path": "packages/execution-history/src/index.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "1fcd9d666d65fe5fea9e64ce6c006af61b916184",
+        "bytes": 11508,
+        "sha256": "b96e2014c496a6620fd9f6b38682ff6607185c5d1f553c14d73eacb71c6d803e"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "4a9f4f738f6c94c59efce95f58b40bfbbe5addf3",
+        "bytes": 20342,
+        "sha256": "bf0bfe3cd2f01338badce335bb8d1dd2a37dc1e76952842c53c05bd844e56487"
+      }
+    },
+    {
+      "path": "packages/execution-history/src/loaders/svc-facts.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "9a0bfba3689600137c594f038acdff098013f061",
+        "bytes": 4041,
+        "sha256": "88b3a575ff3b1abe50256fa4aeca87d829bef4438637e8bd8094e13fa231381d"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "e35ff7f7cabed11fa7b038906a6db731404571ff",
+        "bytes": 5100,
+        "sha256": "3586840fd31f16dd1291d3e6b59db01acd0409e120097532a71b02c3ec23d04c"
+      }
+    },
+    {
+      "path": "packages/execution-history/src/report.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "e47ed555d7bd45fc5b99829aab7eae6e7307a2b4",
+        "bytes": 6470,
+        "sha256": "0adfbaaf2bc8c7d80c8f785f50ace207594a6acee6f0fa1b0d986176ef2a7776"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "2b4c74f8cfec82bbdc8e1def576b8d2d92e067a2",
+        "bytes": 15018,
+        "sha256": "6b5491531785384375feb03f9e676c13b6936b7a0d7c35643aa4e9fa3d4b089e"
+      }
+    },
+    {
+      "path": "packages/execution-history/src/workflow-result.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "7df1f1edb449e8c3dab9b6db4783e8ca2528ced2",
+        "bytes": 2788,
+        "sha256": "a3a923b34b966da2e3aeeaf9a9e01596dc617a8ebb958b96c2a80c978ad6c377"
+      }
+    },
+    {
+      "path": "packages/feishu-connector/src/index.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "7b5e94105d69fab06471cbbc85fad308052871f2",
+        "bytes": 20852,
+        "sha256": "ebee382de2170248b0d09b6fdaae13becdfbb163d7d3ac109c3200be8e7f355f"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "81a8613e80b3e89d24acc3892c88460a736d863c",
+        "bytes": 20507,
+        "sha256": "3de9f3e4141ca17c1ea24b300c232eda68105b27e13e80b57939bf74af5d66a2"
+      }
+    },
+    {
+      "path": "packages/product-api/src/history-listener.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "9cdfea78dd825dd506594e22d7ca0d9a325099a5",
+        "bytes": 9971,
+        "sha256": "c0d970daaaccfed8413bfcbf520a572d586db31623feae1a3b8db80157f5ffe0"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "e5e372276bdc4bc61e097466479b82d122976a64",
+        "bytes": 9167,
+        "sha256": "90bc27dee26d2d419a1fb1a7eaf600f51d487571d95182fa65c7145b65a1adc1"
+      }
+    },
+    {
+      "path": "packages/product-api/src/index.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "5440cb4ffac7f3ee6e377aed561d2d038792220b",
+        "bytes": 21980,
+        "sha256": "c5998ca5e18442981d95a815ffcb78ee39297b56f8eeb3e6e9993247e81c97d8"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "75df3cfb74fd152901326cdae79f476eb0b25bc0",
+        "bytes": 21796,
+        "sha256": "fb83aea83d6fca526416935e67e1ebc4389f2f6470f49640e654bbcda10165b7"
+      }
+    },
+    {
+      "path": "packages/product-api/src/scheduler-auth.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "10abcd64bd801b645b917d5eab5d98c4e2e8f6e1",
+        "bytes": 12309,
+        "sha256": "5802cc884d84159133fb0dca9a46b6a79b08e0a953ec14c2f6f5f3a396dd3e4e"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "f4766a8ef8a2225da61eb84f8915694d9c27e0b5",
+        "bytes": 12432,
+        "sha256": "5fb8304de95499ffa3d4cb9540fdbe759326b11655560f4657cde5649a15f1ae"
+      }
+    },
+    {
+      "path": "packages/product-api/src/website-inquiry/auth.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "b25ed01ebe052f0542e62ee3dae2ef14daef1899",
+        "bytes": 5752,
+        "sha256": "8a2b71f8f76987098e6f44476bd6eb40cd10fe8e29b088c06c9114d545b6c4c3"
+      }
+    },
+    {
+      "path": "packages/product-api/src/website-inquiry/codec.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "6e1b46adfd375d0204dbcbee1da29127ec3b1af9",
+        "bytes": 2023,
+        "sha256": "963a3b526e61551e8c452c36c48328a2d3723434d696c52911f909e0e91df821"
+      }
+    },
+    {
+      "path": "packages/product-api/src/website-inquiry/http.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "1e7788c6a0a14b8be2a6e69a8af249216790acb0",
+        "bytes": 4976,
+        "sha256": "c214966ee67b17fbc6047d86c154826a6734f26ea018a9fc64141f0a156ed43b"
+      }
+    },
+    {
+      "path": "packages/product-api/src/website-inquiry/protocol.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "6c8999f983b475a576ce394ede01e1c13083585b",
+        "bytes": 4922,
+        "sha256": "1a376e32becbe85abe6defd406c393bfceb60d50c23fde63635e54f894c3554b"
+      }
+    },
+    {
+      "path": "packages/product-api/src/website-inquiry/reads.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "d7420a0f37e7f39e1494aa14c58ac7db80822c1e",
+        "bytes": 5730,
+        "sha256": "73b14b0ac8d7df13b8fae56ada91bd569c2b76b4fe446d434b654fd37a3d9433"
+      }
+    },
+    {
+      "path": "packages/product-api/src/website-inquiry/records.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "dc9df79efcbe3dcd237c7b6393dbbdad4d96418c",
+        "bytes": 5583,
+        "sha256": "c9cfab798f232471adbdfe3c67d4dd0ea407ed05e241e1e71062143eddb20982"
+      }
+    },
+    {
+      "path": "packages/product-api/src/website-inquiry/resolution.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "ab92f76198c85dfc9ce4e34e1b93549a5b6d401a",
+        "bytes": 3357,
+        "sha256": "760c59401c794a708c1da832c88ed88cf31f427c1f94cf0a13112b263f96e1d4"
+      }
+    },
+    {
+      "path": "packages/product-api/src/website-inquiry/service.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "88d147d4c2f188b831963a21271ae1f2b78c4672",
+        "bytes": 9515,
+        "sha256": "a5422501929b98ff8b51d31d8b69a29788066a786bbef12117a14917e37b2b91"
+      }
+    },
+    {
+      "path": "packages/product-api/src/website-inquiry/store.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "3fbb8bdafec01f5f7060c85e1925be702ad1305b",
+        "bytes": 2912,
+        "sha256": "cfc8a2168d1cc47676d9f1dfc21a616cc1de7685300209e9a650d64a2215cbb3"
+      }
+    },
+    {
+      "path": "packages/product-api/src/workflow-admission.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a74a669be2b292b76ad76a55e30dfe852a7ea429",
+        "bytes": 4579,
+        "sha256": "339bd0eb1fd22fb2ec37e5c0c0201e4c816f3bde20a6665529c45d0ec2a2329e"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "3d819e4439e362b2419dc15eea367893f7095923",
+        "bytes": 6291,
+        "sha256": "e75364a338514e746797a640c55150f8dc21021def60f9d5da35380c4b9bee73"
+      }
+    },
+    {
+      "path": "packages/product-api/src/workflow-execution-routes.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "9d555edebb275f517683fc6f941577eb5fc74b67",
+        "bytes": 9471,
+        "sha256": "fff8095040f2ee4946d6fcf083d3ceb47fad90d5a0868e92a5aca0e0d33b7ffc"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "1f01257fc4f3b5e884def835186253a223780767",
+        "bytes": 11176,
+        "sha256": "fde1f543bb947c8cb2d89df403d0617d19693b76e1fec62544cb7e93c96276fc"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session-messaging.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "bec9e00e2b915b4e5a08fea1cd37c606f077df91",
+        "bytes": 20287,
+        "sha256": "5928ac293853c646f9062456ac8631882b3a40727370437896ef7068089b6bcf"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a7b4ac67e6d395163f7126d44f3c583f4ec62406",
+        "bytes": 20871,
+        "sha256": "cd687bdda91be60c1d5089b1502d82dfb9c62c86c60c4a2f8dc94b9421f41508"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session/dispatch-status.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "401996aa698a9d4a7fd4549bcf65fe136f32785e",
+        "bytes": 3116,
+        "sha256": "135e1e4cce865356df8e12407988c58f4dd0ecdf6b12933dca49c26dadbf62b0"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session/exact-turn-resolution.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "9585e1922d953573e31cb54f5083f1c29be34151",
+        "bytes": 3591,
+        "sha256": "d03ab8e0353cf862205a50be38f58a129e2b53008a5ac9eaf9e11476bb7903b2"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session/owned-trace-read.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "f4c5903406040179dad69f109628466ff8538360",
+        "bytes": 9204,
+        "sha256": "3a087785b8b15e2a3fdb043d19e7b44c474bebf6cca9f35bdf269425ffa10a48"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session/runtime.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "d3424fbec2e91eb9b29b180cd9d3fbbeba3be780",
+        "bytes": 2269,
+        "sha256": "d272bee82cc3241ee30f7891aa30d1ed2b060f748627058a3201603ca4b82aa0"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "4d170ad168fe7afc7be2b33680e3e265580dbee6",
+        "bytes": 2779,
+        "sha256": "855a794070fade0669c57863a797afcfa8d1527d86d7ca7822a939c94ab6404f"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session/turn-inspection.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "236b9470fb6883ec7f37397efef05e2e396ccdd9",
+        "bytes": 19534,
+        "sha256": "583494fd55c883597fd6f07bcdec4927ca17c50c2571dc518c976e95f968e019"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "829fa64a34b0f3e2dcb16bcea6ec448da8b7c4dc",
+        "bytes": 8580,
+        "sha256": "dbf4bf8f0680f2c8af57709461baaea9a1c4c8a249d7d0058bd390c1376abee3"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session/website-inquiry/main-metadata.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "c1404328f7c6eeecb28e34b719aa072ef076f6c8",
+        "bytes": 973,
+        "sha256": "b913e697bccf1fe0e3f7751b24b37ada19b6ba0665afb061264db6a881e0b861"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session/website-inquiry/native.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "b95b39a2ed115d6d95b79b4adb0ba34a39d7a79d",
+        "bytes": 2935,
+        "sha256": "e433904393fa9c14ea81bb9e42f276282d47777317ed0c1448555b39a7ab33df"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session/website-inquiry/projection.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "f1980f32c893c2daee07409bf3606c3c96db4b2a",
+        "bytes": 3758,
+        "sha256": "9e710fe4f721ced56794f1f6c158794da2569b7a1ed1d15b3d423e25ac385282"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session/website-inquiry/runtime.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "f185f9f29e3fea71f10e163bd5e932cda7d3ada9",
+        "bytes": 1932,
+        "sha256": "822c752fbaf525b01b4ae227e4f9a165b1993b4c038f5940af70104771b13f0d"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/agent-session/website-inquiry/startup-config.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "99f2099ba649084daf6b088718925f25611bf03e",
+        "bytes": 6248,
+        "sha256": "e0e3e033cfd54043a0f4a50315a6f59213f47e7e42ee523462b9c331159fa035"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/broker-composition.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "69b2547d373047032cf4969394bd2f0bd7f8542e",
+        "bytes": 2718,
+        "sha256": "d05a8230d2399f0a59e321657362047aaa66c90f38c70f4853bef69b0ee78e2a"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "08c6ca195bb7c6c93e92016d4fba00c8b0e50626",
+        "bytes": 2855,
+        "sha256": "2632d4e51dfa854c7572d40fb7f8ad92c6b63d23cde69a92e961922012c7516b"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/compose.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "cf6f419b312c2a0630ef5f25f5f9f7b7c8db75bd",
+        "bytes": 36255,
+        "sha256": "04287bd404bf6b45d6026a82443ec2b94b944d7502a7e7766af295f8125a1cce"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "400f993f2a95f9c5c772adce359f74d7b45930a8",
+        "bytes": 27195,
+        "sha256": "5767d595754b8dd457fb55bbfa76ba39b29162c4e61433cdaf398f18406d4df7"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/context.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "248fd289508e7243f08809854c232d21d11b5670",
+        "bytes": 1486,
+        "sha256": "7af2e1407cdeb3ab157916bf4867695e36c141dcace88c8d67d8e20e0a4c04c7"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "b253dded9a3194324bc899f5271454bed8aac88a",
+        "bytes": 1702,
+        "sha256": "0acbe959c6b2de7cf48a1d84d77b53607f2bbb0f1f67225462a339e85e249f83"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/development-execution-runtime.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "32704b628ddf0745c0c1232d2cbabaadbd46fe6b",
+        "bytes": 2164,
+        "sha256": "66a6c6ea9dbce25088a694098c91db724dbd2d9342a923c767bb05050ba4b849"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "da4ecc22f93665559f93d8d33d717007feee1dc4",
+        "bytes": 2261,
+        "sha256": "62a9ac87887bfb4a7246793dea7f451f8094d4250e5573ddf3ccc29f0eef43af"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/entry.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "6239c0b871042b0835653a347f35ab955a8a2dc7",
+        "bytes": 7015,
+        "sha256": "59b87c66b22d49f823b3f2fbaf78cd81543388bb20ad68a6051b2a9a6370fb9c"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "56405f26dac9478254a834f4b5aee59c950f9f0d",
+        "bytes": 7005,
+        "sha256": "5f5c0e0ce2139e9a71ff791cf1d72f13e6e3f0b886e35d3bcbd72e834b48d5f8"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/identity/capability-runtime.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "8294582b96a23db59a57c917a5c47a2abab6f923",
+        "bytes": 5706,
+        "sha256": "e6cf39b3e4fdf2da7e1a80e5a03acc1e87fccf58bdae5b30b7cf66fbbf6d4e59"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/identity/product-api-admission.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "0eb14f277943fa8d20f483e8f5575092f8c9eb3f",
+        "bytes": 1269,
+        "sha256": "58395b04113db14f7fd668353c22c313d0d407c3d0668df43d4c1edff9bb3720"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/identity/workflow-human-principal-projection.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "4b1195fbd28c208eec0d5aaf0a76e65a7196cb4d",
+        "bytes": 10661,
+        "sha256": "ee5f80bcc5a25efab777c4f8dd2203712bfa0f06bea18de94bd31c06c248fb70"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "2c61ab5c826c496c335b207f90853dee41adc1f4",
+        "bytes": 10661,
+        "sha256": "55571ba5b9a4113f16eca21b955c2a628523a68ac781acd59091192e6e63ff38"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/restart-boundary.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "fa1c7aaa0fd5ddec8b1f414ff4ba9686649b6ae1",
+        "bytes": 3984,
+        "sha256": "449fa96838165829d2bdd0802cd3200984b4b0c9e05f3f5a0456fb336148841f"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "b3385a38c62e69a587974f2bdf9585e9b9ea5978",
+        "bytes": 12259,
+        "sha256": "24e816235906dcd7822b2aa92588fc0f74c6860bd75c17413a22c68d23f54bf7"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/auto-reconcile-runtime.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "3183257f02e48348eda263044fd9558ece9d4889",
+        "bytes": 5126,
+        "sha256": "568ce16199b42abdc1b763f9c08ff7a681b032455c9f1e84be16b48ca238f207"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/composition-runtime.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "21d72b5a982c73270e3a2019f5964cfde4215e37",
+        "bytes": 2724,
+        "sha256": "e966a414b0a21d6f864ea24f5c7836011525ba790d2a7114797f9b3d6e849c6a"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-launchd.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "4add6864730eb1ad7f54647b98750e0d71746a9a",
+        "bytes": 2153,
+        "sha256": "4e5e98426ec7b1d9fe33a03d67cc8993f66ac7756338a98f0e3b3d3a909d5faf"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "ea6faed474bd4d3534529e929d385453488b2774",
+        "bytes": 3940,
+        "sha256": "27f26b2d0527fa50a965d9f9c3fdc478c3a2c6f945c7cd3fe543cfff2f6a45d9"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-runtime-restart.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "ea7a2ac734ac013562720379429a029440392a3e",
+        "bytes": 7766,
+        "sha256": "953c919d280c1599324dda67b814af3838a67b62ddd3f112d16c9c1013cd4903"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "6bdf2f1d867a00d239bccbbf8831508b9d34a565",
+        "bytes": 8173,
+        "sha256": "18b201576ce93e18fcf0ab91c36137e58bedd40f983096c26f8d5eb5a26de1c1"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/history-runtime.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "74d0d30c589dbd07862086344d741821ff715927",
+        "bytes": 2439,
+        "sha256": "ee7f82256c01d09c58aa9f16f695f2edc11e98a7628ca55fc338604d837b1144"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "2d55d7b80b666298c5897131b1e7d4804fb0f744",
+        "bytes": 1490,
+        "sha256": "4d6c65b14ef37d54c54ce6e5289353d100ba0f63a99242c3b3cb72bc0796e243"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/workflow-execution-context-runtime.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "29092c91ab0a83ade13c7830b6324deea975f58b",
+        "bytes": 3579,
+        "sha256": "44c5d91912e7ca98f2325301f308a298b52c664656819b98cb53150dd97da578"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "3085a2e11143eece8a6016515c0e038e45cd3d99",
+        "bytes": 4182,
+        "sha256": "97212615ce80d836fb69d879ba964356571cbdd2938192f0081a1cbe2dabd35a"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/workflow-execution-runtime.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "2329449f955c6091597262287e6c892158a46102",
+        "bytes": 22948,
+        "sha256": "319a81a09032f36c6bee251c8ccbee9eb2bf1b90e33d870b3f019b0e199c750f"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "d051079e88d4e08a2d9c1af9db4809b518197b8a",
+        "bytes": 25789,
+        "sha256": "92d0b10ca354d1d4c53bd48c062ef8d9b2ecb326b0cd1003d88f0fef5fdfb32a"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/workflow/capability-runtime.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "e41c79266a5d04d2fad34d569c97edf3a83626e7",
+        "bytes": 3293,
+        "sha256": "53dbddaa6cdbf140da020515c1a2b45beb7712715f3c4c4624ad65708c576ada"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/workflow/owner-assistance-resume-evidence.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "bae2af32572c1b983630bf4fd0500e459b3833a7",
+        "bytes": 3836,
+        "sha256": "17bdd11113f26c07b41a566c601fb0ee69dca3e1bf9be542353b0f76bb8d30a5"
+      }
+    },
+    {
+      "path": "packages/production-runtime/src/workflow/owner-assistance-review-wake.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "080f402fa4cf2e331c004c16b8d89d05032c4fd2",
+        "bytes": 4925,
+        "sha256": "d010f30dc5a8ea0bf9f816f865dd77cbf65dd3c607efc41ed00558f56adb5bed"
+      }
+    },
+    {
+      "path": "packages/scheduler-router/src/index.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "966745988215ea1d0e676f542a9ad0a033738085",
+        "bytes": 21172,
+        "sha256": "1c0fca67ce7e4ece326f174e3a4f75291cee85f948d119d30fdc6ac528d31496"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "f74883bae8ea7c8f3468025f6c4bd70b71632353",
+        "bytes": 21443,
+        "sha256": "4a282d53b89ce8a2f902d9d3d29afa520aa45b39242f396852e792db452d9231"
+      }
+    },
+    {
+      "path": "packages/scheduler/package.json",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "f8740bfe2a4b03f716cd4e892148d38d4ff89bae",
+        "bytes": 816,
+        "sha256": "3ea454db4db55a3a035a63526a140b1353f1faf9f533ca9fdcc96748ab8aa45a"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "c6780c037bb97024ee11ae2722fcbc492fa24e99",
+        "bytes": 870,
+        "sha256": "8160b865e70bcfa11ed76faf7d4113d43ad8c9ab5c816ce2f7c1ac55ad9fb507"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/auto-reconcile.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "d3e7a252be792c1fb92b36eaaab098d7b0fdb6cf",
+        "bytes": 11489,
+        "sha256": "106a11739ffc626dc3c0f73a652ea64ea8e7a12a88e7c35025adb5b1de500f31"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/control.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "d9ecfa09dd2192bc1f6823945f583cf7e6dc12e0",
+        "bytes": 22070,
+        "sha256": "be0ca2df850b6b1bc9a505c052b4882010829b16dfc0d0684f1ada2b2a9cfb6a"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "1e6e37b85a51161b084511c6fed64ecaa78f288a",
+        "bytes": 22306,
+        "sha256": "2fb27ba11305402c5614ba2ffeec0246579e771020e7555d3ffd22b4cd9dfe3f"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/history/history.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a3fd76b68b56886e4ae6f8e3a326175d41e9c960",
+        "bytes": 18402,
+        "sha256": "14298c1d918111c68df8936554dc6fe8ac0158b6dfa8b8fb539af0f0b104815d"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a9b3d8da2ff0e67e03f1cb5c284da7693216726a",
+        "bytes": 18408,
+        "sha256": "1b28260d27f5fa7d8c2168deb0fc4be284cbfffe16abacf7a73aaaa2f57c258b"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/import-openclaw.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "bce4c4dab93a85b7a1ea8f5dfb1a20e79cd839fe",
+        "bytes": 16862,
+        "sha256": "890ccfabd4203d40eaed3cadb88885c29948db68e5a09ada744df9811a532005"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/scheduler/src/index.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "ff24e0995b30b4e9c05c1c77913c451fb234de1c",
+        "bytes": 3043,
+        "sha256": "9ded6900d6f60b1f50c04a5327a5d1b4dd92b31ca7816f34707198a3432c705d"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "e6e81adeb287efe62c59941d2f9a383ba0332c0a",
+        "bytes": 3270,
+        "sha256": "291af31dd6f3b576a376795f74567e80de6f881dbaf15e59fe6c96efc33a7b98"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/job-model.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "1a38584a09c1e8d2351291282eb2cc44eee86828",
+        "bytes": 10058,
+        "sha256": "1d5b8045244d883c2738c888ba32f49d8a1f10211953d5b0bdddad1167be1c86"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "9c1ab3a177b731d0ae94f80c372def04c9afc185",
+        "bytes": 11350,
+        "sha256": "13b34c9a503930fdd597330d9159c9327492f7d75ffa704e61c2c8e63290f06a"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/lock.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "d681bc583ea056ffe933fbd7b15035eebcbc9092",
+        "bytes": 11234,
+        "sha256": "7f725f4289e8f57c97c0ad7987c95e48fa0e0b8660a0ba5b92ba302bd95700f8"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/scheduler/src/occurrence-model.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "96ffa97841be19beb9e4c3411a1d3e298e5afe53",
+        "bytes": 20123,
+        "sha256": "6db88f5cee57d8a217fabde4749ffd7bf677399f348208131b2e2f2309ee9292"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "78b8ce48c619aa7b2003fd9b3b3bf793ce7926e4",
+        "bytes": 22433,
+        "sha256": "9d4faed6f2ccd8843c5be6fd5baff070efb449ec3ff56c318a2f88ca99e7474a"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/occurrence-reservation.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "56bba96d995dcbb8c9362aa99500e5c10c6bc194",
+        "bytes": 5208,
+        "sha256": "495fecb34a442ad4dd94ef441fa13fd556a028de064bd2a3f25f82e70f522038"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/occurrence.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "6827216db20893e0fba271e0fe005b4377c57f95",
+        "bytes": 26985,
+        "sha256": "2e62f8429608c1047532ce51e0f7c07c2cab85c6fe8a61d804d65bf555b863f6"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "f9e9ad71d7e7790c851bcb434028163ad17c79b3",
+        "bytes": 21996,
+        "sha256": "d1dd7a07c02d90b5f4954b0b3e6d7625b5a53c538618b2e7a1e09148ef6da856"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/reconcile.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "9c89cef22494126f0c9f50b706199f137743f215",
+        "bytes": 259,
+        "sha256": "54424c728d58a939d4a21d0227424f75d3985a1547e89ddff8f64e90ae231ff8"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "6b9b31d5fed40894fc30b7260436ae69c445b063",
+        "bytes": 315,
+        "sha256": "ede2988f50e11625af4f0aa1719ebc7e7aa38fe477b403238c7987043fb4d853"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/seams.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "3ef54b775c1def3dea81c5dfba97d3b94f7ece30",
+        "bytes": 6425,
+        "sha256": "6f851cf3681ba9d26f1da547134d91ab5aec89d4629a748668dce288ac0c6ae0"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "3cdfa93eedf31ac641ee5afad9e1b651a3a18616",
+        "bytes": 6526,
+        "sha256": "14fbe09bcb5b07c4cf519048bfaeb55a38baab6d8ff91e9f889cde733b95f946"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/self-ops/diagnosis.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "520fcdfd58dc1a6f68c15719594ba3a7c82651d5",
+        "bytes": 13440,
+        "sha256": "57fe9cf42038233637ad0e8cd917fff49fbd7ea09a37929058cbc550c281fbc0"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "08da4045bead602bd44d27a46a8b5860f7379456",
+        "bytes": 13792,
+        "sha256": "28467820bf0a2fa82fe25de8146e4591b8d3b17d6bf8a197946a9f4035b3d33a"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/store-migration.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a7af7ea101b23685f1f035395fbb5d232b151214",
+        "bytes": 11712,
+        "sha256": "e2ffe9c9fe00c74b2ff24fc4d444e2caccd6dd5e2fd00ff174f15ee4a7152d5c"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/scheduler/src/store.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "d15750efdd2e688156f24b7dc12902988f12911f",
+        "bytes": 17495,
+        "sha256": "a8eacf4f16edd207b7181a5fcc47b30a4b26c9e852d335ca2746c88fd4ac3fcc"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "19fbab66a005224ac7cf1ca5617d44e621c9d0b6",
+        "bytes": 17737,
+        "sha256": "db512f94c11cf2f3fadaa7b56850ddda762a94afb1b577a762c49c0a724b4f03"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/store/import-openclaw.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "f8ef441dba77e37d0ce87163dd63b765b791ebd4",
+        "bytes": 16865,
+        "sha256": "9a01e59d4c649cec03a523952b6c4bcc0e4f91d331141da70c4c564093ae6cb9"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/store/lock.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "d681bc583ea056ffe933fbd7b15035eebcbc9092",
+        "bytes": 11234,
+        "sha256": "7f725f4289e8f57c97c0ad7987c95e48fa0e0b8660a0ba5b92ba302bd95700f8"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/store/store-migration.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a7af7ea101b23685f1f035395fbb5d232b151214",
+        "bytes": 11712,
+        "sha256": "e2ffe9c9fe00c74b2ff24fc4d444e2caccd6dd5e2fd00ff174f15ee4a7152d5c"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/delivery.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a34931e8ebcfa24bc403b988750335951574d3ae",
+        "bytes": 6646,
+        "sha256": "6b875ae5ad13af7d4a066caafdc7375c2000dc789bd63354f616b0c56b21925c"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "d4a9448ee49a33f02230bed637e3394991d13879",
+        "bytes": 7361,
+        "sha256": "4982a6e13e4d4926c52ecc4cd4dd03b3ac0967db994112b11a0ba3ab1802a2e4"
+      }
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/health.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "3adca55fc9228de67a53b5ea9315a0730408387f",
+        "bytes": 14547,
+        "sha256": "ab5aab07f6cdae61b173ab0c925d829c99416091985a8eb455ae90c798b625a3"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a0c380901cf1837772c92b1d42004f0df9df6711",
+        "bytes": 16159,
+        "sha256": "7f2923e965f8b2c27c6be1f58134932b3ee851676c0bd594d526697c5a7b27ce"
+      }
+    },
+    {
+      "path": "packages/session-history/src/locator.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "058343451911a94ed44bf54bfc7c0c972df14792",
+        "bytes": 7473,
+        "sha256": "a762981c5ffce924c3dde9a6c6243f0ec0eb69dde688bf43b9172e1440b34e26"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "e9f3a901f6c063e173fb5cd4126d43cebbdded23",
+        "bytes": 7957,
+        "sha256": "0f8bf75b9fb7e1d6778d94209b153049ba534ceeb795916bca4258811bdd2c72"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/admission-control.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "1f79d720dd7cb777195cf8e9cd683beb23edd0ba",
+        "bytes": 1517,
+        "sha256": "4c4fb663e5b394102f1b88f7967cb56dc7be519239ff7cc895a09a0a5267463f"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/workflow-execution/src/attempt-identity.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "168b5308f9592d9c52ad5b7e89aa0101937e990d",
+        "bytes": 2992,
+        "sha256": "59f5d7d5a02fca8227f598314bce470f77106a66cdda275c4744a874488c3a2b"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/business-result.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "770a2e3d366999c78babc4cb628d1e8cbbfc610d",
+        "bytes": 10710,
+        "sha256": "70ba560d8bdfdf6192b3db01d59b14f07a46043d3aa4f483a73326cc18289673"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/effect-identity.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "cb5468ab927aeaedaf3f1facdaf30a2b0b2ebb8e",
+        "bytes": 512,
+        "sha256": "0628fa1a38838b9f041d1609deab59e3b4c80914c6553ed7a572505b11f3a508"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/workflow-execution/src/engine.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "7868f345247eb93cd1bc7ca516f93435faae6901",
+        "bytes": 28269,
+        "sha256": "85ef49e9a9a66b8902e5d9b34ee8a513eb6ad2375c5114bbdc3539c4efe0aebc"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "cf52e5d52baff065f91cb561678285a1fba00798",
+        "bytes": 24934,
+        "sha256": "d9dfaf86dd5b52d351f4bdf44b971f68a89be8f86c5586c71fbd59dda63a7dd4"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/index.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "c23427b933266ccc6128a819befe9a5dc676bbd7",
+        "bytes": 1654,
+        "sha256": "9579d7e0709a69f1b6b5def2b2b8dfc897dfd951200297b2d0b08eed9b7211f0"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "0ad850c0ec8bc006eafa39007062b95d08501853",
+        "bytes": 1535,
+        "sha256": "f2ad712f983477215406b60cf6ffd3ffe3a91c5e137018714e659704b7f25f4f"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/instruction.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "9ccb00f561e640dfeb327ea79e3eff4d81b9d0a5",
+        "bytes": 2831,
+        "sha256": "fe9cca544a85d4b765bb72ec9e725152410f38b348193457cf2fa58015a6adda"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a76dcd83b57e2ae7e9aea067a02f032ac119565b",
+        "bytes": 4247,
+        "sha256": "782416092782b445e79e2c881bb9e2f8113bf140803b1723d381a40a442a2500"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/judgment.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "d06c9946dee479bf0e366c7db3e7cc17891a11fd",
+        "bytes": 11025,
+        "sha256": "29128eb76e48d6fa7ff14532ff2c6e59fd55c8a662e0a5016d01270a3a13401a"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "7790edae42db113df0c47970c6cfa1386addc3ff",
+        "bytes": 20854,
+        "sha256": "da215899f3848064875e1c752e451a8cebdf88bc69002c6106259f8118ba1fda"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger-admission.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "424d691ec1486d0d9d6b834fbae2feac04f5a7ff",
+        "bytes": 12271,
+        "sha256": "f05a5a3836b7584fa3475c582606e845d72b966dee021e9fd2d5bf8e74cec043"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger-events.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "71cf906b1bdd1306ebf503d5084ef466238ef81c",
+        "bytes": 22914,
+        "sha256": "1ed2b2a4953c00d0e526985be284674a69866113403d796c85fcd7db0c4eac12"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "bc25958691fdb39c554409b6027a3880f0c64bb7",
+        "bytes": 24765,
+        "sha256": "7f56582cd1ed9d36eda7b3648f7e92de347ae39c9616d60a8548692b18aa983e"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger-plan.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "410d2fa061c15ab32c6cc8858dd23eca18ebe4d7",
+        "bytes": 2123,
+        "sha256": "e9a8824d3831ea0e5325f32cdc1aa54172b3b7af949679a20d2b801572f9ae08"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger-records.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "bd3ce88f31c0b9b5e3ab9eb6e6a8d3db2373056a",
+        "bytes": 14404,
+        "sha256": "91c64c21fdb5bd38f26ea9525f7e75647284cc4b3776d6009abf2fce7ac3984c"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "4a2986b13af2f4229871c9453b8c032e63d478a9",
+        "bytes": 42718,
+        "sha256": "85135b76a654c4a2468a2569619330e71263afa00d1691331252323fa9b0f729"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "fa370fa5ed4afd83d3dba62bf87231b68da9de46",
+        "bytes": 22954,
+        "sha256": "7999048f35828027660b580763dd8b42a48b644dc01366f9fe6cfb0e903ed2a2"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/owner-assistance-resume-engine.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "cf33a98bfe6339a53c3410fedb4dcfb6abd0f046",
+        "bytes": 11047,
+        "sha256": "92abbaf927d146f86801f487d4f2afb3c8b530077ef5084e2a9d05fb23d4d466"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/owner-assistance-resume-ledger.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "08c048633a726039276cc91614750c9e34e77bab",
+        "bytes": 2107,
+        "sha256": "7d0e2459c295147922d681cf62b6fba8c13e2618508cbc840440ff3454999381"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/owner-assistance-resume.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "82478fc537b667e086b5b8f4aae968c5be4b51a4",
+        "bytes": 3579,
+        "sha256": "c756abbc02890ff642600e464ac1b891a7c3ef311d58639d18ad5c926d367efe"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/projection.js",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "3092818bfe98f96df6d3dcc892dbbf6a02ff92b0",
+        "bytes": 5452,
+        "sha256": "0573796b58fdf563cf3abd8947aef329e09a82ff02c479071be7adac8595354d"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "74ef4bf47093fb2afbe557560e85e96f77c1edd7",
+        "bytes": 8298,
+        "sha256": "c1a2507cc209a6271645f4c69a4dbea91716f796034db612e5180612ea9131e8"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/recovery.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "98b9d04d5a5522c796688aca105f2f2d2ed78938",
+        "bytes": 13695,
+        "sha256": "9450fcc86d157e1034e73604b7f48fe5e219374bbe6feb4505b740782ccc5253"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/workflow-execution/src/recovery/automatic-ledger.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "b0955ef9dd67c13a3106aa2b9ae043f7b169fd32",
+        "bytes": 3747,
+        "sha256": "37872d963f53e9744833a2e882479ea400ef24859b87535c3fc07a4354faf592"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/recovery/automatic.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "b1f0e1d51e3339231fe79ac71a1261e5c44b5a09",
+        "bytes": 3837,
+        "sha256": "1a27ac6e1f6172bdd1cd4a0ce42800c5a592b863dbbcbeabaafa7962c6cacdef"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/recovery/operation.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "463e3d911aa9823fcb2963984359bda95601e0f2",
+        "bytes": 13575,
+        "sha256": "2a30ea7476c184e90241a16dde50069b20f080c1c93ed53efebd2aba436a8449"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/recovery/readback-ledger.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "db7c9930f97928a10c09b48ada4ccc2ac38ccf3e",
+        "bytes": 5991,
+        "sha256": "3344fd1d899619c300a37977fb3ea7c62009654c158483f82177c9c0febddfcf"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/recovery/readback.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "2beff217085d01a932412ab7300f9af04a54213e",
+        "bytes": 5315,
+        "sha256": "f1d8fb4efcaef581920f889b10a6b7452fb77e58feb7096c0f6e2a8fd0e372cb"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/recovery/refusal.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "fee778f1a794d8dbbfaebc1d6880686034e3878a",
+        "bytes": 4802,
+        "sha256": "d4c5bb2733f75f70c1db2f5334c5c6a30cdd9663a7b9fbeafad6ab2395e92a26"
+      }
+    },
+    {
+      "path": "packages/workflow-execution/src/terminal-attempt-operations.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "ce5c1b16d8a2ac1e5af1237014f7d6445d1c39b3",
+        "bytes": 4193,
+        "sha256": "bd748f9a7a099ab68223ee1d9bb7888c5843c3e9608ce2768dab849aeaec1cb5"
+      }
+    },
+    {
+      "path": "profile-production/cordis.patch.yml",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "d62926040ef9a313ce10e34a29fb8741789f8b73",
+        "bytes": 2435,
+        "sha256": "1eb164e5c43f3471d44798d0941c3e5adf19e41adbf276d88818586e6ab65fa5"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "63efbe221841f7d87f1bcc9886cc923dd94a7ad2",
+        "bytes": 2681,
+        "sha256": "6472e5f038e176d0b6a4418d7e3af6094f7c61cb077217b4dd21f76515347060"
+      }
+    },
+    {
+      "path": "scripts/agent-core-backup-ops.sh",
+      "change": "modified",
+      "base": {
+        "mode": "100755",
+        "kind": "blob",
+        "git_blob": "6d13da2726af9b93cdd5b72efdeaeabfc66f1678",
+        "bytes": 41578,
+        "sha256": "39cbaa232a24fd2f51450b18b398f9e2036cbc0146db9bc5c462414732230c14"
+      },
+      "requested_source": {
+        "mode": "100755",
+        "kind": "blob",
+        "git_blob": "800f8f0a0386e842e439b6bfffae213b80ed56e4",
+        "bytes": 41346,
+        "sha256": "245d4dc926ede0bbdb06cee81f8cecb021530f0ac7b6b2f321a82bc00238d210"
+      }
+    },
+    {
+      "path": "scripts/scheduler-watchdog.mjs",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "ffe1b2cb3fe584dd8a65d840cfb33faa18810277",
+        "bytes": 28153,
+        "sha256": "6ab88171142a386664aa9b9a230fff83a9e01f09c1467e32c661a1aea6a9e522"
+      }
+    },
+    {
+      "path": "scripts/trusted-cp-deploy-install.sh",
+      "change": "modified",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "2887839573fb58c0e657f7e3d2ce035d0d5f9ee4",
+        "bytes": 77596,
+        "sha256": "6d47b6094e07dc249869b4330e9f3dde45389022092cde4a53c420d4d5147047"
+      },
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "356899a8ec0726f245790379429f97dfc6ea3bfb",
+        "bytes": 76467,
+        "sha256": "dba2f136af78b6d89bf58d1b9ab0c15259efa3bf4f4d4f904e9494fd11d7741e"
+      }
+    }
+  ],
+  "predicate": "official whole-app source selection changes only 42487e65 lineage plus direct required dependencies",
+  "result": "WHOLE_TREE_ROUTE_REJECTED_BEFORE_ASSEMBLY",
+  "counterexamples": [
+    {
+      "path": "packages/agent-memory/src/codec.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "e49ef47bd3316d80086a729f8738917fa32072eb",
+        "bytes": 12634,
+        "sha256": "274209c682982a886ea0470a8fee4b5479c7de0ac44dac0043cae7b5a16786cc"
+      }
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow.js",
+      "change": "deleted",
+      "base": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "4383c028eafc0e3150917e8704ec9aa395358723",
+        "bytes": 47766,
+        "sha256": "207fa11372b6f7164a8a4b77ab31dba40c6cf6d63d6042b765162a48b9599482"
+      },
+      "requested_source": null
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow/index.js",
+      "change": "added",
+      "base": null,
+      "requested_source": {
+        "mode": "100644",
+        "kind": "blob",
+        "git_blob": "a19ffe91a49de315da959b9c1245d6ba87f50776",
+        "bytes": 1653,
+        "sha256": "4438d4c8f28e5a944a7592bf755dfe8c441903645f4979b25a44fee6b68f63d8"
+      }
+    }
+  ],
+  "scheduler_context_difference": "95 vs 081 adds policy-auto-reconcile, scheduler-policy, receiptTimeoutSeconds and changes store helper paths; cannot equate exact bytes or silently substitute 081",
+  "affected_readiness": [
+    "CANDIDATE_ARTIFACT_READY",
+    "PRODUCTION_CUTOVER_READY"
+  ],
+  "assembly": "NOT_STARTED",
+  "production_writes": 0,
+  "production_store_reads": 0
+}
