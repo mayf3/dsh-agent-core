@@ -10,12 +10,12 @@
 - Repo/worktree：`mayf3/dsh-agent-core` / `/Users/yanfenma/workspace/project/worktrees/ops-656-landing`；branch `fix/656367cd-landing-prep`。
 - 唯一写者：Codex root；独立 QA：`/root/qa`（只读）；只读发布链研究：`/root/runbook_research`。均为本地工程协作，无生产 Agent 派发。
 - 开始 HEAD / integration base：`6ad69d1fa6fa8c7dcfb3b5b61207c7d21a80ecef`；本轮 `git ls-remote origin refs/heads/main` 读回相同。最终 commit 坐标与 QA final-Head 核对记入 PR。
-- Git656 原修复：`656367cdfa2d8a8c72e63ab16d1932c895396b2b`，已核为 base 祖先。只取两份原 blob，不取后续 main transport retry 尾巴。
+- Git656 原修复：`656367cdfa2d8a8c72e63ab16d1932c895396b2b`，已核为 base 祖先。v2 取两份原 blob；**v3 扩展补取第三份 spawn.js 原 blob**（仍不取后续 main transport retry 尾巴）。
 
 ```text
 schema_version = 2
 SPEC_GOVERNANCE_MODE = PREFLIGHT
-GOAL_OR_TARGET = prepare exact two-file terminal+idle forward-fix for original release chain
+GOAL_OR_TARGET = prepare exact three-file (event/state/spawn) terminal+idle forward-fix for original release chain (v2 two-file scope extended by Owner 2026-11-09 delta-1)
 CURRENT_GAP = v1 build stop; candidate and executed evidence absent at continuation start
 AUTHORITY_ACTION = REUSE
 PRIMARY_AUTHORITY = AGENT_PROCESS_LIFECYCLE_HARDENING_V4@base r0 C-010,C-014..C-018,§12.2
@@ -162,13 +162,13 @@ v2 的证据限度如实声明了 spawn 未覆盖；v3 用**原作者自己的�
 
 1. 排空/旧代退出已证明后，在同mutex内记录**切换窗口**完整code/config/metadata/service前像与 ABSENT、原目标uid/gid/mode/ACL/xattr、目标type及父目录身份。前像必须仍匹配本三文件 beforeSHA；漂移先停止重新核对，不覆盖。
 2. 原链从受信staging/CAS接收已独立审查的三文件delta，重新校验路径、type、source blob、SHA256；不得将scratch整包或候选脚本作为root执行。生产无npm/build；不改旧pack-provenance去伪造整树来源。
-3. 由原deploy控制器按既有profile在**目标同文件系统**创建temp，设定已验证metadata，写入/flush；逐slot durable journal记录intent/preimage/phase并fsync，再rename、目录fsync并读回每个SHA。两次rename不具整组原子性；事务一致性依靠已证明停止的旧代、admission barrier、journal与单writer；只在三文件都验证后开放启动。部分失败/进程崩溃按journal只读核对，不能盲重跑copy/restart。
+3. 由原deploy控制器按既有profile在**目标同文件系统**创建temp，设定已验证metadata，写入/flush；逐slot durable journal记录intent/preimage/phase并fsync，再rename、目录fsync并读回每个SHA。三次rename不具整组原子性；事务一致性依靠已证明停止的旧代、admission barrier、journal与单writer；只在三文件都验证后开放启动。部分失败/进程崩溃按journal只读核对，不能盲重跑copy/restart。
 4. 成功路径由原链只重启共享parent一次，绑定新native instance/runtimeEpoch与loaded代际，核已安装digest及health。不能仅看PID/日志活动/配置source SHA就判加载成功；新业务canary只在原授权明确覆盖其identity/input/side-effect时执行，不重发旧UNKNOWN。
 
 下列为原执行链可用的**只读字节校验**，本任务仅交付：
 
 ```sh
-shasum -a 256 /usr/local/libexec/agent-core/app/packages/agent-router/src/process/event-correlation.js /usr/local/libexec/agent-core/app/packages/agent-router/src/process/state-machine.js
+shasum -a 256 /usr/local/libexec/agent-core/app/packages/agent-router/src/process/event-correlation.js /usr/local/libexec/agent-core/app/packages/agent-router/src/process/state-machine.js /usr/local/libexec/agent-core/app/packages/agent-router/src/process/spawn.js
 /usr/local/libexec/agent-core/node-runtime/bin/node --version
 shasum -a 256 /usr/local/libexec/agent-core/node-runtime/bin/node
 /usr/local/libexec/agent-core/node-runtime/bin/node --check /usr/local/libexec/agent-core/app/packages/agent-router/src/process/event-correlation.js
