@@ -3,7 +3,7 @@
 Hex long listings bind each attribute to a known full path. Ambiguous paths or
 unrecognized output abort; no sentinel can enter an equality comparison.
 """
-from window_helper_core import P, digest, hashlib, json, meta, os, re, require, run
+from window_helper_core import P, digest, hashlib, json, meta, os, re, require, run, effect_guard
 
 XATTRS_KEY = '_xattrs_map'
 
@@ -105,6 +105,7 @@ def reconcile_xattrs(source,target,expected):
         # Refuse a symlink ancestor; leaf itself uses -s and is never followed.
         for parent in path.relative_to(target).parents:
             require(not (P(target)/parent).is_symlink(),'symlink ancestor in xattr repair: '+str(path))
+        effect_guard('xattr.write',str(path),{'name':name,'valueHex':''})
         run(['/usr/bin/xattr','-s','-w',name,'',path])
         print('EMPTY_XATTR_REAPPLIED '+json.dumps({'path':str(path),'attribute':name},sort_keys=True))
     require(xattr_map(xattr_values(target))==expected,'preimage xattrs differ after empty-value reapply: '+str(target))
