@@ -1,0 +1,11 @@
+{
+  "ts": "2026-11-08 06:11",
+  "id": "owner-20261108-three-unified",
+  "items": [
+    "①Captain Principal: 方案1批准——Auth现有合法管理员identity-only创建release-captain-agent-core-20261107; 创建前须确认Auth权威认可的Principal类型/canonical标识/Agent-Session关联及生命周期要求; 使用现有正式管理接口, 不直接写DB不绕认证; 不授权新增Client/Secret/Grant/通用INSERT/特权helper; 本项创建目的已由常设授权§4批准不再重复请示; 若现有管理员确实无法完成→先证明具体缺失权限或机制, 仅新增信任边界时才最小差量HUMAN_GATE; 创建后原合法链自主完成条件任命/撤销机制/G01真实控制适配/全部负向测试, 未验证前保持生产发布禁止",
+    "②PR#664: 按常设授权§3B继续正式接受, 不增加Owner审批; WEC V5/PPR V2是已决定RTH V1语义的必要完整继任(限定refused-terminal责任交接, 不扩大业务/Auth/UNKNOWN/no-replay/fence边界); 由合法且具备真实接受权限的受托维护者完成独立语义审查/accepted-contracts接受事务/前驱整权退休/索引引用同步/终HEAD复核/合并; 生产none; Core接受不能替代Svc独立配套接受; Svc合同未正式进base+跨服务验证未过前#1377新协议不实施不启用; 原#664起草不合并边界继续有效, 后续接受合并由原合法治理责任链按独立事务执行(作者不自授)",
+    "③PR#653: 维持既有裁定无新增Owner决策; 确认两独立缺口(#643 readback aging Assistance交接/#658 refused-terminal责任交接)共用机制各自触发条件/安全前置/规范接受/实施边界; #653作为非规范性调查证据由原链正常归档或合并, 不再生成Owner确认门",
+    "统一执行: 范围内缺证/引用/构建/测试/网络/合并问题原责任链自主处理, 不以新SHA/Session/SpecID/普通失败为由重复请批; 仅常设授权§7所列新风险/新决策才最小差量HUMAN_GATE; 继续推进Captain真实生效/Core-Svc合法实施/W7标准可恢复发布; 源码合并/正式规范接受/实际部署/业务验收分别记录不以文档PASS替代运行PASS",
+    "OPERATION_ALLOWED_NOW=NO直至实际发布条件全部满足"
+  ]
+}
