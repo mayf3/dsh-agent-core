@@ -1,0 +1,36 @@
+{
+  "observedAtUTC": "2026-11-07T15:01:17.468393+00:00",
+  "authPostAttempts": 0,
+  "runtime8788Requests": 0,
+  "observations": [
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:4001/api/health",
+      "authentication": "NONE",
+      "httpStatus": 200,
+      "body": "{\"ok\":true,\"service\":\"auth-service\",\"version\":\"1.0.0\",\"issuer\":\"auth-service\",\"audience\":\"agent-platform\",\"authContractMode\":\"v1\",\"authContractVersion\":\"1.15.0\",\"authContractDigest\":\"78e51dc942356da289840dbae1c79c753925f0acc7ea566e55c06614545cb291\",\"timestamp\":\"2026-11-07T15:01:17.479Z\"}"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:4001/api/v1/principals/by-external-ref",
+      "authentication": "NONE",
+      "httpStatus": 401,
+      "body": "{\"message\":\"Authentication required: Bearer token missing\"}"
+    },
+    {
+      "method": "psql READ ONLY using installed skill connection, values kept in process memory",
+      "sourcePath": "/Users/yanfenma/.openclaw/skills/auth-service/scripts/lookup-principal.py",
+      "sourceSHA256": "316371a934bdcc8c9ad06f924808c166ae257be583aad5cfd71416359adf3874",
+      "query": "BEGIN READ ONLY;\nSELECT json_build_object('observedAtUTC',timezone('UTC',clock_timestamp()),'database',current_database(),'dbUser',current_user,'serverAddress',inet_server_addr(),'serverPort',inet_server_port(),'transactionReadOnly',current_setting('transaction_read_only'),'canSelectPrincipal',has_table_privilege(current_user,'public.machine_principals','SELECT'),'canInsertPrincipal',has_table_privilege(current_user,'public.machine_principals','INSERT'));\nSELECT coalesce(json_agg(row_to_json(p)),'[]'::json) FROM (SELECT id,agent_id,display_name,status,principal_type,owner_user_id,external_ref,disabled_at,created_at FROM machine_principals WHERE agent_id IN ('release-captain-agent-core-20261107','agt_release-captain-agent-core-20261107') OR external_ref IN ('release-captain-agent-core-20261107','agt_release-captain-agent-core-20261107') OR display_name='release-captain-agent-core-20261107' ORDER BY id) p;\nSELECT json_agg(row_to_json(e)) FROM (SELECT t.typname AS enum_name,e.enumlabel FROM pg_type t JOIN pg_enum e ON e.enumtypid=t.oid WHERE t.typname='PrincipalType' ORDER BY e.enumsortorder) e;\nCOMMIT;\n",
+      "querySHA256": "3d2f4eb5a9180afe8df5e9c06ef7e744ab0eb59356d81815936e42dc35f2d084",
+      "rawRC": 0,
+      "stdout": "BEGIN\n{\"observedAtUTC\" : \"2026-11-07T15:01:17.528587\", \"database\" : \"agent_dev_center\", \"dbUser\" : \"auth_ro\", \"serverAddress\" : \"::1\", \"serverPort\" : 5432, \"transactionReadOnly\" : \"on\", \"canSelectPrincipal\" : true, \"canInsertPrincipal\" : false}\n[]\n[{\"enum_name\":\"PrincipalType\",\"enumlabel\":\"agent\"}, {\"enum_name\":\"PrincipalType\",\"enumlabel\":\"service\"}]\nCOMMIT\n",
+      "stderr": ""
+    }
+  ],
+  "limitations": [
+    "HTTP read without management bearer proves current unauthenticated request is denied; it does not prove no authorized administrator exists.",
+    "auth_ro observation is local coordinate only; no assertion of global absence or canonical subject ownership.",
+    "No POST, token mint, Client, Secret, Grant, lifecycle mutation, Core definition write or runtime/8788 access was attempted."
+  ]
+}

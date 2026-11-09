@@ -1,0 +1,140 @@
+{
+  "observedAtUTC": "2026-11-07T15:04:32.394879+00:00",
+  "worktree": "/private/tmp/h-captain-create",
+  "entryHead": "24974c720d634b965943e08bfd0862657b9be0e1",
+  "baseHead": "9df5bd2fdea17f04bcd1762cd6800c350efcf9c3",
+  "isolatedRef": "docs/captain-principal-creation",
+  "authLocalHead": "862eab36677d214b2ce340f49bb141173b51efea",
+  "authAcceptedMain": "2228195f53d603a961b033bdcd600ec5a83ba12d",
+  "authSourceIsLoadedProof": false,
+  "authInstalledEntryBinding": "UNKNOWN; health 1.15.0 is not loaded-code or administrator-custody proof",
+  "previousPackage": {
+    "pr": "https://github.com/mayf3/dsh-agent-core/pull/656",
+    "head": "fcaba5fa6c948a0871478181f8e3bdd262aa43ee",
+    "role": "prior evidence only; not accepted governing authority"
+  },
+  "files": [
+    {
+      "repository": "mayf3/auth-service",
+      "commit": "2228195f53d603a961b033bdcd600ec5a83ba12d",
+      "path": "src/routes/idempotent.ts",
+      "blob": "6084288df4816a7cc6020dde212e17edcad138e3",
+      "sha256": "8a85e4d4733330fac248a93bf9ae0ca1603ac42387cdfb5bfa0738bc2a75053e"
+    },
+    {
+      "repository": "mayf3/auth-service",
+      "commit": "2228195f53d603a961b033bdcd600ec5a83ba12d",
+      "path": "src/lib/oauth/v1/idempotent.ts",
+      "blob": "b139ceb1fc09a76ba872f5aefa1428723344a12f",
+      "sha256": "ad5e4c1304dfd5d203089672954c347348d0aeade126eff2b5af1673d5c953d8"
+    },
+    {
+      "repository": "mayf3/auth-service",
+      "commit": "2228195f53d603a961b033bdcd600ec5a83ba12d",
+      "path": "src/middleware/v1-management-auth.ts",
+      "blob": "bc6963e0936cebf8e2b07ee2eef38770e4bcb9e7",
+      "sha256": "1e8474da9239d4d350e59aa6cd41e4c8c7c62398e5b946418755fe3a9a8ca707"
+    },
+    {
+      "repository": "mayf3/auth-service",
+      "commit": "2228195f53d603a961b033bdcd600ec5a83ba12d",
+      "path": "src/lib/oauth/v1/canonical-identity.ts",
+      "blob": "0c8e27dae5b98b711f0a96a8781f6143ba1d8e2d",
+      "sha256": "e78b6ac7fa16331ac9a14726403c60d2498d94ee46d3b19107af65b0bd1dd0cb"
+    },
+    {
+      "repository": "mayf3/auth-service",
+      "commit": "2228195f53d603a961b033bdcd600ec5a83ba12d",
+      "path": "scripts/canonical-subject-enrollment.ts",
+      "blob": "17925c628d51c2c8bf7fd574363ca230e08a6b0e",
+      "sha256": "193b96b67169bda19be5571471687e522ffe14ae58434223d7616665ce8f6ecf"
+    },
+    {
+      "repository": "mayf3/auth-service",
+      "commit": "2228195f53d603a961b033bdcd600ec5a83ba12d",
+      "path": "prisma/schema.prisma",
+      "blob": "0f4ed129203b3797134dda9c10c5b5c26e25cd07",
+      "sha256": "c7414655f8c82031ec01f29315be4f7f1ecc9ec35517d2fbdcffbfa2460f3db8"
+    },
+    {
+      "repository": "mayf3/auth-service",
+      "commit": "2228195f53d603a961b033bdcd600ec5a83ba12d",
+      "path": "docs/specs/AUTH_SERVICE_CANONICAL_IDENTITY_FOUNDATION_V1.md",
+      "blob": "532108751decdf363ff1c614debe5eed0f432ec4",
+      "sha256": "3a3afbb334f3885408f8218970503bfa2ae8f92678d48a2ef45a785de88682e5"
+    },
+    {
+      "repository": "mayf3/auth-service",
+      "commit": "2228195f53d603a961b033bdcd600ec5a83ba12d",
+      "path": "docs/specs/AUTH_SERVICE_CANONICAL_SUBJECT_ENROLLMENT_AND_SOURCE_BINDING_V1.md",
+      "blob": "3af9bdc75eb09de65ed136bfad2b619f1fe97ce7",
+      "sha256": "a7c5d16d90ea5395d3990068c7e9b5c0e0fb31afb8803a734d02b87365f4a912"
+    },
+    {
+      "repository": "mayf3/auth-service",
+      "commit": "2228195f53d603a961b033bdcd600ec5a83ba12d",
+      "path": "docs/specs/AUTH_SERVICE_OWNERLESS_AGENT_PRINCIPAL_V1.md",
+      "blob": "e51f5dc1a1e92469ec773c7f50959a6f356f4355",
+      "sha256": "0f4214640b9e4b2ed093f7e0bf8959dffdba3e69e2aad0bc2be664e3d33f9cba"
+    },
+    {
+      "repository": "mayf3/dsh-agent-core",
+      "baseCommit": "9df5bd2fdea17f04bcd1762cd6800c350efcf9c3",
+      "path": ".agents/README.md",
+      "sha256": "18d2ee74877c9871b7a086bbc8ec02ae8219146c61e6ecfc4f33038b881c98e2",
+      "source": "base blob unchanged"
+    },
+    {
+      "repository": "mayf3/dsh-agent-core",
+      "baseCommit": "9df5bd2fdea17f04bcd1762cd6800c350efcf9c3",
+      "path": ".agents/local/README.md",
+      "sha256": "ebd1a2f0a39ebfd17b6a17035ad63ff35c59f5e7384ebc3597687b3c3fac8d5a",
+      "source": "base blob unchanged"
+    },
+    {
+      "repository": "mayf3/dsh-agent-core",
+      "baseCommit": "9df5bd2fdea17f04bcd1762cd6800c350efcf9c3",
+      "path": ".agents/governance.lock.json",
+      "sha256": "0cb6acb6e7839ee2b6d0312653e6c5efc680512a36bf44a842db3aa79dc5a8b5",
+      "source": "base blob unchanged"
+    },
+    {
+      "repository": "mayf3/dsh-agent-core",
+      "baseCommit": "9df5bd2fdea17f04bcd1762cd6800c350efcf9c3",
+      "path": "docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md",
+      "sha256": "c8d2627086cb202dcf0e70d9e0d0a9aeb174ea1d74b0b9cfd54339d28c33fe9b",
+      "source": "base blob unchanged"
+    },
+    {
+      "repository": "mayf3/dsh-agent-core",
+      "baseCommit": "9df5bd2fdea17f04bcd1762cd6800c350efcf9c3",
+      "path": "docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md",
+      "sha256": "fcc3603d8f1ab7b1ab10eda7088a56fb2e5095792336311d63a92f74fba6e160",
+      "source": "base blob unchanged"
+    },
+    {
+      "repository": "mayf3/dsh-agent-core",
+      "baseCommit": "9df5bd2fdea17f04bcd1762cd6800c350efcf9c3",
+      "path": "docs/specs/AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1.md",
+      "sha256": "a0b5959ce5a3ef0007c86b486670598216f11c3c62eaac70693dbc7f3cfb3427",
+      "source": "base blob unchanged"
+    },
+    {
+      "repository": "mayf3/dsh-agent-core",
+      "baseCommit": "9df5bd2fdea17f04bcd1762cd6800c350efcf9c3",
+      "path": "BRIEF-CAPTAIN-CREATE.md",
+      "sha256": "629d59a1db8a474c497108f6d2490763261eb720f74b9c00c4606f8e892189b5",
+      "source": "user supplied untracked brief"
+    },
+    {
+      "source": "installed auth-service skill",
+      "path": "/Users/yanfenma/.openclaw/skills/auth-service/SKILL.md",
+      "sha256": "af89a299cca0efc48aeaf4945490b22ba2d448fd1a0ff7997a6729a9ed5a9d8b"
+    },
+    {
+      "source": "installed auth-service skill",
+      "path": "/Users/yanfenma/.openclaw/skills/auth-service/references/api.md",
+      "sha256": "d3c39720c323e35e4cb96dc4aa2e06ae18cf9b62077bcba91c731e66b1e3f5c3"
+    }
+  ]
+}
