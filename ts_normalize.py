@@ -70,6 +70,7 @@ def main():
         print("scheduled(计划时间): MISSING — R1 requires it for slot observations")
 
     anomalies = 0
+    valid_moments = []
     events = data.get("events") or []
     for event in events:
         moment = parse(event.get("at"))
@@ -80,9 +81,14 @@ def main():
             continue
         moment = naive_assume_utc(moment)
         flag = ""
-        if moment > observed + timedelta(minutes=1):
+        if moment > observed:
+            # R2 is strict: ANY moment in the future relative to the
+            # observation time is an anomaly (no clock-skew tolerance —
+            # tolerance would silently reclassify real drift).
             anomalies += 1
             flag = " CLOCK_OR_FORMAT_ANOMALY (future vs observed — no sequencing inference, R2)"
+        else:
+            valid_moments.append(moment)
         print(f"event: {dual(moment)} what={what}{flag}")
 
     counters = data.get("counters") or {}
@@ -97,9 +103,26 @@ def main():
         if missing:
             print(f"  MISSING_TIERS={missing} — R3: report must list ②③④ or declare UNKNOWN")
     print(f"anomalies={anomalies}")
-    print("overall=HR 调度持续运行，部分业务接续已证；不代表全系统验收完成。"
-          if counters.get("schedulerSucceeded") and not anomalies
-          else "overall=NOT CLAIMED — see anomalies/missing fields above")
+    # R4 health gate: the standard's overall claim requires ALL of
+    #   no anomalies, tier-1 recent success, tier-2/3 non-empty evidence,
+    #   and the latest event within 2x the 30-minute slot interval (60 min).
+    # Scheduler success alone (tier-1) is never health.
+    recent = bool(valid_moments) and (observed - max(valid_moments)) <= timedelta(minutes=60)
+    tiers_ok = (counters.get("ingested", 0) > 0 or counters.get("businessChanged", 0) > 0)
+    missing_tiers = [k for k in ("ingested", "businessChanged", "unknown")
+                     if k not in counters]
+    healthy = (not anomalies and not missing_tiers
+               and counters.get("schedulerSucceeded", 0) > 0 and tiers_ok and recent)
+    if healthy:
+        print("overall=HR 调度持续运行，部分业务接续已证；不代表全系统验收完成。")
+    else:
+        reasons = []
+        if anomalies: reasons.append(f"anomalies={anomalies}")
+        if missing_tiers: reasons.append(f"missing_tiers={missing_tiers}")
+        if not counters.get("schedulerSucceeded", 0): reasons.append("no tier-1 success")
+        if not tiers_ok: reasons.append("no tier-2/3 evidence (ingested=0 and businessChanged=0)")
+        if not recent: reasons.append("latest event older than 60min (2x slot interval)")
+        print("overall=NOT CLAIMED (R4 gate) — " + "; ".join(reasons))
 
 
 if __name__ == "__main__":
