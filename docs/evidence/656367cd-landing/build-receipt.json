@@ -1,0 +1,19 @@
+{
+  "observedAt": "2026-11-08T23:59:04.935517+00:00",
+  "repo": "/Users/yanfenma/workspace/project/worktrees/ops-656-landing",
+  "head": "6ad69d1fa6fa8c7dcfb3b5b61207c7d21a80ecef",
+  "source": "656367cdfa2d8a8c72e63ab16d1932c895396b2b",
+  "live": "/usr/local/libexec/agent-core/app",
+  "scratch": "/Users/yanfenma/workspace/project/worktrees/ops-656-landing/.build-scratch/656367cd-landing",
+  "installed": "/Users/yanfenma/workspace/project/worktrees/ops-656-landing/.build-scratch/656367cd-landing/installed/app",
+  "candidate": "/Users/yanfenma/workspace/project/worktrees/ops-656-landing/.build-scratch/656367cd-landing/candidate/app",
+  "entries": 1703,
+  "actualDelta": [
+    "packages/agent-router/src/process/event-correlation.js",
+    "packages/agent-router/src/process/state-machine.js"
+  ],
+  "liveBeforeAfterEqual": true,
+  "symlinks": "literal copy, not traversed; full app never booted",
+  "installedManifestSHA256": "28acb0fad8bcf3967511db7687ada324b0ccac7296e7af4d5252dd3dbb376454",
+  "candidateManifestSHA256": "b397e0e4b9c917b8595c7e801ae8964e127c08cf095a191f596992e26e024049"
+}

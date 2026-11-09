@@ -1,0 +1,51 @@
+{
+  "status": "PASS",
+  "observedAt": "2026-11-09T00:01:08.916935+00:00",
+  "head": "6ad69d1fa6fa8c7dcfb3b5b61207c7d21a80ecef",
+  "source": "656367cdfa2d8a8c72e63ab16d1932c895396b2b",
+  "nodeVersion": "v26.7.0",
+  "fixture": "in-memory synthetic store, execution, waiter; exact candidate functions; no real store constructor, child, network, or full-app boot",
+  "liveBeforeAfterEqual": true,
+  "candidateUnchanged": true,
+  "results": [
+    {
+      "mode": "red",
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "/Users/yanfenma/workspace/project/worktrees/ops-656-landing/docs/evidence/656367cd-landing/owner-cases.test.mjs"
+      ],
+      "returncode": 1,
+      "expectedReturncode": 1,
+      "gatePassed": true,
+      "logSHA256": "df40f60ce2acb69f5cdabfb711049a27ad7f473367c71e9e3e3eba12c31cebdf"
+    },
+    {
+      "mode": "green",
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "/Users/yanfenma/workspace/project/worktrees/ops-656-landing/docs/evidence/656367cd-landing/owner-cases.test.mjs"
+      ],
+      "returncode": 0,
+      "expectedReturncode": 0,
+      "gatePassed": true,
+      "logSHA256": "164b50785fd5700d515b14fd0a2390573ddd835b8c604f11fa7acc96218f12c9"
+    },
+    {
+      "mode": "regression",
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "/Users/yanfenma/workspace/project/worktrees/ops-656-landing/docs/evidence/656367cd-landing/owner-cases.test.mjs"
+      ],
+      "returncode": 0,
+      "expectedReturncode": 0,
+      "gatePassed": true,
+      "logSHA256": "79fc25e20b437ffec9ed0f0723cf588503f230521180eb87bec7837e3a8687b4"
+    }
+  ]
+}

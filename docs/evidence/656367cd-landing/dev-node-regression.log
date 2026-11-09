@@ -1,0 +1,89 @@
+TAP version 13
+# {"mode":"regression","importedFrom":"/Users/yanfenma/workspace/project/worktrees/ops-656-landing/.build-scratch/656367cd-landing/candidate/app","source":"656367cdfa2d8a8c72e63ab16d1932c895396b2b","fullAppBooted":false,"realStoreConstructors":0}
+# Subtest: closure exports exist in exact candidate
+ok 1 - closure exports exist in exact candidate
+  ---
+  duration_ms: 0.507583
+  type: 'test'
+  ...
+# Subtest: no idle: terminal cannot settle
+ok 2 - no idle: terminal cannot settle
+  ---
+  duration_ms: 0.58975
+  type: 'test'
+  ...
+# Subtest: stale pre-start idle cannot settle
+ok 3 - stale pre-start idle cannot settle
+  ---
+  duration_ms: 0.091083
+  type: 'test'
+  ...
+# Subtest: later same-session turn prevents terminal-idle proof
+ok 4 - later same-session turn prevents terminal-idle proof
+  ---
+  duration_ms: 0.082291
+  type: 'test'
+  ...
+# Subtest: replay matcher ignores other session and wrong turn/receipt
+ok 5 - replay matcher ignores other session and wrong turn/receipt
+  ---
+  duration_ms: 0.121167
+  type: 'test'
+  ...
+# Subtest: terminal flushed after current idle still settles exact matched turn
+ok 6 - terminal flushed after current idle still settles exact matched turn
+  ---
+  duration_ms: 0.1495
+  type: 'test'
+  ...
+# Subtest: termination-only no-terminal predicate exact
+ok 7 - termination-only no-terminal predicate exact
+  ---
+  duration_ms: 0.094208
+  type: 'test'
+  ...
+# Subtest: termination-only no-terminal predicate gap
+ok 8 - termination-only no-terminal predicate gap
+  ---
+  duration_ms: 0.04425
+  type: 'test'
+  ...
+# Subtest: termination-only no-terminal predicate missing-receipt
+ok 9 - termination-only no-terminal predicate missing-receipt
+  ---
+  duration_ms: 0.055167
+  type: 'test'
+  ...
+# Subtest: termination-only no-terminal predicate multiple-executions
+ok 10 - termination-only no-terminal predicate multiple-executions
+  ---
+  duration_ms: 0.085291
+  type: 'test'
+  ...
+# Subtest: termination-only no-terminal predicate not-unknown
+ok 11 - termination-only no-terminal predicate not-unknown
+  ---
+  duration_ms: 0.062583
+  type: 'test'
+  ...
+# Subtest: settle once: duplicate/conflicting terminal cannot rewrite or replay
+ok 12 - settle once: duplicate/conflicting terminal cannot rewrite or replay
+  ---
+  duration_ms: 0.1115
+  type: 'test'
+  ...
+# Subtest: settling target leaves another unresolved UNKNOWN fence intact
+ok 13 - settling target leaves another unresolved UNKNOWN fence intact
+  ---
+  duration_ms: 0.062125
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 51.838292

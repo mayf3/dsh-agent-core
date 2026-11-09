@@ -1,0 +1,123 @@
+TAP version 13
+# {"mode":"green","importedFrom":"/Users/yanfenma/workspace/project/worktrees/ops-656-landing/.build-scratch/656367cd-landing/candidate/app","source":"656367cdfa2d8a8c72e63ab16d1932c895396b2b","fullAppBooted":false,"realStoreConstructors":0}
+# OWNER_GREEN_ACTUAL {"name":"aborted/disposed","late":false,"row":{"initialOutcome":"outcome_unknown","output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"source":"terminal_without_outcome","lateOutcome":"terminated_without_outcome","terminationEvidence":"exact_terminal_then_idle","finalAssistantOutput":{"text":"SYNTHETIC PARTIAL","synthetic":true},"settled":true,"fence":false},"waiterStatus":"outcome_unknown"}
+# OWNER_GREEN_ACTUAL {"name":"aborted/disposed","late":true,"row":{"initialOutcome":"outcome_unknown","output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"lateOutcome":"terminated_without_outcome","terminationEvidence":"exact_terminal_then_idle","finalAssistantOutput":{"text":"SYNTHETIC PARTIAL","synthetic":true},"settled":true,"fence":false},"waiterStatus":"outcome_unknown"}
+# OWNER_GREEN_ACTUAL {"name":"aborted/user","late":false,"row":{"initialOutcome":"outcome_unknown","output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"source":"terminal_without_outcome","lateOutcome":"terminated_without_outcome","terminationEvidence":"exact_terminal_then_idle","finalAssistantOutput":{"text":"SYNTHETIC PARTIAL","synthetic":true},"settled":true,"fence":false},"waiterStatus":"outcome_unknown"}
+# OWNER_GREEN_ACTUAL {"name":"aborted/user","late":true,"row":{"initialOutcome":"outcome_unknown","output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"lateOutcome":"terminated_without_outcome","terminationEvidence":"exact_terminal_then_idle","finalAssistantOutput":{"text":"SYNTHETIC PARTIAL","synthetic":true},"settled":true,"fence":false},"waiterStatus":"outcome_unknown"}
+# OWNER_GREEN_ACTUAL {"name":"disposed-kind","late":false,"row":{"initialOutcome":"outcome_unknown","output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"source":"terminal_without_outcome","lateOutcome":"terminated_without_outcome","terminationEvidence":"exact_terminal_then_idle","finalAssistantOutput":{"text":"SYNTHETIC PARTIAL","synthetic":true},"settled":true,"fence":false},"waiterStatus":"outcome_unknown"}
+# OWNER_GREEN_ACTUAL {"name":"disposed-kind","late":true,"row":{"initialOutcome":"outcome_unknown","output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"lateOutcome":"terminated_without_outcome","terminationEvidence":"exact_terminal_then_idle","finalAssistantOutput":{"text":"SYNTHETIC PARTIAL","synthetic":true},"settled":true,"fence":false},"waiterStatus":"outcome_unknown"}
+# OWNER_GREEN_ACTUAL {"name":"null","late":false,"row":{"initialOutcome":"outcome_unknown","output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"source":"terminal_without_outcome","lateOutcome":"terminated_without_outcome","terminationEvidence":"exact_terminal_then_idle","finalAssistantOutput":{"text":"SYNTHETIC PARTIAL","synthetic":true},"settled":true,"fence":false},"waiterStatus":"outcome_unknown"}
+# OWNER_GREEN_ACTUAL {"name":"null","late":true,"row":{"initialOutcome":"outcome_unknown","output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"lateOutcome":"terminated_without_outcome","terminationEvidence":"exact_terminal_then_idle","finalAssistantOutput":{"text":"SYNTHETIC PARTIAL","synthetic":true},"settled":true,"fence":false},"waiterStatus":"outcome_unknown"}
+# OWNER_GREEN_ACTUAL {"name":"missing","late":false,"row":{"initialOutcome":"outcome_unknown","output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"source":"terminal_without_outcome","lateOutcome":"terminated_without_outcome","terminationEvidence":"exact_terminal_then_idle","finalAssistantOutput":{"text":"SYNTHETIC PARTIAL","synthetic":true},"settled":true,"fence":false},"waiterStatus":"outcome_unknown"}
+# OWNER_GREEN_ACTUAL {"name":"missing","late":true,"row":{"initialOutcome":"outcome_unknown","output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"lateOutcome":"terminated_without_outcome","terminationEvidence":"exact_terminal_then_idle","finalAssistantOutput":{"text":"SYNTHETIC PARTIAL","synthetic":true},"settled":true,"fence":false},"waiterStatus":"outcome_unknown"}
+# OWNER_GREEN_ACTUAL {"name":"unrecognized","late":false,"row":{"initialOutcome":"outcome_unknown","output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"source":"terminal_without_outcome","lateOutcome":"terminated_without_outcome","terminationEvidence":"exact_terminal_then_idle","finalAssistantOutput":{"text":"SYNTHETIC PARTIAL","synthetic":true},"settled":true,"fence":false},"waiterStatus":"outcome_unknown"}
+# OWNER_GREEN_ACTUAL {"name":"unrecognized","late":true,"row":{"initialOutcome":"outcome_unknown","output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"lateOutcome":"terminated_without_outcome","terminationEvidence":"exact_terminal_then_idle","finalAssistantOutput":{"text":"SYNTHETIC PARTIAL","synthetic":true},"settled":true,"fence":false},"waiterStatus":"outcome_unknown"}
+# OWNER_GREEN_ACTUAL {"name":"completed","late":false,"row":{"initialOutcome":null,"output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"outcome":"completed","outcomeEvidence":"exact_turn_end_success","terminationEvidence":"exact_terminal_then_idle","settled":true},"waiterStatus":"completed"}
+# OWNER_GREEN_ACTUAL {"name":"completed","late":true,"row":{"initialOutcome":"outcome_unknown","output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"lateOutcome":"late_completed","outcomeEvidence":"exact_turn_end_success","terminationEvidence":"exact_terminal_then_idle","finalAssistantOutput":{"text":"SYNTHETIC PARTIAL","synthetic":true},"settled":true,"fence":false},"waiterStatus":"already_returned"}
+# OWNER_GREEN_ACTUAL {"name":"failed","late":false,"row":{"initialOutcome":null,"output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"outcome":"failed","outcomeEvidence":"exact_turn_end_failure","terminationEvidence":"exact_terminal_then_idle","errorClass":"provider_runtime_rejection","settled":true},"waiterStatus":"failed"}
+# OWNER_GREEN_ACTUAL {"name":"failed","late":true,"row":{"initialOutcome":"outcome_unknown","output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"lateOutcome":"late_failed","outcomeEvidence":"exact_turn_end_failure","terminationEvidence":"exact_terminal_then_idle","finalAssistantOutput":{"text":"SYNTHETIC PARTIAL","synthetic":true},"settled":true,"fence":false},"waiterStatus":"already_returned"}
+# Subtest: OWNER_GREEN aborted/disposed direct
+ok 1 - OWNER_GREEN aborted/disposed direct
+  ---
+  duration_ms: 1.441292
+  type: 'test'
+  ...
+# Subtest: OWNER_GREEN aborted/disposed late
+ok 2 - OWNER_GREEN aborted/disposed late
+  ---
+  duration_ms: 0.164584
+  type: 'test'
+  ...
+# Subtest: OWNER_GREEN aborted/user direct
+ok 3 - OWNER_GREEN aborted/user direct
+  ---
+  duration_ms: 0.124541
+  type: 'test'
+  ...
+# Subtest: OWNER_GREEN aborted/user late
+ok 4 - OWNER_GREEN aborted/user late
+  ---
+  duration_ms: 0.083875
+  type: 'test'
+  ...
+# Subtest: OWNER_GREEN disposed-kind direct
+ok 5 - OWNER_GREEN disposed-kind direct
+  ---
+  duration_ms: 0.106416
+  type: 'test'
+  ...
+# Subtest: OWNER_GREEN disposed-kind late
+ok 6 - OWNER_GREEN disposed-kind late
+  ---
+  duration_ms: 0.133208
+  type: 'test'
+  ...
+# Subtest: OWNER_GREEN null direct
+ok 7 - OWNER_GREEN null direct
+  ---
+  duration_ms: 0.2005
+  type: 'test'
+  ...
+# Subtest: OWNER_GREEN null late
+ok 8 - OWNER_GREEN null late
+  ---
+  duration_ms: 0.093916
+  type: 'test'
+  ...
+# Subtest: OWNER_GREEN missing direct
+ok 9 - OWNER_GREEN missing direct
+  ---
+  duration_ms: 0.10075
+  type: 'test'
+  ...
+# Subtest: OWNER_GREEN missing late
+ok 10 - OWNER_GREEN missing late
+  ---
+  duration_ms: 0.134208
+  type: 'test'
+  ...
+# Subtest: OWNER_GREEN unrecognized direct
+ok 11 - OWNER_GREEN unrecognized direct
+  ---
+  duration_ms: 0.077625
+  type: 'test'
+  ...
+# Subtest: OWNER_GREEN unrecognized late
+ok 12 - OWNER_GREEN unrecognized late
+  ---
+  duration_ms: 0.069375
+  type: 'test'
+  ...
+# Subtest: OWNER_GREEN completed direct
+ok 13 - OWNER_GREEN completed direct
+  ---
+  duration_ms: 0.115708
+  type: 'test'
+  ...
+# Subtest: OWNER_GREEN completed late
+ok 14 - OWNER_GREEN completed late
+  ---
+  duration_ms: 0.039959
+  type: 'test'
+  ...
+# Subtest: OWNER_GREEN failed direct
+ok 15 - OWNER_GREEN failed direct
+  ---
+  duration_ms: 0.829084
+  type: 'test'
+  ...
+# Subtest: OWNER_GREEN failed late
+ok 16 - OWNER_GREEN failed late
+  ---
+  duration_ms: 0.092709
+  type: 'test'
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 56.725833

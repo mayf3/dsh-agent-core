@@ -1,0 +1,53 @@
+{
+  "status": "PASS",
+  "observedAt": "2026-11-09T00:02:03.761257+00:00",
+  "head": "6ad69d1fa6fa8c7dcfb3b5b61207c7d21a80ecef",
+  "source": "656367cdfa2d8a8c72e63ab16d1932c895396b2b",
+  "nodeBinary": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+  "nodeVersion": "v25.6.1",
+  "nodeSHA256": "c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b",
+  "fixture": "in-memory synthetic store, execution, waiter; exact candidate functions; no real store constructor, child, network, or full-app boot",
+  "liveBeforeAfterEqual": true,
+  "candidateUnchanged": true,
+  "results": [
+    {
+      "mode": "red",
+      "command": [
+        "/usr/local/libexec/agent-core/node-runtime/bin/node",
+        "--test",
+        "--test-reporter=tap",
+        "/Users/yanfenma/workspace/project/worktrees/ops-656-landing/docs/evidence/656367cd-landing/owner-cases.test.mjs"
+      ],
+      "returncode": 1,
+      "expectedReturncode": 1,
+      "gatePassed": true,
+      "logSHA256": "a2e3c733c54c68ea6ece5e315190dc2d8abcabd39ed8c4c9fcb63d29713d8f3b"
+    },
+    {
+      "mode": "green",
+      "command": [
+        "/usr/local/libexec/agent-core/node-runtime/bin/node",
+        "--test",
+        "--test-reporter=tap",
+        "/Users/yanfenma/workspace/project/worktrees/ops-656-landing/docs/evidence/656367cd-landing/owner-cases.test.mjs"
+      ],
+      "returncode": 0,
+      "expectedReturncode": 0,
+      "gatePassed": true,
+      "logSHA256": "7b2f8cdc8e5eb47411cb89b5cb31083f11cd1fbe8809c8ae1f28840931f06868"
+    },
+    {
+      "mode": "regression",
+      "command": [
+        "/usr/local/libexec/agent-core/node-runtime/bin/node",
+        "--test",
+        "--test-reporter=tap",
+        "/Users/yanfenma/workspace/project/worktrees/ops-656-landing/docs/evidence/656367cd-landing/owner-cases.test.mjs"
+      ],
+      "returncode": 0,
+      "expectedReturncode": 0,
+      "gatePassed": true,
+      "logSHA256": "c065715256c43164c7018a51efbbee5fec8d75501366947aeaff88b94b3afb91"
+    }
+  ]
+}

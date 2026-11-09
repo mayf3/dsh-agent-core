@@ -1,0 +1,38 @@
+TAP version 13
+# {"mode":"red","importedFrom":"/Users/yanfenma/workspace/project/worktrees/ops-656-landing/.build-scratch/656367cd-landing/installed/app","source":"656367cdfa2d8a8c72e63ab16d1932c895396b2b","fullAppBooted":false,"realStoreConstructors":0}
+# OWNER_RED_ACTUAL {"initialOutcome":"outcome_unknown","output":{"text":"SYNTHETIC PARTIAL","synthetic":true},"lateOutcome":"late_completed","outcomeEvidence":"exact_turn_end_success","terminationEvidence":"exact_terminal_then_idle","finalAssistantOutput":{"text":"SYNTHETIC PARTIAL","synthetic":true},"settled":true,"fence":false}
+# Subtest: OWNER_RED aborted/disposed late terminal must NOT fabricate completed
+not ok 1 - OWNER_RED aborted/disposed late terminal must NOT fabricate completed
+  ---
+  duration_ms: 1.814958
+  type: 'test'
+  location: '/Users/yanfenma/workspace/project/worktrees/ops-656-landing/docs/evidence/656367cd-landing/owner-cases.test.mjs:83:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Owner expected termination-only; installed code fabricates success
+    + actual - expected
+    
+    + 'late_completed'
+    - 'terminated_without_outcome'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'terminated_without_outcome'
+  actual: 'late_completed'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/ops-656-landing/docs/evidence/656367cd-landing/owner-cases.test.mjs:90:12)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1397:25)
+    Test.start (node:internal/test_runner/test:1257:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 50.0615
