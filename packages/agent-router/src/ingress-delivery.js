@@ -13,7 +13,7 @@
  */
 import { createHash } from 'node:crypto'
 import { ingressBindingNamespace, feishuReplyOwed } from './channel-conversation.js'
-import { classifyFailureStage, isRecoveryFenceResult } from './process/ingress-failure.js'
+import { classifyFailureStage, isRecoveryFenceResult, isOutcomeUnknown, notifyOutcomeUnknown } from './process/ingress-failure.js'
 import { createRecoveryAdmission } from './reconciliation/admission.js'
 import { outerFailureProjection } from './reconciliation/query.js'
 import { authenticatedFeishuFields, ingressTurnOpts, authenticatedCorrelation } from './ingress-authenticated.js'
@@ -120,11 +120,8 @@ export function createIngressDelivery({
         message: ingress.text ?? '',
         opts,
       })
-      // C-010 closed envelope. `outcome_unknown` is NOT an ordinary failure:
-      // the turn may still be running — surface a structured timeout error
-      // through the existing failure reply path (Router-owned product
-      // policy; no auto replay, no fabricated completion). Legacy
-      // process-factory fakes returning a bare {reply} keep working.
+      // C-010: UNKNOWN keeps reconciliation and surfaces through CTR-W3.
+      // Legacy process-factory fakes returning a bare {reply} keep working.
       if (turnResult?.status === 'outcome_unknown') {
         throw Object.assign(
           new Error(`turn outcome unknown (agent ${binding.activeAgentId}, deadline ${turnResult.deadlineAtWallMs ?? 'n/a'}); reconciliation handle ${turnResult.reconciliationHandle}`),
@@ -190,15 +187,16 @@ export function createIngressDelivery({
       }
       return executionResult
     } catch (error) {
-      if (isFeishuEntry && turnStarted && !error?.fencedBy
-          && (error?.status === 'outcome_unknown' || error?.envelope === 'outcome_unknown')) {
+      if (isFeishuEntry && turnStarted && !error?.fencedBy && isOutcomeUnknown(error)) {
         lateReplies.watch(error, { agentId: binding?.activeAgentId, sessionId: binding?.activeSessionId, target: lateReplyTarget })
       }
       const failureStage = classifyFailureStage(error, turnStarted)
       log.error(`delivery to ${binding?.activeAgentId ?? 'unresolved'} failed during ${failureStage}: ${error?.code ?? 'unclassified'}`)
       if (feishu !== undefined && isFeishuEntry) {
         try {
-          await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), `[agent-core] delivery failed: ${error?.deliveryFailure?.userMessage ?? error?.message ?? error}`)
+          if (!await notifyOutcomeUnknown({ error, feishu, ingress, target: lateReplyTarget, lateReplies })) {
+            await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), `[agent-core] delivery failed: ${error?.deliveryFailure?.userMessage ?? error?.message ?? error}`)
+          }
         } catch { /* best effort */ }
         // CTR-I2-015 observer external-delivery lifecycle point (failure
         // receipt path — CANARY-C expects exactly one failure delivery).

@@ -1,5 +1,6 @@
 /** CTR-W2: the ORIGINAL ingress caller consumes exact late success, once. */
 import { createHash } from 'node:crypto'
+import { lateReplyId } from '../reconciliation/late-reply-records.js'
 
 export function createLateReplyDelivery({ reconciliationStore: store, routeChain, feishu, log }) {
   const records = routeChain.lateReplyRecords
@@ -70,6 +71,14 @@ export function createLateReplyDelivery({ reconciliationStore: store, routeChain
     } catch (error) { observedFailure(error, null) }
   }
   return {
+    replyAttempted(handle) {
+      if (!records || typeof handle !== 'string') return false
+      try {
+        const record = records.read(lateReplyId(handle))
+        return record.reconciliationHandle === handle
+          && ['late_reply_attempted', 'late_reply_delivered'].includes(record.disposition)
+      } catch { return false }
+    },
     capture(ingress) {
       try {
         // Connector target construction is mechanical; copy before the turn yields.
