@@ -1,0 +1,10 @@
+{
+  "version": "10.0.1",
+  "packagePath": "/tmp/ac1277-r3-node-deps/node_modules/croner",
+  "packageJsonSha256": "8dacc66c293f46a9e9d36987b7d22f7c851b0654e6a1b7a0113fcbdac5403250",
+  "link": "/private/tmp/ac1277-dsh-agent-core/node_modules/croner",
+  "linkTarget": "/private/tmp/ac1277-r3-node-deps/node_modules/croner",
+  "head": "ca18b7176cea0f66f14b825a6fd4b47bfcef577d",
+  "trackedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "scope": "task-local dependency link in isolated clone only; no package/lock/source edit; no lifecycle scripts/global install"
+}

@@ -1,0 +1,15 @@
+{
+  "mandate": "agent-control#1277 and user source-only task",
+  "source_author": "/root",
+  "svc_base": "35c3b685db4ac91bc7a216d840fcf19a0fa1a890",
+  "svc_head": "cf2397b048d84b1c6eadd1170b3cda1c102de11b",
+  "svc_branch": "ac-task/1277-identity-convergence",
+  "dsh_base": "0b64aca3615aec203b95aa960eff39d635bd26c1",
+  "dsh_branch": "ac-task/1277-identity-convergence",
+  "isolated_roots": [
+    "/tmp/ac1277-svc-workflow",
+    "/tmp/ac1277-dsh-agent-core"
+  ],
+  "shared_workspaces_mutated": false,
+  "production_allowed": false
+}

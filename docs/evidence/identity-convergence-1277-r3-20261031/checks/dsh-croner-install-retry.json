@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "npm",
+    "install",
+    "--prefix",
+    "/tmp/ac1277-r3-node-deps",
+    "--no-save",
+    "--ignore-scripts",
+    "--no-package-lock",
+    "--registry=https://registry.npmjs.org",
+    "--userconfig=/tmp/ac1277-r3-evidence/npm-empty-user",
+    "--globalconfig=/tmp/ac1277-r3-evidence/npm-empty-global",
+    "--cache=/tmp/ac1277-r3-npm-cache",
+    "croner@10.0.1"
+  ],
+  "elapsedSeconds": 2.565,
+  "rc": 0,
+  "log": "dsh-croner-install-retry.log",
+  "sha256": "c838f45b60075940d29a7a087a993d53b55e6c44f89d91e68720ff11a2078b8b",
+  "scope": "task-local dependency; ignore scripts; no package/source/lock change"
+}

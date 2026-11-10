@@ -1,0 +1,39 @@
+{
+  "command": "python3 schema validation + validate_metadata, V2/V3 comparison",
+  "cwd": "/tmp/ac1277-svc-spec",
+  "head": "27747607937ecaa032982bd1a81301601633791d",
+  "result": "NO_FULL_SYNTAX_PASS",
+  "records": {
+    "V2": {
+      "status": "accepted",
+      "schemaErrors": [
+        {
+          "path": [
+            "governed_by",
+            1
+          ],
+          "message": "'SVC_WORKFLOW_ARCHITECTURE_V0_4_1' does not match '^[A-Z][A-Z0-9_]*_V[0-9]+$'"
+        }
+      ],
+      "metadataErrors": [
+        "record.governed_by contains a non-strict ID: SVC_WORKFLOW_ARCHITECTURE_V0_4_1"
+      ]
+    },
+    "V3": {
+      "status": "proposed",
+      "schemaErrors": [
+        {
+          "path": [
+            "governed_by",
+            1
+          ],
+          "message": "'SVC_WORKFLOW_ARCHITECTURE_V0_4_7' does not match '^[A-Z][A-Z0-9_]*_V[0-9]+$'"
+        }
+      ],
+      "metadataErrors": [
+        "record.governed_by contains a non-strict ID: SVC_WORKFLOW_ARCHITECTURE_V0_4_7"
+      ]
+    }
+  },
+  "disposition": "real Architecture authority IDs retained; no gate modification or invented rename; proposal not accepted"
+}

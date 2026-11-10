@@ -1,0 +1,58 @@
+{
+  "createdAt": "2026-10-31T02:23:58.101189+00:00",
+  "scope": "task-owned PostgreSQL cluster only; R2 provenance reused",
+  "identity": {
+    "argv": [
+      "psql",
+      "-X",
+      "-A",
+      "-t",
+      "-h",
+      "127.0.0.1",
+      "-p",
+      "57278",
+      "-U",
+      "ac1277_r2_test",
+      "-d",
+      "ac1277_r2_test",
+      "-c",
+      "select current_database(),current_user,inet_server_addr(),inet_server_port(),current_setting('data_directory')"
+    ],
+    "rc": 0,
+    "elapsedSeconds": 0.053,
+    "log": "owned-db-final-identity.log",
+    "sha256": "b06ee930ac15d79a2b030458579cf4fd5239736ba60b1bbb47ad4311f265ad73",
+    "output": "ac1277_r2_test|ac1277_r2_test|127.0.0.1|57278|/tmp/ac1277-r2-pg"
+  },
+  "stop": {
+    "argv": [
+      "pg_ctl",
+      "-D",
+      "/tmp/ac1277-r2-pg",
+      "-m",
+      "fast",
+      "stop"
+    ],
+    "rc": 0,
+    "elapsedSeconds": 1.09,
+    "log": "owned-postgres-stop.log",
+    "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d",
+    "output": "waiting for server to shut down.... done\nserver stopped"
+  },
+  "statusAfterStop": {
+    "argv": [
+      "pg_ctl",
+      "-D",
+      "/tmp/ac1277-r2-pg",
+      "status"
+    ],
+    "rc": 3,
+    "elapsedSeconds": 0.005,
+    "log": "owned-postgres-status-after-stop.log",
+    "sha256": "e138ccb54fdb08283c6eb21159c53207bbbbf07077246e2804e18d22efe6e250",
+    "output": "pg_ctl: no server running"
+  },
+  "productionActions": 0,
+  "port55432Accessed": false,
+  "preservedDataDirectory": true
+}

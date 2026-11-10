@@ -1,0 +1,187 @@
+{
+  "schema_version": 2,
+  "reviewKind": "INDEPENDENT_EXACT_HEAD_R3_DELIVERY_EVIDENCE",
+  "reviewer": "/root/handoff_audit",
+  "author": "/root",
+  "independence": "Reviewer authored no product/source/test/report; only this separate independent receipt.",
+  "evaluationTimeUtc": "2026-10-31T02:29:23.217351+00:00",
+  "repository": "mayf3/dsh-agent-core",
+  "worktree": "/tmp/ac1277-dsh-agent-core",
+  "REVIEW_TARGET_HEAD": "fd929072357e25b36ff475a06204ffa752881221",
+  "REVIEW_TARGET_TREE": "1929aad5d17a68ea1675a4bed11b3f1ed0dc1ea8",
+  "BASE_HEAD": "0b64aca3615aec203b95aa960eff39d635bd26c1",
+  "reportPath": "docs/reports/AC1277_IDENTITY_CONVERGENCE_R3_20261031.md",
+  "reportSha256": "527b075c2010d8d4e17dd32bfeb110a1d0b7dbf26b809395763a93af2376d04f",
+  "sourceHead": "06c035467ef7effc664f41ab703bbe736523d13e",
+  "sourceTree": "9c0c7df1451bf712f0e3627b3c4093b0e1670225",
+  "scope": "Final R3 report and packaged evidence only. Reuse completed contract/source/exception/runtime reviews; no new source semantics, contracts, execution or wider review.",
+  "cleanCandidateObserved": true,
+  "checks": {
+    "AUTHORITY_REVIEW": {
+      "result": "PASS",
+      "detail": "Report accurately binds owner ruling, independently accepted finite V2 amendment and its docs merge before source integration; discarded V3 is not authority. Prior source review is reused at exact06c. T3 remains an owning-contract gap; report does not request general reauthorization or invent accepted DTO/consumer contracts."
+    },
+    "PRIMITIVE_BOUNDARY_REVIEW": {
+      "result": "PASS",
+      "detail": "Report separates bounded source review, dirty-GREEN source binding, clean full runtime failure, scoped reruns, bounded SQL baseline comparison, original-base executed Broker contrast, mocks and production/business acceptance. T1/T2 DONE is explicitly bounded and does not imply whole #1277 ready."
+    },
+    "CONTRACT_REVIEW": {
+      "result": "PASS",
+      "detail": "Completed source semantic review at06c is reused, not reopened. Initial R3-B1 and its bounded closure are retained. Report preserves exact role/history/request/UNKNOWN boundaries and marks T3/T4/T5 blocked; no additional product Contract or reassignment/retirement operation is authored in the handoff."
+    },
+    "ACCEPTANCE_COVERAGE_REVIEW": {
+      "result": "PASS",
+      "detail": "Independent raw-log parsing confirms full1180/95/1 rc101 and affected eight540/0, library252/0/1ignored. Original95 failed-name union is retained;20 pass in owned scoped reruns and exact remaining75 equal the exception audit. Full-project and merge gates remain failed. Broker19/1 on both actual snapshots and execution69/0 are reported with correct limits; warm-context/model T3 was not executed."
+    },
+    "MANDATE_SCOPE_REVIEW": {
+      "result": "PASS",
+      "detail": "DSH R3 delta contains only report/evidence; packages and tracked dependency manifests are unchanged. Exact source06c is clean and unchanged from completed review. Local DB identity/stop and allowlisted runner receipts are preserved; reviewer performed no DB access/tests/production/credentials/grants/sessions/guard edits or new agents. Report claims no installation, deployment, source merge or live business acceptance."
+    },
+    "EVIDENCE_REVIEWABILITY": {
+      "result": "PASS",
+      "detail": "69/69 manifest entries match;46 gzip archives decode;36/36 command raw-log hashes and six auxiliary setup/DB log hashes match. Both historical command snapshots remain actual byte prefixes with bound hashes. Report hash matches delivery receipt. Archived plan is byte-identical original28878 bytes. Prior EOF diff-check failure remains retained; current exact-head diff --check returns0."
+    }
+  },
+  "SPEC_COMPLIANCE": "PASS_BOUNDED_R3_REPORT_AND_EVIDENCE_ONLY",
+  "verdict": "PASS_BOUNDED_R3_DELIVERY_EVIDENCE",
+  "verification": {
+    "manifestEntries": 69,
+    "manifestPassed": 69,
+    "gzipArchives": 46,
+    "gzipDecompressFailures": 0,
+    "commandReceipts": 36,
+    "commandLogHashesPassed": 36,
+    "auxiliaryReceiptHashesPassed": 6,
+    "fullRuntimeLogSha256": "3e0251a9b5a0a4af9ece9e2c7c2e0a268dfc7e31167fdecb52eaabf7b43ad33b",
+    "fullRuntimeRc": 101,
+    "fullRuntimeTotals": {
+      "passed": 1180,
+      "failed": 95,
+      "ignored": 1
+    },
+    "fullRuntimeResultLines": 61,
+    "failedOriginalNames": 95,
+    "resolvedOriginalNamesAfterScopedRuns": 20,
+    "remainingOriginalUnpassedNames": 75,
+    "remainingFailureSetMatchesIndependentAudit": true,
+    "affectedIntegrationTotals": {
+      "passed": 540,
+      "failed": 0,
+      "ignored": 0
+    },
+    "commandSnapshots": [
+      {
+        "path": "checks/commands-at-runtime-review.jsonl",
+        "sha256": "ee01cd2d84349e211557e65e3db56c829370467133f1d77be2c524526b4d5979",
+        "prefixOfFinalCommands": true
+      },
+      {
+        "path": "checks/commands-at-exception-review.jsonl",
+        "sha256": "c344a088b7060e87434d54c6829cce52328c82246c3b3b41edd7f5a8ddbc6495",
+        "prefixOfFinalCommands": true
+      }
+    ],
+    "planOriginalByteIdentical": true,
+    "planBytes": 28878,
+    "planSha256": "3e69c02f548dc8645062b0340499734c03c5bbbf27a8af0a6a9749d10c3bd3ca",
+    "currentDiffCheck": {
+      "argv": [
+        "git",
+        "diff",
+        "--check",
+        "0b64aca3615aec203b95aa960eff39d635bd26c1..fd929072357e25b36ff475a06204ffa752881221"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "retainedPriorDiffCheckFailure": {
+      "head": "54a7e674344cda0fb360e059a589ec546f7b4031",
+      "rc": 2,
+      "log": "checks/dsh-final-docs-diff-check.log.gz",
+      "rawSha256": "18f7f63dde950e92385d92a792a23e1f8fd9470ef9f719b0bcf2899a66f36294",
+      "disposition": "Historical EOF whitespace failure retained; current correct packaged gzip plan observed rc0, no failed command relabeled."
+    }
+  },
+  "frozenFailureUnion": {
+    "initialSourceBlockers": [
+      "R3-B1"
+    ],
+    "sourceBlockerDisposition": "CLOSED_BY_EXISTING_EXACT06C_SOURCE_REVIEW",
+    "fullProjectOriginalFailedTargets": 8,
+    "fullProjectOriginalFailedNames": 95,
+    "remainingOriginalFailedNames": 75,
+    "newProductBlockers": 0,
+    "newProductRepairRequested": false,
+    "requiredFullProjectGate": "FAIL_WITH_CLASSIFIED_EXCEPTIONS",
+    "mergeReady": false
+  },
+  "baselineLimits": [
+    "01 migration observation is matched SQL-precondition reproduction with unchanged schema/test; not pristine-baseline cargo or original test PASS.",
+    "27 missing dedicated runner variables stops before scenario/connection; no original operator APPLY or baseline runtime PASS.",
+    "41/42/46/47 fixed task guard refusals leave product scenarios unexecuted; unchanged guard is not proof of product behavior.",
+    "Fresh owned WEC/prerequisite scoped PASS resolves20 original names at changed fixture preconditions; does not rewrite rc101 full run or prove every possible regression absent.",
+    "Broker original-base and candidate both actually execute19PASS/1FAIL under restored task dependencies; stale contextPayload oracle preserved rather than fixed."
+  ],
+  "reusedReviews": [
+    {
+      "path": "checks/amendment-independent-review.json",
+      "sha256": "823a55bbee1a5b7168ca7e29d09b4bebf12eeec06392bdb2de63cf6e7b4951a3"
+    },
+    {
+      "path": "checks/amendment-lifecycle-final-review.json",
+      "sha256": "0d3c912c210f15d795ea1ff6935b9d431f13288dd4aa5d5531c52e9b54d651c1"
+    },
+    {
+      "path": "checks/source-initial-review.json",
+      "sha256": "48e5ee4a49645f0d67dd27bb4cea35ff170d8c4a757f2ce66b102892ac0e7e86"
+    },
+    {
+      "path": "checks/source-final-review.json",
+      "sha256": "0e5761b17b348acc1a83d1b21a5e999e21f69508d94d7857100302c231b9bffb"
+    },
+    {
+      "path": "checks/runtime-final-review.json",
+      "sha256": "f5b5fc5cbe8fbe73713e5f739daf2dd5865fd2fae66807da0fd888fd49d56a67"
+    },
+    {
+      "path": "checks/broad-exceptions-audit.json",
+      "sha256": "3226b3a43ff667a74ad7e7a763124f81c7eebe4712c3bb1d25672dc9319fe3dd"
+    }
+  ],
+  "findings": [
+    {
+      "id": "R3-REPORT-TARGET-LABELS",
+      "kind": "FOLLOW_UP",
+      "blocking": false,
+      "observation": "Two table display labels use 46_owner_obligation_workflows and47_owner_obligation_reference_authoring; exact raw/JSON identifiers are46_owner_obligations and47_owner_node_reference_authoring. Counts, failed names and evidence links remain exact.",
+      "disposition": "Cosmetic label correction if report is edited; no new source/product blocker or mandatory expanded review."
+    }
+  ],
+  "BLOCKERS": [],
+  "readiness": {
+    "T0": "DONE_BOUNDED_REUSED",
+    "T1": "DONE_BOUNDED_SOURCE_LOCAL_REVIEW",
+    "T2": "DONE_BOUNDED_SOURCE_LOCAL_REVIEW",
+    "T3": "BLOCKED_EXISTING_CONTRACT_GAPS",
+    "T4_T5": "DEPENDENT_BLOCKED",
+    "FULL_PROJECT_RUNTIME": "FAIL_WITH_CLASSIFIED_EXCEPTIONS",
+    "OVERALL_SOURCE_READY": false,
+    "MERGE_READY": false,
+    "SOURCE_PR_MERGED": false,
+    "INSTALLED": false,
+    "ENABLED": false,
+    "BUSINESS_VERIFIED": "NOT_TESTED",
+    "PRODUCTION_CHANGE": 0
+  },
+  "nextAction": "Author may include this exact independent receipt and its manifest entry; then perform one final receipt-only exact-head recheck. No test rerun or new product review is requested by this receipt.",
+  "reviewerActions": {
+    "testsRun": false,
+    "databaseAccess": false,
+    "productionAccess": false,
+    "productEdits": 0,
+    "newContracts": 0,
+    "newAgents": 0,
+    "onlyWrite": "/tmp/ac1277-r3-delivery-review.json"
+  }
+}
