@@ -910,3 +910,30 @@ test('bounds validation: minimum/maximum + validationError fails fast before any
   await tokenServer.close()
   await bizServer.close()
 })
+
+// R#84-D2: engine-level contract detail (svc .details.detail) must survive
+// parseServiceErrorBody and win over the generic message in buildDownstreamError.
+
+
+test('R84-D2: svc invalid_return_references details.detail surfaces as the error detail', () => {
+  const body = JSON.stringify({
+    error: {
+      code: 'invalid_return_references',
+      message: 'return references are invalid',
+      details: { detail: 'RETURN submissions require: rootCauseNodeVisitId (valid UUID), reasonCode, reason' },
+    },
+  })
+  const parsed = parseServiceErrorBody(body)
+  assert.equal(parsed.code, 'invalid_return_references')
+  assert.match(parsed.engineDetail, /rootCauseNodeVisitId/)
+  const built = buildDownstreamError(422, body, new Headers())
+  assert.match(built.detail, /RETURN submissions require/)
+  assert.equal(built.errorCode, 'invalid_return_references')
+  assert.equal(built.status, 422)
+})
+
+test('R84-D2: generic message still used when no engine detail present', () => {
+  const body = JSON.stringify({ error: { code: 'x_code', message: 'plain message' } })
+  const built = buildDownstreamError(422, body, new Headers())
+  assert.equal(built.detail, 'plain message')
+})
