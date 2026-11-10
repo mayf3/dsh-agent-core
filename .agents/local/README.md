@@ -33,6 +33,13 @@ DECISIONS = docs/decisions/
 SPECS = docs/specs/
 ```
 
+Pending-acceptance draft pointer (not authority): the `#441` consolidation
+candidate at `docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md` §7 — currently
+Draft PR #446 — is 待审/unaccepted. It grants no authority until Owner
+acceptance via `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1`; reviewers may read it as
+a written candidate only, never as accepted law. This pointer lives here
+because the vendored `.agents/README.md` is integrity-locked.
+
 Local rules:
 
 - an implementation Spec may refine Architecture or a Current Decision, but may not silently contradict it;
