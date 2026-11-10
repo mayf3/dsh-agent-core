@@ -332,7 +332,7 @@ export function apply(ctx, config) {
   }
 
   // Tear down every owned process when the router plugin stops.
-  ctx.effect(() => () => registry.dispose())
+  ctx.effect(() => () => { ingressDelivery.dispose(); return registry.dispose() })
 
   const service = {
     deliveryFailuresSnapshot: () => routeChain.deliveryFailuresSnapshot(),

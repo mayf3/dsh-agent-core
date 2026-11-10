@@ -2,6 +2,7 @@
 import { randomUUID } from 'node:crypto'
 import { closeSync, fsyncSync, mkdirSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { createLateReplyRecords } from './late-reply-records.js'
 
 const CATEGORIES = ['transport_death', 'caller_bound_exceeded', 'child_exit_without_outcome', 'other']
 
@@ -94,5 +95,6 @@ export function createDeliveryFailureStore({ log, directory, alertThreshold = 3,
     return JSON.parse(readFileSync(join(directory, `${id}.json`), 'utf8'))
   }
   return { failure, blocked, deadLetter, get,
+    lateReplyRecords: createLateReplyRecords({ directory, failure, log, now }),
     snapshot: () => ({ counts: { ...counts }, alerts, windowCount, windowMs, recent: recent.map(row => ({ ...row })) }) }
 }

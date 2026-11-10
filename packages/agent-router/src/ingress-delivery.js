@@ -17,6 +17,7 @@ import { classifyFailureStage, isRecoveryFenceResult } from './process/ingress-f
 import { createRecoveryAdmission } from './reconciliation/admission.js'
 import { outerFailureProjection } from './reconciliation/query.js'
 import { authenticatedFeishuFields, ingressTurnOpts, authenticatedCorrelation } from './ingress-authenticated.js'
+import { createLateReplyDelivery } from './conversation/late-reply.js'
 /**
  * Create the ingress/delivery surface bound to one router mount.
  * @param {object} deps
@@ -40,6 +41,7 @@ export function createIngressDelivery({
   resolveCallerWaitMs,
 }) {
   const deliveries = []
+  const lateReplies = createLateReplyDelivery({ reconciliationStore, routeChain, feishu, log })
   const recoveryAdmission = createRecoveryAdmission(reconciliationStore, routeChain)
   /**
    * Deliver one ingress message through the channel model:
@@ -71,6 +73,7 @@ export function createIngressDelivery({
     let channelConversation
     let binding
     let turnStarted = false
+    let lateReplyTarget = null
     try {
       const trusted = authenticatedFeishu ? authenticatedFeishuFields(ingress) : null
       recoveryAdmission.assertReady()
@@ -110,6 +113,7 @@ export function createIngressDelivery({
         registerAuthenticatedIngress(opts, authenticatedCorrelation(trusted, channelConversation.id))
       }
       turnStarted = true
+      if (isFeishuEntry) lateReplyTarget = lateReplies.capture(ingress)
       const turnResult = await routeChain.runTurnWithRouteChain(binding.activeAgentId, {
         sessionId: binding.activeSessionId,
         deadlineMs: resolveCallerWaitMs?.(binding.activeAgentId, authenticatedFeishu ? 'feishu' : namespace),
@@ -186,6 +190,10 @@ export function createIngressDelivery({
       }
       return executionResult
     } catch (error) {
+      if (isFeishuEntry && turnStarted && !error?.fencedBy
+          && (error?.status === 'outcome_unknown' || error?.envelope === 'outcome_unknown')) {
+        lateReplies.watch(error, { agentId: binding?.activeAgentId, sessionId: binding?.activeSessionId, target: lateReplyTarget })
+      }
       const failureStage = classifyFailureStage(error, turnStarted)
       log.error(`delivery to ${binding?.activeAgentId ?? 'unresolved'} failed during ${failureStage}: ${error?.code ?? 'unclassified'}`)
       if (feishu !== undefined && isFeishuEntry) {
@@ -488,5 +496,5 @@ export function createIngressDelivery({
     return result
   }
 
-  return { onIngress, onAuthenticatedFeishuIngress, deliver, deliveriesSnapshot, abandonPendingTurns }
+  return { onIngress, onAuthenticatedFeishuIngress, deliver, deliveriesSnapshot, abandonPendingTurns, dispose: lateReplies.dispose }
 }
