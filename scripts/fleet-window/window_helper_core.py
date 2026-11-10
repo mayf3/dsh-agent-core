@@ -22,6 +22,45 @@ def stamp(s):
     value=dt.datetime.fromisoformat(s.replace('Z','+00:00'))
     require(value.tzinfo is not None and value.utcoffset()==dt.timedelta(0),'authority/receipt time must be UTC')
     return value.timestamp()
+def _require_hex(value, name, length=64):
+    require(isinstance(value, str) and re.fullmatch(r'[0-9a-f]{%d}' % length, value),
+            '%s must be lowercase hex' % name)
+
+
+def _validate_g01_binding(a):
+    """Consume the SRA/G01 binding; local G01 text is never authoritative."""
+    b = a.get('g01_binding')
+    require(isinstance(b, dict), 'G01 binding missing')
+    sra = b.get('sra')
+    appointment = b.get('appointment')
+    candidate = b.get('candidate_tuple')
+    require(isinstance(sra, dict) and isinstance(appointment, dict) and isinstance(candidate, dict),
+            'G01 binding sections missing')
+    require(sra.get('status') == 'accepted', 'SRA revision is not accepted')
+    revision = sra.get('revision', '')
+    require(isinstance(revision, str) and (revision.startswith('9529e9a5') or sra.get('accepted_head') == revision),
+            'SRA accepted revision/head mismatch')
+    require(sra.get('spec') == 'AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1',
+            'wrong SRA spec')
+    require(appointment.get('selector') and appointment.get('issuer'),
+            'appointment selector/issuer missing')
+    require(re.fullmatch(r'[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}',
+                         str(appointment.get('principal_uuid', ''))), 'appointment Principal UUID invalid')
+    require(appointment.get('valid_until') == '2026-12-07T16:00:00Z', 'appointment expiry mismatch')
+    require(appointment.get('revoked_at') in (None, ''), 'appointment is revoked')
+    require(b.get('scope') == 'STANDARD_RECOVERABLE', 'G01 scope is not STANDARD_RECOVERABLE')
+    require(b.get('control_effective') is True, 'G01 control is not effective')
+    _require_hex(b.get('mandate_final_hash'), 'Mandate final hash')
+    expected = {
+        'window_id': a['window_id'],
+        'writer': a['writer'],
+        'writer_uid': a['writer_uid'],
+        'candidate_sha': a['expected_old_sha'],
+        'candidate_tree': a.get('expected_bindings_sha256'),
+    }
+    require(candidate == expected, 'window/writer/candidate tuple mismatch')
+
+
 def validate_authority(a, writer_uid=None, now_epoch=None):
     required=['window_id','writer','writer_uid','valid_from','valid_until','expected_old_pid','expected_old_identity',
               'expected_old_sha','expected_plist_sha256','expected_harness_stamp','expected_bindings_sha256',
@@ -33,6 +72,7 @@ def validate_authority(a, writer_uid=None, now_epoch=None):
     require(a['expected_old_sha']=='23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9','window stop authorization is pinned to the deployed 23fb91a6 only')
     require(set(['source_lockfile_cleanup','production_mutex','bootout','full_preimage','install',
                  'plist_deployed_sha_only','bootstrap','verify','hr_observe'])<=set(a['scopes']),'missing authorized scope')
+    _validate_g01_binding(a)
     current=time.time() if now_epoch is None else now_epoch
     require(stamp(a['valid_from'])<=current<stamp(a['valid_until']),'window authorization not current')
     return a
@@ -87,8 +127,7 @@ def manifest(file,base,expected=None):
     return {'path':str(file),'sha256':digest(file),'verified':len(records),'records':records}
 def authority():
     a=read(rd/'authority.json')
-    require(stamp(a['valid_from'])<=time.time()<stamp(a['valid_until']),'window authorization not current')
-    return a
+    return validate_authority(a, now_epoch=time.time())
 def identity(pid):
     return run(['/bin/ps','-p',str(pid),'-o','pid=','-o','uid=','-o','gid=','-o','lstart=','-o','comm=']).stdout.decode().strip()
 def launch(): return run(['/bin/launchctl','print',service]).stdout.decode()
