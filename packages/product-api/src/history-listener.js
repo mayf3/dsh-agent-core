@@ -32,6 +32,9 @@ const DENIAL_MESSAGES = {
 }
 
 const ROUTE_TEMPLATE = '/v1/agents/{agentId}/sessions/{selector}/messages'
+const BIND_RETRY_CODES = new Set(['EADDRNOTAVAIL', 'EADDRINUSE', 'EACCES'])
+const BIND_RETRY_LIMIT = 30
+const BIND_RETRY_DELAY_MS = 60_000
 
 /** Parse the history route class (CTR-PA-001): GET + single-segment agentId + any selector + `messages` tail. */
 export function matchHistoryRouteClass(method, pathname) {
@@ -101,8 +104,8 @@ function validateHistoryInput({ rawAgentId, rawSelector, searchParams }) {
  * Create (and bind) the dedicated history listener. `deps.sessionHistory` is
  * the `@agent-core/session-history` service; `deps.resolveStableNodeId` the
  * WhoIs resolver; `deps.profile` the loaded restart-only auth config
- * generation. Bind failure propagates — a forced enable without a bindable
- * Tailscale address fails startup closed.
+ * generation. Bind failures stay contained in this optional surface; only
+ * pre-bind allowlisted errors consume this mount's bounded retry budget.
  */
 export function startHistoryListener({
   host,
@@ -111,8 +114,11 @@ export function startHistoryListener({
   sessionHistory,
   resolveStableNodeId,
   writeLog = (line) => process.stderr.write(`[product-api:history] ${line}\n`),
+  createServerImpl = createServer,
+  setTimeoutImpl = setTimeout,
+  clearTimeoutImpl = clearTimeout,
 }) {
-  const server = createServer((req, res) => {
+  const server = createServerImpl((req, res) => {
     const startedAtNs = process.hrtime.bigint()
     const requestId = randomUUID()
     const url = new URL(req.url ?? '/', 'http://localhost')
@@ -204,19 +210,78 @@ export function startHistoryListener({
 
   server.requestTimeout = 0
   server.headersTimeout = 30000
-  // The history surface is OPTIONAL: a bind failure (e.g. the pinned
-  // tailscale IP disappearing across a network change, 2026-10-23) emits an
-  // async 'error' event. Without a handler it escapes as an uncaught
-  // exception and kills the WHOLE runtime — taking the admission core
-  // (served by the same process) down with it. Log and stay up instead.
-  server.on('error', (error) => {
-    console.error(`[history-listener] bind/serve failed; history route unavailable: ${error?.code ?? ''} ${error?.message ?? error}`)
+  // CTR-ARR-002: one lifecycle owns both retry and teardown. Never reset its
+  // budget after listening or retry a directory/business request.
+  let stopped = false
+  let bound = false
+  let unavailable = false
+  let inFlight = false
+  let retries = 0
+  let retryTimer = null
+  let closePromise
+  const log = (line) => {
+    try { writeLog(line) } catch { /* optional logging cannot affect containment */ }
+  }
+  const cancelRetry = () => {
+    if (retryTimer !== null) clearTimeoutImpl(retryTimer)
+    retryTimer = null
+  }
+  const closeServer = (done = () => {}) => {
+    try { server.closeAllConnections() } catch { /* continue closing */ }
+    try { server.close(done) } catch { done() }
+  }
+  const onError = (error) => {
+    if (stopped) return
+    const code = BIND_RETRY_CODES.has(error?.code) ? error.code : 'OTHER'
+    if (bound) {
+      log(`serve failed; history route unavailable; code=${code}`)
+      return
+    }
+    inFlight = false
+    if (unavailable) return
+    if (!BIND_RETRY_CODES.has(error?.code) || retries >= BIND_RETRY_LIMIT) {
+      unavailable = true
+      cancelRetry()
+      log(`bind failed; history route unavailable; code=${code}`)
+      return
+    }
+    if (retryTimer !== null) return
+    log(`bind failed; retry ${retries + 1}/${BIND_RETRY_LIMIT} in 60s; code=${code}`)
+    retryTimer = setTimeoutImpl(() => {
+      retryTimer = null
+      if (stopped || bound || unavailable || inFlight) return
+      retries += 1
+      listen()
+    }, BIND_RETRY_DELAY_MS)
+    retryTimer.unref()
+  }
+  const listen = () => {
+    if (stopped || bound || unavailable || inFlight) return
+    inFlight = true
+    try { server.listen(port, host) } catch (error) { onError(error) }
+  }
+  server.on('error', onError)
+  server.on('listening', () => {
+    inFlight = false
+    if (stopped) {
+      closeServer()
+      return
+    }
+    bound = true
+    cancelRetry()
   })
-  server.listen(port, host)
+  listen()
 
   return {
     server,
     address: () => server.address(),
-    close: () => new Promise((resolveClose) => server.close(() => resolveClose())),
+    close: () => {
+      if (closePromise) return closePromise
+      stopped = true
+      inFlight = false
+      cancelRetry()
+      closePromise = new Promise((resolveClose) => closeServer(resolveClose))
+      return closePromise
+    },
   }
 }
