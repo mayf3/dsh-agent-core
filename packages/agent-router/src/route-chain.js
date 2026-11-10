@@ -466,8 +466,8 @@ export function createRouteChainExecutor({
     // Unreachable: the loop returns on success and rethrows on the last hop.
     throw new Error('agent-router: route chain executor fell through its route list')
   }
-
   return {
+    lateReplyRecords: resilience.failures.lateReplyRecords,
     recordBlockedDelivery: (error, coordinates) => resilience.failures.blocked(error, coordinates),
     deliveryFailuresSnapshot: () => resilience.failures.snapshot(),
     getDeliveryDeadLetter: id => resilience.failures.get(id),
