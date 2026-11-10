@@ -184,6 +184,18 @@ class G01MandateSource(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'git object id'):
             core.validate_authority(a)
 
+    def test_14_provenance_recorded_as_not_proven(self):
+        # Consistency is proven, issuance is NOT: validation must attach
+        # observed filesystem facts and mark issuance NOT_PROVEN — trust
+        # never comes from the filename.
+        h = write_mandate(mandate_document())
+        a = base_authority(h)
+        core.validate_authority(a)
+        prov = a['g01_provenance']['mandate_document']
+        self.assertEqual(prov['issuance'], 'NOT_PROVEN_FILESYSTEM_ONLY')
+        self.assertEqual(prov['observed_path'], str(MANDATE))
+        self.assertTrue(prov['observed_mode'].startswith('0o'))
+
 
 if __name__ == '__main__':
     # sys.argv is retargeted at import time for window_helper_core; pass an

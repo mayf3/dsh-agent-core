@@ -67,6 +67,18 @@ def _validate_g01_binding(a, now_epoch=None):
     except Exception as error:
         raise require(False, 'mandate document unparseable: %s' % error)
     require(isinstance(mandate, dict), 'mandate document is not an object')
+    # Minimal trust boundary (R131 finite review round 2): a readable file
+    # whose digest matches proves CONSISTENCY, not formal ISSUANCE. No
+    # upstream issuance record exists (itops receipts contain no mandate
+    # issuance; captain remains NOMINATED_NOT_APPOINTED), so provenance is
+    # recorded as observed filesystem facts and explicitly NOT proven. The
+    # document is never upgraded to trust on its filename alone.
+    st = P(mandate_path).lstat()
+    a.setdefault('g01_provenance', {})['mandate_document'] = {
+        'observed_path': mandate_path, 'observed_uid': st.st_uid,
+        'observed_gid': st.st_gid, 'observed_mode': oct(stat.S_IMODE(st.st_mode)),
+        'issuance': 'NOT_PROVEN_FILESYSTEM_ONLY',
+    }
     # Scope and control state are consumed from the TRUSTED document, never
     # from the binding dict: a binding claiming STANDARD_RECOVERABLE over a
     # mandate that grants a different scope (or whose control is not
