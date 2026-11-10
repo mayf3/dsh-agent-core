@@ -75,6 +75,17 @@ export function parseServiceErrorBody(bodyText) {
       break
     }
   }
+  // R#84-D2: preserve the engine-level contract detail (e.g. svc-workflow
+  // invalid_return_references .details.detail naming the missing RETURN
+  // submission fields) so the model can self-correct instead of failing
+  // blind on a flattened code. Sanitized downstream like message.
+  const nestedDetails = nested !== null && typeof nested === 'object' && !Array.isArray(nested) ? nested.details : undefined
+  const detailSource = typeof nestedDetails === 'object' && nestedDetails !== null && !Array.isArray(nestedDetails)
+    ? nestedDetails
+    : (typeof source.details === 'object' && source.details !== null && !Array.isArray(source.details) ? source.details : undefined)
+  if (typeof detailSource?.detail === 'string' && detailSource.detail.length > 0) {
+    out.engineDetail = detailSource.detail
+  }
   return out
 }
 
@@ -102,7 +113,7 @@ export function extractRequestId(headers) {
  * @returns {{ errorCode: string, status: number, detail: string, requestId: string | null }}
  */
 export function buildDownstreamError(status, bodyText, headers) {
-  const { code, message } = parseServiceErrorBody(bodyText)
+  const { code, message, engineDetail } = parseServiceErrorBody(bodyText)
   const canonical = status < 500 ? 'http_4xx' : 'http_5xx'
   return {
     // A pattern-valid downstream code is offered to the mapping layer, which
@@ -111,11 +122,13 @@ export function buildDownstreamError(status, bodyText, headers) {
     errorCode: code ?? canonical,
     status,
     detail:
-      message !== undefined
-        ? sanitizeErrorDetail(message)
-        : bodyText.trim() === ''
-          ? '(downstream returned an empty error body)'
-          : '(downstream returned a non-JSON error body)',
+      engineDetail !== undefined
+        ? sanitizeErrorDetail(engineDetail)
+        : message !== undefined
+          ? sanitizeErrorDetail(message)
+          : bodyText.trim() === ''
+            ? '(downstream returned an empty error body)'
+            : '(downstream returned a non-JSON error body)',
     requestId: extractRequestId(headers),
   }
 }
