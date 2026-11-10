@@ -71,6 +71,7 @@ import { homedir, hostname } from 'node:os'
 import { dirname, join } from 'node:path'
 import { AgentProcess } from './process/index.js'
 import { resolveDeadlineConfig } from './deadline-config.js'
+import { createCallerWaitResolver } from './process/caller-wait-config.js'
 import { TurnReconciliationStore } from './reconciliation/index.js'
 import { BindingStore } from './binding-store.js'
 import { createProcessRegistry } from './process-registry.js'
@@ -127,6 +128,12 @@ export const Config = z.object({
    *  launcher descriptors and matching deployment proof are present. */
   restartQuiescenceEvidenceDir: z.string(),
   restartQuiescenceDeploymentProofDir: z.string(),
+  /** Deployment-owned caller budgets; independent of lifecycle deadlines. */
+  callerWait: z.object({
+    bySurface: z.dict(z.number()),
+    byClass: z.dict(z.number()),
+    agentClasses: z.dict(z.string()),
+  }),
   // Runtime-only option (not in the schema — Config is documentation here):
   // `processFactory(opts) => proc` — per-agent process factory (test/ops
   // seam, defaults to AgentProcess). The proc must expose `spawn()`,
@@ -206,6 +213,10 @@ export function apply(ctx, config) {
    * override file. Running processes keep their resolved config immutable.
    */
   const deadlineConfig = resolveDeadlineConfig(process.env, { productionRoot: cfg.productionRoot })
+  const resolveCallerWaitMs = createCallerWaitResolver({
+    config: cfg.callerWait, agentIds: agentDefinition.listAgents().map(agent => agent.id),
+    resolveDefaultMs: agentId => deadlineConfig.perAgent(agentId).turnTimeoutMs,
+  })
 
   // F-2 (V2 §5.2: 未知 Agent 必须 fail-loud): the override file may only
   // name REGISTERED agents. This is the configuration/apply boundary where
@@ -285,7 +296,7 @@ export function apply(ctx, config) {
     ensureRunningForRoute: registry.ensureRunningForRoute,
     deadLetterDirectory: join(dirname(recoveryFile ?? storeFile), 'delivery-dead-letters'),
     resolveRouteChain: typeof cfg.resolveRouteChain === 'function' ? cfg.resolveRouteChain : undefined,
-    resolveTurnDeadlineMs: (agentId) => deadlineConfig.perAgent(agentId).turnTimeoutMs,
+    resolveTurnDeadlineMs: agentId => resolveCallerWaitMs(agentId),
     ...(typeof cfg.canaryRuntimeRoot === 'string' && cfg.canaryRuntimeRoot !== ''
       ? { canaryRuntimeRoot: cfg.canaryRuntimeRoot }
       : {}),
@@ -306,6 +317,7 @@ export function apply(ctx, config) {
     resolveChannelConversation: bindingResolution.resolveChannelConversation,
     resolveEffectiveWorkspace: bindingResolution.resolveEffectiveWorkspace,
     registerAuthenticatedIngress: (opts, correlation) => authenticatedIngressOpts.set(opts, correlation),
+    resolveCallerWaitMs,
   })
 
   log.log(`binding store loaded: ${store.list().length} binding(s) from ${storeFile}`)

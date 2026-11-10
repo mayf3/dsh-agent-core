@@ -37,6 +37,7 @@ export function createIngressDelivery({
   log, feishu, workspaceBootstrap, store, reconciliationStore,
   routeChain, resolveAgentRef, resolveAgentById, resolveChannelConversation, resolveEffectiveWorkspace,
   registerAuthenticatedIngress,
+  resolveCallerWaitMs,
 }) {
   const deliveries = []
   const recoveryAdmission = createRecoveryAdmission(reconciliationStore, routeChain)
@@ -111,6 +112,7 @@ export function createIngressDelivery({
       turnStarted = true
       const turnResult = await routeChain.runTurnWithRouteChain(binding.activeAgentId, {
         sessionId: binding.activeSessionId,
+        deadlineMs: resolveCallerWaitMs?.(binding.activeAgentId, authenticatedFeishu ? 'feishu' : namespace),
         message: ingress.text ?? '',
         opts,
       })
