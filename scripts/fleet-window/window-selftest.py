@@ -56,7 +56,7 @@ def rejected(fn, label):
 def pure_functions(executor):
     path = executor.with_name('window_helper_core.py')
     names = {'require', 'digest', 'regular', 'manifest', 'stamp', 'validate_authority', 'quiet_ready', 'classify_census',
-             '_require_hex', '_validate_g01_binding'}
+             '_require_hex', '_require_git_object', '_require_sha256', '_validate_g01_binding'}
     tree = ast.parse(path.read_text(), filename=str(path))
     selected = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in names]
     require({node.name for node in selected} == names, 'executor pure validators unavailable')
@@ -195,6 +195,25 @@ def main(executor):
                  'anarrowed/candidate-state.test.mjs', 'anarrowed/rollback.test.mjs')}})
         stages = []
         def stage00():
+            # The validator consumes the TRUSTED mandate document on disk, so
+            # the synthetic authority must carry a real (synthetic) document
+            # file: mandate_path + recomputed sha256, git-object ids at
+            # 40-hex, scope/control_effective inside the document.
+            SYN_SRA_HEAD = '9529e9a5' + '0' * 32            # 40-hex git object id
+            SYN_CANDIDATE = 'c' * 40                        # 40-hex git object id, != pre-state
+            mandate = {'sra': {'status': 'accepted', 'accepted_head': SYN_SRA_HEAD,
+                               'spec': 'AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1'},
+                       'appointment': {'selector': 'C7_SYNTHETIC_APPOINTMENT',
+                                       'issuer': 'C7_SYNTHETIC_ISSUER',
+                                       'principal_uuid': '123e4567-e89b-12d3-a456-426614174000',
+                                       'valid_from': '2026-11-01T00:00:00Z',
+                                       'valid_until': '2026-12-07T16:00:00Z', 'revoked_at': None},
+                       'scope': 'STANDARD_RECOVERABLE', 'control_effective': True,
+                       'candidate': {'pre_state_sha': '23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9',
+                                     'candidate_head': SYN_CANDIDATE}}
+            mandate_file = out / 'synthetic-mandate.json'
+            mandate_file.write_text(json.dumps(mandate, indent=2) + '\n')
+            mandate_hash = sha(mandate_file)
             a = dict(window_id='C7_SYNTHETIC_NOT_AUTHORIZATION', writer='isolated-selftest', writer_uid=os.getuid(),
                      valid_from='2026-11-04T00:00:00Z', valid_until='2026-11-05T00:00:00Z',
                      expected_old_pid=1, expected_old_identity='SYNTHETIC_NOT_PROCESS',
@@ -203,20 +222,18 @@ def main(executor):
                      expected_bindings_sha256='0'*64, expected_runtime_uid=os.getuid(), expected_runtime_gid=os.getgid(),
                      scopes=['source_lockfile_cleanup','production_mutex','bootout','full_preimage','install',
                              'plist_deployed_sha_only','bootstrap','verify','hr_observe'],
-                     g01_binding={'sra': {'status': 'accepted', 'revision': '9529e9a5' + '0' * 56,
-                                          'accepted_head': '9529e9a5' + '0' * 56,
+                     g01_binding={'mandate_path': str(mandate_file),
+                                  'mandate_final_hash': mandate_hash,
+                                  'scope': 'STANDARD_RECOVERABLE',
+                                  'sra': {'status': 'accepted', 'revision': SYN_SRA_HEAD,
+                                          'accepted_head': SYN_SRA_HEAD,
                                           'spec': 'AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1'},
                                   'appointment': {'selector': 'C7_SYNTHETIC_APPOINTMENT',
                                                  'issuer': 'C7_SYNTHETIC_ISSUER',
                                                  'principal_uuid': '123e4567-e89b-12d3-a456-426614174000',
                                                  'valid_until': '2026-12-07T16:00:00Z',
                                                  'revoked_at': None},
-                                  'scope': 'STANDARD_RECOVERABLE', 'control_effective': True,
-                                  'mandate_final_hash': '1' * 64,
-                                  'candidate_tuple': {'window_id': 'C7_SYNTHETIC_NOT_AUTHORIZATION',
-                                                     'writer': 'isolated-selftest', 'writer_uid': os.getuid(),
-                                                     'candidate_sha': '23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9',
-                                                     'candidate_tree': '0' * 64}})
+                                  'candidate': {'candidate_head': SYN_CANDIDATE}})
             moment = f['stamp']('2026-11-04T12:00:00Z')
             check = lambda item: f['validate_authority'](item, writer_uid=os.getuid(), now_epoch=moment)
             check(a)

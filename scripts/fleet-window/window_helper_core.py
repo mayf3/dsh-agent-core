@@ -26,6 +26,18 @@ def _require_hex(value, name, length=64):
     require(isinstance(value, str) and re.fullmatch(r'[0-9a-f]{%d}' % length, value),
             '%s must be lowercase hex' % name)
 
+# Type separation (R131 finite review): git object IDs and SHA-256 digests
+# are DIFFERENT kinds of hex. This repository is SHA-1 (pinned 23fb91a6… is
+# 40-hex), so every git revision is validated at 40 and every byte digest at
+# 64 — a digest must never pass where a git object is required, and vice
+# versa. Lengths are inlined (not module constants) so the pure-function
+# extraction used by window-selftest stays self-contained.
+def _require_git_object(value, name):
+    _require_hex(value, '%s (git object id)' % name, length=40)
+
+def _require_sha256(value, name):
+    _require_hex(value, '%s (sha256 digest)' % name, length=64)
+
 
 def _validate_g01_binding(a, now_epoch=None):
     """Consume the SRA/G01 binding against the TRUSTED mandate document.
@@ -46,7 +58,7 @@ def _validate_g01_binding(a, now_epoch=None):
         mandate_raw = P(mandate_path).read_bytes()
     except OSError as error:
         raise require(False, 'mandate document unreadable (fail-closed): %s' % error)
-    _require_hex(hashlib.sha256(mandate_raw).hexdigest(), 'mandate document sha256')
+    _require_sha256(hashlib.sha256(mandate_raw).hexdigest(), 'mandate document sha256')
     computed = hashlib.sha256(mandate_raw).hexdigest()
     require(computed == b.get('mandate_final_hash'),
             'mandate_final_hash does not match recomputed mandate document hash')
@@ -55,11 +67,21 @@ def _validate_g01_binding(a, now_epoch=None):
     except Exception as error:
         raise require(False, 'mandate document unparseable: %s' % error)
     require(isinstance(mandate, dict), 'mandate document is not an object')
+    # Scope and control state are consumed from the TRUSTED document, never
+    # from the binding dict: a binding claiming STANDARD_RECOVERABLE over a
+    # mandate that grants a different scope (or whose control is not
+    # effective) is rejected.
+    require(mandate.get('scope') == 'STANDARD_RECOVERABLE',
+            'mandate scope is not STANDARD_RECOVERABLE')
+    require(mandate.get('control_effective') is True,
+            'mandate control is not effective')
+    require(b.get('scope') == mandate.get('scope'),
+            'binding scope contradicts the mandate scope')
     sra = mandate.get('sra') or {}
     require(sra.get('status') == 'accepted', 'mandate SRA status is not accepted')
     require(sra.get('spec') == 'AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1', 'wrong SRA spec')
     accepted_head = sra.get('accepted_head')
-    _require_hex(accepted_head, 'mandate SRA accepted_head')
+    _require_git_object(accepted_head, 'mandate SRA accepted_head')
     require(accepted_head == b.get('sra', {}).get('accepted_head'),
             'binding SRA head contradicts the mandate document')
     appointment = mandate.get('appointment') or {}
@@ -94,7 +116,9 @@ def _validate_g01_binding(a, now_epoch=None):
     require(candidate.get('pre_state_sha') == a.get('expected_old_sha'),
             'mandate pre-state does not match the authority pre-state pin')
     candidate_head = candidate.get('candidate_head')
-    _require_hex(candidate_head, 'mandate candidate_head')
+    _require_git_object(candidate_head, 'mandate candidate_head')
+    # Both pins are 40-hex git object ids, so this is a real semantic
+    # distinctness check (a candidate equal to the pre-state means no change).
     require(candidate_head != a.get('expected_old_sha'),
             'candidate head must differ from the pre-state pin')
     require((b.get('candidate') or {}).get('candidate_head') in (None, candidate_head),
