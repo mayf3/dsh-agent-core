@@ -55,7 +55,8 @@ def rejected(fn, label):
 
 def pure_functions(executor):
     path = executor.with_name('window_helper_core.py')
-    names = {'require', 'digest', 'regular', 'manifest', 'stamp', 'validate_authority', 'quiet_ready', 'classify_census'}
+    names = {'require', 'digest', 'regular', 'manifest', 'stamp', 'validate_authority', 'quiet_ready', 'classify_census',
+             '_require_hex', '_validate_g01_binding'}
     tree = ast.parse(path.read_text(), filename=str(path))
     selected = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in names]
     require({node.name for node in selected} == names, 'executor pure validators unavailable')
@@ -201,7 +202,21 @@ def main(executor):
                      expected_plist_sha256='0'*64, expected_harness_stamp='SYNTHETIC',
                      expected_bindings_sha256='0'*64, expected_runtime_uid=os.getuid(), expected_runtime_gid=os.getgid(),
                      scopes=['source_lockfile_cleanup','production_mutex','bootout','full_preimage','install',
-                             'plist_deployed_sha_only','bootstrap','verify','hr_observe'])
+                             'plist_deployed_sha_only','bootstrap','verify','hr_observe'],
+                     g01_binding={'sra': {'status': 'accepted', 'revision': '9529e9a5' + '0' * 56,
+                                          'accepted_head': '9529e9a5' + '0' * 56,
+                                          'spec': 'AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1'},
+                                  'appointment': {'selector': 'C7_SYNTHETIC_APPOINTMENT',
+                                                 'issuer': 'C7_SYNTHETIC_ISSUER',
+                                                 'principal_uuid': '123e4567-e89b-12d3-a456-426614174000',
+                                                 'valid_until': '2026-12-07T16:00:00Z',
+                                                 'revoked_at': None},
+                                  'scope': 'STANDARD_RECOVERABLE', 'control_effective': True,
+                                  'mandate_final_hash': '1' * 64,
+                                  'candidate_tuple': {'window_id': 'C7_SYNTHETIC_NOT_AUTHORIZATION',
+                                                     'writer': 'isolated-selftest', 'writer_uid': os.getuid(),
+                                                     'candidate_sha': '23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9',
+                                                     'candidate_tree': '0' * 64}})
             moment = f['stamp']('2026-11-04T12:00:00Z')
             check = lambda item: f['validate_authority'](item, writer_uid=os.getuid(), now_epoch=moment)
             check(a)

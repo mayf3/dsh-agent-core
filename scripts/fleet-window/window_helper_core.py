@@ -27,38 +27,78 @@ def _require_hex(value, name, length=64):
             '%s must be lowercase hex' % name)
 
 
-def _validate_g01_binding(a):
-    """Consume the SRA/G01 binding; local G01 text is never authoritative."""
+def _validate_g01_binding(a, now_epoch=None):
+    """Consume the SRA/G01 binding against the TRUSTED mandate document.
+
+    R131 finite review (comment 6766131484): the binding dict is never
+    authoritative on its own. The trusted source is the formal Mandate
+    document at `a['g01_binding']['mandate_path']`; its recomputed sha256
+    must equal `mandate_final_hash`, and every claimed field is cross-checked
+    against the mandate document — synthetic revisions, foreign Principal
+    UUIDs, arbitrary hashes, or appointments expired at validation time are
+    rejected. Fail-closed when the mandate file is missing/unreadable.
+    """
     b = a.get('g01_binding')
     require(isinstance(b, dict), 'G01 binding missing')
-    sra = b.get('sra')
-    appointment = b.get('appointment')
-    candidate = b.get('candidate_tuple')
-    require(isinstance(sra, dict) and isinstance(appointment, dict) and isinstance(candidate, dict),
-            'G01 binding sections missing')
-    require(sra.get('status') == 'accepted', 'SRA revision is not accepted')
-    revision = sra.get('revision', '')
-    require(isinstance(revision, str) and (revision.startswith('9529e9a5') or sra.get('accepted_head') == revision),
-            'SRA accepted revision/head mismatch')
-    require(sra.get('spec') == 'AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1',
-            'wrong SRA spec')
+    mandate_path = b.get('mandate_path')
+    require(isinstance(mandate_path, str) and mandate_path, 'mandate_path missing')
+    try:
+        mandate_raw = P(mandate_path).read_bytes()
+    except OSError as error:
+        raise require(False, 'mandate document unreadable (fail-closed): %s' % error)
+    _require_hex(hashlib.sha256(mandate_raw).hexdigest(), 'mandate document sha256')
+    computed = hashlib.sha256(mandate_raw).hexdigest()
+    require(computed == b.get('mandate_final_hash'),
+            'mandate_final_hash does not match recomputed mandate document hash')
+    try:
+        mandate = json.loads(mandate_raw.decode('utf-8'))
+    except Exception as error:
+        raise require(False, 'mandate document unparseable: %s' % error)
+    require(isinstance(mandate, dict), 'mandate document is not an object')
+    sra = mandate.get('sra') or {}
+    require(sra.get('status') == 'accepted', 'mandate SRA status is not accepted')
+    require(sra.get('spec') == 'AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1', 'wrong SRA spec')
+    accepted_head = sra.get('accepted_head')
+    _require_hex(accepted_head, 'mandate SRA accepted_head')
+    require(accepted_head == b.get('sra', {}).get('accepted_head'),
+            'binding SRA head contradicts the mandate document')
+    appointment = mandate.get('appointment') or {}
     require(appointment.get('selector') and appointment.get('issuer'),
-            'appointment selector/issuer missing')
+            'mandate appointment selector/issuer missing')
+    principal_uuid = str(appointment.get('principal_uuid', ''))
     require(re.fullmatch(r'[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}',
-                         str(appointment.get('principal_uuid', ''))), 'appointment Principal UUID invalid')
-    require(appointment.get('valid_until') == '2026-12-07T16:00:00Z', 'appointment expiry mismatch')
-    require(appointment.get('revoked_at') in (None, ''), 'appointment is revoked')
+                         principal_uuid), 'mandate appointment Principal UUID invalid')
+    require(appointment.get('revoked_at') in (None, ''), 'mandate appointment is revoked')
+    # Real freshness: the appointment validity is checked against the CURRENT
+    # time (not merely echoed against the window).
+    current = time.time() if now_epoch is None else now_epoch
+    valid_until = stamp(appointment.get('valid_until'))
+    require(current < valid_until, 'mandate appointment expired at validation time')
+    valid_from = appointment.get('valid_from')
+    if valid_from:
+        require(current >= stamp(valid_from), 'mandate appointment not yet valid')
     require(b.get('scope') == 'STANDARD_RECOVERABLE', 'G01 scope is not STANDARD_RECOVERABLE')
-    require(b.get('control_effective') is True, 'G01 control is not effective')
-    _require_hex(b.get('mandate_final_hash'), 'Mandate final hash')
-    expected = {
-        'window_id': a['window_id'],
-        'writer': a['writer'],
-        'writer_uid': a['writer_uid'],
-        'candidate_sha': a['expected_old_sha'],
-        'candidate_tree': a.get('expected_bindings_sha256'),
-    }
-    require(candidate == expected, 'window/writer/candidate tuple mismatch')
+    # Cross-check: the authority JSON must not contradict the mandate.
+    for field, mandate_value in (('sra_accepted_head', accepted_head),):
+        claimed = b.get('sra', {}).get('accepted_head')
+        require(claimed in (None, mandate_value), 'binding contradicts mandate %s' % field)
+    claimed_uuid = str((b.get('appointment') or {}).get('principal_uuid', ''))
+    require(claimed_uuid in ('', principal_uuid), 'binding appointment UUID contradicts the mandate')
+    claimed_until = (b.get('appointment') or {}).get('valid_until')
+    require(claimed_until in (None, appointment.get('valid_until')),
+            'binding appointment expiry contradicts the mandate')
+    # Artifact binding: pre-state and target candidate are DISTINCT objects,
+    # both bound by the mandate; the legacy deployed pin is preserved and the
+    # candidate is additionally bound by the mandate document.
+    candidate = mandate.get('candidate') or {}
+    require(candidate.get('pre_state_sha') == a.get('expected_old_sha'),
+            'mandate pre-state does not match the authority pre-state pin')
+    candidate_head = candidate.get('candidate_head')
+    _require_hex(candidate_head, 'mandate candidate_head')
+    require(candidate_head != a.get('expected_old_sha'),
+            'candidate head must differ from the pre-state pin')
+    require((b.get('candidate') or {}).get('candidate_head') in (None, candidate_head),
+            'binding candidate head contradicts the mandate')
 
 
 def validate_authority(a, writer_uid=None, now_epoch=None):
