@@ -146,4 +146,6 @@ class G01MandateSource(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main(verbosity=2)
+    # sys.argv is retargeted at import time for window_helper_core; pass an
+    # explicit argv so direct invocation is not parsed as test names.
+    unittest.main(verbosity=2, argv=['test_g01_binding_isolated'])
