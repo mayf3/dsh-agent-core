@@ -7,7 +7,6 @@
  */
 
 import { buildExecutionInstruction } from './instruction.js'
-import { workflowEffectId } from './effect-identity.js'
 import { createRecoveryOperation } from './recovery/operation.js'
 import { createReadbackOperations } from './recovery/readback.js'
 import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeStaleFromDetail } from './judgment.js'
@@ -47,15 +46,8 @@ export function createWorkflowExecutionEngine({
   buildInstruction = buildExecutionInstruction,
   log = {},
   clock = () => Date.now(),
-  admissionControl = null,
   config = {},
 }) {
-  const control = admissionControl ?? {
-    isPaused: () => false,
-    pause: () => ({ paused: true }),
-    resume: () => ({ paused: false }),
-    status: () => ({ paused: false }),
-  }
   for (const [name, fn] of Object.entries({ ledger, fetchDuePage, resolvePrincipalToAgent, deliverRun, getTurnReconciliation, readInstanceDetail })) {
     if (fn === undefined) throw new TypeError(`workflow-execution: engine dep ${name} is required`)
   }
@@ -68,10 +60,6 @@ export function createWorkflowExecutionEngine({
   const retryDelayMs = config.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS
   if (!Number.isInteger(retryDelayMs) || retryDelayMs < 1) {
     throw new TypeError(`workflow-execution: config.retryDelayMs must be a positive integer (got ${JSON.stringify(config.retryDelayMs)})`)
-  }
-
-  function effectIdFor(attempt) {
-    return workflowEffectId(attempt)
   }
 
   function provenanceFor(attempt) {
@@ -117,7 +105,6 @@ export function createWorkflowExecutionEngine({
         recordDeliveryStarted()
         const delivery = await deliverRun({
           requestId,
-          idempotencyKey: effectIdFor(attempt),
           agentId: resolved.agentId,
           message,
           messageOrigin: provenanceFor(attempt),
@@ -244,66 +231,6 @@ export function createWorkflowExecutionEngine({
     if (refreshCandidates) candidates = await ledger.snapshotFresh()
     refreshCandidates = false
     for (const attempt of candidates.filter(attempt => attempt.state === 'ACTIVE')) {
-
-  /** Bounded, non-business recheck for a completed turn with no transition. */
-  async function recheckNeedsReview(attempt) {
-    const started = await ledger.beginNeedsReviewRecheck({
-      nodeVisitId: attempt.nodeVisitId,
-      workflowStateVersion: attempt.workflowStateVersionAtDispatch,
-      nextEligibleAtMs: clock() + retryDelayMs,
-    })
-    if (!started.created) {
-      if (started.cause === 'recheck_limit_reached') {
-        if (attempt.escalation === undefined) await escalateAttemptLimit({ attempt, reason: 'ATTEMPTS_EXHAUSTED' })
-        return { outcome: 'recheck_limit_reached', reconciliationAttemptId: attempt.reconciliation?.reconciliationAttemptId }
-      }
-      return { outcome: started.cause }
-    }
-    let outcome = 'unknown'
-    let reason = 'bounded recheck could not obtain authoritative detail'
-    let observedWorkflowStateVersion
-    try {
-      const turnState = queryTurnState(attempt)
-      const read = await readInstanceDetail({ agentId: attempt.delivered.agentId, workflowInstanceId: attempt.workflowInstanceId })
-      if (!read.ok) {
-        outcome = 'delivery_failed'
-        reason = `detail read failed during NEEDS_REVIEW recheck (${read.code})`
-      } else {
-        const settle = judgeSettleFromDetail({ body: read.body, nodeVisitId: attempt.nodeVisitId })
-        observedWorkflowStateVersion = read.body?.detail?.instance?.workflow_state_version
-        if (settle.kind === 'settled') {
-          outcome = 'transition_observed'
-          reason = settle.reason
-        } else if (settle.kind === 'still_current') {
-          outcome = 'no_transition'
-          reason = `completed turn ${turnState ?? 'unknown'} still has current visit and no committed transition`
-        } else {
-          reason = settle.reason
-        }
-      }
-    } catch (error) {
-      outcome = 'unknown'
-      reason = `recheck error: ${String(error?.message ?? error).slice(0, 200)}`
-    }
-    await ledger.recordNeedsReviewRecheck({
-      nodeVisitId: attempt.nodeVisitId,
-      reconciliationAttemptId: started.reconciliationAttemptId,
-      outcome,
-      reason,
-      observedWorkflowStateVersion,
-    })
-    if (outcome === 'no_transition' && started.count >= (ledger.maxNeedsReviewRechecks ?? 1)) {
-      await escalateAttemptLimit({ attempt, reason: 'ATTEMPTS_EXHAUSTED' })
-    }
-    return { outcome, reconciliationAttemptId: started.reconciliationAttemptId, reason }
-  }
-
-  /** Reconcile ACTIVE attempts; skip resolution_blocked. Only positive business evidence permits stale re-entry. */
-  async function reconcileOnce() {
-    const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [], needsReviewRechecks: [], escalated: [] }
-    // Cross-process failover must not reconcile a cached projection. Refresh
-    // under the ledger's existing OwnerLock before enumerating this pass.
-    for (const attempt of await ledger.listActiveFresh()) {
       if (attempt.phase === 'resolution_blocked') {
         summary.blocked += 1
         continue
@@ -347,12 +274,6 @@ export function createWorkflowExecutionEngine({
           verdict: finalVerdict.state,
           judgment: finalVerdict.judgment,
           reason: finalVerdict.reason,
-          // R#699 minimal port (from origin/main): identity via the
-          // ledger-minted attemptId + generation fallback — pre-field attempts
-          // (no workflowStateVersionAtDispatch/generation) previously produced
-          // a never-VALID identity bag and spun reconcile forever.
-          expectedAttemptId: attempt.attemptId,
-          expectedGeneration: attempt.generation ?? 1,
         })
         retainStaleObservation(summary, recorded)
         if (!recorded.committed) {
@@ -386,7 +307,7 @@ export function createWorkflowExecutionEngine({
         const stale = await judgeStale(attempt)
         retainStaleObservation(summary, await reconcileTerminalCandidate(attempt, stale, summary.staleReentry))
       } catch (error) {
-        log.error?.(`workflow-execution: run-ended NEEDS_REVIEW recheck error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
+        log.error?.(`workflow-execution: run-ended continuation check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
     }
     // Re-read terminal delivery_unverified too: late original receipts remain
@@ -406,7 +327,6 @@ export function createWorkflowExecutionEngine({
   async function _pollOnceImpl() {
     const reconciled = await reconcileOnce()
     const admissions = []
-    if (control.isPaused()) return { ok: true, paused: true, reconciled, admissions, skipped: [], pages: 0 }
     const skipped = []
     let pages = 0
     const budget = admissionBudget.begin()
@@ -531,11 +451,6 @@ export function createWorkflowExecutionEngine({
     reconcileDeliveries,
     admitDueIntent,
     recoverAttempt,
-    /** Supported control-plane operation: pause admissions without killing in-flight work. */
-    pauseAdmission(reason) { return control.pause(reason) },
-    /** Supported control-plane operation: persistently resume new admissions. */
-    resumeAdmission() { return control.resume() },
-    admissionStatus() { return control.status() },
     /** CTR-WEC1-006: coalesce kicks with the single-flight poll; a lost kick is harmless. */
     kick() {
       if (ticking || inflight !== null) return { ok: true, coalesced: true }
@@ -574,6 +489,59 @@ export function createWorkflowExecutionEngine({
     snapshot: () => ledger.snapshot(),
   }
 }
+
+  /** Bounded, non-business recheck for a completed turn with no transition. */
+  async function recheckNeedsReview(attempt) {
+    const started = await ledger.beginNeedsReviewRecheck({
+      nodeVisitId: attempt.nodeVisitId,
+      workflowStateVersion: attempt.workflowStateVersionAtDispatch,
+      nextEligibleAtMs: clock() + retryDelayMs,
+    })
+    if (!started.created) {
+      if (started.cause === 'recheck_limit_reached') {
+        if (attempt.escalation === undefined) await escalateAttemptLimit({ attempt, reason: 'ATTEMPTS_EXHAUSTED' })
+        return { outcome: 'recheck_limit_reached', reconciliationAttemptId: attempt.reconciliation?.reconciliationAttemptId }
+      }
+      return { outcome: started.cause }
+    }
+    let outcome = 'unknown'
+    let reason = 'bounded recheck could not obtain authoritative detail'
+    let observedWorkflowStateVersion
+    try {
+      const turnState = queryTurnState(attempt)
+      const read = await readInstanceDetail({ agentId: attempt.delivered.agentId, workflowInstanceId: attempt.workflowInstanceId })
+      if (!read.ok) {
+        outcome = 'delivery_failed'
+        reason = `detail read failed during NEEDS_REVIEW recheck (${read.code})`
+      } else {
+        const settle = judgeSettleFromDetail({ body: read.body, nodeVisitId: attempt.nodeVisitId })
+        observedWorkflowStateVersion = read.body?.detail?.instance?.workflow_state_version
+        if (settle.kind === 'settled') {
+          outcome = 'transition_observed'
+          reason = settle.reason
+        } else if (settle.kind === 'still_current') {
+          outcome = 'no_transition'
+          reason = `completed turn ${turnState ?? 'unknown'} still has current visit and no committed transition`
+        } else {
+          reason = settle.reason
+        }
+      }
+    } catch (error) {
+      outcome = 'unknown'
+      reason = `recheck error: ${String(error?.message ?? error).slice(0, 200)}`
+    }
+    await ledger.recordNeedsReviewRecheck({
+      nodeVisitId: attempt.nodeVisitId,
+      reconciliationAttemptId: started.reconciliationAttemptId,
+      outcome,
+      reason,
+      observedWorkflowStateVersion,
+    })
+    if (outcome === 'no_transition' && started.count >= (ledger.maxNeedsReviewRechecks ?? 1)) {
+      await escalateAttemptLimit({ attempt, reason: 'ATTEMPTS_EXHAUSTED' })
+    }
+    return { outcome, reconciliationAttemptId: started.reconciliationAttemptId, reason }
+  }
 
 /** Keep rejected old facts reviewable without appending them to the new attempt. */
 function retainStaleObservation(summary, result) {
