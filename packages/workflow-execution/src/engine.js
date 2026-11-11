@@ -362,14 +362,12 @@ export function createWorkflowExecutionEngine({
           verdict: finalVerdict.state,
           judgment: finalVerdict.judgment,
           reason: finalVerdict.reason,
-          expectedIdentity: {
-            status: Number.isInteger(attempt.workflowStateVersionAtDispatch) ? 'VALID' : 'UNKNOWN',
-            workflowInstanceId: attempt.workflowInstanceId,
-            nodeVisitId: attempt.nodeVisitId,
-            dispatchIntentId: attempt.dispatchIntentId,
-            generation: attempt.generation,
-            workflowStateVersionAtDispatch: attempt.workflowStateVersionAtDispatch,
-          },
+          // R#699 minimal port (from origin/main): identity via the
+          // ledger-minted attemptId + generation fallback — pre-field attempts
+          // (no workflowStateVersionAtDispatch/generation) previously produced
+          // a never-VALID identity bag and spun reconcile forever.
+          expectedAttemptId: attempt.attemptId,
+          expectedGeneration: attempt.generation ?? 1,
         })
         if (!recorded.committed) {
           if (recorded.attempt.state === 'ACTIVE') summary.running += 1
