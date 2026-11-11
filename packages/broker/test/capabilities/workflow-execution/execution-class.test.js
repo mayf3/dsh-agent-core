@@ -1,0 +1,340 @@
+import { defineTool } from '@deepseek-ai/dsh-tools'
+import { buildToolDefinition } from '../../../src/registry.js'
+// AGENT_CORE_WORKFLOW_EXECUTION_CLASS_BROKER_V1 — implementation closure tests.
+//
+// Physically separate from workflow-execute.test.js (structure gate 500-line
+// ceiling): this file owns the create_instance binding freeze AS EXTENDED by
+// the accepted companion (optional executionClass + declared invalid_input
+// error row) and the hard-evidence cases for the class semantics.
+import test from 'node:test'
+import assert from 'node:assert/strict'
+
+import { manifests as workflowManifests } from '../../../src/capabilities/workflow/index.js'
+import { validateManifest } from '../../../src/schema.js'
+import { createHttpTransport } from '../../../src/transport.js'
+import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../../test-support/capability-fixtures.js'
+
+const executeManifest = () => workflowManifests.find((manifest) => manifest.id === 'workflow_execute')
+
+const svcError = (res, status, code, message, requestId) => {
+  res.writeHead(status, { 'Content-Type': 'application/json', 'x-request-id': requestId })
+  res.end(JSON.stringify({ error: { code, message } }))
+}
+
+test('workflow_execute: create_instance binding freezes WITH the accepted executionClass companion', () => {
+  const manifest = executeManifest()
+  assert.equal(validateManifest(manifest).ok, true)
+  const op = manifest.operations.find((candidate) => candidate.name === 'create_instance')
+  assert.ok(op)
+  assert.deepEqual(Object.keys(op.arguments.properties), [
+    'domainId',
+    'definitionVersionId',
+    'contextPayload',
+    'metadata',
+    'externalReference',
+    'externalUrl',
+    'executionClass',
+  ])
+  // CTR-WECB-001/002: optional closed enum, structurally validated
+  // broker-side BEFORE transport; never required; never an identity field.
+  assert.equal(op.arguments.properties.executionClass.type, 'string')
+  assert.deepEqual(op.arguments.properties.executionClass.enum, ['BUSINESS', 'NON_BUSINESS_TEST'])
+  assert.ok(!op.arguments.required.includes('executionClass'))
+  assert.deepEqual(op.arguments.required, ['domainId', 'definitionVersionId', 'contextPayload', 'metadata'])
+  assert.deepEqual(op.http, {
+    target: 'svc-workflow',
+    method: 'POST',
+    path: '/internal/v1/workflow-instances',
+    body: ['domainId', 'definitionVersionId', 'contextPayload', 'metadata', 'externalReference', 'externalUrl', 'executionClass'],
+    idempotencyKey: true,
+  })
+  // CTR-WECB-003: the three svc-owned class error codes are DECLARED for
+  // verbatim passthrough (not_domain_owner / idempotency_conflict pre-date
+  // this companion; invalid_input is the single new table row).
+  const codes = manifest.errors.map((e) => e.code)
+  for (const code of ['not_domain_owner', 'invalid_input', 'idempotency_conflict']) {
+    assert.ok(codes.includes(code), `declared error family missing: ${code}`)
+  }
+})
+
+test('workflow_execute create_instance: READY and WAITING admission observations pass through unchanged', async (t) => {
+  const tokenServer = await startTokenServer()
+  const common = {
+    version: 1, kind: 'TERMINAL_SUBMISSION',
+    dependentInstanceId: '11111111-1111-4111-8111-111111111111',
+    dependentDefinitionVersionId: '22222222-2222-4222-8222-222222222222',
+    initialContextRevisionId: '33333333-3333-4333-8333-333333333333', initialContextSha256: 'a'.repeat(64),
+    initialVisitId: '44444444-4444-4444-8444-444444444444', birthEventId: '55555555-5555-4555-8555-555555555555',
+    sourceInstanceId: '66666666-6666-4666-8666-666666666666',
+    sourceDefinitionVersionId: '77777777-7777-4777-8777-777777777777',
+    transitionId: '88888888-8888-4888-8888-888888888888',
+  }
+  const observations = {
+    WAITING: { ...common, status: 'WAITING' },
+    READY: { ...common, status: 'READY', eventId: '99999999-9999-4999-8999-999999999999',
+      submissionId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', submissionSha256: 'b'.repeat(64) },
+  }
+  const workflow = await startMockServer((req, res, entry) => {
+    if (entry.method === 'POST' && entry.pathname === '/internal/v1/workflow-instances') {
+      const status = entry.body.contextPayload.case
+      return json(res, 201, { workflowInstanceId: common.dependentInstanceId, workflowStateVersion: 1,
+        currentContextRevisionId: common.initialContextRevisionId, currentNodeVisitId: common.initialVisitId,
+        eventSequence: 1, admissionObservation: observations[status] })
+    }
+    json(res, 404, { error: { code: 'domain_not_found', message: 'missing' } })
+  })
+  t.after(async () => { await tokenServer.close(); await workflow.close() })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }), authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(executeManifest(), transport)
+  for (const status of ['WAITING', 'READY']) {
+    const result = await definition.execute({ operation: 'create_instance', domainId: 'domain-9',
+      definitionVersionId: common.dependentDefinitionVersionId, contextPayload: { case: status }, metadata: null })
+    assert.deepEqual(result.result.admissionObservation, observations[status])
+    assert.deepEqual(result.result, { workflowInstanceId: common.dependentInstanceId, workflowStateVersion: 1,
+      currentContextRevisionId: common.initialContextRevisionId, currentNodeVisitId: common.initialVisitId,
+      eventSequence: 1, admissionObservation: observations[status] })
+    if (status === 'WAITING') for (const proof of ['eventId', 'submissionId', 'submissionSha256']) {
+      assert.equal(Object.hasOwn(result.result.admissionObservation, proof), false)
+    }
+  }
+  assert.equal(workflow.requests.length, 2)
+  assert.equal(tokenServer.requests.length, 1)
+})
+
+test('WEC companion: legacy create (absent executionClass) maps to a body with NO executionClass key — legacy wire byte-identical', async () => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((req, res) => json(res, 201, { workflowInstanceId: 'wf-wec-1', workflowStateVersion: 1 }))
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(executeManifest(), transport)
+
+  const result = await definition.execute({
+    operation: 'create_instance',
+    domainId: 'domain-9',
+    definitionVersionId: 'defver-3',
+    contextPayload: {},
+    metadata: null,
+  })
+  assert.equal(result.ok, true)
+  // The KEY itself is absent from the serialized body (not undefined-valued):
+  // the builder adds keys only when the arg !== undefined (bindRequest).
+  assert.equal(Object.prototype.hasOwnProperty.call(workflow.requests[0].body, 'executionClass'), false)
+  assert.deepEqual(Object.keys(workflow.requests[0].body), [
+    'domainId',
+    'definitionVersionId',
+    'contextPayload',
+    'metadata',
+  ])
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+test('WEC companion: executionClass BUSINESS and NON_BUSINESS_TEST are forwarded verbatim', async () => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((req, res) => json(res, 201, { workflowInstanceId: 'wf-wec-2', workflowStateVersion: 1 }))
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(executeManifest(), transport)
+
+  for (const executionClass of ['BUSINESS', 'NON_BUSINESS_TEST']) {
+    const result = await definition.execute({
+      operation: 'create_instance',
+      domainId: 'domain-9',
+      definitionVersionId: 'defver-3',
+      contextPayload: {},
+      metadata: null,
+      executionClass,
+    })
+    assert.equal(result.ok, true)
+    assert.equal(workflow.requests.at(-1).body.executionClass, executionClass)
+  }
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+test('WEC companion: executionClass null / unknown value fail closed as invalid_arguments BEFORE any transport', async () => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((req, res) => json(res, 201, { workflowInstanceId: 'wf-wec-3', workflowStateVersion: 1 }))
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(executeManifest(), transport)
+
+  for (const executionClass of [null, 'SOMETHING_ELSE', 'business']) {
+    const result = await definition.execute({
+      operation: 'create_instance',
+      domainId: 'domain-9',
+      definitionVersionId: 'defver-3',
+      contextPayload: {},
+      metadata: null,
+      executionClass,
+    })
+    assert.equal(result.ok, false)
+    assert.equal(result.error.code, 'invalid_arguments')
+  }
+  // Zero HTTP requests reached svc-workflow: structural validation happens
+  // before any credential mint or business call (DEC-WECB-003).
+  assert.equal(workflow.requests.length, 0)
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+test('WEC companion: svc class error families preserve verbatim (not_domain_owner / invalid_input / idempotency_conflict)', async () => {
+  const tokenServer = await startTokenServer()
+  const failures = {
+    'domain-owner-403': [403, 'not_domain_owner', 'caller is not a domain owner', 'req-wec-403'],
+    'domain-422': [422, 'invalid_input', 'executionClass must be BUSINESS or NON_BUSINESS_TEST', 'req-wec-422'],
+    'domain-409': [409, 'idempotency_conflict', 'idempotency key was reused', 'req-wec-409'],
+  }
+  const workflow = await startMockServer((req, res, entry) => {
+    const failure = failures[entry.body.domainId]
+    return svcError(res, ...failure)
+  })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(executeManifest(), transport)
+
+  for (const [domainId, [status, code, message, requestId]] of Object.entries(failures)) {
+    const result = await definition.execute({
+      operation: 'create_instance',
+      domainId,
+      definitionVersionId: 'defver-3',
+      contextPayload: {},
+      metadata: null,
+      executionClass: 'NON_BUSINESS_TEST',
+    })
+    assert.equal(result.ok, false)
+    // Verbatim passthrough: code/status/detail/requestId unchanged; zero
+    // broker rewriting or retry (AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1).
+    assert.equal(result.error.code, code)
+    assert.equal(result.error.status, status)
+    assert.equal(result.error.detail, message)
+    assert.equal(result.error.requestId, requestId)
+  }
+  // One request per failure case — no broker-side retry.
+  assert.equal(workflow.requests.length, 3)
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+// ─── AGENT_CORE_WORKFLOW_RETURN_POLICY_EXHAUSTED_DECLARER_V1 ───────────────
+// The RETURN-limit ingress of the WEC owner-assistance feature (svc-workflow
+// error.rs from_transition @ 5d479d8: ExecuteWorkflowTransitionError::
+// ReturnPolicyExhausted) mints a deterministic 409 service code. While
+// undeclared, the mapping layer fails it closed to `http_4xx` (BROKER_ERROR_
+// PRESERVATION V1 R1); the WEC canary definition pins the expected refusal at
+// docs/evidence/wec-owner-assistance-deploy-handoff-v1-20260929/HANDOFF.md
+// §2 Entry B2, and the base-tree degradation is reproducible by running these
+// tests against base (RED). These tests pin the single declarer row, the
+// verbatim end-to-end seam, and the fail-closed negative.
+
+test('return-policy declarer: workflow_execute declares the 409 return_policy_exhausted service code', () => {
+  const manifest = executeManifest()
+  assert.equal(validateManifest(manifest).ok, true)
+  const row = manifest.errors.find((e) => e.code === 'return_policy_exhausted')
+  assert.ok(row, 'declared error family missing: return_policy_exhausted')
+  assert.match(row.description, /HTTP 409/)
+  // Declarer-table-only delta: the transition wire contract is untouched.
+  const op = manifest.operations.find((candidate) => candidate.name === 'transition')
+  assert.deepEqual(op.arguments.required, ['workflowInstanceId', 'transitionDefinitionId', 'expectedWorkflowStateVersion'])
+})
+
+test('return-policy declarer: svc 409 return_policy_exhausted passes through the transition seam verbatim (code/status/detail/requestId; no retry)', async () => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((req, res, entry) => {
+    if (entry.method === 'POST' && entry.pathname === '/internal/v1/workflow-instances/wf-rpe-1/transitions') {
+      return svcError(res, 409, 'return_policy_exhausted', 'RETURN policy limit reached (1 returns per edge); the loop escalates to a human', 'req-rpe-409')
+    }
+    return json(res, 404, { error: { code: 'instance_not_found', message: 'missing' } })
+  })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(executeManifest(), transport)
+
+  const result = await definition.execute({
+    operation: 'transition',
+    workflowInstanceId: 'wf-rpe-1',
+    transitionDefinitionId: 'td-back-1',
+    expectedWorkflowStateVersion: 3,
+  })
+  assert.equal(result.ok, false)
+  // Verbatim passthrough: the precise stable identity survives end-to-end;
+  // status/detail/requestId unchanged; zero broker rewriting or retry
+  // (AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1).
+  assert.equal(result.error.code, 'return_policy_exhausted')
+  assert.equal(result.error.status, 409)
+  assert.equal(result.error.detail, 'RETURN policy limit reached (1 returns per edge); the loop escalates to a human')
+  assert.equal(result.error.requestId, 'req-rpe-409')
+  // Exactly one downstream request — the refusal is terminal, never retried.
+  assert.equal(workflow.requests.length, 1)
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+test('return-policy declarer: an UNdeclared transition service code still fails closed to http_4xx', async () => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((req, res, entry) => {
+    if (entry.method === 'POST' && entry.pathname === '/internal/v1/workflow-instances/wf-rpe-2/transitions') {
+      return svcError(res, 409, 'some_undeclared_future_code', 'not in the declarer table', 'req-rpe-neg')
+    }
+    return json(res, 404, { error: { code: 'instance_not_found', message: 'missing' } })
+  })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(executeManifest(), transport)
+
+  const result = await definition.execute({
+    operation: 'transition',
+    workflowInstanceId: 'wf-rpe-2',
+    transitionDefinitionId: 'td-back-2',
+    expectedWorkflowStateVersion: 4,
+  })
+  assert.equal(result.ok, false)
+  // Declaring one real code does NOT wildcard the table: undeclared service
+  // codes keep the canonical fail-closed degradation (BROKER_ERROR_PRESERVATION
+  // V1 R1; mirrored as transition Spec DEC-006), with the HTTP status preserved.
+  assert.equal(result.error.code, 'http_4xx')
+  assert.equal(result.error.status, 409)
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+test('Broker exposes only the validated operation selector as a trusted native discriminator', () => {
+  const { definition } = buildToolDefinition({ manifest: executeManifest(), handlers: {} })
+  assert.deepEqual(definition.nativePolicyDiscriminators, ['operation'])
+
+  const ordinaryTool = defineTool({
+    name: 'ordinary_tool',
+    description: 'A direct tool with no operation selector contract.',
+    parameters: {},
+    output: { schema: { type: 'string' }, render: () => [{ type: 'text', text: 'ok' }] },
+    execute: async () => 'ok',
+  })
+  assert.equal(ordinaryTool.nativePolicyDiscriminators, undefined)
+})

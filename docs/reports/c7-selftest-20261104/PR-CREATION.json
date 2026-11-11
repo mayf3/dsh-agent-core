@@ -1,0 +1,13 @@
+{
+  "pr_url": "https://github.com/mayf3/dsh-agent-core/pull/615",
+  "number": 615,
+  "state": "open",
+  "merged": false,
+  "auto_merge": null,
+  "head_at_creation": "a7bf05fa7a35d7b1f916e2af164b33ed4c9a3512",
+  "base": "main",
+  "connector_attempt": "Internal error; read-only gh pr list returned []",
+  "graphql_attempt": "HTTP 502; read-only REST pulls?head query returned []",
+  "rest_create": "POST /repos/mayf3/dsh-agent-core/pulls rc0",
+  "production_effects": "NONE"
+}

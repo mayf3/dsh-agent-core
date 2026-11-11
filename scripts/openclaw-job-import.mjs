@@ -38,7 +38,7 @@ import { join } from 'node:path'
 import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
-import { importOpenClawJobs, writeImportToStore } from '../packages/scheduler/src/import-openclaw.js'
+import { importOpenClawJobs, writeImportToStore } from '../packages/scheduler/src/store/import-openclaw.js'
 import { JobStore } from '../packages/scheduler/src/store.js'
 
 const here = dirname(fileURLToPath(import.meta.url))

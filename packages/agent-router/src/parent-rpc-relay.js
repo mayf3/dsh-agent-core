@@ -11,6 +11,10 @@
  * Router.
  */
 
+import { NATIVE_GOAL_RPC_METHOD, admitNativeGoalContinuation } from './process/native-goal-admission.js'
+
+import { bindWebsiteNativeMessage } from './process/website-inquiry-admission.js'
+
 /** The tool method name per-agent processes use over the parent-RPC relay. */
 export const SWITCH_RPC_METHOD = 'agent-core/switchAgent'
 
@@ -67,6 +71,8 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
         || boundProc?.exit !== undefined) {
       return { ok: false, error: { code: 'PROCESS_STOP_BARRIER_EFFECT_DENIED' } }
     }
+    if (method === NATIVE_GOAL_RPC_METHOD) return admitNativeGoalContinuation(boundProc, params, rpcMeta)
+    if (method === 'agent-core/websiteInquiryMap') return bindWebsiteNativeMessage(boundProc, params, rpcMeta)
     if (method === BROKER_RPC_METHOD) {
       // TRUSTED CREDENTIAL BROKER: the caller identity is THIS proc's
       // actual agentId (the trusted spawning relationship) — never
@@ -76,11 +82,20 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
         'processGeneration', 'turnExecutionId', 'channelNamespace', 'channelConversationId',
         'feishuChatId', 'feishuConversationId', 'feishuMessageId',
         'ingressContext', 'activeIngressContext',
+        'sourceTurnExecutionId', 'workflowProvenance',
       ].filter((field) => params?.[field] !== undefined)
       if (selfReported.length > 0) {
         log.log(`[broker] agent ${agentId}: IGNORING child-supplied identity fields: ${selfReported.join(', ')}`)
       }
       const proc = getProc()
+      const sourceTurnExecutionId = provenSourceTurnExecutionId(proc, rpcMeta)
+      const workflowProvenance = proc.executions?.get(sourceTurnExecutionId)?.workflowProvenance
+      // An explicit correlation that no longer proves a live execution must
+      // not become an ordinary call after finishExecution removes the entry.
+      if (sourceTurnExecutionId === undefined && (rpcMeta.turnExecutionId !== undefined
+        || [...(proc.executions?.values() ?? [])].some(e => e.settled !== true && e.workflowProvenance !== undefined))) {
+        return { ok: false, error: { code: 'authoritative_reference_unavailable' } }
+      }
       const active = proc.activeIngressContext
       const activeExecution = active && proc.executions?.get(active.turnExecutionId)
       const boundIngressContext = active
@@ -117,7 +132,8 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
           ingressContext: boundIngressContext,
           // R3 exact source-turn correlation for the messaging capability —
           // proven against the execution map above, absent when stale.
-          sourceTurnExecutionId: provenSourceTurnExecutionId(proc, rpcMeta),
+          sourceTurnExecutionId,
+          ...(workflowProvenance === undefined ? {} : { workflowProvenance }),
           // Trusted-channel-only logical invocation anchor. It correlates a
           // lost response to this gateway-derived caller; it never supplies
           // identity and is never taken from model arguments.

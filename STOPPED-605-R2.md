@@ -1046,3 +1046,7 @@ remaining commit/push/PR/final-Head readback are in RECEIPT-605-R2.md.
 Historical text above retains its meaning; Markdown trailing whitespace only
 was normalized for presentation. Exact pre-R7 original receipt/STOPPED bytes and
 SHA256 are archived in docs/evidence/605-r7/historical-markdown-originals.json.
+
+R7 SOURCE_DELIVERY_COMPLETE: source commit42487e65 pushed; PR#646 open on main,
+unmerged by live readback. Historical stops above remain preserved; no active
+required-gate blocker for this authorized source task. See completed RECEIPT.

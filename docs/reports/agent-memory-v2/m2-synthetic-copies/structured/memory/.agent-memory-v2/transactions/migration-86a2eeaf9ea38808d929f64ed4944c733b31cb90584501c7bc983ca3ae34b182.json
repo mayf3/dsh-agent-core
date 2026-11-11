@@ -1,0 +1,26 @@
+{
+  "schema": "AGENT_MEMORY_V2_MIGRATION_TRANSACTION",
+  "txid": "migration-86a2eeaf9ea38808d929f64ed4944c733b31cb90584501c7bc983ca3ae34b182",
+  "phase": "CANDIDATE_ONLY",
+  "planStatus": "NOOP",
+  "beforeSha256": "8e6bdce7f6548b94048b7fcc4dcd042e06321caf879a80f81519dca9c4b8eac8",
+  "afterSha256": "8e6bdce7f6548b94048b7fcc4dcd042e06321caf879a80f81519dca9c4b8eac8",
+  "candidateFile": "migration-86a2eeaf9ea38808d929f64ed4944c733b31cb90584501c7bc983ca3ae34b182.candidate",
+  "operations": [],
+  "reasons": [],
+  "changes": [],
+  "preservedSpanProof": [
+    {
+      "byteStart": 0,
+      "byteEnd": 195,
+      "afterByteStart": 0,
+      "beforeSha256": "8e6bdce7f6548b94048b7fcc4dcd042e06321caf879a80f81519dca9c4b8eac8",
+      "afterSha256": "8e6bdce7f6548b94048b7fcc4dcd042e06321caf879a80f81519dca9c4b8eac8"
+    }
+  ],
+  "sourceEvents": {
+    "state": "UNKNOWN",
+    "eventIds": []
+  },
+  "published": false
+}

@@ -1,0 +1,301 @@
+{
+  ".agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md": {
+    "before": {
+      "commit": "7f36750bf08d308cd7f648153e24c0b0e528e4c6",
+      "blob": "f3cea29603385bc5c8eda6d0b6f423f9ee58daef",
+      "sha256": "15cb71d19f8621e4acc230831f9e2b52cabacaf34b37be4ba9dbd454f33872e6",
+      "lines": [
+        {
+          "line": 6,
+          "text": "LIFECYCLE = ACCEPTED"
+        },
+        {
+          "line": 8,
+          "text": "SUPERSEDES = CODE_STRUCTURE_GUARDRAILS_V1 (effective upon merge into main)"
+        }
+      ]
+    },
+    "after": {
+      "commit": "2e67e98a7295dc78d18dad51bf673a0c3be9d009",
+      "blob": "c8869a9902d32bae3233fefab19a7523dcb89d23",
+      "sha256": "dce819190e6ace659c6b5f60687118f548859a66b43d6eba6f86b1198f7cc5b0",
+      "lines": [
+        {
+          "line": 6,
+          "text": "LIFECYCLE = SUPERSEDED"
+        },
+        {
+          "line": 8,
+          "text": "SUPERSEDES = CODE_STRUCTURE_GUARDRAILS_V1 (effective upon merge into main)"
+        },
+        {
+          "line": 14,
+          "text": "SUPERSEDED_BY = CODE_STRUCTURE_GUARDRAILS_V3"
+        }
+      ]
+    }
+  },
+  "docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md": {
+    "before": {
+      "commit": "7f36750bf08d308cd7f648153e24c0b0e528e4c6",
+      "blob": "1a7cd389b7972944f5b08cb583a8de3044b17b51",
+      "sha256": "89ef981a6f98aefe09bf8fd7d7bd183f1f8c0bca826674577f0d6d862139f81d",
+      "lines": [
+        {
+          "line": 3,
+          "text": "status: accepted"
+        },
+        {
+          "line": 17,
+          "text": "superseded_by: null"
+        }
+      ]
+    },
+    "after": {
+      "commit": "2e67e98a7295dc78d18dad51bf673a0c3be9d009",
+      "blob": "1e86dca11cc8131f16de0055ffd2449149f0c32c",
+      "sha256": "f46c6a40a7374fd4c565e52ff96f182a60e908908db1e9f0d7ca065378a1fe6d",
+      "lines": [
+        {
+          "line": 3,
+          "text": "status: superseded"
+        },
+        {
+          "line": 17,
+          "text": "superseded_by: CODE_STRUCTURE_GUARDRAILS_V3"
+        }
+      ]
+    }
+  },
+  ".agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md": {
+    "before": {
+      "commit": "7f36750bf08d308cd7f648153e24c0b0e528e4c6",
+      "blob": "db276b2afc5329e72e7fdc9a7a4c9d983cf39b8d",
+      "sha256": "40bd14c6e061fdfa7f28b3e1378c8052a414809af72fc9002b0b95395e780b6c",
+      "lines": [
+        {
+          "line": 3,
+          "text": "status: proposed"
+        },
+        {
+          "line": 14,
+          "text": "supersedes:"
+        },
+        {
+          "line": 15,
+          "text": "  - CODE_STRUCTURE_GUARDRAILS_V2"
+        },
+        {
+          "line": 16,
+          "text": "  - CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1"
+        },
+        {
+          "line": 74,
+          "text": "<!-- BEGIN CARRIED_V2_POLICY -->"
+        },
+        {
+          "line": 204,
+          "text": "<!-- BEGIN CARRIED_TE_CONTRACTS -->"
+        }
+      ]
+    },
+    "after": {
+      "commit": "2e67e98a7295dc78d18dad51bf673a0c3be9d009",
+      "blob": "1a9914a39d63aacf41b93329c7548d423643850c",
+      "sha256": "466ed526fdf9607400b4912c62c08e9b9399ad9d89776005b9cc4321c0051c48",
+      "lines": [
+        {
+          "line": 3,
+          "text": "status: accepted"
+        },
+        {
+          "line": 7,
+          "text": "accepted_reviewed_semantic_head: 7f36750bf08d308cd7f648153e24c0b0e528e4c6"
+        },
+        {
+          "line": 8,
+          "text": "acceptance_authority: https://github.com/mayf3/dsh-agent-core/pull/642#issuecomment-6701500077"
+        },
+        {
+          "line": 9,
+          "text": "acceptance_ruling_id: owner-20261107-642-643-1377"
+        },
+        {
+          "line": 21,
+          "text": "supersedes:"
+        },
+        {
+          "line": 22,
+          "text": "  - CODE_STRUCTURE_GUARDRAILS_V2"
+        },
+        {
+          "line": 23,
+          "text": "  - CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1"
+        },
+        {
+          "line": 89,
+          "text": "<!-- BEGIN CARRIED_V2_POLICY -->"
+        },
+        {
+          "line": 219,
+          "text": "<!-- BEGIN CARRIED_TE_CONTRACTS -->"
+        },
+        {
+          "line": 440,
+          "text": "## 15. Owner-accepted Phase2 lifecycle record — 2026-11-07"
+        }
+      ]
+    }
+  },
+  ".agents/local/README.md": {
+    "before": {
+      "commit": "7f36750bf08d308cd7f648153e24c0b0e528e4c6",
+      "blob": "81b4ff5477abae63aede634434ebe1f177c85678",
+      "sha256": "4f6b441d80a6ad37cf326a3fec0564c5f6b63c1ab459f075d373cb9dbac9a0ad",
+      "lines": [
+        {
+          "line": 104,
+          "text": "RULE = .agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md"
+        }
+      ]
+    },
+    "after": {
+      "commit": "2e67e98a7295dc78d18dad51bf673a0c3be9d009",
+      "blob": "c2b6e9ea255e436c602f0e5ae04dd3108da91956",
+      "sha256": "ebd1a2f0a39ebfd17b6a17035ad63ff35c59f5e7384ebc3597687b3c3fac8d5a",
+      "lines": [
+        {
+          "line": 95,
+          "text": "Accepted whole-authority successor:"
+        },
+        {
+          "line": 113,
+          "text": "RULE = .agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md"
+        },
+        {
+          "line": 117,
+          "text": "V3_VERIFIER_QUALIFICATION = PENDING_SEPARATE_TASK"
+        }
+      ]
+    }
+  },
+  "docs/specs/README.md": {
+    "before": {
+      "commit": "7f36750bf08d308cd7f648153e24c0b0e528e4c6",
+      "blob": "5f15bf6f445a3858d25bb9126cdb31345f1d2102",
+      "sha256": "db546d678968e4930033aac5ac74aa0ada0bebd40f4581021063ec1d3a29db30",
+      "lines": [
+        {
+          "line": 98,
+          "text": "| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3` | accepted 2026-10-15; current after main merge (2.0.0-rc.1, fixed 6301662e; docs-only, separate from #497 CI) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` |"
+        }
+      ]
+    },
+    "after": {
+      "commit": "2e67e98a7295dc78d18dad51bf673a0c3be9d009",
+      "blob": "88adfbc7789fe8680a163603919e90c365f163de",
+      "sha256": "a91396b3796d9a20074b8114cab286f8b2b366303dc97bf05a55da4e41b713f0",
+      "lines": [
+        {
+          "line": 98,
+          "text": "| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3` | accepted 2026-10-15; explicit rc.3 update accepted 2026-11-07 under §14 (source c1fad897; PR #642 comment-6701500077; final review/main activation pending); historical rc.1 pin retained | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` |"
+        },
+        {
+          "line": 106,
+          "text": "## Structure policy whole-authority succession"
+        },
+        {
+          "line": 110,
+          "text": "| [CODE_STRUCTURE_GUARDRAILS_V3](../../.agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md) | accepted by Owner 2026-11-07; exact reviewed semantics `7f36750b`; PR #642 comment-6701500077, ruling `owner-20261107-642-643-1377` | whole successor to V2 and TE_V1, reciprocal native links; active only after independent final-HEAD review and main merge |"
+        }
+      ]
+    }
+  },
+  "docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md": {
+    "before": {
+      "commit": "7f36750bf08d308cd7f648153e24c0b0e528e4c6",
+      "blob": "b73637ca3235dc181f65cd23005d5fb87585b2f1",
+      "sha256": "d909aae065559d26206929b904ce5fcff6a0b7314fae6486832e64ed17ebe4eb",
+      "lines": []
+    },
+    "after": {
+      "commit": "2e67e98a7295dc78d18dad51bf673a0c3be9d009",
+      "blob": "482fd3931da0bb7a9a2d233ac41c1daa0b9e8085",
+      "sha256": "1264d680f0b425be4f7abace4a7f263a5f0f347bb6c08ac721ba57a8fa1494f1",
+      "lines": [
+        {
+          "line": 202,
+          "text": "## 14. Explicit rc.3 distribution update acceptance — 2026-11-07"
+        },
+        {
+          "line": 213,
+          "text": "Authority: https://github.com/mayf3/dsh-agent-core/pull/642#issuecomment-6701500077"
+        },
+        {
+          "line": 226,
+          "text": "| Prepared lock SHA-256 at b8333ef4 | `2c79ab4da7245dc1875e98300af6d2fefd75245d1be06ad3d3e9d9f86b30ad6c` |"
+        },
+        {
+          "line": 227,
+          "text": "| Accepted lock SHA-256 | `0cb6acb6e7839ee2b6d0312653e6c5efc680512a36bf44a842db3aa79dc5a8b5` |"
+        }
+      ]
+    }
+  },
+  ".agents/governance.lock.json": {
+    "before": {
+      "commit": "7f36750bf08d308cd7f648153e24c0b0e528e4c6",
+      "blob": "38618a4c08cc1a6c9fc8e8f44ca87b06b3229ae2",
+      "sha256": "2c79ab4da7245dc1875e98300af6d2fefd75245d1be06ad3d3e9d9f86b30ad6c",
+      "lines": [
+        {
+          "line": 4,
+          "text": "  \"version\": \"2.0.0-rc.3\","
+        },
+        {
+          "line": 6,
+          "text": "  \"source_commit\": \"c1fad8976e50e96adb27a4c7e2dd4f97bf2e899e\","
+        },
+        {
+          "line": 10,
+          "text": "    \"status\": \"proposed\","
+        },
+        {
+          "line": 13,
+          "text": "    \"accepted_by\": null,"
+        },
+        {
+          "line": 14,
+          "text": "    \"accepted_at\": null"
+        }
+      ]
+    },
+    "after": {
+      "commit": "2e67e98a7295dc78d18dad51bf673a0c3be9d009",
+      "blob": "59a9da8bcd6a567a71ec3096b6066bf69c5b9d52",
+      "sha256": "0cb6acb6e7839ee2b6d0312653e6c5efc680512a36bf44a842db3aa79dc5a8b5",
+      "lines": [
+        {
+          "line": 4,
+          "text": "  \"version\": \"2.0.0-rc.3\","
+        },
+        {
+          "line": 6,
+          "text": "  \"source_commit\": \"c1fad8976e50e96adb27a4c7e2dd4f97bf2e899e\","
+        },
+        {
+          "line": 10,
+          "text": "    \"status\": \"accepted\","
+        },
+        {
+          "line": 13,
+          "text": "    \"accepted_by\": \"mayf3\","
+        },
+        {
+          "line": 14,
+          "text": "    \"accepted_at\": \"2026-11-07T03:20:10.813730Z\""
+        }
+      ]
+    }
+  }
+}

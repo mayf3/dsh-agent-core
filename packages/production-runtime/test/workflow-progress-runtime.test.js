@@ -1,3 +1,4 @@
+import { expectedIdentity } from '../../workflow-execution/test-support/observation-identity.js'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdtempSync, rmSync } from 'node:fs'
@@ -172,7 +173,7 @@ test('terminal attempts cannot accept another checkpoint', async () => {
       sessionId: 'main',
     })
     await fx.ledger.recordReconciled({
-      nodeVisitId: VISIT,
+      ...expectedIdentity(fx.ledger.get(VISIT)), nodeVisitId: VISIT,
       expectedPhase: 'run_delivered',
       verdict: 'SETTLED',
       judgment: 'business_commitment_observed',

@@ -32,6 +32,7 @@ import { execFileSync } from 'node:child_process'
 
 import { restartSchedulerProductionRuntime } from '../../src/scheduler/deployment-runtime-restart.js'
 import { TurnReconciliationStore } from '../../../agent-router/src/reconciliation-store.js'
+import { withRestartProof } from '../compose-fixture.js'
 
 const SHA = '1234567890abcdef1234567890abcdef12345678'
 
@@ -55,14 +56,14 @@ function baseCtx(t) {
   t.after(() => { process.env.PATH = oldPath })
   const calls = { bootout: 0, bootstrap: 0, receipts: [], drainReceipts: [], phases: [], loaded: true }
   const ctx = {
-    launchdDir, artifactsDir, authsvcUid: 501, authsvcGid: 601, runtimeReaderGid: 20,
+    launchdDir, artifactsDir, authsvcUid: process.getuid(), authsvcGid: 601, runtimeReaderGid: 20,
     isLoaded: () => calls.loaded,
     bootout: () => { calls.bootout += 1; calls.loaded = false },
     bootstrap: () => { calls.bootstrap += 1; calls.loaded = true },
     runtimeReceipt: (receipt) => calls.receipts.push(receipt),
     runtimeDrainReceipt: (receipt) => calls.drainReceipts.push(receipt),
   }
-  return { root, ctx, calls, plistPath, plistBytes }
+  return { root, ctx: withRestartProof(ctx, root), calls, plistPath, plistBytes }
 }
 
 /** Real durable turn-recovery store fixture; `reopen` classifies through the
@@ -192,7 +193,7 @@ test('A3: a turn still undrained at window expiry refuses — the window is boun
   assert.equal(calls.bootout, 0)
 })
 
-test('A4: emergency restart (acceptUndrainedRestart) proceeds ONLY with a restart-boundary receipt', (t) => {
+test('A4: emergency acceptance records its boundary but cannot bypass old-generation exit proof', (t) => {
   const { root, ctx, calls } = baseCtx(t)
   const turnFile = join(root, 'control', 'turn-recovery-v3.json')
   const seeded = seedTurnStore(turnFile, { kind: 'inflight' })
@@ -202,14 +203,15 @@ test('A4: emergency restart (acceptUndrainedRestart) proceeds ONLY with a restar
   ctx.restartDrainWindowMs = 20
   ctx.acceptUndrainedRestart = true
 
-  restartSchedulerProductionRuntime({ ctx, phase: () => {}, sourceSha: SHA })
-  assert.equal(calls.bootout, 1, 'the emergency restart still restarts (availability)')
+  assert.throws(() => restartSchedulerProductionRuntime({ ctx, phase: () => {}, sourceSha: SHA }),
+    error => error.code === 'RESTART_EXIT_PROOF_UNAVAILABLE')
+  assert.equal(calls.bootout, 1, 'the existing stop path was attempted')
+  assert.equal(calls.bootstrap, 0, 'an emergency flag cannot substitute for worker exit and settlement')
   const boundary = calls.drainReceipts.filter((r) => r.status === 'RESTART_BOUNDARY')
   assert.equal(boundary.length, 1, 'exactly one boundary receipt on the dedicated channel')
   assert.equal(boundary[0].census.epoch, seeded.epoch)
   assert.deepEqual(boundary[0].census.inflightTurns.map((h) => h.handle), [seeded.handle])
-  assert.deepEqual(calls.receipts.map((r) => r.status), ['INSTALLING', 'INSTALLED'],
-    'the emergency cutover still produces a normal install receipt generation')
+  assert.deepEqual(calls.receipts.map((r) => r.status), ['INSTALLING'], 'no installed receipt before verified old exit')
 })
 
 test('fail-closed: a census-unavailable (corrupt) turn-recovery store refuses the restart', (t) => {
@@ -227,13 +229,14 @@ test('fail-closed: a census-unavailable (corrupt) turn-recovery store refuses th
   assert.equal(calls.bootout, 0)
 })
 
-test('legacy callers without census paths are unarmed: restart behaves exactly as before', (t) => {
+test('legacy callers without census paths cannot perform an unproven runtime replacement', (t) => {
   const { ctx, calls } = baseCtx(t)
-  const result = restartSchedulerProductionRuntime({ ctx, phase: () => {}, sourceSha: SHA })
-  assert.equal(result.healthy, true)
-  assert.equal(calls.bootout, 1)
-  assert.deepEqual(calls.receipts.map((r) => r.status), ['INSTALLING', 'INSTALLED'],
-    'no install-channel change when the gate is not armed')
+  delete ctx.turnRecoveryStore
+  delete ctx.storePath
+  assert.throws(() => restartSchedulerProductionRuntime({ ctx, phase: () => {}, sourceSha: SHA }),
+    error => error.code === 'RESTART_EXIT_PROOF_UNAVAILABLE')
+  assert.equal(calls.bootout, 0)
+  assert.deepEqual(calls.receipts, [], 'missing evidence refuses before runtime mutation')
   assert.deepEqual(calls.drainReceipts, [], 'no drain receipts when the gate is not armed')
 })
 
@@ -284,4 +287,42 @@ test('row 6 (repeated restart): after a drained restart the next armed restart p
   assert.equal(calls.bootout, 2)
   assert.equal(calls.drainReceipts.filter((r) => r.status === 'DRAIN_OBSERVED').length, 2,
     'every armed restart takes its own census; no residue')
+})
+
+test('a turn admitted after the pre-stop census cannot pass bootstrap while still unresolved', t => {
+  const { ctx, calls } = baseCtx(t)
+  const bootout = ctx.bootout
+  let raced
+  ctx.bootout = (...args) => {
+    raced = seedTurnStore(ctx.turnRecoveryStore, { kind: 'unknown' })
+    bootout(...args)
+  }
+  assert.throws(() => restartSchedulerProductionRuntime({ ctx, phase() {}, sourceSha: SHA }),
+    error => error.code === 'RESTART_EXIT_PROOF_UNAVAILABLE')
+  assert.equal(calls.bootstrap, 0, 'the post-stop proof must catch work that raced the pre-stop census')
+  assert.equal(raced.store.getTurnReconciliation(raced.handle).snapshot.initialOutcome, 'outcome_unknown')
+  assert.equal(raced.store.getTurnReconciliation(raced.handle).snapshot.fenceState, 'active')
+})
+
+test('a raced turn with trusted termination-only settlement keeps literal UNKNOWN history while replacement proceeds', t => {
+  const { ctx, calls } = baseCtx(t)
+  const bootout = ctx.bootout
+  let raced
+  ctx.bootout = (...args) => {
+    raced = seedTurnStore(ctx.turnRecoveryStore, { kind: 'inflight' })
+    raced.store.markOutcomeUnknown(raced.handle, { source: 'shutdown' })
+    // Simulated trusted child-exit transition, through the existing store.
+    // Actual owning AgentProcess callback ordering is pinned in shutdown.test.js.
+    raced.store.settleLate(raced.handle, {
+      lateOutcome: 'terminated_without_outcome', terminationEvidence: 'child_real_exit', exitObserved: true,
+    })
+    raced.store.markFenceCleared(raced.handle)
+    bootout(...args)
+  }
+  restartSchedulerProductionRuntime({ ctx, phase() {}, sourceSha: SHA })
+  assert.equal(calls.bootstrap, 1)
+  const records = JSON.parse(readFileSync(ctx.turnRecoveryStore, 'utf8')).records
+  assert.equal(records.filter(record => record.initialOutcome === 'outcome_unknown').length, 1, 'literal UNKNOWN history is retained')
+  assert.equal(records.filter(record => record.initialOutcome === 'outcome_unknown' && record.queryState !== 'settled').length, 0, 'no unresolved new UNKNOWN remains')
+  assert.equal(records.find(record => record.handle === raced.handle).settlementResult, 'terminated_without_outcome')
 })

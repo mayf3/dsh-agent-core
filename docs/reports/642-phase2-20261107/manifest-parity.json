@@ -1,0 +1,137 @@
+{
+  "result": "PASS",
+  "exit_code": 0,
+  "observed_at": "2026-11-07T03:21:44.324873+00:00",
+  "source_commit": "c1fad8976e50e96adb27a4c7e2dd4f97bf2e899e",
+  "source_clean": true,
+  "manifest_sha256": "3ce456bec3af4ee6c9f725cf8d587ed1a3e70812574633fda9bddc06016a0841",
+  "version": "2.0.0-rc.3",
+  "files": [
+    {
+      "path": ".agents/README.md",
+      "sha256": "18d2ee74877c9871b7a086bbc8ec02ae8219146c61e6ecfc4f33038b881c98e2",
+      "size": 20078
+    },
+    {
+      "path": ".agents/protocol/SPEC_GOVERNANCE_V0.md",
+      "sha256": "4f6deb623ccd38336d1ae5313fcb1f1bbccd41c175e1474f390d643ed12ca41b",
+      "size": 930
+    },
+    {
+      "path": ".agents/protocol/SPEC_GOVERNANCE_V1.md",
+      "sha256": "2955ad3a25eae4008cc12a607cd6f64f4c906ef8b0598ef3047e009bdc62921b",
+      "size": 16477
+    },
+    {
+      "path": ".agents/protocol/SPEC_FORMAT_V0.md",
+      "sha256": "027b7600e240d33602e3e75ece381e82d097fdf3d5aa6f907fe46ccfff249ec4",
+      "size": 13245
+    },
+    {
+      "path": ".agents/skills/spec-governance/SKILL.md",
+      "sha256": "a26f27a6f37a40984d8f80be0eea67bcf99d5055b96d840a3116a58e9603be4f",
+      "size": 2589
+    },
+    {
+      "path": ".agents/skills/spec-governance/modes/PREFLIGHT.md",
+      "sha256": "394e5aaae58ae1b87afce978ecbc48929e5759d43a4031cffb754c6c9a6da1e2",
+      "size": 6190
+    },
+    {
+      "path": ".agents/skills/spec-governance/modes/AUTHOR.md",
+      "sha256": "317b28afb24b4dd657671215de705bf9f631842c38b1add60c7847ff4d986327",
+      "size": 2495
+    },
+    {
+      "path": ".agents/skills/spec-governance/modes/REVIEW.md",
+      "sha256": "1c2e285da8a50d39ed4c6362d26eeeeb48ababcc90d1d31ebea6b0b64abb9894",
+      "size": 6512
+    },
+    {
+      "path": ".agents/skills/spec-governance/modes/COMPLIANCE.md",
+      "sha256": "1f26b23f69fef5a1fce219bbc10f23770b5e34a9c026bf05b5abea4bc934881d",
+      "size": 2626
+    },
+    {
+      "path": ".agents/tools/verify_governance.py",
+      "sha256": "1a4b8e3421ad6e3d07d0c11badbc103e9a7646a25015814241a3f29049515937",
+      "size": 7938
+    },
+    {
+      "path": ".agents/tools/validate_spec_transition.py",
+      "sha256": "5be5fae2ab02b87d1fc138e5da21f91f973b512e2198bcf5149a4ae03331b53e",
+      "size": 18577
+    },
+    {
+      "path": ".agents/tools/validate_governance_route.py",
+      "sha256": "f7d78923b94d3593e48f229e19e8a549a592b07b8d820567e21c6691671787f5",
+      "size": 27448
+    },
+    {
+      "path": ".agents/schemas/distribution-manifest.schema.json",
+      "sha256": "9255c0772bf552b6118b664cd3e7a399b5ccbe6f7bedb711a9049f9716072041",
+      "size": 1113
+    },
+    {
+      "path": ".agents/schemas/spec-frontmatter.schema.json",
+      "sha256": "ba481245cb9a636423f6e6386807f408f81f546553e63fd248c75a3093ece74a",
+      "size": 3945
+    },
+    {
+      "path": ".agents/schemas/governance-lock.schema.json",
+      "sha256": "e21a9b535cfacc20b898e782dbe142c76078f73a76c1bcddae83ea50c0c478a3",
+      "size": 2812
+    },
+    {
+      "path": ".agents/schemas/governance-route.schema.json",
+      "sha256": "92fa23576d27f9ace1755169c5120f9f1f50a3547762cebc2c738877cba425b4",
+      "size": 18274
+    },
+    {
+      "path": ".agents/templates/SPEC_TEMPLATE.md",
+      "sha256": "fbc45e2996065f3ad9db266d7bf8fad6b0adc3866bbacc6a0e32df9104e5c1e2",
+      "size": 3343
+    },
+    {
+      "path": ".agents/templates/GOVERNANCE_ADOPTION_SPEC_TEMPLATE.md",
+      "sha256": "c669aa53d0cee0e87cb6cb9b835acaf2f49c7227a80279cd8da56dbbec6d7578",
+      "size": 11645
+    },
+    {
+      "path": ".agents/templates/CHANGE_BRIEF_TEMPLATE.md",
+      "sha256": "bf4d33db4329df6908936f405eed23b53bdc47407bf3b9266ca069c3fffac3aa",
+      "size": 3410
+    },
+    {
+      "path": ".agents/templates/EXEC_PLAN_TEMPLATE.md",
+      "sha256": "edb7252b7416b57a8abea5ce3022d56872e849b5437f1e302c155d8183196196",
+      "size": 1034
+    },
+    {
+      "path": ".agents/templates/EXECUTION_MANDATE_TEMPLATE.md",
+      "sha256": "dedeb24b0f7e53fa962693155a014da4777c8183cc16ff1e9cb138ff9fc62748",
+      "size": 1682
+    },
+    {
+      "path": ".agents/templates/CONTROLLED_RUNBOOK_TEMPLATE.md",
+      "sha256": "4e36d81de5233f834fc745b917111e08f67e132fbb2a78dcdeb82ec9701a9d9b",
+      "size": 1498
+    },
+    {
+      "path": ".agents/templates/REVIEW_RECORD_TEMPLATE.md",
+      "sha256": "182bad8ac113b94056996b68919d68b1510045fc47b81bc20f1f0101e4d61934",
+      "size": 3903
+    },
+    {
+      "path": ".agents/templates/CONFORMANCE_RECORD_TEMPLATE.md",
+      "sha256": "bfc491210cf0754b818a48290a3ce07639ac0f301e3c891c3eea4fc0a4b0dbdd",
+      "size": 1848
+    },
+    {
+      "path": ".agents/templates/INVESTIGATION_RECORD_TEMPLATE.md",
+      "sha256": "e63e5081b1fb68720784bf6bc6bd35357901d8ed566743a7e1507b5a9c5ca28b",
+      "size": 1394
+    }
+  ],
+  "summary": "all 25 files, validator, verifier and manifest match exact source"
+}

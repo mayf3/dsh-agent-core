@@ -1,0 +1,341 @@
+"""Affected-delta tests for the fixed e30 partial-stage closure (AMENDMENT_B7_
+E30_PARTIAL_STAGE_CLOSURE_V1) against the real sealed modules, real wiring and
+the actual paired client, following the test_v49_e29_integration harness.
+
+Isolated: no production service, no process creation, all I/O confined to an
+exclusive mkdtemp. The fixture patches the loaded E30 module pins (same
+discipline as the e29 fixture pins) and builds a real miniature partial stage
+whose manifest digest is computed by the module's own projection code.
+"""
+import copy
+import hashlib
+import json
+import os
+import shutil
+import stat
+import sys
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+sys.dont_write_bytecode = True
+WB = Path(__file__).resolve().parent
+sys.path.insert(0, str(WB))
+
+import test_v49_e29_integration as base
+from test_v49_e29_integration import canonical, sha
+
+OP30 = "b7-packet-r27-758d5250f5c352f2e-e30"
+MANIFEST30 = "758d5250ae752f3d85ea950c572d5545569ee5687c2558e6fa4ba11f17ec168b"
+SOURCE30 = "b4b0dd3e0b7d0b943731c97c5548fafa067589730c39f4443537d7a87053c7d6"
+REG_POLICY30 = "95bcefe73840f5c2e2be2dcc26f38cc676b9bf940606ea0409042fcf6b87a034"
+EXEC_POLICY30 = "367df5571dd3d59362a95fd5b40b11bcf65791a165f0657c38304e74f37ad8cc"
+STAGE_SEED_SHA = "eb58eff34dc2b4de9b6bf65edf3611b2a853dd95575d33711a6ae955c5cdd6f9"
+
+
+class E30Fixture(base.Fixture):
+    """The v49 harness fixture driven for the fixed e30 subject, plus a real
+    miniature partial stage and E30 module pin configuration."""
+
+    def __init__(self, candidate):
+        saved = (base.OP, base.MANIFEST, base.SOURCE, base.OLD_REG_POLICY, base.OLD_EXEC_POLICY)
+        base.OP, base.MANIFEST, base.SOURCE = OP30, MANIFEST30, SOURCE30
+        base.OLD_REG_POLICY, base.OLD_EXEC_POLICY = REG_POLICY30, EXEC_POLICY30
+        try:
+            super().__init__(candidate)
+        finally:
+            base.OP, base.MANIFEST, base.SOURCE = saved[0], saved[1], saved[2]
+            base.OLD_REG_POLICY, base.OLD_EXEC_POLICY = saved[3], saved[4]
+        self._configure_e30()
+        self.auth_path = self.reg_path.with_name(OP30 + ".b7-execution.b7-disposal-auth.json")
+        self.terminal_path = self.reg_path.with_name(OP30 + ".b7-execution.b7-disposal-terminal.json")
+        self.original_stage = Path(self.relocate(
+            "/private/var/db/agent-core/authsvc-codex-migration/activation-code-input"))
+        self.preserved_stage = Path(self.relocate(
+            "/private/var/db/agent-core/authsvc-codex-migration/activation-code-input.e30-closed-758d5250"))
+
+    def _e30_module(self):
+        for value in list(self.ds.__dict__.values()):
+            if isinstance(value, type(sys)) and isinstance(getattr(value, "E30", None), dict):
+                return value
+        raise AssertionError("sealed e30 closure module not loaded")
+
+    def _configure_e30(self):
+        module = self._e30_module()
+        migration = Path(self.policy["nativeTransactionPath"]).parent
+        self.stage_root = migration / "activation-code-input"
+        # Miniature partial stage, real bytes/modes: 3 directories incl. root,
+        # 4 regular files, no other kinds — the exact shape the projection binds.
+        seed_dir = self.stage_root / "b7-entry-code" / "b7-wired-stage"
+        seed_dir.mkdir(parents=True)
+        inputs_dir = self.stage_root / "b7-entry-code" / "b7-wired-inputs" / "dsh-agent-core"
+        inputs_dir.mkdir(parents=True)
+        (self.stage_root / "b7-entry-code" / "b7-wired-inputs" / "note.txt").write_bytes(b"e30\n")
+        (seed_dir / "seed-materials.mjs").write_bytes(b"const PACKAGE='fixture';\n")
+        (seed_dir / "stage-seed-once.py").write_bytes(b"PACKAGE = Path('fixture')\n")
+        (inputs_dir / "pin.txt").write_bytes(b"pinned-bytes\n")
+        os.chmod(self.stage_root, 0o700)
+        for path in (seed_dir, inputs_dir):
+            os.chmod(path, 0o755)
+        rows = module._stage_rows(self.execution, str(self.stage_root))
+        digest = sha(json.dumps(rows, sort_keys=True, separators=(",", ":")).encode())
+        dirs = sum(1 for r in rows if r["kind"] == "D")
+        files = sum(1 for r in rows if r["kind"] == "F")
+        module.E30.update({
+            "registration_receipt_sha256": sha(self.reg_raw),
+            "registration_policy_sha256": REG_POLICY30,
+            "registration_request_sha256": self.reg["request_sha256"],
+            "execution_record_sha256": sha(self.exec_raw),
+            "execution_policy_sha256": EXEC_POLICY30,
+            "journal_sha256": sha(self.journal_raw),
+            "partial_stage_manifest_sha256": digest,
+            "partial_stage_directories": dirs,
+            "partial_stage_files": files,
+            "original_stage": str(self.stage_root),
+            "preserved_stage": str(migration / "activation-code-input.e30-closed-758d5250"),
+            "seed_path": str(migration / "b7-preparation-input.json"),
+        })
+
+    def request(self, action, peer=502, op=OP30, **fields):
+        return super().request(action, peer=peer, op=op, **fields)
+
+    def client_request(self, action, op=OP30, **fields):
+        return super().client_request(action, op=op, **fields)
+
+
+CANDIDATE = None
+FIXTURE = None
+
+
+class E30ClosureTestBase(unittest.TestCase):
+    def setUp(self):
+        self.fix = E30Fixture(CANDIDATE)
+        self.fix.test_case = self.id()
+
+    def tearDown(self):
+        self.fix.close()
+
+    def stage_files(self):
+        return sorted(p for p in self.fix.stage_root.rglob("*") if p.is_file())
+
+
+class StatusAndDisposalTests(E30ClosureTestBase):
+    def test_status_before_disposal_has_no_overlay(self):
+        result = self.fix.request(base.STATUS)
+        self.assertTrue(result["ok"])
+        data = result["data"]
+        self.assertNotIn("disposal_terminal", data)
+        self.assertEqual(data["phase"], "RETAINED")
+        self.assertEqual(data["next_action"], "INSPECT_ORIGINAL_STAGE_CUSTODY_NO_STAGE_REPLAY")
+        self.assertEqual(self.fix.writes, [])
+
+    def test_disposal_requires_registered_peer(self):
+        result = self.fix.request(base.DISPOSE, peer=404)
+        self.assertFalse(result["ok"])
+        self.assertEqual(self.fix.writes, [])
+
+    def test_disposal_refuses_when_native_tx_present(self):
+        self.fix.put(self.fix.policy["nativeTransactionPath"], b'{"kind":"probe"}', 0o600)
+        result = self.fix.request(base.DISPOSE)
+        self.assertFalse(result["ok"])
+        self.assertEqual(self.fix.writes, [])
+
+    def test_disposal_refuses_when_preparation_seed_present(self):
+        self.fix.put(self.fix._e30_module().E30["seed_path"], b'{"seed":true}', 0o600)
+        result = self.fix.request(base.DISPOSE)
+        self.assertFalse(result["ok"])
+        self.assertEqual(self.fix.writes, [])
+
+    def test_disposal_refuses_on_partial_stage_drift(self):
+        files = self.stage_files()
+        (files[0]).write_bytes(files[0].read_bytes() + b"drift\n")
+        result = self.fix.request(base.DISPOSE)
+        self.assertFalse(result["ok"])
+        self.assertEqual(self.fix.writes, [])
+        files[0].write_bytes(files[0].read_bytes()[: -len(b"drift\n")])
+        result = self.fix.request(base.DISPOSE)
+        self.assertTrue(result["ok"])
+        self.assertEqual(len(self.fix.writes), 2)
+
+    def test_disposal_refuses_on_foreign_stage_kind(self):
+        (self.fix.stage_root / "b7-entry-code" / "link").symlink_to("b7-wired-stage")
+        try:
+            result = self.fix.request(base.DISPOSE)
+            self.assertFalse(result["ok"])
+            self.assertEqual(self.fix.writes, [])
+        finally:
+            (self.fix.stage_root / "b7-entry-code" / "link").unlink()
+
+    def test_disposal_writes_auth_then_terminal_and_status_overlays(self):
+        result = self.fix.request(base.DISPOSE)
+        self.assertTrue(result["ok"])
+        self.assertEqual(len(self.fix.writes), 2)
+        auth = json.loads(self.fix.auth_path.read_bytes())
+        terminal = json.loads(self.fix.terminal_path.read_bytes())
+        self.assertEqual(auth["kind"], "DS_B7_PRE_TX_PARTIAL_STAGE_DISPOSAL_AUTH_V1")
+        self.assertEqual(terminal["kind"], "DS_B7_PRE_TX_PARTIAL_STAGE_DISPOSAL_TERMINAL_V1")
+        self.assertEqual(terminal["authorization_sha256"], sha(canonical(auth)))
+        self.assertEqual(terminal["disposal"], dict(native_state="CLOSED_PRE_TX",
+            installed=False, partial_stage_preserved=True))
+        self.assertEqual(terminal["pre"], terminal["post"])
+        modes = {p: stat.S_IMODE(p.stat().st_mode) for p in (self.fix.auth_path, self.fix.terminal_path)}
+        self.assertEqual(modes, {self.fix.auth_path: 0o600, self.fix.terminal_path: 0o600})
+        status = self.fix.request(base.STATUS)
+        self.assertTrue(status["ok"])
+        overlay = status["data"]["disposal_terminal"]
+        self.assertEqual(overlay["native_state"], "CLOSED_PRE_TX")
+        self.assertFalse(overlay["installed"])
+        self.assertTrue(overlay["partial_stage_preserved"])
+        self.assertEqual(overlay["authorization_sha256"], terminal["authorization_sha256"])
+        self.assertEqual(status["data"]["next_action"], "COHERENT_CANDIDATE_NEXT")
+        self.assertEqual(status["data"]["native_state"], "UNKNOWN")
+        self.assertFalse(status["data"]["native_terminal_verified"])
+
+    def test_completed_disposal_repeat_is_read_only(self):
+        self.assertTrue(self.fix.request(base.DISPOSE)["ok"])
+        snapshot = self.fix.snapshot()
+        again = self.fix.request(base.DISPOSE)
+        self.assertTrue(again["ok"])
+        self.assertEqual(self.fix.snapshot(), snapshot)
+
+    def test_auth_only_failure_recovers_to_same_disposition(self):
+        self.fix.stop_before_terminal = True
+        stopped = self.fix.request(base.DISPOSE)
+        self.assertFalse(stopped["ok"])
+        self.assertEqual(len(self.fix.writes), 1)
+        self.assertTrue(self.fix.auth_path.exists())
+        self.assertFalse(self.fix.terminal_path.exists())
+        self.fix.stop_before_terminal = False
+        resumed = self.fix.request(base.DISPOSE)
+        self.assertTrue(resumed["ok"])
+        self.assertEqual(len(self.fix.writes), 2)
+        status = self.fix.request(base.STATUS)
+        self.assertEqual(status["data"]["next_action"], "COHERENT_CANDIDATE_NEXT")
+
+    def test_status_after_preservation_verifies_history(self):
+        self.assertTrue(self.fix.request(base.DISPOSE)["ok"])
+        os.rename(self.fix.stage_root, self.fix.preserved_stage)
+        status = self.fix.request(base.STATUS)
+        self.assertTrue(status["ok"])
+        self.assertTrue(status["data"]["disposal_terminal"]["partial_stage_preserved"])
+
+    def test_status_refuses_when_retained_evidence_missing(self):
+        self.assertTrue(self.fix.request(base.DISPOSE)["ok"])
+        shutil.rmtree(self.fix.stage_root)
+        result = self.fix.request(base.STATUS)
+        self.assertFalse(result["ok"])
+
+    def test_disposal_of_unregistered_subject_refuses(self):
+        result = self.fix.request(base.DISPOSE, op="b7-packet-r27-a2cb892cf5c352f2e-e31")
+        self.assertFalse(result["ok"])
+        self.assertEqual(self.fix.writes, [])
+
+
+class FreshWriteBoundaryTests(E30ClosureTestBase):
+    """The accepted amendment requires the COMPLETE fresh scene at every NEW
+    disposition-record write boundary and on auth-only readmission. These are
+    the five independent-audit probes as standing refusal tests."""
+
+    def refuse_after_auth(self, pollute):
+        self.fix.after_write = pollute
+        result = self.fix.request(base.DISPOSE)
+        self.assertFalse(result["ok"], "drift after auth must refuse")
+        self.assertEqual(len(self.fix.writes), 1, "auth-only evidence is retained")
+        self.assertFalse(self.fix.terminal_path.exists(), "no terminal after drift")
+
+    def test_native_tx_after_auth_refuses_terminal(self):
+        self.refuse_after_auth(lambda path: self.fix.put(
+            self.fix.policy["nativeTransactionPath"], b'{}', 0o600)
+            if path == self.fix.auth_path else None)
+
+    def test_preparation_seed_after_auth_refuses_terminal(self):
+        self.refuse_after_auth(lambda path: self.fix.put(
+            self.fix._e30_module().E30["seed_path"], b'{"seed":true}', 0o600)
+            if path == self.fix.auth_path else None)
+
+    def test_journal_change_after_auth_refuses_terminal(self):
+        def pollute(path):
+            if path == self.fix.auth_path:
+                self.fix.put(self.fix.journal_path,
+                             self.fix.journal_raw + b'{"drift":1}\n', 0o600)
+        self.refuse_after_auth(pollute)
+
+    def test_stage_moved_to_history_before_first_disposal_refuses(self):
+        os.rename(self.fix.stage_root, self.fix.preserved_stage)
+        result = self.fix.request(base.DISPOSE)
+        self.assertFalse(result["ok"])
+        self.assertEqual(self.fix.writes, [])
+
+    def test_auth_only_then_native_tx_refuses_readmission(self):
+        self.fix.stop_before_terminal = True
+        self.assertFalse(self.fix.request(base.DISPOSE)["ok"])
+        self.assertEqual(len(self.fix.writes), 1)
+        self.fix.stop_before_terminal = False
+        self.fix.put(self.fix.policy["nativeTransactionPath"], b'{}', 0o600)
+        result = self.fix.request(base.DISPOSE)
+        self.assertFalse(result["ok"], "readmission with native TX present must refuse")
+        self.assertEqual(len(self.fix.writes), 1, "no further writes after drift")
+        self.assertFalse(self.fix.terminal_path.exists())
+
+
+class PairedClientProjectionTests(E30ClosureTestBase):
+    def test_client_accepts_e30_terminal_projection(self):
+        self.assertTrue(self.fix.request(base.DISPOSE)["ok"])
+        result = self.fix.client_request(base.STATUS)
+        self.assertTrue(result["ok"])
+        overlay = result["data"]["disposal_terminal"]
+        self.assertEqual(overlay["native_state"], "CLOSED_PRE_TX")
+        self.assertTrue(overlay["partial_stage_preserved"])
+        self.assertEqual(result["data"]["next_action"], "COHERENT_CANDIDATE_NEXT")
+
+    def test_client_rejects_e30_terminal_outside_fixed_subject(self):
+        self.assertTrue(self.fix.request(base.DISPOSE)["ok"])
+        good = self.fix.request(base.STATUS)
+        transplanted = copy.deepcopy(good)
+        # The full e30 success envelope replayed under the e29 subject: ids now
+        # match the request, so only the pinned-shape branch can refuse it.
+        transplanted["operation_id"] = base.OP
+
+        def substitute(response):
+            return transplanted
+
+        self.fix.response_transform = substitute
+        try:
+            result = self.fix.client_request(base.STATUS, op=base.OP)
+        finally:
+            self.fix.response_transform = None
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "INVALID_RESPONSE")
+
+    def test_client_rejects_e30_overlay_without_partial_stage_flag(self):
+        self.assertTrue(self.fix.request(base.DISPOSE)["ok"])
+
+        def strip_flag(response):
+            response["data"]["disposal_terminal"].pop("partial_stage_preserved")
+            return response
+
+        self.fix.response_transform = strip_flag
+        try:
+            result = self.fix.client_request(base.STATUS)
+        finally:
+            self.fix.response_transform = None
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "INVALID_RESPONSE")
+
+
+class UnchangedE29BehaviorTests(E30ClosureTestBase):
+    def test_e29_status_path_delegates_through_e30_wrapper(self):
+        # The e30 wrapper must leave every other subject byte-path identical:
+        # the e29 subject keeps its own disposal surface and STATUS semantics.
+        result = self.fix.request(base.STATUS, op=base.OP)
+        self.assertFalse(result["ok"])  # e29 records are not staged in this fixture
+        self.assertEqual(result["error"]["code"], "NOT_FOUND")
+
+
+def setUpModule():
+    global CANDIDATE
+    CANDIDATE = base.Candidate()
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=1)

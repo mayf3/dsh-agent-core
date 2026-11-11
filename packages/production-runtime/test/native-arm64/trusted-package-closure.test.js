@@ -39,11 +39,19 @@ test('trusted pack copies package-root public entries required by production com
 
   const composePath = join(runtimeDst, 'src', 'compose.js')
   const compose = readFileSync(composePath, 'utf8')
-  const line = compose.split('\n').find((row) => row.includes('agent-identity-capabilities/index.js'))
+  const helperSpecifier = compose.match(/import \{ mountIdentityCapabilityRuntime \} from '([^']+)'/)?.[1]
+  assert.notEqual(helperSpecifier, undefined)
+  assert.equal(helperSpecifier.startsWith('.'), true, 'the packed helper import must remain relative')
+  assert.match(compose, /mountIdentityCapabilityRuntime\(\{ ctx, definition, brokerCredentialsFile, brokerAuthServiceOrigin, workflowServiceOrigin \}\)/)
+  const compositionPath = resolve(dirname(composePath), helperSpecifier)
+  assert.equal(compositionPath, join(runtimeDst, 'src', 'identity', 'capability-runtime.js'))
+  assert.equal(existsSync(compositionPath), true, 'the actual identity composition helper must be packed')
+  const composition = readFileSync(compositionPath, 'utf8')
+  const line = composition.split('\n').find((row) => row.includes('agent-identity-capabilities/index.js'))
   assert.notEqual(line, undefined)
   const specifier = line.match(/from\s+'([^']+)'/)?.[1]
   assert.equal(typeof specifier, 'string')
-  const packedIdentityEntry = resolve(dirname(composePath), specifier)
+  const packedIdentityEntry = resolve(dirname(compositionPath), specifier)
   assert.equal(packedIdentityEntry, join(identityDst, 'index.js'))
   assert.equal(existsSync(packedIdentityEntry), true,
     'the exact production composition import must resolve inside the packed app')

@@ -7,8 +7,8 @@ import {
   validateOccurrenceRecord,
   decodeOccurrenceRecord,
 } from './occurrence-model.js'
-import { OwnerLock } from './lock.js'
-import { storeMigrationMethods } from './store-migration.js'
+import { OwnerLock } from './store/lock.js'
+import { storeMigrationMethods } from './store/store-migration.js'
 
 export const STORE_VERSION = 3
 export const UPGRADEABLE_VERSIONS = new Set([1, 2])

@@ -1,0 +1,15 @@
+test_cli_errors_fail_closed (__main__.SyntheticTree.test_cli_errors_fail_closed) ... ok
+test_five_fixture_classes (__main__.SyntheticTree.test_five_fixture_classes) ... ok
+test_forced_empty_omission (__main__.SyntheticTree.test_forced_empty_omission) ... ok
+test_nofollow_absolute_and_dangling (__main__.SyntheticTree.test_nofollow_absolute_and_dangling) ... ok
+test_nonempty_changed_stops (__main__.SyntheticTree.test_nonempty_changed_stops) ... ok
+test_nonempty_missing_stops_before_empty_repair (__main__.SyntheticTree.test_nonempty_missing_stops_before_empty_repair) ... ok
+test_reserved_and_ambiguous_paths_rejected (__main__.SyntheticTree.test_reserved_and_ambiguous_paths_rejected) ... ok
+test_single_process_batch_and_flags_only (__main__.SyntheticTree.test_single_process_batch_and_flags_only) ... ok
+test_source_drift_stops (__main__.SyntheticTree.test_source_drift_stops) ... ok
+test_unexpected_attribute_stops (__main__.SyntheticTree.test_unexpected_attribute_stops) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.246s
+
+OK

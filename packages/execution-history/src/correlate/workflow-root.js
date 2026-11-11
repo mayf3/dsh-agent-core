@@ -11,6 +11,7 @@ import { fetchInstanceDetail, fetchTimelineAll, fetchSubmissions, timelineToReco
 import { observation, classifyAttempt, classifySvcEvents, classifySendOutcome, VERDICTS } from '../rules.js'
 import { gap, correlation, timelineEntry } from './context.js'
 import { projectForViewer } from '../redact.js'
+import { buildWorkflowResult } from '../workflow-result.js'
 
 const lower = (v) => String(v ?? '').toLowerCase()
 
@@ -21,9 +22,13 @@ export async function buildWorkflowRoot(ctx, args) {
   const gaps = []
   const observations = []
   let svcDetail = null
+  const resultObservations = []
 
   if (ctx.svcRequest !== null) {
     const detail = await fetchInstanceDetail(ctx.svcRequest, ctx.viewer.agentId, workflowInstanceId)
+    resultObservations.push({ source: 'svc_detail', observedAtMs: Date.now(),
+      ...(detail.body?.detail?.instance?.workflow_state_version !== undefined
+        ? { workflowStateVersion: detail.body.detail.instance.workflow_state_version } : {}) })
     if (detail.ok) {
       svcDetail = detail.body
       records.push({
@@ -38,17 +43,19 @@ export async function buildWorkflowRoot(ctx, args) {
       ctx._sources.set('svc_detail', { status: { status: 'ABSENT', reason: detail.code }, files: [], rowsRead: 0 })
     }
     const timeline = await fetchTimelineAll(ctx.svcRequest, ctx.viewer.agentId, workflowInstanceId, {})
+    resultObservations.push({ source: 'svc_timeline', observedAtMs: Date.now() })
     if (timeline.error !== null && timeline.error !== undefined) {
       gaps.push(svcFailureGap(timeline.error, 'svc_timeline'))
-      ctx._sources.set('svc_timeline', { status: { status: 'ABSENT', reason: timeline.error.code }, files: [], rowsRead: 0 })
+      ctx._sources.set('svc_timeline', { status: { status: 'ABSENT', reason: timeline.error.code }, files: [], rowsRead: 0, revision: timeline.revision })
     } else {
       const timelineRecords = timelineToRecords(timeline.items)
       records.push(...timelineRecords)
       if (timeline.truncated) gaps.push(gap('TRUNCATED', 'svc_timeline', { reason: 'timeline page cap reached' }))
       observations.push(...classifySvcEvents(timelineRecords))
-      ctx._sources.set('svc_timeline', { status: { status: timeline.truncated ? 'DEGRADED' : 'OK', truncated: timeline.truncated }, files: [], rowsRead: timelineRecords.length })
+      ctx._sources.set('svc_timeline', { status: { status: timeline.truncated ? 'DEGRADED' : 'OK', truncated: timeline.truncated }, files: [], rowsRead: timelineRecords.length, revision: timeline.revision })
     }
     const submissions = await fetchSubmissions(ctx.svcRequest, ctx.viewer.agentId, workflowInstanceId, {})
+    resultObservations.push({ source: 'svc_submissions', observedAtMs: Date.now() })
     if (submissions.ok) {
       records.push({
         source: 'svc_submissions', kind: 'svc_submissions', provenanceClass: 'PRIMARY_PERSISTED',
@@ -128,7 +135,8 @@ export async function buildWorkflowRoot(ctx, args) {
   }
   observations.push(observation('schedulingAdmission', VERDICTS.NOT_APPLICABLE, { ruleId: 'R4', evidenceRefs: [], note: 'activation/closure tables have no read endpoint (SOURCE_ABSENT per R4/F6)' }))
 
-  return { records, correlations, gaps, observations }
+  const workflowResult = await buildWorkflowResult(ctx, workflowInstanceId, records, attempts, resultObservations)
+  return { records, correlations, gaps, observations, workflowResult }
 }
 
 export function briefWorkflow(rec) {

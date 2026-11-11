@@ -1,0 +1,141 @@
+import copy,json,os,sys,unittest
+from pathlib import Path
+from unittest.mock import patch
+from fixture import *
+C=Candidate('candidate')
+class Boundaries(unittest.TestCase):
+ def setUp(self):self.f=Fixture(C);self.addCleanup(self.f.close);self.m=self.f.mod
+ def good(self,r):self.assertIs(r.get('ok'),True,r);return r['data']
+ def closed(self,r):self.assertIn('disposal_terminal',self.good(r))
+ def refused(self,action=DISPOSE,**kw):
+  before=self.f.snapshot();r=self.f.request(action,**kw);self.assertFalse(r['ok'],r);self.assertEqual(self.f.snapshot(),before);return r
+ def test_wrong_peer_bool_extras_and_foreign_op(self):
+  for fields in ({'peer':503},{'peer':True},{'extra':'refused'},{'op':OP+'x'}):
+   with self.subTest(fields=fields):self.refused(**fields)
+ def test_original_raw_hash_and_complete_schema_strict(self):
+  for path,key,val,pin in ((self.f.reg_path,'version',True,'registration_receipt_sha256'),(self.f.exec_path,'attempt',True,'execution_record_sha256'),(self.f.exec_path,'input_sequence',False,'execution_record_sha256'),(self.f.reg_path,'unknown',1,'registration_receipt_sha256')):
+   with self.subTest(key=key):
+    old=path.read_bytes();oldpin=self.m.E31[pin];row=json.loads(old);row[key]=val;path.write_bytes(canon(row));self.refused();self.m.E31[pin]=sha(path.read_bytes());self.refused();path.write_bytes(old);self.m.E31[pin]=oldpin
+ def test_absence_journal_stage_seed_and_destination(self):
+  probes=(self.f.tx_path,self.f.holder_path,Path(self.m.E31['seed_path']),self.f.history)
+  for p in probes:
+   with self.subTest(path=str(p)):
+    p.parent.mkdir(exist_ok=True,parents=True);p.mkdir();self.refused();p.rmdir()
+  old=self.f.journal_path.read_bytes();self.f.journal_path.write_bytes(old+b'changed');self.refused();self.f.journal_path.write_bytes(old)
+  old=self.f.seed.read_bytes();self.f.seed.write_bytes(old+b'changed');self.refused();self.f.seed.write_bytes(old)
+  self.closed(self.f.request(DISPOSE))
+ def test_active_and_mutation_busy_or_missing_lock(self):
+  self.f.execution.active={'operation_id':OP};self.refused();self.f.execution.active=None
+  lock=Path(self.f.ds.STATE_ROOT)/'mutation.lock';fd=os.open(lock,os.O_RDONLY)
+  import fcntl
+  try:
+   fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB);self.refused()
+  finally:os.close(fd)
+  lock.unlink();self.refused();self.assertFalse(lock.exists())
+ def test_each_new_write_rechecks_complete_scene(self):
+  original=self.m._publish
+  def publish(e,path,raw,recheck,lease):
+   result=original(e,path,raw,recheck,lease)
+   if path==str(self.f.auth_path):self.f.tx_path.write_bytes(b'changed')
+   return result
+  with patch.object(self.m,'_publish',side_effect=publish):self.assertFalse(self.f.request(DISPOSE)['ok'])
+  self.assertTrue(self.f.auth_path.exists());self.assertFalse(self.f.terminal_path.exists());self.f.tx_path.unlink();self.closed(self.f.request(DISPOSE))
+ def test_auth_only_restart_does_not_rewrite(self):
+  original=self.m._publish
+  def publish(e,path,*args):
+   if path==str(self.f.terminal_path):raise OSError('interrupted')
+   return original(e,path,*args)
+  with patch.object(self.m,'_publish',side_effect=publish):self.assertFalse(self.f.request(DISPOSE)['ok'])
+  before=self.f.auth_path.read_bytes();inode=self.f.auth_path.stat().st_ino;self.f.execution._e31_durability.clear();calls=[];sync=self.m.os.fsync
+  with patch.object(self.m.os,'fsync',side_effect=lambda fd:(calls.append(fd),sync(fd))[1]):self.closed(self.f.request(DISPOSE))
+  self.assertEqual(len(calls),4);self.assertEqual(self.f.auth_path.read_bytes(),before);self.assertEqual(self.f.auth_path.stat().st_ino,inode)
+ def test_all_four_record_sync_failures_unknown(self):
+  for boundary in range(1,5):
+   with self.subTest(boundary=boundary):
+    f=Fixture(C);m=f.mod;count=[0];sync=m.os.fsync
+    def fail(fd):
+     count[0]+=1
+     if count[0]==boundary:raise OSError('finite failure')
+     return sync(fd)
+    try:
+     with patch.object(m.os,'fsync',side_effect=fail):self.assertFalse(f.request(DISPOSE)['ok'])
+     with patch.object(m.os,'fsync',side_effect=AssertionError('STATUS sync')):self.assertNotIn('disposal_terminal',self.good(f.request(STATUS)))
+     self.assertFalse(list(f.reg_path.parent.glob('*.tmp')));self.closed(f.request(DISPOSE))
+    finally:f.close()
+ def test_orphan_conflict_extra_and_wrong_custody(self):
+  self.closed(self.f.request(DISPOSE));saved={p:p.read_bytes() for p in (self.f.auth_path,self.f.terminal_path)}
+  self.f.auth_path.unlink();self.refused();self.f.auth_path.write_bytes(saved[self.f.auth_path]);self.f.auth_path.chmod(0o600)
+  for path,key,val in ((self.f.auth_path,'unknown',True),(self.f.terminal_path,'authorization_sha256','0'*64),(self.f.terminal_path,'operation_id',OP+'x')):
+   row=json.loads(saved[path]);row[key]=val;path.write_bytes(canon(row));self.refused();path.write_bytes(saved[path])
+  os.chmod(self.f.auth_path,0o644);self.refused();os.chmod(self.f.auth_path,0o600)
+  alias=self.f.auth_path.with_name('hardlink');os.link(self.f.auth_path,alias);self.refused();alias.unlink()
+ def test_no_replace_destination_race_uses_actual_native_excl(self):
+  primitive=self.m._rename_excl;attempt=[]
+  def race(e,parent,src,dst):
+   self.assertTrue(dst.endswith('.b7-disposal-auth.json'));fd=os.open(dst,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600,dir_fd=parent);os.write(fd,b'foreign');os.close(fd);attempt.append(dst);return primitive(e,parent,src,dst)
+  with patch.object(self.m,'_rename_excl',side_effect=race):self.assertFalse(self.f.request(DISPOSE)['ok'])
+  self.assertEqual(self.f.auth_path.read_bytes(),b'foreign');self.assertEqual(len(attempt),1);self.assertFalse(self.f.terminal_path.exists())
+ def test_history_successor_restart_and_rekeyed_policy(self):
+  self.closed(self.f.client_request(DISPOSE));os.rename(self.f.stage,self.f.history);self.f.stage.mkdir();(self.f.stage/'successor').write_bytes(b'keep')
+  self.f.tx_path.write_bytes(b'successor TX');self.f.holder_path.mkdir();self.f.journal_path.write_bytes(b'later journal');Path(self.m.E31['seed_path']).write_bytes(b'later seed')
+  self.f.restart(future=True)
+  before=self.f.snapshot();self.f.execution._e31_durability.clear()
+  with patch.object(self.m.os,'fsync',side_effect=AssertionError('STATUS sync')):self.assertNotIn('disposal_terminal',self.good(self.f.client_request(STATUS)));self.good(self.f.client_request(OUTPUT,cursor=0))
+  calls=[];sync=self.m.os.fsync
+  with patch.object(self.m.os,'fsync',side_effect=lambda fd:(calls.append(fd),sync(fd))[1]):self.closed(self.f.client_request(DISPOSE))
+  self.assertEqual(len(calls),4);self.assertEqual(before,self.f.snapshot());self.closed(self.f.client_request(STATUS))
+ def test_history_auth_only_cannot_manufacture_terminal(self):
+  self.closed(self.f.request(DISPOSE));self.f.terminal_path.unlink();os.rename(self.f.stage,self.f.history);self.refused();self.assertFalse(self.f.terminal_path.exists())
+ def test_proof_invalidation_and_status_has_no_sync_or_repair(self):
+  self.closed(self.f.request(DISPOSE));old=self.f.auth_path.read_bytes();self.f.auth_path.unlink();self.f.auth_path.write_bytes(old);self.f.auth_path.chmod(0o600)
+  with patch.object(self.m.os,'fsync',side_effect=AssertionError('STATUS sync')):self.assertNotIn('disposal_terminal',self.good(self.f.request(STATUS)))
+  self.closed(self.f.request(DISPOSE))
+ def test_existing_record_drift_is_rejected_before_any_sync_of_it(self):
+  self.closed(self.f.request(DISPOSE));self.f.execution._e31_durability.clear();sync=self.m.os.fsync;calls=[]
+  def mutate(fd):
+   calls.append(fd);out=sync(fd)
+   if len(calls)==2:
+    row=json.loads(self.f.terminal_path.read_bytes());row['foreign']=True;self.f.terminal_path.write_bytes(canon(row))
+   return out
+  with patch.object(self.m.os,'fsync',side_effect=mutate):self.assertFalse(self.f.request(DISPOSE)['ok'])
+  self.assertEqual(len(calls),2,'foreign terminal must not be fsynced')
+ def test_exact_custody_uid_gid_parent_modes(self):
+  for p,field,value in ((self.f.reg_path,'st_uid',502),(self.f.reg_path,'st_gid',0),(self.f.exec_path,'st_gid',0),(self.f.journal_path,'st_gid',80),(self.f.reg_path.parent,'st_gid',0)):
+   with self.subTest(path=str(p),field=field):
+    self.f.metadata_overrides[str(p.resolve())]={field:value};self.refused();self.f.metadata_overrides.clear()
+ def test_complete_atomic_temp_and_partial_write_loop(self):
+  write=self.m.os.write;rename=self.m._rename_excl;seen=[]
+  def partial(fd,data):return write(fd,data[:max(1,len(data)//2)])
+  def publication(e,parent,src,dst):
+   self.assertFalse(os.path.exists(self.f.reg_path.parent/dst));raw=(self.f.reg_path.parent/src).read_bytes();self.assertEqual(canon(json.loads(raw)),raw);seen.append(dst)
+   return rename(e,parent,src,dst)
+  with patch.object(self.m.os,'write',side_effect=partial),patch.object(self.m,'_rename_excl',side_effect=publication):self.closed(self.f.request(DISPOSE))
+  self.assertEqual(seen,[self.f.auth_path.name,self.f.terminal_path.name])
+ def test_existing_record_each_fsync_failure_and_warm_zero_sync(self):
+  for boundary in range(1,5):
+   with self.subTest(boundary=boundary):
+    f=Fixture(C)
+    try:
+     self.closed(f.request(DISPOSE));before=f.snapshot();f.restart();count=[0];sync=f.mod.os.fsync
+     def fail(fd):
+      count[0]+=1
+      if count[0]==boundary:raise OSError('existing-record persistence unknown')
+      return sync(fd)
+     with patch.object(f.mod.os,'fsync',side_effect=fail):self.assertFalse(f.request(DISPOSE)['ok'])
+     with patch.object(f.mod.os,'fsync',side_effect=AssertionError('readonly STATUS sync')):self.assertNotIn('disposal_terminal',self.good(f.request(STATUS)))
+     self.closed(f.request(DISPOSE));self.assertEqual(f.snapshot(),before)
+     with patch.object(f.mod.os,'fsync',side_effect=AssertionError('warm proof must not sync')):self.closed(f.request(DISPOSE))
+    finally:f.close()
+ def test_lock_replacement_after_auth_does_not_create_terminal(self):
+  original=self.m._publish;lock=Path(self.f.ds.STATE_ROOT)/'mutation.lock'
+  def publish(e,path,*args):
+   out=original(e,path,*args)
+   if path==str(self.f.auth_path):lock.rename(lock.with_name('original-lock-retained'));lock.write_bytes(b'');lock.chmod(0o644)
+   return out
+  with patch.object(self.m,'_publish',side_effect=publish):self.assertFalse(self.f.request(DISPOSE)['ok'])
+  self.assertTrue(self.f.auth_path.exists());self.assertFalse(self.f.terminal_path.exists());self.assertEqual(self.f.execution._e31_durability,{})
+ def test_other_actions_do_not_receive_historical_exception(self):
+  for action,fields in (('B7_PACKET_EXECUTE_V2',{}),('B7_PACKET_RESUME_V2',{'transaction_id':'tx-refused'}),('B7_PACKET_RECONCILE_V2',{})):
+   with self.subTest(action=action):self.refused(action,**fields)
+if __name__=='__main__':
+ r=unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(Boundaries));(R/'results/boundaries.json').write_text(json.dumps({'methods':r.testsRun,'failures':len(r.failures),'errors':len(r.errors),'details':[str(x) for x in r.failures+r.errors]},indent=2)+'\n');sys.exit(not r.wasSuccessful())

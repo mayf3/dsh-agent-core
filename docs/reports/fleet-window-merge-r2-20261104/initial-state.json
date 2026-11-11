@@ -1,0 +1,63 @@
+{
+  "head": {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "rc": 0,
+    "stdout": "d4ecf90aea0a439419d75c97fb15ad1736e3b542\n",
+    "stderr": ""
+  },
+  "merge_head": {
+    "argv": [
+      "git",
+      "rev-parse",
+      "MERGE_HEAD"
+    ],
+    "rc": 0,
+    "stdout": "7a8aaac00d56c4af2892e7097731ecda86a90f1d\n",
+    "stderr": ""
+  },
+  "base": {
+    "argv": [
+      "git",
+      "rev-parse",
+      "origin/main"
+    ],
+    "rc": 0,
+    "stdout": "7a8aaac00d56c4af2892e7097731ecda86a90f1d\n",
+    "stderr": ""
+  },
+  "branch": {
+    "argv": [
+      "git",
+      "branch",
+      "--show-current"
+    ],
+    "rc": 0,
+    "stdout": "chore/fleet-window-tools\n",
+    "stderr": ""
+  },
+  "status": {
+    "argv": [
+      "git",
+      "status",
+      "--porcelain=v1"
+    ],
+    "rc": 0,
+    "stdout": "A  BRIEF-C7.md\nA  RECEIPT-C7.md\nA  docs/reports/c7-selftest-20261104/INDEPENDENT-REVIEW.md\nA  docs/reports/c7-selftest-20261104/PR-CREATION.json\nA  docs/reports/c7-selftest-20261104/SHA256SUMS.txt\nA  docs/reports/c7-selftest-20261104/SOURCE.diff\nA  docs/reports/c7-selftest-20261104/c7-focused.json\nA  docs/reports/c7-selftest-20261104/c7_extraction_smoke.json\nA  docs/reports/c7-selftest-20261104/canary-child.stderr.log\nA  docs/reports/c7-selftest-20261104/canary-child.stdout.log\nA  docs/reports/c7-selftest-20261104/canary-recorder.command.json\nA  docs/reports/c7-selftest-20261104/canary-recorder.mjs.txt\nA  docs/reports/c7-selftest-20261104/canary-recorder.stderr.log\nA  docs/reports/c7-selftest-20261104/canary-recorder.stdout.log\nA  docs/reports/c7-selftest-20261104/canary-result.json\nA  docs/reports/c7-selftest-20261104/canary-spawn.json\nA  docs/reports/c7-selftest-20261104/extracted-helper-phase.command.json\nA  docs/reports/c7-selftest-20261104/extracted-helper-phase.stderr.log\nA  docs/reports/c7-selftest-20261104/extracted-helper-phase.stdout.log\nA  docs/reports/c7-selftest-20261104/function-bindings.json\nA  docs/reports/c7-selftest-20261104/invocation.json\nA  docs/reports/c7-selftest-20261104/names-after.json\nA  docs/reports/c7-selftest-20261104/names-before.json\nA  docs/reports/c7-selftest-20261104/phase-events.jsonl\nA  docs/reports/c7-selftest-20261104/protected-routing.command.json\nA  docs/reports/c7-selftest-20261104/protected-routing.stderr.log\nA  docs/reports/c7-selftest-20261104/protected-routing.stdout.log\nA  docs/reports/c7-selftest-20261104/routing-probe.mjs.txt\nA  docs/reports/c7-selftest-20261104/routing.json\nA  docs/reports/c7-selftest-20261104/selftest.stdout.log\nA  docs/reports/c7-selftest-20261104/source-bindings.json\nA  docs/reports/c7-selftest-20261104/stage_00.json\nA  docs/reports/c7-selftest-20261104/stage_01.json\nA  docs/reports/c7-selftest-20261104/stage_02.json\nA  docs/reports/c7-selftest-20261104/stage_03.json\nA  docs/reports/c7-selftest-20261104/stage_04.json\nA  docs/reports/c7-selftest-20261104/structure-command.json\nA  docs/reports/c7-selftest-20261104/structure.stderr.log\nA  docs/reports/c7-selftest-20261104/structure.stdout.json\nA  docs/reports/c7-selftest-20261104/summary.json\nA  docs/reports/c7-selftest-20261104/validation-diff-check.stderr.log\nA  docs/reports/c7-selftest-20261104/validation-diff-check.stdout.log\nA  docs/reports/c7-selftest-20261104/validation-dry-run.stderr.log\nA  docs/reports/c7-selftest-20261104/validation-dry-run.stdout.log\nA  docs/reports/c7-selftest-20261104/validation-gates.json\nA  docs/reports/c7-selftest-20261104/validation-python-syntax.stderr.log\nA  docs/reports/c7-selftest-20261104/validation-python-syntax.stdout.log\nA  docs/reports/c7-selftest-20261104/validation-recorder-syntax.stderr.log\nA  docs/reports/c7-selftest-20261104/validation-recorder-syntax.stdout.log\nA  docs/reports/c7-selftest-20261104/validation-selftest.stderr.log\nA  docs/reports/c7-selftest-20261104/validation-selftest.stdout.log\nA  docs/reports/c7-selftest-20261104/validation-shell-syntax.stderr.log\nA  docs/reports/c7-selftest-20261104/validation-shell-syntax.stdout.log\nA  docs/specs/PRODUCTION_442_OPTIONAL_ADAPTER_EFFECT_BOUNDARY_V2.md\nA  scripts/fleet-window/C7-EXTRACTION-MAP.json\nAM scripts/fleet-window/C7-INPUTS.md\nMM scripts/fleet-window/README.md\n M scripts/fleet-window/test_xattrfix_r3.py\nUU scripts/fleet-window/window-executor-v5.sh\nAM scripts/fleet-window/window-selftest.py\nA  scripts/fleet-window/window_close.py\nAD scripts/fleet-window/window_executor_helper.py\nAD scripts/fleet-window/window_executor_state.py\n M scripts/fleet-window/window_helper.py\n M scripts/fleet-window/window_helper_core.py\n?? BRIEF-MERGE-C7.md\n?? BRIEF-MERGE-R2.md\n?? RECEIPT-MERGE.md\n?? STOPPED-MERGE.md\n?? docs/reports/fleet-window-merge-c7-20261104/\n?? docs/reports/fleet-window-merge-r2-20261104/\n",
+    "stderr": ""
+  },
+  "unmerged": {
+    "argv": [
+      "git",
+      "ls-files",
+      "-u"
+    ],
+    "rc": 0,
+    "stdout": "100755 036f7a95e6c15f19135afeb1759af5558747d430 1\tscripts/fleet-window/window-executor-v5.sh\n100755 4eeb8704b17f67501aad844dfbfabaff6de22e27 2\tscripts/fleet-window/window-executor-v5.sh\n100755 1d85194bd75f98fcf41d5f6136fd822fd1849507 3\tscripts/fleet-window/window-executor-v5.sh\n",
+    "stderr": ""
+  },
+  "recorded_at": "2026-11-04T12:50:37.255894+00:00"
+}

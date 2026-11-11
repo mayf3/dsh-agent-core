@@ -1,3 +1,7 @@
+import { applyRecoveryCheck, validateAutomaticAudit } from './recovery/automatic-ledger.js'
+import { validateOwnerAssistanceResumeEvidence } from './owner-assistance-resume.js'
+import { applyReadbackEvent } from './recovery/readback-ledger.js'
+
 /**
  * @agent-core/workflow-execution/src/ledger-events.js — the event vocabulary
  * and replay projection (WORKFLOW_AGENT_EXECUTION_V2; whole-authority
@@ -111,20 +115,28 @@ export function applyLedgerEvent(attempts, event) {
         const sameIdentity = current.dispatchIntentId === event.dispatchIntentId.toLowerCase()
           && current.workflowInstanceId === event.workflowInstanceId.toLowerCase()
           && current.ownerPrincipalId === event.ownerPrincipalId.toLowerCase()
-        const legalReplan = previousGeneration + 1 === generation
+        const legalStaleReplan = previousGeneration + 1 === generation
           && current.state !== 'ACTIVE'
           && current.judgment === 'stale_no_progress'
           && sameIdentity
-        if (!legalReplan) {
+        const legalOwnerResume = ownerResumePlanIsValid(current, event, generation, sameIdentity)
+        if (!legalStaleReplan && !legalOwnerResume) {
+          if (event.retryReason === 'owner_assistance_resolved') {
+            throw new Error(`workflow-execution: corrupt ledger — Owner-resume proof is invalid, mismatched, or already consumed for nodeVisit ${nodeVisitId}`)
+          }
           throw new Error(`workflow-execution: corrupt ledger — attempt_planned twice for nodeVisit ${nodeVisitId} (generation ${previousGeneration} → ${generation}, state=${current.state}, judgment=${current.judgment ?? 'none'})`)
         }
       }
+      const isOwnerResume = event.retryReason === 'owner_assistance_resolved'
       attempts.set(nodeVisitId, {
         attemptId: event.attemptId,
         generation,
         dispatchCount: generation,
         ...(current !== undefined
-          ? { previousAttemptId: current.attemptId, retryReason: 'stale_no_progress' }
+          ? {
+              previousAttemptId: current.attemptId,
+              retryReason: isOwnerResume ? 'owner_assistance_resolved' : 'stale_no_progress',
+            }
           : {}),
         nodeVisitId,
         dispatchIntentId: event.dispatchIntentId.toLowerCase(),
@@ -132,12 +144,30 @@ export function applyLedgerEvent(attempts, event) {
         ownerPrincipalId: event.ownerPrincipalId.toLowerCase(),
         state: 'ACTIVE',
         phase: 'planned',
+        ...(event.deliveryProtocol === undefined ? {} : { deliveryProtocol: event.deliveryProtocol }),
+        ...(Number.isInteger(event.preDeliveryWorkflowStateVersion)
+          ? { preDeliveryWorkflowStateVersion: event.preDeliveryWorkflowStateVersion }
+          : {}),
+        ...(isOwnerResume
+          ? {
+              assistanceResume: event.assistanceResume,
+              consumedAssistanceCaseIds: [event.assistanceResume.assistanceCaseId.toLowerCase()],
+            }
+          : current?.consumedAssistanceCaseIds === undefined
+            ? {}
+            : { consumedAssistanceCaseIds: [...current.consumedAssistanceCaseIds] }),
         reason: undefined,
         createdAtMs: event.atMs,
         delivered: undefined,
       })
       return
     }
+    case 'recovery_checked':
+      applyRecoveryCheck(current, event)
+      return
+    case 'readback_checked':
+      applyReadbackEvent(current, event)
+      return
     case 'delivery_started':
       if (current?.state !== 'ACTIVE') terminalRefusal(current, event)
       // V2 CTR-WAE-012: at most ONE delivery_started per attempt — a second
@@ -166,6 +196,7 @@ export function applyLedgerEvent(attempts, event) {
       current.lastBlockedAtMs = event.atMs
       return
     case 'recovery_authorized':
+      validateAutomaticAudit(current, event.authorization)
       if (current?.state !== 'ACTIVE') terminalRefusal(current, event)
       if (current.phase !== 'resolution_blocked') {
         throw new Error(`workflow-execution: refusing recovery_authorized for nodeVisit ${nodeVisitId} — attempt is not pre-admission blocked (phase ${current.phase})`)
@@ -178,6 +209,7 @@ export function applyLedgerEvent(attempts, event) {
       current.lastAuthorityRef = event.authorityRef
       return
     case 'recovery_refused':
+      validateAutomaticAudit(current, event.authorization)
       if (current?.state !== 'ACTIVE') terminalRefusal(current, event)
       if (current.phase !== 'resolution_blocked') {
         throw new Error(`workflow-execution: refusing recovery_refused for nodeVisit ${nodeVisitId} — attempt is not pre-admission blocked (phase ${current.phase})`)
@@ -341,6 +373,35 @@ export function applyLedgerEvent(attempts, event) {
   }
 }
 
+export function ownerResumePlanIsValid(current, event, generation, sameIdentity) {
+  if (event.retryReason !== 'owner_assistance_resolved') return false
+  if (current.state !== 'NEEDS_REVIEW'
+    || current.phase !== 'reconciled'
+    || current.judgment !== 'run_ended_no_submission'
+    || current.delivered === undefined
+    || current.preDeliveryWorkflowStateVersion === undefined
+    || !sameIdentity
+    || generation !== (current.generation ?? 1) + 1
+    || event.previousAttemptId !== current.attemptId
+    || !Number.isInteger(event.preDeliveryWorkflowStateVersion)
+    || event.preDeliveryWorkflowStateVersion < 1
+    || event.assistanceResume === null
+    || typeof event.assistanceResume !== 'object'
+    || Array.isArray(event.assistanceResume)) return false
+  const usedCases = current.consumedAssistanceCaseIds ?? []
+  if (usedCases.includes(String(event.assistanceResume.assistanceCaseId).toLowerCase())) return false
+  const checked = validateOwnerAssistanceResumeEvidence(event.assistanceResume, {
+    dispatchIntentId: event.dispatchIntentId,
+    workflowInstanceId: event.workflowInstanceId,
+    nodeVisitId: event.nodeVisitId,
+    ownerPrincipalId: event.ownerPrincipalId,
+    previousAttemptId: current.attemptId,
+    previousPreDeliveryWorkflowStateVersion: current.preDeliveryWorkflowStateVersion,
+    preDeliveryWorkflowStateVersion: event.preDeliveryWorkflowStateVersion,
+  })
+  return checked.ok
+}
+
 /**
  * V2 record builders — the PRE-APPEND projection checks for the recovery
  * lifecycle events. The guards also exist in applyLedgerEvent for replay
@@ -369,21 +430,23 @@ export function buildResolutionBlockedEvent(current, nodeVisitId, code) {
   return { kind: 'resolution_blocked', code }
 }
 
-export function buildRecoveryAuthorizedEvent(current, nodeVisitId, authorityRef) {
+export function buildRecoveryAuthorizedEvent(current, nodeVisitId, authorityRef, authorization) {
+  validateAutomaticAudit(current, authorization)
   if (typeof authorityRef !== 'string' || authorityRef === '') throw new TypeError('workflow-execution: authorityRef is required')
   if (current.phase !== 'resolution_blocked') {
     throw new Error(`workflow-execution: refusing recovery_authorized for nodeVisit ${nodeVisitId.toLowerCase()} — attempt is not pre-admission blocked (phase ${current.phase})`)
   }
-  return { kind: 'recovery_authorized', authorityRef }
+  return { kind: 'recovery_authorized', authorityRef, ...(authorization === undefined ? {} : { authorization }) }
 }
 
-export function buildRecoveryRefusedEvent(current, nodeVisitId, authorityRef, refused) {
+export function buildRecoveryRefusedEvent(current, nodeVisitId, authorityRef, refused, authorization) {
+  validateAutomaticAudit(current, authorization)
   if (typeof authorityRef !== 'string' || authorityRef === '') throw new TypeError('workflow-execution: authorityRef is required')
   if (typeof refused !== 'string' || refused === '') throw new TypeError('workflow-execution: refused is required')
   if (current.phase !== 'resolution_blocked') {
     throw new Error(`workflow-execution: refusing recovery_refused for nodeVisit ${nodeVisitId.toLowerCase()} — attempt is not pre-admission blocked (phase ${current.phase})`)
   }
-  return { kind: 'recovery_refused', authorityRef, refused }
+  return { kind: 'recovery_refused', authorityRef, refused, ...(authorization === undefined ? {} : { authorization }) }
 }
 
 export function buildStaleSupersededEvent(current, nodeVisitId, observedWorkflowStateVersion) {

@@ -1,0 +1,22 @@
+[
+  {
+    "path": "scripts/fleet-window/window-executor-v5.sh",
+    "sha256": "b1bf4779fdbdd8c3c4e9b783e012c1aa8abe3cfa7c26aae61a0c984e522a463d"
+  },
+  {
+    "path": "scripts/fleet-window/window_executor_state.py",
+    "sha256": "5801330a3e0ab30a6e31e4b590e1b7dadcc8d6658fd2f0e722879de888780713"
+  },
+  {
+    "path": "scripts/fleet-window/window_executor_helper.py",
+    "sha256": "6ac7643f8da29cc0b81f2224b08711638f3afc52c1e7b99da7fdb4e9cb62f2d2"
+  },
+  {
+    "path": "scripts/fleet-window/window_close.py",
+    "sha256": "6488b91e382dfadf9bf0022d11747beb85071a5e70142e92e6c7348c9bef6465"
+  },
+  {
+    "path": "scripts/fleet-window/window-selftest.py",
+    "sha256": "ae9ec0184632fe9d176cc260d9853d2a8ff1b43a0a4e1d64ffc8404a27007581"
+  }
+]

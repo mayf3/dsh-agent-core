@@ -1,0 +1,16 @@
+import unittest
+from fixture import *
+class SnapshotReadback(unittest.TestCase):
+ def test_status_rechecks_prior_leaf_after_last_leaf_read(self):
+  f=Fixture(Candidate('candidate'))
+  try:
+   self.assertTrue(f.request(DISPOSE)['ok']);read=f.mod._read;changed=[False]
+   def drift(e,path,*args,**kwargs):
+    value=read(e,path,*args,**kwargs)
+    if str(path)==str(f.snapshot_root/'stage-seed-once.py') and not changed[0]:
+     changed[0]=True;p=f.snapshot_root/'checkpoint.py';p.write_bytes(p.read_bytes()+b'changed-after-earlier-read')
+    return value
+   with patch.object(f.mod,'_read',side_effect=drift):reply=f.request(STATUS)
+   self.assertTrue(changed[0]);self.assertFalse(reply['ok'],reply)
+  finally:f.close()
+if __name__=='__main__':unittest.main()

@@ -1,0 +1,86 @@
+{
+  "governing_spec_sha256": "5e8227206176403b74e96de9e591b9d75b76f6aeadf158e8cc8fd94b598c8f5a",
+  "merged_spec_commit": "0b5de0051400f02267869074b19a3763a546c9b7",
+  "accepted_proposal_sha256": "cc61fd25120c888fc3a575687a94bf5899eefd212dfce636a15a308b5276e557",
+  "independent_v2_review_sha256": "e25941b0f6b9129791ee296580386230ac8c48e7b3b9808e91168a7c51e13234",
+  "v1_request_changes_sha256": "1b3459c35d2710766827ae737a6bc9d2d28cb581ce0da4f74857b6e196b74e3d",
+  "v1_rejected_source_sha256": "ea6a2b6c1cbfc9f55f2e1a409918b6adeb1d133b12618bf36373c34b85f8b78a",
+  "old_client_source_sha256": "c554713d060ada189d25f4a93dd792897094dc7f1b180070f7ead9fb691992c9",
+  "baselines": {
+    "deployment_system.py": {
+      "sha256": "4a8556978c9696942ad1bff135ce7d74eab0b2ae7bcf5898be5a408204ff722c",
+      "bytes": 110468307
+    },
+    "ds_client.py": {
+      "sha256": "53728402d508c0afe7041d192bb1e8941c03071f27a20b8b5aee3e52592c78ee",
+      "bytes": 61936
+    }
+  },
+  "sources": {
+    "v51_e32_closure_source.py": {
+      "sha256": "0601d987833a33827a205ba6850a9cdc7f83124d35cf1fb0def61baee2c09161",
+      "bytes": 33588
+    },
+    "v50_execution_client_source.py": {
+      "sha256": "c31c34555f1a975a09be5b3c70a2aab4bdd6fc6cf477acf9b95874b43edd7613",
+      "bytes": 15341
+    }
+  },
+  "outputs": {
+    "deployment_system.py": {
+      "sha256": "e9887775c7fa7c6a7efc167c7aba4655f3d274acaea31e440523bf9aca5d31b1",
+      "bytes": 110503511
+    },
+    "ds_client.py": {
+      "sha256": "959c1a2d92c044b04442a6f9c7f0df902c154cc01986e6c43eff6a5f8b8df241",
+      "bytes": 61979
+    },
+    "v51_e32_closure_source.py": {
+      "sha256": "0601d987833a33827a205ba6850a9cdc7f83124d35cf1fb0def61baee2c09161",
+      "bytes": 33588
+    },
+    "v50_execution_client_source.py": {
+      "sha256": "c31c34555f1a975a09be5b3c70a2aab4bdd6fc6cf477acf9b95874b43edd7613",
+      "bytes": 15341
+    }
+  },
+  "unchanged_executor_sha256": "190de10b947c55d8ef644ee3a787f87557a0bd8de2ff81bf63c763582183bccd",
+  "snapshot_fixture": {
+    "accepted-provisioning-commit.txt": {
+      "sha256": "49c5113d2bae4971bf5f49521f2f3cb18627c57f190b68ba6fac21436a0d25b9",
+      "bytes": 323
+    },
+    "accepted-spec-copy-b08db324aa179af962536a804d275866fa2bb7f2.md": {
+      "sha256": "3dd42a9b8793bb9f68df420d779edd7af42def897861551349cf68db30dd8458",
+      "bytes": 13402
+    },
+    "checkpoint-inputs.json": {
+      "sha256": "c6e916129bfc8c1f180409a68e46630fe88c733c25b9b60add2c1c58ff6e66a1",
+      "bytes": 36963
+    },
+    "checkpoint.py": {
+      "sha256": "4e3218d2fa69568353f93e2960bbc774e20418ad890e992359481fe87d17d5b2",
+      "bytes": 21288
+    },
+    "old-stage-lease-disposal-once.py": {
+      "sha256": "519441cd6b51ba3039340027746eb493c36d9ffc41bfc60c7c256e79b4f81e53",
+      "bytes": 58648
+    },
+    "option-b-quarantine-remove.py": {
+      "sha256": "e25593a703b74620e741dd40ce870d57d502a4b658f9b8564006e84b142bdc03",
+      "bytes": 15121
+    },
+    "preimage-byte-bindings.json": {
+      "sha256": "2ab340c78a5996f59d7a9e7249bb411366cef1fec979eea534e70e60940f4d12",
+      "bytes": 1061
+    },
+    "seed-materials.mjs": {
+      "sha256": "520068ca8d685bcfc34e31d4b448acdb97cb649780e188379e20f46274819346",
+      "bytes": 8819
+    },
+    "stage-seed-once.py": {
+      "sha256": "2a881af0daf50547881245f0cfc556d2f52af1f632b0662abc7754cefb3626ff",
+      "bytes": 29408
+    }
+  }
+}

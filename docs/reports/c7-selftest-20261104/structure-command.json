@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/usr/local/v5-boot-isolation/assembled-root/node-runtime/bin/node",
+    "scripts/verify-code-structure.mjs",
+    "--base",
+    "55d306a997c02fa57e41b815cc31362c66f9ee18",
+    "--head",
+    "a7bf05fa7a35d7b1f916e2af164b33ed4c9a3512",
+    "--json"
+  ],
+  "rc": 0
+}

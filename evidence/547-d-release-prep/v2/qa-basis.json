@@ -1,0 +1,20 @@
+{
+  "commit": "5360707882b4f85813d842037f660f54fd2496c8",
+  "document_title": "# D-STORE-QA-547 — v5 当前副本隔离 QA 终版",
+  "document_sha256": "adc03e45bcaaa25198cc23addebeb58b32f234f81e945e4803d96ec081901478",
+  "stdout_sha256": "c5380e46323ecd4eff82fd60c8672a4d9a8debc551c0e63778a5bdec0f9879f5",
+  "assertion_count": 141,
+  "failed_assertions": [],
+  "effect_counters": {
+    "processFactoryCalls": 0,
+    "workspaceWrites": 0,
+    "effects": 0
+  },
+  "limitations": [
+    "Local source/real-copy mechanism QA only; no production cutover, loaded-byte proof, worker/tool termination or business acceptance.",
+    "Missing caller correlation remains an explicit coverage gap; no invented request identity.",
+    "Fault sidecar is independently parsed and hashed; pinned main reader has no fault-store consumer.",
+    "Negative fixtures modify only separate scratch documents; no manual epoch edits/old epoch overrides. Native reader compaction, if any, is reported explicitly."
+  ],
+  "rerun": false
+}

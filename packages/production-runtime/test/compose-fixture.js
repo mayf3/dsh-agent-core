@@ -1,10 +1,12 @@
-import { chmodSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { appendFileSync, chmodSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { writeAgentDefinition } from '../../agent-definition/src/config.js'
 import { NOTIFICATION_RESOURCE } from '../../notification-ingress/src/auth.js'
 import { resolveProductionLayout } from '../src/paths.js'
+import { TurnReconciliationStore } from '../../agent-router/src/reconciliation-store.js'
+import { readRestartDrainCensus } from '../src/scheduler/restart-drain.js'
 
 export const AGT_ID = 'agt_production-runtime-test'
 export const FORUM = { clientId: 'client-forum-abc', clientSecret: 'forum-secret-111' }
@@ -87,4 +89,36 @@ export async function seedRuntime(t, { agents = [[AGT_ID, 'Production Test Agent
     agents: agents.map(([id, name]) => ({ id, name })),
   })
   return { root, layout }
+}
+
+/** Strict offline launchd-instance/stop-receipt stand-in; never queries host processes. */
+export function withRestartProof(ctx, root) {
+  ctx.waitAfterBootout ??= () => {}
+  ctx.turnRecoveryStore ??= join(root, 'control', 'turn-recovery-v3.json')
+  ctx.storePath ??= join(root, 'scheduler', 'jobs.json')
+  mkdirSync(join(root, 'control'), { recursive: true })
+  mkdirSync(join(root, 'scheduler'), { recursive: true })
+  new TurnReconciliationStore({ persistenceFile: ctx.turnRecoveryStore, runtimeEpoch: 'epoch-live' })
+  writeFileSync(ctx.storePath, JSON.stringify({ version: 3, jobs: [], occurrences: [], fences: {} }))
+  const instance = { pid: 824201, uid: process.getuid(), gid: process.getgid(),
+    started: 'Wed Oct 28 12:00:00 2026', program: '/fixture/node' }
+  instance.uid = ctx.authsvcUid
+  instance.gid = ctx.authsvcGid
+  ctx.readRuntimeInstance = () => ({ ...instance })
+  ctx.readProcessInstance = () => null
+  writeFileSync(join(ctx.turnRecoveryStore, '..', 'runtime-evidence.jsonl'), JSON.stringify({
+    kind: 'ready', pid: instance.pid, stopProof: { version: 1, instance }, ts: Date.now(),
+  }) + '\n')
+  const bootout = ctx.bootout
+  ctx.bootout = (...args) => {
+    bootout?.(...args)
+    const durable = readRestartDrainCensus({ turnRecoveryStore: ctx.turnRecoveryStore, jobsStore: ctx.storePath })
+    const census = { ...durable, durableEpoch: durable.epoch, slots: [] }
+    const path = join(ctx.turnRecoveryStore, '..', 'restart-boundary.jsonl')
+    for (const phase of ['quiesce_begin', 'quiesce_end']) appendFileSync(path, JSON.stringify({
+      kind: 'restart_boundary', phase, pid: instance.pid, signal: 'SIGTERM', census,
+      ...(phase === 'quiesce_end' ? { stopResult: 'stopped' } : {}), ts: Date.now(),
+    }) + '\n')
+  }
+  return ctx
 }

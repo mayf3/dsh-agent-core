@@ -12,6 +12,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import { makeFx, firstHandle, rejectsWith, slotSeq } from './helpers.js'
+import { disposeProcessSlots } from '../../src/process-registry-startup.js'
 
 // ---------------------------------------------------------------------------
 // Shutdown model (C-020..C-022)
@@ -146,4 +147,58 @@ test('CONCURRENT_SHUTDOWN: exact shared Promise identity; one write/kill/exit wa
   assert.equal(fx.proc.state, 'EXITED')
   assert.equal(slot, 'EMPTY', 'FINAL_SLOT=EMPTY only after real exit')
   assert.deepEqual(slotSeq(fx), ['casReap:g1', 'casEmpty:g1'])
+})
+
+test('registry disposal waits real child exit and exact turn settlement despite another worker shutdown failure', async () => {
+  const fx = makeFx()
+  await fx.readyNow()
+  const turn = fx.proc.turn('main', 'in-flight during runtime stop', {})
+  const unknown = rejectsWith(turn, error => assert.equal(error.status, 'outcome_unknown'))
+  await fx.tick()
+  fx.respondTo('session/prompt', { messageId: 'm-dispose' })
+  const failure = new Error('other worker shutdown refused')
+  let releaseOtherExit
+  const other = {
+    shutdown() { throw failure },
+    exitPromise: new Promise(resolve => { releaseOtherExit = resolve }),
+  }
+  const slots = new Map([
+    ['agt_other', { state: 'READY', processRef: other }],
+    ['agt_fx', { state: 'READY', processRef: fx.proc }],
+  ])
+  let settled = false
+  const stopped = disposeProcessSlots(slots, () => {}).then(
+    () => { settled = true; return null }, error => { settled = true; return error },
+  )
+  await fx.tick()
+  const handle = (await unknown).reconciliationHandle
+  fx.respondTo('shutdown', { ok: true })
+  assert.equal(settled, false, 'graceful ACK cannot complete registry disposal')
+  assert.equal(fx.store.getTurnReconciliation(handle).snapshot.fenceState, 'active')
+  releaseOtherExit({ code: 0, signal: null })
+  await fx.tick()
+  assert.equal(settled, false, 'other worker exit cannot substitute for this child exit')
+  fx.childExit(0, null)
+  const error = await stopped
+  assert.equal(fx.proc.state, 'EXITED')
+  const snapshot = fx.store.getTurnReconciliation(handle).snapshot
+  assert.equal(snapshot.lateOutcome, 'terminated_without_outcome')
+  assert.equal(snapshot.terminationEvidence, 'child_real_exit')
+  assert.equal(snapshot.fenceState, 'cleared')
+  assert.ok(error instanceof AggregateError, 'failed shutdown must remain a failed runtime drain after real exits')
+  assert.ok(error.errors.includes(failure))
+})
+
+test('registry disposal attempts worker shutdown after no-child startup cleanup throws', async () => {
+  const failure = new Error('startup cleanup failed')
+  let shutDown = false
+  const proc = { shutdown() { shutDown = true }, exitPromise: Promise.resolve({ code: 0, signal: null }) }
+  const slots = new Map([
+    ['agt_startup', { state: 'STARTUP', processRef: null }],
+    ['agt_worker', { state: 'READY', processRef: proc }],
+  ])
+  const error = await disposeProcessSlots(slots, () => { throw failure }).then(() => null, cause => cause)
+  assert.equal(shutDown, true, 'startup failure must not skip the next owned worker')
+  assert.ok(error instanceof AggregateError)
+  assert.ok(error.errors.includes(failure))
 })

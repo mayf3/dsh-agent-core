@@ -68,9 +68,10 @@
 
 import z from '@deepseek-ai/schemastery'
 import { homedir, hostname } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { AgentProcess } from './process/index.js'
 import { resolveDeadlineConfig } from './deadline-config.js'
+import { createCallerWaitResolver } from './process/caller-wait-config.js'
 import { TurnReconciliationStore } from './reconciliation/index.js'
 import { BindingStore } from './binding-store.js'
 import { createProcessRegistry } from './process-registry.js'
@@ -78,6 +79,7 @@ import { createRouteChainExecutor } from './route-chain.js'
 import { createBindingResolution } from './binding-resolution.js'
 import { createProductSurfaceConversation } from './conversation/surface.js'
 import { createIngressDelivery } from './ingress-delivery.js'
+import { createWebsiteInquiryAdmission } from './process/website-inquiry-admission.js'
 import { channelConversationId } from './channel-conversation.js'
 import { SWITCH_RPC_METHOD, BROKER_RPC_METHOD } from './parent-rpc-relay.js'
 import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
@@ -131,6 +133,12 @@ export const Config = z.object({
    *  launcher descriptors and matching deployment proof are present. */
   restartQuiescenceEvidenceDir: z.string(),
   restartQuiescenceDeploymentProofDir: z.string(),
+  /** Deployment-owned caller budgets; independent of lifecycle deadlines. */
+  callerWait: z.object({
+    bySurface: z.dict(z.number()),
+    byClass: z.dict(z.number()),
+    agentClasses: z.dict(z.string()),
+  }),
   // Runtime-only option (not in the schema — Config is documentation here):
   // `processFactory(opts) => proc` — per-agent process factory (test/ops
   // seam, defaults to AgentProcess). The proc must expose `spawn()`,
@@ -214,6 +222,10 @@ export function apply(ctx, config) {
    * override file. Running processes keep their resolved config immutable.
    */
   const deadlineConfig = resolveDeadlineConfig(process.env, { productionRoot: cfg.productionRoot })
+  const resolveCallerWaitMs = createCallerWaitResolver({
+    config: cfg.callerWait, agentIds: agentDefinition.listAgents().map(agent => agent.id),
+    resolveDefaultMs: agentId => deadlineConfig.perAgent(agentId).turnTimeoutMs,
+  })
 
   // F-2 (V2 §5.2: 未知 Agent 必须 fail-loud): the override file may only
   // name REGISTERED agents. This is the configuration/apply boundary where
@@ -273,8 +285,9 @@ export function apply(ctx, config) {
     reconciliationStore,
     processFactory,
     resolveProcessConfig,
+    resolveNativeToolPolicy: cfg.resolveNativeToolPolicy,
     provisionHome,
-    switchAgent: bindingResolution.switchAgent,
+    switchAgent: bindingResolution.switchAgentFromTurn,
     getBrokerGateway: () => ctx.get('brokerGateway'),
   })
 
@@ -333,12 +346,17 @@ export function apply(ctx, config) {
   const routeChain = createRouteChainExecutor({
     log,
     ensureRunningForRoute: registry.ensureRunningForRoute,
+    deadLetterDirectory: join(dirname(recoveryFile ?? storeFile), 'delivery-dead-letters'),
     resolveRouteChain: typeof cfg.resolveRouteChain === 'function' ? cfg.resolveRouteChain : undefined,
-    resolveTurnDeadlineMs: (agentId) => deadlineConfig.perAgent(agentId).turnTimeoutMs,
+    resolveTurnDeadlineMs: agentId => resolveCallerWaitMs(agentId),
     ...(typeof cfg.canaryRuntimeRoot === 'string' && cfg.canaryRuntimeRoot !== ''
       ? { canaryRuntimeRoot: cfg.canaryRuntimeRoot }
       : {}),
   })
+  try { reconciliationStore.assertBusinessAdmissionReady() } catch (error) {
+    routeChain.recordBlockedDelivery(error, { agentId: null,
+      reason: reconciliationStore.businessAdmissionStatus().reason })
+  }
   const ingressDelivery = createIngressDelivery({
     log,
     feishu,
@@ -351,6 +369,7 @@ export function apply(ctx, config) {
     resolveChannelConversation: bindingResolution.resolveChannelConversation,
     resolveEffectiveWorkspace: bindingResolution.resolveEffectiveWorkspace,
     registerAuthenticatedIngress: (opts, correlation) => authenticatedIngressOpts.set(opts, correlation),
+    resolveCallerWaitMs,
   })
 
   log.log(`binding store loaded: ${store.list().length} binding(s) from ${storeFile}`)
@@ -367,10 +386,13 @@ export function apply(ctx, config) {
   // Tear down every owned process when the router plugin stops.
   ctx.effect(() => () => {
     clearInterval(processHealthTimer)
+    ingressDelivery.dispose()
     return registry.dispose()
   })
 
   const service = {
+    deliveryFailuresSnapshot: () => routeChain.deliveryFailuresSnapshot(),
+    getDeliveryDeadLetter: id => routeChain.getDeliveryDeadLetter(id),
     ...createProductSurfaceConversation({sourceDirectory:cfg.conversationSourceDir,bindingResolution,definition:agentDefinition,reconciliationStore,routeChain,workspaceBootstrap}),
     pluginName: name,
     /** D-002 endpoint #12: idempotent ChannelConversation resolve (async). */
@@ -399,6 +421,7 @@ export function apply(ctx, config) {
      * for the model turn (see deliver's doc for the full contract).
      */
     deliver: ingressDelivery.deliver,
+    admitWebsiteInquiry: createWebsiteInquiryAdmission({ routeChain, reconciliationStore, workspaceBootstrap, definition: agentDefinition, store }),
     /** Test/ops surface: durable Delivery V0 fresh-mapping table snapshot. */
     freshSessionsSnapshot: () => store.freshSessionsSnapshot(),
     /** Test/ops surface: in-memory Delivery V0 acceptance log. */

@@ -1,3 +1,8 @@
+import { continuePlannedOwnerResume, mutateWithRecord, recordProgressCheckpoint, recordReconciled, recordStaleSuperseded, recordEscalationRequested, recordDeliveryFailed, recordRecoveryRefused } from './ledger-records.js'
+import { beginAttemptIfAbsent } from './ledger-admission.js'
+import { recordRecoveryCheck } from './recovery/automatic-ledger.js'
+import { recordReadback, listReadbackCandidates } from './recovery/readback-ledger.js'
+import { staleCandidates, runEndedCandidates } from './terminal-attempt-operations.js'
 /**
  * @agent-core/workflow-execution/src/ledger.js — the execution ledger store
  * (WORKFLOW_AGENT_EXECUTION_V2; whole-authority successor of V1).
@@ -31,14 +36,15 @@
  * trying to re-run a settled/reviewed NodeVisit — visible, never absorbed.
  */
 
-import { createHash, randomUUID } from 'node:crypto'
 import { mkdirSync, appendFileSync, existsSync, statSync, openSync, readSync, closeSync, fsyncSync, truncateSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
-import { OwnerLock } from '../../scheduler/src/lock.js'
+import { OwnerLock } from '../../scheduler/src/store/lock.js'
 
-import { applyLedgerEvent, buildDeliveryStartedEvent, buildRecoveryAuthorizedEvent, buildRecoveryRefusedEvent, buildResolutionBlockedEvent, buildStaleSupersededEvent, terminalRefusal } from './ledger-events.js'
-import { normalizeProgressCheckpoint } from './progress.js'
+import { applyLedgerEvent, buildDeliveryStartedEvent, buildRecoveryAuthorizedEvent, buildRecoveryRefusedEvent, buildResolutionBlockedEvent, terminalRefusal } from './ledger-events.js'
+import { UUID_RE } from './attempt-identity.js'
+
+export { attemptIdFor } from './attempt-identity.js'
 
 export const LEDGER_EVENTS_FILE = 'attempts.jsonl'
 export const LEDGER_LOCK_FILE = 'attempts.lock'
@@ -61,37 +67,6 @@ export const DEFAULT_MAX_ATTEMPTS_PER_VISIT = 3
 /** The ONE escalation fact (CTR-WEC1-005): recorded at most once per visit. */
 export const ESCALATION_REQUESTED_KIND = 'escalation_requested'
 
-const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
-const AGENT_ID_RE = /^agt_[A-Za-z0-9_-]+$/
-const ATTEMPT_ID_RE = /^wfeat-[0-9a-f]{24}$/
-
-/**
- * Deterministic attempt id for one NodeVisit generation: stable across
- * pollers, restarts and re-polls, so "already attempted" needs no clock and
- * no coordination beyond the ledger itself. Generation 1 keeps the V2
- * formula byte-identically (existing files replay unchanged); generation
- * N > 1 exists only via the CTR-SRE-003 stale re-entry path.
- */
-export function attemptIdFor(nodeVisitId, generation = 1) {
-  if (typeof nodeVisitId !== 'string' || !UUID_RE.test(nodeVisitId)) {
-    throw new TypeError(`workflow-execution: attemptIdFor requires a UUID nodeVisitId (got ${JSON.stringify(nodeVisitId)})`)
-  }
-  if (!Number.isInteger(generation) || generation < 1) {
-    throw new TypeError(`workflow-execution: attemptIdFor requires a positive integer generation (got ${JSON.stringify(generation)})`)
-  }
-  const base = nodeVisitId.toLowerCase()
-  const material = generation === 1 ? base : `${base}#gen${generation}`
-  return `wfeat-${createHash('sha256').update(material).digest('hex').slice(0, 24)}`
-}
-
-function validateIntentIds({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId }) {
-  for (const [name, value] of Object.entries({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId })) {
-    if (typeof value !== 'string' || !UUID_RE.test(value)) {
-      throw new TypeError(`workflow-execution: ${name} must be a UUID string (got ${JSON.stringify(value)})`)
-    }
-  }
-}
-
 /**
  * The execution ledger. All mutations go through mutate() — in-process FIFO
  * chain, then the cross-process OwnerLock, then read-latest/replay, apply,
@@ -108,7 +83,7 @@ export class ExecutionLedger {
    *   CTR-WEC1-004 admission policy: the fence refuses generation N+1 when
    *   N >= maxAttemptsPerVisit (default 3, min 1).
    */
-  constructor({ dir, clock = () => Date.now(), log = {}, io = {}, maxAttemptsPerVisit = DEFAULT_MAX_ATTEMPTS_PER_VISIT, maxNeedsReviewRechecks = 1, requireReconciledIdentity = false }) {
+  constructor({ dir, clock = () => Date.now(), log = {}, io = {}, maxAttemptsPerVisit = DEFAULT_MAX_ATTEMPTS_PER_VISIT, resolveManagedAttempt }) {
     if (typeof dir !== 'string' || dir === '') throw new TypeError('workflow-execution: ledger dir is required')
     if (!Number.isInteger(maxAttemptsPerVisit) || maxAttemptsPerVisit < 1) {
       throw new TypeError(`workflow-execution: ledger maxAttemptsPerVisit must be a positive integer (got ${JSON.stringify(maxAttemptsPerVisit)})`)
@@ -127,8 +102,7 @@ export class ExecutionLedger {
     this.clock = clock
     this.log = log
     this.maxAttemptsPerVisit = maxAttemptsPerVisit
-    this.maxNeedsReviewRechecks = maxNeedsReviewRechecks
-    this.requireReconciledIdentity = requireReconciledIdentity === true
+    this.resolveManagedAttempt = resolveManagedAttempt
     this.appendFileSync = io.appendFileSync ?? appendFileSync
     this.syncDirectorySync = io.syncDirectorySync ?? ((path) => {
       const fd = openSync(path, 'r')
@@ -149,6 +123,30 @@ export class ExecutionLedger {
     if (existsSync(this.eventsFile)) this.syncDirectorySync(this.dir)
   }
 
+  async attemptPolicy(context) {
+    if (this.resolveManagedAttempt === undefined) return { limit: this.maxAttemptsPerVisit, managed: false }
+    try {
+      const managed = await this.resolveManagedAttempt(context)
+      if (typeof managed !== 'boolean') return undefined
+      return { limit: managed ? 3 : this.maxAttemptsPerVisit, managed }
+    } catch { return undefined }
+  }
+
+  #operationPort() {
+    return {
+      attempt: id => this.#attempt(id), applyEvent: e => this.#applyEvent(e),
+      appendEvent: e => this.#appendEvent(e), terminalGuard: (a, e) => this.#terminalGuard(a, e),
+      recordForActive: (id, build) => this.#recordForActive(id, build),
+      recordDeliveryStarted: id => this.#recordDeliveryStarted(id),
+      recordRunDelivered: (id, fields) => this.#recordRunDelivered(id, fields),
+      recordDeliveryFailed: (id, reason) => this.#recordDeliveryFailed(id, reason),
+      recordResolutionBlocked: (id, code) => this.#recordResolutionBlocked(id, code),
+      recordRecoveryAuthorized: (id, ref, audit) => this.#recordRecoveryAuthorized(id, ref, audit),
+      recordRecoveryRefused: (id, ref, code, audit) => this.#recordRecoveryRefused(id, ref, code, audit),
+      recordRecoveryCheck: (id, fields) => recordRecoveryCheck(this, this.#operationPort(), id, fields),
+    }
+  }
+
   /** One projection record derived from the event stream. */
   #attempt(nodeVisitId) {
     return this.attempts.get(nodeVisitId.toLowerCase())
@@ -166,10 +164,12 @@ export class ExecutionLedger {
     this.attempts = new Map()
     if (!existsSync(this.eventsFile)) {
       this.loaded = true
-      return
+      return { tailIncomplete: false }
     }
     const raw = this.#readAllBytes()
     const endsWithNewline = raw.length === 0 || raw[raw.length - 1] === 0x0a
+    const read = endsWithNewline ? { tailIncomplete: false }
+      : { tailIncomplete: true, tailKind: 'missing_newline' }
     const lines = raw.toString('utf8').split('\n')
     for (const [index, line] of lines.entries()) {
       if (line === '') continue
@@ -182,6 +182,7 @@ export class ExecutionLedger {
           throw new Error(`workflow-execution: corrupt ledger record at line ${index + 1}`, { cause: error })
         }
         this.log.warn?.('workflow-execution: skipped torn tail line in attempts.jsonl')
+        read.tailKind = 'invalid_json'
         if (repairTornTail) this.#truncateTornTail(raw)
         continue
       }
@@ -202,6 +203,7 @@ export class ExecutionLedger {
       if (completeTail) this.#appendAndSync('\n')
     }
     this.loaded = true
+    return read
   }
 
   #readAllBytes() {
@@ -278,166 +280,25 @@ export class ExecutionLedger {
     return run
   }
 
-  /**
-   * The atomic one-attempt-per-NodeVisit fence. Creates the attempt (and
-   * appends attempt_planned) only for a new visit or a terminal stale attempt
-   * with positive execution proof. `canReenter` reads the fresh predecessor
-   * under OwnerLock and must return synchronous true before any new append.
-   *
-   * When `complete` is supplied, retain the same cross-process OwnerLock
-   * through resolve/delivery and append exactly one completion event before
-   * releasing it. Omitting `complete` preserves the ledger-only primitive
-   * used by focused lifecycle tests and recovery tooling; stale re-entry
-   * still requires the same proof even when no delivery callback is supplied.
-   *
-   * @returns {Promise<{created:true, attempt:object, completion?:object}
-   *   | {created:false, attempt:object, cause:string}>}
-   */
-  async beginAttemptIfAbsent({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId }, complete, canReenter) {
-    validateIntentIds({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId })
-    if (complete !== undefined && typeof complete !== 'function') {
-      throw new TypeError('workflow-execution: admission completion callback must be a function when provided')
-    }
-    return this.mutate(async () => {
-      const existing = this.#attempt(nodeVisitId)
-      if (existing !== undefined) {
-        if (!(existing.state !== 'ACTIVE' && existing.judgment === STALE_NO_PROGRESS_JUDGMENT)) {
-          return { created: false, attempt: { ...existing }, cause: 'already_attempted' }
-        }
-        // CTR-SRE-003: reject contradictory identity before any append.
-        const sameIdentity = existing.dispatchIntentId === dispatchIntentId.toLowerCase()
-          && existing.workflowInstanceId === workflowInstanceId.toLowerCase()
-          && existing.ownerPrincipalId === ownerPrincipalId.toLowerCase()
-        if (!sameIdentity) {
-          throw new Error(`workflow-execution: refusing generation ${(existing.generation ?? 1) + 1} attempt_planned for nodeVisit ${nodeVisitId.toLowerCase()} — identity triple differs from the stale-superseded attempt (corrupt feed or ledger)`)
-        }
-        // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-004: the policy limit is
-        // enforced INSIDE the fence, so no poller, race or double trigger can
-        // mint past it. Refusal is a clean non-created outcome — the engine
-        // turns it into the one-time escalation (CTR-WEC1-005).
-        const nextGeneration = (existing.generation ?? 1) + 1
-        if (nextGeneration > this.maxAttemptsPerVisit) {
-          return { created: false, attempt: { ...existing }, cause: 'attempt_limit_reached' }
-        }
-        let quiescent = false
-        try {
-          const proof = typeof canReenter === 'function' ? canReenter({ ...existing }) : undefined
-          if (proof instanceof Promise) void proof.catch(() => {})
-          quiescent = proof === true
-        } catch { /* unavailable proof cannot authorize a new execution */ }
-        if (!quiescent) return { created: false, attempt: { ...existing }, cause: 'deferred_quiescence' }
-      }
-      // WORKFLOW_STALE_REENTRY_V1 CTR-SRE-003: a terminal attempt with
-      // judgment 'stale_no_progress' is superseded by generation N+1 (the
-      // projection guard in ledger-events re-validates identity + generation
-      // on both live append and replay). Every other existing attempt keeps
-      // the V2 fence semantics byte-for-byte.
-      const generation = existing === undefined ? 1 : (existing.generation ?? 1) + 1
-      const event = {
-        kind: 'attempt_planned',
-        attemptId: attemptIdFor(nodeVisitId, generation),
-        nodeVisitId: nodeVisitId.toLowerCase(),
-        dispatchIntentId: dispatchIntentId.toLowerCase(),
-        workflowInstanceId: workflowInstanceId.toLowerCase(),
-        ownerPrincipalId: ownerPrincipalId.toLowerCase(),
-        atMs: this.clock(),
-        ...(generation === 1 ? {} : { generation }),
-      }
-      this.#appendEvent(event)
-      this.#applyEvent(event)
-      if (complete === undefined) return { created: true, attempt: { ...this.#attempt(nodeVisitId) } }
-      // V2 CTR-WAE-013: the completion callback gets a write-ahead seam so it
-      // can durably append delivery_started BEFORE invoking router.deliver,
-      // inside this same locked mutation. There is no invocation-to-record
-      // crash window: any delivery attempt must first leave this trace.
-      const completion = await complete({ ...this.#attempt(nodeVisitId) }, {
-        recordDeliveryStarted: () => { this.#recordDeliveryStarted(nodeVisitId) },
-      })
-      if (completion?.kind === 'run_delivered') {
-        this.#recordRunDelivered(nodeVisitId, completion)
-      } else if (completion?.kind === 'delivery_failed') {
-        this.#recordDeliveryFailed(nodeVisitId, completion.reason)
-      } else if (completion?.kind === 'resolution_blocked') {
-        this.#recordResolutionBlocked(nodeVisitId, completion.code)
-      } else {
-        throw new TypeError('workflow-execution: admission callback must return run_delivered, delivery_failed or resolution_blocked')
-      }
-      return { created: true, attempt: { ...this.#attempt(nodeVisitId) }, completion }
-    })
-  }
+
+  async beginAttemptIfAbsent(...args) { return beginAttemptIfAbsent(this, this.#operationPort(), ...args) }
+
+  /** Continue only an Owner-resume plan whose delivery write-ahead fence is absent. */
+  async continuePlannedOwnerResume(...args) { return continuePlannedOwnerResume(this, this.#operationPort(), ...args) }
 
   /** Record a successful Run admission (NodeVisit → Attempt → Run linkage). */
   async recordRunDelivered({ nodeVisitId, agentId, requestId, sessionId, reconciliationHandle, messageId, workflowStateVersionAtDispatch }) {
     return this.mutate(() => this.#recordRunDelivered(nodeVisitId, { agentId, requestId, sessionId, reconciliationHandle, messageId, workflowStateVersionAtDispatch }))
   }
 
-  /**
-   * PROGRESS_CHECKPOINT_V1: append thin execution-resume metadata for the
-   * EXACT currently-delivered attempt. This is deliberately NOT a business
-   * progress signal: it never changes state/phase/judgment and therefore
-   * cannot reset stale-no-progress or trigger Workflow transitions/wakes.
-   */
-  async recordProgressCheckpoint({ nodeVisitId, attemptId, reporterAgentId, sessionId, turnExecutionId, checkpoint }) {
-    if (typeof nodeVisitId !== 'string' || !UUID_RE.test(nodeVisitId)) {
-      throw new TypeError(`workflow-execution: progress nodeVisitId must be a UUID string (got ${JSON.stringify(nodeVisitId)})`)
-    }
-    if (typeof attemptId !== 'string' || !ATTEMPT_ID_RE.test(attemptId)) {
-      throw new TypeError('workflow-execution: progress attemptId must be a ledger-minted wfeat-* id')
-    }
-    if (typeof reporterAgentId !== 'string' || !AGENT_ID_RE.test(reporterAgentId)) {
-      throw new TypeError('workflow-execution: progress reporterAgentId must be an agt_* id')
-    }
-    if (sessionId !== undefined && (typeof sessionId !== 'string' || sessionId === '')) {
-      throw new TypeError('workflow-execution: progress sessionId must be a non-empty string when provided')
-    }
-    if (turnExecutionId !== undefined && (typeof turnExecutionId !== 'string' || turnExecutionId === '')) {
-      throw new TypeError('workflow-execution: progress turnExecutionId must be a non-empty string when provided')
-    }
-    const normalized = normalizeProgressCheckpoint(checkpoint)
-    return this.mutate(() => {
-      const current = this.#attempt(nodeVisitId)
-      if (current === undefined) {
-        throw new Error(`workflow-execution: no attempt exists for nodeVisit ${nodeVisitId.toLowerCase()} — cannot record progress`)
-      }
-      if (current.state !== 'ACTIVE') this.#terminalGuard(current, { kind: 'progress_checkpoint', nodeVisitId })
-      if (current.phase !== 'run_delivered' || current.delivered === undefined) {
-        throw new Error(`workflow-execution: progress requires an active delivered Run (phase=${current.phase})`)
-      }
-      if (current.attemptId !== attemptId) {
-        return { committed: false, cause: 'stale_attempt', attempt: { ...current } }
-      }
-      if (current.delivered.agentId !== reporterAgentId) {
-        return { committed: false, cause: 'reporter_mismatch', attempt: { ...current } }
-      }
-      if (sessionId !== undefined && current.delivered.sessionId !== sessionId) {
-        return { committed: false, cause: 'session_mismatch', attempt: { ...current } }
-      }
-      const event = {
-        kind: 'progress_checkpoint',
-        nodeVisitId: nodeVisitId.toLowerCase(),
-        attemptId,
-        reporterAgentId,
-        ...(sessionId === undefined ? {} : { sessionId }),
-        ...(turnExecutionId === undefined ? {} : { turnExecutionId }),
-        checkpoint: normalized,
-        atMs: this.clock(),
-      }
-      this.#appendEvent(event)
-      this.#applyEvent(event)
-      return { committed: true, attempt: { ...this.#attempt(nodeVisitId) } }
-    })
-  }
+
+  async recordProgressCheckpoint(...args) { return recordProgressCheckpoint(this, this.#operationPort(), ...args) }
 
   /** Record a failed (or never-verifiably-started) delivery: NEEDS_REVIEW.
    *  V2: NEW-path resolution failures must use recordResolutionBlocked — a
    *  fresh `resolve_failed:` reason here would silently re-create the V1
    *  conflation this successor removed, so it fails loud. */
-  async recordDeliveryFailed({ nodeVisitId, reason }) {
-    if (typeof reason === 'string' && reason.startsWith('resolve_failed:')) {
-      throw new TypeError('workflow-execution: delivery_failed cannot carry a resolve_failed: reason (V2) — use recordResolutionBlocked')
-    }
-    return this.mutate(() => this.#recordDeliveryFailed(nodeVisitId, reason))
-  }
+  async recordDeliveryFailed(...args) { return recordDeliveryFailed(this, this.#operationPort(), ...args) }
 
   /** V2 CTR-WAE-012: durable WRITE-AHEAD INTENT before any router.deliver
    *  invocation. Allowed from the pre-delivery phases only; at-most-one is
@@ -463,116 +324,16 @@ export class ExecutionLedger {
 
   /** V2 CTR-WAE-013 E5: world drift discovered on an eligible-shaped attempt
    *  — refusal is terminal NEEDS_REVIEW (the human path), zero admission. */
-  async recordRecoveryRefused({ nodeVisitId, authorityRef, refused }) {
-    if (typeof authorityRef !== 'string' || authorityRef === '') {
-      throw new TypeError('workflow-execution: authorityRef is required')
-    }
-    if (typeof refused !== 'string' || refused === '') {
-      throw new TypeError('workflow-execution: refused is required')
-    }
-    return this.mutate(() => this.#recordRecoveryRefused(nodeVisitId, authorityRef, refused))
-  }
+  async recordRecoveryRefused(...args) { return recordRecoveryRefused(this, this.#operationPort(), ...args) }
 
   /** Record the terminal reconcile verdict for an ACTIVE attempt. */
-  async recordReconciled({ nodeVisitId, expectedPhase, verdict, judgment, reason, expectedIdentity = undefined, expectedAttemptId = undefined, expectedGeneration = undefined }) {
-    if (verdict !== 'SETTLED' && verdict !== 'NEEDS_REVIEW') {
-      throw new TypeError(`workflow-execution: reconciled verdict must be SETTLED | NEEDS_REVIEW (got ${JSON.stringify(verdict)})`)
-    }
-    if (typeof expectedPhase !== 'string' || expectedPhase === '') throw new TypeError('workflow-execution: reconciled expectedPhase is required')
-    if (typeof judgment !== 'string' || judgment === '') throw new TypeError('workflow-execution: reconciled judgment is required')
-    if (typeof reason !== 'string' || reason === '') throw new TypeError('workflow-execution: reconciled reason is required')
-    // R#699 minimal port (from origin/main): attempts planned before the
-    // workflowStateVersionAtDispatch/generation fields existed carry only the
-    // ledger-minted attemptId — the identity-bag form can never be VALID for
-    // them, which spun reconcile forever on one live nodeVisit. The
-    // attemptId form verifies identity against THIS ledger's own record with
-    // the same strictness; stale callers get a graceful refusal, not a throw.
-    const identityForm = expectedAttemptId !== undefined ? 'attemptId'
-      : expectedIdentity !== undefined ? 'bag'
-      : 'none'
-    if (identityForm === 'attemptId') {
-      if (!/^wfeat-[0-9a-f]{24}$/.test(expectedAttemptId) || !Number.isInteger(expectedGeneration) || expectedGeneration < 1) {
-        throw new TypeError('workflow-execution: reconciled expectedAttemptId must be a ledger-minted wfeat-* id and expectedGeneration a positive integer')
-      }
-    } else if (this.requireReconciledIdentity && (expectedIdentity === undefined || typeof expectedIdentity !== 'object' || expectedIdentity === null
-      || expectedIdentity.status !== 'VALID'
-      || typeof expectedIdentity.workflowInstanceId !== 'string'
-      || expectedIdentity.nodeVisitId !== 'string'
-      || expectedIdentity.dispatchIntentId !== 'string'
-      || !Number.isInteger(expectedIdentity.generation)
-      || !Number.isInteger(expectedIdentity.workflowStateVersionAtDispatch))) {
-      throw new TypeError('workflow-execution: reconciled expectedIdentity must be complete and VALID')
-    }
-    return this.mutate(() => {
-      const current = this.#attempt(nodeVisitId)
-      if (current === undefined) {
-        throw new Error(`workflow-execution: no attempt exists for nodeVisit ${nodeVisitId.toLowerCase()} — beginAttemptIfAbsent first`)
-      }
-      if (identityForm === 'attemptId') {
-        // stale-observation semantics (origin/main): a caller proving the
-        // wrong attempt id or generation is refused gracefully — the live
-        // record is authoritative, never overwritten by a stale reconciler.
-        if (current.attemptId !== expectedAttemptId || (current.generation ?? 1) !== expectedGeneration) {
-          return { committed: false, attempt: { ...current }, cause: 'stale_observation' }
-        }
-      }
-      if (current.state !== 'ACTIVE') this.#terminalGuard(current, { kind: 'reconciled', nodeVisitId })
-      if (current.phase !== expectedPhase) {
-        return { committed: false, attempt: { ...current }, cause: 'attempt_changed' }
-      }
-      if (expectedIdentity !== undefined) {
-        const sameIdentity = expectedIdentity.workflowInstanceId === current.workflowInstanceId
-          && expectedIdentity.nodeVisitId === current.nodeVisitId
-          && expectedIdentity.dispatchIntentId === current.dispatchIntentId
-          && expectedIdentity.generation === current.generation
-          && expectedIdentity.workflowStateVersionAtDispatch === current.workflowStateVersionAtDispatch
-        if (!sameIdentity) return { committed: false, attempt: { ...current }, cause: 'identity_conflict' }
-      }
-      const record = this.#recordForActive(nodeVisitId, (event) => {
-        event.kind = 'reconciled'
-        event.verdict = verdict
-        event.judgment = judgment
-        event.reason = reason
-        return event
-      })
-      return { committed: true, ...record }
-    })
-  }
+  async recordReconciled(...args) { return recordReconciled(this, this.#operationPort(), ...args) }
 
-  /**
-   * WORKFLOW_STALE_REENTRY_V1 CTR-SRE-002: settle ONE stale attempt as the
-   * re-entry marker (terminal SETTLED / judgment 'stale_no_progress'). The
-   * `expected` snapshot (state + phase + delivered.atMs) is the CAS guard:
-   * two pollers may both probe stale, only the one whose snapshot still
-   * matches the fresh replay wins; the loser gets { committed: false } —
-   * never a double settlement, never a corrupt append.
-   */
-  async recordStaleSuperseded({ nodeVisitId, expected, observedWorkflowStateVersion }) {
-    if (expected === null || typeof expected !== 'object') throw new TypeError('workflow-execution: stale supersession expected snapshot is required')
-    if (typeof expected.state !== 'string' || typeof expected.phase !== 'string') throw new TypeError('workflow-execution: stale supersession expected.state/phase are required')
-    if (!Number.isInteger(expected.deliveredAtMs)) throw new TypeError('workflow-execution: stale supersession expected.deliveredAtMs must be an integer')
-    if (!Number.isInteger(observedWorkflowStateVersion) || observedWorkflowStateVersion < 1) {
-      throw new TypeError('workflow-execution: stale supersession requires observedWorkflowStateVersion baseline')
-    }
-    return this.mutate(() => {
-      const current = this.#attempt(nodeVisitId)
-      if (current === undefined) {
-        throw new Error(`workflow-execution: no attempt exists for nodeVisit ${nodeVisitId.toLowerCase()} — beginAttemptIfAbsent first`)
-      }
-      const matches = current.state === expected.state
-        && current.phase === expected.phase
-        && current.delivered !== undefined
-        && current.delivered.atMs === expected.deliveredAtMs
-      if (!matches) {
-        return { committed: false, attempt: { ...current }, cause: 'attempt_changed' }
-      }
-      const patch = buildStaleSupersededEvent(current, nodeVisitId, observedWorkflowStateVersion)
-      const event = { nodeVisitId: nodeVisitId.toLowerCase(), atMs: this.clock(), ...patch }
-      this.#appendEvent(event)
-      this.#applyEvent(event)
-      return { committed: true, attempt: { ...this.#attempt(nodeVisitId) } }
-    })
-  }
+  async recordReadback(observation) { return recordReadback(this, this.#operationPort(), observation) }
+  async listReadbackCandidatesFresh(limit, nowMs = this.clock()) { return listReadbackCandidates(this, limit, nowMs) }
+
+
+  async recordStaleSuperseded(...args) { return recordStaleSuperseded(this, this.#operationPort(), ...args) }
 
   #recordRunDelivered(nodeVisitId, { agentId, requestId, sessionId, reconciliationHandle, messageId, workflowStateVersionAtDispatch }) {
     return this.#recordForActive(nodeVisitId, (event) => {
@@ -623,13 +384,13 @@ export class ExecutionLedger {
     return this.#recordForActive(nodeVisitId, (event) => Object.assign(event, patch))
   }
 
-  #recordRecoveryAuthorized(nodeVisitId, authorityRef) {
-    const patch = buildRecoveryAuthorizedEvent(this.#precheckActive(nodeVisitId, 'recovery_authorized'), nodeVisitId, authorityRef)
+  #recordRecoveryAuthorized(nodeVisitId, authorityRef, authorization) {
+    const patch = buildRecoveryAuthorizedEvent(this.#precheckActive(nodeVisitId, 'recovery_authorized'), nodeVisitId, authorityRef, authorization)
     return this.#recordForActive(nodeVisitId, (event) => Object.assign(event, patch))
   }
 
-  #recordRecoveryRefused(nodeVisitId, authorityRef, refused) {
-    const patch = buildRecoveryRefusedEvent(this.#precheckActive(nodeVisitId, 'recovery_refused'), nodeVisitId, authorityRef, refused)
+  #recordRecoveryRefused(nodeVisitId, authorityRef, refused, authorization) {
+    const patch = buildRecoveryRefusedEvent(this.#precheckActive(nodeVisitId, 'recovery_refused'), nodeVisitId, authorityRef, refused, authorization)
     return this.#recordForActive(nodeVisitId, (event) => Object.assign(event, patch))
   }
 
@@ -660,45 +421,12 @@ export class ExecutionLedger {
     return [...this.attempts.values()].filter((a) => a.state === 'ACTIVE').map((a) => ({ ...a }))
   }
 
-  /** V2 CTR-WAE-013: run ONE controlled-recovery dispatch ATOMICALLY — fresh
-   *  replay under the lock, held across the whole entry-state dispatch (the
-   *  same discipline as the admission completion callback). `record` exposes
-   *  the locked-mutation appenders (pre-checked private paths — NO nested
-   *  mutate, which would deadlock the FIFO chain), and `getAttempt` reads the
-   *  live projection, so an interleaved caller can never split an E-check
-   *  from its append: the whole dispatch is single-flight. */
-  async mutateWithRecord(nodeVisitId, fn) {
-    return this.mutate(async () => {
-      // The record seam is SCOPE-BOUND: the appenders die with the locked
-      // callback (revoked in `finally`), so a captured closure can never
-      // append after the OwnerLock/FIFO boundary — every post-callback call
-      // fails loud instead of bypassing the serialization.
-      let closed = false
-      const guard = (call) => (...args) => {
-        if (closed) throw new Error('workflow-execution: recovery mutation seam is closed (lock released)')
-        return call(...args)
-      }
-      const record = {
-        recoveryAuthorized: guard((authorityRef) => this.#recordRecoveryAuthorized(nodeVisitId, authorityRef)),
-        resolutionBlocked: guard((code) => this.#recordResolutionBlocked(nodeVisitId, code)),
-        deliveryStarted: guard(() => this.#recordDeliveryStarted(nodeVisitId)),
-        recoveryRefused: guard((authorityRef, refused) => this.#recordRecoveryRefused(nodeVisitId, authorityRef, refused)),
-        runDelivered: guard((fields) => this.#recordRunDelivered(nodeVisitId, fields)),
-        deliveryFailed: guard((reason) => this.#recordDeliveryFailed(nodeVisitId, reason)),
-      }
-      try {
-        return await fn(record, () => this.#attempt(nodeVisitId))
-      } finally {
-        closed = true
-      }
-    })
-  }
+
+  async mutateWithRecord(...args) { return mutateWithRecord(this, this.#operationPort(), ...args) }
 
   /** Cross-process-fresh ACTIVE snapshot for one reconciliation pass. */
   async listActiveFresh() {
-    return this.mutate(() => [...this.attempts.values()]
-      .filter((attempt) => attempt.state === 'ACTIVE')
-      .map((attempt) => ({ ...attempt })))
+    return this.inspectFresh(attempts => attempts.filter(attempt => attempt.state === 'ACTIVE'))
   }
 
   /**
@@ -710,53 +438,11 @@ export class ExecutionLedger {
    * listActiveFresh.
    */
   async listStaleCandidatesFresh(thresholdMs, nowMs = this.clock()) {
-    if (!Number.isInteger(thresholdMs) || thresholdMs < 1) {
-      throw new TypeError('workflow-execution: listStaleCandidatesFresh requires a positive integer thresholdMs')
-    }
-    return this.mutate(() => [...this.attempts.values()]
-      .filter((attempt) => attempt.delivered !== undefined
-        && nowMs - attempt.delivered.atMs >= thresholdMs
-        && ((attempt.state === 'ACTIVE' && attempt.phase === 'run_delivered') || (attempt.state === 'NEEDS_REVIEW' && attempt.judgment === 'run_ended_no_submission')))
-      .map((attempt) => ({ ...attempt })))
+    return this.inspectFresh(attempts => staleCandidates(attempts, thresholdMs, nowMs))
   }
 
-  /**
-   * WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-005: record the ONE escalation
-   * fact per visit (append-only `escalation_requested` event). Idempotent:
-   * an already-escalated visit yields { committed: false } WITHOUT appending
-   * anything. Requires an existing terminal attempt — escalation rides the
-   * attempt's own terminal evidence, never an ACTIVE attempt.
-   */
-  async recordEscalationRequested({ nodeVisitId, reason, attemptCount, lastAttemptId, dispatchIntentId }) {
-    if (typeof reason !== 'string' || reason === '') throw new TypeError('workflow-execution: escalation reason is required')
-    return this.mutate(() => {
-      const current = this.#attempt(nodeVisitId)
-      if (current === undefined) {
-        throw new Error(`workflow-execution: no attempt exists for nodeVisit ${nodeVisitId.toLowerCase()} — escalation rides an existing attempt`)
-      }
-      if (current.state === 'ACTIVE') {
-        throw new Error(`workflow-execution: refusing escalation_requested for nodeVisit ${nodeVisitId.toLowerCase()} — attempt is ACTIVE`)
-      }
-      if (current.escalation !== undefined) {
-        return { committed: false, attempt: { ...current }, cause: 'already_escalated' }
-      }
-      const event = {
-        kind: ESCALATION_REQUESTED_KIND,
-        nodeVisitId: nodeVisitId.toLowerCase(),
-        // The workflowInstanceId rides the event line (not the projection):
-        // outbound projections (forum) key their thread resolution on it.
-        workflowInstanceId: current.workflowInstanceId,
-        atMs: this.clock(),
-        reason,
-        ...(Number.isInteger(attemptCount) ? { attemptCount } : {}),
-        ...(typeof lastAttemptId === 'string' ? { lastAttemptId } : {}),
-        ...(typeof dispatchIntentId === 'string' ? { dispatchIntentId } : {}),
-      }
-      this.#appendEvent(event)
-      this.#applyEvent(event)
-      return { committed: true, attempt: { ...this.#attempt(nodeVisitId) } }
-    })
-  }
+
+  async recordEscalationRequested(...args) { return recordEscalationRequested(this, this.#operationPort(), ...args) }
 
   /** Mint and persist a server-issued bounded reconciliation identity. */
   async beginNeedsReviewRecheck({ nodeVisitId, workflowStateVersion, nextEligibleAtMs }) {
@@ -810,16 +496,7 @@ export class ExecutionLedger {
    * outcome_unknown NEVER appears here).
    */
   async listRunEndedCandidatesFresh(retryDelayMs, nowMs = this.clock()) {
-    if (!Number.isInteger(retryDelayMs) || retryDelayMs < 1) {
-      throw new TypeError('workflow-execution: listRunEndedCandidatesFresh requires a positive integer retryDelayMs')
-    }
-    return this.mutate(() => [...this.attempts.values()]
-      .filter((attempt) => attempt.state === 'NEEDS_REVIEW'
-        && attempt.judgment === 'run_ended_no_submission'
-        && Number.isInteger(attempt.reconciledAtMs)
-        && nowMs - attempt.reconciledAtMs >= retryDelayMs
-        && (!Number.isInteger(attempt.reconciliation?.nextEligibleAtMs) || nowMs >= attempt.reconciliation.nextEligibleAtMs))
-      .map((attempt) => ({ ...attempt })))
+    return this.inspectFresh(attempts => runEndedCandidates(attempts, retryDelayMs, nowMs))
   }
 
   snapshot() {
@@ -827,13 +504,25 @@ export class ExecutionLedger {
     return [...this.attempts.values()].map((a) => ({ ...a }))
   }
 
+  /** Read-only reconciliation under the admission lock; never repair a torn tail.
+   * The synchronous inspector observes WAL and original Router correlation in
+   * the same exclusion interval, so a live sender cannot cross the fence. */
+  async inspectFresh(inspect) {
+    const run = this._queue.then(() => this.lock.runExclusive(() => {
+      const read = this.load()
+      return inspect(this.snapshot(), read)
+    }))
+    this._queue = run.then(() => {}, () => {})
+    return run
+  }
+
   /**
    * WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-003: cross-process-fresh read
    * view for the trace projection — replays the file under the existing
    * lock (same discipline as listActiveFresh) and returns the whole
-   * projection. Read-only in intent; the lock is the freshness seam.
+   * projection without event-file repair; the lock is the freshness seam.
    */
   async snapshotFresh() {
-    return this.mutate(() => [...this.attempts.values()].map((a) => ({ ...a })))
+    return this.inspectFresh(attempts => attempts)
   }
 }

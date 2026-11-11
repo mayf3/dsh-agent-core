@@ -6,7 +6,7 @@
  */
 
 import path from 'node:path'
-import { OwnerLock } from '../lock.js'
+import { OwnerLock } from '../store/lock.js'
 import {
   HISTORY_OUTCOMES,
   HISTORY_STORE_VERSION,

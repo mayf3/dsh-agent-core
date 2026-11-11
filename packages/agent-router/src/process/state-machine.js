@@ -42,6 +42,16 @@ export function fencedRejection(fenceHandle) {
     `agent ${fenceHandle === undefined ? 'process' : 'process'} has an unresolved outcome_unknown turn; new prompt admission is forbidden until termination is proven`, { fencedBy: fenceHandle ?? null })
 }
 
+/** C-015/C-017: only explicit native outcomes prove success or failure.
+ * Cancellation, limits and unknown/future reasons can prove termination only.
+ */
+export function exactTurnOutcome(reason) {
+  if (reason === null || typeof reason !== 'object' || Array.isArray(reason)) return null
+  if (reason.kind === 'completed') return 'completed'
+  if (reason.kind === 'error') return 'failed'
+  return null
+}
+
 /** Final prompt and queue gates share the same admission-blocker check. */
 export function promptFenceError(store, agentId) {
   const fence = typeof store.admissionBlockerForAgent === 'function'

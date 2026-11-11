@@ -11,7 +11,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { workflowDefinitionReadManifest } from '../src/capabilities/workflow-definition-read.js'
+import { workflowDefinitionReadManifest } from '../src/capabilities/workflow-definition-read/index.js'
 import { DEFAULT_MANIFESTS } from '../src/index.js'
 import { validateManifest } from '../src/schema.js'
 import { createHttpTransport } from '../src/transport.js'

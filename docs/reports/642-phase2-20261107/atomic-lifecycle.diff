@@ -1,0 +1,270 @@
+diff --git a/.agents/governance.lock.json b/.agents/governance.lock.json
+index 38618a4c..59a9da8b 100644
+--- a/.agents/governance.lock.json
++++ b/.agents/governance.lock.json
+@@ -7,11 +7,11 @@
+   "distribution_manifest_sha256": "3ce456bec3af4ee6c9f725cf8d587ed1a3e70812574633fda9bddc06016a0841",
+   "adoption": {
+     "mode": "vendored",
+-    "status": "proposed",
++    "status": "accepted",
+     "prepared_by": "Codex under Owner task 2026-11-07",
+     "prepared_at": "2026-11-06T23:45:23Z",
+-    "accepted_by": null,
+-    "accepted_at": null
++    "accepted_by": "mayf3",
++    "accepted_at": "2026-11-07T03:20:10.813730Z"
+   },
+   "files": [
+     {
+diff --git a/.agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md b/.agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md
+index f3cea296..c8869a99 100644
+--- a/.agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md
++++ b/.agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md
+@@ -3,7 +3,7 @@
+ ```text
+ RULE_ID = CODE_STRUCTURE_GUARDRAILS_V2
+ RULE_KIND = repository-local binding rule (carried by .agents/local/, not a docs/specs authority)
+-LIFECYCLE = ACCEPTED
++LIFECYCLE = SUPERSEDED
+ EFFECTIVE_RULE = CODE_STRUCTURE_GUARDRAILS_V2 upon this accepted transaction merging into main
+ SUPERSEDES = CODE_STRUCTURE_GUARDRAILS_V1 (effective upon merge into main)
+ IMPLEMENTATION_CONTRACTS = CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1
+@@ -11,6 +11,7 @@ ENFORCEMENT = machine verifier (scripts/verify-code-structure.mjs) + manual revi
+ BASELINE_COMMIT = d506f81105e8aa05177a01b817ebe11dcc076ba5 (unchanged from V1)
+ ACCEPTANCE_ACTORS = mayf3 or an explicitly authorized maintainer recorded in the acceptance PR
+ REGISTRY_APPROVAL_ACTORS = [mayf3] (a different actor requires an accepted rule change; prose alone cannot extend this list)
++SUPERSEDED_BY = CODE_STRUCTURE_GUARDRAILS_V3
+ ```
+ 
+ This is the accepted whole-version successor to local V1, under the Owner's explicit maintainer delegation. It becomes effective on merge into main. The implementation contracts are defined once in `docs/specs/CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md`; this file remains the single authority for structural thresholds and rule semantics.
+diff --git a/.agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md b/.agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md
+index db276b2a..1a9914a3 100644
+--- a/.agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md
++++ b/.agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md
+@@ -1,6 +1,13 @@
+ ---
+ spec_id: CODE_STRUCTURE_GUARDRAILS_V3
+-status: proposed
++status: accepted
++accepted_by: mayf3
++accepted_date: 2026-11-07
++accepted_recorded_at: 2026-11-07T03:20:10.813730Z
++accepted_reviewed_semantic_head: 7f36750bf08d308cd7f648153e24c0b0e528e4c6
++acceptance_authority: https://github.com/mayf3/dsh-agent-core/pull/642#issuecomment-6701500077
++acceptance_ruling_id: owner-20261107-642-643-1377
++acceptance_final_head_review: PENDING_REGULATOR
+ spec_kind: invariant
+ authority_level: repository_local_rule
+ rule_kind: repository-local binding rule
+@@ -18,6 +25,14 @@ superseded_by: null
+ owners: [mayf3]
+ date: 2026-11-07
+ ---
++<!-- BEGIN PHASE2_CURRENT -->
++> **Current lifecycle: accepted by Owner mayf3, 2026-11-07; activation pending
++> main merge and the regulator's independent final-HEAD review.** The title and
++> preparation-time statements in §§0, 11–14 below are historical Phase1 records.
++> They do not override this accepted lifecycle or claim that Phase2 was already
++> performed when those records were authored. Both carried normative blocks and
++> every reviewed obligation remain byte-identical to the accepted semantic head.
++<!-- END PHASE2_CURRENT -->
+ 
+ # Code Structure Guardrails V3 — standalone whole-authority successor proposal
+ 
+@@ -420,3 +435,39 @@ evidence additions, outside the validated source tree. They do not claim a
+ second gate execution, independent final-head review, Owner acceptance,
+ predecessor retirement, runtime conformance or merge readiness. Independent
+ review of the resulting PR head is reserved for the regulator.
++<!-- BEGIN PHASE2_ACCEPTANCE -->
++
++## 15. Owner-accepted Phase2 lifecycle record — 2026-11-07
++
++Owner: `mayf3`. Exact accepted reviewed semantic head:
++`7f36750bf08d308cd7f648153e24c0b0e528e4c6`. Authority transcription:
++https://github.com/mayf3/dsh-agent-core/pull/642#issuecomment-6701500077
++Registry ruling: `rulings[id=owner-20261107-642-643-1377]`.
++The comment was transcribed at `2026-11-07T03:13:36Z`; the original Owner ruling
++is dated 2026-11-07, without a separately verified original signature time.
++This lifecycle record was applied at `2026-11-07T03:20:10.813730Z`.
++The external registry coordinate is supplied by the mandate and transcription;
++this worker does not claim an independent read of that external registry.
++
++Accepted scope is the complete inherited V2 policy, the complete effective
++TE_V1 exact-transition exception, and whole-authority succession. The ordinary
++500-line cap, fixed baseline, registry, anti-evasion, fail-closed behavior,
++one-time exact blob constraint and visible split debt remain unchanged.
++
++In this same atomic lifecycle tree:
++
++- `.agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md` has native
++  `LIFECYCLE = SUPERSEDED` and `SUPERSEDED_BY = CODE_STRUCTURE_GUARDRAILS_V3`.
++- `docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md` has raw
++  `status: superseded` and `superseded_by: CODE_STRUCTURE_GUARDRAILS_V3`.
++- V3's `supersedes` contains both complete predecessor IDs, providing the
++  reciprocal links. Predecessor bodies and original acceptance history remain
++  unchanged. The V1-to-V2 historical edge remains unchanged.
++
++Final accepted candidate HEAD is the commit containing this atomic tree,
++identified in `RECEIPT-642-PHASE2.md`; final independent review remains
++`PENDING_REGULATOR` and must bind that final delivery HEAD before merge.
++Acceptance on this branch is not activation on main. This worker does not merge.
++Verifier adaptation and PR #603 revalidation remain separate post-main tasks;
++this record authorizes no product implementation or production writes.
++<!-- END PHASE2_ACCEPTANCE -->
+diff --git a/.agents/local/README.md b/.agents/local/README.md
+index 81b4ff54..c2b6e9ea 100644
+--- a/.agents/local/README.md
++++ b/.agents/local/README.md
+@@ -92,21 +92,35 @@ The accepted paired governing authorities are `docs/specs/SVC_WORKFLOW_OWNER_OBL
+ 
+ ## Code structure rules
+ 
+-Current binding repository-local rule: [`.agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md`](CODE_STRUCTURE_GUARDRAILS_V2.md)
+-(frozen limits, fixed-baseline registry validation, candidate-delta gate and visible
+-historical debt). V2 and its V1 supersession activate atomically on main.
+-The implementation contract is
++Accepted whole-authority successor:
++[`.agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md`](CODE_STRUCTURE_GUARDRAILS_V3.md)
++(Owner 2026-11-07, reviewed semantic head `7f36750bf08d308cd7f648153e24c0b0e528e4c6`,
++PR #642 comment-6701500077; `rulings[id=owner-20261107-642-643-1377]`). V3 inherits
++V2 completely and absorbs TE_V1's one exact transition with all constraints.
++V2 and TE_V1 are superseded with reciprocal links in the same lifecycle commit.
++This transaction activates only on main merge after independent final-HEAD review;
++until then, main's accepted predecessor authorities remain controlling.
++The historical V1-to-V2 link and all predecessor acceptance records are retained.
++
++The separate implementation contract remains
+ [`CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1`](../../docs/specs/CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md).
+-Implementation starts only after both accepted authorities are in its base.
+-The existing V1 runner remains unqualified for V2 until the implementation lands.
++The existing runner still consumes the predecessor formats and requires V2
++ACCEPTED; it is not qualified for the retired Phase2/V3 authority state.
++Owner reserves verifier adaptation and #603 revalidation for separate tasks
++following main merge. No runner adaptation or product implementation occurs here.
+ 
+ ```text
+-RULE = .agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md
++RULE = .agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md
+ EXCEPTION_REGISTRY = .agents/structure-registry.json
+ VERIFIER = node scripts/verify-code-structure.mjs --base <ref> --head <ref> [--json]
+ NPM = npm run verify:structure
++V3_VERIFIER_QUALIFICATION = PENDING_SEPARATE_TASK
+ ```
+ 
++The explicit rc.3 distribution update is accepted under adoption V3's unchanged
++Contracts; see its §14 and `RECEIPT-642-PHASE2.md` for exact lock/source/Owner
++coordinates. Accepted update status on this branch is not main activation.
++
+ Raw logs may remain outside Git, but every load-bearing Observation or Evidence relation must retain enough provenance to retrieve and interpret the source.
+ 
+ ## Legacy transition
+diff --git a/docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md b/docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md
+index b73637ca..482fd393 100644
+--- a/docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md
++++ b/docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md
+@@ -197,3 +197,44 @@ no pre-merge record by itself establishes active adoption.
+ No unresolved question grants implementation or production authority. Future
+ executor-level duplicate suppression and measured delivery improvements are not
+ prerequisites of current HR recovery or this bounded governance repair.
++<!-- BEGIN PHASE2_READOPTION -->
++
++## 14. Explicit rc.3 distribution update acceptance — 2026-11-07
++
++This is the explicit later-update record permitted by CTR-AD3-001's final
++sentence, under the unchanged adoption Contracts and source/local-review/main
++activation procedure. The original rc.1 source pin and 2026-10-15 acceptance
++above remain historical records of that adoption; they are not rewritten or
++represented as acceptance of rc.3. No new routing or product Contract is added.
++
++Owner mayf3's current acceptance is bound to reviewed semantic head
++`7f36750bf08d308cd7f648153e24c0b0e528e4c6`, including exact preparation commit
++`b8333ef43d3e3433d5276cb8af49be7c949a18c8`.
++Authority: https://github.com/mayf3/dsh-agent-core/pull/642#issuecomment-6701500077
++Registry ruling: `rulings[id=owner-20261107-642-643-1377]`.
++The original ruling is dated 2026-11-07. The comment timestamp
++`2026-11-07T03:13:36Z` is the regulatory transcription time; this accepted lock
++record was applied at `2026-11-07T03:20:10.813730Z`. The external registry ID is supplied by
++the mandate/transcription, not an independently inspected local registry.
++
++| Coordinate | Exact value |
++|---|---|
++| Source repository | `mayf3/agent-development-governance` |
++| Source commit | `c1fad8976e50e96adb27a4c7e2dd4f97bf2e899e` |
++| Distribution/version | `development-governance-v0` / `2.0.0-rc.3` |
++| Manifest SHA-256 | `3ce456bec3af4ee6c9f725cf8d587ed1a3e70812574633fda9bddc06016a0841` |
++| Prepared lock SHA-256 at b8333ef4 | `2c79ab4da7245dc1875e98300af6d2fefd75245d1be06ad3d3e9d9f86b30ad6c` |
++| Accepted lock SHA-256 | `0cb6acb6e7839ee2b6d0312653e6c5efc680512a36bf44a842db3aa79dc5a8b5` |
++| Lock lifecycle | `accepted`; actor `mayf3`; acceptance recording time above |
++| Preparation metadata and managed files | preserved exactly from b8333ef4 |
++
++Acceptance changes only lock `adoption.status`, `accepted_by`, `accepted_at`.
++The 25 managed-file hashes/sizes, source pin and manifest digest are unchanged.
++Raw verifier/manifest parity, complete five-record governing adoption lifecycle,
++exact structural native lifecycle and source-preservation evidence are archived
++in `docs/reports/642-phase2-20261107/` and `RECEIPT-642-PHASE2.md`.
++Final-HEAD independent review is `PENDING_REGULATOR`; authority activation still
++requires that review and main merge. Neither a proposed lock nor this unmerged
++accepted update is represented as currently activated main authority. Product
++implementation, deployment, production access and runtime acceptance remain none.
++<!-- END PHASE2_READOPTION -->
+diff --git a/docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md b/docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md
+index 1a7cd389..1e86dca1 100644
+--- a/docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md
++++ b/docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md
+@@ -1,6 +1,6 @@
+ ---
+ spec_id: CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1
+-status: accepted
++status: superseded
+ spec_kind: implementation
+ authority_level: governing_spec
+ implementation_authority: contracts
+@@ -14,7 +14,7 @@ governed_by:
+   - CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1
+ external_authorities: []
+ supersedes: []
+-superseded_by: null
++superseded_by: CODE_STRUCTURE_GUARDRAILS_V3
+ owners: [mayf3]
+ date: 2026-11-06
+ ---
+diff --git a/docs/specs/README.md b/docs/specs/README.md
+index 5f15bf6f..88adfbc7 100644
+--- a/docs/specs/README.md
++++ b/docs/specs/README.md
+@@ -95,7 +95,7 @@ runtime change, credential change, or real HR dispatch.
+ 
+ | Spec ID | Status in this branch | Kind | Scope | Supersedes on acceptance |
+ |---|---|---|---|---|
+-| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3` | accepted 2026-10-15; current after main merge (2.0.0-rc.1, fixed 6301662e; docs-only, separate from #497 CI) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` |
++| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3` | accepted 2026-10-15; explicit rc.3 update accepted 2026-11-07 under §14 (source c1fad897; PR #642 comment-6701500077; final review/main activation pending); historical rc.1 pin retained | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` |
+ | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` | superseded by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3`; historical acceptance 2026-09-05 retained | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1` |
+ | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1` | superseded (by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2`) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` |
+ | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` | superseded (by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1`) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` |
+@@ -103,11 +103,24 @@ runtime change, credential change, or real HR dispatch.
+ 
+ Other existing Specs remain at their stable filenames and keep their current lifecycle until explicitly reviewed.
+ 
++## Structure policy whole-authority succession
++
++| Authority | Lifecycle in this branch | Effect |
++|---|---|---|
++| [CODE_STRUCTURE_GUARDRAILS_V3](../../.agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md) | accepted by Owner 2026-11-07; exact reviewed semantics `7f36750b`; PR #642 comment-6701500077, ruling `owner-20261107-642-643-1377` | whole successor to V2 and TE_V1, reciprocal native links; active only after independent final-HEAD review and main merge |
++| [CODE_STRUCTURE_GUARDRAILS_V2](../../.agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md) | superseded by V3 in the same lifecycle transaction | preserved historical policy and V1 predecessor link |
++| [CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1](CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md) | superseded by V3 in the same lifecycle transaction | complete effective exception absorbed; exact tuple, visible debt and history preserved |
++
++The existing verifier still requires the V2/TE predecessor lifecycle. Its V3
++adaptation and #603 revalidation are separately authorized post-main tasks.
++No new Current Decision is created; the Decision index has no structure-policy
++entry. This index and the local README point to the native structural authority.
++
+ ## Structure verifier implementation authority
+ 
+ | Spec | Current lifecycle | Implementation authority | Authority role |
+ |---|---|---|---|
+-| [CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1](CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md) | accepted under Owner delegation; effective on main merge | contracts after accepted in implementation base; production apply none | verifier CLI coordinates, byte-preserving V1 registry validation, computed visible baseline-debt output, affected-surface candidate gating, fail-closed configuration, and regression acceptance for local `CODE_STRUCTURE_GUARDRAILS_V2` |
++| [CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1](CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md) | accepted under Owner delegation; effective on main merge | contracts after accepted in implementation base; production apply none | verifier CLI coordinates, byte-preserving V1 registry validation, computed visible baseline-debt output, affected-surface candidate gating, fail-closed configuration, and regression acceptance for historical local `CODE_STRUCTURE_GUARDRAILS_V2`, wholly inherited by accepted V3; existing runner adaptation pending a separate post-main task |
+ 
+ ## Agent primary Workspace authority
+ 

@@ -1,0 +1,17 @@
+import json,os,re,subprocess,sys,tempfile,unittest
+from pathlib import Path
+from fixture import R
+class Executor(unittest.TestCase):
+ def test_actual_case_fixed_argument_return_and_preparation_boundary(self):
+  raw=(R/'candidate/executor.sh').read_text() if (R/'candidate/executor.sh').exists() else (R/'baseline/executor.sh').read_text()
+  hit=re.search(r'^  e31-preserve\)\n(.*?)^    ;;',raw,re.M|re.S);self.assertIsNotNone(hit,'new fixed maintenance branch absent')
+  with tempfile.TemporaryDirectory(prefix='e31-executor-case-') as td:
+   d=Path(td);(d/'e31_preserve_once.py').write_text('import os,sys\nfrom pathlib import Path\nPath(os.environ["SEEN"]).write_text(repr(sys.argv))\nraise SystemExit(int(os.environ["CHILD_RC"]))\n')
+   code='set -u\nDRIVEN='+repr(str(d))+'\nprepare_driven() { return "$PREPARE_RC"; }\nreceipt() { printf "%s %s\\n" "$1" "$2" >> "$RECEIPT"; return "$RECEIPT_RC"; }\ndeny() { exit 1; }\n'+hit[1]
+   for prep,child,receipt,extra,expected in ((0,0,0,[],0),(0,7,0,[],7),(9,0,0,[],2),(0,0,1,[],2),(0,0,0,['foreign'],1)):
+    seen=d/'seen';seen.unlink(missing_ok=True);log=d/'receipt';env=dict(os.environ,SEEN=str(seen),RECEIPT=str(log),CHILD_RC=str(child),PREPARE_RC=str(prep),RECEIPT_RC=str(receipt))
+    out=subprocess.run(['/bin/bash','-c',code,'fixed-case',*extra],env=env,capture_output=True,timeout=5)
+    self.assertEqual(out.returncode,expected,out.stderr);self.assertEqual(seen.exists(),prep==0 and not extra)
+    if seen.exists():self.assertEqual(seen.read_text(),repr([str(d/'e31_preserve_once.py')]))
+if __name__=='__main__':
+ r=unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(Executor));(R/'results/executor.json').write_text(json.dumps({'methods':r.testsRun,'failures':len(r.failures),'errors':len(r.errors),'details':[str(x) for x in r.failures+r.errors]},indent=2)+'\n');sys.exit(not r.wasSuccessful())

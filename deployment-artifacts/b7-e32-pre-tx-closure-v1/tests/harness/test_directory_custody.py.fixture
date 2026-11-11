@@ -1,0 +1,10 @@
+import unittest
+from fixture import *
+class FixedDirectoryCustody(unittest.TestCase):
+ def test_original_migration_parent_exact_custody_required(self):
+  f=Fixture(Candidate('candidate'))
+  try:
+   f.tx_path.parent.chmod(0o755)
+   self.assertFalse(f.request(DISPOSE)['ok']);self.assertFalse(f.auth_path.exists())
+  finally:f.close()
+if __name__=='__main__':unittest.main()

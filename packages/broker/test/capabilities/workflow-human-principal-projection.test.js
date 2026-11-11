@@ -14,7 +14,7 @@ import {
   WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_CAPABILITY_ID,
   manifests,
   workflowHumanPrincipalProjectionManifest,
-} from '../../src/capabilities/workflow-human-principal-projection.js'
+} from '../../src/capabilities/workflow/human-principal-projection.js'
 
 const exactArgs = {
   principalId: TARGET_HUMAN_PRINCIPAL_ID,

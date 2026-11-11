@@ -228,3 +228,19 @@ test('AGENT_NOT_FOUND from the Router maps to 404', async (t) => {
   assert.equal(body.error.code, 'AGENT_NOT_FOUND')
   router.switchAgent = original
 })
+
+test('GET /health carries additive admission readiness; absent handler stays null (PRODUCT #525 P1)', async (t) => {
+  const admissionHandler = async () => null
+  admissionHandler.admissionHealth = () => ({ configured: true, state: 'unproven' })
+  const withAdmission = await startServer(t, { config: { workflowAdmission: admissionHandler } })
+  const health = await call(withAdmission.base, 'GET', '/health')
+  assert.equal(health.status, 200)
+  assert.equal(health.body.ok, true)
+  assert.deepEqual(health.body.admission, { configured: true, state: 'unproven' })
+
+  const bare = await startServer(t, {})
+  const bareHealth = await call(bare.base, 'GET', '/health')
+  assert.equal(bareHealth.status, 200)
+  assert.equal(bareHealth.body.ok, true)
+  assert.equal(bareHealth.body.admission, null)
+})

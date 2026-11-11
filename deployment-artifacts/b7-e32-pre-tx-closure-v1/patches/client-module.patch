@@ -1,0 +1,5 @@
+--- a/client-source
++++ b/client-source
+@@ -78 +78 @@
+-   if dv['native_state']=='CLOSED_PRE_TX' and not (p['operation_id']=='b7-packet-r27-83054332f5c352f2e-e29' and phase=='RETAINED' and d.get('tx_id') is None and d.get('attempt')==1 and d.get('input_sequence')==0 and d.get('input_pending') is False and d.get('reason')=='EXECUTION_INTENT' and d.get('next_action')=='COHERENT_CANDIDATE_NEXT'):return False
++   if dv['native_state']=='CLOSED_PRE_TX' and not (p['operation_id'] in ('b7-packet-r27-83054332f5c352f2e-e29','b7-packet-r31-19e485b2f9fa79a5-e32') and phase=='RETAINED' and d.get('tx_id') is None and d.get('attempt')==1 and d.get('input_sequence')==0 and d.get('input_pending') is False and d.get('reason')=='EXECUTION_INTENT' and d.get('next_action')=='COHERENT_CANDIDATE_NEXT'):return False

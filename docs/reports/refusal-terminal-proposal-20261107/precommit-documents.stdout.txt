@@ -1,0 +1,197 @@
+frozen R1 proposal/provenance/Brief: PASS
+frontmatter: date -> JSON string; schema/proposed/none/NEW: PASS
+13 sections; 6 contracts; 7 acceptance definitions; reverse coverage 6/6: PASS
+7 fixed Git sources/blob/hash; 2 local input hashes: PASS
+{
+  "docs_only_scope": "PASS",
+  "relative_file_links": [
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 5,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/R2-EXECUTION.md"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 6,
+      "target": "BRIEF-REFUSAL-PROPOSAL.md"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 8,
+      "target": "STOPPED-REFUSAL-PROPOSAL.md"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 10,
+      "target": "docs/specs/AGENT_CORE_REFUSAL_TERMINAL_HANDOFF_V1.md"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 21,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/check_documents.py"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 28,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/governance.stdout.txt"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 28,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/governance.stderr.txt"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 28,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/governance.command.json"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 29,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/documents.stdout.txt"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 29,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/documents.stderr.txt"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 29,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/documents.command.json"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 30,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/checker-review.md"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 31,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/whitespace.command.json"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 31,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/whitespace.stdout.txt"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 31,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/whitespace.stderr.txt"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 51,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/source-provenance.json"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 57,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/base-impact.json"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 58,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/main-movement.raw.txt"
+    },
+    {
+      "file": "RECEIPT-REFUSAL-PROPOSAL.md",
+      "line": 59,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/independent-review.md"
+    },
+    {
+      "file": "STOPPED-REFUSAL-PROPOSAL.md",
+      "line": 6,
+      "target": "BRIEF-REFUSAL-PROPOSAL.md"
+    },
+    {
+      "file": "STOPPED-REFUSAL-PROPOSAL.md",
+      "line": 35,
+      "target": "docs/specs/AGENT_CORE_REFUSAL_TERMINAL_HANDOFF_V1.md"
+    },
+    {
+      "file": "STOPPED-REFUSAL-PROPOSAL.md",
+      "line": 36,
+      "target": "docs/reports/refusal-terminal-proposal-20261107/source-provenance.json"
+    },
+    {
+      "file": "docs/reports/refusal-terminal-proposal-20261107/R2-EXECUTION.md",
+      "line": 10,
+      "target": "../../../BRIEF-REFUSAL-PROPOSAL.md"
+    },
+    {
+      "file": "docs/reports/refusal-terminal-proposal-20261107/R2-EXECUTION.md",
+      "line": 10,
+      "target": "../../../STOPPED-REFUSAL-PROPOSAL.md"
+    },
+    {
+      "file": "docs/reports/refusal-terminal-proposal-20261107/R2-EXECUTION.md",
+      "line": 12,
+      "target": "check_documents.py"
+    },
+    {
+      "file": "docs/reports/refusal-terminal-proposal-20261107/independent-review.md",
+      "line": 45,
+      "target": "base-impact.json"
+    },
+    {
+      "file": "docs/reports/refusal-terminal-proposal-20261107/independent-review.md",
+      "line": 45,
+      "target": "current-aging-frontmatter.txt"
+    },
+    {
+      "file": "docs/specs/AGENT_CORE_REFUSAL_TERMINAL_HANDOFF_V1.md",
+      "line": 64,
+      "target": "../../BRIEF-REFUSAL-PROPOSAL.md"
+    },
+    {
+      "file": "docs/specs/AGENT_CORE_REFUSAL_TERMINAL_HANDOFF_V1.md",
+      "line": 67,
+      "target": "../reports/refusal-terminal-proposal-20261107/source-provenance.json"
+    },
+    {
+      "file": "docs/specs/AGENT_CORE_REFUSAL_TERMINAL_HANDOFF_V1.md",
+      "line": 95,
+      "target": "AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1.md"
+    },
+    {
+      "file": "docs/specs/AGENT_CORE_REFUSAL_TERMINAL_HANDOFF_V1.md",
+      "line": 96,
+      "target": "AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3.md"
+    },
+    {
+      "file": "docs/specs/AGENT_CORE_REFUSAL_TERMINAL_HANDOFF_V1.md",
+      "line": 97,
+      "target": "AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3.md"
+    }
+  ],
+  "scope_files": [
+    "BRIEF-REFUSAL-PROPOSAL.md",
+    "RECEIPT-REFUSAL-PROPOSAL.md",
+    "STOPPED-REFUSAL-PROPOSAL.md",
+    "docs/reports/refusal-terminal-proposal-20261107/R2-EXECUTION.md",
+    "docs/reports/refusal-terminal-proposal-20261107/base-impact.json",
+    "docs/reports/refusal-terminal-proposal-20261107/check_documents.py",
+    "docs/reports/refusal-terminal-proposal-20261107/checker-review.md",
+    "docs/reports/refusal-terminal-proposal-20261107/current-aging-frontmatter.txt",
+    "docs/reports/refusal-terminal-proposal-20261107/documents.command.json",
+    "docs/reports/refusal-terminal-proposal-20261107/documents.stderr.txt",
+    "docs/reports/refusal-terminal-proposal-20261107/documents.stdout.txt",
+    "docs/reports/refusal-terminal-proposal-20261107/governance.command.json",
+    "docs/reports/refusal-terminal-proposal-20261107/governance.stderr.txt",
+    "docs/reports/refusal-terminal-proposal-20261107/governance.stdout.txt",
+    "docs/reports/refusal-terminal-proposal-20261107/independent-review.md",
+    "docs/reports/refusal-terminal-proposal-20261107/main-movement.raw.txt",
+    "docs/reports/refusal-terminal-proposal-20261107/source-provenance.json",
+    "docs/reports/refusal-terminal-proposal-20261107/whitespace.command.json",
+    "docs/reports/refusal-terminal-proposal-20261107/whitespace.stderr.txt",
+    "docs/reports/refusal-terminal-proposal-20261107/whitespace.stdout.txt",
+    "docs/specs/AGENT_CORE_REFUSAL_TERMINAL_HANDOFF_V1.md"
+  ],
+  "limits": "No network/anchor validation; no product/runtime acceptance."
+}
+lifecycle argv=["/opt/homebrew/opt/python@3.14/bin/python3.14", ".agents/tools/validate_spec_transition.py", "--base", "/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/refusal-spec-check-dr48lgm2/base.json", "--candidate", "/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/refusal-spec-check-dr48lgm2/candidate.json"]
+Spec transition is a valid whole-authority lifecycle state
+lifecycle rc=0
+{"result": "PASS", "proposal_sha256": "c5fe3b5da21082e417c2c78d0952ed6df2246d5e3e222316a6943152515ff212", "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]", "PyYAML": "6.0.3", "jsonschema": "4.26.0"}

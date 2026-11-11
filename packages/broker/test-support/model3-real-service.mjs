@@ -12,7 +12,7 @@ import { tmpdir } from 'node:os'
 import { createBrokerGateway } from '../src/gateway.js'
 import { buildToolDefinition } from '../src/registry.js'
 import { createRelayHandlers } from '../src/relay.js'
-import { manifests } from '../src/capabilities/workflow.js'
+import { manifests } from '../src/capabilities/workflow/index.js'
 import { createHttpTransport } from '../src/transport.js'
 import { wire, startMockServer, json, mockTargets } from './capability-fixtures.js'
 

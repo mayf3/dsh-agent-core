@@ -1,0 +1,39 @@
+{
+  "result": "PASS",
+  "exit_code": 0,
+  "observed_at": "2026-11-07T03:21:44.467303+00:00",
+  "reviewed_semantic_head": "7f36750bf08d308cd7f648153e24c0b0e528e4c6",
+  "tool_increment_commit": "245d361a229513abb0fb09ba6a73ddcae11ab559",
+  "atomic_lifecycle_commit": "2e67e98a7295dc78d18dad51bf673a0c3be9d009",
+  "atomic_lifecycle_tree": "c3a0197cb67c1fdc14af9a3184e46e8d9976e209",
+  "changed_paths": [
+    ".agents/governance.lock.json",
+    ".agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md",
+    ".agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md",
+    ".agents/local/README.md",
+    "BRIEF-642-PHASE2.md",
+    "docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md",
+    "docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md",
+    "docs/specs/README.md",
+    "scripts/governance/validate_v3_phase2.py"
+  ],
+  "atomic_lifecycle_paths": [
+    ".agents/governance.lock.json",
+    ".agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md",
+    ".agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md",
+    ".agents/local/README.md",
+    "docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md",
+    "docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md",
+    "docs/specs/README.md"
+  ],
+  "source_delta_since_structure_gate": [],
+  "original_five_commits": [
+    "b8333ef43d3e3433d5276cb8af49be7c949a18c8",
+    "21ac77eabf67008d0612e9c688931b25911d0c8c",
+    "74523bc95e62d6b476af3cff007d88483927ed41",
+    "4a3dce83d0af0bcd1c8467155ba86514734ec870",
+    "7f36750bf08d308cd7f648153e24c0b0e528e4c6"
+  ],
+  "structure_gate_applicability": "old CLI verified tool increment at prep; source unchanged through lifecycle, but old CLI does not support actual retired-head lifecycle; adaptation is separately deferred by Owner",
+  "summary": "three authorities atomic; zero source delta after structure gate; original five commits preserved"
+}

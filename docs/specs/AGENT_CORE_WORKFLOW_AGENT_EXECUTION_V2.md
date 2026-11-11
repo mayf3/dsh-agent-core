@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2
-status: accepted
+status: superseded
 accepted_date: 2026-09-10
 acceptance_authority_basis: >-
   Owner exact-head acceptance (PR mayf3/dsh-agent-core#236,
@@ -33,35 +33,9 @@ revision_note: >-
   family extended with attributable reconciliation handle / messageId /
   session linkage (requestId, attemptId, or nodeVisitId) in Router or
   session seams, covered in the ENTRY-DISPATCH test row.
-supersedes:
-  - AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V1 (accepted @ main f14d625, PR
-    #219): WHOLE-AUTHORITY successor transaction. When this document is
-    accepted and merged, V1 ceases to be authority in full; this document
-    carries V1's complete contract set forward (verbatim unless explicitly
-    marked as a V2 successor note) and changes ONLY the provably
-    pre-admission resolution-failure recovery semantics. At acceptance
-    time the accepted V1 file gains a reciprocal superseded-by backlink
-    (§8; this candidate does not modify the accepted V1 file itself).
-amends:
-  - AGENT_CORE_AGENT_SESSION_MESSAGING_V1 — INHERITED VERBATIM from the
-    superseded V1: the R4 trusted message-origin sidecar extension from
-    ONE kind (`inter_agent`) to TWO (`+ workflow_execution`) is carried
-    forward UNCHANGED (see CTR-WAE-004). No other R4 semantic changes.
-superseded_in_scope_by:
-  - AGENT_CORE_WORKFLOW_STALE_REENTRY_V1 (accepted 2026-09-17, Owner
-    ACCEPT_EXACT_HEAD at 6592dd50dda2fa46ba931c138d3718f8528da02f,
-    merged via drift-closure 7e05e5b): SCOPED successor — supersedes ONLY
-    the two §1 frozen gates `SECOND_ATTEMPT_ID = FORBIDDEN` and
-    `SECOND_RUN = FORBIDDEN` and the §0 non-goal clauses "no automatic
-    retry engine of any kind … no recovery triggered by poller ticks or
-    reconcile passes" and "no second attempt id, ever", in the single
-    bounded stale_no_progress case defined by its CTR-SRE-002/004.
-    V2 remains current accepted authority for ALL other surfaces,
-    including the complete outcome_unknown family (CTR-WAE-006 carried;
-    unknown never creates a second execution) and every
-    AGENT_PROCESS_LIFECYCLE_HARDENING_V2 discipline (C-013/015/016/017
-    reused, not amended). Mechanical pointer only, no semantic change to
-    the accepted bytes.
+supersedes: [AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V1]
+amends: [AGENT_CORE_AGENT_SESSION_MESSAGING_V1]
+superseded_in_scope_by: [AGENT_CORE_WORKFLOW_STALE_REENTRY_V1]
 external:
   - svc-workflow SVC_WORKFLOW_DISPATCH_INTENT_KEYSET_CONTINUATION_V1
     (consumed UNCHANGED by CTR-WAE-001b; inherited from V1)
@@ -96,6 +70,39 @@ implementation_basis: >-
   stays frozen and may only be rebased/ported AFTER this Spec is accepted,
   restricted to the accepted delta (§8).
 frozen_implementation_candidate: NONE
+superseded_by: AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3
+
+legacy_lifecycle_narrative: |-
+  supersedes:
+    - AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V1 (accepted @ main f14d625, PR
+      #219): WHOLE-AUTHORITY successor transaction. When this document is
+      accepted and merged, V1 ceases to be authority in full; this document
+      carries V1's complete contract set forward (verbatim unless explicitly
+      marked as a V2 successor note) and changes ONLY the provably
+      pre-admission resolution-failure recovery semantics. At acceptance
+      time the accepted V1 file gains a reciprocal superseded-by backlink
+      (§8; this candidate does not modify the accepted V1 file itself).
+  amends:
+    - AGENT_CORE_AGENT_SESSION_MESSAGING_V1 — INHERITED VERBATIM from the
+      superseded V1: the R4 trusted message-origin sidecar extension from
+      ONE kind (`inter_agent`) to TWO (`+ workflow_execution`) is carried
+      forward UNCHANGED (see CTR-WAE-004). No other R4 semantic changes.
+  superseded_in_scope_by:
+    - AGENT_CORE_WORKFLOW_STALE_REENTRY_V1 (accepted 2026-09-17, Owner
+      ACCEPT_EXACT_HEAD at 6592dd50dda2fa46ba931c138d3718f8528da02f,
+      merged via drift-closure 7e05e5b): SCOPED successor — supersedes ONLY
+      the two §1 frozen gates `SECOND_ATTEMPT_ID = FORBIDDEN` and
+      `SECOND_RUN = FORBIDDEN` and the §0 non-goal clauses "no automatic
+      retry engine of any kind … no recovery triggered by poller ticks or
+      reconcile passes" and "no second attempt id, ever", in the single
+      bounded stale_no_progress case defined by its CTR-SRE-002/004.
+      V2 remains current accepted authority for ALL other surfaces,
+      including the complete outcome_unknown family (CTR-WAE-006 carried;
+      unknown never creates a second execution) and every
+      AGENT_PROCESS_LIFECYCLE_HARDENING_V2 discipline (C-013/015/016/017
+      reused, not amended). Mechanical pointer only, no semantic change to
+      the accepted bytes.
+
 ---
 
 # AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2 — whole-authority successor (minimal semantic delta: pre-admission recovery)

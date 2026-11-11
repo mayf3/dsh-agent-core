@@ -1,0 +1,8 @@
+{
+  "schema_version": 2,
+  "entries": [
+    {"operation":"initial short-ref 393a0afc lookup in h547 object database","rc":128,"explanation":"object resides in provenance-named production source object database; fixed-object reads recovered it without changing that checkout","classification":"source-location discovery; not missing required baseline"},
+    {"operation":"Watch3 comment 6718344408 GitHub issues-comment lookup","rc":1,"http_status":404,"explanation":"exploratory reference lookup; not treated as a production mandate. Existing local operation receipt found separately; authenticated original authority remains unproved","classification":"exploratory lookup miss"},
+    {"operation":"first collect-preflight.py invocation","rc":1,"nested_git_rc":128,"explanation":"recorder looked for QA53607078 in production object database instead of the already-fetched h547 database; corrected repository argument, same exact QA bytes available","classification":"recorder reference-location mistake; no production write or store access"}
+  ]
+}

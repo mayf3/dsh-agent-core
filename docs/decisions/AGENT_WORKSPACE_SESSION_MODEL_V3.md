@@ -560,6 +560,19 @@ Messaging/Delegation 的内部来源不会改变 Feishu Binding 或 Mobile activ
 
 ## 20. Mobile switch_agent 与 scope
 
+**AMEND（2026-11-03，[#523](https://github.com/mayf3/dsh-agent-core/issues/523)，
+[Owner 方案 A 裁定](https://github.com/mayf3/dsh-agent-core/issues/523#issuecomment-6591294712)）：**
+本节的 Mobile switch 允许仅适用于前端/操作员来源的切换；手机切换是前端操作，
+不得据此授权 chat/agent-turn 经后端 SWITCH parent-RPC 跨工作区改绑。
+chat/agent-turn 路径无条件先执行治理 guard（不按 channel 区分）：
+`resolveWorkspace(target.id) != resolveEffectiveWorkspace(current).workspacePath`
+时，以 `SWITCH_WORKSPACE_MISMATCH` 结构化拒绝，并记录一行审计（ccId、from、to、
+code、双方路径）。guard 同步先于 `setLastSession` / `persistBinding`，拒绝时 Binding
+与 bookmark 均不改动；同工作区切换保持原语义。此前任何可被解读为允许 agent-turn
+跨工作区 switch 的本节表述均以本 AMEND 为准。前端/操作员入口
+`product-api POST /v1/switch-agent` 直接调用 `Router.switchAgent`，不加此 guard。
+本次 amendment 不授权生产部署或 Binding 写入。
+
 ```text
 agent_core.switch_agent(targetAgent)
 → update current switchable Product Surface activeAgent
@@ -572,7 +585,7 @@ switch_agent 不是当前 Agent 角色扮演成另一个 Agent，也不创建、
 ```text
 SWITCH_AGENT_SCOPE = SWITCHABLE_PRODUCT_SURFACE_SCOPED
 
-Mobile main             = ALLOWED
+Mobile main             = ALLOWED (frontend/operator source only)
 Feishu main             = NOT_ALLOWED
 cron Session            = NOT_ALLOWED
 delegation/task Session = NOT_ALLOWED

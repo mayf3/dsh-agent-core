@@ -40,6 +40,8 @@
  * scheduler-router-final-integration-v1.md).
  */
 
+import { createScheduledReceiptBudget } from '../../agent-router/src/process/scheduler-receipt.js'
+
 // Process-lifetime defense in depth. Cross-process durability remains the
 // Scheduler occurrence ledger + AgentProcess caller-correlation authority.
 const PROCESS_ADMISSIONS = new Map()
@@ -219,6 +221,9 @@ export function createRouterInvoker(router, opts = {}) {
         // route attempt, zero fallbacks. The model string stays opaque here.
         ...(request.model === undefined ? {} : { strictReason: 'explicit_model_strict' }),
         opts: {
+          ...(request.receiptBudget === undefined ? {} : {
+            scheduledReceiptBudget: createScheduledReceiptBudget(request, request.receiptBudget),
+          }),
           callerCorrelation: {
             occurrenceId: request.occurrenceId,
             runId: request.runId,

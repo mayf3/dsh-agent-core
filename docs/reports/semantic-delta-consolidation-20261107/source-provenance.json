@@ -1,0 +1,190 @@
+{
+  "observed_at_utc": "2026-11-07T10:21:57.308533+00:00",
+  "repository": "mayf3/dsh-agent-core",
+  "worktree": "/private/tmp/h1377-minimpl",
+  "base_head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "current_main": {
+    "sha": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+    "url": "https://github.com/mayf3/dsh-agent-core/commit/2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648"
+  },
+  "prs": [
+    {
+      "baseRefName": "main",
+      "baseRefOid": "3c1bcf98bc40a2c34cca24f241c87d1b12cea216",
+      "headRefName": "docs/readback-aging-handoff-amend",
+      "headRefOid": "7b5d79c3961625aaade6f3b383b18b2968e82f6c",
+      "mergedAt": null,
+      "number": 643,
+      "state": "OPEN",
+      "url": "https://github.com/mayf3/dsh-agent-core/pull/643"
+    },
+    {
+      "baseRefName": "main",
+      "baseRefOid": "55f442c74414dc723306a6d8e0cdba73d78eb8da",
+      "headRefName": "docs/1377-convergence-analysis",
+      "headRefOid": "4928f5022a2385b571eba4d9d2967d216c78c2f8",
+      "mergedAt": null,
+      "number": 650,
+      "state": "OPEN",
+      "url": "https://github.com/mayf3/dsh-agent-core/pull/650"
+    }
+  ],
+  "sources": [
+    {
+      "kind": "local-input-byte-copy",
+      "source": "/private/tmp/h1377-minimpl/BRIEF-SEMANTIC-DELTA-CONSOLIDATION.md",
+      "snapshot": "docs/reports/semantic-delta-consolidation-20261107/BRIEF-SEMANTIC-DELTA-CONSOLIDATION.md",
+      "sha256": "62cdfeb103c12d8b3711fb57fa5673e5cbb998c631c8965f6f7ebc456e097be7"
+    },
+    {
+      "kind": "local-input-byte-copy",
+      "source": "/private/tmp/h1377-minimpl/STOPPED-1377-MINIMPL.md",
+      "snapshot": "docs/reports/semantic-delta-consolidation-20261107/STOPPED-1377-MINIMPL.md",
+      "sha256": "9b3acc663678399e54bc930f507953c3eca6defa47f148933d65a5f06a025821"
+    },
+    {
+      "kind": "local-input-byte-copy",
+      "source": "/private/tmp/h1377-minimpl/BRIEF-1377-MINIMPL.md",
+      "snapshot": "docs/reports/semantic-delta-consolidation-20261107/BRIEF-1377-MINIMPL.md",
+      "sha256": "660b0fdc72b6fdb44a47f2d7422c8f51e1a04bd9a449d1b69c0c2da18f5be5e0"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": ".agents/README.md",
+      "blob": "e3493fbf67f4cb2641c7990478d7c008c1dd9ca5",
+      "sha256": "18d2ee74877c9871b7a086bbc8ec02ae8219146c61e6ecfc4f33038b881c98e2"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": ".agents/local/README.md",
+      "blob": "c2b6e9ea255e436c602f0e5ae04dd3108da91956",
+      "sha256": "ebd1a2f0a39ebfd17b6a17035ad63ff35c59f5e7384ebc3597687b3c3fac8d5a"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": ".agents/governance.lock.json",
+      "blob": "59a9da8bcd6a567a71ec3096b6066bf69c5b9d52",
+      "sha256": "0cb6acb6e7839ee2b6d0312653e6c5efc680512a36bf44a842db3aa79dc5a8b5"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md",
+      "blob": "f260b482564a561cf97f1b94676b048f67bd2f90",
+      "sha256": "c8d2627086cb202dcf0e70d9e0d0a9aeb174ea1d74b0b9cfd54339d28c33fe9b"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md",
+      "blob": "0c3f6f6005794edec2faf666e4fb035a9c87b009",
+      "sha256": "fcc3603d8f1ab7b1ab10eda7088a56fb2e5095792336311d63a92f74fba6e160"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V3.md",
+      "blob": "fd4ee0df516fd1cda800e586dd05cab8bfc355eb",
+      "sha256": "1c37687e473df7ce977e5cc571f74d9a6dc0470f3aca95a599d4c9066e52321f"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1.md",
+      "blob": "232b890c1b8f01c9d2fbcd9a1f6b8acfb401a816",
+      "sha256": "a939403cbd83bf9636d2f55e439dddcbbfc3eb74c578db8d4e348d513323a481"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3.md",
+      "blob": "ffa4defa97973b8c25240c2a4e7191dc6fee4167",
+      "sha256": "c5d39e390026807b9e471a6875f5e0e9d15432f21a3d177733bf422fc751a1e6"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3.md",
+      "blob": "f7623521fd031f661ecc74fe61cf9ec52e69ba13",
+      "sha256": "03469e9f53ccf53f23de3a552270a4bb82f1922b6979108fe01083488c3335d4"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "docs/specs/AGENT_DELIVERY_RESILIENCE_D009_ALIGNMENT_V1.md",
+      "blob": "00924a3a83cf0a5fa28c8a15f8c2267726071fcf",
+      "sha256": "d8b07bc5ed280dae767015dbb437e1d52e596d3e84148f448593290beb3ba0ca"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "docs/reports/sra-v1-draft-20261107/owner-selected-records.json",
+      "blob": "29fb4f4612c86b420447d3a3716223cf933c6bbe",
+      "sha256": "973ac125730ffb5971f3e0bf5ff872821adae11d6b92e078bd01fda1a4258151"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "packages/workflow-execution/src/recovery/refusal.js",
+      "blob": "fee778f1a794d8dbbfaebc1d6880686034e3878a",
+      "sha256": "d4c5bb2733f75f70c1db2f5334c5c6a30cdd9663a7b9fbeafad6ab2395e92a26"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "packages/workflow-execution/src/recovery/operation.js",
+      "blob": "463e3d911aa9823fcb2963984359bda95601e0f2",
+      "sha256": "2a30ea7476c184e90241a16dde50069b20f080c1c93ed53efebd2aba436a8449"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "packages/workflow-execution/src/recovery/automatic-ledger.js",
+      "blob": "b0955ef9dd67c13a3106aa2b9ae043f7b169fd32",
+      "sha256": "37872d963f53e9744833a2e882479ea400ef24859b87535c3fc07a4354faf592"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "packages/broker/src/capabilities/workflow/dispatch.js",
+      "blob": "3d53e8176d80c216b9c6a5934be451a54e51d159",
+      "sha256": "5f00af03d19ab8835587e2660f7b2ce60f0d9cf6b7ca03ae87943c375d830847"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "packages/broker/src/capabilities/workflow/assistance.js",
+      "blob": "0e0495ede9a73e5f9508625311fcad9f92e4c9c6",
+      "sha256": "b3630230fbba79f62c320daab0040249e2ab9976ed1e33d0ca0a620f9525f388"
+    },
+    {
+      "kind": "git-object",
+      "revision": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+      "path": "packages/production-runtime/src/workflow-execution-runtime.js",
+      "blob": "d051079e88d4e08a2d9c1af9db4809b518197b8a",
+      "sha256": "92d0b10ca354d1d4c53bd48c062ef8d9b2ecb326b0cd1003d88f0fef5fdfb32a"
+    },
+    {
+      "kind": "git-object",
+      "revision": "7b5d79c3961625aaade6f3b383b18b2968e82f6c",
+      "path": "docs/specs/AGENT_CORE_READBACK_AGING_HANDOFF_V1.md",
+      "blob": "b28b77bb88d7bdc963e989738177ce3d68aba39f",
+      "sha256": "3ac3478f4e9f71c0fd27276ffd568b3d5f44c135c47d4113f1f64be989d243ad"
+    },
+    {
+      "kind": "git-object",
+      "revision": "4928f5022a2385b571eba4d9d2967d216c78c2f8",
+      "path": "CONVERGENCE-ANALYSIS-1377.md",
+      "blob": "725422c81050068e70f61c71dada902d2311a195",
+      "sha256": "54b1f7203ed55dadc23d5f512126cd266f401533ac49d38eb91c00a7003902a7"
+    }
+  ],
+  "limitations": [
+    "No production access or execution",
+    "Svc successor acceptance coordinates not established",
+    "Analysis is not Product Authority"
+  ]
+}

@@ -1,0 +1,355 @@
+import { withManagedWriteErrors } from './owner-obligation.js'
+/**
+ * DOMAIN_OWNER_ASSISTANCE_V1 — thin broker transport over svc-workflow's
+ * existing Assistance V1 API. Business authorization stays server-side.
+ *
+ * Read and mutation are split because broker scopes are capability-level:
+ * owner inbox/detail need workflow.read; resolve/escalate need workflow.execute.
+ */
+import { withTransportErrors } from '../../transport.js'
+import { authErrors, baseErrors } from './definition-authoring.js'
+import { queryErrors } from './execute.js'
+
+const uuid = (description) => ({ type: 'string', description: description + ' (UUID).' })
+const limit = {
+  type: 'integer', minimum: 1, maximum: 100,
+  validationError: 'invalid_pagination',
+  description: 'Page size, 1-100 (server default when omitted).',
+}
+
+const readErrors = [
+  ...baseErrors, ...authErrors, ...queryErrors,
+  { code: 'assistance_case_not_found_or_not_visible', description: 'Case is absent or not visible.' },
+  { code: 'invalid_pagination', description: 'Pagination is invalid.' },
+  { code: 'invalid_cursor', description: 'Cursor is malformed or incomplete.' },
+]
+
+const actionErrors = [
+  ...baseErrors, ...authErrors,
+  { code: 'principal_not_found', description: 'Caller principal is not registered.' },
+  { code: 'principal_disabled', description: 'Caller principal is disabled.' },
+  { code: 'not_domain_owner', description: 'Caller is not the enabled Domain Owner.' },
+  { code: 'assistance_case_not_found_or_not_visible', description: 'Case is absent or not visible.' },
+  { code: 'assistance_status_conflict', description: 'Case status does not admit this action.' },
+  { code: 'workflow_state_version_conflict', description: 'Workflow version CAS failed.' },
+  { code: 'authoritative_reference_unavailable', description: 'Current governance review evidence is absent, inconsistent, or no longer eligible.' },
+  { code: 'invalid_assistance_payload', description: 'Assistance payload is invalid.' },
+  { code: 'size_limit_exceeded', description: 'Assistance payload is too large.' },
+  { code: 'idempotency_conflict', description: 'Idempotency key conflicts with an earlier request.' },
+  { code: 'command_still_processing', description: 'Idempotent command is still processing.' },
+  { code: 'internal_consistency_error', description: 'Downstream consistency failure.' },
+  { code: 'service_unavailable', description: 'Downstream storage unavailable.' },
+]
+
+const payload = (label) => ({
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    message: { type: 'string', description: label + ' message.' },
+    supportingPayload: { type: 'object', description: 'Optional non-authoritative JSON context.' },
+  },
+  required: ['message'],
+})
+
+const governanceChildReviewSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    bindingId: { type: 'string', description: 'Exact service-provided governance binding id.' },
+    terminalEventId: { type: 'string', description: 'Exact service-provided child terminal event id.' },
+    submissionId: { type: 'string', description: 'Exact service-provided acceptance submission id.' },
+    submissionDigest: { type: 'string', description: 'Exact service-provided submission digest.' },
+    acceptanceContractDigest: { type: 'string', description: 'Exact service-provided acceptance contract digest.' },
+  },
+  required: ['bindingId', 'terminalEventId', 'submissionId', 'submissionDigest', 'acceptanceContractDigest'],
+}
+
+export const workflowAssistanceReadManifest = withTransportErrors({
+  id: 'workflow_assistance_read',
+  toolName: 'workflow_assistance_read',
+  name: 'Workflow Assistance Read',
+  description:
+    'Read the calling Domain Owner\'s open assistance inbox or one visible case. '
+    + 'svc-workflow remains the sole authority for Domain Owner visibility.',
+  requiredScopes: ['workflow.read'],
+  errors: readErrors,
+  operations: [{
+    name: 'owner_inbox',
+    description: 'List open OWNER_PENDING/HUMAN_REQUIRED cases for domains owned by the caller.',
+    arguments: {
+      properties: {
+        limit,
+        beforeCreatedAt: { type: 'string', description: 'RFC3339 cursor time; pair with beforeId.' },
+        beforeId: uuid('Cursor assistance case id; pair with beforeCreatedAt'),
+      },
+      required: [],
+    },
+    result: { type: 'json' },
+    errors: ['invalid_arguments', 'invalid_pagination', 'invalid_cursor'],
+    http: {
+      target: 'svc-workflow', method: 'GET',
+      path: '/internal/v1/assistance-cases/owner-inbox',
+      query: ['limit', 'beforeCreatedAt', 'beforeId'],
+    },
+  }, {    name: 'detail',
+    description: 'Read one assistance case visible to the caller as requester or Domain Owner.',
+    arguments: {
+      properties: { assistanceCaseId: uuid('Assistance case id') },
+      required: ['assistanceCaseId'],
+    },
+    result: { type: 'json' },
+    errors: ['invalid_arguments', 'assistance_case_not_found_or_not_visible'],
+    http: {
+      target: 'svc-workflow', method: 'GET',
+      path: '/internal/v1/assistance-cases/{assistanceCaseId}',
+      pathParams: ['assistanceCaseId'],
+    },
+  }],
+})
+
+export const workflowAssistanceActionManifest = withTransportErrors(withManagedWriteErrors({
+  id: 'workflow_assistance_action',
+  toolName: 'workflow_assistance_action',
+  name: 'Workflow Assistance Action',
+  description:
+    'Domain Owner action on an existing assistance case: resolve the blocker '
+    + 'explicitly escalate OWNER_PENDING to HUMAN_REQUIRED, or bind one existing governance child for review.',
+  requiredScopes: ['workflow.execute'],
+  errors: actionErrors,
+  operations: [{    name: 'resolve',
+    description:
+      'Resolve an open assistance case after the Domain Owner handles the blocker. '
+      + 'For a linked governance-child case, provide the exact five-field governanceChildReview reference at the top level, using service-provided values from workflow_assistance_read.detail; do not put rich child proof into the opaque supportingPayload.',
+    arguments: {
+      properties: {
+        assistanceCaseId: uuid('Assistance case id'),
+        expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Workflow version for CAS.' },
+        resolution: payload('Resolution'),
+        governanceChildReview: governanceChildReviewSchema,
+      },
+      required: ['assistanceCaseId', 'expectedWorkflowStateVersion', 'resolution'],
+    },
+    result: { type: 'json' },
+    errors: ['invalid_arguments', 'not_domain_owner', 'assistance_case_not_found_or_not_visible',
+      'assistance_status_conflict', 'workflow_state_version_conflict'],
+    http: {
+      target: 'svc-workflow', method: 'POST',
+      path: '/internal/v1/assistance-cases/{assistanceCaseId}/resolve',
+      pathParams: ['assistanceCaseId'],
+      body: ['expectedWorkflowStateVersion', 'resolution'],
+      bodyProjections: [{
+        sourceArg: 'governanceChildReview',
+        destinationBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview'],
+      }],
+      idempotencyKey: true,
+    },
+  }, {
+    name: 'resolve_current_governance_review',
+    description:
+      'Resolve a linked accepted governance-child review only after the Domain Owner has inspected the exact child terminal event and submission and explicitly decides to resolve. '
+      + 'The Broker reads the current case detail as this same caller and projects its exact service-owned review references; do not copy or guess reference values. '
+      + 'If the evidence does not support resolution, explicitly use escalate_to_human.',
+    arguments: {
+      properties: {
+        assistanceCaseId: uuid('Assistance case id'),
+        expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Original workflow version for the existing Svc CAS; sent unchanged.' },
+        resolution: payload('Resolution'),
+      },
+      required: ['assistanceCaseId', 'expectedWorkflowStateVersion', 'resolution'],
+      additionalProperties: false,
+    },
+    result: { type: 'json' },
+    errors: ['invalid_arguments', 'not_domain_owner', 'assistance_case_not_found_or_not_visible',
+      'assistance_status_conflict', 'workflow_state_version_conflict', 'authoritative_reference_unavailable'],
+    http: {
+      target: 'svc-workflow', method: 'POST',
+      path: '/internal/v1/assistance-cases/{assistanceCaseId}/resolve',
+      pathParams: ['assistanceCaseId'],
+      body: ['expectedWorkflowStateVersion', 'resolution'],
+      idempotencyKey: true,
+      readProjection: {
+        capabilityId: 'workflow_assistance_read',
+        operation: 'detail',
+        argumentBindings: [{ targetArg: 'assistanceCaseId', sourceArg: 'assistanceCaseId' }],
+        responseChecks: [
+          { responsePath: ['assistanceCaseId'], equalsArg: 'assistanceCaseId', errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['status'], equals: 'OWNER_PENDING', errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['workflowStateVersion'], equalsArg: 'expectedWorkflowStateVersion', errorCode: 'workflow_state_version_conflict' },
+          { responsePath: ['governanceBinding', 'assistanceCaseId'], equalsArg: 'assistanceCaseId', errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceBinding', 'status'], equals: 'BOUND', errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceBinding', 'source', 'workflowInstanceId'], equalsResponsePath: ['workflowInstanceId'], errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceBinding', 'source', 'nodeVisitId'], equalsResponsePath: ['nodeVisitId'], errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceBinding', 'child', 'definitionVersionId'], equalsResponsePath: ['governanceTerminalProof', 'definitionVersionId'], errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceBinding', 'child', 'acceptanceTransitionId'], equalsResponsePath: ['governanceTerminalProof', 'transitionId'], errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceBinding', 'acceptanceContractDigest'], equalsResponsePath: ['governanceTerminalProof', 'acceptanceContractDigest'], errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceBinding', 'currentReview', 'deliveryStatus'], equals: 'DELIVERED', errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceBinding', 'currentReview', 'reviewStatus'], equals: 'OUTSTANDING', errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceTerminalProof', 'verdict'], equals: 'ACCEPTED', errorCode: 'authoritative_reference_unavailable' },
+        ],
+        collisionBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview'],
+        bodyProjections: [
+          { responsePath: ['governanceBinding', 'bindingId'], destinationBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview', 'bindingId'], valueType: 'string' },
+          { responsePath: ['governanceTerminalProof', 'terminalEventId'], destinationBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview', 'terminalEventId'], valueType: 'string' },
+          { responsePath: ['governanceTerminalProof', 'submissionId'], destinationBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview', 'submissionId'], valueType: 'string' },
+          { responsePath: ['governanceTerminalProof', 'submissionDigest'], destinationBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview', 'submissionDigest'], valueType: 'string' },
+          { responsePath: ['governanceBinding', 'acceptanceContractDigest'], destinationBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview', 'acceptanceContractDigest'], valueType: 'string' },
+        ],
+      },
+    },
+  }, {
+    name: 'escalate_to_human',
+    description: 'Explicitly move OWNER_PENDING to HUMAN_REQUIRED when owner handling is insufficient.',
+    arguments: {
+      properties: {        assistanceCaseId: uuid('Assistance case id'),
+        expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Workflow version for CAS.' },
+        escalation: payload('Escalation'),
+      },
+      required: ['assistanceCaseId', 'expectedWorkflowStateVersion', 'escalation'],
+    },
+    result: { type: 'json' },
+    errors: ['invalid_arguments', 'not_domain_owner', 'assistance_case_not_found_or_not_visible',
+      'assistance_status_conflict', 'workflow_state_version_conflict'],
+    http: {
+      target: 'svc-workflow', method: 'POST',
+      path: '/internal/v1/assistance-cases/{assistanceCaseId}/escalate-to-human',
+      pathParams: ['assistanceCaseId'],
+      body: ['expectedWorkflowStateVersion', 'escalation'],
+      idempotencyKey: true,
+    },
+  }, {
+    name: 'bind_governance',
+    description:
+      'Bind one existing same-Domain nonterminal governance child to this open case for later Owner review. '
+      + 'If the bind response is lost or returns transport_failure, read the exact case with workflow_assistance_read.detail. '
+      + 'Reconcile its assistanceCaseId and governanceBinding against the intended child instance and selected acceptance transition, '
+      + 'the acceptanceContractDigest, and persisted source/request and child-bind provenance: source workflowInstanceId, nodeVisitId, '
+      + 'requestContextRevisionId, definitionVersionId, requestPayloadDigest, requestCommandId and requestEventSequence; child '
+      + 'workflowInstanceId, definitionVersionId, contextRevisionAtBind and acceptanceTransitionId. Reuse a confirmed existing binding. '
+      + 'If readback is inconclusive, report UNKNOWN; do not invoke bind_governance again, create a replacement child, or use a new '
+      + 'idempotency key. The trusted transport key is hidden and must not be inferred from tool text.',
+    arguments: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        assistanceCaseId: uuid('Assistance case id'),
+        governanceChildInstanceId: uuid('Existing governance child instance id'),
+        acceptanceTransitionId: uuid('Published child terminal acceptance transition id'),
+        expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Workflow version for CAS.' },
+      },
+      required: ['assistanceCaseId', 'governanceChildInstanceId', 'acceptanceTransitionId', 'expectedWorkflowStateVersion'],
+    },
+    result: { type: 'json' },
+    errors: ['invalid_arguments', 'not_domain_owner', 'assistance_case_not_found_or_not_visible',
+      'assistance_status_conflict', 'workflow_state_version_conflict'],
+    http: {
+      target: 'svc-workflow', method: 'POST',
+      path: '/internal/v1/assistance-cases/{assistanceCaseId}/governance-child',
+      pathParams: ['assistanceCaseId'],
+      body: ['governanceChildInstanceId', 'acceptanceTransitionId', 'expectedWorkflowStateVersion'],
+      idempotencyKey: true,
+    },
+  }, {
+    name: 'create_and_bind_governance_child',
+    description:
+      'For an open case, inspect authoritative source facts and workflow_definition_read published versions with exact Context and terminal-transition schemas. '
+      + 'Select one exact published same-Domain definitionVersionId and acceptanceTransitionId with the closed GCR acceptance envelope and acceptance-task fit. '
+      + 'Never infer IDs from names or text. Proceed when authoritative facts select one candidate even if others pass generic schema checks; unresolved ambiguity, unreadable schema, foreign/disabled Domain or unclear fit stops before mutation. '
+      + 'Create and bind once atomically; never use separate create/bind as fallback. On timeout, transport failure or ambiguous result, read workflow_assistance_read detail for the exact case and match child instance, Definition version, binding, acceptance digest and prerequisite coordinates. '
+      + 'A matching durable receipt proves commit. Otherwise preserve UNKNOWN until authoritative rejection or commit is proven; no new-key call, replacement child or inferred success. The trusted transport idempotency key is hidden.',
+    arguments: {
+      type: 'object', additionalProperties: false,
+      properties: {
+        assistanceCaseId: { ...uuid('Exact assistance case'), pattern: '^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$' },
+        definitionVersionId: { ...uuid('Exact published child Version'), pattern: '^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$' },
+        contextPayload: { type: 'object', description: 'Exact immutable Context matching the selected published schema; prerequisite, if opted in, uses the actual preexisting supplier coordinates.' },
+        acceptanceTransitionId: { ...uuid('Exact published terminal acceptance transition'), pattern: '^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$' },
+        expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Exact source workflow state version for CAS.' },
+      },
+      required: ['assistanceCaseId', 'definitionVersionId', 'contextPayload', 'acceptanceTransitionId', 'expectedWorkflowStateVersion'],
+    },
+    result: { type: 'json' },
+    errors: ['invalid_arguments', 'not_domain_owner', 'assistance_case_not_found_or_not_visible', 'assistance_status_conflict', 'workflow_state_version_conflict'],
+    http: {
+      target: 'svc-workflow', method: 'POST',
+      path: '/internal/v1/assistance-cases/{assistanceCaseId}/governance-child:create-and-bind',
+      pathParams: ['assistanceCaseId'],
+      body: ['definitionVersionId', 'contextPayload', 'acceptanceTransitionId', 'expectedWorkflowStateVersion'],
+      idempotencyKey: true,
+    },
+  }],
+}))
+
+export const workflowAssistanceRequestManifest = withTransportErrors(withManagedWriteErrors({
+  id: 'workflow_assistance_request',
+  toolName: 'workflow_assistance_request',
+  name: 'Workflow Assistance Request',
+  description:
+    'Open an assistance case as the CURRENT ASSIGNEE of a workflow node visit when the node cannot be completed '
+    + '(missing/invalid context inputs, missing authority for a required step, or any other unfixable-here blocker). '
+    + 'This is the formal blocker declaration: it never fabricates a submission and never silently ends the run. '
+    + 'svc-workflow stays the sole authority: the caller must be the visit\'s current assignee (server-side), the case '
+    + 'is opened in an atomic transaction with CAS (expectedWorkflowStateVersion) and a trusted Idempotency-Key, and an '
+    + 'open case on the visit answers 409 assistance_already_open. The Domain Owner sees the case in '
+    + 'workflow_assistance_read.owner_inbox and either resolves it (workflow_assistance_action.resolve) or explicitly '
+    + 'escalates it to HUMAN_REQUIRED (workflow_assistance_action.escalate_to_human). '
+    + 'First read the instance with workflow_instance_detail: currentNodeVisitId must equal the current visit id and '
+    + 'expectedWorkflowStateVersion the current workflow_state_version. PRODUCT #449: use this instead of ending a '
+    + 'blocked distribution/execution turn silently.',
+  renderErrorDetail: true,
+  requiredScopes: ['workflow.execute'],
+  errors: [
+    ...baseErrors,
+    ...authErrors,
+    { code: 'principal_not_found', description: 'Caller principal is not registered (HTTP 404).' },
+    { code: 'principal_disabled', description: 'Caller principal is disabled (HTTP 403).' },
+    { code: 'instance_not_found', description: 'Workflow instance not found (HTTP 404).' },
+    { code: 'current_visit_not_found', description: 'The given currentNodeVisitId does not exist (HTTP 404).' },
+    { code: 'current_node_visit_mismatch', description: 'currentNodeVisitId is not the instance current visit (HTTP 409).' },
+    { code: 'principal_not_assignee', description: 'Caller is not the current assignee of the visit (HTTP 403).' },
+    { code: 'source_node_terminal', description: 'The current node is terminal (HTTP 409).' },
+    { code: 'instance_cancelled', description: 'The instance is cancelled (HTTP 409).' },
+    { code: 'instance_archived', description: 'The instance is archived (HTTP 409).' },
+    { code: 'workflow_state_version_conflict', description: 'Expected workflow state version is stale (HTTP 409); re-read the instance detail.' },
+    { code: 'assistance_already_open', description: 'An assistance case is already open for this visit (HTTP 409) — read it with workflow_assistance_read.detail instead.' },
+    { code: 'invalid_assistance_payload', description: 'The request payload is invalid (HTTP 422).' },
+    { code: 'size_limit_exceeded', description: 'The request payload exceeds the service limit (HTTP 413).' },
+    { code: 'idempotency_conflict', description: 'Idempotency key was reused with a different request (HTTP 409).' },
+    { code: 'command_still_processing', description: 'The idempotent command is still processing (HTTP 425).' },
+    { code: 'internal_consistency_error', description: 'Downstream internal consistency failure (HTTP 500).' },
+    { code: 'service_unavailable', description: 'Downstream storage unavailable (HTTP 503).' },
+  ],
+  operations: [{
+    name: 'open',
+    description:
+      'Open one assistance case for the CURRENT node visit. Required: workflowInstanceId, currentNodeVisitId, '
+      + 'expectedWorkflowStateVersion, request.message (what is blocked and why). Optional: request.supportingPayload '
+      + '(non-authoritative JSON evidence, e.g. the missing input name). The response carries the assistanceCaseId; '
+      + 'the assignee then waits for the Domain Owner — do not retry the node work unless the case is resolved.',
+    arguments: {
+      properties: {
+        workflowInstanceId: uuid('Workflow instance id'),
+        currentNodeVisitId: uuid('The CURRENT node visit id (== workflow_instance_detail current_node_visit_id)'),
+        expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Workflow version for CAS (== workflow_instance_detail workflow_state_version).' },
+        request: payload('Request'),
+      },
+      required: ['workflowInstanceId', 'currentNodeVisitId', 'expectedWorkflowStateVersion', 'request'],
+      structuralDiagnostics: true,
+      additionalProperties: false,
+    },
+    result: { type: 'json' },
+    errors: ['invalid_arguments'],
+    http: {
+      target: 'svc-workflow', method: 'POST',
+      path: '/internal/v1/workflow-instances/{workflowInstanceId}/assistance-cases',
+      pathParams: ['workflowInstanceId'],
+      body: ['currentNodeVisitId', 'expectedWorkflowStateVersion', 'request'],
+      idempotencyKey: true,
+    },
+  }],
+}))
+
+export const workflowAssistanceManifests = [
+  workflowAssistanceReadManifest,
+  workflowAssistanceActionManifest,
+  workflowAssistanceRequestManifest,
+]
