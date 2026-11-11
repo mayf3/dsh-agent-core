@@ -1,0 +1,96 @@
+{
+  "allowlist_examples": {
+    "turn-recovery-v3.json": true,
+    "turn-recovery-v3.json.faults.json": true,
+    "turn-recovery-v3.json.abandonment-declarations.json": true,
+    "turn-recovery-v3.json.r28-history.jsonl": true,
+    "turn-recovery-v3.json.tmp-396-123": true,
+    "turn-recovery-v3.json.bak-pre-epoch-fix2-20261106": false,
+    "turn-recovery-v3.pre-fleet-unblock-20261002-111745.json": false,
+    "turn-recovery-v3.json.lock": false,
+    "turn-recovery-v3.json.history": false,
+    "xturn-recovery-v3.json.tmp-1": false
+  },
+  "reused_source_files": [
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/admin-abandonment.js",
+      "sha256": "62237fb500694f95d894f0f75516ee97fee05cd961971156783120bcbe059710"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/authority-capacity.js",
+      "sha256": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/capacity.js",
+      "sha256": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/durable-file.js",
+      "sha256": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/index.js",
+      "sha256": "8f8d56082e0513397ca89c3799c9bd745bbafa540050b7c4189bdb3f2a61a91f"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/ingress-correlation.js",
+      "sha256": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/query.js",
+      "sha256": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/quiescence-bundle.js",
+      "sha256": "f2a724c2b0e5e00d5b81e1a5eb86efddc97365519fb75daa3321e5417e1694ed"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/quiescence-custody.js",
+      "sha256": "0a64281ff4beb6aab0e91bb249f2b58c78715ee579148d6fd45632e4073edef8"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/startup-recovery.js",
+      "sha256": "795c3cf863023d11f270ec2600bf350d0eaf04bd07c392503696ef57dba04963"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/state-machine.js",
+      "sha256": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/store.js",
+      "sha256": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/index.js",
+      "sha256": "bd19c4f1465fda669986adf1ff82416a70ddba5283a650f30c6bde0fcd952603"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/packages/production-runtime/src/paths.js",
+      "sha256": "44dbf7df2dd8e660b0bfb67d22e7bad2833c9147a0463577e859cf916ad54f36"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/packages/production-runtime/src/compose.js",
+      "sha256": "04287bd404bf6b45d6026a82443ec2b94b944d7502a7e7766af295f8125a1cce"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/scripts/production-runtime.mjs",
+      "sha256": "6a35dab738acdbdfd9bb9abe5632a9b949426bca15f09a73383428e4762c8588"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/pack-provenance.json",
+      "sha256": "a2df8c86f8227579c317fc6f9e599b852e9beecd506dd267fe48c4130e59476d"
+    },
+    {
+      "copy": "docs/evidence/h547-store-diag/private/v2/source/package.json",
+      "sha256": "d57644033f2ed7458272262dedad91c1cabc86aa51bc75bcc1f35184029299cd"
+    }
+  ],
+  "whitelist_provenance": [
+    "packages/production-runtime/src/paths.js",
+    "packages/agent-router/src/reconciliation/store.js",
+    "packages/agent-router/src/reconciliation/durable-file.js",
+    "packages/agent-router/src/index.js"
+  ],
+  "old_capture_scripts_rerun": false,
+  "production_commands": false
+}

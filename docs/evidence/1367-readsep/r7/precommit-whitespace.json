@@ -1,0 +1,32 @@
+{
+  "command": [
+    "git",
+    "diff",
+    "--cached",
+    "--check",
+    "--",
+    ".",
+    ":(exclude)docs/evidence/**/*.diff",
+    ":(exclude)docs/evidence/**/*.stderr",
+    ":(exclude)docs/evidence/**/*.stdout",
+    ":(exclude)docs/evidence/**/*.log",
+    ":(exclude)docs/evidence/1367-readsep/RED.txt",
+    ":(exclude)docs/evidence/1367-readsep/R2-RED.txt",
+    ":(exclude)docs/evidence/1367-readsep/R3-diff-check.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/RED.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/regression.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/target8.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/diagnostic11.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/observation-cas.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/workflow.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/integration.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/broker.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/shutdown-api.txt"
+  ],
+  "cwd": "/private/tmp/h1367-readsep",
+  "started_at_utc": "2026-11-07T12:12:56.202707+00:00",
+  "finished_at_utc": "2026-11-07T12:12:56.217569+00:00",
+  "actual_rc": 0,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

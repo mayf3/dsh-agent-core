@@ -1,0 +1,23 @@
+{
+  "tests": 3126,
+  "suites": 12,
+  "pass": 2974,
+  "fail": 116,
+  "cancelled": 0,
+  "skipped": 36,
+  "todo": 0,
+  "duration_ms": 80856.592709,
+  "test_rc": 1,
+  "parsed_failure_names": 116,
+  "base_head": "0b64aca3615aec203b95aa960eff39d635bd26c1",
+  "source_git_status": "",
+  "completed_at_utc": "2026-10-30T23:48:02.309391+00:00",
+  "command": "env -u TEST_ROTATION_DATABASE_URL -u TEST_AUTH_ORIGIN -u NOTIFICATION_INGRESS_INTEGRATION node --test --test-force-exit --test-timeout=60000 --test-reporter=tap 'packages/*/test/*.test.js' 'packages/*/test/*/*.test.js'",
+  "limitations": [
+    "force-exit is required because failed fixture setup can retain open server handles; original npm command and timeout-only runner each interrupted rc130 with no final summary",
+    "root-only npm install does not install feishu-connector pinned @larksuite/channel subpackage dependency",
+    "lifecycle scripts disabled; native voice engine and external harness/credential fixtures unavailable",
+    "first test pass itself created ignored @agent-core symlink bridge and dsh-tools unit-test-passthrough stub; finite pass inherited these dependencies",
+    "existing environment/import/native failures are not product regressions; user2574/109 reference is prior, not current result"
+  ]
+}

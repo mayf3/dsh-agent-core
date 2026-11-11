@@ -1,0 +1,21 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "--test-name-pattern=#1364",
+    "packages/workflow-execution/test/continuation.test.js"
+  ],
+  "shell_display": "node --test '--test-name-pattern=#1364' packages/workflow-execution/test/continuation.test.js",
+  "cwd": "/private/tmp/h1364-budget",
+  "started_at": "2026-11-07T09:00:17.966222+00:00",
+  "finished_at": "2026-11-07T09:00:23.291843+00:00",
+  "rc": 0,
+  "sha256": "9eabef2e91ba7f622f783f198319560bafdc53cb45643ce6ad245f42e3413789",
+  "head": "55f442c74414dc723306a6d8e0cdba73d78eb8da",
+  "diff_sha256": "dc287eae9b46ccb35606c998e4b3df7fba6ecb9351e624e7dc171035bd15b7cb",
+  "files": {
+    "packages/workflow-execution/src/engine.js": "e4bff6fa2d698dfd281968b0131fc98598e3979a31e9508750739385106838b0",
+    "packages/workflow-execution/src/ledger-admission.js": "d28bfea85dcec82c4bfa03beb86e0db123618e73c834eff8b4a40f37dd6f11ed",
+    "packages/workflow-execution/test/continuation.test.js": "74cf5c8275853a3def3cb0f437ee9207d6488e07b9935c6980dd6824af7e54b4"
+  }
+}

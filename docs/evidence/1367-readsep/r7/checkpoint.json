@@ -1,0 +1,172 @@
+{
+  "recorded_at_utc": "2026-11-07T12:12:41.877836+00:00",
+  "parent": "84b1e612aa31f4caa5a0de0ca39e3abca545bcef",
+  "integration_base": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "retained_files": [
+    {
+      "path": "packages/workflow-execution/src/ledger.js",
+      "sha256": "7999048f35828027660b580763dd8b42a48b644dc01366f9fe6cfb0e903ed2a2",
+      "same_as_R6": true
+    },
+    {
+      "path": "packages/workflow-execution/src/engine.js",
+      "sha256": "d9dfaf86dd5b52d351f4bdf44b971f68a89be8f86c5586c71fbd59dda63a7dd4",
+      "same_as_R6": true
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger-admission.js",
+      "sha256": "d28bfea85dcec82c4bfa03beb86e0db123618e73c834eff8b4a40f37dd6f11ed",
+      "same_as_R6": true
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger-records.js",
+      "sha256": "91c64c21fdb5bd38f26ea9525f7e75647284cc4b3776d6009abf2fce7ac3984c",
+      "same_as_R6": true
+    },
+    {
+      "path": "packages/workflow-execution/src/attempt-identity.js",
+      "sha256": "59f5d7d5a02fca8227f598314bce470f77106a66cdda275c4744a874488c3a2b",
+      "same_as_R6": true
+    },
+    {
+      "path": "packages/workflow-execution/test/observation-cas/diagnostic-read.test.js",
+      "sha256": "4b29cb5577be6f836becb6ad016216e5d4c189051146368fd6554fbb7f216580",
+      "same_as_R6": true
+    },
+    {
+      "path": "packages/workflow-execution/test/shutdown-contract.test.js",
+      "sha256": "0213313107d4fc54d04b715a02188565df6d358ae22e81961875660c31c28f49",
+      "same_as_R6": true
+    }
+  ],
+  "observations": [
+    {
+      "gate": "RED",
+      "actual_rc": 1,
+      "counts": {
+        "tests": 6,
+        "pass": 2,
+        "fail": 4,
+        "skipped": 0
+      },
+      "raw_sha256": "f35a55c3e60718cbfdf8fd25387df0e311d529a20675ee6d575316a0dfed5511",
+      "metadata": "RED.json",
+      "raw": "RED.txt"
+    },
+    {
+      "gate": "regression",
+      "actual_rc": 0,
+      "counts": {
+        "tests": 6,
+        "pass": 6,
+        "fail": 0,
+        "skipped": 0
+      },
+      "raw_sha256": "35fcafd430f635299f89415cc54479d5cf50a6604726b04032777b6b3f427fa6",
+      "metadata": "regression.json",
+      "raw": "regression.txt"
+    },
+    {
+      "gate": "target8",
+      "actual_rc": 0,
+      "counts": {
+        "tests": 8,
+        "pass": 8,
+        "fail": 0,
+        "skipped": 0
+      },
+      "raw_sha256": "a76b3883e76382df77ffaf8608e7d63bfaf837f2eedf30427e380438f0300770",
+      "metadata": "target8.json",
+      "raw": "target8.txt"
+    },
+    {
+      "gate": "diagnostic11",
+      "actual_rc": 0,
+      "counts": {
+        "tests": 11,
+        "pass": 11,
+        "fail": 0,
+        "skipped": 0
+      },
+      "raw_sha256": "9abd8a63f112a3d0dcfeb198cd560773a87fc679a69608436ee9cab97dbee0a8",
+      "metadata": "diagnostic11.json",
+      "raw": "diagnostic11.txt"
+    },
+    {
+      "gate": "observation-cas",
+      "actual_rc": 0,
+      "counts": {
+        "tests": 110,
+        "pass": 110,
+        "fail": 0,
+        "skipped": 0
+      },
+      "raw_sha256": "7fdb57f00e5689661b80a7b3aeb347032f5e2182b3d996ece86b2ffacea6fa19",
+      "metadata": "observation-cas.json",
+      "raw": "observation-cas.txt"
+    },
+    {
+      "gate": "workflow",
+      "actual_rc": 0,
+      "counts": {
+        "tests": 316,
+        "pass": 316,
+        "fail": 0,
+        "skipped": 0
+      },
+      "raw_sha256": "f79350087e717d893a17d46907212c6db113e1a70da4088401910632910aa561",
+      "metadata": "workflow.json",
+      "raw": "workflow.txt"
+    },
+    {
+      "gate": "integration",
+      "actual_rc": 0,
+      "counts": {
+        "tests": 29,
+        "pass": 29,
+        "fail": 0,
+        "skipped": 0
+      },
+      "raw_sha256": "0e5416886c4a5917eb8fc260aec387d64223a9f92419c3a6f8465780ff597356",
+      "metadata": "integration.json",
+      "raw": "integration.txt"
+    },
+    {
+      "gate": "broker",
+      "actual_rc": 0,
+      "counts": {
+        "tests": 80,
+        "pass": 80,
+        "fail": 0,
+        "skipped": 0
+      },
+      "raw_sha256": "abc395652c081645d4007209cac5534bd2f74e81e138958279e24c12aed51633",
+      "metadata": "broker.json",
+      "raw": "broker.txt"
+    },
+    {
+      "gate": "shutdown-api",
+      "actual_rc": 0,
+      "counts": {
+        "tests": 12,
+        "pass": 12,
+        "fail": 0,
+        "skipped": 0
+      },
+      "raw_sha256": "b600bb130b3c49a05d33363ed90e1f5c1b222b15eda963be3fd7b712247d1904",
+      "metadata": "shutdown-api.json",
+      "raw": "shutdown-api.txt"
+    }
+  ],
+  "new_source_sha256": "53dbddaa6cdbf140da020515c1a2b45beb7712715f3c4c4624ad65708c576ada",
+  "new_test_sha256": "72e23f26b5adde0a8351db9fd4c684b80d4b347a0db7105e096b4abc15f8bebb",
+  "reviewer_original_receipt": {
+    "path": "/private/tmp/h654-review/RECEIPT-654-REVIEW.md",
+    "sha256": "733210de7f6630215d639d619fcc8008a53aa16a8e9d50bb9da15cdbad090827"
+  },
+  "existing_untracked_terminal_sidecars": {
+    "R6-FINAL-REVIEW.md": "28152c8529605fa82838215b2bd10d9a079c798610916b6555f149f417a6dad3",
+    "R6-final-readback.json": "e156f351d0a8009c3c382c12b2d842171b86092c10d0fe0fab9bd89b78e81f8e"
+  },
+  "production_writes": 0
+}

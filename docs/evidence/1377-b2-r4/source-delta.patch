@@ -1,0 +1,646 @@
+diff --git a/packages/workflow-execution/src/recovery/automatic-ledger.js b/packages/workflow-execution/src/recovery/automatic-ledger.js
+index d86ee9ab..b0955ef9 100644
+--- a/packages/workflow-execution/src/recovery/automatic-ledger.js
++++ b/packages/workflow-execution/src/recovery/automatic-ledger.js
+@@ -1,6 +1,7 @@
+ import { staleObservation, validateObservationIdentity } from '../attempt-identity.js'
+ 
+ export const RECOVERY_RULE = 'accepted:AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1#CTR-EKRWAE-005'
++export const REFUSAL_RULE = 'accepted:AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1#CTR-EKRWAE-007'
+ const IDS = ['workflowInstanceId', 'nodeVisitId', 'dispatchIntentId', 'ownerPrincipalId']
+ 
+ export function recoveryIdentity(attempt) {
+@@ -26,6 +27,16 @@ function validateCheck(current, event) {
+     || typeof event.triggerId !== 'string' || event.triggerId === '' || event.ruleRef !== RECOVERY_RULE) {
+     throw new Error('workflow-execution: invalid automatic recovery responsibility')
+   }
++  if (event.refusalSchedule !== undefined) {
++    const schedule = event.refusalSchedule
++    if (schedule?.ruleRef !== REFUSAL_RULE || schedule.consumer !== 'workflow_execution_due_poller'
++      || schedule.firstCheckAtMs !== event.nextCheckAtMs
++      || !Number.isSafeInteger(schedule.intervalMs) || schedule.intervalMs < 1
++      || !Number.isSafeInteger(schedule.firstCheckAtMs + schedule.intervalMs)
++      || event.result !== 'world_drift_refusal_pending') {
++      throw new Error('workflow-execution: invalid refusal read obligation')
++    }
++  }
+ }
+ 
+ export function applyRecoveryCheck(current, event) {
+@@ -33,7 +44,8 @@ export function applyRecoveryCheck(current, event) {
+   current.recoveryCheck = { revision: event.expectedRecoveryRevision + 1,
+     nextCheckAtMs: event.nextCheckAtMs, failures: event.failures, lastResult: event.result,
+     triggerId: event.triggerId, ruleRef: event.ruleRef,
+-    consumer: 'workflow_execution_due_poller', businessOutcome: 'UNKNOWN' }
++    consumer: 'workflow_execution_due_poller', businessOutcome: 'UNKNOWN',
++    ...(event.refusalSchedule === undefined ? {} : { refusalSchedule: { ...event.refusalSchedule } }) }
+ }
+ 
+ /** Called ONLY from the scope-bound record port under FIFO/OwnerLock. */
+diff --git a/packages/workflow-execution/src/recovery/automatic.js b/packages/workflow-execution/src/recovery/automatic.js
+index 446217a3..b1f0e1d5 100644
+--- a/packages/workflow-execution/src/recovery/automatic.js
++++ b/packages/workflow-execution/src/recovery/automatic.js
+@@ -1,7 +1,8 @@
+-import { recoveryIdentity, matchesRecoveryTrigger, RECOVERY_RULE } from './automatic-ledger.js'
++import { recoveryIdentity, matchesRecoveryTrigger, RECOVERY_RULE, REFUSAL_RULE } from './automatic-ledger.js'
++import { createRefusalConsumer } from './refusal.js'
+ 
+ /** Existing reconciler consumer only: no queue/timer, and no second admission path. */
+-export function createAutomaticRecovery({ ledger, recover, clock, config }) {
++export function createAutomaticRecovery({ ledger, recover, clock, config, readInstanceDetail, resolvePrincipalToAgent }) {
+   const budget = config.maxRecoveryChecksPerPoll ?? 25
+   const delayMs = config.recoveryRetryDelayMs ?? 30_000
+   const maxDelayMs = config.recoveryMaxDelayMs ?? 300_000
+@@ -13,6 +14,7 @@ export function createAutomaticRecovery({ ledger, recover, clock, config }) {
+     throw new TypeError('workflow-execution: invalid recovery delay range')
+   }
+   const enabled = () => config.automaticRecoveryEnabled === true
++  const refusals = createRefusalConsumer({ ledger, clock, enabled, budget, readInstanceDetail, resolvePrincipalToAgent })
+ 
+   async function reconcile() {
+     if (!enabled()) return []
+@@ -28,7 +30,7 @@ export function createAutomaticRecovery({ ledger, recover, clock, config }) {
+         triggerId: `${attempt.attemptId}:${attempt.generation ?? 1}:${(attempt.recoveryCheck?.revision ?? 0) + 1}`,
+       }))
+     }
+-    return results
++    return [...results, ...await refusals.reconcile()]
+   }
+ 
+   function eligible(attempt, context) {
+@@ -50,5 +52,16 @@ export function createAutomaticRecovery({ ledger, recover, clock, config }) {
+     return { ...ids, kind: 'automatic', ruleRef: RECOVERY_RULE, triggerId: context.triggerId,
+       attemptId: expectedAttemptId, generation: expectedGeneration, gateEvidence }
+   }
+-  return { reconcile, eligible, checkpoint, audit, enabled }
++
++  // Persist while ACTIVE, before the original refusal. B2 has no terminal
++  // append exception: the recurring obligation is immutable after refusal.
++  function retainRefusal(record, attempt, context) {
++    const firstCheckAtMs = clock() + delayMs
++    return record.recoveryChecked({ ...recoveryIdentity(attempt), ruleRef: RECOVERY_RULE,
++      triggerId: context.triggerId, failures: attempt.recoveryCheck.failures,
++      nextCheckAtMs: firstCheckAtMs, result: 'world_drift_refusal_pending',
++      refusalSchedule: { firstCheckAtMs, intervalMs: maxDelayMs,
++        consumer: 'workflow_execution_due_poller', ruleRef: REFUSAL_RULE } })
++  }
++  return { reconcile, eligible, checkpoint, audit, enabled, retainRefusal }
+ }
+diff --git a/packages/workflow-execution/src/recovery/operation.js b/packages/workflow-execution/src/recovery/operation.js
+index c429fe47..463e3d91 100644
+--- a/packages/workflow-execution/src/recovery/operation.js
++++ b/packages/workflow-execution/src/recovery/operation.js
+@@ -47,7 +47,7 @@ export function createRecoveryOperation({
+   config = {},
+ }) {
+   const automaticCalls = new WeakSet()
+-  const automatic = createAutomaticRecovery({ ledger, clock, config, recover: (args, context) => {
++  const automatic = createAutomaticRecovery({ ledger, clock, config, readInstanceDetail, resolvePrincipalToAgent, recover: (args, context) => {
+     automaticCalls.add(context)
+     return recoverAttempt(args, context)
+   } })
+@@ -72,6 +72,11 @@ export function createRecoveryOperation({
+         if (auto) await automatic.checkpoint(record, attempt, context)
+         let gateEvidence = { ledger: 'pre_admission_resolution_failure', originalExecution: 'never_started', tools: 'never_dispatched' }
+         const audit = () => auto ? automatic.audit(attempt, context, gateEvidence) : undefined
++        async function refuse(refused) {
++          if (auto) await automatic.retainRefusal(record, getAttempt(), context)
++          await record.recoveryRefused(authorityRef, refused, audit())
++          return { outcome: 'RECOVERY_REFUSED', refused, nodeVisitId, attemptId: attempt.attemptId }
++        }
+         async function dispatch() {
+           // E4 — ledger-side shape + delivery-domain evidence.
+           if (attempt.phase !== 'resolution_blocked' || attempt.deliveryStartedAtMs !== undefined || attempt.delivered !== undefined) {
+@@ -134,12 +139,10 @@ export function createRecoveryOperation({
+           if (settle === undefined || settle.kind === 'unavailable') {
+             const refused = probe.ok ? 'instance_state_unavailable' : `instance_state_unavailable:${probe.code}`
+             if (auto) return { outcome: 'RECOVERY_INAPPLICABLE', evidenceClass: refused, nodeVisitId, attemptId: attempt.attemptId }
+-            await record.recoveryRefused(authorityRef, refused, audit())
+-            return { outcome: 'RECOVERY_REFUSED', refused, nodeVisitId, attemptId: attempt.attemptId }
++            return refuse(refused)
+           }
+           if (settle.kind === 'settled') {
+-            await record.recoveryRefused(authorityRef, settle.reason, audit())
+-            return { outcome: 'RECOVERY_REFUSED', refused: settle.reason, nodeVisitId, attemptId: attempt.attemptId }
++            return refuse(settle.reason)
+           }
+           // E5 — assignee identity: the visit's assignee is immutable on
+           // svc-workflow rows, and when the wire carries it we compare it
+@@ -147,12 +150,10 @@ export function createRecoveryOperation({
+           const assignee = findAssigneeOnDetail(probe.body?.detail)
+           if (assignee !== undefined && assignee !== attempt.ownerPrincipalId.toLowerCase()) {
+             const refused = `assignee_no_longer_current:${assignee}`
+-            await record.recoveryRefused(authorityRef, refused, audit())
+-            return { outcome: 'RECOVERY_REFUSED', refused, nodeVisitId, attemptId: attempt.attemptId }
++            return refuse(refused)
+           }
+           if (auto && probe.body?.detail?.instance?.is_terminal === true) {
+-            await record.recoveryRefused(authorityRef, 'instance_terminal', audit())
+-            return { outcome: 'RECOVERY_REFUSED', refused: 'instance_terminal', nodeVisitId, attemptId: attempt.attemptId }
++            return refuse('instance_terminal')
+           }
+           if (auto && !detailMatchesActivation(probe.body, attempt)) {
+             return { outcome: 'RECOVERY_INAPPLICABLE', evidenceClass: 'activation_identity_unverified', nodeVisitId, attemptId: attempt.attemptId }
+diff --git a/packages/workflow-execution/src/recovery/refusal.js b/packages/workflow-execution/src/recovery/refusal.js
+new file mode 100644
+index 00000000..fee778f1
+--- /dev/null
++++ b/packages/workflow-execution/src/recovery/refusal.js
+@@ -0,0 +1,87 @@
++import { AGENT_ID_RE } from '../attempt-identity.js'
++import { judgeSettleFromDetail } from '../judgment.js'
++import { matchesRecoveryTrigger, recoveryIdentity } from './automatic-ledger.js'
++
++/** CTR-EKRWAE-004/007: retain the original obligation, not a handoff claim.
++ * The ACTIVE writer persisted the cadence before refusal. Terminal consumption
++ * is read-only: no append, closure, recovery invocation or business mutation.
++ * The existing poller owns cadence; this module creates no timer or store. */
++export function createRefusalConsumer({ ledger, clock, enabled, budget, readInstanceDetail, resolvePrincipalToAgent }) {
++  const served = new Map() // throttle/fairness only; restart rediscovers the durable obligation
++  const owns = attempt => attempt?.state === 'NEEDS_REVIEW' && attempt.phase === 'recovery_refused'
++    && attempt.recoveryCheck?.refusalSchedule !== undefined
++
++  function due(attempt) {
++    if (!owns(attempt)) return undefined
++    const { firstCheckAtMs, intervalMs } = attempt.recoveryCheck.refusalSchedule
++    const now = clock()
++    if (now < firstCheckAtMs) return undefined
++    const slot = Math.floor((now - firstCheckAtMs) / intervalMs)
++    const nextCheckAtMs = firstCheckAtMs + (slot + 1) * intervalMs
++    if (!Number.isSafeInteger(nextCheckAtMs) || served.get(attempt.attemptId)?.slot >= slot) return undefined
++    return { slot, nextCheckAtMs }
++  }
++
++  async function observe(attempt) {
++    let agentId, result = 'unavailable', reason = 'target_identity_unavailable'
++    try {
++      const resolved = await resolvePrincipalToAgent(attempt.ownerPrincipalId)
++      if (resolved.ok && typeof resolved.agentId === 'string' && AGENT_ID_RE.test(resolved.agentId) && enabled()) {
++        agentId = resolved.agentId
++        const read = await readInstanceDetail({ agentId, workflowInstanceId: attempt.workflowInstanceId })
++        reason = 'instance_detail_unavailable'
++        if (read.ok) {
++          reason = 'instance_identity_unverified'
++          if (read.body?.detail?.instance?.workflow_instance_id === attempt.workflowInstanceId) {
++            const world = judgeSettleFromDetail({ body: read.body, nodeVisitId: attempt.nodeVisitId })
++            reason = world.reason
++            if (world.kind !== 'unavailable') {
++              result = 'world_observed'
++              if (read.body.detail.instance.is_terminal === true) reason = 'instance_terminal'
++            }
++          }
++        }
++      }
++    } catch { reason = 'read_dependency_unavailable' }
++    return { source: 'target_agent_instance_detail', observedAtMs: clock(), result, reason,
++      ...(agentId === undefined ? {} : { agentId }) }
++  }
++
++  async function reconcile() {
++    if (!enabled()) return []
++    const attempts = await ledger.inspectFresh(items => items.filter(owns))
++    const retainedIds = new Set(attempts.map(attempt => attempt.attemptId))
++    for (const id of served.keys()) if (!retainedIds.has(id)) served.delete(id)
++    const candidates = attempts.filter(attempt => due(attempt))
++      .sort((a, b) => (served.get(a.attemptId)?.atMs ?? -Infinity) - (served.get(b.attemptId)?.atMs ?? -Infinity)
++        || a.recoveryCheck.refusalSchedule.firstCheckAtMs - b.recoveryCheck.refusalSchedule.firstCheckAtMs
++        || a.attemptId.localeCompare(b.attemptId)).slice(0, budget)
++    const results = []
++    for (const scanned of candidates) {
++      if (!enabled()) break
++      // Same OwnerLock/fresh replay, but deliberately use none of the record
++      // ports. Overlapping scans recheck both identity/revision and due slot.
++      const checked = await ledger.mutateWithRecord(scanned.nodeVisitId, async (_record, getAttempt) => {
++        const attempt = getAttempt()
++        if (!enabled() || !owns(attempt) || !matchesRecoveryTrigger(attempt, recoveryIdentity(scanned))) return
++        const trigger = due(attempt)
++        if (!trigger) return
++        served.set(attempt.attemptId, { slot: trigger.slot, atMs: clock() })
++        const observation = await observe(attempt)
++        const schedule = attempt.recoveryCheck.refusalSchedule
++        // Slow dependency reads may span slots. Throttle through completion
++        // and report the next future slot of the same persisted cadence.
++        const completedSlot = Math.max(trigger.slot,
++          Math.floor((clock() - schedule.firstCheckAtMs) / schedule.intervalMs))
++        served.set(attempt.attemptId, { slot: completedSlot, atMs: clock() })
++        return { outcome: 'REFUSAL_RESPONSIBILITY_PENDING', nodeVisitId: attempt.nodeVisitId,
++          attemptId: attempt.attemptId, ...schedule,
++          nextCheckAtMs: schedule.firstCheckAtMs + (completedSlot + 1) * schedule.intervalMs, observation,
++          businessOutcome: 'UNKNOWN' }
++      })
++      if (checked) results.push(checked)
++    }
++    return results
++  }
++  return { reconcile }
++}
+diff --git a/packages/workflow-execution/test/observation-cas/blocked-recovery-process.js b/packages/workflow-execution/test/observation-cas/blocked-recovery-process.js
+index f3e76a0a..1a710550 100644
+--- a/packages/workflow-execution/test/observation-cas/blocked-recovery-process.js
++++ b/packages/workflow-execution/test/observation-cas/blocked-recovery-process.js
+@@ -12,7 +12,13 @@ if (process.env.EKR_BLOCKED_RECOVERY_CHILD === '1') {
+   const ledger = new ExecutionLedger({ dir })
+   const routerFile = join(dir, 'router-reconciliation.json')
+   const router = new TurnReconciliationStore({ runtimeEpoch: `b2-child-${process.pid}`, persistenceFile: routerFile })
+-  const correlations = []
++  const correlations = [], recoveryResults = []
++  const trackedMutation = ledger.mutateWithRecord.bind(ledger)
++  ledger.mutateWithRecord = async (...args) => {
++    const result = await trackedMutation(...args)
++    if (result?.outcome === 'REFUSAL_RESPONSIBILITY_PENDING') recoveryResults.push(result)
++    return result
++  }
+   let polls = 0, watcher, finishing = false
+   const send = (stage, fields = {}) => new Promise((resolve, reject) => {
+     process.send({ stage, ...fields }, error => error ? reject(error) : resolve())
+@@ -22,7 +28,8 @@ if (process.env.EKR_BLOCKED_RECOVERY_CHILD === '1') {
+   // SAME OwnerLock at the exact boundary until the parent actually SIGKILLs
+   // this process; throwing an exception would not model process failure.
+   const faultRecord = mode === 'crash-before-wal' ? 'recoveryAuthorized'
+-    : mode === 'crash-after-wal' ? 'deliveryStarted' : undefined
++    : mode === 'crash-after-wal' ? 'deliveryStarted'
++      : mode === 'crash-after-refusal' ? 'recoveryRefused' : undefined
+   if (faultRecord) {
+     const mutateWithRecord = ledger.mutateWithRecord.bind(ledger)
+     ledger.mutateWithRecord = (nodeVisitId, callback) => mutateWithRecord(nodeVisitId, (record, getAttempt) => {
+@@ -72,9 +79,11 @@ if (process.env.EKR_BLOCKED_RECOVERY_CHILD === '1') {
+     finishing = true
+     clearInterval(watcher)
+     await engine.stop()
++    const terminalRecovery = stage === 'refusal-observed'
++      ? await engine.recoverAttempt({ nodeVisitId: VISIT, authorityRef: 'B2_PROCESS_READ_ONLY_CHECK' }) : undefined
+     const attempt = ledger.get(VISIT)
+     const correlation = attempt ? router.resolveCallerCorrelation({ requestId: attempt.attemptId }) : undefined
+-    await send(stage, { ...fields, attempt, errors, polls, correlations, correlation,
++    await send(stage, { ...fields, attempt, errors, polls, correlations, correlation, recoveryResults, terminalRecovery,
+       routerBytes: readFileSync(routerFile, 'utf8') })
+     process.disconnect()
+   }
+@@ -100,7 +109,9 @@ if (process.env.EKR_BLOCKED_RECOVERY_CHILD === '1') {
+         engine.start({ intervalMs: 20 })
+         watcher = setInterval(() => {
+           const attempt = ledger.get(VISIT)
+-          if (mode === 'observe') {
++          if (mode === 'observe-refusal') {
++            if (recoveryResults.length >= 2) void finish('refusal-observed')
++          } else if (mode === 'observe') {
+             if (polls >= 4) void finish('observed')
+           } else if (attempt?.phase === 'run_delivered') {
+             void finish('admitted')
+diff --git a/packages/workflow-execution/test/observation-cas/blocked-recovery-restart.test.js b/packages/workflow-execution/test/observation-cas/blocked-recovery-restart.test.js
+index 475e9a7a..1b6e2402 100644
+--- a/packages/workflow-execution/test/observation-cas/blocked-recovery-restart.test.js
++++ b/packages/workflow-execution/test/observation-cas/blocked-recovery-restart.test.js
+@@ -27,12 +27,13 @@ async function fixture() {
+   const dir = mkdtempSync(join(tmpdir(), 'ekr-b2-process-'))
+   const router = new TurnReconciliationStore({ runtimeEpoch: 'b2-loopback-router',
+     persistenceFile: join(dir, 'router-reconciliation.json') })
+-  const state = { recovered: false, loseAck: false, requests: [], deliveries: [] }
++  const state = { recovered: false, loseAck: false, worldDrift: false, detailUnavailable: false, requests: [], deliveries: [] }
+   let accepted
+   const acceptance = new Promise(resolve => { accepted = resolve })
+   const server = createServer(async (req, res) => {
+     try {
+-      const status = req.url === '/resolve' && !state.recovered ? 503 : 200
++      const status = req.url === '/resolve' && !state.recovered
++        || req.url === '/detail' && state.detailUnavailable ? 503 : 200
+       state.requests.push({ path: req.url, status, principalId: req.headers['x-principal-id'],
+         agentId: req.headers['x-agent-id'], workflowInstanceId: req.headers['x-workflow-id'] })
+       if (req.url === '/deliver') {
+@@ -52,9 +53,11 @@ async function fixture() {
+         res.end(JSON.stringify({ ok: true, sessionId: 'main', reconciliationHandle: handle, messageId: 'b2-original-message' }))
+       } else {
+         res.writeHead(status, { 'content-type': 'application/json' })
++        const world = detail(7).body
++        if (state.worldDrift) world.detail.current_node_visit_id = 'ad5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e77'
+         res.end(JSON.stringify(req.url === '/resolve'
+           ? status === 200 ? { ok: true, agentId: AGENT } : { error: 'injected_resolution_503' }
+-          : detail(7).body))
++          : status === 200 ? world : { error: 'injected_detail_503' }))
+       }
+     } catch (error) {
+       res.writeHead(500, { 'content-type': 'application/json' })
+@@ -290,3 +293,71 @@ test('B2 real processes: automatic consumer racing explicit manual recovery admi
+       { autoResult, manualResult }, { childExits: [[0, null], [0, null]] })
+   } finally { await fx.cleanup() }
+ })
++
++test('B2 real SIGKILL after world-drift refusal: two restarts consume the durable read-only duty without terminal appends', { timeout: 15_000 }, async t => {
++  const fx = await fixture()
++  try {
++    const initial = await seed(fx)
++    fx.state.recovered = true
++    fx.state.worldDrift = true
++    const crashed = fx.start('crash-after-refusal')
++    const boundary = await crashed.waitFor('crash-ready')
++    assert.equal(boundary.point, 'recoveryRefused')
++    sameIdentity(boundary.attempt, initial.attempt)
++    assert.equal(boundary.attempt.state, 'NEEDS_REVIEW')
++    assert.equal(boundary.attempt.phase, 'recovery_refused')
++    const duty = boundary.attempt.recoveryCheck.refusalSchedule
++    assert.equal(duty.consumer, 'workflow_execution_due_poller')
++    assert.equal(duty.ruleRef, 'accepted:AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1#CTR-EKRWAE-007')
++    assert.equal(duty.intervalMs, 160)
++    assert.ok(Number.isSafeInteger(duty.firstCheckAtMs))
++    const terminalBytes = bytes(join(fx.dir, 'attempts.jsonl'))
++    const routerBytes = bytes(join(fx.dir, 'router-reconciliation.json'))
++    crashed.child.kill('SIGKILL')
++    assert.deepEqual(await crashed.exit, [null, 'SIGKILL'])
++
++    const observations = []
++    for (const unavailable of [true, false]) {
++      fx.state.detailUnavailable = unavailable
++      // The second restart sees the original world again. A fresh readable
++      // world is an observation, never permission to reopen the old refusal.
++      fx.state.worldDrift = false
++      const priorRequests = fx.state.requests.length
++      const restarted = fx.start('observe-refusal')
++      const loaded = await restarted.waitFor('ready')
++      const actual = await restarted.waitFor('refusal-observed')
++      assert.deepEqual(await restarted.exit, [0, null])
++      assert.deepEqual(actual.errors, [])
++      sameIdentity(actual.attempt, initial.attempt)
++      assert.deepEqual(actual.attempt, boundary.attempt)
++      assert.equal(actual.terminalRecovery.outcome, 'NO_OP_TERMINAL')
++      assert.ok(actual.recoveryResults.length >= 2, 'the existing poller consumes later cadence slots, not just startup')
++      for (const check of actual.recoveryResults) {
++        assert.equal(check.outcome, 'REFUSAL_RESPONSIBILITY_PENDING')
++        assert.equal(check.attemptId, initial.attempt.attemptId)
++        assert.equal(check.observation.source, 'target_agent_instance_detail')
++        assert.equal(check.observation.result, unavailable ? 'unavailable' : 'world_observed')
++        assert.ok(Number.isSafeInteger(check.nextCheckAtMs))
++        assert.ok(check.nextCheckAtMs > duty.firstCheckAtMs)
++        assert.equal((check.nextCheckAtMs - duty.firstCheckAtMs) % duty.intervalMs, 0)
++      }
++      assert.ok(fx.state.requests.slice(priorRequests).filter(request => request.path === '/detail').length >= 2)
++      assert.ok(fx.state.requests.slice(priorRequests).filter(request => request.path === '/detail')
++        .every(request => request.status === (unavailable ? 503 : 200)
++          && request.agentId === AGENT && request.workflowInstanceId === INSTANCE))
++      assert.equal(bytes(join(fx.dir, 'attempts.jsonl')), terminalBytes, 'every terminal event byte remains immutable')
++      assert.equal(actual.routerBytes, loaded.routerBytes)
++      assert.equal(actual.routerBytes, routerBytes, 'read-only obligations cannot change Router outcome/fence')
++      assert.equal(fx.state.deliveries.length, 0)
++      assert.equal(count(fx.dir, 'attempt_planned'), 1)
++      assert.equal(count(fx.dir, 'recovery_refused'), 1)
++      assert.equal(count(fx.dir, 'recovery_authorized'), 0)
++      assert.equal(count(fx.dir, 'delivery_started'), 0)
++      assert.equal(count(fx.dir, 'run_delivered'), 0)
++      observations.push({ unavailable, loaded, actual, childExit: [0, null] })
++    }
++    receipt(t, 'B2-world-drift-refusal-SIGKILL-read-only-duty-restarts', fx, initial,
++      observations, { boundary, crashedExit: [null, 'SIGKILL'], terminalBytes, routerBytes,
++        responsibilityDisposition: 'retained by original automatic consumer; no handoff, closure or business success claimed' })
++  } finally { await fx.cleanup() }
++})
+diff --git a/packages/workflow-execution/test/observation-cas/blocked-refusal.test.js b/packages/workflow-execution/test/observation-cas/blocked-refusal.test.js
+new file mode 100644
+index 00000000..ae9cf3c5
+--- /dev/null
++++ b/packages/workflow-execution/test/observation-cas/blocked-refusal.test.js
+@@ -0,0 +1,245 @@
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
++import { join } from 'node:path'
++import { tmpdir } from 'node:os'
++import { ExecutionLedger } from '../../src/ledger.js'
++import { createWorkflowExecutionEngine } from '../../src/engine.js'
++import { intent, detail, VISIT, OWNER, AGENT, T0 } from './fixture.js'
++
++const OTHER = 'ad5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e77'
++const RULE = 'accepted:AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1#CTR-EKRWAE-007'
++
++function world(input = intent()) {
++  const read = detail()
++  read.body.detail.instance.workflow_instance_id = input.workflowInstanceId
++  read.body.detail.current_node_visit_id = input.nodeVisitId
++  Object.assign(read.body.detail.current_visit, {
++    node_visit_id: input.nodeVisitId, workflow_instance_id: input.workflowInstanceId,
++    assignee_principal_id: input.ownerPrincipalId,
++  })
++  return read
++}
++
++function fixture(overrides = {}) {
++  const dir = mkdtempSync(join(tmpdir(), 'wfe-refusal-responsibility-'))
++  const state = { now: T0, worlds: new Map(),
++    resolve: async () => ({ ok: true, agentId: AGENT }) }
++  state.read = async args => structuredClone(state.worlds.get(args.workflowInstanceId))
++  const calls = { reads: [], resolutions: [], deliveries: [], errors: [] }
++  const clock = () => state.now
++  const config = { automaticRecoveryEnabled: true, recoveryRetryDelayMs: 80,
++    recoveryMaxDelayMs: 160, ...overrides }
++  const ledger = new ExecutionLedger({ dir, clock })
++  const makeEngine = (store = ledger) => createWorkflowExecutionEngine({
++    ledger: store, clock, config,
++    fetchDuePage: async () => ({ ok: true, items: [] }),
++    resolvePrincipalToAgent: async principal => {
++      calls.resolutions.push(principal)
++      return state.resolve(principal)
++    },
++    readInstanceDetail: async args => { calls.reads.push(args); return state.read(args) },
++    resolveCallerCorrelation: () => ({ state: 'never_existed' }),
++    getTurnReconciliation: () => ({ state: 'pending' }),
++    deliverRun: async request => {
++      calls.deliveries.push(request)
++      return { ok: true, sessionId: 'main' }
++    },
++    log: { error: message => calls.errors.push(message) },
++  })
++  const engine = makeEngine()
++  const bytes = () => readFileSync(ledger.eventsFile, 'utf8')
++  const events = () => bytes().trim().split('\n').map(JSON.parse)
++  return { dir, state, calls, clock, config, ledger, makeEngine, engine, bytes, events,
++    cleanup: () => rmSync(dir, { recursive: true, force: true }) }
++}
++
++async function seed(fx, input = intent(), automatic = true) {
++  const created = await fx.ledger.beginAttemptIfAbsent(input,
++    async () => ({ kind: 'resolution_blocked', code: 'identity_resolution_unavailable' }))
++  assert.equal(created.created, true)
++  const drift = world(input)
++  drift.body.detail.current_visit.assignee_principal_id = OTHER
++  fx.state.worlds.set(input.workflowInstanceId, drift)
++  const result = automatic ? (await fx.engine.reconcileOnce()).recoveries[0]
++    : await fx.engine.recoverAttempt({ nodeVisitId: input.nodeVisitId, authorityRef: 'owner:manual-refusal-test' })
++  assert.equal(result.outcome, 'RECOVERY_REFUSED')
++  const attempt = structuredClone(fx.ledger.get(input.nodeVisitId))
++  assert.equal(attempt.state, 'NEEDS_REVIEW')
++  assert.equal(attempt.phase, 'recovery_refused')
++  return attempt
++}
++
++function assertTerminalUnchanged(fx, original, before, store = fx.ledger) {
++  assert.equal(fx.bytes(), before, 'terminal read-only responsibility must append no event')
++  assert.deepEqual(store.get(original.nodeVisitId), original)
++  assert.equal(fx.calls.deliveries.length, 0)
++  assert.equal(fx.events().filter(event => event.kind === 'recovery_authorized').length, 0)
++  assert.equal(fx.events().filter(event => event.kind === 'delivery_started').length, 0)
++  assert.equal(fx.events().filter(event => event.kind === 'run_delivered').length, 0)
++}
++
++function assertPending(result, original, now) {
++  assert.equal(result.outcome, 'REFUSAL_RESPONSIBILITY_PENDING')
++  assert.equal(result.attemptId, original.attemptId)
++  assert.equal(result.nodeVisitId, original.nodeVisitId)
++  assert.equal(result.consumer, 'workflow_execution_due_poller')
++  assert.equal(result.ruleRef, RULE)
++  assert.equal(result.observation.source, 'target_agent_instance_detail')
++  assert.equal(result.observation.observedAtMs, now)
++  assert.ok(result.nextCheckAtMs > now)
++}
++
++test('B2 refusal persists the existing consumer obligation before terminal and reopens without terminal writes', async () => {
++  const fx = fixture()
++  try {
++    const original = await seed(fx)
++    assert.deepEqual(original.recoveryCheck.refusalSchedule, {
++      firstCheckAtMs: T0 + 80, intervalMs: 160,
++      consumer: 'workflow_execution_due_poller', ruleRef: RULE,
++    })
++    const events = fx.events()
++    const scheduled = events.findIndex(event => event.kind === 'recovery_checked'
++      && event.result === 'world_drift_refusal_pending')
++    assert.ok(scheduled >= 0)
++    assert.ok(scheduled < events.findIndex(event => event.kind === 'recovery_refused'))
++    const before = fx.bytes()
++    assert.deepEqual((await fx.engine.reconcileOnce()).recoveries, [])
++    fx.state.now = original.recoveryCheck.refusalSchedule.firstCheckAtMs
++    const reopened = new ExecutionLedger({ dir: fx.dir, clock: fx.clock })
++    const engine = fx.makeEngine(reopened)
++    const pass = await engine.reconcileOnce()
++    assert.equal(pass.recoveries.length, 1)
++    assertPending(pass.recoveries[0], original, fx.state.now)
++    assert.equal(pass.recoveries[0].nextCheckAtMs, T0 + 240)
++    assert.deepEqual((await engine.reconcileOnce()).recoveries, [], 'one read per persisted slot')
++    assertTerminalUnchanged(fx, original, before, reopened)
++    assert.deepEqual(fx.calls.errors, [])
++  } finally { fx.cleanup() }
++})
++
++for (const unavailable of ['HTTP503', 'invalid resolver', 'wrong instance', 'throwing dependency']) {
++  test(`B2 terminal refusal ${unavailable} retains obligation and a later slot reads again`, async () => {
++    const fx = fixture()
++    try {
++      const original = await seed(fx)
++      const before = fx.bytes()
++      fx.state.now = original.recoveryCheck.refusalSchedule.firstCheckAtMs
++      if (unavailable === 'invalid resolver') fx.state.resolve = async () => ({ ok: false, code: 'authority_revoked' })
++      else if (unavailable === 'HTTP503') fx.state.read = async () => ({ ok: false, code: 'http_503' })
++      else if (unavailable === 'throwing dependency') fx.state.read = async () => { throw new Error('injected read outage') }
++      else fx.state.read = async () => {
++        const read = world()
++        read.body.detail.instance.workflow_instance_id = OTHER
++        return read
++      }
++      const failed = (await fx.engine.reconcileOnce()).recoveries[0]
++      assertPending(failed, original, fx.state.now)
++      assert.equal(failed.observation.result, 'unavailable')
++      assertTerminalUnchanged(fx, original, before)
++      fx.state.resolve = async () => ({ ok: true, agentId: AGENT })
++      fx.state.read = async () => world()
++      fx.state.now = failed.nextCheckAtMs
++      const recovered = (await fx.engine.reconcileOnce()).recoveries[0]
++      assertPending(recovered, original, fx.state.now)
++      assert.equal(recovered.observation.result, 'world_observed')
++      assert.equal(recovered.observation.agentId, AGENT)
++      assertTerminalUnchanged(fx, original, before)
++      assert.deepEqual(fx.calls.errors, [])
++    } finally { fx.cleanup() }
++  })
++}
++
++for (const observed of ['original world restored', 'moved visit', 'terminal instance']) {
++  test(`B2 terminal refusal ${observed} remains pending and recoverAttempt stays E3 no-op`, async () => {
++    const fx = fixture()
++    try {
++      const original = await seed(fx)
++      const before = fx.bytes()
++      fx.state.read = async () => {
++        const read = world()
++        if (observed === 'moved visit') read.body.detail.current_node_visit_id = OTHER
++        if (observed === 'terminal instance') read.body.detail.instance.is_terminal = true
++        return read
++      }
++      fx.state.now = original.recoveryCheck.refusalSchedule.firstCheckAtMs
++      const checked = (await fx.engine.reconcileOnce()).recoveries[0]
++      assertPending(checked, original, fx.state.now)
++      assert.equal(checked.observation.result, 'world_observed')
++      const manual = await fx.engine.recoverAttempt({ nodeVisitId: VISIT, authorityRef: 'owner:later-decision' })
++      assert.equal(manual.outcome, 'NO_OP_TERMINAL')
++      assertTerminalUnchanged(fx, original, before)
++      assert.equal(fx.events().filter(event => event.kind === 'recovery_refused').length, 1)
++      assert.equal(original.recoveryCheck.businessOutcome, 'UNKNOWN')
++    } finally { fx.cleanup() }
++  })
++}
++
++test('B2 stopping automatic consumption retains the durable refusal obligation for a later enabled consumer', async () => {
++  const fx = fixture()
++  try {
++    const original = await seed(fx)
++    const before = fx.bytes()
++    fx.state.now = original.recoveryCheck.refusalSchedule.firstCheckAtMs
++    fx.config.automaticRecoveryEnabled = false
++    const readsBefore = fx.calls.reads.length
++    assert.deepEqual((await fx.engine.reconcileOnce()).recoveries, [])
++    assert.equal(fx.calls.reads.length, readsBefore)
++    assertTerminalUnchanged(fx, original, before)
++    fx.config.automaticRecoveryEnabled = true
++    const reopened = new ExecutionLedger({ dir: fx.dir, clock: fx.clock })
++    const checked = (await fx.makeEngine(reopened).reconcileOnce()).recoveries[0]
++    assertPending(checked, original, fx.state.now)
++    assertTerminalUnchanged(fx, original, before, reopened)
++  } finally { fx.cleanup() }
++})
++
++test('B2 refusal bounded consumer rotates due obligations without starving the second item', async () => {
++  const fx = fixture({ maxRecoveryChecksPerPoll: 1 })
++  try {
++    const first = await seed(fx)
++    fx.state.now += 1
++    const second = await seed(fx, { ...intent(), nodeVisitId: OTHER,
++      workflowInstanceId: OTHER, ownerPrincipalId: OWNER })
++    const before = fx.bytes()
++    fx.state.now = second.recoveryCheck.refusalSchedule.firstCheckAtMs
++    const one = (await fx.engine.reconcileOnce()).recoveries
++    const two = (await fx.engine.reconcileOnce()).recoveries
++    assert.equal(one.length, 1)
++    assert.equal(two.length, 1)
++    assert.deepEqual(new Set([one[0].attemptId, two[0].attemptId]), new Set([first.attemptId, second.attemptId]))
++    assert.deepEqual((await fx.engine.reconcileOnce()).recoveries, [])
++    assertTerminalUnchanged(fx, first, before)
++    assertTerminalUnchanged(fx, second, before)
++  } finally { fx.cleanup() }
++})
++
++test('B2 concurrent restarted consumers only repeat safe reads and append no terminal event', async () => {
++  const fx = fixture()
++  try {
++    const original = await seed(fx)
++    const before = fx.bytes()
++    fx.state.now = original.recoveryCheck.refusalSchedule.firstCheckAtMs
++    const left = new ExecutionLedger({ dir: fx.dir, clock: fx.clock })
++    const right = new ExecutionLedger({ dir: fx.dir, clock: fx.clock })
++    const passes = await Promise.all([
++      fx.makeEngine(left).reconcileOnce(), fx.makeEngine(right).reconcileOnce(),
++    ])
++    for (const pass of passes) assertPending(pass.recoveries[0], original, fx.state.now)
++    assertTerminalUnchanged(fx, original, before, left)
++    assertTerminalUnchanged(fx, original, before, right)
++    assert.deepEqual(fx.calls.errors, [])
++  } finally { fx.cleanup() }
++})
++
++test('B2 manual refusal without an accepted automatic schedule is not given a new terminal obligation', async () => {
++  const fx = fixture()
++  try {
++    const original = await seed(fx, intent(), false)
++    assert.equal(original.recoveryCheck, undefined)
++    const before = fx.bytes()
++    fx.state.now += 1_000
++    assert.deepEqual((await fx.engine.reconcileOnce()).recoveries, [])
++    assertTerminalUnchanged(fx, original, before)
++  } finally { fx.cleanup() }
++})

@@ -1,6 +1,22 @@
 ---
 spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3
-status: proposed
+status: accepted
+accepted_date: 2026-10-15
+accepted_by: mayf3
+accepted_at: 2026-10-15T12:03:07.950464Z
+accepted_reviewed_spec_commit: 44da63d21987bf7115435f0767e7851b9022836a
+acceptance_review_verdict: NO_SEMANTIC_BLOCKER_FOUND_IN_EXISTING_V3_PROPOSAL
+acceptance_review_receipt_sha256: 9c1450a75e024a85a5be0670cf2d31a7e17c1f166c7a7d7f18fd2a27cd00fdee
+acceptance_authority_basis: >-
+  Owner mayf3 explicitly approved in the current Codex task on 2026-10-15:
+  "批准。接受 MCP #5，将 DSH 文档治理激活与 #497 的 CI 改造分开，
+  完成最终校验后合入两仓 main。生产加载和新增权限仍另批，
+  EP49 和旧 UNKNOWN 不重发。" This is current docs-only acceptance of
+  the independently reviewed V3 proposal at 44da63d2 and its four-file
+  activation plan. It does not reuse or overwrite PR #497's historical
+  five-check approval. The independent reviewer /root/governance_adoption_review
+  authored no candidate changes. Exact final-head delta review and main
+  readback are retained in the activation PR; activation occurs only at merge.
 spec_kind: invariant
 authority_level: governing_spec
 implementation_authority: none
@@ -20,7 +36,13 @@ superseded_by: null
 owners: [mayf3]
 ---
 
-# Bounded governance adoption V3 — proposed pilot
+# Bounded governance adoption V3 — accepted pilot
+
+> Current lifecycle: accepted by mayf3 on 2026-10-15 for docs-only activation,
+> independently of the CI work in PR #497. Source pin, all six Contracts, local
+> rules and historical preparation observations are preserved. Main merge is
+> the activation boundary; this record grants no product or production operation.
+> Candidate/proposed wording in the dated preparation sections below is history.
 
 ## 1. Goal
 
@@ -169,7 +191,50 @@ Rollback follows CTR-AD3-006 and the preserved lineage; do not edit old receipts
 Source PR #21 integration is satisfied: the exact source `6301662e18adaed88e4412394ad9bdb959d92355`
 was merged into upstream main by `d38c94dc6df8e8d8e0bfe45528dadfe5c9bf2543`
 on 2026-09-29T03:26:17Z. Source: https://github.com/mayf3/agent-development-governance/pull/21.
-Local independent final-head review and adoption acceptance remain pending.
+Owner acceptance and independent proposal/activation-plan review are complete.
+The activation PR records the final-head delta review and main merge/readback;
+no pre-merge record by itself establishes active adoption.
 No unresolved question grants implementation or production authority. Future
 executor-level duplicate suppression and measured delivery improvements are not
 prerequisites of current HR recovery or this bounded governance repair.
+<!-- BEGIN PHASE2_READOPTION -->
+
+## 14. Explicit rc.3 distribution update acceptance — 2026-11-07
+
+This is the explicit later-update record permitted by CTR-AD3-001's final
+sentence, under the unchanged adoption Contracts and source/local-review/main
+activation procedure. The original rc.1 source pin and 2026-10-15 acceptance
+above remain historical records of that adoption; they are not rewritten or
+represented as acceptance of rc.3. No new routing or product Contract is added.
+
+Owner mayf3's current acceptance is bound to reviewed semantic head
+`7f36750bf08d308cd7f648153e24c0b0e528e4c6`, including exact preparation commit
+`b8333ef43d3e3433d5276cb8af49be7c949a18c8`.
+Authority: https://github.com/mayf3/dsh-agent-core/pull/642#issuecomment-6701500077
+Registry ruling: `rulings[id=owner-20261107-642-643-1377]`.
+The original ruling is dated 2026-11-07. The comment timestamp
+`2026-11-07T03:13:36Z` is the regulatory transcription time; this accepted lock
+record was applied at `2026-11-07T03:20:10.813730Z`. The external registry ID is supplied by
+the mandate/transcription, not an independently inspected local registry.
+
+| Coordinate | Exact value |
+|---|---|
+| Source repository | `mayf3/agent-development-governance` |
+| Source commit | `c1fad8976e50e96adb27a4c7e2dd4f97bf2e899e` |
+| Distribution/version | `development-governance-v0` / `2.0.0-rc.3` |
+| Manifest SHA-256 | `3ce456bec3af4ee6c9f725cf8d587ed1a3e70812574633fda9bddc06016a0841` |
+| Prepared lock SHA-256 at b8333ef4 | `2c79ab4da7245dc1875e98300af6d2fefd75245d1be06ad3d3e9d9f86b30ad6c` |
+| Accepted lock SHA-256 | `0cb6acb6e7839ee2b6d0312653e6c5efc680512a36bf44a842db3aa79dc5a8b5` |
+| Lock lifecycle | `accepted`; actor `mayf3`; acceptance recording time above |
+| Preparation metadata and managed files | preserved exactly from b8333ef4 |
+
+Acceptance changes only lock `adoption.status`, `accepted_by`, `accepted_at`.
+The 25 managed-file hashes/sizes, source pin and manifest digest are unchanged.
+Raw verifier/manifest parity, complete five-record governing adoption lifecycle,
+exact structural native lifecycle and source-preservation evidence are archived
+in `docs/reports/642-phase2-20261107/` and `RECEIPT-642-PHASE2.md`.
+Final-HEAD independent review is `PENDING_REGULATOR`; authority activation still
+requires that review and main merge. Neither a proposed lock nor this unmerged
+accepted update is represented as currently activated main authority. Product
+implementation, deployment, production access and runtime acceptance remain none.
+<!-- END PHASE2_READOPTION -->

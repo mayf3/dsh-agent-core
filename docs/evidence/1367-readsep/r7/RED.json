@@ -1,0 +1,49 @@
+{
+  "gate": "RED",
+  "cwd": "/private/tmp/h1367-readsep",
+  "source_parent": "84b1e612aa31f4caa5a0de0ca39e3abca545bcef",
+  "integration_base": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "command": [
+    "/opt/homebrew/bin/node",
+    "--test",
+    "--test-reporter=tap",
+    "packages/workflow-execution/test/observation-cas/diagnostic-missing-trace.test.js"
+  ],
+  "environment_recipe": "env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u all_proxy -u NO_PROXY -u no_proxy -u NODE_USE_ENV_PROXY /opt/homebrew/bin/node --test --test-reporter=tap packages/workflow-execution/test/observation-cas/diagnostic-missing-trace.test.js",
+  "unset_keys": [
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "ALL_PROXY",
+    "all_proxy",
+    "NO_PROXY",
+    "no_proxy",
+    "NODE_USE_ENV_PROXY"
+  ],
+  "environment_scope": "test child only; parent unchanged",
+  "node_runtime": {
+    "execPath": "/opt/homebrew/Cellar/node/26.7.0/bin/node",
+    "version": "v26.7.0",
+    "arch": "arm64",
+    "proxyKeysPresent": []
+  },
+  "started_at_utc": "2026-11-07T12:08:52.250979+00:00",
+  "completed_at_utc": "2026-11-07T12:08:52.637981+00:00",
+  "expected_rc": 1,
+  "actual_rc": 1,
+  "counts": {
+    "tests": 6,
+    "pass": 2,
+    "fail": 4,
+    "skipped": 0
+  },
+  "raw_sha256": "f35a55c3e60718cbfdf8fd25387df0e311d529a20675ee6d575316a0dfed5511",
+  "file_sha256": {
+    "packages/production-runtime/src/workflow/capability-runtime.js": "a0c71765c4c863d68b21dd66bccf83a4a328869206a16adbbedd06033ee26e51",
+    "packages/workflow-execution/src/ledger.js": "7999048f35828027660b580763dd8b42a48b644dc01366f9fe6cfb0e903ed2a2",
+    "packages/workflow-execution/src/engine.js": "d9dfaf86dd5b52d351f4bdf44b971f68a89be8f86c5586c71fbd59dda63a7dd4",
+    "packages/workflow-execution/test/observation-cas/diagnostic-read.test.js": "4b29cb5577be6f836becb6ad016216e5d4c189051146368fd6554fbb7f216580",
+    "packages/workflow-execution/test/observation-cas/diagnostic-missing-trace.test.js": "72e23f26b5adde0a8351db9fd4c684b80d4b347a0db7105e096b4abc15f8bebb"
+  }
+}

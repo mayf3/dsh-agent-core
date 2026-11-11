@@ -1,0 +1,211 @@
+{
+  "observed_at": "2026-11-07T15:50:51.080827+00:00",
+  "command": "lsof -nP +L1 -FpcfstDin",
+  "raw_rc": 0,
+  "descriptor_records": 716,
+  "unique_regular_files": 191,
+  "logical_bytes_unique": 235993965,
+  "largest_unique": [
+    {
+      "pid": 22823,
+      "comm": "Brave Browser Helper (Renderer)",
+      "fd": "15",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "17067336",
+      "i": "357503393",
+      "n": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/.com.brave.Browser.lwh4sc"
+    },
+    {
+      "pid": 8689,
+      "comm": "Brave Browser Helper (Renderer)",
+      "fd": "15",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "13401372",
+      "i": "352127305",
+      "n": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/.com.brave.Browser.loZGsx"
+    },
+    {
+      "pid": 925,
+      "comm": "Spotlight",
+      "fd": "txt",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "12353536",
+      "i": "326976761",
+      "n": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.LaunchServices.dv/com.apple.LaunchServices-20971545-v2(a7c8cc8c~).csstore"
+    },
+    {
+      "pid": 70723,
+      "comm": "com.apple.appkit.xpc.openAndSav",
+      "fd": "txt",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "12353536",
+      "i": "323869998",
+      "n": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.LaunchServices.dv/com.apple.LaunchServices-20971545-v2(79e8c04a~).csstore"
+    },
+    {
+      "pid": 68258,
+      "comm": "ThemeWidgetControlViewService",
+      "fd": "txt",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "12288000",
+      "i": "312287536",
+      "n": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.LaunchServices.dv/com.apple.LaunchServices-20971545-v2(7613a085~).csstore"
+    },
+    {
+      "pid": 92256,
+      "comm": "Lark Helper",
+      "fd": "txt",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "12288000",
+      "i": "354371142",
+      "n": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.LaunchServices.dv/com.apple.LaunchServices-20971545-v2(c6fc15ce~).csstore"
+    },
+    {
+      "pid": 1400,
+      "comm": "com.apple.SafariPlatformSupport",
+      "fd": "txt",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "12271616",
+      "i": "296640825",
+      "n": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.LaunchServices.dv/com.apple.LaunchServices-20971545-v2(635f24e4~).csstore"
+    },
+    {
+      "pid": 15708,
+      "comm": "com.apple.SafariPlatformSupport",
+      "fd": "txt",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "12271616",
+      "i": "296670152",
+      "n": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.LaunchServices.dv/com.apple.LaunchServices-20971545-v2(74bb5f80~).csstore"
+    },
+    {
+      "pid": 1284,
+      "comm": "com.apple.SafariPlatformSupport",
+      "fd": "txt",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "12238848",
+      "i": "279447214",
+      "n": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.LaunchServices.dv/com.apple.LaunchServices-20971545-v2(f0226955~).csstore"
+    },
+    {
+      "pid": 29411,
+      "comm": "QLPreviewGenerationExtension",
+      "fd": "txt",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "11796480",
+      "i": "354759638",
+      "n": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.LaunchServices.dv/com.apple.LaunchServices-20971545-v2(ea9da64d~).csstore"
+    },
+    {
+      "pid": 64042,
+      "comm": "com.apple.SafariPlatformSupport",
+      "fd": "txt",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "11796480",
+      "i": "348916548",
+      "n": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.LaunchServices.dv/com.apple.LaunchServices-20971545-v2(9404c2b4~).csstore"
+    },
+    {
+      "pid": 63000,
+      "comm": "Lark Helper",
+      "fd": "txt",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "11550720",
+      "i": "328287407",
+      "n": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.LaunchServices.dv/com.apple.LaunchServices-20971545-v2(d2070f69~).csstore"
+    },
+    {
+      "pid": 51352,
+      "comm": "Brave Browser Helper (Renderer)",
+      "fd": "15",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "7218600",
+      "i": "357814046",
+      "n": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/.com.brave.Browser.0DGmTc"
+    },
+    {
+      "pid": 66846,
+      "comm": "Brave Browser Helper (Renderer)",
+      "fd": "15",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "6221288",
+      "i": "329922683",
+      "n": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/.com.brave.Browser.GkkqiL"
+    },
+    {
+      "pid": 59447,
+      "comm": "Google Chrome Helper (Aperitif ",
+      "fd": "15",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "6075196",
+      "i": "354738415",
+      "n": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/.com.google.Chrome.U6gPNH"
+    },
+    {
+      "pid": 867,
+      "comm": "corespotlightd",
+      "fd": "147",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "4291276",
+      "i": "328802974",
+      "n": "/Users/yanfenma/Library/Metadata/CoreSpotlight/SpotlightKnowledge/index.V2/deletes/NSFileProtectionCompleteUntilFirstUserAuthentication/skg_deleteAttr.0"
+    },
+    {
+      "pid": 55245,
+      "comm": "Codex (Renderer)",
+      "fd": "13",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "4228457",
+      "i": "348915014",
+      "n": "/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/.com.openai.codex.8gaDjV"
+    },
+    {
+      "pid": 802,
+      "comm": "Feishu",
+      "fd": "6",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "4194304",
+      "i": "266359782",
+      "n": "/Users/yanfenma/Library/Application Support/LarkShell/BrowserMetrics/BrowserMetrics-6AE11F7E-322.pma"
+    },
+    {
+      "pid": 1242,
+      "comm": "Brave Browser",
+      "fd": "4",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "4194304",
+      "i": "272481988",
+      "n": "/Users/yanfenma/Library/Application Support/BraveSoftware/Brave-Browser/BrowserMetrics/BrowserMetrics-6AE11F88-4DA.pma"
+    },
+    {
+      "pid": 55354,
+      "comm": "SkyComputerUseService",
+      "fd": "4",
+      "t": "REG",
+      "D": "0x100000d",
+      "s": "4194304",
+      "i": "344815935",
+      "n": "/Users/yanfenma/Library/Application Support/Codex/BrowserMetrics/BrowserMetrics-6AE9D4B6-D781.pma"
+    }
+  ],
+  "limitations": "Visible processes only; logical st_size is not physical/private allocation; no lsof errors does not prove privileged visibility"
+}

@@ -1,0 +1,8 @@
+{
+  "cwd": "/Users/yanfenma/workspace/project/worktrees/h1370-verification/dsh-agent-core",
+  "command": "npm install --no-package-lock --no-audit --no-fund",
+  "start": "2026-11-08T07:00:12.243881+00:00",
+  "end": "2026-11-08T07:00:17.301081+00:00",
+  "exit_code": 0,
+  "sha256": "bb696fb8ed2176c00bf448272357c4347c32580e004e87f73ba22de801264e29"
+}

@@ -1,0 +1,409 @@
+{
+  "APP_precise_handoff_only": {
+    "actual_body_locator_and_keeper": "No saved body path/bytes/SHA or reliably proven material custodian entry for these three missing members is established by this handoff. new14c is a reliable coordination entry, not proof of record ownership.",
+    "callback_action": "Carry this exact c9f9 handoff plus the three named missing members in the one terminal new14c callback. Record ACK/UNKNOWN separately; no additional sends or archive/live search.",
+    "finite_inventory": {
+      "members": "Same selected APP immutable manifest entries for packages/*/package.json and top-level bundle-*/package.json that drive held b85:33-46; exact names and existing target links",
+      "purpose": "Derive the finite Lshared output set/custody refusal or a proved zero-write branch from source and immutable intended topology. This pattern describes missing documentary inputs, not permission for a live glob/read."
+    },
+    "held_bridge": {
+      "bytes": 4770,
+      "finite_effect": "ensureRepoCoreBridge may mkdir/link each selected APP packages and bundle-* member if writable; otherwise validates/refuses. Exact selected inventory and branch applicability not established; Lshared not0.",
+      "member": "app/packages/agent-provisioning/src/repo-core-bridge.js",
+      "saved_path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/app-repo-core-bridge.js",
+      "sha256": "b85c7f574cec3e2564ba092426c4501ac09caf057b9c975669a1072ed3228f4b",
+      "spans": "5,28-64,66-79"
+    },
+    "identity_limit": "9df/e1c/ba397 remain separate. Candidate-local P6 plugin-artifact.js requires its own exact binding; do not assume equality with the selected APP member.",
+    "independence": "These gaps stop only dependent APP integration/coherent tuple/P0. They do not block accepted independent A implementation, synthetic evidence, or B fixed public plugin build; no Lshared=0 assumption.",
+    "input": {
+      "bytes": 3901,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/APP-DIRECT-CLOSURE-HANDOFF.v1.json",
+      "sha256": "c9f9d56298cf040e82b36be4eda303c235ea713cf2378e0ba034933986b6e2c9"
+    },
+    "missing_members": [
+      {
+        "bytes": null,
+        "member": "app/packages/agent-provisioning/src/shared-codex.js",
+        "sha256": null,
+        "why": "Selected e1c static import/re-export at26-32,38-45; exact assertOAuthCredentialBoundary and imported module dependencies/side effects must be qualified, not stubbed."
+      },
+      {
+        "bytes": null,
+        "member": "app/packages/agent-provisioning/src/plugin-artifact.js",
+        "sha256": null,
+        "why": "Selected e1c static import at33; original P6 separately imports the candidate-local packages/agent-provisioning/src/plugin-artifact.js resolvePluginPeerLinks. Matching member/API and candidate-local original source pin must be bound separately, not assumed equal."
+      },
+      {
+        "bytes": null,
+        "member": "app/packages/agent-provisioning/src/ensure-symlink.js",
+        "sha256": null,
+        "why": "Selected e1c import34 and held b85 import5; exact link/foreign refusal semantics and its own finite imports."
+      }
+    ],
+    "new_APP_read_or_implementation_authorized": false,
+    "responsibility": "Original APP packaging/provisioning source chain supplies any already-held exact immutable selected-e1c bodies/pins and intended inventory through new14c. original1437 joins and validates them; no invented OS issuer or generic keeper lookup.",
+    "selected_parent": {
+      "bytes": 21325,
+      "lineage": "Exact selected e1c identity accepted by02f7; parent archive/complete matching APP tree remains UNPROVEN. Not9df equivalence or ba397 current installed evidence.",
+      "member": "app/packages/agent-provisioning/src/index.js",
+      "saved_path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/app-agent-provisioning-index.js",
+      "sha256": "e1c3dc586f0cede58a9c1f8fce4d2ff025c49600816af9e7d2f75beb5284df01",
+      "source_spans": "26-45 and291-308"
+    }
+  },
+  "A_source_decision": {
+    "affected_evidence": "Original same reader only: wholly new synthetic fixtures, below/equal/over-cap and no-output negatives, full enumeration before P decision, stage/reason plus diagnostic failure, archive safety and no-overwrite, exact copied layout/sourceModuleSha, and inverse runtime bytes/AST outside allowed branches. No original869b/old partial bytes in synthetic fixtures; unchanged suites reused.",
+    "conditional": false,
+    "implementation_start": "After exact accepted docs/base/final HEAD/main lifecycle and this continuation PREFLIGHT. Future P/catalog/APP/L/J/P0 values are not prerequisites to acceptance or independent builder implementation.",
+    "mechanical_ceiling": [
+      "Necessary isolated nonproduction sourceModuleSha/catalog/source pins and copied-relative-layout bindings for that exact delta"
+    ],
+    "parent_rule": "Unique F1-closed00bb source. Neither f881 historical failed-build source nor superseded7ad is the continuation runtime baseline. Existing repaired runtime identity/custody behavior must remain inverse outside the explicit builder/diagnostic delta.",
+    "parent_source_only_receipt": {
+      "bytes": 14395,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/independent-sol-readback/FRESH-CARRIER-AFFECTED-SOURCE-RECEIPT.v2.json",
+      "sha256": "b541d431a0d0c0514b3e4f5028d7db6cc230e70bbe63a317597c21ed1cce65eb"
+    },
+    "phase1": {
+      "effect": "One complete read of the exact fixed compressed input, verify full declared length/hash and held-parent/nofollow identity/bookends, safely enumerate every header/content once; hold bounded required content/row data in process before any payload-tree output.",
+      "failure": "Unsafe, mismatched, changed, unsupported, duplicate or resource-limit input fails closed. A partial enumeration does not yield complete P/M/C or a numerical PASS. No external tar/npm/network/dependency resolution/second input read.",
+      "limits": {
+        "expected_input_bytes": 22231229,
+        "max_canonical_catalog_bytes": 16777216,
+        "max_compressed_bytes": 22233088,
+        "max_depth": 64,
+        "max_path_bytes": 4096,
+        "max_regular_logical_bytes": 192720896,
+        "max_rows": 47051
+      },
+      "unit_lines": "17-23"
+    },
+    "phase2": {
+      "P_ceiling_bytes": 192720896,
+      "P_formula": "The same complete conservative charge, including root and minimum4096 per object/empty regular file; no metric change to make it fit.",
+      "fit": "Only after complete safe enumeration and P fit, exclusively create the fixed new output, write already validated memory contents and exact modes/links/catalog, then full membership/content/bin/identity/durability readback. No implicit APP/prefix/dependency materialization.",
+      "over_cap": "If a complete safe catalog was established and computed P exceeds the ceiling, emit only bounded typed complete quantities and PAYLOAD_ALLOCATION_LIMIT; no payload or catalog artifact. Larger P remains a real STOP, not an automatically accepted numerical amendment.",
+      "unit_lines": "25,33-37"
+    },
+    "semantic_ceiling": [
+      "scripts/lib/deployment-reuse/b7-fixed-plugin-materializer.mjs: buildFixedPluginPayloadFromPinnedArtifact()/--build two-phase builder and nonproduction typed failure-prefix branch only"
+    ],
+    "source_parent": {
+      "bytes": 28557,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v2/packet/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/b7-fixed-plugin-materializer.mjs",
+      "sha256": "00bb8302eba5783378fe3c4cd1e0b7f61def9f5f24d213c6edaa93cb9fc6b056"
+    },
+    "status": "ACCEPT",
+    "typed_diagnostic": {
+      "privacy": "No raw headers/content, arbitrary exception text, env or credentials. Nonproduction prefix only; runtime ABI unchanged. Prefix-write failure remains refusal/UNKNOWN and never causes success or a new call.",
+      "reasons": "Closed fixed enums for input length/hash/identity/custody; archive path/type/mode/link/duplicate; row/logical/catalog and P limits; output collision/IO/durability/readback.",
+      "stages": [
+        "INPUT_QUALIFIED",
+        "ARCHIVE_ENUMERATING",
+        "CATALOG_VALIDATED",
+        "QUANTITY_DECIDED",
+        "OUTPUT_STARTED",
+        "OUTPUT_READBACK",
+        "PUBLISHED"
+      ],
+      "top_families": [
+        "PAYLOAD_BINDING",
+        "SOURCE_DRIFT",
+        "COPY_IO",
+        "DURABILITY_UNKNOWN"
+      ]
+    },
+    "unaccepted_deltas": [],
+    "unchanged": [
+      "Runtime copier/result/error ABI",
+      "Six-home and prior-batch guards",
+      "P6 and preparation",
+      "APP/e1c/credential behavior",
+      "Outer/native transaction and business identity",
+      "Original source/validation phases",
+      "Collector interfaces/quotas"
+    ]
+  },
+  "B_additional_effect_decision": {
+    "after_issue_remaining": 0,
+    "allowed_additional_calls": 1,
+    "before_issue": [
+      "Exact accepted docs/base/final HEAD/main and continuation PREFLIGHT; actual A implementation/owned synthetic evidence and same original affected reader closure.",
+      "Bind final actual module/source/catalog pin rules, this decision, exact literal input/output, predecessor intent/process/terminal and old partial evidence into one exclusive0600 continuation intent at the new owned candidate evidence parent.",
+      "Durably fsync intent/files/parent and read back before issue; enforce fixed output no-overwrite and original unprivileged custody.",
+      "Bind actual owned source/evidence/catalog/output/temp/parent topology and finite budget using the unchanged declared worst-case caps; retain old partial cost separately. This is not new P0 capacity sampling or a requirement for successful future P before the call."
+    ],
+    "candidate_root": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/packet/b7-wired-inputs",
+    "conditional": false,
+    "consumption": "Issuing the native process consumes the additional allowance on every outcome, including pre-read refusal, unsafe metadata, over-cap, timeout, crash, transport UNKNOWN, incomplete output or publication failure. An ambiguous issuance/response does not permit reissue.",
+    "entry": "Same owning module buildFixedPluginPayloadFromPinnedArtifact()/--build, final reviewed source/pins in one fixed owned offline candidate; no build at import",
+    "executed_this_turn": 0,
+    "grant_source": "This explicit B decision under original delegated technical scope; not source PASS, a new path, a window, a fixed hash or the consumed original build allowance.",
+    "historical_fixed_build_calls": 1,
+    "input": {
+      "bytes": 22231229,
+      "custody": "Original unprivileged packaging identity; regular nofollow, stable held-parent and before/after bookends. Verify actual exact size/hash before interpreting. No alternate literal, symlink fallback, identity or read after mismatch.",
+      "literal_path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/b7-install-r41/b7-wired-inputs/artifacts/dsh-codex-0.2.3-release.tgz",
+      "sha256": "869b8e64095a796a0fe6cfbe7bc09e5cf49dfa35defba7b69d621cfec0d0290f"
+    },
+    "maximum_total_fixed_build_calls": 2,
+    "new_payload_members": [
+      "fixed-plugin-payload/",
+      "fixed-plugin-catalog.json"
+    ],
+    "old_output_rule": "implementation-v1 failed payload/intent/raw/source remain protected, not overwritten/resumed/reused as input/deleted/promoted.",
+    "phase": "Nonproduction isolated packaging only, before eventual candidate freeze/P0; no F/adoption/register/attempt/TX/context or business invocation.",
+    "result_recovery": "Only the same request/process/artifacts may be read back; no new path/ID/window or automatic retry. A later changed source alone cannot replenish the allowance.",
+    "status": "ACCEPT_EXACTLY_ONE_ADDITIONAL_NONPRODUCTION_FIXED_CALL",
+    "third_packaging_call_allowed": false,
+    "unaccepted_deltas": []
+  },
+  "actor": {
+    "backend_execution_model": "NOT_EXPOSED",
+    "exclusive_coordinator": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "observed_resume_configuration": {
+      "attribution": "Latest user route reports just-observed resume configuration",
+      "model": "gpt-6-astra",
+      "provider": "openai"
+    },
+    "original_delegation": [
+      {
+        "message_id": "msg_01a14739-9970-7491-994e-888bf1340b31",
+        "source": "Original same-thread user delegation, carried forward",
+        "text": "我是希望你来尽量审批和做决策的，尽量不要我参与"
+      },
+      {
+        "message_id": "msg_01a1477a-c4c5-7cf2-8a67-fd9f2222c62e",
+        "source": "Original same-thread scope delegation, carried forward",
+        "text": "授权范围内的问题你直接决策"
+      },
+      {
+        "scope": "Separately decide exact builder/diagnostic source and one additional fixed unprivileged public input/build effect; no execution in this turn",
+        "source": "Current new14c FRESH_CARRIER_OFFLINE_CONTINUATION_V2_1 exclusive route"
+      }
+    ],
+    "requested_model": "gpt-6-astra",
+    "role": "Original delegated B7/#386/#508 technical source/effect decision actor; not OS permission issuer or production writer",
+    "role_limit": "No new general root privilege, identity, deployment grant, human signature or second writer is manufactured.",
+    "sole_source_runtime_writer": "01a1437b-f9f3-7a33-a253-8f7fce9459f3 / existing original source continuation",
+    "thread_id": "01a1378d-e052-7021-9992-f0760eb9f9e7"
+  },
+  "at_utc": "2026-10-19T17:56:42.520406+00:00",
+  "callback": {
+    "ACK_meaning": "Coordination transport only, not build/runtime/numeric/business PASS",
+    "input": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/ORIGINAL-FIXED-869B-OFFLINE-CARRIER-CONTINUATION-TERMINAL-CALLBACK.v2.1.json",
+    "max_invocations": 1,
+    "on_UNKNOWN": "Preserve attempt, no resend; never old1486",
+    "receipt": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/ORIGINAL-FIXED-869B-OFFLINE-CARRIER-CONTINUATION-TERMINAL-CALLBACK.v2.1.RECEIPT.json",
+    "state_at_freeze": "NOT_YET_CALLED",
+    "target": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38"
+  },
+  "cost_and_consumption": {
+    "G_budget": null,
+    "Lhome": null,
+    "Lreceipt": null,
+    "Lshadow": null,
+    "Lshared": null,
+    "catalog_cap": 16777216,
+    "complete_C": null,
+    "complete_M": null,
+    "complete_P": null,
+    "eventual_business_bound": "12P+Lhome+Lshadow+Lshared+Lreceipt plus all unchanged3N/2S/H/generation/rollback/growth/overlap/aux; all final source/packet/preimage/copy/J costs must be known before actual P0. Unknown terms stop only dependent consumption.",
+    "final_J": null,
+    "floor_bytes": 53687091200,
+    "future_exact_delta": "If complete P exceeds the ceiling, only a genuinely new exact numerical/source decision can change the bound. This accepted continuation cannot promote its over-cap diagnostic into admission.",
+    "new_larger_P_bound_accepted": false,
+    "new_output_bound": "Same P ceiling plus measured rounded catalog<=16777216 and actual bounded source/intent/result/parent/temp overlaps; no over-cap payload/catalog. Prior partial is protected and not cleanup credit.",
+    "numeric_remaining": null,
+    "offline_payload_ceiling": 192720896,
+    "old_partial_stays_separately_charged": 192720896,
+    "physical_claim_limit": "Bounded in-process data and logical/output charge are not measured RSS, APFS quota or observed free-space. No prior4MiB fit/J/free/conditional26.35GB is inherited."
+  },
+  "disposition": {
+    "P_ceiling_increased": false,
+    "accepted": true,
+    "accepted_additional_fixed_offline_invocation": true,
+    "accepted_source_delta": true,
+    "actual_input_read_or_build_performed_by_this_decision": false,
+    "additional_offline_invocations_authorized": 1,
+    "collector_remaining": 0,
+    "collector_total_cap": 2,
+    "conditional": false,
+    "contract_acceptance_explanation": "The exact source and additional-effect contracts are accepted without an unresolved semantic condition. Their stated docs/PREFLIGHT/review/once/custody/budget requirements govern later consumption, not a second acceptance of future P/catalog facts.",
+    "implementation_spec_ready": true,
+    "new_material_reviewer_required": false,
+    "new_offline_call_ready_now": false,
+    "new_ordinary_Owner_confirmation_required": false,
+    "numeric_capacity_admission": false,
+    "runtime_production_sampling_or_business_invocation_authorized": false,
+    "source_delta_implementation_pass": false,
+    "total_fixed_869b_packaging_lineage_cap": 2,
+    "unaccepted_deltas": [],
+    "verdict": "ACCEPT_A_AND_B_SEPARATELY"
+  },
+  "effects_this_turn": {
+    "APP_live_source_archive_reads": 0,
+    "actual_869b_reads": 0,
+    "builds_or_tests": 0,
+    "business_effects": 0,
+    "new_identity_permission_op_TX": 0,
+    "product_source_changes": 0,
+    "runtime_or_native_collections": 0
+  },
+  "exact_material_refs": {
+    "APP_direct_member_handoff": {
+      "bytes": 3901,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/APP-DIRECT-CLOSURE-HANDOFF.v1.json",
+      "sha256": "c9f9d56298cf040e82b36be4eda303c235ea713cf2378e0ba034933986b6e2c9"
+    },
+    "READY": {
+      "bytes": 4355,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/MATERIAL-READY.v2.1.json",
+      "sha256": "81610367cdb02940b837068a5acba1664e9b0b7797cb5cafbf6c50bfd1335433"
+    },
+    "cleanup": {
+      "bytes": 854,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v2/OWN-CLEANUP.v2.json",
+      "sha256": "0f4be5f0aee516b525d394c4621cb69dfef465ba0b844046a140de9d83197fb3"
+    },
+    "material_index": {
+      "bytes": 2187,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/INDEX.v2.1.json",
+      "sha256": "924f394544dddd17c8bccd3352a57e987ed71f372cb88e4b103cb9761a0b1959"
+    },
+    "material_review": {
+      "bytes": 9466,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/independent-sol-readback/FIXED-869B-OFFLINE-CONTINUATION-MATERIAL-RECEIPT.v2.1.json",
+      "sha256": "a25f978054b042835603c12f04c39877f62f56b9a998d012ea4b02e3506f3e9a"
+    },
+    "parent_binding_delta": {
+      "bytes": 4075,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/PARENT-BINDING-ONLY.v1-to-v2.1.diff",
+      "sha256": "4f438bad3e188d9cc76fd1e8bc9c8c7ac948b1df75b6a233a1ddb6ed09629731"
+    },
+    "source_closure": {
+      "bytes": 4675,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/SOURCE-CLOSURE.v2.json",
+      "sha256": "6992fe0af1176ebd1b7b676c38ee152e04289557d08346252084531f22f3c379"
+    },
+    "source_terminal": {
+      "bytes": 2617,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v2/SOURCE-TERMINAL-INDEX.v2.json",
+      "sha256": "117a304d78f3e83c7964987a2931acdff7e40b9d3cc2d1e6322c382e671379d9"
+    },
+    "unit": {
+      "bytes": 10752,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/PROPOSED-FIXED-869B-OFFLINE-CARRIER-CONTINUATION.v2.1.md",
+      "sha256": "b75b0a0067c07b2dbb8dd08c46374bf4b0d3635ce4523d98034902c37f890f8e"
+    }
+  },
+  "exact_unit": {
+    "bytes": 10752,
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/PROPOSED-FIXED-869B-OFFLINE-CARRIER-CONTINUATION.v2.1.md",
+    "sha256": "b75b0a0067c07b2dbb8dd08c46374bf4b0d3635ce4523d98034902c37f890f8e"
+  },
+  "historical_failure_preserved": {
+    "allowed_original": 1,
+    "catalog_produced": false,
+    "inner_stage_header_predicate": "NOT_CAPTURED",
+    "input_qualification_attribution": "Prior source control flow, as stated in exact new unit and original same-chain material receipt; not an independent current hash/read observation.",
+    "native_fixed_build_calls": 1,
+    "owned_partial": {
+      "conservative_charge_bytes": 192720896,
+      "directories": 1837,
+      "links": 0,
+      "logical_bytes": 120505552,
+      "regular_files": 21736,
+      "three_empty_files_charge_bytes": 12288
+    },
+    "quantity_limit": "Partial charge is neither full P nor proof of the failed predicate. No partial/raw/source rewritten. Source00bb/b541 fixes do not retrospectively explain or repair the failed build.",
+    "rc": 1,
+    "source_sha256": "f8811ccafeec1bc521b1cc86ae17a33b7b8cb2f556f73277b1d84b2f8229edd1",
+    "top_error": "PAYLOAD_BINDING"
+  },
+  "kind": "ORIGINAL_FIXED_869B_OFFLINE_CARRIER_CONTINUATION_TECHNICAL_DECISION_V2_1",
+  "mandate_and_no_retry_findings": {
+    "collector": {
+      "issued": 2,
+      "new_allowance": 0,
+      "remaining": 0
+    },
+    "extra_OS_access_identity_custody_authority_granted": false,
+    "genuinely_uncovered_authority_effects_in_exact_A_B": [],
+    "limits": "Any new permission/custody/identity/hash or actual denied-access refusal stops this one call; B does not authorize retry after it, privilege escalation, alternate root/path/channel or bypass of a separate original source/P3 refusal. General original no-denied-access and no-third-collector restrictions remain intact.",
+    "no_denied_path_retry_compatible": true,
+    "other_original_business_authority_preserved": true,
+    "positive_basis": [
+      {
+        "mapping": "Original02f7 explicitly accepted this fixed public869b packaging responsibility and one offline input/build, now consumed. It supports the existing purpose/source/custody context, not another call by implication.",
+        "ref": {
+          "bytes": 27081,
+          "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/ORIGINAL-FIXED-FRESH-SIX-TARGET-OFFLINE-CARRIER-TECHNICAL-DECISION.v2.json",
+          "sha256": "02f7a36660fc340277f3075079af87ea9deea4a7a4ff026e73cbda10c5aff158"
+        }
+      },
+      {
+        "mapping": "A finite change to this nonproduction builder and one accountable additional same-public-input invocation fall within the original technical decision role. This decision explicitly supplies B; it does not fabricate OS access or a generic retry policy.",
+        "ref": "Original same-thread user B7 technical delegation and current explicit request for a separate extra fixed effect decision"
+      },
+      {
+        "lines": "7-11,17-27,31-41",
+        "mapping": "Same original unprivileged input/path/owner, changed bounded enumeration and diagnostics, unchanged P ceiling and immutable predecessor; no denied native/prefix/env path or production input is used.",
+        "ref": {
+          "bytes": 10752,
+          "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/PROPOSED-FIXED-869B-OFFLINE-CARRIER-CONTINUATION.v2.1.md",
+          "sha256": "b75b0a0067c07b2dbb8dd08c46374bf4b0d3635ce4523d98034902c37f890f8e"
+        }
+      }
+    ],
+    "reason": "Held source-flow evidence implies the prior regular/full expected-hash checks passed before output creation; the actual failure was an offline build refusal with inner subpredicate NOT_CAPTURED. No OS denial cause is asserted or waived. The extra call is openly granted for the changed bounded builder under B, not concealed as an input alias, fixture, successful first build or old grant continuation.",
+    "third_collector_allowed": false,
+    "user_no_retry_override": false
+  },
+  "next": [
+    {
+      "action": "Land exact v2.1 accepted docs/decision through normal docs-only accepted base, final HEAD and main lifecycle; preserve frozen NOT_SENT/material records.",
+      "owner": "Original1437 source lane"
+    },
+    {
+      "action": "Emit continuation PREFLIGHT; implement only A on00bb; run newly authored owned synthetic evidence and exact unchanged-runtime inverse. No real869b read during synthetic tests.",
+      "owner": "Original1437 existing source continuation"
+    },
+    {
+      "action": "Close only actual builder/diagnostic/source-pin delta; reuse unchanged parent source evidence. No new reviewer or repeat whole source/gate audit.",
+      "owner": "Same original nonauthor affected reader"
+    },
+    {
+      "action": "Bind final reviewed A, exact input/output/source/old failure lineage and owned budget; create durable EXCL intent, then consume B once. Preserve every outcome and truthful complete/partial quantity. No third packaging call or collector.",
+      "owner": "Original1437 sole unprivileged packaging writer"
+    },
+    {
+      "action": "Consume only actual successful offline catalog/quantity and qualified APP/L/J/P0 records for a future new coherent tuple; if over-cap/refused/unknown, retain STOP and return the exact remaining delta. No actual business permission supplied here.",
+      "owner": "Original1437 and original technical candidate chain"
+    }
+  ],
+  "own_cleanup": {
+    "deleted_bytes": 0,
+    "deleted_files": 0,
+    "reason": "Only unique active decision/index/cleanup and planned callback records; no redundant temp created, no outside scan/deletion. Original failed input/partial/evidence/source/production/thread/daemon protected."
+  },
+  "saved_state_not_refreshed": {
+    "H": 53592064,
+    "J_adopted": false,
+    "S": 1606156288,
+    "business": "0/2",
+    "collector": "total2/rem0",
+    "currentJ": 1496551424,
+    "e42": "unregistered/attempt0",
+    "floor": 53687091200,
+    "prospectiveJ": 1496567808,
+    "selected": 92
+  },
+  "verification_attribution": {
+    "bounded_Sol": "Existing capacity_a_sol only extracted the3901B new APP handoff; no cited member opened, new reviewer, artifact, implementation or callback. Requested6.1-sol/ultra; backend UNKNOWN.",
+    "direct": "Full READY/unit/new closure/index/same-chain material receipt/APP handoff/source-terminal/author cleanup read and byte/SHA checked. Parent binding diff pin checked. Old source/archive/partial/live paths not opened.",
+    "original_material_review": "a25f material PASS with no blockers is reused, not converted to implementation or effect PASS. This is the separate original technical acceptance.",
+    "parent_source_result": "00bb/b541 PASS_SOURCE_ONLY and old failure facts are reused from pinned new source terminal and original same-chain receipt; no repeat source review, test or primary read."
+  }
+}

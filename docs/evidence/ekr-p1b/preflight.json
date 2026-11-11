@@ -1,0 +1,63 @@
+{
+  "schema_version": 2,
+  "SPEC_GOVERNANCE_MODE": "PREFLIGHT",
+  "TARGET_REPOSITORY": "mayf3/dsh-agent-core",
+  "BASE_HEAD": "f6a1f77a8b7b878bcb9821a68836925755ca7076",
+  "REVIEW_TARGET_HEAD": "f6a1f77a8b7b878bcb9821a68836925755ca7076",
+  "CURRENT_BASE_HEAD": "f6a1f77a8b7b878bcb9821a68836925755ca7076",
+  "checkedAt": "2026-11-05T19:31:51.065566+00:00",
+  "remoteObservation": {
+    "method": "GitHub connector github_fetch_commit(ref=main)",
+    "sha": "f6a1f77a8b7b878bcb9821a68836925755ca7076",
+    "url": "https://github.com/mayf3/dsh-agent-core/commit/f6a1f77a8b7b878bcb9821a68836925755ca7076",
+    "provenance": "structuredContent.commit.sha observed in current tool result; summary, not raw subprocess output"
+  },
+  "ghObservation": {
+    "command": [
+      "gh",
+      "api",
+      "repos/mayf3/dsh-agent-core/commits/main",
+      "--jq",
+      ".sha"
+    ],
+    "rc": 1,
+    "stderr": "Get \"https://api.github.com/repos/mayf3/dsh-agent-core/commits/main\": net/http: TLS handshake timeout\n",
+    "provenance": "current tool subprocess output copied verbatim"
+  },
+  "GOAL_OR_TARGET": "P1-B only: cross-attempt receipt-loss and UNKNOWN regression tests",
+  "CURRENT_GAP": "No longitudinal coverage of a response lost after the first guarded effect request",
+  "AUTHORITY_ACTION": "REUSE",
+  "PRIMARY_AUTHORITY": "AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2 sections 2,4,5,8",
+  "RELATED_AUTHORITIES": [
+    "AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3",
+    "AGENT_CORE_WORKFLOW_STALE_REENTRY_V1"
+  ],
+  "ROUTE_STAGE": "IMPLEMENTATION",
+  "AUTHORITY_ACCEPTED_IN_BASE": "YES",
+  "IMPLEMENTATION_AUTHORITY": "contracts",
+  "PLAN_LEVEL": "BRIEF",
+  "ASSURANCE_LEVEL": "ROUTINE",
+  "EXECUTION_MANDATE": "VALID",
+  "MUTATION_AUTHORIZATION": "VALID",
+  "ISOLATED_WRITE_SURFACE": "YES",
+  "SPEC_GAP_DEPENDENCY": "NONE",
+  "EVIDENCE_REVIEWABILITY": "PASS",
+  "IMPLEMENTATION_ALLOWED": "YES",
+  "MERGE_READY": "NO",
+  "OPERATION_ALLOWED": "NO",
+  "DONE_WHEN": "New tests and unchanged five-suite 67/67 baseline pass; receipt, commit, push and PR or authorized gh TLS fallback",
+  "EXPANSION_TRIGGER": "Any product gap, test/gate or patch failure, authority conflict, upstream movement: stop without product repair",
+  "NEXT_ACTION": "CONTINUE",
+  "authorization": "BRIEF-EKR-P1B-ONLY.md (user contract, fourth dispatch 2026-11-06)",
+  "limitations": [
+    "P1-A excluded",
+    "No product writes or real Svc effects",
+    "Attempt eligibility/quiescence seeded in fixture; no live recovery claim"
+  ],
+  "authority_sha256": {
+    "BRIEF-EKR-P1B-ONLY.md": "c89cf84e18d79a5c2b83e497d834c454d9b7b6cb203fa5e5d3ecb81168facfbe",
+    "docs/specs/AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2.md": "f8e8b0d48f8e2a682897c98f5003a1ffbd608ed722fb653a01bde81417767e7b",
+    "docs/specs/AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3.md": "c5d39e390026807b9e471a6875f5e0e9d15432f21a3d177733bf422fc751a1e6",
+    "docs/specs/AGENT_CORE_WORKFLOW_STALE_REENTRY_V1.md": "eee9fcb7d8099acdb866c26b9084a3e3d4a003a8e1fdf43b52fd0c4597ed1325"
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "observed_at_utc": "2026-11-07T15:51:10.395640+00:00",
+  "method": "read selected nonproduction task script/receipt text only, retained source hashes; no script execution",
+  "sources": [
+    {
+      "source": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/REVIEW-R6-POSTRUN.md",
+      "source_sha256": "87c247026b8a975f9ad069be47b3ee8a07fb3db2c7e04478025f928bcbb6ba4c",
+      "mtime_utc": "2026-11-07T07:32:51.726135+00:00",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 20,
+          "text": "1: # Independent E6 final qualification review\n2: \n3: Reviewer: /root/criteria_audit (did not author semantic repair or qualification runner).\n4: Result: QUALIFICATION PASS / Blockers=0, EXACT synthetic scratch REUSE tuple only.\n5: \n6: Independently read actual sandbox outer command/raw logs and hashes: outer rc0, installer rc0, stderr empty. E01-E17 exact set17 and every result PASS. Actual installed real reader rc0 commit13ecda5c759263c7ce7ab93b678f862f65513f34; reader ba397d8cb92d56f11158400256097379edbea69271a6ac5fee471b56127eb0cf unchanged. Actual JSON stamp clean and installed patched writer/backup helper match exact candidate pins.\n7: \n8: Actual unique BAK metadata describes predecessor: source_commit=unknown, harness_commit13ec..., pinned=false/statuspredeploy. Marker exactly.cache/harness/node-runtime. W6 successful-install-rollback schema binds this-run uniqueBAK/log/marker/section5b/fullpreimage, mutationReceiptUsed=false; correct absence of rc0 failure JSON.\n9: \n10: Complete equality independently rechecked: preimage/restored89,186 rows, identical JSON hash77b19374a892b32096495ee014ba7ce2c8e9c908bd1b8096367cea029706446a; external21 rows identical9841154bcaf40f9f04bccf753c1e93233b6c9c1b751a250466eec4a15d991c24. Full mutation and auxiliary manifest relations present: fs622 deltas/temp7/home0/app-source0/harness-source1. Harness delta is only.git directory mtime; index and source file bytes unchanged. Both source Git statuses empty.\n11: \n12: Both isolated maps mechanically exact;23 bundle members, only entrypoint and helper temporary-path variants differ. Root-owned4755 fixture copied only to exact new scratch path before sandbox, never executed. Actual installer helper gate unchanged. All installer mutations kernel-confined, no production operation/activation; original helper hash/fullmode/ctime readback unchanged. The earlier0755 concern was a reviewer tool-format false positive (%Lp excludes special bits), expressly retracted after full%p/%Sp/lstat proofs.\n13: \n14: Limits: native sudo integration NOT_EXECUTED; actual kernel credential-drop adapter+positive control used. Full fresh Harness/Node installation NOT_RUN (fresh stamp persistence/reuse/reader unit chain tested separately14 PASS). Synthetic fixtures, no real business or production Mandate activation. These limits do not become production authorization or claims of an unexecuted path.\n15: \n16: Reviewed at 2026-11-07T07:32:51.724113+00:00\n17: {\n18:   \"installer.command.json\": \"4e373923c23151867520149a661d2c9c5484678b222473cbc0d827bcaa6b249b\",\n19:   \"installer.stdout.log\": \"412171c4aba98d4fbcd107cce330b61d932c7157385c98b4489a450bfe5914ca\",\n20:   \"installer.stderr.log\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\","
+        }
+      ]
+    },
+    {
+      "source": "/private/tmp/fleet-w6-s04/STOPPED-W6-S04-R2.md",
+      "source_sha256": "a5182ad555720f754a4cd80bb7aec897fcb89782de9984725d1c8c29b19929be",
+      "mtime_utc": "2026-11-06T00:10:22.486346+00:00",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 11,
+          "text": "1: # STOPPED-W6-S04-R2\n2: \n3: Phase: GH_PR_SUBMISSION / publication immediate-head assertion\n4: \n5: Runtime/cold: PASS_ISOLATED_S04_R2; 20 specified acceptance commands rc=0, full-runtime 16/16 true, cold three cases PASS/modelCalls=0.\n6: \n7: Publication wrapper rc=1 (AssertionError). Git push rc=0 delivered e111c16cbe641bd4d73069d445fbc1f4f4bb1f32; gh PATCH rc=0/no timeout updated S04-R2/#605 but returned old PR head 88102f284e84035de0ed24c29955685b7328778a. At 2026-11-06T00:08:33.781333+00:00 dependent publication actions stopped. No resubmission, new commit/push, or runtime retry.\n8: \n9: One read-only GET after STOP, rc=0 at 2026-11-06T00:09:04.415335+00:00, confirms PR #630 head e111c16cbe641bd4d73069d445fbc1f4f4bb1f32 with expected title/body. Remote delivery is confirmed; the failed wrapper and STOP history remain, so this is not end-to-end all-rc-zero closure.\n10: \n11: Evidence: /private/tmp/fleet-w6-s04/r2-evidence/STOP-PUBLICATION-R2.json, gh-pr-update-r2.stdout.log, post-stop-pr-readback.json, publication-reconciliation-status.json. No production acceptance. No production writes or bind/connect 8788/8790."
+        }
+      ]
+    },
+    {
+      "source": "/private/tmp/fleet-w6-s04/RECEIPT-W6-S04-R2.md",
+      "source_sha256": "2775ed4512fb0628d84996f6657bd57d5f46687c6b5291dbb509c8548e5830f0",
+      "mtime_utc": "2026-11-06T00:10:22.487268+00:00",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 28,
+          "text": "1: # RECEIPT-W6-S04-R2 — runtime PASS / publication assertion STOP，远端已只读确认\n2: \n3: 关联：[Issue #605](https://github.com/mayf3/dsh-agent-core/issues/605)；交付 PR：[S04-R2 / #630](https://github.com/mayf3/dsh-agent-core/pull/630)。Owner 交办日期 2026-11-06（Asia/Shanghai）。\n4: \n5: **S04-R2 指定隔离门全部通过。** Recorder 路径机械修正后，官方装配、selected-input/mode 对账、canonical app graph、scratch closure/graph、原 r2 canary、r3 full-runtime 16/16 true，以及 cold-session 三例均有本轮实测。上文指定验收门的 20 个命令收据均 rc=0，无超时。canary 按原工具设计 SIGKILL 结束；full-runtime SIGTERM 后 code=0 干净退出。\n6: \n7: 零生产写入；未 bind/connect 8788/8790。full-runtime 仅使用 127.0.0.1:18788/18790、合成空业务状态和空凭据。cold-session 全部离线、模型调用 0。本收据不宣称生产验收；S05 K24/K26 仍未解除。R1 STOP 收据和原始失败保留，其 NOT_EXECUTED 仅代表 R1。\n8: \n9: ## 坐标、授权与原件保留\n10: \n11: | 对象 | 本轮坐标 |\n12: |---|---|\n13: | app | `75ece578301b014a23b987568d1eb8af96795300` |\n14: | app tree | `7a68ac22c8eef6340131dacafe1c0f2aa5dfa0d6` |\n15: | harness | `13ecda5c759263c7ce7ab93b678f862f65513f34` |\n16: | Node | `/private/tmp/fleet-v5-prep/scratch/node-runtime/bin/node`，darwin-x64 v25.6.1 |\n17: | Node SHA-256 | `c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b` |\n18: | 收据工作树 | `/private/tmp/dsh-w6-s04-receipt`；`chore/fleet-w6-s04-20261106` |\n19: | R2 起点 | `88102f284e84035de0ed24c29955685b7328778a`；沿用 R1 PR，新增 R2 收据 |\n20: | R2 证据 | `/private/tmp/fleet-w6-s04/r2-evidence` |\n21: \n22: 沿用仓库 spec-governance PREFLIGHT：`schema_version=2 / REUSE / EXEC_PLAN / DURABLE / OPERATION`。本轮直接授权为 `BRIEF-W6-S04-R2.md`（本次用户交办原文），不是 R1 preflight 中沿用的旧授权字段。操作计划为 `r2-operation-plan.md`；accepted `PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1` 允许 nonproduction verification，`production_apply_authority=none`。没有修改产品源码或长期合同。\n23: \n24: `execute.py` 只有下述一处路径修改。`run-r2-assembly.py` wrapper 将输出/STOP 身份隔离为 R2并持有原 rebuild 锁；`run-r2-remaining.py` 顺序驱动后续门且任一失败停止。R1 recorder、worker、STOP、manifest 已保留于 `r1-preserved/`。旧 assembled app、scratch app/harness、r2 tooling/日志、r3 attempt-02 均保存在 R2 证据目录下，未删除或覆盖原证据。原 r2 canary 字节不变；r3 driver 仅改冻结 SHA；runtime-entry 与原合成状态/parentBoundary 隔离机制不变。\n25: \n26: ### recorder 路径修正\n27: \n28: ```diff"
+        }
+      ]
+    },
+    {
+      "source": "/private/tmp/dsh-548-r2-iwl_bczh/setup.py",
+      "source_sha256": "06f4cd3d7ddce3f951012ebd3b34604cba9a7014b50af1cd1a3a851621247c6d",
+      "mtime_utc": "2026-11-04T01:51:34.644638+00:00",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 26,
+          "text": "1: from pathlib import Path\n2: import subprocess, json, shlex, hashlib, os, time\n3: R=Path(__file__).parent\n4: H=Path('/Users/yanfenma/workspace/github/deepseek-harness')\n5: entries=[]\n6: def run(args,cwd=H,output=None):\n7:     p=subprocess.run(args,cwd=cwd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)\n8:     if output is not None:\n9:         output.write_bytes(p.stdout)\n10:         stdout=f'[binary stdout saved: {output}; sha256={hashlib.sha256(p.stdout).hexdigest()}; bytes={len(p.stdout)}]'\n11:     else: stdout=p.stdout.decode()\n12:     e=dict(command=shlex.join(map(str,args)),cwd=str(cwd),exit_code=p.returncode,stdout=stdout,stderr=p.stderr.decode())\n13:     entries.append(e)\n14:     (R/'evidence/setup.json').write_text(json.dumps(entries,ensure_ascii=False,indent=2)+'\\n')\n15:     print(json.dumps(e,ensure_ascii=False),flush=True)\n16:     if p.returncode: raise SystemExit(p.returncode)\n17:     return p.stdout.decode() if output is None else ''\n18: refs={'pin':'514ab7b0029141b88c807704764d0d3e1eea1da4','master':run(['git','rev-parse','origin/master']).strip()}\n19: for label,ref in refs.items():\n20:     dest=R/label\n21:     dest.mkdir()\n22:     archive=R/f'{label}.tar'\n23:     run(['git','archive','--format=tar',ref],output=archive)\n24:     run(['tar','-xf',str(archive),'-C',str(dest)],cwd=R)\n25:     links=[]\n26:     for p in [dest,*[x.parent for x in dest.rglob('package.json')]]:"
+        }
+      ]
+    },
+    {
+      "source": "/private/tmp/dsh-548-r5-evidence/run.py",
+      "source_sha256": "6466c6210bc95915109714e903a6d5e96539220df4b1eb3290a093f8d966dd78",
+      "mtime_utc": "2026-11-04T02:35:23.323827+00:00",
+      "excerpts": [
+        {
+          "start_line": 10,
+          "end_line": 14,
+          "text": "10: E = Path(__file__).parent\n11: W = Path('/private/tmp/harness-548-transport')\n12: BASE = '419ee11c9bd5d01b206c8660762525d151bc4b4b'\n13: R2 = Path('/tmp/dsh-548-r2-iwl_bczh/fixtures')\n14: ORIGINAL = Path('/tmp/dsh-548-r2-iwl_bczh/pin/probe.mts')"
+        },
+        {
+          "start_line": 85,
+          "end_line": 92,
+          "text": "85:     phase = sys.argv[1]\n86:     if phase == 'red':\n87:         assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=W).decode().strip() == BASE\n88:         assert not subprocess.check_output(['git', 'diff', '--name-only', 'HEAD'], cwd=W).strip()\n89:         prior = json.loads(Path('/private/tmp/dsh-548-r4-evidence/original-hashes.json').read_text())\n90:         for path in [W / 'RECEIPT-548-R4.md', W / 'STOPPED-548-R4.md', W / 'probe-548-r4.mts']:\n91:             prior[str(path)] = sha(path)\n92:         assert all(sha(path) == value for path, value in prior.items())"
+        }
+      ]
+    },
+    {
+      "source": "/private/tmp/sw-1347-evidence/delivery.json",
+      "source_sha256": "1bf0f00074c6b0240dc5c61c91547428f5ee1b1760677fd1b0cd2092b4393a16",
+      "mtime_utc": "2026-11-01T03:42:23.445663+00:00",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 32,
+          "text": "1: {\n2:   \"status\": \"DELIVERED_OPEN_ONLY\",\n3:   \"head\": \"22419bfc2712752164e5122addcef2b4f82822f9\",\n4:   \"base\": \"108a47a5eb3c3fb0aee7ee548e297fd65b134013\",\n5:   \"branch\": \"ac-d6d11-impl\",\n6:   \"worktree_clean\": true,\n7:   \"push_rc\": 0,\n8:   \"pr\": \"https://github.com/mayf3/svc-workflow/pull/115\",\n9:   \"pr_readback\": {\n10:     \"state\": \"open\",\n11:     \"merged\": false,\n12:     \"base\": \"main\",\n13:     \"head_sha\": \"22419bfc2712752164e5122addcef2b4f82822f9\",\n14:     \"changed_files\": 2,\n15:     \"additions\": 12,\n16:     \"deletions\": 1\n17:   },\n18:   \"issue_receipt\": \"https://github.com/mayf3/agent-control/issues/1347#issuecomment-6552989611\",\n19:   \"issue_comment_body_readback\": \"MATCH\",\n20:   \"artifact\": \"1347-verification.tgz\",\n21:   \"artifact_sha256\": \"036fcea884a63e86b619c4f550110dc7f33447363fcbdb156518be9169f5a82b\",\n22:   \"artifact_internal_hashes\": \"VERIFIED\",\n23:   \"baseline_passed\": 470,\n24:   \"candidate_passed\": 470,\n25:   \"naming_diff\": [],\n26:   \"independent_final_head_recheck\": \"PASS\",\n27:   \"test_postgres\": \"STOPPED\",\n28:   \"merged\": false,\n29:   \"deployed\": false,\n30:   \"production_writes\": false,\n31:   \"verified_at_utc\": \"2026-11-01T03:42:23.445349+00:00\"\n32: }"
+        }
+      ]
+    }
+  ]
+}

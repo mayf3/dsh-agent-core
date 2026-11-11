@@ -1,0 +1,137 @@
+{
+  "kind": "FIXED_GIT_TRANSPORT_AMENDMENT_MATERIAL_RECEIPT",
+  "version": "v1",
+  "disposition": "PASS_PROPOSAL_MATERIAL_ONLY",
+  "blockingFindings": [],
+  "reader": {
+    "agent": "/root/sol_e40_independent_reader",
+    "role": "Original same-chain nonauthor reader",
+    "requestedModel": "gpt-6.1-sol",
+    "requestedReasoning": "ultra",
+    "nativeObservedModel": "UNKNOWN",
+    "attribution": "Personally read the four fixed new material/observation files and the observation's existing owned driver/PROCESS/stdout/stderr. Exact content pins verified through direct local-file MCP reads and data-only SHA256 calculation; no shell/CLI, fixture, API or source-export execution by this reader."
+  },
+  "inputPins": {
+    "index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/INDEX.v1.json",
+      "bytes": 1523,
+      "sha256": "085693ccafd98bc145145f9045a3b98f7e7eef07ddb854d0783176081382078d"
+    },
+    "unit": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/PROPOSED-FIXED-BOUNDED-PUBLIC-GIT-TRANSPORT-AMENDMENT.v1.md",
+      "bytes": 7857,
+      "sha256": "9f162062fd8bef1e840609b42dabbbb6c715183a828c22482395f563bcbc513f"
+    },
+    "closure": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/SOURCE-CLOSURE.v1.json",
+      "bytes": 2473,
+      "sha256": "16aa3514573eb0edd2bc027f42b6d62b56256f3e3ba5f9a0f931eb3be840d0c9"
+    },
+    "observation": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/ACTUAL-CLI-REDIRECT-OBSERVATION.v1.json",
+      "bytes": 3229,
+      "sha256": "641b55272985fba99a6753c0eb6059ed88eb550972734a200c3d99a219287ac4"
+    },
+    "savedOwnedEvidence": {
+      "driver": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/tests/cli_redirect_control_probe.py",
+        "bytes": 2303,
+        "sha256": "a1a8f5a3ac17c0d89dff2c3e93c268d826dfb70a1745d8c3299dfb53d4a33135",
+        "verification": "Complete direct text plus exact final LF/empty matched pinned bytes/SHA."
+      },
+      "process": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/synthetic-cli-transport-v1/PROCESS.json",
+        "bytes": 978,
+        "sha256": "e56d0053b01e13322c94436ead85f2405ce331029ac46f3e985c1061a92f4709",
+        "verification": "Complete direct text plus exact final LF/empty matched pinned bytes/SHA."
+      },
+      "stdout": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/synthetic-cli-transport-v1/stdout.synthetic",
+        "bytes": 141,
+        "sha256": "ec8c79b0d832ad48a6db7d349741fc878a19244e9b668ed5881574d926f8fd73",
+        "verification": "Direct text read rendered EOLs; original mixed EOLs (status LF, four remaining header separators CRLF, no final LF) reconstructed to exact141B/pinnedSHA."
+      },
+      "stderr": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/synthetic-cli-transport-v1/stderr.synthetic",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "verification": "Complete direct text plus exact final LF/empty matched pinned bytes/SHA."
+      }
+    }
+  },
+  "scope": "Only the new measured default-CLI redirect issue and proposed fixed anonymous bounded HTTPS transport/source-effect amendment. Prior S/E/P6/d955, APP mechanisms, carrier/build/source/tests remain at their original scopes.",
+  "verifiedPrimary": {
+    "childGhArgv": [
+      "/opt/homebrew/bin/gh",
+      "api",
+      "http://127.0.0.1:54548/git/first",
+      "--method",
+      "GET",
+      "--include"
+    ],
+    "childGhReturncode": 0,
+    "recordedServerGETs": [
+      "/git/first",
+      "/git/second"
+    ],
+    "noRedirectPredicatePassed": false,
+    "fact": "Saved real driver starts one new loopback-only server and invokes existing gh api once; response302 to another path on that server causes a second GET and ends in200/child rc0. Driver records every handler GET; its evidence is not a packet capture.",
+    "custody": "Driver uses new empty private GH_CONFIG_DIR and fixed synthetic token, replacement child env with loopback proxy/NO_PROXY, localhost-only server with CONNECT refusal/no forwarding, bounded child timeout, and server shutdown/close/join. No actual account/config/credential/source/API is exercised in this evidence.",
+    "returncodePrecision": "PROCESS.rc=0 is the child gh result, not the outer counterdriver verdict. The driver's final predicate intentionally exits1 for this observed two-GET list; no separate saved native outer-driver exit receipt is supplied or invented here.",
+    "limits": "One actual default CLI invocation is disproven as one actual GET/no-redirect. This does not prove real GitHub redirects, every possible gh configuration is incapable, a real source access failure/leak or the prior artifact failure cause.",
+    "helpClaim": "No exposed help switch/trusted alternate CLI proof is an author-held capability limit in the observation, not a new reader CLI/source inspection or universal absence claim.",
+    "readerReruns": 0
+  },
+  "materialConclusions": {
+    "concreteSourceDelta": "Same <=500-line owned zeroarg helper only: authenticated gh transport replaced by fixed-host443 Python HTTPSConnection/direct GET, ordinary existing TLS trust; no auth credential/client/Grant/token lookup, proxy/env/config discovery, custom trust installation, root/product source, external broker or new endpoint.",
+    "scopeAndPrincipal": "Unit lines11-13 explicitly call this a new HTTP principal/transport-purpose/route choice beyond existing E, while OS UID502/sole writer stays. Anonymous/public availability is UNKNOWN. Less privilege, docs merge, public naming, source hashes and prior S acceptance are not treated as authority.",
+    "boundedAttemptSemantics": "Line15 requires durable count increment before each actual request; one connection/request per attempt, no redirect follow or retry/auth/host/ref/path fallback;3xx stops without second connection, named HTTP/error/connect/TLS/read failures stop whole export, sockets close, bounded body read1048577 rejects >1048576 and disallowed encoding/length. Only closed typed failure/count/phase/time is published, no raw header/credential/exception dump. These are proposed source obligations, not implementation PASS.",
+    "unchangedSubject": "Exact repository/ref72a, e1c/b85-first gates, five source blobs, bounded same-commit nonrecursive inventory,330 actual GET cap, object/body integrity, N1 complete-proof semantics, separate prospective P6 input, output ABI/path and no recursive import/body/API/runtime equivalence are retained.",
+    "existingAllowance": "Line20 asks to rebind the existing unissued one export to the anonymous route, not add an export. Source closure/current custody/preimage/budget and durable0600 EXCL intent/readback still precede issue; every issued refusal/UNKNOWN/timeout/publication failure consumes it. No second export or earlier-output salvage.",
+    "authority": "Lines11-13/22/29 expressly leave original1378 to decide its actual technical mandate and exact user identity/channel restrictions; it is not an OS/network/ACL issuer. Mayf3 or exact maintainer remains repository-publication/access role. A mandatory network/custody route is not bypassable; if prohibited, return the precise controlling restriction/issuer and only that decision boundary. No generic Owner/keeper/new auth writer is manufactured.",
+    "noRetryBoundary": "A401/403/404 or unavailable public source is terminal, not grounds to try existing authenticatedCLI/new source. Reader does not decide live access, anonymous availability or compatibility with governing restrictions.",
+    "cost": "Original independent20MiB ceiling and all source/receipt/temp/retained branch overlaps remain;1MiB JSON body/4MiB tree proof/256KiB new body bounds remain. Removing gh is no unmeasured capacity credit. No new J/free-space/APP/Lshared/P0/actual fit claim.",
+    "validationPlan": "Only after exact amendment acceptance and normal docs/PREFLIGHT may transport/proof/publisher be implemented. New owned synthetic HTTP/TLS cases cover302 one attempt/no second GET,429/5xx/disconnect/timeouts/no retry, byte/header limits and fixed host/path/no fallback, followed by original same-reader actual source closure. No real API/APP import test or old-suite rerun is requested.",
+    "decisionReadiness": "This is a specific independently decidable S-transport amendment and rebind of unissued E. SourceImplementationReady is a qualified output field; unwritten helper is not passed by a model. Original accepted S/E/P6 remains historical authority if amendment is rejected, with nonconforming consumption stopped."
+  },
+  "reusedAndUnproven": {
+    "priorMaterialReceipt": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/independent-sol-readback/FIXED-SELECTED-E1C-APP-EXPORT-MATERIAL-RECEIPT.v1.json",
+      "bytes": 11798,
+      "sha256": "d955aec1a839ac0d905089cb1065a71d944650a92d5f4a1ff4ce3d3284cb8d4b"
+    },
+    "existingAcceptedDecision": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/ORIGINAL-FIXED-SELECTED-E1C-APP-GIT-EXPORT-TECHNICAL-DECISION.v1.json",
+      "bytes": 27143,
+      "sha256": "64b13dc07372e8b00d5d596be5e51dbd14e22a9ea11e3c57907d63aee11ea26f"
+    },
+    "docsMain": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/DOCS-MAIN-TERMINAL-INDEX.v1.json",
+      "bytes": 2430,
+      "sha256": "33be1669e4bfd7b41d985c33df1e0cab00ba55d428ba933ae556de5273fb4def"
+    },
+    "preflight": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/DEVELOPMENT_PREFLIGHT.json",
+      "bytes": 3135,
+      "sha256": "9986e884a9810a561f85e3900b5545e0de5068bf30b40672852a2f1d0c91501e"
+    },
+    "attribution": "These accepted/docs/PREFLIGHT coordinates are supplied canonical context and reused, not reopened as a new authority/source audit in this block.",
+    "currentCountsAsMaterial": "E issued0/rem1; packaging3/rem0/noFourth and collector2/rem0/noThird unchanged. This review issues nothing and changes no quota.",
+    "notEstablished": [
+      "Anonymous GitHub source availability or actual legal read-purpose/principal/route compatibility",
+      "Actual transport/helper/proof/publisher correctness",
+      "Export result or complete APP API/import/P6 integration closure",
+      "Lshared/finalJ/G/remaining, runtime/F/business admission"
+    ]
+  },
+  "routing": "PROPOSED/NOT_SENT/route_count0, exclusive new14c -> original1378. Reader returns only this receipt to original author; no qualified dispatch or access approval.",
+  "readerEffects": {
+    "commandsStarted": 0,
+    "newRepositorySourceOrObjectReads": 0,
+    "networkOrAPIRequests": 0,
+    "fixtureOrBuilderReruns": 0,
+    "realIdentityConfigSecretReads": 0,
+    "productCandidateOrRuntimeWrites": 0,
+    "ownedMaterialReceiptOnly": true
+  }
+}

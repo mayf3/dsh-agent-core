@@ -1,0 +1,96 @@
+{
+  "kind": "E42_Q3_UNCHANGED_NPM_BASIS_DOCS_MATERIAL_INDEPENDENT_RECEIPT_V2_1",
+  "at_utc": "2026-10-19T13:59:10.888365+00:00",
+  "reader": "/root/sol_e40_independent_reader",
+  "author": "/root/sol_execution_continuation",
+  "requested_model": "gpt-6.1-sol/ultra",
+  "native_observed_model": "UNKNOWN",
+  "disposition": "PASS_CONTRACT_MATERIAL_ONLY",
+  "exact_inputs": {
+    "unit": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/PROPOSED-E42-FIXED-NPM-MATERIALIZATION-BASIS-CONTRACT.v2.1.md",
+      "bytes": 11550,
+      "sha256": "6af696a123c79f814444c63139da8dcbfe6cdeafdfe458a4418da5c1399b4d88"
+    },
+    "source_closure": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/SOURCE-CLOSURE-INDEX.v2.1.json",
+      "bytes": 2253,
+      "sha256": "a138714915521ee650108acacfa9be543abc10c14e9e374d61addd4e631e5f66"
+    },
+    "index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/INDEX.v2.1.json",
+      "bytes": 1324,
+      "sha256": "3adfde6b96f5daa059bc99cac90e52e889575f130d3cfd0af50be4c34955ffae"
+    }
+  },
+  "superseded_proposed_unit": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/PROPOSED-E42-FIXED-NPM-MATERIALIZATION-BASIS-CONTRACT.v2.md",
+    "bytes": 11351,
+    "sha256": "89a6e559c5444aead5967d98cae731fbed0bf8d56a2cfd514f9719ed0559c3fa"
+  },
+  "scope": "One new Q3 unchanged-command proof/basis-schema/typed-consumption material review. No source implementation, producer/getter/profile selection, old method reacceptance, new observation or runtime decision.",
+  "actual_read_and_attribution": {
+    "direct": "Read complete original89a6 unit/closure/index; verified all five canonical reference pins. Read complete1bba disposition and77d89 source-fact matrix; read selected3e6e direction fields solely to check existing sample/producer boundary. Then verified v2.1 exact pins and single-paragraph diff plus unchanged canonical refs.",
+    "source_facts_author": "/root/critical_path_sol, matrix77d89cf9816888c4c81d0a1321074a2c1e2c540526a04a25ff08cb3451917e3a",
+    "original_disposition_sha256": "1bba850e288239cb87256c8bc7a5b979f838c9664fe52473407163df54e6f64a",
+    "no_new_primary_source_read": "No dd96/npm physical source, env/npmrc/prefix/SourceRoot or current config read. Original1490B/90b native pins and conditional allowance are reused through the pinned upstream primary/source-fact pointers, not freshly remeasured here.",
+    "actual_sample_claim_limit": "Saved once-result and quota facts are attributed to3e6e original qualified direction and author; reader did not requery sample/DS or open actual runtime inputs."
+  },
+  "finding_resolved_same_round": {
+    "id": "N1_FULL_SIX_CALL_CONSERVATIVE_PATH",
+    "original_concern": "v2 line29 could read as requiring phase-stable skip proof for every skipped prefix even when full-six possible-call model and full-six charges were retained.",
+    "resolution": "v2.1 changes only that paragraph: all six possible calls may be proven compatible and charged in full without extra skip evidence. Skip proof is required only when not-called status omits that prefix proof or reduces charging. This preserves1bba original positive conservative path without removing any actual condition.",
+    "old_unit_preserved": true,
+    "status": "CLOSED_DOCS_ONLY"
+  },
+  "readback": [
+    {
+      "lines": "7-19",
+      "conclusion": "Fixed e42 operation/manifest/worker/SC and unchanged command/artifact/native model remain exact. Explicit npm flags constrain only proven named effects; PATH-only wrapper is not full npm environment sanitization, and another Python caller is not npm. Original6*(2P+2T)=2579447808B remains conditional normal/defined-failure accounting, not quota/APFS or arbitrary-host-failure guarantee."
+    },
+    {
+      "lines": "23-31",
+      "conclusion": "Proposed <=16KiB canonical proof object binds subject/native/caller/artifact/phase with finite nonsecret primary implication records. Closed classifications and exact nonnegative integer quantities reject bool/float/unknown-as-zero. NO_ADDITIONAL requires all materialization-relevant original conditions or proven irrelevance; EXACT_EXTRA requires exhaustive finite membership/max concurrent lifetime and resolved overlap. Ambiguous graph/config/bytes remain UNPROVEN, not a guessed option list or broadened allowance."
+    },
+    {
+      "lines": "29,33",
+      "conclusion": "Full six-call conservative route remains available when its own conditions are proved; phase-stable skip proof is needed only for claimed skip credit/exemption. UNPROVEN cannot be a genuine remaining value or capacity PASS, and this proof format is not a universal new gate on independently justified original lawful paths."
+    },
+    {
+      "lines": "37-41",
+      "conclusion": "A producer current public identity/count/digest fields do not establish package-graph, lock/workspace, future npm resolution or effective-config compatibility. Once H-selector failure does not become a tested npm-condition refusal or salvaged Q3 result. Current basis remains UNPROVEN/null with unresolved extras; no actual deviation, absent authority, unsafe host or permanent refusal is inferred."
+    },
+    {
+      "lines": "39,47,51-53",
+      "conclusion": "No installed safe getter is invented, npmInstallExact stays a write producer, source matrix is not live facts, and naming proof fields grants no read. A future proven materialization-changing gap must identify exact finite member/field/receiver/custody/read effect through the original role; no blanket env/npmrc/profile/Owner search. Source delta and runtime-producer list are empty; no implementation/read/sampling/production permission is requested."
+    },
+    {
+      "lines": "45-47",
+      "conclusion": "134217728B normal cache-index/log/helper component remains a conditional part of original typed1GiB aux, not a sink for arbitrary trees/logging/COW/growth. Defined-failure/retained overlap is charged; uncertainty retains original request, no replay. Any future helper/evidence/temp/tool change must pay actual applicable J/aux and preserve immutable candidate rules."
+    }
+  ],
+  "blocking_findings_remaining": [],
+  "current_typed_state": {
+    "classification": "UNPROVEN",
+    "originalAllowanceConditionMatch": null,
+    "extraTerms": "UNRESOLVED_NOT_ZERO",
+    "numeric_remaining_or_capacity_admission": false
+  },
+  "transport_in_material": {
+    "state": "NOT_SENT",
+    "route_count": 0,
+    "exclusive_sender": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "original_qualified_recipient": "01a1378d-e052-7021-9992-f0760eb9f9e7"
+  },
+  "reader_effects": {
+    "source_or_product_changes": 0,
+    "new_tests_or_fixtures": 0,
+    "npm_config_or_env_commands": 0,
+    "protected_or_sourceRoot_prefix_or_native_reads": 0,
+    "sampling_or_production_calls": 0,
+    "external_route_or_send": 0,
+    "owned_effect": "This single material receipt only."
+  },
+  "limits": "Only the original qualified actor may decide acceptance of this exact finite proof/consumption contract. Material PASS is not that acceptance, a valid current basis record, implementation readiness, original allowance inheritance, affordableG, capacity admission or a new caller/projection effect.",
+  "next": "Original author may package this unique v2.1 proposed unit for the existing exclusive qualified route; no repeated source audit, additional reviewer/Owner gate or prerequisite on unrelated A work is introduced."
+}

@@ -1,0 +1,15 @@
+{
+  "command": [
+    "du",
+    "-x",
+    "-k",
+    "-d",
+    "2",
+    "/Users/yanfenma/workspace/project/.zcode-worktrees"
+  ],
+  "started_at": "2026-11-07T15:46:06.335810+00:00",
+  "ended_at": "2026-11-07T15:46:06.407506+00:00",
+  "rc": 0,
+  "stdout": "44\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/evidence\n8\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/profile-integration\n12\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/bundle-integration\n80940\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/node_modules\n252\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/.agents\n7548\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/docs\n8\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/profile-production\n8\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/profile-demo\n8\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/profile-integration-agent\n8\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/bundle-agent-switch\n44\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/examples\n1456\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/scripts\n50036\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/packages\n8\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/bundle-memory\n8\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/bundle-broker\n8\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/profile-memory\n788\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/deployment-artifacts\n8\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next/bundle-demo\n141264\t/Users/yanfenma/workspace/project/.zcode-worktrees/dsh-agent-core-autonomous-next\n141264\t/Users/yanfenma/workspace/project/.zcode-worktrees\n",
+  "stderr": ""
+}

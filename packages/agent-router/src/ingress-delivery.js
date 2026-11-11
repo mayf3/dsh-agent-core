@@ -13,10 +13,11 @@
  */
 import { createHash } from 'node:crypto'
 import { ingressBindingNamespace, feishuReplyOwed } from './channel-conversation.js'
-import { classifyFailureStage, isRecoveryFenceResult } from './process/ingress-failure.js'
-import { fencedRejection } from './process/state-machine.js'
+import { classifyFailureStage, isRecoveryFenceResult, isOutcomeUnknown, notifyOutcomeUnknown } from './process/ingress-failure.js'
+import { createRecoveryAdmission } from './reconciliation/admission.js'
 import { outerFailureProjection } from './reconciliation/query.js'
 import { authenticatedFeishuFields, ingressTurnOpts, authenticatedCorrelation } from './ingress-authenticated.js'
+import { createLateReplyDelivery } from './conversation/late-reply.js'
 /**
  * Create the ingress/delivery surface bound to one router mount.
  * @param {object} deps
@@ -37,9 +38,11 @@ export function createIngressDelivery({
   log, feishu, workspaceBootstrap, store, reconciliationStore,
   routeChain, resolveAgentRef, resolveAgentById, resolveChannelConversation, resolveEffectiveWorkspace,
   registerAuthenticatedIngress,
+  resolveCallerWaitMs,
 }) {
-  /** Delivery V0 acceptance log (evidence surface; in-memory only). */
   const deliveries = []
+  const lateReplies = createLateReplyDelivery({ reconciliationStore, routeChain, feishu, log })
+  const recoveryAdmission = createRecoveryAdmission(reconciliationStore, routeChain)
   /**
    * Deliver one ingress message through the channel model:
    *   ChannelConversation -> Binding -> Agent + Session -> reply.
@@ -70,9 +73,10 @@ export function createIngressDelivery({
     let channelConversation
     let binding
     let turnStarted = false
+    let lateReplyTarget = null
     try {
       const trusted = authenticatedFeishu ? authenticatedFeishuFields(ingress) : null
-      reconciliationStore.assertBusinessAdmissionReady?.()
+      recoveryAdmission.assertReady()
       ;({ channelConversation, binding } = await resolveChannelConversation({
         channel: namespace,
         externalId: ingress.conversationId,
@@ -85,12 +89,7 @@ export function createIngressDelivery({
       // New-request admission consults the abandonment-aware blocker
       // projection; the historical agent-wide fence stays queryable via
       // activeFenceForAgent and still blocks every non-abandoned unknown.
-      const restoredFence = typeof reconciliationStore.admissionBlockerForAgent === 'function'
-        ? reconciliationStore.admissionBlockerForAgent(binding.activeAgentId)
-        : reconciliationStore.activeFenceForAgent?.(binding.activeAgentId)
-      if (restoredFence !== null && restoredFence !== undefined) {
-        throw Object.assign(fencedRejection(restoredFence.handle), reconciliationStore.recoveryDiagnostic?.(restoredFence.handle) ?? {})
-      }
+      recoveryAdmission.assertUnfenced(binding.activeAgentId)
       log.log(`channelConversation ${channelConversation.id.slice(0, 24)}... -> binding -> agent ${binding.activeAgentId} + session ${binding.activeSessionId} (${evSummary})`)
       // AGENT_CORE_BINDING_WORKSPACE_V1: resolve the Binding's effective
       // workspace and hand it to the turn as the SESSION cwd (R1 create /
@@ -114,16 +113,15 @@ export function createIngressDelivery({
         registerAuthenticatedIngress(opts, authenticatedCorrelation(trusted, channelConversation.id))
       }
       turnStarted = true
+      if (isFeishuEntry) lateReplyTarget = lateReplies.capture(ingress)
       const turnResult = await routeChain.runTurnWithRouteChain(binding.activeAgentId, {
         sessionId: binding.activeSessionId,
+        deadlineMs: resolveCallerWaitMs?.(binding.activeAgentId, authenticatedFeishu ? 'feishu' : namespace),
         message: ingress.text ?? '',
         opts,
       })
-      // C-010 closed envelope. `outcome_unknown` is NOT an ordinary failure:
-      // the turn may still be running — surface a structured timeout error
-      // through the existing failure reply path (Router-owned product
-      // policy; no auto replay, no fabricated completion). Legacy
-      // process-factory fakes returning a bare {reply} keep working.
+      // C-010: UNKNOWN keeps reconciliation and surfaces through CTR-W3.
+      // Legacy process-factory fakes returning a bare {reply} keep working.
       if (turnResult?.status === 'outcome_unknown') {
         throw Object.assign(
           new Error(`turn outcome unknown (agent ${binding.activeAgentId}, deadline ${turnResult.deadlineAtWallMs ?? 'n/a'}); reconciliation handle ${turnResult.reconciliationHandle}`),
@@ -189,11 +187,16 @@ export function createIngressDelivery({
       }
       return executionResult
     } catch (error) {
+      if (isFeishuEntry && turnStarted && !error?.fencedBy && isOutcomeUnknown(error)) {
+        lateReplies.watch(error, { agentId: binding?.activeAgentId, sessionId: binding?.activeSessionId, target: lateReplyTarget })
+      }
       const failureStage = classifyFailureStage(error, turnStarted)
       log.error(`delivery to ${binding?.activeAgentId ?? 'unresolved'} failed during ${failureStage}: ${error?.code ?? 'unclassified'}`)
       if (feishu !== undefined && isFeishuEntry) {
         try {
-          await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), `[agent-core] delivery failed: ${error?.message ?? error}`)
+          if (!await notifyOutcomeUnknown({ error, feishu, ingress, target: lateReplyTarget, lateReplies })) {
+            await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), `[agent-core] delivery failed: ${error?.deliveryFailure?.userMessage ?? error?.message ?? error}`)
+          }
         } catch { /* best effort */ }
         // CTR-I2-015 observer external-delivery lifecycle point (failure
         // receipt path — CANARY-C expects exactly one failure delivery).
@@ -325,7 +328,7 @@ export function createIngressDelivery({
    * @returns {Promise<{accepted:true, sessionId:string}>}
    */
   async function deliver(req, controlOpts = undefined) {
-    reconciliationStore.assertBusinessAdmissionReady?.()
+    recoveryAdmission.assertReady()
     const requestId = req?.requestId
     const sessionMode = req?.sessionMode
     const message = req?.message
@@ -406,12 +409,7 @@ export function createIngressDelivery({
     // HR_RESET_AND_RESUME_V1: new-request admission consults the abandonment-
     // aware projection; the historical agent-wide fence stays queryable via
     // activeFenceForAgent and still blocks every non-abandoned unknown.
-    const restoredFence = typeof reconciliationStore.admissionBlockerForAgent === 'function'
-      ? reconciliationStore.admissionBlockerForAgent(agent.id)
-      : reconciliationStore.activeFenceForAgent?.(agent.id)
-    if (restoredFence !== null && restoredFence !== undefined) {
-      throw Object.assign(fencedRejection(restoredFence.handle), reconciliationStore.recoveryDiagnostic?.(restoredFence.handle) ?? {})
-    }
+    recoveryAdmission.assertUnfenced(agent.id)
     // CLAUSE-PROC-BOUNDED rule 8: reconciliation capacity is checked BEFORE
     // spawn/write — an exhausted store must never cost a spawn or a prompt
     // byte (§10.3 ROUTER_GLOBAL_RECONCILIATION_CAP: S/W = 0/0).
@@ -473,7 +471,6 @@ export function createIngressDelivery({
     }
   }
 
-  /** Test/ops: in-memory Delivery V0 acceptance log snapshot. */
   function deliveriesSnapshot() {
     return deliveries.map(d => ({ ...d }))
   }
@@ -497,5 +494,5 @@ export function createIngressDelivery({
     return result
   }
 
-  return { onIngress, onAuthenticatedFeishuIngress, deliver, deliveriesSnapshot, abandonPendingTurns }
+  return { onIngress, onAuthenticatedFeishuIngress, deliver, deliveriesSnapshot, abandonPendingTurns, dispose: lateReplies.dispose }
 }

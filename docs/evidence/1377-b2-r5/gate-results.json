@@ -1,0 +1,184 @@
+[
+  {
+    "gate": "syntax-1",
+    "command": [
+      "node",
+      "--check",
+      "packages/workflow-execution/src/ledger-records.js"
+    ],
+    "started_at_utc": "2026-11-07T03:19:29.568526+00:00",
+    "rc": 0
+  },
+  {
+    "gate": "syntax-2",
+    "command": [
+      "node",
+      "--check",
+      "packages/workflow-execution/src/recovery/automatic-ledger.js"
+    ],
+    "started_at_utc": "2026-11-07T03:19:29.617578+00:00",
+    "rc": 0
+  },
+  {
+    "gate": "syntax-3",
+    "command": [
+      "node",
+      "--check",
+      "packages/workflow-execution/src/recovery/automatic.js"
+    ],
+    "started_at_utc": "2026-11-07T03:19:29.660456+00:00",
+    "rc": 0
+  },
+  {
+    "gate": "syntax-4",
+    "command": [
+      "node",
+      "--check",
+      "packages/workflow-execution/src/recovery/operation.js"
+    ],
+    "started_at_utc": "2026-11-07T03:19:29.702967+00:00",
+    "rc": 0
+  },
+  {
+    "gate": "syntax-5",
+    "command": [
+      "node",
+      "--check",
+      "packages/workflow-execution/src/recovery/refusal.js"
+    ],
+    "started_at_utc": "2026-11-07T03:19:29.745100+00:00",
+    "rc": 0
+  },
+  {
+    "gate": "syntax-6",
+    "command": [
+      "node",
+      "--check",
+      "packages/workflow-execution/test/observation-cas/blocked-recovery-process.js"
+    ],
+    "started_at_utc": "2026-11-07T03:19:29.787148+00:00",
+    "rc": 0
+  },
+  {
+    "gate": "syntax-7",
+    "command": [
+      "node",
+      "--check",
+      "packages/workflow-execution/test/observation-cas/blocked-recovery-restart.test.js"
+    ],
+    "started_at_utc": "2026-11-07T03:19:29.828862+00:00",
+    "rc": 0
+  },
+  {
+    "gate": "syntax-8",
+    "command": [
+      "node",
+      "--check",
+      "packages/workflow-execution/test/observation-cas/blocked-refusal.test.js"
+    ],
+    "started_at_utc": "2026-11-07T03:19:29.871568+00:00",
+    "rc": 0
+  },
+  {
+    "gate": "syntax-9",
+    "command": [
+      "node",
+      "--check",
+      "packages/workflow-execution/test/observation-cas/ledger-identity.test.js"
+    ],
+    "started_at_utc": "2026-11-07T03:19:29.913896+00:00",
+    "rc": 0
+  },
+  {
+    "gate": "diff-check",
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "started_at_utc": "2026-11-07T03:19:29.957337+00:00",
+    "rc": 0
+  },
+  {
+    "gate": "blocked-targeted",
+    "command": [
+      "node",
+      "--test",
+      "packages/workflow-execution/test/observation-cas/blocked-recovery.test.js",
+      "packages/workflow-execution/test/observation-cas/blocked-recovery-restart.test.js",
+      "packages/workflow-execution/test/observation-cas/blocked-refusal.test.js"
+    ],
+    "started_at_utc": "2026-11-07T03:19:29.985992+00:00",
+    "rc": 0
+  },
+  {
+    "gate": "observation-cas-full",
+    "command": [
+      "node",
+      "--test",
+      "packages/workflow-execution/test/observation-cas/blocked-recovery-restart.test.js",
+      "packages/workflow-execution/test/observation-cas/blocked-recovery.test.js",
+      "packages/workflow-execution/test/observation-cas/blocked-refusal.test.js",
+      "packages/workflow-execution/test/observation-cas/engine-races.test.js",
+      "packages/workflow-execution/test/observation-cas/ledger-identity.test.js",
+      "packages/workflow-execution/test/observation-cas/planned-reconciliation.test.js",
+      "packages/workflow-execution/test/observation-cas/process-race.test.js",
+      "packages/workflow-execution/test/observation-cas/readback-restart.test.js",
+      "packages/workflow-execution/test/observation-cas/readback.test.js",
+      "packages/workflow-execution/test/observation-cas/stale-guards.test.js",
+      "packages/workflow-execution/test/observation-cas/stale-reentry.test.js"
+    ],
+    "started_at_utc": "2026-11-07T03:19:55.725676+00:00",
+    "rc": 0
+  },
+  {
+    "gate": "broker-owner-obligation-31",
+    "command": [
+      "node",
+      "--test",
+      "packages/broker/test/capabilities/workflow-execution/owner-obligation-attempt.test.js",
+      "packages/broker/test/capabilities/workflow-execution/owner-obligation.test.js"
+    ],
+    "started_at_utc": "2026-11-07T03:20:12.095835+00:00",
+    "rc": 0
+  },
+  {
+    "gate": "affected-regressions-135",
+    "command": [
+      "node",
+      "--test",
+      "packages/workflow-execution/test/recovery.test.js",
+      "packages/workflow-execution/test/engine.test.js",
+      "packages/workflow-execution/test/owner-assistance-resume.test.js",
+      "packages/workflow-execution/test/owner-assistance-resume-engine.test.js",
+      "packages/workflow-execution/test/execution-control.test.js",
+      "packages/workflow-execution/test/runtime-wiring.test.js"
+    ],
+    "started_at_utc": "2026-11-07T03:20:14.759566+00:00",
+    "rc": 0
+  },
+  {
+    "gate": "ledger-terminal-regression",
+    "command": [
+      "node",
+      "--test",
+      "packages/workflow-execution/test/ledger.test.js"
+    ],
+    "started_at_utc": "2026-11-07T03:20:28.218213+00:00",
+    "rc": 0
+  },
+  {
+    "gate": "structure",
+    "command": [
+      "node",
+      "scripts/verify-code-structure.mjs",
+      "--base",
+      "3c1bcf98bc40a2c34cca24f241c87d1b12cea216",
+      "--head",
+      "ba16e0529a7ac68683d076416106140fdd018009",
+      "--json"
+    ],
+    "started_at_utc": "2026-11-07T03:20:39.074356+00:00",
+    "rc": 0
+  }
+]

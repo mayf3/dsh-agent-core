@@ -4,3 +4,4 @@
  * mutations share one domain module and one store mutation authority.
  */
 export { reconcileOccurrence } from './control.js'
+export { autoReconcileOccurrences } from './control.js'

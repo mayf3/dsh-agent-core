@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V1
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -29,17 +29,8 @@ revision_note: >-
   architecture and frozen implementation candidate are carried unchanged
   except where this Spec says otherwise.
 supersedes: []
-superseded_by: AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2 (accepted 2026-09-10, PR
-  mayf3/dsh-agent-core#236 at 11023c6fd112f48e2d1de84f6a27048f8049df6c;
-  whole-authority successor — this Spec remains accepted history and proof
-  provenance but is no longer current authority; mechanical pointer only,
-  no semantic change to the accepted bytes)
-amends:
-  - AGENT_CORE_AGENT_SESSION_MESSAGING_V1 (accepted R4 trusted message-origin
-    sidecar: extends the exact source-kind enumeration from ONE kind
-    (`inter_agent`) to TWO (`+ workflow_execution`); no other R4 semantic —
-    exact-allowlist, freeze, fail-loud rejection, control-plane-only — is
-    changed. See CTR-WAE-004.)
+superseded_by: AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2
+amends: [AGENT_CORE_AGENT_SESSION_MESSAGING_V1]
 external:
   - svc-workflow SVC_WORKFLOW_DISPATCH_INTENT_KEYSET_CONTINUATION_V1 (candidate,
     same closure round; amends CTR-VAI-009 of accepted
@@ -60,6 +51,20 @@ frozen_candidate:
   base: 4dac90d
   state: FROZEN 2026-09-09 (no further commits; minimal replay onto the
     accepted-Spec base is the only permitted future use)
+
+legacy_lifecycle_narrative: |-
+  superseded_by: AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2 (accepted 2026-09-10, PR
+    mayf3/dsh-agent-core#236 at 11023c6fd112f48e2d1de84f6a27048f8049df6c;
+    whole-authority successor — this Spec remains accepted history and proof
+    provenance but is no longer current authority; mechanical pointer only,
+    no semantic change to the accepted bytes)
+  amends:
+    - AGENT_CORE_AGENT_SESSION_MESSAGING_V1 (accepted R4 trusted message-origin
+      sidecar: extends the exact source-kind enumeration from ONE kind
+      (`inter_agent`) to TWO (`+ workflow_execution`); no other R4 semantic —
+      exact-allowlist, freeze, fail-loud rejection, control-plane-only — is
+      changed. See CTR-WAE-004.)
+
 ---
 
 # AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V1

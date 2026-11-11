@@ -1,0 +1,622 @@
+[
+  {
+    "candidate": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-current-input-implementation/target",
+    "token": "svc-current-input-implementation",
+    "started_at": "2026-11-07T15:49:25.997911+00:00",
+    "ended_at": "2026-11-07T15:49:26.649397+00:00",
+    "command": [
+      "rg",
+      "--json",
+      "-F",
+      "-g",
+      "*.md",
+      "-g",
+      "!node_modules/**",
+      "-g",
+      "!target/**",
+      "-g",
+      "!sessions/**",
+      "-g",
+      "!pgdata/**",
+      "-g",
+      "!pg55432-cluster/**",
+      "-g",
+      "!credentials/**",
+      "svc-current-input-implementation",
+      "docs",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027",
+      "/Users/yanfenma/workspace/artifacts/goal-svc-workflow-zero-ops-001",
+      "/Users/yanfenma/workspace/project/svc-workflow/docs"
+    ],
+    "rc": 0,
+    "stderr": "",
+    "matches": [
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/g6-runtime-candidates-20261028-evidence/svc-f2ebf07e-clean-source/docs/reports/CURRENT_TASK_INPUT_IMPLEMENTATION_20261027.md",
+        "line": 26,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "b28e6ed5887e82ab1e7e28176dfbc989eba9f51111f79a99f77a1cf7c36fb53f",
+        "file_mtime_utc": "2026-10-28T07:56:50.806977+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-current-input-implementation/progress.md",
+        "line": 1,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "80af3e96e5318e7b72f72c50439e093b7633c4ebf5fa7db0fbb93d9610b10911",
+        "file_mtime_utc": "2026-10-27T01:45:06.970839+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a3/workspaces/agt_unattended-canary-trial-20261027-a3-hr/memory/2026-10-27.md",
+        "line": 1,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "5d90336be85b20b762e0a5a4e0b3db0ee5cc62e600dc6d37cf2317df351ed401",
+        "file_mtime_utc": "2026-10-27T05:01:02.832406+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a11/local-merge/svc-workflow/docs/reports/CURRENT_TASK_INPUT_IMPLEMENTATION_20261027.md",
+        "line": 26,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "b28e6ed5887e82ab1e7e28176dfbc989eba9f51111f79a99f77a1cf7c36fb53f",
+        "file_mtime_utc": "2026-10-27T14:24:33.515375+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a5/workspaces/agt_unattended-canary-trial-20261027-a5-hr/memory/2026-10-27.md",
+        "line": 1,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "9110d3525d8bff762cffa668043e00327343827d8c54c02a602b8dab3790392f",
+        "file_mtime_utc": "2026-10-27T05:39:36.393836+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a2/workspaces/agt_unattended-canary-trial-20261027-a2-hr/memory/2026-10-27.md",
+        "line": 1,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "efb9a9420e1e9dfe029da8da52965e0e3157d85af0086fa4502bbb98ad66d4a6",
+        "file_mtime_utc": "2026-10-27T02:22:21.471009+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a10/local-merge/svc-workflow/docs/reports/CURRENT_TASK_INPUT_IMPLEMENTATION_20261027.md",
+        "line": 26,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "b28e6ed5887e82ab1e7e28176dfbc989eba9f51111f79a99f77a1cf7c36fb53f",
+        "file_mtime_utc": "2026-10-27T13:20:17.600153+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a9/local-merge/svc-workflow/docs/reports/CURRENT_TASK_INPUT_IMPLEMENTATION_20261027.md",
+        "line": 26,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "b28e6ed5887e82ab1e7e28176dfbc989eba9f51111f79a99f77a1cf7c36fb53f",
+        "file_mtime_utc": "2026-10-27T11:38:19.516570+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a8/workspaces/agt_unattended-canary-trial-20261027-a8-hr/memory/2026-10-27.md",
+        "line": 1,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "60daaa6d95674d41be97f2b64df35a255306c122b7dff4a6430239122d0b692c",
+        "file_mtime_utc": "2026-10-27T10:05:58.763741+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a9/workspaces/agt_unattended-canary-trial-20261027-a9-hr/memory/2026-10-27.md",
+        "line": 1,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "d7866a323deea51bbe565299264ec0cc0b87f108f84643bfc5f279a5331ca142",
+        "file_mtime_utc": "2026-10-27T11:45:35.894829+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a70-paired-candidate-20261029/svc-source-worktree/docs/reports/CURRENT_TASK_INPUT_IMPLEMENTATION_20261027.md",
+        "line": 26,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "b28e6ed5887e82ab1e7e28176dfbc989eba9f51111f79a99f77a1cf7c36fb53f",
+        "file_mtime_utc": "2026-10-29T01:19:30.952665+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a6/workspaces/agt_unattended-canary-trial-20261027-a6-hr/memory/2026-10-27.md",
+        "line": 1,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "0e35090f03de3021d90c91278410de1fe794aed38ceda344412efb8dfe71423c",
+        "file_mtime_utc": "2026-10-27T06:10:42.739993+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a6/workspaces/agt_unattended-canary-trial-20261027-a6-security/memory/2026-10-27.md",
+        "line": 12,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "64d1b8425b3ef35c1273d17ba232b27384f8a57b5dd8f95f3ba17f044069bfc5",
+        "file_mtime_utc": "2026-10-27T06:11:31.918458+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a6/workspaces/agt_unattended-canary-trial-20261027-a6-cto/memory/2026-10-27.md",
+        "line": 13,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "21ea8113e6d2342fae94f556b6e91b69a18dabfa472fab36e1e3b26638f88130",
+        "file_mtime_utc": "2026-10-27T06:05:09.984326+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/owner-obligation-implementation-20261029/independent-repair-review/source/docs/reports/CURRENT_TASK_INPUT_IMPLEMENTATION_20261027.md",
+        "line": 26,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "b28e6ed5887e82ab1e7e28176dfbc989eba9f51111f79a99f77a1cf7c36fb53f",
+        "file_mtime_utc": "2026-10-29T11:00:23+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/owner-obligation-implementation-20261029/independent-v2-review/source-9d545570/docs/reports/CURRENT_TASK_INPUT_IMPLEMENTATION_20261027.md",
+        "line": 26,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "b28e6ed5887e82ab1e7e28176dfbc989eba9f51111f79a99f77a1cf7c36fb53f",
+        "file_mtime_utc": "2026-10-29T10:49:08+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/owner-obligation-implementation-20261029/independent-v1-review/source/docs/reports/CURRENT_TASK_INPUT_IMPLEMENTATION_20261027.md",
+        "line": 26,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "b28e6ed5887e82ab1e7e28176dfbc989eba9f51111f79a99f77a1cf7c36fb53f",
+        "file_mtime_utc": "2026-10-29T10:33:09+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/build-worktree/docs/reports/CURRENT_TASK_INPUT_IMPLEMENTATION_20261027.md",
+        "line": 26,
+        "matched_token": "svc-current-input-implementation",
+        "matched_line_sha256": "b28e6ed5887e82ab1e7e28176dfbc989eba9f51111f79a99f77a1cf7c36fb53f",
+        "file_mtime_utc": "2026-10-29T12:51:17.220879+00:00"
+      }
+    ]
+  },
+  {
+    "candidate": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/target-clean-f4a1",
+    "token": "svc-combined-integration-20261027",
+    "started_at": "2026-11-07T15:49:26.649408+00:00",
+    "ended_at": "2026-11-07T15:49:27.016418+00:00",
+    "command": [
+      "rg",
+      "--json",
+      "-F",
+      "-g",
+      "*.md",
+      "-g",
+      "!node_modules/**",
+      "-g",
+      "!target/**",
+      "-g",
+      "!sessions/**",
+      "-g",
+      "!pgdata/**",
+      "-g",
+      "!pg55432-cluster/**",
+      "-g",
+      "!credentials/**",
+      "svc-combined-integration-20261027",
+      "docs",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027",
+      "/Users/yanfenma/workspace/artifacts/goal-svc-workflow-zero-ops-001",
+      "/Users/yanfenma/workspace/project/svc-workflow/docs"
+    ],
+    "rc": 0,
+    "stderr": "",
+    "matches": [
+      {
+        "path": "docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md",
+        "line": 255,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "15000719138931562faa31a440fc5f992e6c86e4a2fdf5d8c40b9e849d80a09c",
+        "file_mtime_utc": "2026-11-07T15:42:31.354376+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a69-current-governance-review-20261029/core-runtime-worktree-g6-80beed/docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md",
+        "line": 255,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "15000719138931562faa31a440fc5f992e6c86e4a2fdf5d8c40b9e849d80a09c",
+        "file_mtime_utc": "2026-10-28T18:15:41.878712+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a67-gcr-typed-runtime-20261029/core-runtime-candidate-g6-e2b662/docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md",
+        "line": 255,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "15000719138931562faa31a440fc5f992e6c86e4a2fdf5d8c40b9e849d80a09c",
+        "file_mtime_utc": "2026-10-28T16:32:00.603014+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/core-runtime-candidate/docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md",
+        "line": 255,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "15000719138931562faa31a440fc5f992e6c86e4a2fdf5d8c40b9e849d80a09c",
+        "file_mtime_utc": "2026-10-28T03:11:25.183537+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a10/workspaces/agt_unattended-canary-trial-20261027-a9-hr/memory/2026-10-27.md",
+        "line": 1,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "5e41fdc923686863bba6988f4354426f01ea15c0552338e62f19e670ae33fcc1",
+        "file_mtime_utc": "2026-10-27T13:30:23.493453+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/e2e-runs/trial-20261027-a11/workspaces/agt_unattended-canary-trial-20261027-a9-hr/memory/2026-10-27.md",
+        "line": 1,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "cc8c90a4df720b7cc242e2acb400915bfabef3134cb881b9a36441402a51b563",
+        "file_mtime_utc": "2026-10-27T14:31:29.224570+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/g6-runtime-candidates-20261028/core-9b57f2ee/core-runtime-candidate/docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md",
+        "line": 255,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "15000719138931562faa31a440fc5f992e6c86e4a2fdf5d8c40b9e849d80a09c",
+        "file_mtime_utc": "2026-10-28T07:22:54.470618+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/core-runtime-candidate-policy-ack/docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md",
+        "line": 255,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "15000719138931562faa31a440fc5f992e6c86e4a2fdf5d8c40b9e849d80a09c",
+        "file_mtime_utc": "2026-10-28T03:50:08.181110+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/FINAL_REPORT.md",
+        "line": 24,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "fefc6b4f52c2a5ed8de2d10083f20b93947741e7e78c174ace4587b684dbdcb6",
+        "file_mtime_utc": "2026-10-27T11:40:56.843938+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a70-prerequisite-candidate-20261029-833d9e/core-runtime-worktree/docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md",
+        "line": 255,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "15000719138931562faa31a440fc5f992e6c86e4a2fdf5d8c40b9e849d80a09c",
+        "file_mtime_utc": "2026-10-29T00:51:30.460008+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a69-current-governance-review-20261029-4fe3d0/core-runtime-worktree-g6-4fe3d0/docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md",
+        "line": 255,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "15000719138931562faa31a440fc5f992e6c86e4a2fdf5d8c40b9e849d80a09c",
+        "file_mtime_utc": "2026-10-28T18:20:05.547699+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/core-runtime-candidate-g6-9b57/docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md",
+        "line": 255,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "15000719138931562faa31a440fc5f992e6c86e4a2fdf5d8c40b9e849d80a09c",
+        "file_mtime_utc": "2026-10-28T07:28:46.579534+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-owner-obligation-candidate-20261029/core-runtime-worktree/docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md",
+        "line": 255,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "15000719138931562faa31a440fc5f992e6c86e4a2fdf5d8c40b9e849d80a09c",
+        "file_mtime_utc": "2026-10-29T10:59:59.753421+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a75-admission-observation-candidate-20261029/core-runtime-worktree/docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md",
+        "line": 255,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "15000719138931562faa31a440fc5f992e6c86e4a2fdf5d8c40b9e849d80a09c",
+        "file_mtime_utc": "2026-10-29T04:32:24.117638+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a68-gcr-typed-runtime-20261029/core-runtime-worktree-g6-be067/docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md",
+        "line": 255,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "15000719138931562faa31a440fc5f992e6c86e4a2fdf5d8c40b9e849d80a09c",
+        "file_mtime_utc": "2026-10-28T17:14:58.878664+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a68-gcr-typed-runtime-20261029/core-runtime-candidate-g6-be067/docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md",
+        "line": 255,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "15000719138931562faa31a440fc5f992e6c86e4a2fdf5d8c40b9e849d80a09c",
+        "file_mtime_utc": "2026-10-28T17:09:26+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/core-runtime-candidate-policy-ack/docs/reports/WORKFLOW_UNATTENDED_MECHANISMS_20261027.md",
+        "line": 255,
+        "matched_token": "svc-combined-integration-20261027",
+        "matched_line_sha256": "15000719138931562faa31a440fc5f992e6c86e4a2fdf5d8c40b9e849d80a09c",
+        "file_mtime_utc": "2026-10-28T04:51:45.877594+00:00"
+      }
+    ]
+  },
+  {
+    "candidate": "/Users/yanfenma/workspace/github/deepseek-harness.hold-b7-20261001/node_modules",
+    "token": "deepseek-harness.hold-b7-20261001",
+    "started_at": "2026-11-07T15:49:27.016422+00:00",
+    "ended_at": "2026-11-07T15:49:27.391612+00:00",
+    "command": [
+      "rg",
+      "--json",
+      "-F",
+      "-g",
+      "*.md",
+      "-g",
+      "!node_modules/**",
+      "-g",
+      "!target/**",
+      "-g",
+      "!sessions/**",
+      "-g",
+      "!pgdata/**",
+      "-g",
+      "!pg55432-cluster/**",
+      "-g",
+      "!credentials/**",
+      "deepseek-harness.hold-b7-20261001",
+      "docs",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027",
+      "/Users/yanfenma/workspace/artifacts/goal-svc-workflow-zero-ops-001",
+      "/Users/yanfenma/workspace/project/svc-workflow/docs"
+    ],
+    "rc": 1,
+    "stderr": "",
+    "matches": []
+  },
+  {
+    "candidate": "/Users/yanfenma/workspace/project/svc-workflow/target",
+    "token": "/workspace/project/svc-workflow/target",
+    "started_at": "2026-11-07T15:49:27.391633+00:00",
+    "ended_at": "2026-11-07T15:49:27.872360+00:00",
+    "command": [
+      "rg",
+      "--json",
+      "-F",
+      "-g",
+      "*.md",
+      "-g",
+      "!node_modules/**",
+      "-g",
+      "!target/**",
+      "-g",
+      "!sessions/**",
+      "-g",
+      "!pgdata/**",
+      "-g",
+      "!pg55432-cluster/**",
+      "-g",
+      "!credentials/**",
+      "/workspace/project/svc-workflow/target",
+      "docs",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027",
+      "/Users/yanfenma/workspace/artifacts/goal-svc-workflow-zero-ops-001",
+      "/Users/yanfenma/workspace/project/svc-workflow/docs"
+    ],
+    "rc": 1,
+    "stderr": "",
+    "matches": []
+  },
+  {
+    "candidate": "/Users/yanfenma/workspace/worktrees/52bd-svc-workflow-20261101/target",
+    "token": "52bd-svc-workflow-20261101",
+    "started_at": "2026-11-07T15:49:27.872402+00:00",
+    "ended_at": "2026-11-07T15:49:28.251215+00:00",
+    "command": [
+      "rg",
+      "--json",
+      "-F",
+      "-g",
+      "*.md",
+      "-g",
+      "!node_modules/**",
+      "-g",
+      "!target/**",
+      "-g",
+      "!sessions/**",
+      "-g",
+      "!pgdata/**",
+      "-g",
+      "!pg55432-cluster/**",
+      "-g",
+      "!credentials/**",
+      "52bd-svc-workflow-20261101",
+      "docs",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027",
+      "/Users/yanfenma/workspace/artifacts/goal-svc-workflow-zero-ops-001",
+      "/Users/yanfenma/workspace/project/svc-workflow/docs"
+    ],
+    "rc": 1,
+    "stderr": "",
+    "matches": []
+  },
+  {
+    "candidate": "/Users/yanfenma/workspace/worktrees/m2-dispatch-intent-20261101/target",
+    "token": "m2-dispatch-intent-20261101",
+    "started_at": "2026-11-07T15:49:28.251239+00:00",
+    "ended_at": "2026-11-07T15:49:28.625521+00:00",
+    "command": [
+      "rg",
+      "--json",
+      "-F",
+      "-g",
+      "*.md",
+      "-g",
+      "!node_modules/**",
+      "-g",
+      "!target/**",
+      "-g",
+      "!sessions/**",
+      "-g",
+      "!pgdata/**",
+      "-g",
+      "!pg55432-cluster/**",
+      "-g",
+      "!credentials/**",
+      "m2-dispatch-intent-20261101",
+      "docs",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027",
+      "/Users/yanfenma/workspace/artifacts/goal-svc-workflow-zero-ops-001",
+      "/Users/yanfenma/workspace/project/svc-workflow/docs"
+    ],
+    "rc": 1,
+    "stderr": "",
+    "matches": []
+  },
+  {
+    "candidate": "/Users/yanfenma/workspace/worktrees/codex-wec-kick-token-renewal-20261028/target",
+    "token": "codex-wec-kick-token-renewal-20261028",
+    "started_at": "2026-11-07T15:49:28.625565+00:00",
+    "ended_at": "2026-11-07T15:49:29.004307+00:00",
+    "command": [
+      "rg",
+      "--json",
+      "-F",
+      "-g",
+      "*.md",
+      "-g",
+      "!node_modules/**",
+      "-g",
+      "!target/**",
+      "-g",
+      "!sessions/**",
+      "-g",
+      "!pgdata/**",
+      "-g",
+      "!pg55432-cluster/**",
+      "-g",
+      "!credentials/**",
+      "codex-wec-kick-token-renewal-20261028",
+      "docs",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027",
+      "/Users/yanfenma/workspace/artifacts/goal-svc-workflow-zero-ops-001",
+      "/Users/yanfenma/workspace/project/svc-workflow/docs"
+    ],
+    "rc": 0,
+    "stderr": "",
+    "matches": [
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/g6-runtime-candidates-20261028-evidence/svc-f2ebf07e-clean-source/docs/investigations/2026-10-28-owner-wake-token-lifecycle.md",
+        "line": 10,
+        "matched_token": "codex-wec-kick-token-renewal-20261028",
+        "matched_line_sha256": "2e2cbd6404071ac3919220f7888cbdce29e75be1135900966884dc58a8973017",
+        "file_mtime_utc": "2026-10-28T07:56:50.799262+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/owner-obligation-implementation-20261029/independent-repair-review/source/docs/investigations/2026-10-28-owner-wake-token-lifecycle.md",
+        "line": 10,
+        "matched_token": "codex-wec-kick-token-renewal-20261028",
+        "matched_line_sha256": "2e2cbd6404071ac3919220f7888cbdce29e75be1135900966884dc58a8973017",
+        "file_mtime_utc": "2026-10-29T11:00:23+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a70-paired-candidate-20261029/svc-source-worktree/docs/investigations/2026-10-28-owner-wake-token-lifecycle.md",
+        "line": 10,
+        "matched_token": "codex-wec-kick-token-renewal-20261028",
+        "matched_line_sha256": "2e2cbd6404071ac3919220f7888cbdce29e75be1135900966884dc58a8973017",
+        "file_mtime_utc": "2026-10-29T01:19:30.942023+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/owner-obligation-implementation-20261029/independent-v2-review/source-9d545570/docs/investigations/2026-10-28-owner-wake-token-lifecycle.md",
+        "line": 10,
+        "matched_token": "codex-wec-kick-token-renewal-20261028",
+        "matched_line_sha256": "2e2cbd6404071ac3919220f7888cbdce29e75be1135900966884dc58a8973017",
+        "file_mtime_utc": "2026-10-29T10:49:08+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/owner-obligation-implementation-20261029/independent-v1-review/source/docs/investigations/2026-10-28-owner-wake-token-lifecycle.md",
+        "line": 10,
+        "matched_token": "codex-wec-kick-token-renewal-20261028",
+        "matched_line_sha256": "2e2cbd6404071ac3919220f7888cbdce29e75be1135900966884dc58a8973017",
+        "file_mtime_utc": "2026-10-29T10:33:09+00:00"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/build-worktree/docs/investigations/2026-10-28-owner-wake-token-lifecycle.md",
+        "line": 10,
+        "matched_token": "codex-wec-kick-token-renewal-20261028",
+        "matched_line_sha256": "2e2cbd6404071ac3919220f7888cbdce29e75be1135900966884dc58a8973017",
+        "file_mtime_utc": "2026-10-29T12:51:17.202856+00:00"
+      }
+    ]
+  },
+  {
+    "candidate": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/build-worktree/target",
+    "token": "a76-pr106-owner-node-reference-candidate-20261029",
+    "started_at": "2026-11-07T15:49:29.004312+00:00",
+    "ended_at": "2026-11-07T15:49:29.384713+00:00",
+    "command": [
+      "rg",
+      "--json",
+      "-F",
+      "-g",
+      "*.md",
+      "-g",
+      "!node_modules/**",
+      "-g",
+      "!target/**",
+      "-g",
+      "!sessions/**",
+      "-g",
+      "!pgdata/**",
+      "-g",
+      "!pg55432-cluster/**",
+      "-g",
+      "!credentials/**",
+      "a76-pr106-owner-node-reference-candidate-20261029",
+      "docs",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027",
+      "/Users/yanfenma/workspace/artifacts/goal-svc-workflow-zero-ops-001",
+      "/Users/yanfenma/workspace/project/svc-workflow/docs"
+    ],
+    "rc": 1,
+    "stderr": "",
+    "matches": []
+  },
+  {
+    "candidate": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/helper-crate/target",
+    "token": "a76-pr106-owner-node-reference-candidate-20261029",
+    "started_at": "2026-11-07T15:49:29.384754+00:00",
+    "ended_at": "2026-11-07T15:49:29.755378+00:00",
+    "command": [
+      "rg",
+      "--json",
+      "-F",
+      "-g",
+      "*.md",
+      "-g",
+      "!node_modules/**",
+      "-g",
+      "!target/**",
+      "-g",
+      "!sessions/**",
+      "-g",
+      "!pgdata/**",
+      "-g",
+      "!pg55432-cluster/**",
+      "-g",
+      "!credentials/**",
+      "a76-pr106-owner-node-reference-candidate-20261029",
+      "docs",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027",
+      "/Users/yanfenma/workspace/artifacts/goal-svc-workflow-zero-ops-001",
+      "/Users/yanfenma/workspace/project/svc-workflow/docs"
+    ],
+    "rc": 1,
+    "stderr": "",
+    "matches": []
+  },
+  {
+    "candidate": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+svc-workflow/ac-1301-7cd-revise-fix/target",
+    "token": "ac-1301-7cd-revise-fix",
+    "started_at": "2026-11-07T15:49:29.755408+00:00",
+    "ended_at": "2026-11-07T15:49:30.126314+00:00",
+    "command": [
+      "rg",
+      "--json",
+      "-F",
+      "-g",
+      "*.md",
+      "-g",
+      "!node_modules/**",
+      "-g",
+      "!target/**",
+      "-g",
+      "!sessions/**",
+      "-g",
+      "!pgdata/**",
+      "-g",
+      "!pg55432-cluster/**",
+      "-g",
+      "!credentials/**",
+      "ac-1301-7cd-revise-fix",
+      "docs",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027",
+      "/Users/yanfenma/workspace/artifacts/goal-svc-workflow-zero-ops-001",
+      "/Users/yanfenma/workspace/project/svc-workflow/docs"
+    ],
+    "rc": 1,
+    "stderr": "",
+    "matches": []
+  }
+]

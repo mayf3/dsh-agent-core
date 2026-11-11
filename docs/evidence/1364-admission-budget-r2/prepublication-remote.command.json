@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "ls-remote",
+    "--heads",
+    "origin",
+    "main",
+    "fix/admission-budget-fairness"
+  ],
+  "at": "2026-11-07T09:05:05.526884+00:00",
+  "rc": 0
+}

@@ -2,7 +2,7 @@
   "name": "@agent-core/scheduler",
   "version": "0.0.0",
   "private": true,
-  "description": "Agent Core Scheduler Replacement V1 — persistent cron/at/every jobs, Control Plane execution semantics, injectable invocation + delivery seams (no Feishu SDK, no distributed stack)",
+  "description": "Agent Core Scheduler Replacement V1 \u2014 persistent cron/at/every jobs, Control Plane execution semantics, injectable invocation + delivery seams (no Feishu SDK, no distributed stack)",
   "type": "module",
   "main": "src/index.js",
   "exports": {
@@ -13,7 +13,8 @@
     "./occurrence": "./src/occurrence-model.js",
     "./reconcile": "./src/reconcile.js",
     "./self-ops": "./src/self-ops/index.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./auto-reconcile": "./src/auto-reconcile.js"
   },
   "scripts": {
     "test": "node --test test/*.test.js test/*/*.test.js"

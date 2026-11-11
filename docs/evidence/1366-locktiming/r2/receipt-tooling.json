@@ -1,0 +1,24 @@
+{
+  "record_kind": "receipt_tooling_observations",
+  "provenance": "Root transcription of actual tool outputs in this R2 turn; not a product/test gate log.",
+  "observations": [
+    {
+      "check": "ad hoc Markdown link checker",
+      "result": "assertion error",
+      "stderr_verbatim": "AssertionError: [\"'workflow-existing'\", \"'integration'\", \"'broker'\"]",
+      "cause": "The checker matched Python syntax inside a fenced code block. No actual missing Markdown links.",
+      "repair": "Only change the ad hoc checker to ignore fenced code.",
+      "recheck": "PASS: receipt links valid; four complete raw dual-writer lines embedded exactly; every raw metadata SHA valid"
+    },
+    {
+      "check": "git diff --check f1db5b4c -- BRIEF-1366-LOCKTIMING-IMPL.md packages/workflow-execution/test/engine.test.js STOPPED-1366-IMPL.md",
+      "actual_rc": 2,
+      "stdout_verbatim": "STOPPED-1366-IMPL.md:90: new blank line at EOF.",
+      "cause": "Moving the appended R2 status to the end preserved an extra blank line.",
+      "repair": "Trim end-of-file blank lines in the documentation artifact; preserve exactly one newline.",
+      "recheck_actual_rc": 0,
+      "recheck_stdout_verbatim": ""
+    }
+  ],
+  "required_test_gates": "workflow-existing333/333rc0; integration29/29rc0; broker80/80rc0; no new source/test edits after those runs."
+}

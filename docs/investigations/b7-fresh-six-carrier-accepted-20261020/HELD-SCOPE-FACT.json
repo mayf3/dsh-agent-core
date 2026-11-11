@@ -1,0 +1,32 @@
+{
+  "kind": "E42_HELD_C_FIXED_SIX_SCOPE_DISJOINTNESS_V1",
+  "method": "Parse only saved closedV2 H.observation.value.selection.selectedIDs; no new observation or full private-row copy",
+  "primary": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-source-readiness-diagnostic/business-readiness-producer-order-amendment/successor-r40-binding/successor-r41-binding-v2/actual-business-admission/capacity-facts-only/actual-observation-public-selector-v2/RESULT.json",
+    "bytes": 111092,
+    "sha256": "6d9179ad1b2c57e791498cc1d2b784621cc9391e1ad560fbfa53ba1c1291b342",
+    "span": "root_result.H.observation.value.selection.selectedIDs"
+  },
+  "selectedCount": 92,
+  "HcopyBytes": 53592064,
+  "fixedSixIncluded": {
+    "agt_data-engineer-agent": false,
+    "agt_family-insurance-manager-agent": false,
+    "agt_investment-manager-agent": false,
+    "agt_lw-lifecycle-canary": false,
+    "agt_machine-learning-engineer-agent": false,
+    "agt_technical-writer-agent": false
+  },
+  "implication": "The measured92-root H term does not measure these six literal home prefixes. No assertion about those homes presence, identity, graph or quantity follows.",
+  "notClaimed": [
+    "Global absence",
+    "Current physical state",
+    "Permission denial",
+    "New runtime read authority",
+    "Numeric admission"
+  ],
+  "existingNativeLineage": {
+    "totalIssued": 2,
+    "remaining": 0
+  }
+}

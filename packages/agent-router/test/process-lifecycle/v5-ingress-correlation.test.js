@@ -228,7 +228,15 @@ function integratedRouter(t, { failBeforePrompt = false } = {}) {
         proc.exitPromise = new Promise(() => {})
         return proc
       }
-      proc.ready = async () => { proc.state = 'READY'; return 0 }
+      proc.ready = async () => {
+        proc.state = 'READY'
+        proc.initializeEvidence = { deliveryReadiness: { version: 1 } }
+        return 0
+      }
+      proc.request = async (method, params) => {
+        assert.equal(method, 'session/prepare')
+        return { version: 1, ready: true, sessionId: params.sessionId }
+      }
       // Keep real turn(), bounded queue and C-010 mint. Only the downstream
       // child prompt I/O and terminal observation are synthetic.
       proc.promptWrite = async (execution) => {
@@ -242,6 +250,7 @@ function integratedRouter(t, { failBeforePrompt = false } = {}) {
           terminationEvidence: 'exact_terminal_then_idle',
         })
         execution.settled = true
+        execution.terminalResolve({ reply: 'synthetic-result', messageId: 'native-receipt' })
         execution.releaseQueueOwnership()
         return { messageId: 'native-receipt' }
       }

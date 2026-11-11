@@ -1,0 +1,49 @@
+{
+  "observed_at_utc": "2026-11-07T15:48:24.521513+00:00",
+  "method": "plist strings searched exact basename; crontab output filtered to exact candidate refs; no schedule invocation/mutation",
+  "plist_roots": [
+    "/Users/yanfenma/Library/LaunchAgents",
+    "/Library/LaunchAgents",
+    "/Library/LaunchDaemons",
+    "/System/Library/LaunchAgents",
+    "/System/Library/LaunchDaemons"
+  ],
+  "plist_scanned_count": 962,
+  "matches": [],
+  "errors": [
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/ai.openclaw.gateway.plist",
+      "error": "[Errno 13] Permission denied: '/Users/yanfenma/Library/LaunchAgents/ai.openclaw.gateway.plist'"
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.openclaw.forum-scheduler.plist",
+      "error": "[Errno 13] Permission denied: '/Library/LaunchDaemons/com.openclaw.forum-scheduler.plist'"
+    },
+    {
+      "path": "/Library/LaunchDaemons/zcode.fda-check.plist",
+      "error": "unexpected key at line 12"
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.openclaw.gateway.plist",
+      "error": "[Errno 13] Permission denied: '/Library/LaunchDaemons/com.openclaw.gateway.plist'"
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.openclaw.workflow-dispatcher.plist",
+      "error": "[Errno 13] Permission denied: '/Library/LaunchDaemons/com.openclaw.workflow-dispatcher.plist'"
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.openclaw.host-exec-runner.plist",
+      "error": "[Errno 13] Permission denied: '/Library/LaunchDaemons/com.openclaw.host-exec-runner.plist'"
+    },
+    {
+      "path": "/System/Library/LaunchAgents/com.apple.familycircled.plist",
+      "error": "XML declaration not well-formed: line 1, column 14"
+    }
+  ],
+  "current_uid_crontab": {
+    "rc": 0,
+    "line_count": 18,
+    "matches": [],
+    "stderr": ""
+  }
+}

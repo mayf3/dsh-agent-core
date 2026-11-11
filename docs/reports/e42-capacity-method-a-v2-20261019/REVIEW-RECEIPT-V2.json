@@ -1,0 +1,417 @@
+{
+  "schema": "E42_CAPACITY_A_V2_INDEPENDENT_FIXED_DOCS_SOURCE_REVIEW_V1",
+  "at_utc": "2026-10-19T10:37:09.644888+00:00",
+  "actor": "/root/fixed_effect_design_review",
+  "role": "original nonauthor reviewer; fixed docs/source-evidence review only; final technical decision belongs to original actor",
+  "requested_model": "gpt-6-astra (coordinator request)",
+  "observed_model": "NOT_EXPOSED",
+  "observed_effort": "NOT_EXPOSED",
+  "not_claimed": "No model backend/effort was inferred from the requested label.",
+  "fixed_subject": {
+    "proposal_path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-capacity-plan-a-20261019/PROPOSED-E42-REMAINING-PHASE-CAPACITY-A-V2.md",
+    "proposal_bytes": 14938,
+    "proposal_sha256": "398303ca62e6104e8ec3a98300b69936cdb31e6b3b579cd76cbfd61b0bafff0d",
+    "table_path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-capacity-plan-a-20261019/MAX-FUTURE-EVENT-OCCUPANCY-TABLE-V2.json",
+    "table_bytes": 11610,
+    "table_sha256": "2aafeecbe704143b5a47dd932ec711a386941daba4e96510ab14a704ff86e4c5"
+  },
+  "verdict": {
+    "method_and_limited_contract": "PASS_FIXED_METHOD_AND_CONDITIONAL_PLANNING_ONLY",
+    "proposal_blocking_revisions": [],
+    "blocking_revision_count": 0,
+    "can_be_submitted_to_original_actor_for_qualified_acceptance": true,
+    "reviewer_accepts_Spec": false,
+    "current_e42_numeric_admission": "NOT_ESTABLISHED_NO_RELEASE",
+    "production_admission": false,
+    "new_lower_remaining_authorized": false,
+    "unconditional_physical_upper_bound_proved": false,
+    "implementation_or_runtime_PASS": false,
+    "reason": "Finite future-event reconstruction is consistent with unchanged floor and retention obligations; V2 accurately conditions its metric and does not claim current physical admission. Missing quantity joins are explicitly retained rather than hidden."
+  },
+  "fixed_scope": {
+    "operation_id": "b7-packet-r41-5a07e742664460c2-e42",
+    "actual_TX": null,
+    "allocation_registration_attempt": "NONE in designated saved OBS, not a new live observation",
+    "sole_production_writer": "01a1437b-f9f3-7a33-a253-8f7fce9459f3",
+    "floor_bytes": 53687091200,
+    "second_distinct_business_operation_included_or_preapproved": false,
+    "business_credit": 0
+  },
+  "independent_findings": [
+    {
+      "id": "F1",
+      "conclusion": "Full closure copied on every invocation, not a single pair.",
+      "source": "executor152,162-174,188-199; embedded authority_manifest at shell129 decoded152-156",
+      "evidence": "New mktemp per invocation; entire driven/config dictionaries; full preimage and package. Later duplicate conditionals228/233 skip existing directories. Saved authority independently parsed as56+33=89names."
+    },
+    {
+      "id": "F2",
+      "conclusion": "Conditional n=5+2G+extra is derived from a single same-operation/future-TX consumer call graph.",
+      "calls": {
+        "release_b7": 1,
+        "protected_context": 1,
+        "place_material": "G",
+        "bind_act": 1,
+        "commit_gate": 1,
+        "witnessed_gate": "G",
+        "confirm_gate": 1
+      },
+      "source": "owner162-164,171,177-228,245,592-614,659-672; executor310/424/436/676",
+      "conditions": "G=2 and extra=0 are not current facts. G means route/provision witness representatives from the same TX. The two later different business releases do not justify G2 or nine calls. No actual TX exists yet; stage495 generates it and owner510-540 binds same-operation STATUS."
+    },
+    {
+      "id": "F3",
+      "conclusion": "Normal prefix, retained partial/UNKNOWN and rollback overlap must remain in the same occupancy envelope.",
+      "source": "transaction-recovery149-157,205-216,265-293; stage456-488; V2lines49-51,57",
+      "envelope": "3N+2S plus retained invocation copies and other future events; old baseline displaced by rename is already in saved free, not an additional allocated copy; input/next/live-or-failed + old-copy/restored-copy can coexist. No future deletion or clone credit. n full payloads cover a failed prefix only for the stipulated finite sequence; any lawful extra recovery invocation adds J."
+    },
+    {
+      "id": "F4",
+      "conclusion": "The newly installed six plugins are copied into shadow before their shadow leaves are removed.",
+      "source": "preparation247-252,278-288; six-target486-489",
+      "metric": "6*192720896=1156325376 retained operational metric additional to restored-profile H; no credit for rmSync."
+    },
+    {
+      "id": "F5",
+      "conclusion": "Saved observed capacity and conditional metric cannot release current e42.",
+      "source": "OBS saved snapshot; V2lines9-13,85-95",
+      "qualification": "Old guard margin and V2 metric excess are distinct saved arithmetic, neither a measured physical shortfall nor additive. Snapshot is not current free. Complete control does not numerically discharge B0. New known events must not be ignored solely because old B0 remains frozen."
+    },
+    {
+      "id": "F6",
+      "conclusion": "No general capacity audit/lock/stop-other-services gate follows from this review.",
+      "source": "original acceptedSpec79; V1A5; V2lines81,89-95",
+      "qualification": "Missing bounds prevent using this proposal as a new lower guarantee. They do not independently amend old entry, change floor or require rerunning unchanged R41 gates. Newly identified events remain relevant to genuine remaining."
+    }
+  ],
+  "arithmetic_checked": {
+    "method": "pure integer arithmetic and saved JSON metadata aggregation, no filesystem capacity measurement",
+    "J_bytes": 1496420352,
+    "K_bytes": 12884258816,
+    "conditional_G": 2,
+    "conditional_extra": 0,
+    "conditional_n": 9,
+    "nJ_bytes": 13467783168,
+    "conditional_K_plus_nJ_bytes": 26352041984,
+    "saved_free_bytes": 71896256512,
+    "saved_free_minus_floor_bytes": 18209165312,
+    "conditional_metric_excess_bytes": 8142876672,
+    "conditional_metric_required_free_bytes": 80039133184,
+    "old_B0_bytes": 18667145856,
+    "saved_old_guard_margin_bytes": -457980544,
+    "extra_group_metric_bytes": 2992840704,
+    "extra_invocation_metric_bytes": 1496420352,
+    "projected_package": {
+      "regular_files": 1803,
+      "directories_including_root": 289,
+      "regular_rounded_bytes": 352882688,
+      "total_metric_bytes": 354066432
+    },
+    "numbers_are_not_physical_minima_or_hard_upper_bounds": true
+  },
+  "minimum_specific_numeric_missing_inputs": [
+    {
+      "quantity": "S_current or bounded delta to saved1606156288",
+      "producer": "transaction-recovery.mjs:149-157,285",
+      "input": "Existing receipt path/SHA joining measured app,harness,node-runtime identities/content and size to current frozen trees, including uncovered growth. S delta contributes twice. Do not infer join from E41 stopping pre-outer."
+    },
+    {
+      "quantity": "H_current baseline or bounded delta to saved53592064; current migration membership",
+      "producer": "b7-preparation.mjs:239,282-288",
+      "input": "Existing profile-dependency baseline content/identity/quantity join to saved95-root/config321897cd basis. New six-plugin shadow is already a separate item. No new home scan required by this review."
+    },
+    {
+      "quantity": "same-e42 representative_group_count G and extra_prepare_driven_count over normal/failure/UNKNOWN/recovery schedule",
+      "producer": "delegated_owner_session.py:171,177-228,599-614,659-672; executor:152,310,424,436,676",
+      "input": "Held exact scope/plan/receipts identifying group count and additional legal invocations, including any unperformed place-delegation. Keep formula if absent; do not run context or allocate a TX for review."
+    },
+    {
+      "quantity": "six-npm allowance applicability and prefix dependency delta",
+      "producer": "six-target-provision.mjs:113-118,479-489; saved NPM-OPERATIONAL-ALLOWANCE.json:19-24",
+      "input": "Saved current native implementation/effective nonsecret config identity join and prefix_dependency_set_basis. Same flags alone do not establish same native implementation or exclude extra dependency expansion. No npm rehearsal."
+    },
+    {
+      "quantity": "aux membership/normal evidence quantities and any unaccounted same-pool metadata/COW/competition growth needed for a physical admission bound",
+      "producer": "FINAL-OPERATIONAL-RESERVATION.json:43-57; executor:181-195; stage-seed:469,488,492; proposalV1:55-81/V2:81,89-91",
+      "input": "Existing bounded quantities tied to actual finite producers where beyond original assumptions; do not relabel1GiB as unlimited raw/evidence/COW/shared-writer bound. This review does not impose a new all-host audit or shared lock. Unknown physical overhead leaves this estimate conditional."
+    }
+  ],
+  "evidence": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-capacity-plan-a-20261019/PROPOSED-E42-REMAINING-PHASE-CAPACITY-A-V2.md",
+      "bytes": 14938,
+      "sha256": "398303ca62e6104e8ec3a98300b69936cdb31e6b3b579cd76cbfd61b0bafff0d",
+      "lines": [
+        "1-95"
+      ],
+      "review_scope": "full fixed proposal; no accepted status assigned",
+      "total_lines": 95
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-capacity-plan-a-20261019/MAX-FUTURE-EVENT-OCCUPANCY-TABLE-V2.json",
+      "bytes": 11610,
+      "sha256": "2aafeecbe704143b5a47dd932ec711a386941daba4e96510ab14a704ff86e4c5",
+      "lines": [
+        "1-114"
+      ],
+      "review_scope": "full JSON plus independent pure arithmetic; fields authoritative where long JSON lines combine several entries",
+      "total_lines": 114
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-capacity-plan-a-20261019/PROPOSED-E42-REMAINING-PHASE-CAPACITY-A.md",
+      "bytes": 16800,
+      "sha256": "c36fe5986f32e9f09d02de4f9a1f3aca3d4169aa6cb76d09c36a7cf03eb9fbcd",
+      "lines": [
+        "1-83"
+      ],
+      "review_scope": "preserved original governing/method clauses and saved-boundary arithmetic; not separately accepted",
+      "total_lines": 128
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-capacity-plan-a-20261019/EVIDENCE-INDEX.json",
+      "bytes": 17283,
+      "sha256": "0b6451cc410c60360f0cc1470fe9722eb324fc554b6c4e55b5457ff6b27eab61",
+      "lines": [
+        "1-114"
+      ],
+      "review_scope": "read index as path/pin locator and author evidence qualification, not as independent proof of all indexed contents",
+      "total_lines": 114
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/CRITICAL-PATH-SOL-R41-CONTROL-CAPACITY-TERMINAL-OBS-20261019.json",
+      "bytes": 9739,
+      "sha256": "038746f07b37eca2fc43a40af554b804ca97d40d73949c38c91e4dbac4c619c6",
+      "lines": [
+        "1-214"
+      ],
+      "review_scope": "full saved observation; no live refresh",
+      "total_lines": 214
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/CAPACITY-PLAN-B-ORIGINAL-ACTOR-DECISION-20261018.json",
+      "bytes": 15433,
+      "sha256": "9412a8825f1871df234347c799c8564c73b2c161239bd90bf625c726619d425d",
+      "lines": [
+        "47-68"
+      ],
+      "review_scope": "original A recommendation/floor/competition and nonadmission boundary; saved prior decision",
+      "total_lines": 202
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/CAPACITY-PLAN-B-ORIGINAL-ACTOR-ADDENDUM-20261018.json",
+      "bytes": 3521,
+      "sha256": "6c79c4c8140bc9eca54c582fc925db611743192d26eb1e5dc411dfba49eee35e",
+      "lines": [
+        "1-61"
+      ],
+      "review_scope": "prior conditional B and no new gate/old path preference",
+      "total_lines": 61
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-source-readiness-diagnostic/business-readiness-producer-order-amendment/successor-r40-binding/successor-r41-binding-v2/control-source/b7-release-executor.sh",
+      "bytes": 174027,
+      "sha256": "968d42e94b2d6345aaac2220714c96c105483902f823ad2af48a23f892db212b",
+      "lines": [
+        "129: decoded authority_manifest lines152-156",
+        "143-251",
+        "308-317",
+        "421-440",
+        "673-685"
+      ],
+      "review_scope": "static full-manifest return; new invocation and complete copy; four affected action call sites; no execution",
+      "total_lines": 719
+    },
+    {
+      "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/delegated_owner_session.py",
+      "bytes": 37950,
+      "sha256": "39e47fd661332afb38457cccfb435659b619090fefcea0b147e2670a6f5856a4",
+      "lines": [
+        "138",
+        "149-277",
+        "510-540",
+        "569-713"
+      ],
+      "review_scope": "same operation/TX binding; all EXECUTOR call sites; normal one-session count and guarded no-repeat flags; no execution",
+      "total_lines": 740
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-source-readiness-diagnostic/business-readiness-producer-order-amendment/successor-r40-binding/successor-r41-binding-v2/final-delivery-v2/b7-v3-publication-authority.json",
+      "bytes": 21062,
+      "sha256": "88a81dbc0d2670a8b51658b750aff662c9967f4e4bd9b788491ec96715b71e2b",
+      "lines": [
+        "$.drivenScripts",
+        "$.drivenConfigs"
+      ],
+      "review_scope": "actual saved JSON hash and 56+33=89 disjoint flat names; owner pin match; no fresh 89-object content verification",
+      "total_lines": 1
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-source-readiness-diagnostic/business-readiness-producer-order-amendment/successor-r40-binding/successor-r41-binding-v2/small-output/R41-FILES-PROJECTED.json",
+      "bytes": 523003,
+      "sha256": "b1d4d5f4b6151c40cd2af36a48f68a082e30abc9c6468f232b777494d17c3a00",
+      "lines": [
+        "1-16154: metadata fields type/bytes"
+      ],
+      "review_scope": "actual saved manifest hash and aggregate1803files/289dirs/354066432; no tree traversal",
+      "total_lines": 16154
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-source-readiness-diagnostic/business-readiness-producer-order-amendment/successor-r40-binding/successor-r41-binding-v2/small-output/package-overlay/b7-wired-inputs/INSTALL-PINS.json",
+      "bytes": 19835,
+      "sha256": "e673ee816035ba2eb31c25b89f988ba2199f30d909b1d0170b1f49c5b8a4a090",
+      "lines": [
+        "213-217",
+        "248-257"
+      ],
+      "review_scope": "current pins join exact saved preparation/six-target/recovery bytes to R41; not actual installed source verification",
+      "total_lines": 301
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-source-readiness-diagnostic/business-readiness-producer-order-amendment/successor-r40-binding/successor-r41-binding-v2/small-output/package-overlay/packet/b7-wired-stage/stage-seed-once.py",
+      "bytes": 31839,
+      "sha256": "490bd9570d7915e29213b78bffb625e6970ce3158eb67afc7b4128db5284bc79",
+      "lines": [
+        "377-382",
+        "445-510"
+      ],
+      "review_scope": "original source validation call retained; future extraction/public writes; actual future UUID only at495",
+      "total_lines": 518
+    },
+    {
+      "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/b7-install-r38/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/transaction-recovery.mjs",
+      "bytes": 21482,
+      "sha256": "db45db7230ec25015321081f8c9c1357355c61df517d8f6392924fd7ce06f55f",
+      "lines": [
+        "134-218",
+        "265-309"
+      ],
+      "review_scope": "actual hash equals R41 pin; input/old/next/staged/restore coexistence; rename is not new payload or release",
+      "total_lines": 398
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-r39-binding-preparation/small-output/package-overlay/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/b7-preparation.mjs",
+      "bytes": 38142,
+      "sha256": "00811809c5b1fb4a2d64b909f6410051733c8c0fafb97aa576fda97d605bd3b3",
+      "lines": [
+        "234-310"
+      ],
+      "review_scope": "actual hash equals R41 pin; six installs precede whole dependency shadow; shadow removal gets no credit",
+      "total_lines": 356
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-r39-binding-preparation/small-output/package-overlay/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/six-target-provision.mjs",
+      "bytes": 34571,
+      "sha256": "dd96d67eca9d27afb1d4b656f870b2a13f45e80d7ab51c444ed549ed0c5f3bb9",
+      "lines": [
+        "96-119",
+        "464-502"
+      ],
+      "review_scope": "actual hash equals R41 pin; exact normal offline npm flags and future install predicate",
+      "total_lines": 530
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-r39-binding-preparation/small-output/package-overlay/b7-wired-inputs/dsh-agent-core/docs/evidence/openai-codex-refresh-token-reused-v1-20260910/owner-authsvc-plugin-upgrade-r13.sh",
+      "bytes": 103362,
+      "sha256": "ba571c774dc01b897a074d031a52ec324163382071fb15c1e747563b642d32a0",
+      "lines": [
+        "918-929"
+      ],
+      "review_scope": "bounded static validate-source call projection only; no new complete installer/gate audit",
+      "total_lines": 1694
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-r33-storage-reservation-readonly/NPM-OPERATIONAL-ALLOWANCE.json",
+      "bytes": 1872,
+      "sha256": "9680a975a70400e03233535c0cb2675193242a06de27ec6ad1af19e057860145",
+      "lines": [
+        "1-32"
+      ],
+      "review_scope": "full original conditional metric and assumptions; not native/npm live read",
+      "total_lines": 32
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-r33-storage-reservation-readonly/NPM-OPERATIONAL-SOURCE-PINS.json",
+      "bytes": 1490,
+      "sha256": "90b2236a5d0474d258a4bf7d9f9a579d5a8d00394606e415aa2b3de80975711f",
+      "lines": [
+        "1-37"
+      ],
+      "review_scope": "full saved native/config pins only; referenced native files not opened",
+      "total_lines": 37
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e36-terminal-material-retirement/successor-capacity-readonly/R36-REMAINING-RECIPE.json",
+      "bytes": 8058,
+      "sha256": "bdfdb505a56514ef1787552b9ede91d308f136d64fd8ff5d6df8e5925d3c598a",
+      "lines": [
+        "1-143"
+      ],
+      "review_scope": "full historical recipe, finite-event provenance and explicit unjoined S/H/npm conditions; not substituted for e42",
+      "total_lines": 143
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e36-terminal-material-retirement/successor-capacity-readonly/R36-SIX-NPM-RECOVERY-CONDITION.json",
+      "bytes": 3654,
+      "sha256": "14b6567313ab52305e9746e2cf6bb697093228ddeb0518b627388ee9d918f177",
+      "lines": [
+        "1-47"
+      ],
+      "review_scope": "full saved recovery/conditional6npm evidence; not refreshed checkpoint",
+      "total_lines": 47
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-r33-storage-reservation-readonly/FINAL-OPERATIONAL-RESERVATION.json",
+      "bytes": 3752,
+      "sha256": "19ad2242c2b7c1cc4136d7c91780f7a525d232544240bfb3d7e47994cc092b32",
+      "lines": [
+        "1-64"
+      ],
+      "review_scope": "full original metric, S/H origin, group assumption and typed aux split",
+      "total_lines": 64
+    },
+    {
+      "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/docs/specs/AGENT_CORE_B7_FIXED_DRIVEN_PUBLIC_LEAF_RETENTION_STOP_COMPLETION_V1.md",
+      "bytes": 12727,
+      "sha256": "01a7f96add721cbed654a818b9a5bc362170f9fee4230569a330c65f330dd72a",
+      "lines": [
+        "1-30",
+        "75-81"
+      ],
+      "review_scope": "accepted exact text/floor/genuine future events and source-only/production separation",
+      "total_lines": 82
+    }
+  ],
+  "reuse_and_limits": {
+    "reused_not_rerun": [
+      "R41 copied225/225, committed control, post227/227",
+      "original terminal/recovery/checkpoint evidence",
+      "original independent source reviews and native npm source pins"
+    ],
+    "not_personally_remeasured": [
+      "89 flat files individual sizes/content",
+      "9 preimage leaves individual size/content",
+      "APP/OP archive headers or payloads",
+      "actual S/H roots or native npm/config/cache",
+      "live/free/runtime/registered state"
+    ],
+    "source_pin_join": "Opened small saved producer files and matched hashes to current saved R41 INSTALL-PINS; no production source-root read.",
+    "not_exhaustive": "Review is the fixed docs/event-accounting delta. It is not a new entire controller/MCP/installer/validator source audit or proof of physical APFS allocation.",
+    "actions_not_performed": {
+      "production_reads_or_writes": 0,
+      "df_or_capacity_probe": 0,
+      "tests_or_gates_or_rehearsals": 0,
+      "controller_DS_or_sudo": 0,
+      "new_agents": 0,
+      "large_artifact_rehashes": 0,
+      "source_or_Spec_mutations": 0,
+      "goal_or_session_changes": 0
+    }
+  },
+  "next": "Original technical actor may make qualified method/conditional-planning decision using this fixed receipt. Numeric release remains not established; original sole writer supplies only missing held quantities and uses original valid admission path. No parallel execution command is sent.",
+  "cleanup": {
+    "deleted_count": 0,
+    "deleted_bytes": 0,
+    "created_only": "independent-review/REVIEW-RECEIPT-V2.json",
+    "originals_production_sources_threads_daemons_preserved": true
+  }
+}

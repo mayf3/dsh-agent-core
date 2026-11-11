@@ -1,0 +1,95 @@
+{
+  "kind": "FIXED_FIRST_ANCHOR_BLOB_SHAPE_PREDICATE_RECORDING_MATERIAL_READY",
+  "at": "2026-10-19T20:47:53.513867+00:00",
+  "state": "PROPOSED_REVIEWED_READY_FOR_ORIGINAL_QUALIFIED_DECISION",
+  "unique_acceptance_unit": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract/PROPOSED-FIXED-FIRST-ANCHOR-BLOB-SHAPE-PREDICATE-RECORDING-CONTRACT.v1.1.md",
+    "bytes": 15193,
+    "sha256": "20a1c8ef74415e4dc6dd7d4611f7859443189ff7ed9b0e7b7cdb33dd1ca6ddbe"
+  },
+  "closure": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract/SOURCE-CLOSURE.v1.1.json",
+    "bytes": 7827,
+    "sha256": "6a875effdaed86b5a16fce5f2d8a5b6f75cbdd32801913eb0302dcb4b3110fa0"
+  },
+  "material_index": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract/MATERIAL-INDEX.v1.1.json",
+    "bytes": 3427,
+    "sha256": "a37f5a9cfa815c62360d7421631d02a69762623d84a72c6a20c0b05050350a67"
+  },
+  "same_chain_material_review": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract/independent-sol-readback/FIRST-ANCHOR-PREDICATE-RECORDING-MATERIAL-RECEIPT.v1.json",
+    "bytes": 8814,
+    "sha256": "376c816c3c909f4d71c1640ff8769851909f7e49e1d026898a20f3bfa5679dc9"
+  },
+  "review_disposition": "PASS_PROPOSAL_MATERIAL_ONLY",
+  "remaining_blocking_findings": [],
+  "review_delta": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract/V1-TO-V1.1-PROVENANCE.diff",
+    "bytes": 3243,
+    "sha256": "4b9a7fb79e9d10634883ee0b88599b6cb0ff91222f79143ab7685d4fde461142"
+  },
+  "historical_v1": "Retained; onlyv1.1iscurrentacceptanceunit",
+  "exact_acceptance_requested": "Finite source/resultcontract only: orderedfourpredicate diagnostics, closedV2/unavailableprovenancenull/partialUNKNOWN, existingboundedpublisher/validatorjoins andprospectivecostmethod. Notcodealreadyaccepted andno runtimeeffect.",
+  "current_source_implementation_authorized": false,
+  "runtime_effects_requested": [],
+  "new_export_requested": false,
+  "new_E": 0,
+  "decision_output": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract/ORIGINAL-FIXED-FIRST-ANCHOR-BLOB-SHAPE-PREDICATE-RECORDING-TECHNICAL-DECISION.v1.json",
+  "author": {
+    "role": "Original1437sole source/runtimewriter",
+    "agent": "/root/sol_execution_continuation",
+    "requested_model": "gpt-6.1-sol",
+    "requested_reasoning": "ultra",
+    "observed_model": "UNKNOWN"
+  },
+  "nonauthor": {
+    "role": "Originalsamechainmaterialreader",
+    "agent": "/root/sol_e40_independent_reader",
+    "scope": "Onlynewmaterial+c932; oldninefailedpins matchedagainstnewdecisiontext, no oldsource/primary/failedpath/API/tests"
+  },
+  "dispatch": {
+    "state": "NOT_SENT",
+    "route_count": 0,
+    "exclusive_sender": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "original_technical_target": "01a1378d-e052-7021-9992-f0760eb9f9e7",
+    "execution_lane_technical_send": false
+  },
+  "limits": {
+    "diagnostic_UTF8_includingLF_max": 2048,
+    "whole_result_max": 65536,
+    "prospective_diagnostic_only_rounded_5copy_increment": 20480,
+    "actual_future_topology_fit": "NOT_PROVED; old20MiBfitnotinherited",
+    "old_actual_failed_subpredicate": "UNKNOWN/irrecoverablefromsavedset",
+    "E": {
+      "issued": 1,
+      "remaining": 0,
+      "max": 1,
+      "noSecond": true
+    },
+    "packaging": {
+      "issued": 3,
+      "remaining": 0,
+      "noFourth": true
+    },
+    "collector": {
+      "issued": 2,
+      "remaining": 0,
+      "noThird": true
+    }
+  },
+  "state_preserved": {
+    "business": "0/2",
+    "e42": "UNREGISTERED",
+    "attempt": 0,
+    "floor": 53687091200,
+    "solewriter_op_TX_fence": "UNCHANGED",
+    "APP_P6_Lshared_finalJ_G_remaining_P0": "UNPROVEN/null"
+  },
+  "next": "New14cexclusivelyroutesexactmaterial; no implementation/tests/newsource/runtimeacquisition beforetheir ownexactacceptance. Optionaldiagnosticnotnewbusinessgate.",
+  "cleanup": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract/OWN-CLEANUP-MATERIAL.v1.json",
+    "bytes": 681,
+    "sha256": "2d0bfd1f20e23312b56793ea7e9879fa37cc4c9400eff7495446ede150559a0f"
+  }
+}

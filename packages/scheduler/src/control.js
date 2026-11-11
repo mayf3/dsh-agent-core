@@ -250,9 +250,11 @@ export async function enableJobOp(store, id, { nowMs = Date.now(), assertJob, ex
     if (job.migrationRestoreBlocked === true) {
       throw Object.assign(new Error(`job ${id} restore gate is closed`), { code: 'RESTORE_GATE_CLOSED' })
     }
-    job.enabled = true
+    if (job.enabled !== true) {
+      job.enabled = true
+      job.revisionActivatedAtMs = nowMs
+    }
     job.updatedAtMs = nowMs
-    job.revisionActivatedAtMs = nowMs
     refreshProjection(latest, id, nowMs)
     return { value: job }
   })
@@ -457,3 +459,7 @@ export async function reconcileOccurrence(store, { occurrenceId, runId, resolved
     evidenceStatus,
   }
 }
+
+// Preserve the public control facade; the policy and its sole atomic writer
+// live together under the accepted D-009 alignment.
+export { autoReconcileOccurrences } from './auto-reconcile.js'

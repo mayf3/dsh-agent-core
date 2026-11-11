@@ -1,0 +1,47 @@
+"""R1: the exact record validated before cache lookup must reach held-FD sync.
+Actual module install/handler/paired codec, real owned file+directory fsync.
+"""
+import fcntl,json,os,sys,unittest
+from pathlib import Path
+from unittest.mock import patch
+from fixture import *
+C=Candidate('candidate');MODE=sys.argv.pop(1) if len(sys.argv)>1 and sys.argv[1] in ('red','green') else 'green';DETAIL=[]
+class SyncAuthorization(unittest.TestCase):
+ def run_drift(self,slot,kind):
+  f=Fixture(C)
+  try:
+   self.assertTrue(f.client_request(DISPOSE)['ok']);f.restart();m=f.mod;target=f.auth_path if slot=='auth' else f.terminal_path;before=target.read_bytes();known=m._known;sync=m.os.fsync;trigger=[];seen=[]
+   def drift(e,path):
+    result=known(e,path)
+    if path==str(target) and not trigger:
+     if kind=='malformed':changed=b'{"kind":'
+     else:
+      record=json.loads(before)
+      if kind=='extra':record['foreign_unknown']=1
+      else:record['operation_id']=OP+'-foreign'
+      changed=canon(record)
+     target.write_bytes(changed);trigger.append(path)
+    return result
+   def spy(fd):
+    path=Path(fcntl.fcntl(fd,50,b'\0'*1024).split(b'\0',1)[0].decode()).resolve();self.assertTrue(path.is_relative_to(f.root.resolve()))
+    seen.append({'path':str(path.relative_to(f.root.resolve())),'after_drift':bool(trigger),'target_record':path==target.resolve()});return sync(fd)
+   with patch.object(m,'_known',side_effect=drift),patch.object(m.os,'fsync',side_effect=spy):response=f.client_request(DISPOSE)
+   foreign=[x for x in seen if x['after_drift']];DETAIL.append({'slot':slot,'mutation':kind,'response':response,'actual_fsyncs':seen,'foreign_fsyncs':foreign})
+   self.assertEqual(len(trigger),1);self.assertFalse(response['ok']);self.assertEqual(foreign,[],'non-exact record or its parent was synchronized after drift')
+   self.assertEqual(f.execution._e31_durability,{});self.assertNotIn('disposal_terminal',f.client_request(STATUS).get('data',{}))
+  finally:f.close()
+ def test_auth_drift_between_validated_recheck_and_sync_is_zero_foreign_sync(self):
+  for kind in ('extra','wrong_subject','malformed'):
+   with self.subTest(kind=kind):self.run_drift('auth',kind)
+ def test_terminal_drift_between_validated_recheck_and_sync_is_zero_foreign_sync(self):
+  for kind in ('extra','wrong_subject','malformed'):
+   with self.subTest(kind=kind):self.run_drift('terminal',kind)
+ def test_existing_complete_schema_encoding_semantics_unchanged(self):
+  f=Fixture(C)
+  try:
+   self.assertTrue(f.client_request(DISPOSE)['ok']);f.restart()
+   for path in (f.auth_path,f.terminal_path):path.write_bytes((json.dumps(json.loads(path.read_bytes()),indent=2)+'\n').encode())
+   before=f.snapshot();out=f.client_request(DISPOSE);self.assertTrue(out['ok'],out);self.assertIn('disposal_terminal',out['data']);self.assertEqual(f.snapshot(),before)
+  finally:f.close()
+if __name__=='__main__':
+ r=unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(SyncAuthorization));(R/'results'/('sync-authorization-'+MODE+'.json')).write_text(json.dumps({'methods':r.testsRun,'failures':len(r.failures),'errors':len(r.errors),'details':[str(x) for x in r.failures+r.errors],'scenarios':DETAIL},indent=2)+'\n');sys.exit(not r.wasSuccessful())

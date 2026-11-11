@@ -1,0 +1,411 @@
+{
+  "evaluated_at_utc": "2026-10-30T23:50:06.048810+00:00",
+  "baseline": {
+    "tests": 3126,
+    "suites": 12,
+    "pass": 2974,
+    "fail": 116,
+    "cancelled": 0,
+    "skipped": 36,
+    "todo": 0,
+    "duration_ms": 80856.592709,
+    "test_rc": 1,
+    "parsed_failure_names": 116,
+    "base_head": "0b64aca3615aec203b95aa960eff39d635bd26c1",
+    "source_git_status": "",
+    "completed_at_utc": "2026-10-30T23:48:02.309391+00:00",
+    "command": "env -u TEST_ROTATION_DATABASE_URL -u TEST_AUTH_ORIGIN -u NOTIFICATION_INGRESS_INTEGRATION node --test --test-force-exit --test-timeout=60000 --test-reporter=tap 'packages/*/test/*.test.js' 'packages/*/test/*/*.test.js'",
+    "limitations": [
+      "force-exit is required because failed fixture setup can retain open server handles; original npm command and timeout-only runner each interrupted rc130 with no final summary",
+      "root-only npm install does not install feishu-connector pinned @larksuite/channel subpackage dependency",
+      "lifecycle scripts disabled; native voice engine and external harness/credential fixtures unavailable",
+      "first test pass itself created ignored @agent-core symlink bridge and dsh-tools unit-test-passthrough stub; finite pass inherited these dependencies",
+      "existing environment/import/native failures are not product regressions; user2574/109 reference is prior, not current result"
+    ]
+  },
+  "candidate_first": {
+    "source": "/private/tmp/dsh-1332-delivery-race-fix",
+    "revision": "uncommitted worktree over0b64aca3615aec203b95aa960eff39d635bd26c1; exact source at historical log execution not bound by this child",
+    "log": "/private/tmp/dsh-1332-candidate-full.tap",
+    "log_sha256": "381c284a9261e60c56a199c7cbaa6f5d2d05b834c3b63367b0ef7b605834f396",
+    "summary": {
+      "tests": 3069,
+      "suites": 7,
+      "pass": 2891,
+      "fail": 142,
+      "cancelled": 0,
+      "skipped": 36,
+      "todo": 0,
+      "duration_ms": 77608.296
+    }
+  },
+  "TEST_AUTH_ORIGIN_present_at_comparison": false,
+  "common_failed_names": [
+    "A-D1 zero config: every un-overridden Agent resolves to the Luna default with its subscription mount",
+    "A-D2 runtime env override wins over the default; composition config wins over env",
+    "A-D3 explicit OpenCode Go agent override wins; un-overridden Agents keep the Luna default",
+    "A6: a delivery parked in flight at the controlled stop leaves a durable reserved admission, quiesce receipts, and a closed ingress surface",
+    "A6: runtime restart on the same root reuses the in-flight admission idempotently — outcome_unknown, zero Router re-admission",
+    "AC-GATE-MALFORMED-FAIL-CLOSED: only a non-null object with literal allowed=true passes",
+    "ACC-008/013: access_denied never enters the actual reader",
+    "ACC-008/013: transport_failure never enters the actual reader",
+    "ACC-009/013: a foreign actual caller cannot reuse another callers exact coordinate",
+    "ACC-012/013: missing composed provider is unsupported and never falls back",
+    "ACC-013: real relay/parent/gateway/runtime reads pending and terminal with no target admission",
+    "ACC-ADT-005: name-only caller discovers the canonical id and the send lands in the target main",
+    "ACC-ASM2-004/007: granted inspect crosses gateway, provider, audit and one exact artifact",
+    "ACC-CMR-005: six executable zero-side-effect oracles across the full resolution matrix",
+    "B15 production evidence preserves scheduled outcome_unknown reconciliation data",
+    "B9 flow: sender identity, receiver identity, durable receipt and reply association across a full restart",
+    "B9 lifecycle: canonical materialization admits, principal deactivation invalidates, scopes never escalate",
+    "C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths — no credentials, no secret env",
+    "C-HIST compose wires the HistoryStore over layout.historyDir into the scheduler and provides the /scheduler/* services",
+    "C-HIST schedulerAuth opts provide a JWKS verifier; unconfigured stays null",
+    "C-IDM-007 AC-IDM-08 F-23: concurrent same-key requests -> ONE Router call, ONE shared terminal outcome",
+    "C-IDM-009 AC-IDM-04 F-14 W2: crash AFTER reserve, BEFORE Router -> boot sweep -> outcome_unknown, no re-delivery",
+    "Case A: the existing main is reused — same process, two sends, two Runs",
+    "Case B: concurrent first sends to an absent main share ONE startup generation",
+    "Case C + G: receipt-only accepted; the provenance sidecar is runtime-owned and exact",
+    "Case F (F23): a grant-check transport outage is transport_failure, never access_denied",
+    "Case F: an unauthorized sender is access_denied with zero target deliveries",
+    "Case G: model-supplied identity fields are rejected before any delivery",
+    "E2E disabled target: resolves enabled:false (existence truth) and the send is refused",
+    "E2E list: the full composed stack lists both agents in directory shape",
+    "E2E negative: unknown name → not_found and ZERO deliveries anywhere",
+    "E2E negative: whitespace-only query → invalid_arguments envelope, ZERO deliveries",
+    "E: valid canonical credential — child initializes on the openai-codex route",
+    "F: missing credential fails loud on the real chain — never a silent fallback",
+    "G: unsafe credential (group/world readable) fails loud on the real chain",
+    "GATE: NO gate installed = fail-closed drop (spec §9 startup ordering — never legacy forward)",
+    "GATE: a throwing gate FAILS CLOSED too (gate_error)",
+    "GATE: accessor-based allowed verdict fails closed without invoking getter",
+    "GATE: allowed verdict forwards to onEvent, no receipt",
+    "GATE: current Router-style {error} outcome remains a handler failure",
+    "GATE: diagnostic verdict getters are never invoked and cannot suppress rejection receipt",
+    "GATE: handler awaits the FULL onEvent turn before resolving",
+    "GATE: onEvent rejection propagates to the SDK public error pipeline",
+    "GATE: rejection FAILS CLOSED — onEvent never called, fixed receipt sent once",
+    "GATE: self-echo never reaches the gate (residual guard before admission)",
+    "GATE: wired after construction takes effect immediately (live config, like setCallback)",
+    "I: the same static config file yields the identical primary across restarts",
+    "IDENTITY: group message with UNRESOLVED bot identity fails closed (error + drop)",
+    "IDENTITY: identity resolved but openId empty fails closed for group too",
+    "IDENTITY: p2p message with unresolved identity still reaches the gate (p2p needs no identity for adjudication)",
+    "MOBILE_SESSION_HISTORY_V1: productApi.history crosses the composition contract (default OFF unchanged; explicit enable reaches the module and fails closed)",
+    "R12: L0 rows never carry business detail; the target reply never reaches the audit file",
+    "R3: a settled or unknown turnExecutionId proves nothing (absent leaf)",
+    "RED base: channel OFF + invalid mention switch composes the base runtime (warn, not fatal)",
+    "RED base: channel OFF + invalid processing-reaction switch composes the base runtime (warn, not fatal)",
+    "RED base: channel OFF + invalid reply render mode composes the base runtime (warn, not fatal)",
+    "RED base: missing adapter implementation does not block the channel-OFF base path",
+    "absent primary-workspaces.json → behavior identical to today (default derivation)",
+    "actual arm64 Node and internal links pass closure inspection",
+    "compose stop persists the boundary receipt across the controlled shutdown (quiesce begin/end)",
+    "composition forwards the trusted exact-agent native policy resolver into process startup",
+    "composition freezes the own-domain artifact and refuses drift before the next process boundary",
+    "composition pins the credentialFile to the runtime deployment root (own root accepted)",
+    "composition provides the full existing service graph over the production layout",
+    "composition resolves the v3 primary to target and the global route to another Agent",
+    "cross-agent scheduler authorization flows one target-owned fresh Run into HistoryStore without source authority propagation or replay",
+    "disabled target is target_disabled with zero target process or prompt",
+    "enabled channel + invalid identity credentials fail composition LOUD (fail closed)",
+    "enabled channel + invalid mention switch fails composition LOUD (fail closed)",
+    "enabled channel + invalid reply render mode fails composition LOUD (fail closed)",
+    "enabled channel + missing adapter implementation fails composition LOUD (fail closed)",
+    "graceful stop closes the HTTP surfaces and writes stopped-able state",
+    "harness resolution is worktree-aware and cliBin fails loud without a checkout",
+    "installer probes before backup and never grants root Git trust",
+    "invalid import entry (missing directory) → startup fails loud",
+    "invalid import entry (relative path) → startup fails loud with PRIMARY_WORKSPACE_INVALID",
+    "malformed config fails target respawn loud without disturbing a running non-target",
+    "malformed primary-workspaces.json (bad JSON / non-object) → startup fails loud",
+    "notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox",
+    "packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js",
+    "packages/feishu-connector/test/bridge.test.js",
+    "packages/feishu-connector/test/current-main-full-turn.test.js",
+    "packages/feishu-connector/test/frozen-config.test.js",
+    "packages/feishu-connector/test/full-ingress-differential.test.js",
+    "packages/feishu-connector/test/golden-vectors.test.js",
+    "packages/feishu-connector/test/log-redaction-adversarial.test.js",
+    "packages/feishu-connector/test/log-redaction.test.js",
+    "packages/feishu-connector/test/mention-config.test.js",
+    "packages/feishu-connector/test/mount.test.js",
+    "packages/feishu-connector/test/outbound.test.js",
+    "packages/feishu-connector/test/processing-reaction.test.js",
+    "packages/feishu-connector/test/real-binding-replay.test.js",
+    "packages/feishu-connector/test/reply-card/reply-card.test.js",
+    "packages/feishu-connector/test/reply-card/scheduler-card.test.js",
+    "packages/feishu-connector/test/reply-card/ux-phase1-v3-display.test.js",
+    "packages/feishu-connector/test/sdk-pipeline.test.js",
+    "packages/feishu-connector/test/standalone-log-redaction.test.js",
+    "packages/feishu-connector/test/ux-phase1-v2.test.js",
+    "postdeploy finalize readback gate survives the authsvc/runtime-reader gid split",
+    "production composition applies the runtime proxy gate before any mount or layout read",
+    "production-pinned payload executes migration with distinct source and destination groups",
+    "real child cancel removes native queued admission before old owner release",
+    "real child timeout removes native queued admission before old owner release",
+    "routing receipt readback fails closed on a wrong control gid",
+    "runtime state carries no demo artifacts anywhere",
+    "scheduler engine consumes a job from the production store through the router seam",
+    "scripted native rounds obtain fresh parent proof after prior settlement through real child transport",
+    "seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept)",
+    "seam: a structured gateway failure passes through declared codes verbatim at the correct depth",
+    "special-bit store mode is rejected instead of treated as exact 0600",
+    "target-only rollback rewrites the config file; non-target PID and route unchanged",
+    "watchdog deployment source retains the accepted Session Trace lineage in its overlay",
+    "wiring: the import map reaches workspace-bootstrap AND the spawned process (cwd base + env)",
+    "workflow_execute: manifest freezes the unified four-operation write contract (§25 amendment)"
+  ],
+  "new_failed_names": [
+    {
+      "name": "packages/agent-memory/test/memory.test.js",
+      "category": "cold_dependency_import_failure",
+      "support": "SUPPORTED",
+      "reason": "First candidate full run starts before test-created workspace package bridge/dsh-tools stub exists; module-level import error, whereas warmed baseline loads leaf tests.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-memory/test/memory.test.js:1:1'",
+      "candidate_error": "'test failed'"
+    },
+    {
+      "name": "packages/agent-memory/test/paths.test.js",
+      "category": "cold_dependency_import_failure",
+      "support": "SUPPORTED",
+      "reason": "First candidate full run starts before test-created workspace package bridge/dsh-tools stub exists; module-level import error, whereas warmed baseline loads leaf tests.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-memory/test/paths.test.js:1:1'",
+      "candidate_error": "'test failed'"
+    },
+    {
+      "name": "packages/agent-memory/test/plugin-workspace.test.js",
+      "category": "cold_dependency_import_failure",
+      "support": "SUPPORTED",
+      "reason": "First candidate full run starts before test-created workspace package bridge/dsh-tools stub exists; module-level import error, whereas warmed baseline loads leaf tests.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-memory/test/plugin-workspace.test.js:1:1'",
+      "candidate_error": "'test failed'"
+    },
+    {
+      "name": "packages/agent-memory/test/primary-workspace.test.js",
+      "category": "cold_dependency_import_failure",
+      "support": "SUPPORTED",
+      "reason": "First candidate full run starts before test-created workspace package bridge/dsh-tools stub exists; module-level import error, whereas warmed baseline loads leaf tests.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-memory/test/primary-workspace.test.js:1:1'",
+      "candidate_error": "'test failed'"
+    },
+    {
+      "name": "TRUSTED_INGRESS: exact Feishu chat/conversation/message fields reach the routed turn without parsing",
+      "category": "candidate_fixture_protocol_integration_regression",
+      "support": "SUPPORTED",
+      "reason": "Existing monkey-patched ready/turn fake leaves real AgentProcess SPAWNING; new prepareDelivery is called and rejects before fixture turn.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/feishu-regression.test.js:158:1'",
+      "candidate_error": "|-"
+    },
+    {
+      "name": "FEISHU_P2P_REPLY: p2p ingress replies to Feishu and binds under feishu:<conversationId>",
+      "category": "candidate_fixture_protocol_integration_regression",
+      "support": "SUPPORTED",
+      "reason": "Existing monkey-patched ready/turn fake leaves real AgentProcess SPAWNING; new prepareDelivery is called and rejects before fixture turn.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/feishu-regression.test.js:190:1'",
+      "candidate_error": "|-"
+    },
+    {
+      "name": "FEISHU_GROUP_REPLY: group ingress replies to Feishu and binds under feishu:<conversationId>",
+      "category": "candidate_fixture_protocol_integration_regression",
+      "support": "SUPPORTED",
+      "reason": "Existing monkey-patched ready/turn fake leaves real AgentProcess SPAWNING; new prepareDelivery is called and rejects before fixture turn.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/feishu-regression.test.js:206:1'",
+      "candidate_error": "|-"
+    },
+    {
+      "name": "FEISHU_EXISTING_BINDING_KEY_PRESERVED: pre-existing feishu:<id> binding is HIT, not orphaned",
+      "category": "candidate_fixture_protocol_integration_regression",
+      "support": "SUPPORTED",
+      "reason": "Existing monkey-patched ready/turn fake leaves real AgentProcess SPAWNING; new prepareDelivery is called and rejects before fixture turn.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/feishu-regression.test.js:218:1'",
+      "candidate_error": "|-"
+    },
+    {
+      "name": "MOBILE_BINDING_NAMESPACE_UNCHANGED: mobile ingress -> mobile:<surfaceId>, no Feishu reply",
+      "category": "candidate_fixture_protocol_integration_regression",
+      "support": "SUPPORTED",
+      "reason": "Existing monkey-patched ready/turn fake leaves real AgentProcess SPAWNING; new prepareDelivery is called and rejects before fixture turn.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/feishu-regression.test.js:241:1'",
+      "candidate_error": "|-"
+    },
+    {
+      "name": "V3 parsed terminal and child exit remain uncommitted together when durable settlement fails",
+      "category": "timing_or_load_failure_pending_rerun",
+      "support": "INFERRED",
+      "reason": "Short-deadline test reports pre-write AGENT_PROCESS_RPC_DEADLINE; baseline passed and source business route does not invoke preparation here. Need focused rerun before classifying product regression.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js:11:1'",
+      "candidate_error": "'request session/prompt deadline expired before write (agent agt_fx)'"
+    },
+    {
+      "name": "R1 readiness: initialize ready cannot bypass session preparation acknowledgement",
+      "category": "candidate_fixture_auto_ack_regression",
+      "support": "SUPPORTED",
+      "reason": "Changed fake-child stdin now auto-acks every session/prepare, defeating pending/never-ready injection in readiness tests.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/delivery-readiness.test.js:13:1'",
+      "candidate_error": "|-"
+    },
+    {
+      "name": "R1 readiness: never-ready child respects caller deadline and late ack cannot admit",
+      "category": "candidate_fixture_auto_ack_regression",
+      "support": "SUPPORTED",
+      "reason": "Changed fake-child stdin now auto-acks every session/prepare, defeating pending/never-ready injection in readiness tests.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/delivery-readiness.test.js:45:1'",
+      "candidate_error": "'Missing expected rejection.'"
+    },
+    {
+      "name": "V5 mounted private callback reaches real C-010 mint; public route and chain remain unbound",
+      "category": "candidate_fixture_protocol_integration_regression",
+      "support": "SUPPORTED",
+      "reason": "Fake initialize/request peer implements only old initialize/session-prompt protocol and lacks versioned readiness acknowledgement. New session/prepare is rejected or unsupported before previously observed work.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js:263:1'",
+      "candidate_error": "|-"
+    },
+    {
+      "name": "V5 real C-010 mint persists trusted identity before synthetic prompt byte failure",
+      "category": "candidate_fixture_protocol_integration_regression",
+      "support": "SUPPORTED",
+      "reason": "Fake initialize/request peer implements only old initialize/session-prompt protocol and lacks versioned readiness acknowledgement. New session/prepare is rejected or unsupported before previously observed work.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js:281:1'",
+      "candidate_error": "|-"
+    },
+    {
+      "name": "V5 deliver remains unbound; duplicate private message IDs remain distinct records",
+      "category": "candidate_fixture_protocol_integration_regression",
+      "support": "SUPPORTED",
+      "reason": "Fake initialize/request peer implements only old initialize/session-prompt protocol and lacks versioned readiness acknowledgement. New session/prepare is rejected or unsupported before previously observed work.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js:292:1'",
+      "candidate_error": "'child does not support versioned delivery preparation'"
+    },
+    {
+      "name": "packages/agent-switch/test/switch.test.js",
+      "category": "cold_dependency_import_failure",
+      "support": "SUPPORTED",
+      "reason": "First candidate full run starts before test-created workspace package bridge/dsh-tools stub exists; module-level import error, whereas warmed baseline loads leaf tests.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-switch/test/switch.test.js:1:1'",
+      "candidate_error": "'test failed'"
+    },
+    {
+      "name": "packages/broker/test/agent-directory.test.js",
+      "category": "cold_dependency_import_failure",
+      "support": "SUPPORTED",
+      "reason": "First candidate full run starts before test-created workspace package bridge/dsh-tools stub exists; module-level import error, whereas warmed baseline loads leaf tests.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/broker/test/agent-directory.test.js:1:1'",
+      "candidate_error": "'test failed'"
+    },
+    {
+      "name": "packages/broker/test/agent-session-messaging.test.js",
+      "category": "cold_dependency_import_failure",
+      "support": "SUPPORTED",
+      "reason": "First candidate full run starts before test-created workspace package bridge/dsh-tools stub exists; module-level import error, whereas warmed baseline loads leaf tests.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/broker/test/agent-session-messaging.test.js:1:1'",
+      "candidate_error": "'test failed'"
+    },
+    {
+      "name": "packages/broker/test/authoring-file-entry.runtime.test.js",
+      "category": "cold_dependency_import_failure",
+      "support": "SUPPORTED",
+      "reason": "First candidate full run starts before test-created workspace package bridge/dsh-tools stub exists; module-level import error, whereas warmed baseline loads leaf tests.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/broker/test/authoring-file-entry.runtime.test.js:1:1'",
+      "candidate_error": "'test failed'"
+    },
+    {
+      "name": "C-IDM-009 AC-IDM-04 F-14 W1: crash BEFORE the reserve commit -> no record -> clean retry delivers",
+      "category": "fixture_race_pending_rerun",
+      "support": "INFERRED",
+      "reason": "JSON.parse reads partial marker before writer completes; same file already has shared baseline JSON/race failures. Need focused rerun.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/notification-ingress/test/idempotency-recovery.test.js:44:1'",
+      "candidate_error": "'Unexpected end of JSON input'"
+    },
+    {
+      "name": "POST /v1/voice/transcription: valid short WAV -> 200 {\"text\"} (engine: string text; tone may be empty)",
+      "category": "native_or_timing_environment_pending_rerun",
+      "support": "INFERRED",
+      "reason": "Voice endpoint504 instead200 under concurrent full suite; baseline other native utterance test failed. No affected voice source; needs focused rerun.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/product-api/test/voice-transcription.test.js:176:1'",
+      "candidate_error": "|-"
+    },
+    {
+      "name": "real HTTP/store/Router chain/AgentProcess FIFO/native message/source observer produces one own final",
+      "category": "candidate_fixture_protocol_integration_regression",
+      "support": "SUPPORTED",
+      "reason": "Fake initialize/request peer implements only old initialize/session-prompt protocol and lacks versioned readiness acknowledgement. New session/prepare is rejected or unsupported before previously observed work.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/website-inquiry-integration.test.js:7:1'",
+      "candidate_error": "|-"
+    },
+    {
+      "name": "retained original projection repairs result-commit loss after canonical main reset without resend",
+      "category": "candidate_fixture_protocol_integration_regression",
+      "support": "SUPPORTED",
+      "reason": "Fake initialize/request peer implements only old initialize/session-prompt protocol and lacks versioned readiness acknowledgement. New session/prepare is rejected or unsupported before previously observed work.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/website-inquiry-integration.test.js:38:1'",
+      "candidate_error": "|-"
+    },
+    {
+      "name": "lost real receipt preserves UNKNOWN delivery independently from exact completed reply; never resends",
+      "category": "candidate_fixture_protocol_integration_regression",
+      "support": "SUPPORTED",
+      "reason": "Fake initialize/request peer implements only old initialize/session-prompt protocol and lacks versioned readiness acknowledgement. New session/prepare is rejected or unsupported before previously observed work.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/website-inquiry-integration.test.js:74:2'",
+      "candidate_error": "|-"
+    },
+    {
+      "name": "settled active fence preserves stale successor liveness: correlation=false, clean baseline=false",
+      "category": "candidate_fixture_protocol_integration_regression",
+      "support": "SUPPORTED",
+      "reason": "Fake initialize/request peer implements only old initialize/session-prompt protocol and lacks versioned readiness acknowledgement. New session/prepare is rejected or unsupported before previously observed work.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/workflow-execution/test/runtime-wiring.test.js:238:3'",
+      "candidate_error": "|-"
+    },
+    {
+      "name": "settled active fence preserves stale successor liveness: correlation=false, clean baseline=true",
+      "category": "candidate_fixture_protocol_integration_regression",
+      "support": "SUPPORTED",
+      "reason": "Fake initialize/request peer implements only old initialize/session-prompt protocol and lacks versioned readiness acknowledgement. New session/prepare is rejected or unsupported before previously observed work.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/workflow-execution/test/runtime-wiring.test.js:238:3'",
+      "candidate_error": "|-"
+    },
+    {
+      "name": "settled active fence preserves stale successor liveness: correlation=true, clean baseline=false",
+      "category": "candidate_fixture_protocol_integration_regression",
+      "support": "SUPPORTED",
+      "reason": "Fake initialize/request peer implements only old initialize/session-prompt protocol and lacks versioned readiness acknowledgement. New session/prepare is rejected or unsupported before previously observed work.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/workflow-execution/test/runtime-wiring.test.js:238:3'",
+      "candidate_error": "|-"
+    },
+    {
+      "name": "settled active fence preserves stale successor liveness: correlation=true, clean baseline=true",
+      "category": "candidate_fixture_protocol_integration_regression",
+      "support": "SUPPORTED",
+      "reason": "Fake initialize/request peer implements only old initialize/session-prompt protocol and lacks versioned readiness acknowledgement. New session/prepare is rejected or unsupported before previously observed work.",
+      "candidate_location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/workflow-execution/test/runtime-wiring.test.js:238:3'",
+      "candidate_error": "|-"
+    }
+  ],
+  "absent_failed_names": [
+    {
+      "name": "TEXT_NONEMPTY: real utterance (macOS say, zh_CN) transcribes to non-empty text",
+      "interpretation": "No improvement established: agent-switch import failure removes leaf definition, or native utterance coverage absent after earlier engine failure."
+    },
+    {
+      "name": "registers exactly the agent_core_switch_agent tool",
+      "interpretation": "No improvement established: agent-switch import failure removes leaf definition, or native utterance coverage absent after earlier engine failure."
+    }
+  ],
+  "category_counts": {
+    "cold_dependency_import_failure": 8,
+    "candidate_fixture_protocol_integration_regression": 15,
+    "timing_or_load_failure_pending_rerun": 1,
+    "candidate_fixture_auto_ack_regression": 2,
+    "fixture_race_pending_rerun": 1,
+    "native_or_timing_environment_pending_rerun": 1
+  },
+  "comparison_result": "NOT_COMPARABLE_AS_CLEAN_PRODUCT_REGRESSION_COUNT",
+  "limitations": [
+    "candidate cold dependencies versus warm baseline reduce test definitions;3069vs3126 cannot be compared as same universe",
+    "15 protocol-integration fixture failures and2 new readiness-fixture failures are candidate-induced, not dismissed as baseline environment debt",
+    "3 timing/native/race cases remain INFERRED pending focused/warm rerun",
+    "current candidate worktree is being repaired by parent; first log does not bind later source bytes"
+  ],
+  "next_action": "Parent repair handshake-aware synthetic peers and disable auto ack in readiness negative tests; run candidate warmed with identical finite command/env after frozen source snapshot, then compare."
+}

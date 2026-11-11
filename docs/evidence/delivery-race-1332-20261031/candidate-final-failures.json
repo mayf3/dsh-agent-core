@@ -1,0 +1,1046 @@
+[
+  {
+    "name": "special-bit store mode is rejected instead of treated as exact 0600",
+    "tap_index": 79,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-credential-provisioning/test/store-writer.test.js:165:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'Missing expected rejection.'",
+    "details": "  ---\n  duration_ms: 8.719834\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-credential-provisioning/test/store-writer.test.js:165:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected rejection.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected:\n    code: 'CREDENTIALS_STORE_ERROR'\n  operator: 'rejects'\n  stack: |-\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-credential-provisioning/test/store-writer.test.js:168:3)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: symlink existing store is rejected without following it"
+  },
+  {
+    "name": "harness resolution is worktree-aware and cliBin fails loud without a checkout",
+    "tap_index": 183,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-provisioning/test/provisioning.test.js:129:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'repo root sanity: /private/tmp/dsh-1332-delivery-race-fix'",
+    "details": "  ---\n  duration_ms: 0.478292\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-provisioning/test/provisioning.test.js:129:1'\n  failureType: 'testCodeFailure'\n  error: 'repo root sanity: /private/tmp/dsh-1332-delivery-race-fix'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: true\n  actual: false\n  operator: '=='\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-provisioning/test/provisioning.test.js:132:10)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1397:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:969:18)\n    Test.postRun (node:internal/test_runner/test:1537:19)\n    Test.run (node:internal/test_runner/test:1462:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: target-home plugin provisioning is exact, idempotent and leaves the shared profile byte-unchanged"
+  },
+  {
+    "name": "seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept)",
+    "tap_index": 263,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/broker-rpc.test.js:322:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "|-",
+    "details": "  ---\n  duration_ms: 0.868208\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/broker-rpc.test.js:322:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The input did not match the regular expression /response was lost/. Input:\n    \n    'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {\"state\":\"STILL_UNKNOWN\",\"operation\":\"create\",\"reason\":\"read-back transport failed\"}'\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected:\n  actual: 'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {\"state\":\"STILL_UNKNOWN\",\"operation\":\"create\",\"reason\":\"read-back transport failed\"}'\n  operator: 'match'\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/broker-rpc.test.js:330:10)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: seam: a structured gateway failure passes through declared codes verbatim at the correct depth"
+  },
+  {
+    "name": "seam: a structured gateway failure passes through declared codes verbatim at the correct depth",
+    "tap_index": 264,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/broker-rpc.test.js:334:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "|-",
+    "details": "  ---\n  duration_ms: 0.302542\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/broker-rpc.test.js:334:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The input did not match the regular expression /outcome is unknown/. Input:\n    \n    'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {\"state\":\"STILL_UNKNOWN\",\"operation\":\"create\",\"reason\":\"read-back response unusable\"}'\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected:\n  actual: 'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {\"state\":\"STILL_UNKNOWN\",\"operation\":\"create\",\"reason\":\"read-back response unusable\"}'\n  operator: 'match'\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/broker-rpc.test.js:340:10)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: seam: agent_session_send accepted/replied/timeout survive the corrected depth; a gateway throw stays outcome_unknown with zero retry"
+  },
+  {
+    "name": "E: valid canonical credential — child initializes on the openai-codex route",
+    "tap_index": 328,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/luna-credential-chain.test.js:157:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout'",
+    "details": "  ---\n  duration_ms: 6.266833\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/luna-credential-chain.test.js:157:1'\n  failureType: 'testCodeFailure'\n  error: 'dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    cliBin (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-provisioning/src/index.js:76:11)\n    gates (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/luna-credential-chain.test.js:42:46)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/luna-credential-chain.test.js:158:8)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1397:25)\n    Test.start (node:internal/test_runner/test:1257:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)\n  ...\n# Subtest: F: missing credential fails loud on the real chain — never a silent fallback"
+  },
+  {
+    "name": "F: missing credential fails loud on the real chain — never a silent fallback",
+    "tap_index": 329,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/luna-credential-chain.test.js:169:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout'",
+    "details": "  ---\n  duration_ms: 0.131792\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/luna-credential-chain.test.js:169:1'\n  failureType: 'testCodeFailure'\n  error: 'dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    cliBin (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-provisioning/src/index.js:76:11)\n    gates (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/luna-credential-chain.test.js:42:46)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/luna-credential-chain.test.js:170:8)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1397:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:969:18)\n    Test.postRun (node:internal/test_runner/test:1537:19)\n    Test.run (node:internal/test_runner/test:1462:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n# Subtest: G: unsafe credential (group/world readable) fails loud on the real chain"
+  },
+  {
+    "name": "G: unsafe credential (group/world readable) fails loud on the real chain",
+    "tap_index": 330,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/luna-credential-chain.test.js:186:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout'",
+    "details": "  ---\n  duration_ms: 0.094083\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/luna-credential-chain.test.js:186:1'\n  failureType: 'testCodeFailure'\n  error: 'dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    cliBin (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-provisioning/src/index.js:76:11)\n    gates (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/luna-credential-chain.test.js:42:46)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/luna-credential-chain.test.js:187:8)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1397:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:969:18)\n    Test.postRun (node:internal/test_runner/test:1537:19)\n    Test.run (node:internal/test_runner/test:1462:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-priws-3JNIRO/bindings.json\n# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)\n# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)\n# [router] binding created: channelConversation feishu:oc_x... -> agent agt_stock_agent + session main + workspace (agent default)\n# [router] channelConversation feishu:oc_x... -> binding -> agent agt_stock_agent + session main (channel=p2p chat=oc_x sender=ou_sen text=\"first turn after import\")\n# [router] route-chain {\"kind\":\"route_attempt\",\"tsWallMs\":1793404396330,\"routeChainId\":\"single-route\",\"agentId\":\"agt_stock_agent\",\"attemptIndex\":0,\"route\":\"global\",\"primaryRoute\":\"global\",\"failureClass\":\"NONE\",\"admissionProven\":\"admitted\",\"attemptOutcome\":\"success\"}\n# [router] route-chain {\"kind\":\"route_chain_final\",\"tsWallMs\":1793404396330,\"routeChainId\":\"single-route\",\"agentId\":\"agt_stock_agent\",\"primaryRoute\":\"global\",\"finalRoute\":\"global\",\"finalOutcome\":\"SUCCESS\",\"totalRouteAttempts\":1,\"fallbackActivated\":false,\"fallbackRoute\":null}\n# [router] agent agt_stock_agent (pid 7301) produced a 26B reply\n# Subtest: D: imported agent — spawn hands the process the imported workspace + env mechanically"
+  },
+  {
+    "name": "V3 parsed terminal and child exit remain uncommitted together when durable settlement fails",
+    "tap_index": 360,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js:11:1'",
+    "failure_type": "'unhandledRejection'",
+    "error": "'request session/prompt deadline expired before write (agent agt_fx)'",
+    "details": "  ---\n  duration_ms: 185.738875\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js:11:1'\n  failureType: 'unhandledRejection'\n  error: 'request session/prompt deadline expired before write (agent agt_fx)'\n  code: 'AGENT_PROCESS_RPC_DEADLINE'\n  name: 'AgentProcessEnvelopeError'\n  stack: |-\n    envelopeCarrier (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/state-machine.js:30:17)\n    AgentProcess.request (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/rpc-channel.js:239:29)\n    AgentProcess.promptWrite (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/prompt-write.js:20:30)\n    AgentProcess.runPromptExecution (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/turn-execution.js:318:34)\n    AgentProcess.drainTurnQueue (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/turn-execution.js:217:15)\n    file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/turn-execution.js:170:12\n    new Promise (<anonymous>)\n    AgentProcess.enqueuePromptExecution (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/turn-execution.js:139:12)\n    AgentProcess.turn (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/agent-process.js:260:17)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js:20:26)\n  ...\n# Subtest: V3 over-cap durable record keeps startup business admission fail closed"
+  },
+  {
+    "name": "packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js",
+    "tap_index": 41,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 38.825125\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# Subtest: CTR-EPAR-005: a deleted exact id whose string matches another agent display name sends ZERO"
+  },
+  {
+    "name": "R3: a settled or unknown turnExecutionId proves nothing (absent leaf)",
+    "tap_index": 475,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/message-origin.test.js:175:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot read properties of undefined (reading 'ctx')\"",
+    "details": "  ---\n  duration_ms: 0.111458\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/message-origin.test.js:175:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'ctx')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/message-origin.test.js:180:32)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: R3: the ordinary turn-mode path keeps its trusted ingressContext binding AND the source leaf"
+  },
+  {
+    "name": "scripted native rounds obtain fresh parent proof after prior settlement through real child transport",
+    "tap_index": 683,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/route-chain/native-goal-composed.test.js:14:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'paired native build is required; this conformance test must not silently skip'",
+    "details": "  ---\n  duration_ms: 0.701917\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/route-chain/native-goal-composed.test.js:14:1'\n  failureType: 'testCodeFailure'\n  error: 'paired native build is required; this conformance test must not silently skip'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: true\n  operator: '=='\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/route-chain/native-goal-composed.test.js:15:10)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1397:25)\n    Test.start (node:internal/test_runner/test:1257:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)\n  ...\n# Subtest: real child timeout removes native queued admission before old owner release"
+  },
+  {
+    "name": "real child timeout removes native queued admission before old owner release",
+    "tap_index": 684,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/route-chain/native-goal-composed.test.js:74:43'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'agent agt_cancel-source (generation 1) RPC initialize rejected: AGENT_PROCESS_EXITED'",
+    "details": "  ---\n  duration_ms: 59.161708\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/route-chain/native-goal-composed.test.js:74:43'\n  failureType: 'testCodeFailure'\n  error: 'agent agt_cancel-source (generation 1) RPC initialize rejected: AGENT_PROCESS_EXITED'\n  code: 'AGENT_PROCESS_EXITED'\n  stack: |-\n    AgentProcess.rejectAllPending (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/rpc-channel.js:358:35)\n    AgentProcess.onChildExit (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/spawn.js:143:10)\n    ChildProcess.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/spawn.js:77:47)\n    ChildProcess.wrapper (node:events:639:12)\n    ChildProcess.emit (node:events:514:20)\n    ChildProcess._handle.onexit (node:internal/child_process:294:12)\n  ...\n# Subtest: real child cancel removes native queued admission before old owner release"
+  },
+  {
+    "name": "real child cancel removes native queued admission before old owner release",
+    "tap_index": 685,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/route-chain/native-goal-composed.test.js:74:43'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'agent agt_cancel-source (generation 1) RPC initialize rejected: AGENT_PROCESS_EXITED'",
+    "details": "  ---\n  duration_ms: 56.377667\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/route-chain/native-goal-composed.test.js:74:43'\n  failureType: 'testCodeFailure'\n  error: 'agent agt_cancel-source (generation 1) RPC initialize rejected: AGENT_PROCESS_EXITED'\n  code: 'AGENT_PROCESS_EXITED'\n  stack: |-\n    AgentProcess.rejectAllPending (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/rpc-channel.js:358:35)\n    AgentProcess.onChildExit (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/spawn.js:143:10)\n    ChildProcess.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/spawn.js:77:47)\n    ChildProcess.wrapper (node:events:639:12)\n    ChildProcess.emit (node:events:514:20)\n    ChildProcess._handle.onexit (node:internal/child_process:294:12)\n  ...\n# Subtest: draining child of an ordinary agent loses broker and switch at the stop barrier"
+  },
+  {
+    "name": "registers exactly the agent_core_switch_agent tool",
+    "tap_index": 795,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/agent-switch/test/switch.test.js:42:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot read properties of undefined (reading 'includes')\"",
+    "details": "  ---\n  duration_ms: 1.061292\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-switch/test/switch.test.js:42:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'includes')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-switch/test/switch.test.js:51:52)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1397:25)\n    Test.start (node:internal/test_runner/test:1257:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)\n  ...\n# Subtest: execute forwards args verbatim to the Router over agentRpc"
+  },
+  {
+    "name": "workflow_execute: manifest freezes the unified four-operation write contract (§25 amendment)",
+    "tap_index": 1024,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/broker/test/capabilities/workflow-transition.test.js:89:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "|-",
+    "details": "  ---\n  duration_ms: 1.52075\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/broker/test/capabilities/workflow-transition.test.js:89:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly deep-equal:\n    + actual - expected\n    \n      [\n        'workflowInstanceId',\n        'transitionDefinitionId',\n        'expectedWorkflowStateVersion',\n        'submissionPayload',\n    +   'contextPayload',\n        'executable_for_actor'\n      ]\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected:\n    0: 'workflowInstanceId'\n    1: 'transitionDefinitionId'\n    2: 'expectedWorkflowStateVersion'\n    3: 'submissionPayload'\n    4: 'executable_for_actor'\n  actual:\n    0: 'workflowInstanceId'\n    1: 'transitionDefinitionId'\n    2: 'expectedWorkflowStateVersion'\n    3: 'submissionPayload'\n    4: 'contextPayload'\n    5: 'executable_for_actor'\n  operator: 'deepStrictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/broker/test/capabilities/workflow-transition.test.js:115:10)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1397:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:969:18)\n    Test.postRun (node:internal/test_runner/test:1537:19)\n    Test.run (node:internal/test_runner/test:1462:12)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n# Subtest: workflow_execute operation=transition: authorized POST preserves body, scope, trusted IK and token-only actor"
+  },
+  {
+    "name": "ACC-CMR-005: six executable zero-side-effect oracles across the full resolution matrix",
+    "tap_index": 1080,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/broker/test/credential-metadata-side-effects.test.js:69:1'",
+    "failure_type": "'uncaughtException'",
+    "error": "'EMFILE: too many open files, watch'",
+    "details": "  ---\n  duration_ms: 25.504667\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/broker/test/credential-metadata-side-effects.test.js:69:1'\n  failureType: 'uncaughtException'\n  error: 'EMFILE: too many open files, watch'\n  code: 'EMFILE'\n  stack: |-\n    FSWatcher._handle.onchange (node:internal/fs/watchers:269:21)\n  ...\n# Subtest: PRESENT: closed result {entry, clientId} from a valid entry, canary excluded"
+  },
+  {
+    "name": "GATE: allowed verdict forwards to onEvent, no receipt",
+    "tap_index": 1534,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:47:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"",
+    "details": "  ---\n  duration_ms: 1.081541\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:47:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"\n  code: 'ERR_MODULE_NOT_FOUND'\n  stack: |-\n    Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    packageResolve (node:internal/modules/esm/resolve:784:25)\n    moduleResolve (node:internal/modules/esm/resolve:873:18)\n    defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    #resolve (node:internal/modules/esm/loader:690:17)\n    ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    node:internal/modules/esm/loader:639:32\n  ...\n# Subtest: GATE: rejection FAILS CLOSED — onEvent never called, fixed receipt sent once"
+  },
+  {
+    "name": "GATE: rejection FAILS CLOSED — onEvent never called, fixed receipt sent once",
+    "tap_index": 1535,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:54:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"",
+    "details": "  ---\n  duration_ms: 0.226791\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:54:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"\n  code: 'ERR_MODULE_NOT_FOUND'\n  stack: |-\n    Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    packageResolve (node:internal/modules/esm/resolve:784:25)\n    moduleResolve (node:internal/modules/esm/resolve:873:18)\n    defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    #resolve (node:internal/modules/esm/loader:690:17)\n    ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    node:internal/modules/esm/loader:639:32\n  ...\n# Subtest: AC-GATE-MALFORMED-FAIL-CLOSED: only a non-null object with literal allowed=true passes"
+  },
+  {
+    "name": "AC-GATE-MALFORMED-FAIL-CLOSED: only a non-null object with literal allowed=true passes",
+    "tap_index": 1536,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:64:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"",
+    "details": "  ---\n  duration_ms: 0.184792\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:64:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"\n  code: 'ERR_MODULE_NOT_FOUND'\n  stack: |-\n    Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    packageResolve (node:internal/modules/esm/resolve:784:25)\n    moduleResolve (node:internal/modules/esm/resolve:873:18)\n    defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    #resolve (node:internal/modules/esm/loader:690:17)\n    ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    node:internal/modules/esm/loader:639:32\n  ...\n# Subtest: GATE: diagnostic verdict getters are never invoked and cannot suppress rejection receipt"
+  },
+  {
+    "name": "GATE: diagnostic verdict getters are never invoked and cannot suppress rejection receipt",
+    "tap_index": 1537,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:97:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"",
+    "details": "  ---\n  duration_ms: 0.1665\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:97:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"\n  code: 'ERR_MODULE_NOT_FOUND'\n  stack: |-\n    Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    packageResolve (node:internal/modules/esm/resolve:784:25)\n    moduleResolve (node:internal/modules/esm/resolve:873:18)\n    defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    #resolve (node:internal/modules/esm/loader:690:17)\n    ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    node:internal/modules/esm/loader:639:32\n  ...\n# Subtest: GATE: accessor-based allowed verdict fails closed without invoking getter"
+  },
+  {
+    "name": "GATE: accessor-based allowed verdict fails closed without invoking getter",
+    "tap_index": 1538,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:115:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"",
+    "details": "  ---\n  duration_ms: 0.500375\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:115:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"\n  code: 'ERR_MODULE_NOT_FOUND'\n  stack: |-\n    Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    packageResolve (node:internal/modules/esm/resolve:784:25)\n    moduleResolve (node:internal/modules/esm/resolve:873:18)\n    defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    #resolve (node:internal/modules/esm/loader:690:17)\n    ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    node:internal/modules/esm/loader:639:32\n  ...\n# Subtest: GATE: a throwing gate FAILS CLOSED too (gate_error)"
+  },
+  {
+    "name": "GATE: a throwing gate FAILS CLOSED too (gate_error)",
+    "tap_index": 1539,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:133:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"",
+    "details": "  ---\n  duration_ms: 0.146875\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:133:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"\n  code: 'ERR_MODULE_NOT_FOUND'\n  stack: |-\n    Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    packageResolve (node:internal/modules/esm/resolve:784:25)\n    moduleResolve (node:internal/modules/esm/resolve:873:18)\n    defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    #resolve (node:internal/modules/esm/loader:690:17)\n    ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    node:internal/modules/esm/loader:639:32\n  ...\n# Subtest: GATE: NO gate installed = fail-closed drop (spec §9 startup ordering — never legacy forward)"
+  },
+  {
+    "name": "GATE: NO gate installed = fail-closed drop (spec §9 startup ordering — never legacy forward)",
+    "tap_index": 1540,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:140:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"",
+    "details": "  ---\n  duration_ms: 0.130125\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:140:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"\n  code: 'ERR_MODULE_NOT_FOUND'\n  stack: |-\n    Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    packageResolve (node:internal/modules/esm/resolve:784:25)\n    moduleResolve (node:internal/modules/esm/resolve:873:18)\n    defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    #resolve (node:internal/modules/esm/loader:690:17)\n    ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    node:internal/modules/esm/loader:639:32\n  ...\n# Subtest: GATE: wired after construction takes effect immediately (live config, like setCallback)"
+  },
+  {
+    "name": "GATE: wired after construction takes effect immediately (live config, like setCallback)",
+    "tap_index": 1541,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:147:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"",
+    "details": "  ---\n  duration_ms: 0.13825\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:147:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"\n  code: 'ERR_MODULE_NOT_FOUND'\n  stack: |-\n    Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    packageResolve (node:internal/modules/esm/resolve:784:25)\n    moduleResolve (node:internal/modules/esm/resolve:873:18)\n    defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    #resolve (node:internal/modules/esm/loader:690:17)\n    ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    node:internal/modules/esm/loader:639:32\n  ...\n# Subtest: GATE: self-echo never reaches the gate (residual guard before admission)"
+  },
+  {
+    "name": "GATE: self-echo never reaches the gate (residual guard before admission)",
+    "tap_index": 1542,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:157:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"",
+    "details": "  ---\n  duration_ms: 0.147541\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:157:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"\n  code: 'ERR_MODULE_NOT_FOUND'\n  stack: |-\n    Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    packageResolve (node:internal/modules/esm/resolve:784:25)\n    moduleResolve (node:internal/modules/esm/resolve:873:18)\n    defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    #resolve (node:internal/modules/esm/loader:690:17)\n    ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    node:internal/modules/esm/loader:639:32\n  ...\n# Subtest: GATE: handler awaits the FULL onEvent turn before resolving"
+  },
+  {
+    "name": "GATE: handler awaits the FULL onEvent turn before resolving",
+    "tap_index": 1543,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:167:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"",
+    "details": "  ---\n  duration_ms: 0.190917\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:167:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"\n  code: 'ERR_MODULE_NOT_FOUND'\n  stack: |-\n    Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    packageResolve (node:internal/modules/esm/resolve:784:25)\n    moduleResolve (node:internal/modules/esm/resolve:873:18)\n    defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    #resolve (node:internal/modules/esm/loader:690:17)\n    ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    node:internal/modules/esm/loader:639:32\n  ...\n# Subtest: GATE: onEvent rejection propagates to the SDK public error pipeline"
+  },
+  {
+    "name": "GATE: onEvent rejection propagates to the SDK public error pipeline",
+    "tap_index": 1544,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:178:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"",
+    "details": "  ---\n  duration_ms: 0.213\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:178:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"\n  code: 'ERR_MODULE_NOT_FOUND'\n  stack: |-\n    Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    packageResolve (node:internal/modules/esm/resolve:784:25)\n    moduleResolve (node:internal/modules/esm/resolve:873:18)\n    defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    #resolve (node:internal/modules/esm/loader:690:17)\n    ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    node:internal/modules/esm/loader:639:32\n  ...\n# Subtest: GATE: current Router-style {error} outcome remains a handler failure"
+  },
+  {
+    "name": "GATE: current Router-style {error} outcome remains a handler failure",
+    "tap_index": 1545,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:184:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"",
+    "details": "  ---\n  duration_ms: 0.274458\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:184:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"\n  code: 'ERR_MODULE_NOT_FOUND'\n  stack: |-\n    Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    packageResolve (node:internal/modules/esm/resolve:784:25)\n    moduleResolve (node:internal/modules/esm/resolve:873:18)\n    defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    #resolve (node:internal/modules/esm/loader:690:17)\n    ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    node:internal/modules/esm/loader:639:32\n  ...\n# Subtest: IDENTITY: group message with UNRESOLVED bot identity fails closed (error + drop)"
+  },
+  {
+    "name": "IDENTITY: group message with UNRESOLVED bot identity fails closed (error + drop)",
+    "tap_index": 1546,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:199:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"",
+    "details": "  ---\n  duration_ms: 0.722833\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:199:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"\n  code: 'ERR_MODULE_NOT_FOUND'\n  stack: |-\n    Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    packageResolve (node:internal/modules/esm/resolve:784:25)\n    moduleResolve (node:internal/modules/esm/resolve:873:18)\n    defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    #resolve (node:internal/modules/esm/loader:690:17)\n    ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    node:internal/modules/esm/loader:639:32\n  ...\n# Subtest: IDENTITY: p2p message with unresolved identity still reaches the gate (p2p needs no identity for adjudication)"
+  },
+  {
+    "name": "IDENTITY: p2p message with unresolved identity still reaches the gate (p2p needs no identity for adjudication)",
+    "tap_index": 1547,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:211:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"",
+    "details": "  ---\n  duration_ms: 0.609458\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:211:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"\n  code: 'ERR_MODULE_NOT_FOUND'\n  stack: |-\n    Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    packageResolve (node:internal/modules/esm/resolve:784:25)\n    moduleResolve (node:internal/modules/esm/resolve:873:18)\n    defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    #resolve (node:internal/modules/esm/loader:690:17)\n    ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    node:internal/modules/esm/loader:639:32\n  ...\n# Subtest: IDENTITY: identity resolved but openId empty fails closed for group too"
+  },
+  {
+    "name": "IDENTITY: identity resolved but openId empty fails closed for group too",
+    "tap_index": 1548,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:222:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"",
+    "details": "  ---\n  duration_ms: 0.213792\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js:222:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/admission.test.js\"\n  code: 'ERR_MODULE_NOT_FOUND'\n  stack: |-\n    Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    packageResolve (node:internal/modules/esm/resolve:784:25)\n    moduleResolve (node:internal/modules/esm/resolve:873:18)\n    defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    #resolve (node:internal/modules/esm/loader:690:17)\n    ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    node:internal/modules/esm/loader:639:32\n  ...\n# node:internal/modules/package_json_reader:301\n#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n#         ^\n# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/bridge.test.js\n#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n#     at packageResolve (node:internal/modules/esm/resolve:784:25)\n#     at moduleResolve (node:internal/modules/esm/resolve:873:18)\n#     at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n#     at \\#cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n#     at \\#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n#     at \\#resolve (node:internal/modules/esm/loader:690:17)\n#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n#   code: 'ERR_MODULE_NOT_FOUND'\n# }\n# Node.js v26.7.0\n# Subtest: packages/feishu-connector/test/bridge.test.js"
+  },
+  {
+    "name": "packages/feishu-connector/test/bridge.test.js",
+    "tap_index": 156,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/bridge.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 36.502542\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/bridge.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# Subtest: buildConversationId: p2p / group = chatId"
+  },
+  {
+    "name": "packages/feishu-connector/test/current-main-full-turn.test.js",
+    "tap_index": 158,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/current-main-full-turn.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 52.24075\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/current-main-full-turn.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# node:internal/modules/package_json_reader:301\n#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n#         ^\n# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/frozen-config.test.js\n#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n#     at packageResolve (node:internal/modules/esm/resolve:784:25)\n#     at moduleResolve (node:internal/modules/esm/resolve:873:18)\n#     at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n#     at \\#cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n#     at \\#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n#     at \\#resolve (node:internal/modules/esm/loader:690:17)\n#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n#   code: 'ERR_MODULE_NOT_FOUND'\n# }\n# Node.js v26.7.0\n# Subtest: packages/feishu-connector/test/frozen-config.test.js"
+  },
+  {
+    "name": "packages/feishu-connector/test/frozen-config.test.js",
+    "tap_index": 159,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/frozen-config.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 33.766292\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/frozen-config.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# node:internal/modules/package_json_reader:301\n#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n#         ^\n# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/full-ingress-differential.test.js\n#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n#     at packageResolve (node:internal/modules/esm/resolve:784:25)\n#     at moduleResolve (node:internal/modules/esm/resolve:873:18)\n#     at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n#     at \\#cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n#     at \\#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n#     at \\#resolve (node:internal/modules/esm/loader:690:17)\n#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n#   code: 'ERR_MODULE_NOT_FOUND'\n# }\n# Node.js v26.7.0\n# Subtest: packages/feishu-connector/test/full-ingress-differential.test.js"
+  },
+  {
+    "name": "packages/feishu-connector/test/full-ingress-differential.test.js",
+    "tap_index": 160,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/full-ingress-differential.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 31.65825\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/full-ingress-differential.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# node:internal/modules/package_json_reader:301\n#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n#         ^\n# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/golden-vectors.test.js\n#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n#     at packageResolve (node:internal/modules/esm/resolve:784:25)\n#     at moduleResolve (node:internal/modules/esm/resolve:873:18)\n#     at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n#     at \\#cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n#     at \\#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n#     at \\#resolve (node:internal/modules/esm/loader:690:17)\n#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n#   code: 'ERR_MODULE_NOT_FOUND'\n# }\n# Node.js v26.7.0\n# Subtest: packages/feishu-connector/test/golden-vectors.test.js"
+  },
+  {
+    "name": "packages/feishu-connector/test/golden-vectors.test.js",
+    "tap_index": 161,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/golden-vectors.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 33.161125\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/golden-vectors.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# node:internal/modules/package_json_reader:301\n#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n#         ^\n# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/standalone.mjs\n#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n#     at packageResolve (node:internal/modules/esm/resolve:784:25)\n#     at moduleResolve (node:internal/modules/esm/resolve:873:18)\n#     at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n#     at \\#cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n#     at \\#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n#     at \\#resolve (node:internal/modules/esm/loader:690:17)\n#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n#   code: 'ERR_MODULE_NOT_FOUND'\n# }\n# Node.js v26.7.0\n# Subtest: packages/feishu-connector/test/log-redaction-adversarial.test.js"
+  },
+  {
+    "name": "packages/feishu-connector/test/log-redaction-adversarial.test.js",
+    "tap_index": 162,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/log-redaction-adversarial.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 34.177666\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/log-redaction-adversarial.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# node:internal/modules/package_json_reader:301\n#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n#         ^\n# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/src/index.js\n#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n#     at packageResolve (node:internal/modules/esm/resolve:784:25)\n#     at moduleResolve (node:internal/modules/esm/resolve:873:18)\n#     at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n#     at \\#cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n#     at \\#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n#     at \\#resolve (node:internal/modules/esm/loader:690:17)\n#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n#   code: 'ERR_MODULE_NOT_FOUND'\n# }\n# Node.js v26.7.0\n# Subtest: packages/feishu-connector/test/log-redaction.test.js"
+  },
+  {
+    "name": "packages/feishu-connector/test/log-redaction.test.js",
+    "tap_index": 163,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/log-redaction.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 32.773292\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/log-redaction.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# node:internal/modules/package_json_reader:301\n#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n#         ^\n# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/mention-config.test.js\n#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n#     at packageResolve (node:internal/modules/esm/resolve:784:25)\n#     at moduleResolve (node:internal/modules/esm/resolve:873:18)\n#     at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n#     at \\#cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n#     at \\#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n#     at \\#resolve (node:internal/modules/esm/loader:690:17)\n#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n#   code: 'ERR_MODULE_NOT_FOUND'\n# }\n# Node.js v26.7.0\n# Subtest: packages/feishu-connector/test/mention-config.test.js"
+  },
+  {
+    "name": "packages/feishu-connector/test/mention-config.test.js",
+    "tap_index": 164,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/mention-config.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 37.839375\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/mention-config.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# node:internal/modules/package_json_reader:301\n#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n#         ^\n# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/src/index.js\n#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n#     at packageResolve (node:internal/modules/esm/resolve:784:25)\n#     at moduleResolve (node:internal/modules/esm/resolve:873:18)\n#     at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n#     at \\#cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n#     at \\#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n#     at \\#resolve (node:internal/modules/esm/loader:690:17)\n#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n#   code: 'ERR_MODULE_NOT_FOUND'\n# }\n# Node.js v26.7.0\n# Subtest: packages/feishu-connector/test/mount.test.js"
+  },
+  {
+    "name": "packages/feishu-connector/test/mount.test.js",
+    "tap_index": 165,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/mount.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 37.598666\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/mount.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# node:internal/modules/package_json_reader:301\n#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n#         ^\n# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/outbound.test.js\n#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n#     at packageResolve (node:internal/modules/esm/resolve:784:25)\n#     at moduleResolve (node:internal/modules/esm/resolve:873:18)\n#     at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n#     at \\#cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n#     at \\#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n#     at \\#resolve (node:internal/modules/esm/loader:690:17)\n#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n#   code: 'ERR_MODULE_NOT_FOUND'\n# }\n# Node.js v26.7.0\n# Subtest: packages/feishu-connector/test/outbound.test.js"
+  },
+  {
+    "name": "packages/feishu-connector/test/outbound.test.js",
+    "tap_index": 166,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/outbound.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 37.962083\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/outbound.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# node:internal/modules/package_json_reader:301\n#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n#         ^\n# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/src/index.js\n#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n#     at packageResolve (node:internal/modules/esm/resolve:784:25)\n#     at moduleResolve (node:internal/modules/esm/resolve:873:18)\n#     at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n#     at \\#cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n#     at \\#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n#     at \\#resolve (node:internal/modules/esm/loader:690:17)\n#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n#   code: 'ERR_MODULE_NOT_FOUND'\n# }\n# Node.js v26.7.0\n# Subtest: packages/feishu-connector/test/processing-reaction.test.js"
+  },
+  {
+    "name": "packages/feishu-connector/test/processing-reaction.test.js",
+    "tap_index": 167,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/processing-reaction.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 38.765625\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/processing-reaction.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# node:internal/modules/package_json_reader:301\n#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n#         ^\n# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/real-binding-replay.test.js\n#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n#     at packageResolve (node:internal/modules/esm/resolve:784:25)\n#     at moduleResolve (node:internal/modules/esm/resolve:873:18)\n#     at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n#     at \\#cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n#     at \\#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n#     at \\#resolve (node:internal/modules/esm/loader:690:17)\n#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n#   code: 'ERR_MODULE_NOT_FOUND'\n# }\n# Node.js v26.7.0\n# Subtest: packages/feishu-connector/test/real-binding-replay.test.js"
+  },
+  {
+    "name": "packages/feishu-connector/test/real-binding-replay.test.js",
+    "tap_index": 168,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/real-binding-replay.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 36.293208\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/real-binding-replay.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# node:internal/modules/package_json_reader:301\n#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n#         ^\n# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/reply-card/reply-card.test.js\n#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n#     at packageResolve (node:internal/modules/esm/resolve:784:25)\n#     at moduleResolve (node:internal/modules/esm/resolve:873:18)\n#     at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n#     at \\#cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n#     at \\#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n#     at \\#resolve (node:internal/modules/esm/loader:690:17)\n#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n#   code: 'ERR_MODULE_NOT_FOUND'\n# }\n# Node.js v26.7.0\n# Subtest: packages/feishu-connector/test/reply-card/reply-card.test.js"
+  },
+  {
+    "name": "packages/feishu-connector/test/reply-card/reply-card.test.js",
+    "tap_index": 169,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/reply-card/reply-card.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 35.775291\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/reply-card/reply-card.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# Subtest: request envelope counts final UTF-8 bytes for required character classes"
+  },
+  {
+    "name": "packages/feishu-connector/test/reply-card/scheduler-card.test.js",
+    "tap_index": 171,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/reply-card/scheduler-card.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 37.666292\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/reply-card/scheduler-card.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# node:internal/modules/package_json_reader:301\n#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n#         ^\n# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/reply-card/ux-phase1-v3-display.test.js\n#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n#     at packageResolve (node:internal/modules/esm/resolve:784:25)\n#     at moduleResolve (node:internal/modules/esm/resolve:873:18)\n#     at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n#     at \\#cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n#     at \\#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n#     at \\#resolve (node:internal/modules/esm/loader:690:17)\n#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n#   code: 'ERR_MODULE_NOT_FOUND'\n# }\n# Node.js v26.7.0\n# Subtest: packages/feishu-connector/test/reply-card/ux-phase1-v3-display.test.js"
+  },
+  {
+    "name": "packages/feishu-connector/test/reply-card/ux-phase1-v3-display.test.js",
+    "tap_index": 172,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/reply-card/ux-phase1-v3-display.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 36.251417\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/reply-card/ux-phase1-v3-display.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# node:internal/modules/package_json_reader:301\n#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n#         ^\n# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/real-sdk-harness.js\n#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n#     at packageResolve (node:internal/modules/esm/resolve:784:25)\n#     at moduleResolve (node:internal/modules/esm/resolve:873:18)\n#     at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n#     at \\#cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n#     at \\#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n#     at \\#resolve (node:internal/modules/esm/loader:690:17)\n#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n#   code: 'ERR_MODULE_NOT_FOUND'\n# }\n# Node.js v26.7.0\n# Subtest: packages/feishu-connector/test/sdk-pipeline.test.js"
+  },
+  {
+    "name": "packages/feishu-connector/test/sdk-pipeline.test.js",
+    "tap_index": 173,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/sdk-pipeline.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 37.84575\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/sdk-pipeline.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# node:internal/modules/package_json_reader:301\n#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n#         ^\n# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/standalone.mjs\n#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n#     at packageResolve (node:internal/modules/esm/resolve:784:25)\n#     at moduleResolve (node:internal/modules/esm/resolve:873:18)\n#     at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n#     at \\#cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n#     at \\#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n#     at \\#resolve (node:internal/modules/esm/loader:690:17)\n#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n#   code: 'ERR_MODULE_NOT_FOUND'\n# }\n# Node.js v26.7.0\n# Subtest: packages/feishu-connector/test/standalone-log-redaction.test.js"
+  },
+  {
+    "name": "packages/feishu-connector/test/standalone-log-redaction.test.js",
+    "tap_index": 174,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/standalone-log-redaction.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 37.367709\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/standalone-log-redaction.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# node:internal/modules/package_json_reader:301\n#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n#         ^\n# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@larksuite/channel' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/ux-phase1-v2.test.js\n#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n#     at packageResolve (node:internal/modules/esm/resolve:784:25)\n#     at moduleResolve (node:internal/modules/esm/resolve:873:18)\n#     at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n#     at \\#cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n#     at \\#resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n#     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n#     at \\#resolve (node:internal/modules/esm/loader:690:17)\n#     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n#     at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n#   code: 'ERR_MODULE_NOT_FOUND'\n# }\n# Node.js v26.7.0\n# Subtest: packages/feishu-connector/test/ux-phase1-v2.test.js"
+  },
+  {
+    "name": "packages/feishu-connector/test/ux-phase1-v2.test.js",
+    "tap_index": 175,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/ux-phase1-v2.test.js:1:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'test failed'",
+    "details": "  ---\n  duration_ms: 35.519042\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/feishu-connector/test/ux-phase1-v2.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# Subtest: FIXED_OPERATION error table is exactly the five fail-closed classes"
+  },
+  {
+    "name": "C-IDM-007 AC-IDM-08 F-23: concurrent same-key requests -> ONE Router call, ONE shared terminal outcome",
+    "tap_index": 1674,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/notification-ingress/test/idempotency.test.js:210:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "|-",
+    "details": "  ---\n  duration_ms: 724.000333\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/notification-ingress/test/idempotency.test.js:210:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    every joiner replays the SAME terminal outcome\n    \n    2 !== 1\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 1\n  actual: 2\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/notification-ingress/test/idempotency.test.js:233:10)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# [notification-ingress] listening on http://127.0.0.1:57303 (deliverReady=true storeReady=true)\n# [notification-ingress] listening on http://127.0.0.1:57316 (deliverReady=true storeReady=true)\n# [notification-ingress] listening on http://127.0.0.1:57338 (deliverReady=true storeReady=true)\n# [notification-ingress] listening on http://127.0.0.1:57356 (deliverReady=true storeReady=true)\n# [notification-ingress] listening on http://127.0.0.1:57363 (deliverReady=true storeReady=true)\n# Subtest: C-IDM-008 AC-IDM-09 F-24: PROVEN no-admission = {VALIDATION_ERROR, AGENT_NOT_FOUND} ONLY"
+  },
+  {
+    "name": "TEXT_NONEMPTY: real utterance (macOS say, zh_CN) transcribes to non-empty text",
+    "tap_index": 1755,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/product-api/test/voice-transcription.test.js:193:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'TEXT_NONEMPTY per DEC-VT-004'",
+    "details": "  ---\n  duration_ms: 1342.464\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/product-api/test/voice-transcription.test.js:193:1'\n  failureType: 'testCodeFailure'\n  error: 'TEXT_NONEMPTY per DEC-VT-004'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: true\n  actual: false\n  operator: '=='\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/product-api/test/voice-transcription.test.js:203:10)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# [product-api:voice] {\"route\":\"/v1/voice/transcription\",\"status\":400,\"byte_count\":64,\"duration_ms\":null,\"latency_ms\":0}\n# [product-api] listening on http://127.0.0.1:0 (channel=mobile)\n# Subtest: malformed WAV (bad RIFF header) -> 400"
+  },
+  {
+    "name": "ACC-ADT-005: name-only caller discovers the canonical id and the send lands in the target main",
+    "tap_index": 1793,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:231:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 76.377834\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:231:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    seedRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:185:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:233:32)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n# Subtest: E2E negative: unknown name → not_found and ZERO deliveries anywhere"
+  },
+  {
+    "name": "E2E negative: unknown name → not_found and ZERO deliveries anywhere",
+    "tap_index": 1794,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:275:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 67.3375\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:275:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    seedRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:185:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:276:32)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: E2E negative: whitespace-only query → invalid_arguments envelope, ZERO deliveries"
+  },
+  {
+    "name": "E2E negative: whitespace-only query → invalid_arguments envelope, ZERO deliveries",
+    "tap_index": 1795,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:288:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 64.216875\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:288:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    seedRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:185:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:289:32)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: E2E disabled target: resolves enabled:false (existence truth) and the send is refused"
+  },
+  {
+    "name": "E2E disabled target: resolves enabled:false (existence truth) and the send is refused",
+    "tap_index": 1796,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:300:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 72.431708\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:300:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    seedRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:185:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:301:32)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: E2E list: the full composed stack lists both agents in directory shape"
+  },
+  {
+    "name": "E2E list: the full composed stack lists both agents in directory shape",
+    "tap_index": 1797,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:323:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 74.933834\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:323:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    seedRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:185:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js:324:23)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: R2: the exact three fields accept boundary values"
+  },
+  {
+    "name": "ACC-013: real relay/parent/gateway/runtime reads pending and terminal with no target admission",
+    "tap_index": 1842,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:90:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 39.15\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:90:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    rig (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:48:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:91:14)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n# Subtest: ACC-009/013: a foreign actual caller cannot reuse another callers exact coordinate"
+  },
+  {
+    "name": "ACC-009/013: a foreign actual caller cannot reuse another callers exact coordinate",
+    "tap_index": 1843,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:113:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 38.594292\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:113:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    rig (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:48:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:114:14)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: ACC-008/013: access_denied never enters the actual reader"
+  },
+  {
+    "name": "ACC-008/013: access_denied never enters the actual reader",
+    "tap_index": 1844,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:123:3'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 50.089084\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:123:3'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    rig (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:48:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:124:16)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: ACC-008/013: transport_failure never enters the actual reader"
+  },
+  {
+    "name": "ACC-008/013: transport_failure never enters the actual reader",
+    "tap_index": 1845,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:123:3'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 39.485625\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:123:3'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    rig (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:48:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:124:16)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: ACC-012/013: missing composed provider is unsupported and never falls back"
+  },
+  {
+    "name": "ACC-012/013: missing composed provider is unsupported and never falls back",
+    "tap_index": 1846,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:132:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 48.825416\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:132:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    rig (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:48:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/dispatch-status-integration.test.js:133:14)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: ACC-012: provider status binds trusted caller and runs the real read-only reader"
+  },
+  {
+    "name": "B9 lifecycle: canonical materialization admits, principal deactivation invalidates, scopes never escalate",
+    "tap_index": 1867,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/fleet-send-entitlement-e2e.test.js:282:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 47.71675\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/fleet-send-entitlement-e2e.test.js:282:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    seedB9Runtime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/fleet-send-entitlement-e2e.test.js:221:25)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/fleet-send-entitlement-e2e.test.js:291:82)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n# Subtest: B9 flow: sender identity, receiver identity, durable receipt and reply association across a full restart"
+  },
+  {
+    "name": "B9 flow: sender identity, receiver identity, durable receipt and reply association across a full restart",
+    "tap_index": 1868,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/fleet-send-entitlement-e2e.test.js:366:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 49.20275\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/fleet-send-entitlement-e2e.test.js:366:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    seedB9Runtime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/fleet-send-entitlement-e2e.test.js:221:25)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/fleet-send-entitlement-e2e.test.js:371:64)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: Case C + G: receipt-only accepted; the provenance sidecar is runtime-owned and exact"
+  },
+  {
+    "name": "Case C + G: receipt-only accepted; the provenance sidecar is runtime-owned and exact",
+    "tap_index": 1869,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:269:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 52.306167\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:269:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    seedRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:191:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:270:43)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n# Subtest: ACC-ASM2-004/007: granted inspect crosses gateway, provider, audit and one exact artifact"
+  },
+  {
+    "name": "ACC-ASM2-004/007: granted inspect crosses gateway, provider, audit and one exact artifact",
+    "tap_index": 1870,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:305:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 63.870416\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:305:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    seedRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:191:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:306:57)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: Case A: the existing main is reused — same process, two sends, two Runs"
+  },
+  {
+    "name": "Case A: the existing main is reused — same process, two sends, two Runs",
+    "tap_index": 1871,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:347:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 59.417459\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:347:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    seedRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:191:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:348:32)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: Case B: concurrent first sends to an absent main share ONE startup generation"
+  },
+  {
+    "name": "Case B: concurrent first sends to an absent main share ONE startup generation",
+    "tap_index": 1872,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:365:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 76.797083\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:365:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    seedRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:191:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:366:32)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: Case F: an unauthorized sender is access_denied with zero target deliveries"
+  },
+  {
+    "name": "Case F: an unauthorized sender is access_denied with zero target deliveries",
+    "tap_index": 1873,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:383:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 92.132792\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:383:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    seedRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:191:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:387:43)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: Case F (F23): a grant-check transport outage is transport_failure, never access_denied"
+  },
+  {
+    "name": "Case F (F23): a grant-check transport outage is transport_failure, never access_denied",
+    "tap_index": 1874,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:401:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 55.582208\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:401:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:417:25)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: disabled target is target_disabled with zero target process or prompt"
+  },
+  {
+    "name": "disabled target is target_disabled with zero target process or prompt",
+    "tap_index": 1875,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:437:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 65.757875\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:437:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    seedRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:191:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:438:32)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: Case G: model-supplied identity fields are rejected before any delivery"
+  },
+  {
+    "name": "Case G: model-supplied identity fields are rejected before any delivery",
+    "tap_index": 1876,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:445:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 84.078167\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:445:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    seedRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:191:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:446:32)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: R12: L0 rows never carry business detail; the target reply never reaches the audit file"
+  },
+  {
+    "name": "R12: L0 rows never carry business detail; the target reply never reaches the audit file",
+    "tap_index": 1877,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:457:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 61.437125\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:457:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    seedRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:191:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js:458:34)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: exact argument closure and DSH path encoding reject path interpretation"
+  },
+  {
+    "name": "composition pins the credentialFile to the runtime deployment root (own root accepted)",
+    "tap_index": 1914,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose-deployment-root.test.js:79:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 70.458792\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose-deployment-root.test.js:79:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    composeWith (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose-deployment-root.test.js:66:25)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose-deployment-root.test.js:84:36)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n# Subtest: composition refuses a foreign surface lineage in the deployment-owned catalog (fail closed)"
+  },
+  {
+    "name": "composition provides the full existing service graph over the production layout",
+    "tap_index": 1916,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:47:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 44.6995\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:47:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:50:25)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n# Subtest: composition forwards the trusted exact-agent native policy resolver into process startup"
+  },
+  {
+    "name": "composition forwards the trusted exact-agent native policy resolver into process startup",
+    "tap_index": 1917,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:72:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 71.092417\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:72:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:76:25)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox"
+  },
+  {
+    "name": "notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox",
+    "tap_index": 1918,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:107:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 73.504917\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:107:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:111:25)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: scheduler engine consumes a job from the production store through the router seam"
+  },
+  {
+    "name": "scheduler engine consumes a job from the production store through the router seam",
+    "tap_index": 1919,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:169:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 45.858417\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:169:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:172:25)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: B15 production evidence preserves scheduled outcome_unknown reconciliation data"
+  },
+  {
+    "name": "B15 production evidence preserves scheduled outcome_unknown reconciliation data",
+    "tap_index": 1920,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:213:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 43.835625\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:213:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:215:25)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: graceful stop closes the HTTP surfaces and writes stopped-able state"
+  },
+  {
+    "name": "graceful stop closes the HTTP surfaces and writes stopped-able state",
+    "tap_index": 1921,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:256:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 44.670291\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:256:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:258:25)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: runtime state carries no demo artifacts anywhere"
+  },
+  {
+    "name": "runtime state carries no demo artifacts anywhere",
+    "tap_index": 1922,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:274:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 37.192\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:274:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:276:25)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: C-WIRE paths: the production layout owns the notification-ingress persistent surface"
+  },
+  {
+    "name": "C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths — no credentials, no secret env",
+    "tap_index": 1924,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:305:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 46.735625\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:305:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:308:25)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: C-HIST compose wires the HistoryStore over layout.historyDir into the scheduler and provides the /scheduler/* services"
+  },
+  {
+    "name": "C-HIST compose wires the HistoryStore over layout.historyDir into the scheduler and provides the /scheduler/* services",
+    "tap_index": 1925,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:359:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 43.549125\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:359:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:373:25)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: C-HIST schedulerAuth opts provide a JWKS verifier; unconfigured stays null"
+  },
+  {
+    "name": "C-HIST schedulerAuth opts provide a JWKS verifier; unconfigured stays null",
+    "tap_index": 1926,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:419:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 34.059625\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:419:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:421:25)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: C-HIST R4 ingestion: valid / UNPARSEABLE / OVERSIZE / INVALID_SCHEMA / absent blocks"
+  },
+  {
+    "name": "MOBILE_SESSION_HISTORY_V1: productApi.history crosses the composition contract (default OFF unchanged; explicit enable reaches the module and fails closed)",
+    "tap_index": 1928,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:479:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 39.749958\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:479:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/compose.test.js:495:23)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: canonicalDefaultGlobalRoute is the complete Luna subscription route"
+  },
+  {
+    "name": "A-D1 zero config: every un-overridden Agent resolves to the Luna default with its subscription mount",
+    "tap_index": 1931,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/default-model-route.test.js:157:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 52.260375\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/default-model-route.test.js:157:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    runtimeFixture (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/default-model-route.test.js:105:25)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/default-model-route.test.js:159:52)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: A-D2 runtime env override wins over the default; composition config wins over env"
+  },
+  {
+    "name": "A-D2 runtime env override wins over the default; composition config wins over env",
+    "tap_index": 1932,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/default-model-route.test.js:167:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 47.143458\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/default-model-route.test.js:167:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    runtimeFixture (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/default-model-route.test.js:105:25)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/default-model-route.test.js:169:18)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: A-D3 explicit OpenCode Go agent override wins; un-overridden Agents keep the Luna default"
+  },
+  {
+    "name": "A-D3 explicit OpenCode Go agent override wins; un-overridden Agents keep the Luna default",
+    "tap_index": 1933,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/default-model-route.test.js:182:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 53.008792\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/default-model-route.test.js:182:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    runtimeFixture (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/default-model-route.test.js:105:25)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/default-model-route.test.js:184:45)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: composition freezes the own-domain artifact and refuses drift before the next process boundary"
+  },
+  {
+    "name": "composition freezes the own-domain artifact and refuses drift before the next process boundary",
+    "tap_index": 1934,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/default-model-route.test.js:199:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 71.769125\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/default-model-route.test.js:199:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    runtimeFixture (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/default-model-route.test.js:105:25)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/default-model-route.test.js:205:13)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# (node:85202) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.\n# (Use `node --trace-deprecation ...` to show where the warning was created)\n# Subtest: RED base: missing adapter implementation does not block the channel-OFF base path"
+  },
+  {
+    "name": "RED base: missing adapter implementation does not block the channel-OFF base path",
+    "tap_index": 1935,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-missing-impl-startup.test.js:48:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 149.922292\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-missing-impl-startup.test.js:48:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    compose (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-missing-impl-startup.test.js:35:25)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-missing-impl-startup.test.js:52:25)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n# Subtest: enabled channel + missing adapter implementation fails composition LOUD (fail closed)"
+  },
+  {
+    "name": "enabled channel + missing adapter implementation fails composition LOUD (fail closed)",
+    "tap_index": 1936,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-missing-impl-startup.test.js:61:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "|-",
+    "details": "  ---\n  duration_ms: 57.521666\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-missing-impl-startup.test.js:61:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    Error: production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-missing-impl-startup.test.js:66:3)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: RED base: channel OFF + invalid mention switch composes the base runtime (warn, not fatal)"
+  },
+  {
+    "name": "RED base: channel OFF + invalid mention switch composes the base runtime (warn, not fatal)",
+    "tap_index": 1937,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:80:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 42.512625\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:80:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    composeBase (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:64:25)\n    async file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:83:25\n    async withFeishuEnv (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:44:12)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:82:3)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n# Subtest: RED base: channel OFF + invalid reply render mode composes the base runtime (warn, not fatal)"
+  },
+  {
+    "name": "RED base: channel OFF + invalid reply render mode composes the base runtime (warn, not fatal)",
+    "tap_index": 1938,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:93:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 36.547333\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:93:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    composeBase (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:64:25)\n    async file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:96:25\n    async withFeishuEnv (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:44:12)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:95:3)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: RED base: channel OFF + invalid processing-reaction switch composes the base runtime (warn, not fatal)"
+  },
+  {
+    "name": "RED base: channel OFF + invalid processing-reaction switch composes the base runtime (warn, not fatal)",
+    "tap_index": 1939,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:105:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 37.595625\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:105:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    composeBase (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:64:25)\n    async file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:108:25\n    async withFeishuEnv (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:44:12)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:107:3)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: enabled channel + invalid mention switch fails composition LOUD (fail closed)"
+  },
+  {
+    "name": "enabled channel + invalid mention switch fails composition LOUD (fail closed)",
+    "tap_index": 1940,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:129:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "|-",
+    "details": "  ---\n  duration_ms: 81.4435\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:129:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    Error: production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    async file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:133:5\n    async withFeishuEnv (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:44:12)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:132:3)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: enabled channel + invalid reply render mode fails composition LOUD (fail closed)"
+  },
+  {
+    "name": "enabled channel + invalid reply render mode fails composition LOUD (fail closed)",
+    "tap_index": 1941,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:140:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "|-",
+    "details": "  ---\n  duration_ms: 47.356916\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:140:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    Error: production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    async file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:144:5\n    async withFeishuEnv (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:44:12)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:143:3)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: enabled channel + invalid identity credentials fail composition LOUD (fail closed)"
+  },
+  {
+    "name": "enabled channel + invalid identity credentials fail composition LOUD (fail closed)",
+    "tap_index": 1942,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:151:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "|-",
+    "details": "  ---\n  duration_ms: 71.326083\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:151:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    Error: production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    async file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:158:5\n    async withFeishuEnv (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:44:12)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js:157:3)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: Feishu gate wiring precedes awaited readiness and live declaration"
+  },
+  {
+    "name": "A6: a delivery parked in flight at the controlled stop leaves a durable reserved admission, quiesce receipts, and a closed ingress surface",
+    "tap_index": 1970,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/ingress-restart-handoff.test.js:141:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 50.778209\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/ingress-restart-handoff.test.js:141:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    composeWithIngress (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/ingress-restart-handoff.test.js:121:25)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/ingress-restart-handoff.test.js:145:25)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n# Subtest: A6: runtime restart on the same root reuses the in-flight admission idempotently — outcome_unknown, zero Router re-admission"
+  },
+  {
+    "name": "A6: runtime restart on the same root reuses the in-flight admission idempotently — outcome_unknown, zero Router re-admission",
+    "tap_index": 1971,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/ingress-restart-handoff.test.js:185:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 77.473875\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/ingress-restart-handoff.test.js:185:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    composeWithIngress (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/ingress-restart-handoff.test.js:121:25)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/ingress-restart-handoff.test.js:191:26)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: default production root is ~/.agent-core (agentcore-cron store root, NOT .demo)"
+  },
+  {
+    "name": "production composition applies the runtime proxy gate before any mount or layout read",
+    "tap_index": 1977,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/model-overrides-runtime.test.js:102:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "|-",
+    "details": "  ---\n  duration_ms: 0.981625\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/model-overrides-runtime.test.js:102:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    Error: production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/model-overrides-runtime.test.js:106:5)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: composition resolves the v3 primary to target and the global route to another Agent"
+  },
+  {
+    "name": "composition resolves the v3 primary to target and the global route to another Agent",
+    "tap_index": 1978,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/model-overrides-runtime.test.js:167:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 47.183125\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/model-overrides-runtime.test.js:167:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    runtimeFixture (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/model-overrides-runtime.test.js:154:25)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/model-overrides-runtime.test.js:168:45)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: target-only rollback rewrites the config file; non-target PID and route unchanged"
+  },
+  {
+    "name": "target-only rollback rewrites the config file; non-target PID and route unchanged",
+    "tap_index": 1979,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/model-overrides-runtime.test.js:184:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 45.537167\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/model-overrides-runtime.test.js:184:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    runtimeFixture (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/model-overrides-runtime.test.js:154:25)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/model-overrides-runtime.test.js:185:40)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: malformed config fails target respawn loud without disturbing a running non-target"
+  },
+  {
+    "name": "malformed config fails target respawn loud without disturbing a running non-target",
+    "tap_index": 1980,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/model-overrides-runtime.test.js:213:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 50.719\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/model-overrides-runtime.test.js:213:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    runtimeFixture (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/model-overrides-runtime.test.js:154:25)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/model-overrides-runtime.test.js:214:40)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: the code constant carries ONLY pins and scope — no route tuple values (F-10)"
+  },
+  {
+    "name": "actual arm64 Node and internal links pass closure inspection",
+    "tap_index": 2011,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/native-arm64/inventory.test.js:20:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'NATIVE_CLOSURE_REJECTED: 44 failure(s)'",
+    "details": "  ---\n  duration_ms: 696.36675\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/native-arm64/inventory.test.js:20:1'\n  failureType: 'testCodeFailure'\n  error: 'NATIVE_CLOSURE_REJECTED: 44 failure(s)'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    inspectNativeClosure (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/native-arm64/inventory.js:146:44)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/native-arm64/inventory.test.js:21:18)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1397:25)\n    Test.start (node:internal/test_runner/test:1257:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)\n  ...\n# Subtest: substituted x64 native bytes reject the candidate"
+  },
+  {
+    "name": "installer probes before backup and never grants root Git trust",
+    "tap_index": 2022,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/native-arm64/trusted-source-git-stamp.test.js:53:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "|-",
+    "details": "  ---\n  duration_ms: 1.802541\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/native-arm64/trusted-source-git-stamp.test.js:53:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The input did not match the regular expression /trap '\\/bin\\/rm -f \"\\$PRESERVED_SOURCE_GIT_STAMP\"' EXIT/. Input:\n    \n    '#!/bin/bash\\n' +\n      '# =============================================================================\\n' +\n      '# trusted-cp-deploy-install.sh — TRUSTED_CONTROL_PLANE_DEPLOYMENT_HARDENING_V1\\n' +\n      '#\\n' +\n      '# One-time (re-runnable) root install of the TRUSTED control-plane closure.\\n' +\n      '#\\n' +\n      '# Goal: every piece of code/config the trusted Control Plane (uid 505,\\n' +\n      '# authsvc) executes BEFORE dropping to the Agent uid (502) must live under a\\n' +\n      '# protected root that uid 502 cannot modify, replace, or redirect.\\n' +\n      '#\\n' +\n      '#   TRUSTED_INSTALL_PATH=/usr/local/libexec/agent-core\\n' +\n      '#     harness/   self-contained DSH CLI closure (source copy + `pnpm install`\\n' +\n      '#                with package-import-method=copy so NO hardlink points into a\\n' +\n      '#                502-owned store)           owner authsvc:authsvc  0755/0644\\n' +\n      '#     app/       Agent Core closure (packages/bundles/profiles/scripts) with\\n' +\n      '#                node_modules/@deepseek-ai -> ../../harness/node_modules/@deepseek-ai\\n' +\n      '#                                           owner authsvc:authsvc  0755/0644\\n' +\n      '#     home/      the 505 control-plane DSH_HOME (profile + farm -> app/)\\n' +\n      '#                                           owner authsvc:authsvc\\n' +\n      '#     config/    production state: Agent Definition (agents.json)/bindings/jobs/\\n' +\n      '#                credential store   owner authsvc:authsvc  0700/0600\\n' +\n      '#     .cache/    pnpm cache (root-owned)\\n' +\n      '#\\n' +\n      '# Also seeds /Users/authsvc/.dsh/{settings.yaml,.credentials.yaml} (authsvc\\n' +\n      '# 0600) — the trusted model-route settings source the children copy from.\\n' +\n      '#\\n' +\n      '# The dev repo / harness stay uid 502-writable for development; this install\\n' +\n      '# only ships the minimal execution closure (NOT the monorepos). The Agent\\n' +\n      '# child (502) may keep reading the trusted closure (world-readable) but can\\n' +\n      '# never modify it; its own workspace/runtime stays 502-writable as before.\\n' +\n      '#\\n' +\n      '# Usage (run as root):\\n' +\n      '#   sudo ./scripts/trusted-cp-deploy-install.sh REPO_SRC [HARNESS_SRC] [MAIN_REPO]\\n' +\n      '#   (env REQUIRED: EXPECTED_SOURCE_SHA, EXPECTED_SOURCE_TREE; env OPTIONAL:\\n' +\n      '#    GENERATION_LABEL_SHA; --selftest-provenance [SCRATCH_REPO] = no-root selftest)\\n' +\n      '#   REPO_SRC    REQUIRED, explicit-only (TRUSTED_CP_PACK_INPUT_PROVENANCE_V1):\\n' +\n      '#               defaulting it to the installer location silently repacked the\\n' +\n      '#               OLD live app under a new generation label (2026-09-18 incident)\\n' +\n      '#   HARNESS_SRC default: /Users/yanfenma/workspace/github/deepseek-harness\\n' +\n      '#\\n' +\n      '# Verifies at the end: every symlink in the trusted tree resolves INSIDE the\\n' +\n      '# trusted root (or /usr/local/libexec), and a uid-502 spot check cannot write\\n' +\n      '# to app/, harness/, home/, config/ or the helper.\\n' +\n      '#\\n' +\n      '# INSTALL MUTATION RECEIPT (Product #477 G4; the B7 2026-10-01/02 wrapper-truth\\n' +\n      '# class, agent-control#191/#193/#195): on ANY non-zero exit the composed EXIT\\n' +\n      '# cleanup emits AGENT_CORE_INSTALL_MUTATION_RECEIPT_V1 — the stages this run\\n' +\n      '# actually reached, the §1 preimage $BAK when one exists, and the exact\\n' +\n      '# restore recipe (stage-gated RESTORE / RESTORE-R1 / RESTORE-R2) — to stderr\\n' +\n      '# plus a durable latest-wins JSON receipt at\\n' +\n      '# $(dirname $TRUSTED_ROOT)/agent-core-install-mutation-receipt.json\\n' +\n      '# (fixture/test receipt directory override: TRUSTED_CP_RECEIPT_DIR). A\\n' +\n      '# pre-mutation failure receipts the negative truth (NOTHING was mutated).\\n' +\n      '# This is post-failure truth ONLY: fail-closed exit codes, the production\\n' +\n      '# deploy mutex, and the operator-owned rollback authority (restore = exact\\n' +\n      '# rm/mv of the recorded $BAK) are all unchanged — the receipt never restores,\\n' +\n      '# never heals, and never bypasses a lock.\\n' +\n      '#\\n' +\n      '# §1b REUSE + PREIMAGE COMPLETENESS (RESTORE-R1): when the reuse optimization\\n' +\n      \"# mv's node-runtime/harness/.cache OUT of the fresh $BAK, each moved subtree\\n\" +\n      '# is recorded in <BAK>/.preimage-reused-subtrees (sidecar marker, same family\\n' +\n      '# as .backup-meta/.pinned; prune eligibility untouched — non-pinned status\\n' +\n      '# stays exactly as the retention helper wrote it). A later restore from such\\n' +\n      \"# a .bak lands WITHOUT those subtrees — the marker + the receipt's RESTORE-R1\\n\" +\n      '# line say so before anyone boots it (fired live 3× on 2026-10-02).\\n' +\n      '#\\n' +\n      '# Selftests (no root, scratch fixtures only):\\n' +\n      '#   --selftest-provenance [SCRATCH_REPO]      pack-source provenance guards\\n' +\n      '#   TRUSTED_CP_SELFTEST_LOCK=1                mutex/exit-cleanup contract\\n' +\n      '#   TRUSTED_CP_SELFTEST_RESTORE_TRUTH=1       mutation-receipt + reuse-marker\\n' +\n      '#                                             contract (Product #477 G4)\\n' +\n      '# =============================================================================\\n' +\n      'set -euo pipefail\\n' +\n      '\\n' +\n      '# INSTALL_MUTATION_RECEIPT state — initialized before ANY exit path so the\\n' +\n      '# EXIT-trap receipt is set -u-safe on the earliest failure (e.g. P1).\\n' +\n      'TRAP_RC=0\\n' +\n      'BAK=\"\"\\n' +\n      'MUTATION_STAGES=\"\"\\n' +\n      'PREIMAGE_BAK=\"\"\\n' +\n      'REUSED_PREIMAGE_SUBTREES=\"\"\\n' +\n      '\\n' +\n      '# GLOBAL production-deploy mutex (WATCHDOG transaction P1/B7 convergence): every\\n' +\n      '# entrypoint that replaces the trusted app / routing / restarts the canonical\\n' +\n      '# runtime shares THIS exact lock. Atomic mkdir acquire; a held lock fails\\n' +\n      '# closed with its holder metadata; a killed run leaves the lock behind and it\\n' +\n      '# is disposed of EXPLICITLY (never guessed, never auto-deleted).\\n' +\n      'PRODUCTION_DEPLOY_LOCK_DIR=\"${PRODUCTION_DEPLOY_LOCK_DIR:-/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock}\"\\n' +\n      '# B7 inherited-lock seam: a parent transaction (run-authorized-transaction.sh)\\n' +\n      '# holds the mutex across DEPLOY/ROUTING/RELOAD; the child verifies the actual\\n' +\n      '# holder belongs to that parent and then neither reacquires nor releases it.\\n' +\n      '# There is deliberately NO bypass flag: without a verified inherited holder\\n' +\n      '# the installer always acquires the mutex itself (standalone path).\\n' +"
+  },
+  {
+    "name": "wiring: the import map reaches workspace-bootstrap AND the spawned process (cwd base + env)",
+    "tap_index": 2026,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:104:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 91.705791\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:104:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:108:25)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n# Subtest: absent primary-workspaces.json → behavior identical to today (default derivation)"
+  },
+  {
+    "name": "absent primary-workspaces.json → behavior identical to today (default derivation)",
+    "tap_index": 2027,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:139:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 76.912208\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:139:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:142:25)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: invalid import entry (relative path) → startup fails loud with PRIMARY_WORKSPACE_INVALID"
+  },
+  {
+    "name": "invalid import entry (relative path) → startup fails loud with PRIMARY_WORKSPACE_INVALID",
+    "tap_index": 2028,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:161:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "|-",
+    "details": "  ---\n  duration_ms: 82.171042\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:161:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    Error: production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:163:3)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: invalid import entry (missing directory) → startup fails loud"
+  },
+  {
+    "name": "invalid import entry (missing directory) → startup fails loud",
+    "tap_index": 2029,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:175:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "|-",
+    "details": "  ---\n  duration_ms: 87.363625\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:175:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    Error: production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:177:3)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: malformed primary-workspaces.json (bad JSON / non-object) → startup fails loud"
+  },
+  {
+    "name": "malformed primary-workspaces.json (bad JSON / non-object) → startup fails loud",
+    "tap_index": 2030,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:189:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "|-",
+    "details": "  ---\n  duration_ms: 27.475333\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:189:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    Error: production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:200:3)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: I: the same static config file yields the identical primary across restarts"
+  },
+  {
+    "name": "I: the same static config file yields the identical primary across restarts",
+    "tap_index": 2031,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:218:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 116.552292\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:218:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    compose (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:221:27)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/primary-workspaces.test.js:231:23)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: ENV: unset and empty mean FALSE (connector default OFF)"
+  },
+  {
+    "name": "compose stop persists the boundary receipt across the controlled shutdown (quiesce begin/end)",
+    "tap_index": 2048,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/restart-boundary.test.js:101:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 26.463542\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/restart-boundary.test.js:101:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/restart-boundary.test.js:103:25)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: cross-agent scheduler authorization flows one target-owned fresh Run into HistoryStore without source authority propagation or replay"
+  },
+  {
+    "name": "cross-agent scheduler authorization flows one target-owned fresh Run into HistoryStore without source authority propagation or replay",
+    "tap_index": 2049,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/scheduler/compose-cross-agent-history.test.js:28:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'",
+    "details": "  ---\n  duration_ms: 73.864417\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/scheduler/compose-cross-agent-history.test.js:28:1'\n  failureType: 'testCodeFailure'\n  error: 'production-runtime: invalid agent model overrides: HTTP_PROXY: runtime_proxy_env_present'\n  code: 'AGENT_MODEL_OVERRIDE_INVALID'\n  stack: |-\n    invalidProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:87:5)\n    assertTargetProxyRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:94:40)\n    composeProductionRuntime (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/compose.js:144:3)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/scheduler/compose-cross-agent-history.test.js:58:25)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n# Subtest: postdeploy control creates one retained, no-delivery, no-retry canary and replays idempotently"
+  },
+  {
+    "name": "production-pinned payload executes migration with distinct source and destination groups",
+    "tap_index": 2086,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/scheduler/deployment-incident-migration.test.js:107:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "|-",
+    "details": "  ---\n  duration_ms: 1183.916958\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/scheduler/deployment-incident-migration.test.js:107:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Command failed: /opt/homebrew/Cellar/node/26.7.0/bin/node /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/pinned-incident-reader-gid-NBI14i/live/scripts/scheduler-watchdog.mjs --migrate-incident-state\n    [migration] FAILED: Cannot find module '/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/pinned-incident-reader-gid-NBI14i/live/packages/scheduler/src/occurrence-model.js' imported from /private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/pinned-in\n    \n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    genericNodeError (node:internal/errors:999:15)\n    wrappedFn (node:internal/errors:544:14)\n    checkExecSyncError (node:child_process:942:11)\n    execFileSync (node:child_process:978:15)\n    runSchedulerIncidentMigration (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/src/scheduler/deployment-incident-migration.js:16:18)\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/scheduler/deployment-incident-migration.test.js:124:19)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: migration rejects an ACL-bearing frozen source without writing destination state"
+  },
+  {
+    "name": "postdeploy finalize readback gate survives the authsvc/runtime-reader gid split",
+    "tap_index": 2102,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/scheduler/deployment-postdeploy-finalize-ownership.test.js:24:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"EPERM: operation not permitted, mkdtemp '/Users/yanfenma/postdeploy-ownership-NIVf5N'\"",
+    "details": "  ---\n  duration_ms: 1.360667\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/scheduler/deployment-postdeploy-finalize-ownership.test.js:24:1'\n  failureType: 'testCodeFailure'\n  error: \"EPERM: operation not permitted, mkdtemp '/Users/yanfenma/postdeploy-ownership-NIVf5N'\"\n  code: 'EPERM'\n  stack: |-\n    async mkdtemp (node:internal/fs/promises:2033:10)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/scheduler/deployment-postdeploy-finalize-ownership.test.js:32:29)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n# Subtest: routing receipt readback fails closed on a wrong control gid"
+  },
+  {
+    "name": "routing receipt readback fails closed on a wrong control gid",
+    "tap_index": 2103,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/scheduler/deployment-postdeploy-finalize-ownership.test.js:93:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "\"EPERM: operation not permitted, mkdtemp '/Users/yanfenma/postdeploy-receipt-JLFZyb'\"",
+    "details": "  ---\n  duration_ms: 0.733333\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/scheduler/deployment-postdeploy-finalize-ownership.test.js:93:1'\n  failureType: 'testCodeFailure'\n  error: \"EPERM: operation not permitted, mkdtemp '/Users/yanfenma/postdeploy-receipt-JLFZyb'\"\n  code: 'EPERM'\n  stack: |-\n    async mkdtemp (node:internal/fs/promises:2033:10)\n    async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/scheduler/deployment-postdeploy-finalize-ownership.test.js:98:29)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ...\n# Subtest: formal postdeploy evidence accepts exact health, one canary delta, quarantine isolation and dedupe"
+  },
+  {
+    "name": "watchdog deployment source retains the accepted Session Trace lineage in its overlay",
+    "tap_index": 2132,
+    "nesting_spaces": 0,
+    "location": "'/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/scheduler/deployment-session-trace-lineage.test.js:9:1'",
+    "failure_type": "'testCodeFailure'",
+    "error": "|-",
+    "details": "  ---\n  duration_ms: 95.2735\n  type: 'test'\n  location: '/private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/scheduler/deployment-session-trace-lineage.test.js:9:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Session Trace bytes changed: packages/production-runtime/src/agent-session/turn-inspection.js\n    + actual - expected\n    \n    + '236b9470fb6883ec7f37397efef05e2e396ccdd9'\n    - '829fa64a34b0f3e2dcb16bcea6ec448da8b7c4dc'\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: '829fa64a34b0f3e2dcb16bcea6ec448da8b7c4dc'\n  actual: '236b9470fb6883ec7f37397efef05e2e396ccdd9'\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/production-runtime/test/scheduler/deployment-session-trace-lineage.test.js:19:12)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1397:25)\n    Test.start (node:internal/test_runner/test:1257:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)\n  ...\n# Subtest: T15/T29 runtime reads one generation-bound complete census"
+  }
+]

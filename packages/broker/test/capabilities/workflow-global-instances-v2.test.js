@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
-import { manifests as workflowManifests } from '../../src/capabilities/workflow.js'
+import { manifests as workflowManifests } from '../../src/capabilities/workflow/index.js'
 import { validateManifest } from '../../src/schema.js'
 import { createHttpTransport } from '../../src/transport.js'
 import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../test-support/capability-fixtures.js'
@@ -375,7 +375,8 @@ test('workflow_global_instances: generic tool — no per-agent wiring, no legacy
   // capability codes (AGENT_CORE_WORKFLOW_DISPATCH_INTENT_BROKER_V1) are the
   // only lawful scheduler-facing strings here; per-agent wiring and the
   // legacy scheduler bindings stay banned.
-  const source = readFileSync(new URL('../../src/capabilities/workflow.js', import.meta.url), 'utf8')
+  const source = ['index', 'reads', 'dispatch', 'domains'].map(name =>
+    readFileSync(new URL(`../../src/capabilities/workflow/${name}.js`, import.meta.url), 'utf8')).join('\n')
   assert.equal(/agt_|dispatcher/i.test(source), false)
   assert.equal(source.includes('dc702687'), false)
   assert.equal(source.includes('bc970ced'), false)

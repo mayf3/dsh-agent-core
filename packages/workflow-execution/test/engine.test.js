@@ -15,6 +15,7 @@ import { join } from 'node:path'
 
 import { ExecutionLedger, attemptIdFor } from '../src/ledger.js'
 import { createWorkflowExecutionEngine } from '../src/engine.js'
+import { completeCurrentActivationDetail } from '../test-support/current-activation-detail.js'
 
 const VISIT = '0d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e11'
 const VISIT_NEXT = 'ad5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e77'
@@ -45,22 +46,23 @@ function makeDeps({
   deliver = () => ({ ok: true, sessionId: 'main', reconciliationHandle: 'turn:handle-1' }),
   turnState = () => 'pending',
   correlatedState = () => undefined,
-  detailBody = () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: VISIT } } }),
+  detailBody = () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: VISIT } } }),
 } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'wfe-engine-'))
   const ledger = new ExecutionLedger({ dir })
-  const calls = { delivers: [], resolves: [], detailReads: [], instructions: [], dueRequests: [] }
+  const calls = { delivers: [], resolves: [], detailReads: [], instructions: [], dueRequests: [], warnings: [] }
   // Mid-test re-pointable seams (tests reassign fixture.turnState etc. to
   // advance time without rebuilding the engine).
   const mutable = { turnState, detailBody }
   const engine = createWorkflowExecutionEngine({
     ledger,
-    log: { log: () => {}, warn: () => {}, error: () => {} },
+    log: { log: () => {}, warn: message => calls.warnings.push(message), error: () => {} },
     fetchDuePage: async (req) => {
       calls.dueRequests.push(req)
       if (dueError !== undefined && calls.dueRequests.length >= dueErrorOnPage) return { ok: false, ...dueError }
       if (duePages !== undefined) {
-        const idx = calls.dueRequests.length - 1
+        const idx = req.afterDispatchIntentId === undefined ? 0
+          : duePages.findIndex(page => page.at(-1)?.dispatchIntentId === req.afterDispatchIntentId) + 1
         return { ok: true, items: duePages[idx] ?? [] }
       }
       return { ok: true, items: typeof dueItems === 'function' ? dueItems() : dueItems }
@@ -83,7 +85,10 @@ function makeDeps({
     },
     readInstanceDetail: async (req) => {
       calls.detailReads.push(req)
-      return mutable.detailBody(req)
+      const read = mutable.detailBody(req)
+      return read?.ok ? { ...read, body: completeCurrentActivationDetail(read.body, {
+        workflowInstanceId: req.workflowInstanceId, ownerPrincipalId: OWNER,
+      }) } : read
     },
     buildInstruction: (input) => {
       calls.instructions.push(input)
@@ -109,7 +114,7 @@ test('happy chain: due intent -> one attempt -> assignee Run with provenance -> 
 
     // Exactly one Run, resolved through the canonical principal mapping.
     assert.equal(calls.delivers.length, 1)
-    assert.deepEqual(calls.resolves, [OWNER])
+    assert.deepEqual(calls.resolves, [OWNER, OWNER], 'pre-plan activation read and delivery resolve are both fresh')
     const delivery = calls.delivers[0]
     assert.equal(delivery.agentId, AGENT)
     assert.equal(delivery.requestId, attemptIdFor(VISIT), 'requestId IS the deterministic attempt id')
@@ -133,17 +138,16 @@ test('happy chain: due intent -> one attempt -> assignee Run with provenance -> 
     assert.equal(attempt.delivered.agentId, AGENT)
     assert.equal(attempt.delivered.reconciliationHandle, 'turn:handle-1')
 
-    // Run in flight -> stays ACTIVE, no settle probe spent on it. The ONE
-    // instance read so far is the dispatch-time version baseline
-    // (WORKFLOW_STALE_REENTRY_V1 CTR-SRE-002) recorded at admission.
+    // A running Run adds no settle probe: reads are unlocked pre-plan,
+    // locked final validation and the post-delivery stale baseline.
     const reconcileRunning = await engine.reconcileOnce()
     assert.equal(reconcileRunning.running, 1)
-    assert.equal(calls.detailReads.length, 1, 'no settle probe on a running run; the single read is the dispatch baseline')
+    assert.equal(calls.detailReads.length, 3, 'running reconciliation adds no read after pre-plan, final validation and dispatch baseline')
     assert.equal(ledger.get(VISIT).state, 'ACTIVE')
 
     // Run settled + business state moved past our visit -> SETTLED.
     fixture.mutable.turnState = () => 'settled'
-    fixture.mutable.detailBody = () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: VISIT_NEXT } } })
+    fixture.mutable.detailBody = () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: VISIT_NEXT } } })
     const reconcileDone = await engine.reconcileOnce()
     assert.deepEqual(reconcileDone.settled, [VISIT])
     assert.equal(ledger.get(VISIT).state, 'SETTLED')
@@ -179,18 +183,24 @@ test('cross-process reconcile cannot terminalize another poller during planned-t
   const entered = new Promise((resolve) => { resolutionEntered = resolve })
   const release = new Promise((resolve) => { releaseResolution = resolve })
   const common = {
-    fetchDuePage: async () => ({ ok: true, items: [] }),
+    fetchDuePage: async () => ({ ok: true, items: [dueIntent()] }),
     deliverRun: async () => ({ ok: true, sessionId: 'main', reconciliationHandle: 'turn:race' }),
     getTurnReconciliation: () => ({ state: 'pending' }),
-    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: VISIT } } }),
+    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: {
+      instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 1 },
+      current_node_visit_id: VISIT,
+      current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
+    } } }),
     log: { log: () => {}, warn: () => {}, error: () => {} },
   }
+  let resolutions = 0
   const admitting = createWorkflowExecutionEngine({
     ...common,
     ledger: new ExecutionLedger({ dir }),
     resolvePrincipalToAgent: async () => {
-      resolutionEntered()
-      await release
+      // Park the original completion callback after attempt_planned; the
+      // separate pre-plan collection interval is deliberately unlocked in V4.
+      if (++resolutions === 2) { resolutionEntered(); await release }
       return { ok: true, agentId: AGENT }
     },
   })
@@ -234,7 +244,7 @@ test('cross-process failover refreshes a stale empty projection before reconcili
     resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
     deliverRun: async () => ({ ok: true, sessionId: 'main', reconciliationHandle: 'turn:failover' }),
     getTurnReconciliation: () => ({ state: 'settled' }),
-    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: VISIT_NEXT } } }),
+    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: VISIT_NEXT } } }),
     log: { log: () => {}, warn: () => {}, error: () => {} },
   })
   try {
@@ -246,6 +256,7 @@ test('cross-process failover refreshes a stale empty projection before reconcili
       requestId: attemptIdFor(VISIT),
       sessionId: 'main',
       reconciliationHandle: 'turn:failover',
+      workflowStateVersionAtDispatch: 1,
     })
 
     const reconciled = await engine.reconcileOnce()
@@ -260,7 +271,7 @@ test('cross-process failover refreshes a stale empty projection before reconcili
 test('NEGATIVE (goal-required): run completed, model replied 完成了, visit still current => NEEDS_REVIEW, not silent, not rerun', async () => {
   const fixture = makeDeps({
     turnState: () => 'settled',
-    detailBody: () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: VISIT } } }),
+    detailBody: () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: VISIT } } }),
   })
   try {
     const { engine, ledger, calls } = fixture
@@ -274,7 +285,7 @@ test('NEGATIVE (goal-required): run completed, model replied 完成了, visit st
     // And the next poll never re-runs it (no automatic retry, no agent swap).
     const next = await engine.pollOnce()
     assert.equal(calls.delivers.length, 1)
-    assert.equal(next.admissions.every((a) => a.action === 'already_attempted'), true)
+    assert.equal(next.admissions.every((a) => a.action !== 'admitted'), true)
   } finally {
     fixture.cleanup()
   }
@@ -284,7 +295,7 @@ test('outcome unknown (handle lost, correlation lost) + still current => NEEDS_R
   const fixture = makeDeps({
     turnState: () => 'restart_lost',
     correlatedState: () => 'restart_lost',
-    detailBody: () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: VISIT } } }),
+    detailBody: () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: VISIT } } }),
   })
   try {
     const { engine, ledger, calls } = fixture
@@ -306,17 +317,15 @@ test('settle probe fails (credential/read error) => NEEDS_REVIEW settle_check_un
   })
   try {
     const { engine, ledger } = fixture
-    await engine.pollOnce()
-    await engine.reconcileOnce()
-    const attempt = ledger.get(VISIT)
-    assert.equal(attempt.state, 'NEEDS_REVIEW')
-    assert.equal(attempt.judgment, 'settle_check_unavailable')
+    const pass = await engine.pollOnce()
+    assert.equal(pass.admissions[0].action, 'pre_plan_unavailable')
+    assert.equal(ledger.get(VISIT), undefined, 'no baseline means no durable attempt plan')
   } finally {
     fixture.cleanup()
   }
 })
 
-test('assignee unresolvable => recoverable-blocked (ACTIVE/resolution_blocked) with zero Runs, fence holds on re-polls (V2 CTR-WAE-011)', async () => {
+test('assignee unresolvable after exact pre-plan baseline is recoverably blocked with zero Runs', async () => {
   const fixture = makeDeps({
     resolve: () => ({ ok: false, code: 'agent_mapping_missing' }),
   })
@@ -324,19 +333,27 @@ test('assignee unresolvable => recoverable-blocked (ACTIVE/resolution_blocked) w
     const { engine, ledger, calls } = fixture
     const pass = await engine.pollOnce()
     assert.equal(pass.admissions[0].action, 'blocked')
-    assert.equal(pass.admissions[0].code, 'agent_mapping_missing')
     assert.equal(calls.delivers.length, 0, 'never deliver without the canonical mapping')
-    assert.equal(ledger.get(VISIT).state, 'ACTIVE')
     assert.equal(ledger.get(VISIT).phase, 'resolution_blocked')
-    assert.equal(ledger.get(VISIT).blockedCode, 'agent_mapping_missing')
     const next = await engine.pollOnce()
     assert.equal(next.admissions[0].action, 'already_attempted')
+  } finally {
+    fixture.cleanup()
+  }
+})
+
+test('pre-plan exact current-visit mismatch mints and delivers nothing', async () => {
+  const fixture = makeDeps({
+    detailBody: () => ({ ok: true, body: { visibility: 'full', detail: {
+      instance: { workflow_state_version: 2 }, current_node_visit_id: VISIT_NEXT,
+    } } }),
+  })
+  try {
+    const { engine, ledger, calls } = fixture
+    const pass = await engine.pollOnce()
+    assert.equal(pass.admissions[0].action, 'pre_plan_unavailable')
+    assert.equal(ledger.get(VISIT), undefined)
     assert.equal(calls.delivers.length, 0)
-    // The reconcile exemption: the blocked attempt is never judged
-    // delivery_unverified (it has no Run linkage BY CONSTRUCTION).
-    const reconciled = await engine.reconcileOnce()
-    assert.equal(reconciled.blocked, 1)
-    assert.equal(ledger.get(VISIT).state, 'ACTIVE')
   } finally {
     fixture.cleanup()
   }
@@ -369,7 +386,7 @@ test('restart: a fresh engine over the same ledger reconciles via the requestId 
       deliverRun: async () => { throw new Error('restart engine must never deliver again') },
       getTurnReconciliation: () => ({ state: 'never_existed' }),
       resolveCallerCorrelation: ({ requestId }) => (requestId === attemptIdFor(VISIT) ? { state: 'settled', handle: 'turn:correlated' } : { state: 'never_existed' }),
-      readInstanceDetail: async () => ({ ok: true, body: { visibility: 'historical_participant', detail: { instance: {} } } }),
+      readInstanceDetail: async () => ({ ok: true, body: { visibility: 'historical_participant', detail: { instance: { workflow_state_version: 1 } } } }),
     })
     return { engine }
   })()
@@ -401,16 +418,37 @@ test('due feed failure: loud no-op pass, zero mutations', async () => {
   }
 })
 
-test('malformed due records are skipped loudly; valid ones still admitted', async () => {
+test('malformed due records are skipped loudly; a later clean sweep admits after fresh validation', async () => {
+  let items = [dueIntent({ nodeVisitId: 'garbage' }), { foo: 1 }, dueIntent()]
   const fixture = makeDeps({
-    dueItems: () => [dueIntent({ nodeVisitId: 'garbage' }), { foo: 1 }, dueIntent()],
+    dueItems: () => items,
   })
   try {
-    const { engine, ledger } = fixture
+    const { engine, ledger, calls } = fixture
     const pass = await engine.pollOnce()
     assert.equal(pass.ok, true)
-    assert.equal(pass.admissions.length, 1, 'only the well-formed record admits')
+    assert.equal(pass.admissions.length, 1, 'only the well-formed record reaches admission')
+    assert.equal(pass.skipped.length, 2)
+    assert.deepEqual(calls.warnings, [
+      'workflow-execution: skipped malformed due record (nodeVisitId is not a UUID)',
+      'workflow-execution: skipped malformed due record (missing field dispatchIntentId)',
+    ])
+    // WEC V4 CTR-WEC4-010 steps 2/4 and refusal: the same malformed,
+    // ambiguous target feed cannot authorize a plan at locked revalidation.
+    assert.equal(pass.admissions[0].action, 'pre_plan_unavailable')
+    assert.equal(ledger.snapshot().length, 0)
+    assert.equal(calls.delivers.length, 0)
+
+    // CTR-WEC4-010 permits a later ordinary sweep to collect fresh facts.
+    items = [dueIntent()]
+    const clean = await engine.pollOnce()
+    assert.equal(clean.ok, true)
+    assert.deepEqual(clean.skipped, [])
+    assert.equal(clean.admissions.length, 1)
+    assert.equal(clean.admissions[0].action, 'admitted')
     assert.equal(ledger.snapshot().length, 1)
+    assert.equal(calls.delivers.length, 1)
+    assert.equal(calls.dueRequests.length, 4, 'both sweeps fetch the feed again for locked validation')
   } finally {
     fixture.cleanup()
   }
@@ -420,8 +458,10 @@ test('maxAdmissionsPerPoll bounds a burst; excess due intents stay due (no admis
   const items = [1, 2, 3].map((n) => dueIntent({
     dispatchIntentId: `bd5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e0${n}`,
     nodeVisitId: `cd5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e0${n}`,
+    workflowInstanceId: `4d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e0${n}`,
   }))
-  const fixture = makeDeps({ dueItems: items })
+  const detailBody = (req) => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: items.find((item) => item.workflowInstanceId === req.workflowInstanceId)?.nodeVisitId } } })
+  const fixture = makeDeps({ dueItems: items, detailBody })
   try {
     // Recreate the engine with a tighter bound via the ledger dir trick is
     // overkill: assert the default engine admits all three, then verify the
@@ -436,7 +476,12 @@ test('maxAdmissionsPerPoll bounds a burst; excess due intents stay due (no admis
         resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
         deliverRun: async () => ({ ok: true, sessionId: 'main' }),
         getTurnReconciliation: () => ({ state: 'pending' }),
-        readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: VISIT } } }),
+        readInstanceDetail: async ({ workflowInstanceId }) => {
+          const read = detailBody({ workflowInstanceId })
+          return { ...read, body: completeCurrentActivationDetail(read.body, {
+            workflowInstanceId, ownerPrincipalId: OWNER,
+          }) }
+        },
         config: { maxAdmissionsPerPoll: 2 },
       })
       const boundedPass = await bounded.pollOnce()

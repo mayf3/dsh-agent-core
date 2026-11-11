@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "task": "1367-readsep",
+  "round": "R6",
+  "recorded_at_utc": "2026-11-07T11:42:13.125Z",
+  "worktree": "/private/tmp/h1367-readsep",
+  "branch": "fix/diagnostic-read-separation",
+  "base": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "reviewed_tree": "07ff18450ba8099edf7e655fa8bdc4b500154cac",
+  "source_commit": "ed31db7cfa068ac8128c127382efd98986abff4b",
+  "entry_staged_files": 47,
+  "serialization": "Each command completed before the next command was invoked. No parallel capture wrappers, concurrent task Git processes or lock removal.",
+  "r5_failure": "Concurrent evidence wrappers both collected index coordinates with git write-tree; PR-list wrapper failed before gh invocation with index.lock contention. R5 single-key/full remote reads were rc0.",
+  "fresh_remote_check": {
+    "chunk_id": "92a6d7",
+    "wall_time_seconds": 0.694993042,
+    "exit_code": 0,
+    "original_token_count": 15,
+    "output": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648\trefs/heads/main\n"
+  },
+  "commit": {
+    "command": "git commit -m \"fix(workflow): separate diagnostic reads from ledger repair\"",
+    "started_at_utc": "2026-11-07T11:39:12.484Z",
+    "finished_at_utc": "2026-11-07T11:39:13.569Z",
+    "chunk_id": "a3cc0d",
+    "wall_time_seconds": 0.922134042,
+    "exit_code": 0,
+    "original_token_count": 711,
+    "output": "[fix/diagnostic-read-separation ed31db7c] fix(workflow): separate diagnostic reads from ledger repair\n 47 files changed, 5492 insertions(+), 44 deletions(-)\n create mode 100644 BRIEF-1367-READSEP.md\n create mode 100644 RECEIPT-1367-READSEP.md\n create mode 100644 STOPPED-1367-READSEP.md\n create mode 100644 docs/evidence/1367-readsep/R2-GREEN.json\n create mode 100644 docs/evidence/1367-readsep/R2-GREEN.txt\n create mode 100644 docs/evidence/1367-readsep/R2-RECEIPT.md\n create mode 100644 docs/evidence/1367-readsep/R2-RED-test.js.txt\n create mode 100644 docs/evidence/1367-readsep/R2-RED.json\n create mode 100644 docs/evidence/1367-readsep/R2-RED.txt\n create mode 100644 docs/evidence/1367-readsep/R2-REVIEW.md\n create mode 100644 docs/evidence/1367-readsep/R2-checkpoint.json\n create mode 100644 docs/evidence/1367-readsep/R2-diff-check.txt\n create mode 100644 docs/evidence/1367-readsep/R2-integration.json\n create mode 100644 docs/evidence/1367-readsep/R2-integration.txt\n create mode 100644 docs/evidence/1367-readsep/R2-product.diff\n create mode 100644 docs/evidence/1367-readsep/R2-workflow.json\n create mode 100644 docs/evidence/1367-readsep/R2-workflow.txt\n create mode 100644 docs/evidence/1367-readsep/R3-RECEIPT-READBACK.md\n create mode 100644 docs/evidence/1367-readsep/R3-RECEIPT.md\n create mode 100644 docs/evidence/1367-readsep/R3-REVIEW.md\n create mode 100644 docs/evidence/1367-readsep/R3-broker.json\n create mode 100644 docs/evidence/1367-readsep/R3-broker.txt\n create mode 100644 docs/evidence/1367-readsep/R3-checkpoint.json\n create mode 100644 docs/evidence/1367-readsep/R3-diff-check.json\n create mode 100644 docs/evidence/1367-readsep/R3-diff-check.txt\n create mode 100644 docs/evidence/1367-readsep/R3-environment.txt\n create mode 100644 docs/evidence/1367-readsep/R3-integration.json\n create mode 100644 docs/evidence/1367-readsep/R3-integration.txt\n create mode 100644 docs/evidence/1367-readsep/R3-structure.json\n create mode 100644 docs/evidence/1367-readsep/R3-structure.txt\n create mode 100644 docs/evidence/1367-readsep/R4-REVIEW.md\n create mode 100644 docs/evidence/1367-readsep/R4-checkpoint.json\n create mode 100644 docs/evidence/1367-readsep/R4-whitespace-corrected.json\n create mode 100644 docs/evidence/1367-readsep/R4-whitespace-corrected.stderr\n create mode 100644 docs/evidence/1367-readsep/R4-whitespace-corrected.stdout\n create mode 100644 docs/evidence/1367-readsep/R4-whitespace-scope.json\n create mode 100644 docs/evidence/1367-readsep/R4-whitespace.json\n create mode 100644 docs/evidence/1367-readsep/R4-whitespace.stderr\n create mode 100644 docs/evidence/1367-readsep/R4-whitespace.stdout\n create mode 100644 docs/evidence/1367-readsep/RED.json\n create mode 100644 docs/evidence/1367-readsep/RED.txt\n create mode 100644 packages/workflow-execution/test/observation-cas/diagnostic-read.test.js\n"
+  },
+  "commit_coordinates": {
+    "chunk_id": "11e32d",
+    "wall_time_seconds": 0.000003166,
+    "exit_code": 0,
+    "original_token_count": 31,
+    "output": "ed31db7cfa068ac8128c127382efd98986abff4b\n07ff18450ba8099edf7e655fa8bdc4b500154cac\n2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648\n"
+  },
+  "push": {
+    "command": "git push -u origin fix/diagnostic-read-separation",
+    "started_at_utc": "2026-11-07T11:39:20.997Z",
+    "chunk_id": "b26ba3",
+    "wall_time_seconds": 1.0031015,
+    "session_id": 96455,
+    "original_token_count": 0,
+    "output": "",
+    "completion": {
+      "chunk_id": "d0f74d",
+      "wall_time_seconds": 0.000004458,
+      "exit_code": 0,
+      "original_token_count": 113,
+      "output": "remote: \nremote: Create a pull request for 'fix/diagnostic-read-separation' on GitHub by visiting:        \nremote:      https://github.com/mayf3/dsh-agent-core/pull/new/fix/diagnostic-read-separation        \nremote: \nTo https://github.com/mayf3/dsh-agent-core.git\n * [new branch]        fix/diagnostic-read-separation -> fix/diagnostic-read-separation\nbranch 'fix/diagnostic-read-separation' set up to track 'origin/fix/diagnostic-read-separation'.\n"
+    },
+    "finished_at_utc": "2026-11-07T11:39:27.670Z"
+  },
+  "pr_create": {
+    "command": "gh pr create --repo mayf3/dsh-agent-core --base main --head fix/diagnostic-read-separation --title \"fix(workflow): separate diagnostic reads from ledger repair\" --body-file /private/tmp/h1367-r6-pr-body.md",
+    "started_at_utc": "2026-11-07T11:39:54.995Z",
+    "chunk_id": "fadd03",
+    "wall_time_seconds": 1.001254333,
+    "session_id": 32718,
+    "original_token_count": 0,
+    "output": "",
+    "completion": {
+      "chunk_id": "9c9dc7",
+      "wall_time_seconds": 0.000001458,
+      "exit_code": 0,
+      "original_token_count": 13,
+      "output": "https://github.com/mayf3/dsh-agent-core/pull/654\n"
+    },
+    "finished_at_utc": "2026-11-07T11:39:59.681Z"
+  },
+  "pr_readback": {
+    "command": "gh pr view 654 --repo mayf3/dsh-agent-core --json number,url,state,baseRefName,baseRefOid,headRefName,headRefOid,isDraft,mergedAt,mergeCommit",
+    "started_at_utc": "2026-11-07T11:40:04.228Z",
+    "chunk_id": "09a8cd",
+    "wall_time_seconds": 0.495462083,
+    "exit_code": 0,
+    "original_token_count": 80,
+    "output": "{\"baseRefName\":\"main\",\"baseRefOid\":\"2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648\",\"headRefName\":\"fix/diagnostic-read-separation\",\"headRefOid\":\"ed31db7cfa068ac8128c127382efd98986abff4b\",\"isDraft\":false,\"mergeCommit\":null,\"mergedAt\":null,\"number\":654,\"state\":\"OPEN\",\"url\":\"https://github.com/mayf3/dsh-agent-core/pull/654\"}\n"
+  },
+  "verification_boundary": "Source/offline evidence reused from unchanged reviewed tree; no R6 product test rerun, merge or production operation."
+}

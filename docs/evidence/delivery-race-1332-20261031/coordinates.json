@@ -1,0 +1,31 @@
+{
+  "base_head": "0b64aca3615aec203b95aa960eff39d635bd26c1",
+  "semantic_head": "3259d8cc2c6a3cb0d8e8f16edaacc0c01f0ca3bb",
+  "node_version": "v26.7.0",
+  "repro_test_path": "packages/agent-router/test/route-chain/delivery-race-repro.test.js",
+  "repro_test_sha256": "62271b4d603fff93e0cfcd845b349d3d8ae64d6bcf33b9aece9f5b29d3d6c9eb",
+  "repro_same_test_bytes_in_base_and_candidate": true,
+  "race_RED_rc": 1,
+  "race_GREEN_rc": 0,
+  "production_writes": 0,
+  "historical_message_replays": 0,
+  "archived_compression": {
+    "main-baseline-finite.tap.gz": {
+      "uncompressed_sha256": "7cfc974141a531caa54a8d0c907ed4cc2def3ad5f062f6b8898dd20a49c086de",
+      "bytes": 1102850
+    },
+    "candidate-first-full.tap.gz": {
+      "uncompressed_sha256": "381c284a9261e60c56a199c7cbaa6f5d2d05b834c3b63367b0ef7b605834f396",
+      "bytes": 1122237
+    },
+    "candidate-final-full.tap.gz": {
+      "uncompressed_sha256": "939eda58394392d8596e63fba29f038ffa82de74e6b4afbe33953cefdb38401c",
+      "bytes": 1114143
+    }
+  },
+  "install": "npm install --ignore-scripts --package-lock=false with cache in /private/tmp; no source/lock edits",
+  "bounded_scope": "PR-A CTR-R1..R5 source and offline evidence; no harness root-cause or production acceptance claim",
+  "independent_review_head": "3259d8cc2c6a3cb0d8e8f16edaacc0c01f0ca3bb",
+  "independent_review_verdict": "PASS; F1..F6 CLOSED; 0 open blockers",
+  "full_suite_status": "FAIL: 116 named failures in both full runs, 115 shared names, one timing delta retained; focused delta file passes at both coordinates"
+}

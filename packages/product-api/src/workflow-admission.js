@@ -14,15 +14,28 @@ const SCOPE = 'agent.directory.read'
 const validId = id => typeof id === 'string' && id.length <= 128 && /^agt_[A-Za-z0-9_-]+$/.test(id)
 const failure = (status, error) => ({ status, body: { error } })
 
-/** Production-only exact observation; the existing verifier owns JWT semantics. */
+/** Production-only exact observation; the existing verifier owns JWT semantics.
+ *
+ * PRODUCT #525 P1 deployment-seam guard: jwksUrl is REQUIRED. The verifier
+ * factory's own TypeError fires at construction, so a missing
+ * AGENT_DIRECTORY_AUTH_JWKS_URL refuses the mount instead of silently serving
+ * a permanently-401 verifier (the 2026-10-17 admission outage shape). The
+ * returned handler carries admissionHealth() — {configured, state} with state
+ * unproven | ready | auth_unavailable — plus one bounded warn per infra-state
+ * transition (never on ordinary invalid tokens, never with token/principal
+ * material); the wire contract itself is unchanged. */
 export function createWorkflowAdmissionHandler({ definition, jwksUrl, nowMs = Date.now,
-  fetchImpl = fetch, timeoutMs = 1000 }) {
+  fetchImpl = fetch, timeoutMs = 1000, log = {} }) {
   if (!(timeoutMs > 0 && timeoutMs <= 1000)) throw new TypeError('Invalid admission timeout')
-  const verifier = jwksUrl ? createJwksTokenVerifier({
+  // A failing log sink must never gate the admission path — warn is fire-safe.
+  const warn = (...args) => { try { (typeof log?.warn === 'function' ? log.warn : () => {})(...args) } catch { /* ignore */ } }
+  const verifier = createJwksTokenVerifier({
     jwksUrl, issuer: 'auth-service', audience: AUDIENCE, nowMs, fetchImpl,
-  }) : null
+  })
+  let verifyState = 'unproven' // 'unproven' | 'ready' | 'auth_unavailable'
+  const admissionHealth = () => ({ configured: true, state: verifyState })
 
-  return async function handle(req, url) {
+  async function handle(req, url) {
     if (url.pathname !== PREFIX && !url.pathname.startsWith(PREFIX + '/')) return null
     const deadline = performance.now() + timeoutMs
     const expired = () => performance.now() >= deadline
@@ -32,9 +45,22 @@ export function createWorkflowAdmissionHandler({ definition, jwksUrl, nowMs = Da
       const token = typeof header === 'string' && header.startsWith('Bearer ') ? header.slice(7) : ''
       let caller
       try {
-        if (!verifier) throw new Error('Unavailable verifier')
         caller = await verifier.verify(token)
-      } catch { return failure(401, 'UNAUTHORIZED') }
+        if (verifyState !== 'ready') {
+          if (verifyState === 'auth_unavailable') warn('workflow-admission: directory verifier recovered (ready)')
+          verifyState = 'ready'
+        }
+      } catch (error) {
+        // Infra down (JWKS seam) flips the health state once; ordinary token
+        // rejections never do. The wire response stays the frozen 401 shape.
+        if (error?.kind === 'AUTH_JWKS_UNAVAILABLE' || error?.kind === 'AUTH_SEAM_NOT_CONFIGURED') {
+          if (verifyState !== 'auth_unavailable') {
+            verifyState = 'auth_unavailable'
+            warn('workflow-admission: directory verifier not ready (auth_unavailable) — admission fails closed until the auth-service JWKS is reachable (AGENT_DIRECTORY_AUTH_JWKS_URL)')
+          }
+        }
+        return failure(401, 'UNAUTHORIZED')
+      }
       if (expired()) return failure(504, 'AGENT_DEFINITION_TIMEOUT')
       // CTR-IAD-002: generic internal callers — machine principals only. The
       // verifier profile already 401s human tokens; this predicate stays as
@@ -80,4 +106,6 @@ export function createWorkflowAdmissionHandler({ definition, jwksUrl, nowMs = Da
       return expired() ? failure(504, 'AGENT_DEFINITION_TIMEOUT') : result
     } finally { clearTimeout(timer) }
   }
+  handle.admissionHealth = admissionHealth
+  return handle
 }

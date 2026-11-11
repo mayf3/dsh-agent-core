@@ -1,0 +1,82 @@
+{
+  "schema": "AGENT_MEMORY_V2_MIGRATION_TRANSACTION",
+  "txid": "migration-4038929a802bb7a3d4a413b6d33fea261e015459ae544aef68b32de8a8229045",
+  "phase": "CANDIDATE_ONLY",
+  "planStatus": "READY",
+  "beforeSha256": "e82b1e12cc985497579c1899ea4c16d8cb41d0285b176b15bd02d2441c10b2ba",
+  "afterSha256": "4b0257559fcc8e04b520e8f2ee3ff86d172d431f0382f529d90164b921e53662",
+  "candidateFile": "migration-4038929a802bb7a3d4a413b6d33fea261e015459ae544aef68b32de8a8229045.candidate",
+  "operations": [
+    {
+      "type": "UPDATE",
+      "entryId": "synthetic-1",
+      "expectedEntrySha256": "8e6bdce7f6548b94048b7fcc4dcd042e06321caf879a80f81519dca9c4b8eac8",
+      "patch": {
+        "content": "Synthetic new candidate fact."
+      }
+    }
+  ],
+  "reasons": [],
+  "changes": [
+    {
+      "byteStart": 225,
+      "byteEnd": 244,
+      "replacement": {
+        "type": "Buffer",
+        "data": [
+          83,
+          121,
+          110,
+          116,
+          104,
+          101,
+          116,
+          105,
+          99,
+          32,
+          110,
+          101,
+          119,
+          32,
+          99,
+          97,
+          110,
+          100,
+          105,
+          100,
+          97,
+          116,
+          101,
+          32,
+          102,
+          97,
+          99,
+          116,
+          46
+        ]
+      },
+      "entryId": "synthetic-1"
+    }
+  ],
+  "preservedSpanProof": [
+    {
+      "byteStart": 0,
+      "byteEnd": 225,
+      "afterByteStart": 0,
+      "beforeSha256": "54ddcd764cb8c303655cdf03f12e1c9c10873498b9076ee50f61c5a0673571cf",
+      "afterSha256": "54ddcd764cb8c303655cdf03f12e1c9c10873498b9076ee50f61c5a0673571cf"
+    },
+    {
+      "byteStart": 244,
+      "byteEnd": 306,
+      "afterByteStart": 254,
+      "beforeSha256": "e80ff058c36c5a8c250c3a62a6bf85ab08e2492f04ac4f1ddc8ae295c27e0cd0",
+      "afterSha256": "e80ff058c36c5a8c250c3a62a6bf85ab08e2492f04ac4f1ddc8ae295c27e0cd0"
+    }
+  ],
+  "sourceEvents": {
+    "state": "UNKNOWN",
+    "eventIds": []
+  },
+  "published": false
+}

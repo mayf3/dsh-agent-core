@@ -20,8 +20,9 @@
  * through the exact child/generation real-exit observation path).
  */
 
-import { appendFileSync, mkdirSync } from 'node:fs'
-import { dirname } from 'node:path'
+import { appendFileSync, closeSync, constants, fstatSync, mkdirSync, openSync, readSync } from 'node:fs'
+import { dirname, isAbsolute, join } from 'node:path'
+import { StringDecoder } from 'node:string_decoder'
 import { readRestartDrainCensus } from './scheduler/restart-drain.js'
 
 /**
@@ -67,11 +68,137 @@ export function collectRuntimeRestartCensus({ turnRecoveryStore, jobsStore, rout
     }
   }
   return {
+    ...census,
     epoch: runtimeStatus.generationId ?? census.epoch ?? null,
+    durableEpoch: census.epoch,
     routerHealth: runtimeStatus.health ?? null,
     businessAdmission: runtimeStatus.businessAdmission ?? null,
     slots,
-    ...census,
+  }
+}
+
+const RUNTIME_LABEL = 'system/ai.agent-core.runtime'
+const unavailable = (reason, retryable = false) => Object.assign(new Error(`runtime restart exit proof unavailable: ${reason}`), { code: 'RESTART_EXIT_PROOF_UNAVAILABLE', retryable })
+function instanceKey(instance) {
+  if (!instance || !['pid', 'uid', 'gid'].every(key => Number.isSafeInteger(instance[key]) && instance[key] >= (key === 'pid' ? 1 : 0))
+      || typeof instance.started !== 'string' || !Number.isFinite(Date.parse(instance.started))
+      || typeof instance.program !== 'string' || !isAbsolute(instance.program)) throw unavailable('invalid native process identity')
+  return JSON.stringify(['pid', 'uid', 'gid', 'started', 'program'].map(key => instance[key]))
+}
+
+function readBoundaryWindow(path, instance, prior = null) {
+  let fd
+  try {
+    fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW)
+  } catch (error) {
+    if (error.code === 'ENOENT' && prior === null) return { offset: 0, dev: null, ino: null }
+    throw unavailable('boundary log unavailable', error.code === 'ENOENT')
+  }
+  try {
+    const stat = fstatSync(fd)
+    if (!stat.isFile() || stat.uid !== instance.uid || (stat.mode & 0o022) !== 0 || stat.nlink !== 1) throw unavailable('boundary log custody')
+    if (prior === null) return { offset: stat.size, dev: stat.dev, ino: stat.ino }
+    const size = stat.size - prior.offset
+    if (size === 0) throw unavailable('awaiting fresh boundary receipts', true)
+    if ((prior.ino !== null && (prior.ino !== stat.ino || prior.dev !== stat.dev)) || size < 0 || size > 8 * 1024 * 1024) throw unavailable('no bounded fresh boundary window')
+    const bytes = Buffer.alloc(size)
+    if (readSync(fd, bytes, 0, size, prior.offset) !== size || fstatSync(fd).size !== stat.size) throw unavailable('boundary changed during read')
+    if (bytes.at(-1) !== 10) throw unavailable('incomplete boundary receipt', true)
+    return bytes.toString('utf8').trim().split('\n').map(line => JSON.parse(line))
+  } finally { closeSync(fd) }
+}
+
+function requireReadyStopCapability(ctx, instance, identity) {
+  let fd
+  try {
+    fd = openSync(join(dirname(ctx.turnRecoveryStore), 'runtime-evidence.jsonl'), constants.O_RDONLY | constants.O_NOFOLLOW)
+    const stat = fstatSync(fd)
+    if (!stat.isFile() || stat.uid !== instance.uid || (stat.mode & 0o022) !== 0 || stat.nlink !== 1) throw unavailable('ready evidence custody')
+    const deadline = performance.now() + (ctx.unloadTimeoutMs ?? 10_000)
+    const bytes = Buffer.alloc(65536), decoder = new StringDecoder('utf8')
+    let offset = 0, pending = '', dropping = false, found = false
+    while (offset < stat.size) {
+      if (performance.now() >= deadline) throw unavailable('ready evidence read exceeded existing unload budget')
+      const size = readSync(fd, bytes, 0, Math.min(bytes.length, stat.size - offset), offset)
+      if (size === 0) throw unavailable('ready evidence truncated')
+      offset += size
+      const lines = (pending + decoder.write(bytes.subarray(0, size))).split('\n')
+      pending = lines.pop()
+      if (dropping && lines.length > 0) { lines.shift(); dropping = false }
+      for (const line of lines) {
+        if (line.length > 65536) continue
+        try {
+          const entry = JSON.parse(line)
+          if (entry.kind === 'ready' && entry.pid === instance.pid && entry.stopProof?.version === 1
+              && instanceKey(entry.stopProof.instance) === identity) found = true
+        } catch { /* unrelated/partial historical evidence never grants a capability */ }
+      }
+      if (pending.length > 65536 || dropping) { pending = ''; dropping = true }
+    }
+    if (!found) throw unavailable('exact running producer has no supported ready stop-proof capability; producer-first rollout required')
+  } catch (error) {
+    if (error.code === 'RESTART_EXIT_PROOF_UNAVAILABLE') throw error
+    throw unavailable('ready stop-proof capability unavailable; predecessor left running')
+  } finally { if (fd !== undefined) closeSync(fd) }
+}
+
+/** Bind the old native instance and a fresh append window before mutation. */
+export function captureRuntimeStopProof(ctx, census) {
+  if (typeof ctx.readRuntimeInstance !== 'function' || typeof ctx.readProcessInstance !== 'function'
+      || typeof ctx.turnRecoveryStore !== 'string' || !isAbsolute(ctx.turnRecoveryStore)
+      || typeof census?.epoch !== 'string' || census.epoch === '') throw unavailable('exact readback and durable census are required')
+  const instance = ctx.readRuntimeInstance(RUNTIME_LABEL)
+  const identity = instanceKey(instance)
+  if (instance.uid !== ctx.authsvcUid || instance.gid !== ctx.authsvcGid) throw unavailable('unexpected native runtime principal')
+  requireReadyStopCapability(ctx, instance, identity)
+  const path = join(dirname(ctx.turnRecoveryStore), 'restart-boundary.jsonl')
+  return { instance, identity, path, window: readBoundaryWindow(path, instance),
+    lostHandles: new Set(census.unresolvedLostTurns.map(record => record.handle)) }
+}
+
+export function assertRuntimeStopProofCurrent(ctx, proof) {
+  if (instanceKey(ctx.readRuntimeInstance(RUNTIME_LABEL)) !== proof.identity) throw unavailable('old runtime instance changed before stop')
+}
+
+/** Receipts are a restart barrier only; they never settle or mint exit evidence. */
+function readRuntimeStopProof(ctx, proof, deadlineMono) {
+  try {
+    const entries = readBoundaryWindow(proof.path, proof.instance, proof.window)
+    if (entries.length === 1 && entries[0].phase === 'quiesce_begin' && entries[0].pid === proof.instance.pid) throw unavailable('awaiting end receipt', true)
+    if (entries.length !== 2) throw unavailable('ambiguous boundary receipts')
+    const [begin, end] = entries
+    const liveEpoch = begin.census?.epoch
+    if (typeof liveEpoch !== 'string' || liveEpoch === '' || begin.phase !== 'quiesce_begin' || end.phase !== 'quiesce_end'
+        || !entries.every(entry => entry.kind === 'restart_boundary' && entry.pid === proof.instance.pid
+          && entry.census?.epoch === liveEpoch && ['SIGTERM', 'SIGINT'].includes(entry.signal))
+        || end.stopResult !== 'stopped' || end.census.drained !== true
+        || !['slots', 'inflightTurns', 'inflightOccurrences'].every(key => Array.isArray(end.census[key]) && end.census[key].length === 0)) throw unavailable('old runtime cleanup did not complete')
+    const after = readRestartDrainCensus({ turnRecoveryStore: ctx.turnRecoveryStore, jobsStore: ctx.storePath })
+    if (!after.drained || typeof after.epoch !== 'string' || after.epoch === '' || after.epoch !== end.census.durableEpoch
+        || after.unresolvedLostTurns.some(record => !proof.lostHandles.has(record.handle))) throw unavailable('new unresolved work remains after stop')
+    const remaining = deadlineMono - performance.now()
+    if (remaining <= 0) throw unavailable('existing unload deadline expired before native readback')
+    const current = ctx.readProcessInstance(proof.instance.pid, { timeoutMs: Math.ceil(remaining) })
+    if (current !== null && instanceKey(current) === proof.identity) throw unavailable('old native process still exists', true)
+    if (performance.now() >= deadlineMono) throw unavailable('native exit readback completed after existing unload deadline')
+    return { instance: proof.instance, liveEpoch, durableEpoch: after.epoch }
+  } catch (error) {
+    if (error.code === 'RESTART_EXIT_PROOF_UNAVAILABLE') throw error
+    throw unavailable('missing, invalid or unreadable stop evidence')
+  }
+}
+
+export function verifyRuntimeStopProof(ctx, proof, deadlineMono) {
+  for (;;) {
+    const remaining = deadlineMono - performance.now()
+    if (remaining <= 0) throw unavailable('existing unload deadline expired without completed stop proof')
+    try { return readRuntimeStopProof(ctx, proof, deadlineMono) } catch (error) {
+      if (error.retryable !== true) throw error
+      const wait = Math.min(250, deadlineMono - performance.now())
+      if (wait <= 0) throw error
+      if (typeof ctx.waitAfterBootout === 'function') ctx.waitAfterBootout(wait)
+      else Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, wait)
+    }
   }
 }
 

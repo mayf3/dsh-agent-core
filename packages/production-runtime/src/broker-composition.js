@@ -27,6 +27,7 @@ export function mountBrokerGateway({ ctx, credentialsFile, authServiceOrigin, au
     mode: 'gateway',
     credentialsFile,
     authServiceOrigin,
+    resolveWorkflowProvenance: (trustedContext) => ctx.get('workflowExecutionContextAccess')?.resolveWorkflowProvenance(trustedContext),
     ...(auditDenial === undefined ? {} : { auditDenial }),
     resolveLocalHandlers: () => ({
       ...(ctx.get('agentDefinitionAccess')?.handlers ?? {}),

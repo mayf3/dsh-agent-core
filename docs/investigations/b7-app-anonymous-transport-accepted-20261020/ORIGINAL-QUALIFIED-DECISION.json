@@ -1,0 +1,331 @@
+{
+  "acceptanceConditions": [],
+  "actor": {
+    "actor_thread": "01a1378d-e052-7021-9992-f0760eb9f9e7",
+    "backend_execution_model": "NOT_EXPOSED",
+    "exclusive_coordinator": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "requested_decision_model": "gpt-6-astra",
+    "role": "Original B7 delegated technical decision actor; amendment of own fixed candidate-source transport/purpose contract, not OS/network/repository ACL issuer",
+    "same_chain_material_reader": "/root/sol_e40_independent_reader",
+    "sol_contribution": {
+      "agent": "/root/capacity_a_sol",
+      "backend_execution_model": "UNKNOWN",
+      "requested_model_attribution": "gpt-6.1-sol/ultra, original lane historical requested configuration",
+      "scope": "Mechanical read/hash/extraction of the two new READY/closure files only; no additional semantic review"
+    },
+    "sole_source_and_runtime_writer": "01a1437b-f9f3-7a33-a253-8f7fce9459f3",
+    "stored_model_config": {
+      "at": "2026-10-19T19:47:13Z",
+      "attribution": "Current coordinator-supplied stored configuration; no model query, resume or configuration change in this decision",
+      "model": "gpt-6-astra",
+      "provider": "openai"
+    }
+  },
+  "actualExportAdmittedNow": false,
+  "actualReadAndWork": {
+    "businessCalls": 0,
+    "direct": "Complete exact new unit/READY/closure/INDEX/observation/original material receipt/author cleanup read and byte/SHA verified; the decision directly applies the new material. Existing parent decisions/source/gates are reused, not rerun.",
+    "exportCalls": 0,
+    "identityProbes": 0,
+    "networkOrGitHubCalls": 0,
+    "newSamplingCalls": 0,
+    "ownEffects": "Formal decision/index/cleanup and one authorized coordinator callback with its durable receipts only",
+    "productionReads": 0,
+    "rawCounterexampleAttribution": "No driver/rawtest reread or execution by this decision actor; original same-chain ed456 attribution retained.",
+    "sol": "Only two-file new READY/closure pin extraction; no added review or authority decision.",
+    "sourceOrProductEdits": 0,
+    "testsOrFixtures": 0
+  },
+  "actualRouteOverlay": {
+    "acceptance": "This artifact is the original technical acceptance, independent of material PASS and transport ACK",
+    "actualInbound": "User-supplied exclusive new14c -> original1378 route in this turn",
+    "callbackACKMeaning": "Coordination delivery only, not source, access, export, capacity or business PASS",
+    "callbackLimit": 1,
+    "oldCoordinatorWritten": false,
+    "sourceFrozenState": "NOT_SENT/route0 preserved as historical material",
+    "terminalTarget": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38"
+  },
+  "additionalExportsGranted": 0,
+  "at_utc": "2026-10-19T19:52:55.842721+00:00",
+  "authorityRoleAndExactBasis": {
+    "actuallyEstablishedExtraOSOrPrivateAccessEffect": [],
+    "correspondingHigherAuthorityDecisionRequiredForThisExactScope": false,
+    "finding": "WITHIN_ORIGINAL_DELEGATED_FINITE_CANDIDATE_SOURCE_PURPOSE",
+    "limitation": "No assertion that all system policies or access grants were searched or that no external constraint exists; no new universal policy audit is introduced.",
+    "noGenericOwnerOrKeeperGate": true,
+    "positiveBasis": [
+      {
+        "ref": "reusedParent.decision",
+        "scope": "Original1378 expressly accepted the finite B7 candidate-source acquisition purpose/readset and one nonproduction E in64b13, under the same user-delegated technical decision role. Its authenticatedCLI selection was a technical choice of that contract, not a new repository ACL grant."
+      },
+      {
+        "ref": "Current exclusive new14c route, exact unit sections2/3/5",
+        "scope": "User expressly routes whether the same delegated role may amend its own64b13 transport/principal choice; this decision affirmatively accepts that exact amendment rather than treating the routing request or material PASS as acceptance."
+      },
+      {
+        "ref": "Previously held same-thread delegation, recorded by64b13",
+        "scope": "User instruction to decide directly within the authorized scope and minimize ordinary approval involvement is reused as original role basis, not expanded into global network/OS/access administration."
+      }
+    ],
+    "reasoning": [
+      "The object purpose, repository, immutable commit, bounded readset, output roles, sole writer and nonproduction effect stay fixed. Only the technically selected transport/HTTP principal changes, and is expressly amended here.",
+      "Original E has not been issued. The new owned-loopback evidence proves a hidden redirect in one CLI invocation; it is not a denial or failure of this repository/source export. There is no prior actual GitHub refusal being retried through an alternate principal.",
+      "Anonymous naming, lower apparent privilege, UID502, docs merge, old PASS and mere client capability supply no authority. The positive grant is this role's explicit fixed-purpose amendment of64b13.",
+      "No private repository entitlement is conferred. GitHub/repository publication and access enforcement stay with mayf3 or its existing delegated repository maintainer; inaccessible anonymous content terminates this E.",
+      "This role does not waive an actual controlling network/custody requirement or alter an OS/ACL/TLS trust arrangement. The material's explicit stop-on-prohibited-direct-route provision remains operative."
+    ]
+  },
+  "cleanup": {
+    "deletedBytes": 0,
+    "deletedFiles": 0,
+    "retained": "All active original evidence, failures/partials, product/source/runtime, thread and daemon records untouched",
+    "scope": "Known owned unique decision delivery artifacts only; no scan",
+    "temporaryScriptsCreated": 0
+  },
+  "completionBoundary": "Technical contract adjudication complete; source implementation, qualified consumption and actual export remain with original1437.",
+  "conditional": false,
+  "currentIssued": 0,
+  "decisions": {
+    "E": {
+      "OSPrincipal": "Original unprivileged UID502 and sole writer; no OS identity or permission change",
+      "disposition": "ACCEPT_REBIND_EXISTING_UNISSUED_ALLOWANCE",
+      "invocationConditionsAreNotNewAcceptances": true,
+      "newHTTPPrincipal": "Unauthenticated GitHub request; no Authorization/cookie/CLI account/credential lookup",
+      "operation": "Nonproduction candidate-source acquisition only; no runtime, F/install, REGISTER/attempt/TX/context/business execution authority",
+      "previousHTTPChoice": "Authenticated gh CLI choice in parent64b13 is superseded for consumption of this E; not a second available route",
+      "quota": "One export total, previously issued0, remaining1. Not one anonymous plus one authenticated export. Every issued outcome consumes this E; no second export, per-member restart or authenticated fallback.",
+      "scope": "Explicitly substitute this anonymous fixed HTTPS read-purpose/route for the authenticated CLI choice of parent64b13, for the same one unissued bounded candidate-source export"
+    },
+    "S": {
+      "disposition": "ACCEPT",
+      "notClaimed": "No helper implementation, source/test PASS, actual anchor/body/public visibility, export result or APP integration established by this acceptance",
+      "scope": "Exact unit sections 2/4: only the fixed zero-argument <=500-line nonproduction tools/fixed_selected_e1c_app_export.py transport and required bounded count/failure/proof/publication joins",
+      "sourceCeiling": [
+        "Replace authenticated gh API transport with fixed unauthenticated Python standard-library HTTPSConnection to api.github.com:443",
+        "Durable per-request attempt accounting before dispatch; closed bounded response/failure handling; no redirect, retry, discovery or fallback",
+        "Necessary same-helper proof/publisher joins and only affected owned synthetic HTTP/TLS coverage"
+      ],
+      "unchanged": "Fixed repo/72a commit, e1c then b85 anchors, five bodies, complete bounded nonrecursive inventory, Git-object/SHA256 checks, original N1, output ABI/destination/P6 selection, gross cost ceiling and ordinary lifecycle"
+    }
+  },
+  "evidenceAttributionCorrection": {
+    "acceptanceForm": "Accept exact frozen semantic unit with this explicit evidence-attribution overlay; no byte edits, source/effect/count expansion or new material gate",
+    "actualOuterExit": "ACTUAL_OUTER_EXIT_NOT_SEPARATELY_CAPTURED",
+    "actualOuterExitValue": null,
+    "appliesTo": "Unit section1/line7 and coordinator wording outer counter rc1; frozen unit/READY/INDEX/observation/review remain unchanged",
+    "correctionSource": "New14c same-turn evidence-attribution correction; independently consistent with ed456 verifiedPrimary.returncodePrecision",
+    "noRerun": true,
+    "notEvidenceOf": [
+      "Real GitHub redirect/denial/access failure",
+      "Real credential disclosure",
+      "Every possible gh capability being unusable",
+      "APP/source/export failure",
+      "Actual outer native rc1"
+    ],
+    "outerVerdict": "SOURCE_DERIVED_EXPECTED_RC1",
+    "proofUnaffected": "One gh invocation followed302 and caused two recorded local GETs. This suffices for the reported no-hidden-redirect counterexample without a saved outer exit receipt.",
+    "savedPrimary": {
+      "observedChild": "gh child native rc0",
+      "observedServerRequests": 2,
+      "paths": [
+        "/git/first",
+        "/git/second"
+      ],
+      "status": "Saved owned-loopback evidence read by original same-chain reader; reused here"
+    }
+  },
+  "exactInputs": {
+    "authorCleanup": {
+      "bytes": 780,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/OWN-CLEANUP.v1.json",
+      "sha256": "52d42dd4ad2f3147ab6fd317d3a85441d4b3c90ea3bebc6abc01b4a001b9cc30"
+    },
+    "closure": {
+      "bytes": 2473,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/SOURCE-CLOSURE.v1.json",
+      "sha256": "16aa3514573eb0edd2bc027f42b6d62b56256f3e3ba5f9a0f931eb3be840d0c9"
+    },
+    "index": {
+      "bytes": 1523,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/INDEX.v1.json",
+      "sha256": "085693ccafd98bc145145f9045a3b98f7e7eef07ddb854d0783176081382078d"
+    },
+    "materialReview": {
+      "bytes": 11922,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/independent-sol-readback/FIXED-GIT-TRANSPORT-AMENDMENT-MATERIAL-RECEIPT.v1.json",
+      "sha256": "ed456f12624bb3af1e326c4140396829f521a94a9727bf82cb83a43a17b747b7"
+    },
+    "observation": {
+      "bytes": 3229,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/ACTUAL-CLI-REDIRECT-OBSERVATION.v1.json",
+      "sha256": "641b55272985fba99a6753c0eb6059ed88eb550972734a200c3d99a219287ac4"
+    },
+    "ready": {
+      "bytes": 4578,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/MATERIAL-READY.v1.json",
+      "sha256": "8ef5a704315ca4af5c9ae13d65c86332aba68e7d73b0e259a5bfb994aa0ab62f"
+    },
+    "unit": {
+      "bytes": 7857,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/PROPOSED-FIXED-BOUNDED-PUBLIC-GIT-TRANSPORT-AMENDMENT.v1.md",
+      "sha256": "9f162062fd8bef1e840609b42dabbbb6c715183a828c22482395f563bcbc513f"
+    }
+  },
+  "existingUnissuedEReboundToAnonymousFixedReadAccepted": true,
+  "finiteScope": {
+    "commit": "72a097bd65f05adf26d7929dbb4d32384e124d37",
+    "costRule": "All actual helper/evidence/output/temporary/retained overlap remains charged. Removing CLI child creates no unmeasured credit.20MiB is a gross ceiling, not current physical fit/J/remaining.",
+    "grossOperationalCeilingBytes": 20971520,
+    "maxHelperLines": 500,
+    "originalAnchors": "e1c21325 then b854770 before the three further fixed bodies; mismatch stops without alternative commit/path",
+    "originalInventory": "Same bounded complete nonrecursive manifest-presence proof; no manifest content or recursive import fetch",
+    "repo": "mayf3/dsh-agent-core",
+    "runtimeOrProductionEffects": [],
+    "sourceProductChanges": [],
+    "unrelatedAuthoritiesPreserved": true
+  },
+  "immutableState": {
+    "attempt": 0,
+    "business": "0/2",
+    "capacityCollector": {
+      "issued": 2,
+      "noThird": true,
+      "remaining": 0
+    },
+    "e42": "UNREGISTERED",
+    "export": {
+      "issued": 0,
+      "remaining": 1,
+      "source": "Current saved material, not a new runtime probe",
+      "totalCap": 1
+    },
+    "floorBytes": 53687091200,
+    "oldFailuresAndPartialRecordsPreserved": true,
+    "originalTXFenceSingleWriterAndStrongPredicatesPreserved": true,
+    "packaging": {
+      "issued": 3,
+      "noFourth": true,
+      "remaining": 0
+    }
+  },
+  "implementationPass": false,
+  "implementation_spec_ready": true,
+  "kind": "ORIGINAL_FIXED_BOUNDED_PUBLIC_GIT_TRANSPORT_AMENDMENT_TECHNICAL_DECISION_V1",
+  "maxActualGETsPerExport": 330,
+  "maxExports": 1,
+  "next": [
+    {
+      "action": "Land this exact accepted amendment and evidence correction as docs-only accepted Spec/base, bind final reviewed HEAD/main and original decision. Preserve all frozen proposals,64b13 and PR542 history; no rewriting old NOT_SENT fields.",
+      "owner": "Original1437 source lane"
+    },
+    {
+      "action": "Update this helper's DEVELOPMENT_PREFLIGHT to the accepted transport delta, then implement only its finite source ceiling in the existing isolated owned workblock.",
+      "owner": "Original1437 source lane"
+    },
+    {
+      "action": "Run the new affected owned HTTP/TLS cases and required original proof/layout inverse evidence; reuse unchanged passed groups. Original reader closes the affected source/closure. No real GitHub, identity probe, APP import, new reviewer or old gh RED rerun.",
+      "owner": "Original1437 plus original same-chain nonauthor reader"
+    },
+    {
+      "action": "Before the one E, bind final source/review/pins, genuine owned budget/preimage/custody and applicable original admission; create0600 EXCL durable intent with file/parent fsync and exact readback. No second ordinary acceptance or future-quantity contract is introduced.",
+      "owner": "Original1437 sole execution lane"
+    },
+    {
+      "action": "Only then consume the one fixed anonymous export under max330 pre-counted GET attempts. All terminal/UNKNOWN outcomes consume it. Preserve all original failures; no authenticated fallback, second export or changed source selection.",
+      "owner": "Original1437 sole execution lane"
+    }
+  ],
+  "noRedirectNoRetrySemantics": {
+    "accepted": true,
+    "authentication": "NONE; no account/profile/token/client/Grant/cookie/Authorization read or creation",
+    "fixedPathPrefix": "/repos/mayf3/dsh-agent-core/git/",
+    "headers": "Reject nonidentity Content-Encoding and conflicting/oversized Content-Length; no raw headers/cookies/exceptions exported",
+    "host": "api.github.com",
+    "originalProofs": "N1 complete=false is initial/failure only; every tree must be nontruncated and completely bounded; EXPORT_COMPLETE only after all original anchor/body/Git-object/absence/inventory/publication requirements. This amendment does not weaken those checks.",
+    "port": 443,
+    "prohibited": [
+      "Hidden redirect or automatic retry",
+      "Authenticated CLI fallback",
+      "Alternative host/ref/path or per-member restart",
+      "Proxy/env/config discovery or access repair",
+      "Reusing a failed connection to continue",
+      "A second export or salvaging incomplete output as complete"
+    ],
+    "requestCounting": "Durably reserve/count each request attempt before it can issue. One connection and one GET per attempt; count is not proof the server received it. A connection/TLS/read failure is terminal and cannot be retried because delivery is uncertain.",
+    "responseBounds": {
+      "maxAcceptedBodyBytes": 1048576,
+      "originalNewBodyBytes": 262144,
+      "originalTreeProofBytes": 4194304,
+      "overflowDetectionReadBytes": 1048577
+    },
+    "scheme": "https",
+    "stopOn": [
+      "3xx without follow-up connection",
+      "401",
+      "403",
+      "404",
+      "429",
+      "5xx",
+      "connect failure",
+      "TLS failure",
+      "read failure",
+      "timeout",
+      "UNKNOWN",
+      "oversized/conflicting/unsupported response",
+      "any original anchor/object/tree/proof/publication failure"
+    ],
+    "trust": "Ordinary existing system TLS verification; no custom CA/truststore or network configuration edits"
+  },
+  "originalNoIdentityOrChannelChangeCompatibility": {
+    "amendedBoundary": "Only64b13's selected authenticatedCLI transport for this unissued E is replaced.",
+    "compatibilityBasis": "No actual GitHub/export request or refusal has occurred; the saved local synthetic302 is a client-behavior counterexample, not denied access. This is a prospective explicit choice before first source access, with terminal anonymous denial and no fallback.",
+    "currentPublicAvailability": "UNKNOWN",
+    "disposition": "COMPATIBLE_BY_EXPLICIT_TECHNICAL_CONTRACT_AMENDMENT_NOT_USER_RESTRICTION_WAIVER",
+    "globalNoRestrictionFinding": false,
+    "mandatoryIntermediary": "Do not bypass any applicable mandatory network/custody intermediary. If an already governing admission constraint forbids the proposed direct route, stop E and report that exact constraint/issuer; do not discover alternate proxies, alter configuration or probe around it.",
+    "preservedControllingBoundary": "Original prohibition on identity/path/channel/permission switching to circumvent a refusal remains unchanged. Prior local SourceRoot/DS refusals and their no-retry rules are not affected; Git object export cannot stand in for source readiness or original strong validators.",
+    "realDeltaAcknowledged": "Authenticated CLI -> unauthenticated fixed direct HTTPS is a real HTTP principal and transport-purpose/route change; it is not described as unchanged identity/channel.",
+    "userRestrictionOverride": false
+  },
+  "remainingExports": 1,
+  "reusedParent": {
+    "P6": "Original prospective candidate-local P6 selection preserved; no historical P6/import/runtime-equivalence finding",
+    "PR": 542,
+    "attribution": "Previously held accepted role/source/purpose basis and frozen references reused. No new parent source, archive, gate, credential or mandate trace.",
+    "decision": {
+      "bytes": 27143,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/ORIGINAL-FIXED-SELECTED-E1C-APP-GIT-EXPORT-TECHNICAL-DECISION.v1.json",
+      "sha256": "64b13dc07372e8b00d5d596be5e51dbd14e22a9ea11e3c57907d63aee11ea26f"
+    },
+    "docsMain": {
+      "bytes": 2430,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/DOCS-MAIN-TERMINAL-INDEX.v1.json",
+      "sha256": "33be1669e4bfd7b41d985c33df1e0cab00ba55d428ba933ae556de5273fb4def"
+    },
+    "main": "4238992",
+    "preflight": {
+      "bytes": 3135,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/DEVELOPMENT_PREFLIGHT.json",
+      "sha256": "9986e884a9810a561f85e3900b5545e0de5068bf30b40672852a2f1d0c91501e"
+    }
+  },
+  "scopeUnaccepted": [],
+  "sourceAndEffectSeparation": {
+    "G": null,
+    "Lshared": null,
+    "actualAPPOrAPIImportCompatibility": "UNPROVEN",
+    "actualCostFit": "UNPROVEN",
+    "admittedExecution": false,
+    "contractAcceptance": "S and E separately accepted now; no deferred ordinary acceptance or hidden review of unchanged units",
+    "exportResult": "NOT_ISSUED",
+    "finalJ": null,
+    "futureValues": "Future source hashes/cost/closure/anchors/visibility are real execution-consumption facts, not prerequisites for this source/effect-contract acceptance",
+    "implementation": "NOT_IMPLEMENTED_IN_THIS_DECISION; sourceImplementationReady means exact accepted specification permits the original writer's normal isolated implementation lifecycle",
+    "numericAdmission": false,
+    "publicSourceVisibility": "UNKNOWN",
+    "remainingCapacity": null
+  },
+  "sourceImplementationReady": true,
+  "status": "ACCEPT_S_AND_REBIND_EXISTING_UNISSUED_E",
+  "transportSourceAmendmentAccepted": true
+}

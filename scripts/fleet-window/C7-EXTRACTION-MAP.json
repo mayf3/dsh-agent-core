@@ -1,0 +1,124 @@
+{
+  "base_head": "55d306a997c02fa57e41b815cc31362c66f9ee18",
+  "original_embedded_lines": 683,
+  "unchanged_lines": 667,
+  "mapping": [
+    {
+      "original_from": 98,
+      "original_to": 120,
+      "new_file": "window_executor_state.py",
+      "new_from": 1,
+      "new_to": 23,
+      "lines": 23,
+      "byte_identical": true
+    },
+    {
+      "original_from": 121,
+      "original_to": 440,
+      "new_file": "window_executor_state.py",
+      "new_from": 40,
+      "new_to": 359,
+      "lines": 320,
+      "byte_identical": true
+    },
+    {
+      "original_from": 441,
+      "original_to": 442,
+      "new_file": "window_executor_helper.py",
+      "new_from": 4,
+      "new_to": 5,
+      "lines": 2,
+      "byte_identical": true
+    },
+    {
+      "original_from": 452,
+      "original_to": 452,
+      "new_file": "window_executor_helper.py",
+      "new_from": 7,
+      "new_to": 7,
+      "lines": 1,
+      "byte_identical": true
+    },
+    {
+      "original_from": 453,
+      "original_to": 520,
+      "new_file": "window_executor_helper.py",
+      "new_from": 9,
+      "new_to": 76,
+      "lines": 68,
+      "byte_identical": true
+    },
+    {
+      "original_from": 522,
+      "original_to": 576,
+      "new_file": "window_executor_helper.py",
+      "new_from": 79,
+      "new_to": 133,
+      "lines": 55,
+      "byte_identical": true
+    },
+    {
+      "original_from": 578,
+      "original_to": 627,
+      "new_file": "window_executor_helper.py",
+      "new_from": 135,
+      "new_to": 184,
+      "lines": 50,
+      "byte_identical": true
+    },
+    {
+      "original_from": 629,
+      "original_to": 657,
+      "new_file": "window_executor_helper.py",
+      "new_from": 187,
+      "new_to": 215,
+      "lines": 29,
+      "byte_identical": true
+    },
+    {
+      "original_from": 659,
+      "original_to": 677,
+      "new_file": "window_executor_helper.py",
+      "new_from": 218,
+      "new_to": 236,
+      "lines": 19,
+      "byte_identical": true
+    },
+    {
+      "original_from": 679,
+      "original_to": 719,
+      "new_file": "window_executor_helper.py",
+      "new_from": 239,
+      "new_to": 279,
+      "lines": 41,
+      "byte_identical": true
+    },
+    {
+      "original_from": 721,
+      "original_to": 774,
+      "new_file": "window_executor_helper.py",
+      "new_from": 282,
+      "new_to": 335,
+      "lines": 54,
+      "byte_identical": true
+    },
+    {
+      "original_from": 775,
+      "original_to": 778,
+      "new_file": "window_executor_helper.py",
+      "new_from": 344,
+      "new_to": 347,
+      "lines": 4,
+      "byte_identical": true
+    },
+    {
+      "original_from": 780,
+      "original_to": 780,
+      "new_file": "window_executor_helper.py",
+      "new_from": 350,
+      "new_to": 350,
+      "lines": 1,
+      "byte_identical": true
+    }
+  ]
+}

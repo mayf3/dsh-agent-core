@@ -1,0 +1,342 @@
+{
+  "schema_version": 5,
+  "time_utc": "2026-11-08T07:44:30.673796+00:00",
+  "parent": "f6b988232ce218e7b85ea1853d4d0f8b47a4032a",
+  "baseline": "95a8e1cb512fc99dc018209d837250dd51b4d08f",
+  "current_remote_main_observed": "206e19c17c268c7513e5a4d8b2135ac496cf7daf",
+  "path_checks": [
+    {
+      "path": "AGENTS.md",
+      "test_e_rc": 0
+    },
+    {
+      "path": ".agents/README.md",
+      "test_e_rc": 0
+    },
+    {
+      "path": ".agents/local/README.md",
+      "test_e_rc": 0
+    },
+    {
+      "path": ".agents/governance.lock.json",
+      "test_e_rc": 0
+    },
+    {
+      "path": ".agents/skills/spec-governance/SKILL.md",
+      "test_e_rc": 0
+    },
+    {
+      "path": ".agents/skills/spec-governance/modes/PREFLIGHT.md",
+      "test_e_rc": 0
+    },
+    {
+      "path": "BRIEF-547-STORE-DIAG.md",
+      "test_e_rc": 0
+    },
+    {
+      "path": "D-STORE-QA-547.md",
+      "test_e_rc": 0
+    },
+    {
+      "path": "STOPPED-547-STORE-DIAG.md",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/decisions/README.md",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/specs/README.md",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V4.md",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/specs/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2.md",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/capture-v3.py",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/capture-v2-receipt.json",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/candidate-audit-v3.md",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/admin-abandonment.js",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/authority-capacity.js",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/capacity.js",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/durable-file.js",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/index.js",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/ingress-correlation.js",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/query.js",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/quiescence-bundle.js",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/quiescence-custody.js",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/startup-recovery.js",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/state-machine.js",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/store.js",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/index.js",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/production-runtime/src/paths.js",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/production-runtime/src/compose.js",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/scripts/production-runtime.mjs",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/pack-provenance.json",
+      "test_e_rc": 0
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/package.json",
+      "test_e_rc": 0
+    }
+  ],
+  "source_hash_checks": [
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/admin-abandonment.js",
+      "expected": "62237fb500694f95d894f0f75516ee97fee05cd961971156783120bcbe059710",
+      "actual": "62237fb500694f95d894f0f75516ee97fee05cd961971156783120bcbe059710"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/authority-capacity.js",
+      "expected": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+      "actual": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/capacity.js",
+      "expected": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+      "actual": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/durable-file.js",
+      "expected": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c",
+      "actual": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/index.js",
+      "expected": "8f8d56082e0513397ca89c3799c9bd745bbafa540050b7c4189bdb3f2a61a91f",
+      "actual": "8f8d56082e0513397ca89c3799c9bd745bbafa540050b7c4189bdb3f2a61a91f"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/ingress-correlation.js",
+      "expected": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca",
+      "actual": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/query.js",
+      "expected": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63",
+      "actual": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/quiescence-bundle.js",
+      "expected": "f2a724c2b0e5e00d5b81e1a5eb86efddc97365519fb75daa3321e5417e1694ed",
+      "actual": "f2a724c2b0e5e00d5b81e1a5eb86efddc97365519fb75daa3321e5417e1694ed"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/quiescence-custody.js",
+      "expected": "0a64281ff4beb6aab0e91bb249f2b58c78715ee579148d6fd45632e4073edef8",
+      "actual": "0a64281ff4beb6aab0e91bb249f2b58c78715ee579148d6fd45632e4073edef8"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/startup-recovery.js",
+      "expected": "795c3cf863023d11f270ec2600bf350d0eaf04bd07c392503696ef57dba04963",
+      "actual": "795c3cf863023d11f270ec2600bf350d0eaf04bd07c392503696ef57dba04963"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/state-machine.js",
+      "expected": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f",
+      "actual": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/reconciliation/store.js",
+      "expected": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+      "actual": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/agent-router/src/index.js",
+      "expected": "bd19c4f1465fda669986adf1ff82416a70ddba5283a650f30c6bde0fcd952603",
+      "actual": "bd19c4f1465fda669986adf1ff82416a70ddba5283a650f30c6bde0fcd952603"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/production-runtime/src/paths.js",
+      "expected": "44dbf7df2dd8e660b0bfb67d22e7bad2833c9147a0463577e859cf916ad54f36",
+      "actual": "44dbf7df2dd8e660b0bfb67d22e7bad2833c9147a0463577e859cf916ad54f36"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/packages/production-runtime/src/compose.js",
+      "expected": "04287bd404bf6b45d6026a82443ec2b94b944d7502a7e7766af295f8125a1cce",
+      "actual": "04287bd404bf6b45d6026a82443ec2b94b944d7502a7e7766af295f8125a1cce"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/scripts/production-runtime.mjs",
+      "expected": "6a35dab738acdbdfd9bb9abe5632a9b949426bca15f09a73383428e4762c8588",
+      "actual": "6a35dab738acdbdfd9bb9abe5632a9b949426bca15f09a73383428e4762c8588"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/pack-provenance.json",
+      "expected": "a2df8c86f8227579c317fc6f9e599b852e9beecd506dd267fe48c4130e59476d",
+      "actual": "a2df8c86f8227579c317fc6f9e599b852e9beecd506dd267fe48c4130e59476d"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v2/source/package.json",
+      "expected": "d57644033f2ed7458272262dedad91c1cabc86aa51bc75bcc1f35184029299cd",
+      "actual": "d57644033f2ed7458272262dedad91c1cabc86aa51bc75bcc1f35184029299cd"
+    }
+  ],
+  "production_path_checks": [
+    {
+      "path": "/Users/authsvc/.agent-core/control/turn-recovery-v3.json",
+      "argv": [
+        "sudo",
+        "-n",
+        "-u",
+        "authsvc",
+        "/bin/test",
+        "-e",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json"
+      ],
+      "rc": 0,
+      "required": true,
+      "stderr": ""
+    },
+    {
+      "path": "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.faults.json",
+      "argv": [
+        "sudo",
+        "-n",
+        "-u",
+        "authsvc",
+        "/bin/test",
+        "-e",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.faults.json"
+      ],
+      "rc": 0,
+      "required": false,
+      "stderr": ""
+    },
+    {
+      "path": "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.abandonment-declarations.json",
+      "argv": [
+        "sudo",
+        "-n",
+        "-u",
+        "authsvc",
+        "/bin/test",
+        "-e",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.abandonment-declarations.json"
+      ],
+      "rc": 0,
+      "required": false,
+      "stderr": ""
+    },
+    {
+      "path": "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.r28-history.jsonl",
+      "argv": [
+        "sudo",
+        "-n",
+        "-u",
+        "authsvc",
+        "/bin/test",
+        "-e",
+        "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.r28-history.jsonl"
+      ],
+      "rc": 1,
+      "required": false,
+      "stderr": ""
+    }
+  ],
+  "planned_new_paths": [
+    {
+      "path": "docs/evidence/h547-store-diag/private/v5",
+      "test_e_rc": 1,
+      "role": "output_to_create"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v5/reader",
+      "test_e_rc": 1,
+      "role": "output_to_create"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v5/scratch",
+      "test_e_rc": 1,
+      "role": "output_to_create"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/private/v3",
+      "test_e_rc": 1,
+      "role": "output_to_create"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/capture-v3-receipt.json",
+      "test_e_rc": 1,
+      "role": "output_to_create"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/qa-v5.json",
+      "test_e_rc": 1,
+      "role": "output_to_create"
+    },
+    {
+      "path": "docs/evidence/h547-store-diag/qa-v5.stdout.txt",
+      "test_e_rc": 1,
+      "role": "output_to_create"
+    }
+  ],
+  "self_reference_correction": "User D-STORE-STORE-QA-547.md resolves to existing D-STORE-QA-547.md; not a required-input failure",
+  "status": "PASS"
+}

@@ -108,7 +108,7 @@ function walkConfinementComponents(sessionRoot, artifactPath) {
  * Absent artifact is SESSION_NOT_FOUND (not instability); every other
  * deviation is a retry signal.
  */
-function attemptStableRead(artifactPath, sessionRoot) {
+function attemptStableRead(artifactPath, sessionRoot, headerOnly = false) {
   const rootStat = statComponent(sessionRoot, { absent: 'not_found' })
   if (fileType(rootStat) !== FILE_TYPE_DIRECTORY) throw internalError()
   walkConfinementComponents(sessionRoot, artifactPath)
@@ -118,7 +118,7 @@ function attemptStableRead(artifactPath, sessionRoot) {
     throw internalError()
   }
   // Artifact-size ceiling BEFORE opening any content (CTR-SH-011).
-  if (preStat.size > BigInt(MAX_ARTIFACT_BYTES)) throw resourceLimit()
+  if (!headerOnly && preStat.size > BigInt(MAX_ARTIFACT_BYTES)) throw resourceLimit()
 
   const flags = fsConstants.O_RDONLY | (fsConstants.O_NOFOLLOW ?? 0)
   let fd
@@ -135,14 +135,16 @@ function attemptStableRead(artifactPath, sessionRoot) {
     if (d0.dev !== rootStat.dev) throw internalError()
 
     const size = Number(d0.size)
-    if (size > MAX_ARTIFACT_BYTES) throw resourceLimit()
-    const bytes = Buffer.allocUnsafe(size)
+    if (!headerOnly && size > MAX_ARTIFACT_BYTES) throw resourceLimit()
+    const bytes = Buffer.allocUnsafe(headerOnly ? Math.min(size, 1048576) : size)
     let read = 0
-    while (read < size) {
-      const n = readSync(fd, bytes, read, size - read, read)
+    while (read < bytes.length) {
+      const n = readSync(fd, bytes, read, headerOnly ? 1 : size - read, read)
       if (n <= 0) throw new SnapshotUnstableError()
       read += n
+      if (headerOnly && bytes[read - 1] === 0x0a) break
     }
+    if (headerOnly && bytes[read - 1] !== 0x0a) throw internalError()
 
     const d1 = fstatSync(fd, { bigint: true })
     const p1 = statComponent(artifactPath, { absent: 'unstable' })
@@ -160,7 +162,7 @@ function attemptStableRead(artifactPath, sessionRoot) {
       if (HistoryErrorIsInstance(error)) throw error
       throw new SnapshotUnstableError()
     }
-    return bytes
+    return headerOnly ? bytes.subarray(0, read) : bytes
   } finally {
     closeSync(fd)
   }
@@ -191,3 +193,8 @@ export function readStableArtifact(artifactPath, sessionRoot) {
 }
 
 export { HistoryError }
+
+/** WEBSITE_HUMAN_WORKFLOW_INQUIRY_V1: header-only, no transcript byte read. */
+export function readStableHeader(artifactPath, sessionRoot) {
+  return attemptStableRead(artifactPath, sessionRoot, true)
+}

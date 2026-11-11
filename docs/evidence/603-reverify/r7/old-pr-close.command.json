@@ -1,0 +1,25 @@
+{
+  "name": "old-pr-close",
+  "argv": [
+    "gh",
+    "pr",
+    "close",
+    "603",
+    "--repo",
+    "mayf3/dsh-agent-core"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "started_at": "2026-11-07T05:27:56.325063+00:00",
+  "head": "c87a78b175c5a5da5d661ee2ef8435021bbdceef",
+  "index_tree_before_command": "8835f604c7ce7a1ab23a78f2607d1e4db3008f6e",
+  "environment": "Inherited unless argv explicitly clears keys; no Secret values recorded",
+  "ended_at": "2026-11-07T05:27:58.140726+00:00",
+  "rc": 0,
+  "encoding": "base64 is authoritative verbatim output; text is a UTF-8 display",
+  "stdout_base64": "",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_text": "",
+  "stderr_base64": "4pyTIENsb3NlZCBwdWxsIHJlcXVlc3QgbWF5ZjMvZHNoLWFnZW50LWNvcmUjNjAzIChmaXgoc2NoZWR1bGVyKTogZmluYWxpemUgQ1RSLVM0IHJ1bnRpbWUgcHJlcGFyYXRpb24gZm9yIGFjMTE1OS1kZXBsb3kpCg==",
+  "stderr_sha256": "f7f189d4f37c5ddbe2756bfda47113d29283fbd20601935912477f0c2972f7d8",
+  "stderr_text": "\u2713 Closed pull request mayf3/dsh-agent-core#603 (fix(scheduler): finalize CTR-S4 runtime preparation for ac1159-deploy)\n"
+}

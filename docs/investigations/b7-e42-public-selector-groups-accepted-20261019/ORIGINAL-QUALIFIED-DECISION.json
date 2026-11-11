@@ -1,0 +1,191 @@
+{
+  "kind": "E42_PUBLIC_SELECTOR_GROUPS_AND_FIXED_CONTINUATION_ORIGINAL_QUALIFIED_DECISION_V1",
+  "at_utc": "2026-10-19T14:10:16.748323+00:00",
+  "GOAL": "Separately decide Item S finite source/result semantics and Item C one additional fixed collection for exact v1.1; preserve the sole writer and immutable original sample.",
+  "STATE": "ITEM_S_ACCEPTED_IMPLEMENTATION_SPEC_READY__ITEM_C_ACCEPTED_FIXED_ONCE_CONTRACT_NOT_RUNTIME_ADMITTED",
+  "actor": {
+    "thread": "01a1378d-e052-7021-9992-f0760eb9f9e7",
+    "role": "Original user-delegated B7/#386/#508 qualified technical decision actor; not human Owner or a second production writer",
+    "delegation": [
+      {
+        "message_id": "msg_01a14739-9970-7491-994e-888bf1340b31",
+        "user_text": "我是希望你来尽量审批和做决策的，尽量不要我参与"
+      },
+      {
+        "message_id": "msg_01a1477a-c4c5-7cf2-8a67-fd9f2222c62e",
+        "user_text": "授权范围内的问题你直接决策"
+      }
+    ],
+    "exclusive_coordinator": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "sole_source_and_production_writer": "01a1437b-f9f3-7a33-a253-8f7fce9459f3",
+    "requested_model": "gpt-6-astra",
+    "native_observed_model": "NOT_EXPOSED; no backend-switch claim",
+    "existing_material_reader": {
+      "actor": "/root/sol_e40_independent_reader",
+      "requested_model": "gpt-6.1-sol/ultra",
+      "native_observed_model": "UNKNOWN as recorded",
+      "new_reviewer_created": false
+    }
+  },
+  "accepted_source_result_delta": true,
+  "implementation_spec_ready": true,
+  "accepted_additional_fixed_collection": true,
+  "total_lineage_native_cap": 2,
+  "unaccepted_deltas": [],
+  "conditional": false,
+  "conditional_meaning": "Both exact contract items are finally accepted, with no pending textual revision or discretionary reapproval. Their written implementation/admission requirements remain operative; this is not a finding those future requirements are currently satisfied.",
+  "exact_inputs": {
+    "exact_unit": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-public-selector-independent-groups/PROPOSED-E42-PUBLIC-SELECTOR-AND-INDEPENDENT-GROUPS.v1.1.md",
+      "bytes": 18664,
+      "sha256": "6241dcd1212295b7179d7fbcafe6032aef2425fe5dd4c7394cb7612128090ab9"
+    },
+    "source_closure": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-public-selector-independent-groups/SOURCE-CLOSURE-INDEX.v1.1.json",
+      "bytes": 3943,
+      "sha256": "6fa56a7fb683fad5d0fccc821861656f5a2cbb9ab0c3ddb2596841b1d0e038c2"
+    },
+    "same_chain_material_review": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-public-selector-independent-groups/independent-sol-readback/E42-PUBLIC-SELECTOR-INDEPENDENT-GROUPS-MATERIAL-RECEIPT.v1.1.json",
+      "bytes": 8748,
+      "sha256": "2f9d83c830d083d32152e5be7c6f2fb2d16e71a6f665849c80d3a09ba3badc86"
+    },
+    "ready_index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-public-selector-independent-groups/READY-INDEX.v1.1.json",
+      "bytes": 3067,
+      "sha256": "5d3f42ecba57746c4ea234613a26f32664ae026ae94663fbe4f0ef89ea8884b8"
+    },
+    "historical_material_index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-public-selector-independent-groups/INDEX.v1.1.json",
+      "bytes": 1631,
+      "sha256": "b66980d4c233359917dfd629c2cf72d16742dd7d1e0f87d571be9d35f517d96e"
+    }
+  },
+  "scope": {
+    "subject": "b7-packet-r41-5a07e742664460c2-e42",
+    "manifest_sha256": "5a07e742664460c28aa169d134e72e2ded0fe86c8fa2ae323f5b712a7a3d1000",
+    "worker_sha256": "490bd9570d7915e29213b78bffb625e6970ce3158eb67afc7b4128db5284bc79",
+    "source_content_sha256": "5cd372cf79c29ee1d95f949119e1fa2b164d14bf9b0c721e5b2e65832cf93721",
+    "semantic_parent": {
+      "relative_path": "delivery-v6/v50_e42_capacity_facts_source.py",
+      "bytes": 24138,
+      "sha256": "b86ba8b820de4b9a1f769710f9303a54bda2bf3c962614021d2b8faf7fcd7af7"
+    },
+    "S": "Sections1-6 and the Item S parts of8: internal public H projection/canonical source-defined grammar, independent group qualification, closed V2 result and publisher/consumer handling with necessary original sealed closure joins.",
+    "C": "Section7 and the Item C parts of8: one separately accepted additional invocation of the same fixed zero-argument entry, fixed new private output identity, old evidence lineage and total native cap2.",
+    "unchanged": "Business op/manifest/worker/SC, S/H metadata measurement and Q3 public readset, original Q2Plan provenance, caller/root/channel/current pair and strong-validator order, original method and 50GiB floor."
+  },
+  "item_S": {
+    "verdict": "ACCEPT",
+    "accepted": true,
+    "conditional": false,
+    "implementation_spec_ready": true,
+    "unaccepted_deltas": [],
+    "positive_basis": "The prior 3e6e direction required a concrete public H producer and local/shared result semantics. This exact unit supplies them using capture7fe28dcd and its pure provider-environment3deb dependency. It retains the same two fixed bounded JSON content inputs and existing custody/read scope; it does not treat content hashing or omission from output as public qualification.",
+    "accepted_semantics": [
+      "Same fixed registry/config content reads are acknowledged honestly. Original alias/nofollow/owner0-or505/single-link/no022/1MiB bound/held-parent/bookends remain. No extra file or opaque provider source.",
+      "Absent or empty providerEnv remains compatible. Nonempty requires exactly HTTP_PROXY, HTTPS_PROXY, NO_PROXY, NODE_USE_ENV_PROXY string keys, the last exactly1, and the exact canonical grammar in section2. All routes and original references validate.",
+      "The Python grammar is an intentional fail-closed subset. Its acceptance must imply acceptance by the pinned original validator; full WHATWG equivalence is not claimed. Unsupported spellings yield H_PUBLIC_PROFILE_UNPROVEN rather than an invented original-invalid/secret finding. Genuine original schema violations get only the fixed refusal.",
+      "The internal projection and H proof are source/identity-bound and yield the original sorted unique enabled-ID intersection with validated override keys. No external projection input, arbitrary selected set, raw provider values or credential path output.",
+      "S, H and fixed public Q3 observations qualify independently under one original admission/mutex/deadline. Local H failure does not suppress unrelated qualified observations. Shared failure or dependent ancestor/final-bookend drift nulls every affected qualified quantity.",
+      "Closed V2 separates input qualification, observation and budget condition. Unknown quantities are null, retained values are not admitted totals, and a positively qualified empty H is distinct from missing input. Q3 public observations do not prove npm condition compatibility. Q2 provenance/actualG remain unchanged.",
+      "Top complete=false and rc2 are truthful expected results while ledger/npm budget conditions remain unknown. No V1 reinterpretation and no raw values or arbitrary exception output."
+    ],
+    "source_ceiling": [
+      "v50_e42_capacity_facts_source.py: pure canonical validator/internal public_h_projection, select_ids/selection, bounded group dispatch/invalidation and V2 assembly only",
+      "Original executor embedded-source and AUTH source pin joins; fixed publisher V2 schema validation and, because C is separately accepted below, its one fixed new identity/output literal",
+      "Narrowly necessary existing consumer/verifier/capsule/PIN joins; same affected review covers any actual new verifier logic",
+      "Original two JS files remain semantic/owned synthetic oracle inputs only, never root collector executable dependencies"
+    ],
+    "implementation_lifecycle": "Original1437 first records the exact accepted docs/base and final HEAD under repository governance, then emits this delta DEVELOPMENT_PREFLIGHT and implements within the isolated original source lane. Same original nonauthor closes only affected evidence in section6. No code authority is inferred from the prior material PASS.",
+    "future_proof_not_acceptance_prerequisite": "Synthetic soundness, equality/failure/schema tests, final source hashes and copied-layout costs must be established by the accepted implementation lifecycle, not demanded as preconditions to this source contract acceptance. They are not currently claimed PASS."
+  },
+  "item_C": {
+    "verdict": "ACCEPT",
+    "accepted": true,
+    "conditional": false,
+    "unaccepted_deltas": [],
+    "accepted_additional_native_calls": 1,
+    "original_issued_calls": 1,
+    "original_remaining_calls": 0,
+    "total_lineage_native_cap": 2,
+    "basis": "This decision explicitly accepts the finite cardinality/private-destination exception. It is not derived from S, a changed PID/window/path or old general authority alone. The purpose/readset/sole executor remain within the already applied B7 maintenance/nonsecret capacity scope; no new OS right or general retry permission is introduced.",
+    "identity": "E42_CAPACITY_FACTS_PUBLIC_SELECTOR_CONTINUATION_V2",
+    "entry": "Original zero-argument e42-capacity-facts through original /usr/local/libexec/b7-release-executor and peer502/internal-root channel; no separate group API or caller-selected path",
+    "fixed_private_destination": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-source-readiness-diagnostic/business-readiness-producer-order-amendment/successor-r40-binding/successor-r41-binding-v2/actual-business-admission/capacity-facts-only/actual-observation-public-selector-v2",
+    "predecessor": {
+      "intent_bytes": 329,
+      "intent_sha256": "ce4436675363e2c4a989192266134915fb2cbd4eaf236affd1e042ed57afe406",
+      "result_bytes": 2352,
+      "result_sha256": "ae9a42799b6880d1c54b867282b39ff26daf32aa1691796376e60d30e7212306",
+      "full_terminal_bytes": 7750,
+      "full_terminal_sha256": "e7b50c4d120df7d7eb6d20025766259178a4d6aa2287c7c8a196eca4a8fc9bb3"
+    },
+    "actual_runtime_admission_verified": false,
+    "immediate_native_dispatch_authorized": false,
+    "consumption_requirements": [
+      "S accepted docs/base, finite implementation and original same-chain affected source review are complete; final source/executor/publisher/verifier/AUTH/PIN identity binds this exact unit and old evidence.",
+      "Original maintenance admission freshly binds actual caller/root, installed generation/protected pair/custody, same-inode lease/mutex, finite valid window and phase/preimage/rollback. No old window is asserted current.",
+      "Offline final incremental layout proves the original4MiB operational reserve including changed files, applicable rollback preimages, sequential temporary overlap and output/intent/index. Prior1519616/oldJ is not the changed-byte fit.",
+      "One new fixed EXCL intent is durably published before dispatch and explicitly charges this additional allowance. Old intent/result/terminal remain untouched; no independent S-only or H-only call or path quota."
+    ],
+    "once_semantics": "The durable EXCL intent reserves/charges the one additional allowance before native dispatch. Every issued success, refusal, incomplete result, timeout, transportUNKNOWN or publication failure consumes it. No automatic rearming after an ambiguous pre-dispatch state or failed publication; preserve evidence and read only the same intent/result/status. There is no third native call, alternate identity/path or destination reset under this decision.",
+    "known_partial_purpose": "The accepted intended output is phase-qualified S/H metadata and fixed Q3 public rows when provable. The canonical subset can still leave H UNKNOWN; ledger/npm conditions can still leave top complete=false/rc2. These disclosed limitations neither negate the accepted scope nor create a replacement-call entitlement.",
+    "allowed_executor": "Only original1437 may consume C after the stated original lifecycle/admission. Coordinator and decision actor do not install, collect or become another writer.",
+    "not_granted": "Capacity admission, registration, attempt/TX/context, prepare_driven, DS_UPDATE, business execution, npm/config command, SourceRoot/Git, secret/env access, permission change or general recovery/replay."
+  },
+  "authority_application": {
+    "existing_basis": "Reuse original user technical delegation, 42a39af5 #386 L136/145-147 fixed nonsecret capacity scope and the original maintenance applicability already established in this chain; accepted helper639e/method531 are not reopened.",
+    "new_finite_technical_delta": "S explicitly repairs the public validator dependency/result contract. C explicitly adds one fixed invocation/private evidence destination to an exhausted lineage. Both are decided here within that purpose and original trusted execution scope.",
+    "new_resource_policy": false,
+    "new_identity_or_OS_access_scope": false,
+    "new_generic_owner_gate": false,
+    "no_hidden_acceptance_gate": "Future implementation/custody/window/cost evidence is a consumption requirement already stated in this unit, not a pending textual acceptance or a requirement to ask another Owner. A concrete later out-of-scope effect must be reported precisely rather than silently expanded."
+  },
+  "read_and_review_attribution": {
+    "direct": "This actor read all five exact new body/closure/review/READY/index files in full and verified their lengths and SHA256; no primary source/runtime reread or tests.",
+    "same_chain_review": "Reuse original /root/sol_e40_independent_reader PASS_CONTRACT_MATERIAL_ONLY with blocking_material_findings=[]. It remains material review, not the source implementation PASS or this acceptance.",
+    "primary_source_attribution": "Original reviewer directly read the listed frozen capture7fe/provider-environment3deb/b86 spans and verified the closure references; original capacity_a_sol785f facts retain their attribution. This actor does not relabel those as its own direct source observations.",
+    "oracle_status": "No validator oracle or fixture was run in this decision turn. Soundness and affected behavior remain implementation obligations.",
+    "old_evidence_reuse": "No re-review or re-run of 639e/531/R41, old gates, actual failed sample or unrelated Q2/Q3 work."
+  },
+  "preserved_state": {
+    "old_sample": "Settled rc2 PUBLIC_PROVIDER_ENV_UNPROVEN; S/H null, Q3 UNKNOWN, original native remaining0. No salvage/rewrite or assertion of current quantities.",
+    "new_sample_issued_by_this_actor": false,
+    "new_S_H_quantities": null,
+    "actual_G": null,
+    "new_J": null,
+    "numeric_admission": false,
+    "business_credit": 0,
+    "business_reported": "0/2; no runtime refresh in this decision turn",
+    "Q2_Q3": "Original Q2 source-only evidence and the Q3 proof-contract decision9a795776 remain independent. Q3 schema acceptance is not a successful actual npm basis."
+  },
+  "NEXT": {
+    "1_docs": "Original1437 immediately records both separate ACCEPT items against exact6241dcd1 body/6fa56a7f closure and this decision in the original docs-only accepted Spec/base; bind final HEAD without changing frozen original proposal/review/index files.",
+    "2_source": "Emit DEVELOPMENT_PREFLIGHT for S and perform only its accepted isolated source delta; close section6 affected synthetic/custody/result/inverse/layout checks with the original nonauthor. No extra reviewer or old full gate suite.",
+    "3_assembly_admission": "Seal actual changed closure and show incremental4MiB fit and final applicable J. Perform only the original mandatory checks affected by changed inputs and the genuine original maintenance admission; do not treat existing historical PASS as current new-byte validation.",
+    "4_one_collection": "Once original conditions hold, original1437 may consume the separately accepted C exactly once, publish/read back the fixed new private evidence, retain all outcomes, and stop native collection at lineage cap2. Do not wait for another ordinary Owner approval or for Q2/Q3 to finish.",
+    "5_consumption": "Use only genuinely phase-qualified facts with the original method and separately proven remaining/npm basis. No rc2-to-success rewrite, no unknown-as-zero or business credit."
+  },
+  "transport": {
+    "received_as": "EXCLUSIVE_BATCH_ACTUAL_ROUTE E42_PUBLIC_SELECTOR_V1_1_ITEMS_S_AND_C via current user/coordinator turn",
+    "frozen_NOT_SENT_route0_preserved": true,
+    "other_thread_messages_sent": 0,
+    "old_coordinator_contacted": false,
+    "delivery": "New decision/index and final reply to new14c; no downstream native ACK/main merge/implementation/admission claimed."
+  },
+  "effects_and_cleanup": {
+    "new_docs": [
+      "this decision",
+      "its pinned index"
+    ],
+    "source_edits": 0,
+    "fixtures_or_tests": 0,
+    "live_reads": 0,
+    "native_calls": 0,
+    "production_changes": 0,
+    "deleted_files": 0,
+    "deleted_bytes": 0,
+    "retained": "All original source, proposals, evidence, quota records, thread and daemon records; new decision/index are unique active evidence."
+  }
+}

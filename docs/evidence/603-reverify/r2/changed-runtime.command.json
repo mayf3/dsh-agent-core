@@ -1,0 +1,26 @@
+{
+  "name": "changed-runtime",
+  "argv": [
+    "node",
+    "--test",
+    "packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js",
+    "packages/production-runtime/test/compose.test.js",
+    "packages/production-runtime/test/workflow-execution-shutdown.test.js"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "verification_snapshot": "0f25ce5270c0964476184af509c5857acbdf1527",
+  "verification_tree": "63534a3f954004da8967cd1284df8915d11d5603",
+  "environment": {
+    "EKR_SOURCE_SHA": "0f25ce5270c0964476184af509c5857acbdf1527",
+    "EKR_TEST_SOURCE_SHA": "0f25ce5270c0964476184af509c5857acbdf1527"
+  },
+  "started_at": "2026-11-07T04:29:00.269564+00:00",
+  "ended_at": "2026-11-07T04:29:10.537410+00:00",
+  "rc": 1,
+  "stdout": "changed-runtime.stdout.log",
+  "stderr": "changed-runtime.stderr.log",
+  "sha256": {
+    "stdout": "e85b02077794a5111c30c28446d10e21b66e63b2bda9a089c0912ae22c543814",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "kind": "E42_Q3_UNCHANGED_NPM_BASIS_READY_INDEX_V2_1",
+  "created_utc": "2026-10-19T14:00:41.559030+00:00",
+  "status": "READY_DECISION_MATERIAL_ONLY_NOT_ACCEPTED",
+  "unit": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/PROPOSED-E42-FIXED-NPM-MATERIALIZATION-BASIS-CONTRACT.v2.1.md",
+    "bytes": 11550,
+    "sha256": "6af696a123c79f814444c63139da8dcbfe6cdeafdfe458a4418da5c1399b4d88"
+  },
+  "closure": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/SOURCE-CLOSURE-INDEX.v2.1.json",
+    "bytes": 2253,
+    "sha256": "a138714915521ee650108acacfa9be543abc10c14e9e374d61addd4e631e5f66"
+  },
+  "review": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/independent-sol-readback/E42-Q3-UNCHANGED-NPM-BASIS-MATERIAL-RECEIPT.v2.1.json",
+    "bytes": 7702,
+    "sha256": "487492fb39ff7ad99e1c667bf72012ccf90d21d070ba31121503728529967c13"
+  },
+  "requested_acceptance": "Unchanged-command conditional basis/proof schema and exact classification/consumption rules only. No getter/profile/source implementation/read/sampling/production grant.",
+  "actual_condition": "UNPROVEN; originalAllowanceConditionMatch null; no current remaining value or capacity PASS.",
+  "decision_output": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/ORIGINAL-E42-UNCHANGED-NPM-BASIS-TECHNICAL-DECISION.json",
+  "dispatch": {
+    "status": "NOT_SENT",
+    "route_count": 0,
+    "exclusive_sender": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "target": "01a1378d-e052-7021-9992-f0760eb9f9e7"
+  },
+  "source_facts_attribution": "77d89 original critical_path_sol; reviewer read only new material/refs, no npm/caller/live source reread.",
+  "cleanup": {
+    "deleted_files": 0,
+    "deleted_bytes": 0,
+    "reason": "All new docs and original versions are active unique evidence; no new sweep or removable duplicate."
+  }
+}

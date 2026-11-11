@@ -1,0 +1,21 @@
+import importlib.util,json,sys,unittest
+from unittest.mock import patch
+from fixture import *
+C=Candidate('candidate')
+class OldControls(unittest.TestCase):
+ def test_e29_actual_disposal_and_client_status_unchanged(self):
+  f=b.Fixture(C)
+  try:
+   for action in (DISPOSE,STATUS):
+    r=f.client_request(action);self.assertTrue(r['ok'],r);self.assertEqual(r['data']['disposal_terminal']['native_state'],'CLOSED_PRE_TX');self.assertNotIn('partial_stage_preserved',r['data']['disposal_terminal'])
+  finally:f.close()
+ def test_e30_actual_disposal_and_five_field_client_status_unchanged(self):
+  spec=importlib.util.spec_from_file_location('owned_old_e30',R/'baseline/test_e30.py');m=importlib.util.module_from_spec(spec)
+  with patch.dict(sys.modules,{'test_v49_e29_integration':b}):spec.loader.exec_module(m)
+  f=m.E30Fixture(C)
+  try:
+   for action in (DISPOSE,STATUS):
+    r=f.client_request(action);self.assertTrue(r['ok'],r);self.assertIs(r['data']['disposal_terminal']['partial_stage_preserved'],True)
+  finally:f.close()
+if __name__=='__main__':
+ r=unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(OldControls));(R/'results/unchanged-controls.json').write_text(json.dumps({'methods':r.testsRun,'failures':len(r.failures),'errors':len(r.errors),'details':[str(x) for x in r.failures+r.errors]},indent=2)+'\n');sys.exit(not r.wasSuccessful())

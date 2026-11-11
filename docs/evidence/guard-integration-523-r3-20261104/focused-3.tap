@@ -1,0 +1,20 @@
+TAP version 13
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-broker-ipqqOv/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [broker] execute as agent agt_a (capability scheduler)
+# Subtest: broker RPC: delayed turn-A carrier cannot inherit live turn-B ingress context
+ok 1 - broker RPC: delayed turn-A carrier cannot inherit live turn-B ingress context
+  ---
+  duration_ms: 5.4925
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 61.024125

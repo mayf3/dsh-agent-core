@@ -1,0 +1,31 @@
+import json,os,sys,unittest
+from pathlib import Path
+from unittest.mock import patch
+from fixture import *
+MODE=sys.argv.pop(1) if len(sys.argv)>1 and sys.argv[1] in ('baseline','candidate') else 'candidate'
+C=Candidate(MODE)
+class Closure(unittest.TestCase):
+ def setUp(self):self.f=Fixture(C);self.addCleanup(self.f.close)
+ def good(self,r):self.assertIs(r.get('ok'),True,r);return r['data']
+ def closed(self,r):
+  d=self.good(r);self.assertIs(d['disposal_terminal']['partial_stage_preserved'],True);self.assertEqual(d['disposal_terminal']['native_state'],'CLOSED_PRE_TX');self.assertIs(d['native_terminal_verified'],False);self.assertIsNone(d['tx_id']);return d
+ def test_actual_install_and_paired_roundtrip(self):
+  self.closed(self.f.client_request(DISPOSE));self.closed(self.f.client_request(STATUS))
+  self.assertIsNotNone(self.f.mod);self.assertTrue(self.f.execution._e31_closure_installed)
+ def test_status_readonly_and_restart_requires_original_action(self):
+  self.closed(self.f.request(DISPOSE));before=self.f.snapshot()
+  with patch.object(os,'fsync',side_effect=AssertionError('STATUS must never sync')):self.closed(self.f.request(STATUS))
+  self.assertEqual(before,self.f.snapshot());self.assertTrue(hasattr(self.f.execution,'_e31_durability'));self.f.execution._e31_durability.clear()
+  with patch.object(os,'fsync',side_effect=AssertionError('STATUS must never sync')):self.assertNotIn('disposal_terminal',self.good(self.f.request(STATUS)))
+  self.closed(self.f.request(DISPOSE));self.assertEqual(before,self.f.snapshot())
+ def test_original_records_unchanged_only_two_new_leaves(self):
+  before=self.f.snapshot();self.closed(self.f.request(DISPOSE));after=self.f.snapshot()
+  self.assertEqual(set(after)-set(before),{str(p.relative_to(self.f.root)) for p in (self.f.auth_path,self.f.terminal_path)})
+  for k,v in before.items():self.assertEqual(after[k],v,k)
+ def test_fsync_failure_leaves_unknown_and_finite_completion(self):
+  self.assertIsNotNone(self.f.mod)
+  with patch.object(self.f.mod.os,'fsync',side_effect=OSError('unknown')):self.assertFalse(self.f.request(DISPOSE)['ok'])
+  self.assertNotIn('disposal_terminal',self.good(self.f.request(STATUS)));self.closed(self.f.request(DISPOSE))
+if __name__=='__main__':
+ r=unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(Closure))
+ (R/'results'/('closure-'+MODE+'.json')).write_text(json.dumps({'methods':r.testsRun,'failures':len(r.failures),'errors':len(r.errors),'details':[str(x) for x in r.failures+r.errors]},indent=2)+'\n');sys.exit(not r.wasSuccessful())

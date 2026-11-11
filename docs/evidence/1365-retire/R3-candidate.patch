@@ -1,0 +1,338 @@
+diff --git a/packages/development-execution/src/engine.js b/packages/development-execution/src/engine.js
+index 6d3f596d..9a5d4cea 100644
+--- a/packages/development-execution/src/engine.js
++++ b/packages/development-execution/src/engine.js
+@@ -72,11 +72,15 @@ export class DevelopmentExecutionEngine {
+     this.clock = clock
+     this.log = log
+     this.timeoutMs = timeoutMs
+-    this.backend = backend ?? createCodexBackendFromConfig(this.backendFile)
+-    this.ledger = new ExecutionLedger({ dir: this.ledgerDir, clock })
+-    this.executions = ExecutionLedger.replay(join(this.ledgerDir, 'executions.jsonl'))
+     this.supervised = new Map() // executionId -> {childDone, timer}
+-    if (!this.writerAuthorityRetired) this.#recoverOrphans()
++    // CTR-DEC-001/002: retired writes refuse without touching backend/history.
++    // Only the hermetic opt-out initializes mutable writer machinery.
++    if (!this.writerAuthorityRetired) {
++      this.backend = backend ?? createCodexBackendFromConfig(this.backendFile)
++      this.ledger = new ExecutionLedger({ dir: this.ledgerDir, clock })
++      this.executions = ExecutionLedger.replay(join(this.ledgerDir, 'executions.jsonl'))
++      this.#recoverOrphans()
++    }
+   }
+ 
+   /** CTR-DEC-001: refuse every writer operation before any other effect. */
+@@ -104,7 +108,10 @@ export class DevelopmentExecutionEngine {
+   }
+ 
+   #execution(executionId) {
+-    const execution = this.executions.get(executionId)
++    const executions = this.writerAuthorityRetired
++      ? ExecutionLedger.replay(join(this.ledgerDir, 'executions.jsonl'))
++      : this.executions
++    const execution = executions.get(executionId)
+     if (execution === undefined) throw err('execution_not_found', `no execution ${executionId}`)
+     return execution
+   }
+diff --git a/packages/development-execution/test/development-retirement.test.js b/packages/development-execution/test/development-retirement.test.js
+new file mode 100644
+index 00000000..ecc02735
+--- /dev/null
++++ b/packages/development-execution/test/development-retirement.test.js
+@@ -0,0 +1,116 @@
++/** #1365 D02: retired development files cannot gate unrelated Workflow startup. */
++import { test } from 'node:test'
++import assert from 'node:assert/strict'
++import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync, existsSync } from 'node:fs'
++import { join } from 'node:path'
++import { tmpdir } from 'node:os'
++import { DevelopmentExecutionEngine } from '../src/index.js'
++import { createPluginContext } from '../../production-runtime/src/context.js'
++import { mountWorkflowCapabilityRuntime } from '../../production-runtime/src/workflow/capability-runtime.js'
++
++const log = { log() {}, warn() {}, error() {} }
++const started = id => ({ type: 'execution_started', atMs: 1000, executionId: id,
++  backend: 'codex', agentId: 'agt_legacy', repo: 'r', worktree: '/historical/worktree', baseSha: '0'.repeat(40) })
++const history = [started('running'), { type: 'state', atMs: 2000, executionId: 'running', state: 'RUNNING', pid: 999999999 },
++  started('done'), { type: 'terminal', atMs: 3000, executionId: 'done', terminalState: 'SUCCEEDED',
++    candidateSha: 'a'.repeat(40), changedFiles: ['app.txt'], sessionId: 'legacy-session' }]
++
++function snapshot(dir) {
++  if (!existsSync(dir)) return null
++  return Object.fromEntries(readdirSync(dir, { recursive: true, withFileTypes: true }).map(entry => {
++    const file = join(entry.parentPath, entry.name)
++    return [file.slice(dir.length + 1), entry.isDirectory() ? 'directory' : readFileSync(file).toString('base64')]
++  }))
++}
++
++function fixture(t, { backend, ledger } = {}) {
++  const root = mkdtempSync(join(tmpdir(), 'retire-1365-'))
++  t.after(() => rmSync(root, { recursive: true, force: true }))
++  const devDir = join(root, 'dev-execution')
++  if (backend !== undefined) {
++    mkdirSync(devDir, { recursive: true })
++    writeFileSync(join(devDir, 'backend.json'), backend)
++  }
++  if (ledger !== undefined) {
++    mkdirSync(join(devDir, 'ledger'), { recursive: true })
++    writeFileSync(join(devDir, 'ledger', 'executions.jsonl'), ledger)
++  }
++  return { root, devDir }
++}
++
++for (const [name, files] of [
++  ['missing backend and history', {}],
++  ['corrupt backend with intact history', { backend: '{broken backend', ledger: history.map(JSON.stringify).join('\n') + '\n' }],
++  ['corrupt history', { ledger: '{broken history\n' }],
++  ['corrupt backend and history', { backend: '{broken backend', ledger: '{broken history\n' }],
++]) {
++  test(`1365 Workflow starts and polls with ${name}; retired writes refuse, history stays read-only`, async t => {
++    const { root, devDir } = fixture(t, files)
++    const before = snapshot(devDir)
++    const kill = t.mock.method(process, 'kill', () => { throw new Error('no development signal allowed') })
++    const ctx = createPluginContext()
++    let polls = 0
++    ctx.provide('brokerGateway', { execute: async call => {
++      assert.equal(call.capabilityId, 'workflow_dispatch_intents')
++      assert.equal(call.operation, 'list_ready')
++      polls += 1
++      return { ok: true, result: { items: [] } }
++    } })
++    ctx.provide('agentPrincipalResolutionAccess', { handlers: { agent_resolve_principal: {
++      resolve: async () => { throw new Error('empty due feed must not resolve an agent') },
++    } } })
++    const runtime = mountWorkflowCapabilityRuntime({ ctx,
++      layout: { developmentExecutionDir: devDir, workflowExecutionDir: join(root, 'workflow-execution') },
++      router: { deliver: async () => { throw new Error('empty due feed must not deliver') } },
++      log, opts: { workflowExecution: { pollerAgentId: 'agt_poller' } },
++    })
++    t.after(() => runtime.stop())
++    await runtime.engine.pollOnce()
++    assert.equal(polls, 1, 'unrelated Workflow due-feed is usable')
++    assert.equal(snapshot(devDir) === null, before === null)
++    assert.deepEqual(snapshot(devDir), before, 'mount/poll must not create a development ledger directory')
++    const { handlers, engine } = ctx.get('developmentExecutionAccess')
++    const ops = handlers.development_execute
++    const refused = error => error.code === 'writer_authority_retired'
++    for (const operation of ['start', 'continue', 'cancel']) {
++      await assert.rejects(() => ops[operation]({ executionId: 'running', task: 'never' }, { callerAgentId: 'agt_legacy' }), refused)
++    }
++    for (const operation of ['status', 'result']) {
++      if (files.ledger?.startsWith('{broken')) {
++        await assert.rejects(() => ops[operation]({ executionId: 'running' }), SyntaxError)
++      } else if (files.ledger === undefined) {
++        await assert.rejects(() => ops[operation]({ executionId: 'missing' }), error => error.code === 'execution_not_found')
++      } else {
++        const running = await ops[operation]({ executionId: 'running' })
++        assert.equal(running.result.state, 'RUNNING', 'restart must preserve historical non-terminal state')
++        const done = await ops[operation]({ executionId: 'done' })
++        assert.equal(done.result.state, 'SUCCEEDED')
++        assert.equal(done.result.candidateSha, 'a'.repeat(40))
++        if (operation === 'result') {
++          assert.equal(running.result.terminal, false)
++          assert.equal(done.result.receipt.terminalState, 'SUCCEEDED')
++          assert.deepEqual(done.result.receipt.changedFiles, ['app.txt'])
++        }
++      }
++    }
++    // A failed history query must not change the refusal or poison Workflow.
++    await assert.rejects(() => ops.cancel({ executionId: 'running' }), refused)
++    await runtime.engine.pollOnce()
++    assert.equal(polls, 2)
++    assert.equal(engine.writerAuthorityRetired, true)
++    assert.equal(engine.backend, undefined, 'retired query must not initialize a backend')
++    assert.equal(engine.ledger, undefined, 'retired query must not initialize a mutable ledger')
++    assert.equal(kill.mock.callCount(), 0, 'no PID probe or signal')
++    assert.deepEqual(snapshot(devDir), before, 'all development files remain byte-identical, no worktrees/execution dirs')
++  })
++}
++
++test('1365 default Engine also defers damaged history and ignores damaged backend', async t => {
++  const { devDir } = fixture(t, { backend: '{broken backend', ledger: '{broken history\n' })
++  const before = snapshot(devDir)
++  const engine = new DevelopmentExecutionEngine({ devDir })
++  await assert.rejects(() => engine.start({}, 'agt_legacy'), error => error.code === 'writer_authority_retired')
++  assert.throws(() => engine.status('running'), SyntaxError)
++  assert.throws(() => engine.result('done'), SyntaxError)
++  assert.deepEqual(snapshot(devDir), before)
++})
+diff --git a/packages/development-execution/test/run-retirement-gates.py b/packages/development-execution/test/run-retirement-gates.py
+new file mode 100644
+index 00000000..77a29150
+--- /dev/null
++++ b/packages/development-execution/test/run-retirement-gates.py
+@@ -0,0 +1,130 @@
++#!/usr/bin/env python3
++"""Task-scoped offline evidence capture; explicit files, clean child env, stop on mismatch."""
++import datetime
++import hashlib
++import json
++import os
++from pathlib import Path
++import re
++import shutil
++import subprocess
++import sys
++
++ROOT = Path(__file__).resolve().parents[3]
++HARNESS = str(Path(__file__).relative_to(ROOT))
++OUT = ROOT / 'docs/evidence/1365-retire'
++KEYS = ['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy', 'ALL_PROXY',
++        'all_proxy', 'NO_PROXY', 'no_proxy', 'NODE_USE_ENV_PROXY']
++ENV = {k: v for k, v in os.environ.items() if k not in KEYS}
++NODE = shutil.which('node')
++REGRESSION = 'packages/development-execution/test/development-retirement.test.js'
++SOURCES = ['packages/development-execution/src/engine.js',
++           'packages/production-runtime/src/development-execution-runtime.js',
++           'packages/production-runtime/src/workflow/capability-runtime.js']
++
++
++def sha(path):
++    return hashlib.sha256(path.read_bytes()).hexdigest()
++
++
++def red_diagnostics(text):
++    """Bind every expected failure to its own TAP diagnostic, not loose text."""
++    suffix = '; retired writes refuse, history stays read-only'
++    names = [f'1365 Workflow starts and polls with {case}{suffix}' for case in [
++        'missing backend and history', 'corrupt backend with intact history',
++        'corrupt history', 'corrupt backend and history']]
++    names.append('1365 default Engine also defers damaged history and ignores damaged backend')
++    blocks = re.findall(r'^not ok (\d+) - ([^\n]+)\n  ---\n(.*?)^  \.\.\.$', text, re.M | re.S)
++    backend = (r'''^  error: "development-execution: malformed backend\.json \([^"\r\n]*/retire-1365-[A-Za-z0-9]+/dev-execution/backend\.json\): '''
++               r'''Expected property name or '\}' in JSON at position 1 \(line 1 column 2\)"$''')
++    history = "  error: 'development-execution: corrupt (unparseable) executions.jsonl line — fail loud, never self-heal'"
++    checks = []
++    for index, name in enumerate(names, 1):
++        matching = [block for number, title, block in blocks if number == str(index) and title == name]
++        diagnostic = matching[0] if len(matching) == 1 else ''
++        if index == 1:
++            expected = ("  error: |-\n    Expected values to be strictly equal:\n    \n    false !== true\n    \n"
++                        "  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: true\n  actual: false\n  operator: 'strictEqual'")
++            exact = expected in diagnostic and 'development-retirement.test.js:70:12)' in diagnostic
++        else:
++            exact = (history in diagnostic.splitlines() if index == 3 else bool(re.search(backend, diagnostic, re.M)))
++            exact = exact and "  code: 'ERR_TEST_FAILURE'" in diagnostic.splitlines()
++            origin = '#replayTerminal' if index == 3 else 'loadBackendConfig'
++            exact = exact and f'    {origin} (file://' in diagnostic
++            exact = exact and '    new DevelopmentExecutionEngine (file://' in diagnostic
++            if index != 5:
++                exact = exact and '    mountWorkflowCapabilityRuntime (file://' in diagnostic
++        checks.append(dict(test=index, name=name, diagnostic_matched=bool(exact)))
++    return checks, len(blocks) == 5 and all(check['diagnostic_matched'] for check in checks)
++
++
++def capture(gate):
++    if gate in ('RED', 'GREEN'):
++        files = [REGRESSION]
++    elif gate == 'existing':
++        files = sorted(str(p.relative_to(ROOT)) for p in
++                       (ROOT / 'packages/development-execution/test').rglob('*.test.js'))
++        files += ['packages/production-runtime/test/compose.test.js',
++                  'packages/production-runtime/test/compose-deployment-root.test.js',
++                  'packages/production-runtime/test/workflow-execution-shutdown.test.js',
++                  'packages/workflow-execution/test/observation-cas/diagnostic-read.test.js',
++                  'packages/workflow-execution/test/observation-cas/diagnostic-missing-trace.test.js']
++    elif gate == 'targeted':
++        files = ['packages/production-runtime/test/workflow-progress-runtime.test.js',
++                 'packages/production-runtime/test/workflow-progress-gateway.test.js',
++                 'packages/workflow-execution/test/runtime-wiring.test.js',
++                 'packages/workflow-execution/test/recovery.test.js']
++    else:
++        raise ValueError('unknown gate')
++    command = [NODE, '--test', '--test-reporter=tap', *files]
++    started = datetime.datetime.now(datetime.timezone.utc).isoformat()
++    probe = subprocess.run([NODE, '-e', 'process.stdout.write(JSON.stringify({version:process.version,execPath:process.execPath,arch:process.arch,proxyKeysPresent:Object.keys(process.env).filter(k=>/^(http_proxy|https_proxy|all_proxy|no_proxy|node_use_env_proxy)$/i.test(k))}))'],
++                           cwd=ROOT, env=ENV, capture_output=True, text=True, check=True)
++    runtime = json.loads(probe.stdout)
++    if runtime['version'] != 'v25.6.1' or runtime['proxyKeysPresent']:
++        raise RuntimeError('wrong runtime or proxy environment')
++    version = subprocess.run([NODE, '--version'], cwd=ROOT, env=ENV,
++                             capture_output=True, text=True, check=True)
++    if version.stdout != 'v25.6.1\n':
++        raise RuntimeError('unexpected node --version output')
++    OUT.mkdir(parents=True, exist_ok=True)
++    raw = OUT / f'R3-{gate}.tap'
++    if raw.exists() or (OUT / f'R3-{gate}.json').exists():
++        raise RuntimeError('R3 evidence already exists; never overwrite a prior attempt')
++    with raw.open('wb') as stream:
++        result = subprocess.run(command, cwd=ROOT, env=ENV, stdout=stream, stderr=subprocess.STDOUT)
++    text = raw.read_text()
++    counts = {key: int(match.group(1)) if (match := re.search(rf'^# {key} (\d+)$', text, re.M)) else None
++              for key in ['tests', 'pass', 'fail', 'cancelled', 'skipped']}
++    expected_rc = 1 if gate == 'RED' else 0
++    expected_fail = 5 if gate == 'RED' else 0
++    valid = (result.returncode == expected_rc and counts['fail'] == expected_fail
++             and counts['cancelled'] == 0 and counts['skipped'] == 0
++             and (gate in ('existing', 'targeted') and counts['tests'] > 0 or counts['tests'] == 5)
++             and counts['pass'] == counts['tests'] - expected_fail)
++    checks = []
++    if gate == 'RED':
++        checks, diagnostics_valid = red_diagnostics(text)
++        valid = valid and diagnostics_valid
++    record = dict(gate=gate, cwd=str(ROOT), command=command, runtime=runtime,
++                  invocation=[sys.executable, HARNESS, gate], path=ENV.get('PATH'),
++                  node_version_command=[NODE, '--version'], node_version_rc=version.returncode,
++                  node_version_stdout=version.stdout, node_binary_sha256=sha(Path(runtime['execPath'])),
++                  started_utc=started, ended_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),
++                  child_unset_keys=KEYS, parent_env_unchanged=True,
++                  git_head=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
++                  expected_rc=expected_rc, actual_rc=result.returncode, expected_fail=expected_fail,
++                  counts=counts, diagnostic_checks=checks, capture_valid=bool(valid), capture_rc=0 if valid else 1, raw_sha256=sha(raw),
++                  file_sha256={p: sha(ROOT / p) for p in [*SOURCES, *files, HARNESS]})
++    (OUT / f'R3-{gate}.json').write_text(json.dumps(record, indent=2) + '\n')
++    print(json.dumps(record, indent=2))
++    if not valid:
++        with (ROOT / 'STOPPED-1365-RETIRE.md').open('a') as stopped:
++            stopped.write(f'\n## R3 STOP\n\nGate {gate} failed its declared expectation. '
++            f'Actual rc={result.returncode}; counts={counts}.\n\n'
++            f'Raw: docs/evidence/1365-retire/R3-{gate}.tap\n'
++            'No further repair, commit, push or PR is authorized under failure-stop.\n')
++        raise SystemExit(1)
++
++
++capture(sys.argv[1])
+diff --git a/packages/production-runtime/src/development-execution-runtime.js b/packages/production-runtime/src/development-execution-runtime.js
+index 32704b62..da4ecc22 100644
+--- a/packages/production-runtime/src/development-execution-runtime.js
++++ b/packages/production-runtime/src/development-execution-runtime.js
+@@ -16,29 +16,31 @@ export function mountDevelopmentExecutionRuntime({ ctx, layout, log = { log: ()
+   if (ctx === undefined || layout?.developmentExecutionDir === undefined) {
+     throw new TypeError('development-execution-runtime: ctx and layout.developmentExecutionDir are required')
+   }
+-  const engine = new DevelopmentExecutionEngine({
++  let engine
++  const getEngine = () => engine ??= new DevelopmentExecutionEngine({
+     devDir: layout.developmentExecutionDir,
+     log: { log: (...a) => log.log('[development-execution]', ...a) },
+   })
+   const handlers = {
+     development_execute: {
+       start: async (args, context) => {
+-        const r = await engine.start({
++        const r = await getEngine().start({
+           repo: args.repo, baseSha: args.baseSha, task: args.task,
+           branch: args.branch, constraints: args.constraints, dedupeKey: args.dedupe_key,
+         }, context.callerAgentId)
+         return { ok: true, result: r }
+       },
+-      status: async (args) => ({ ok: true, result: engine.status(args.executionId) }),
++      status: async (args) => ({ ok: true, result: getEngine().status(args.executionId) }),
+       continue: async (args, context) => {
+-        const r = await engine.continue({ executionId: args.executionId, instruction: args.instruction }, context.callerAgentId)
++        const r = await getEngine().continue({ executionId: args.executionId, instruction: args.instruction }, context.callerAgentId)
+         return { ok: true, result: r }
+       },
+-      cancel: async (args) => ({ ok: true, result: engine.cancel(args.executionId) }),
+-      result: async (args) => ({ ok: true, result: engine.result(args.executionId) }),
++      cancel: async (args) => ({ ok: true, result: getEngine().cancel(args.executionId) }),
++      result: async (args) => ({ ok: true, result: getEngine().result(args.executionId) }),
+     },
+   }
+-  ctx.provide('developmentExecutionAccess', { handlers, engine })
++  const access = { handlers, get engine() { return getEngine() } }
++  ctx.provide('developmentExecutionAccess', access)
+   log.log('development-execution surface mounted (shared, backend-abstracted)')
+-  return { engine, handlers }
++  return access
+ }

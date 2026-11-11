@@ -1,0 +1,35 @@
+{
+  "auth_source_head": "862eab36677d214b2ce340f49bb141173b51efea",
+  "migrations": [
+    {
+      "path": "prisma/migrations/20260714000001_add_machine_principal_client/migration.sql",
+      "sha256": "9307b84b6c71c15f0516d801444e8f727162621f110dc395242717fd099046b9"
+    },
+    {
+      "path": "prisma/migrations/20260721000100_add_external_ref_idempotent/migration.sql",
+      "sha256": "2ab11097629aec12239867fa25afff49332e91179ecf09279300cb18528eaf4e"
+    },
+    {
+      "path": "prisma/migrations/20260909010000_machine_credential_rotation_seam/migration.sql",
+      "sha256": "00788aaf1a1d0091b83e4a6e2a94e6bf5f19d2ec17c5c968f5a9a092b751843d"
+    },
+    {
+      "path": "prisma/migrations/202609170001_rotation_null_preimage_guard/migration.sql",
+      "sha256": "bfcda97487b99ecf8ece49f64161b263978d109e43da3ff77cff891fcc09505f"
+    }
+  ],
+  "fixture_deltas": [
+    "minimal users table to satisfy FK",
+    "machine_principals.owner_user_id nullable for fixture agents",
+    "app INSERT/DELETE rotation ledger for census annotation seeding/cleanup; secret UPDATE remains denied; no test role membership in machine_credential_owner"
+  ],
+  "connection": {
+    "socket": "/tmp/dsh-1257-pg/sock",
+    "port": 49858,
+    "admin": "dsh1257_admin",
+    "app": "dsh1257_app",
+    "database": "dsh1257_fixture",
+    "host": "127.0.0.1",
+    "source": "isolated temporary cluster only"
+  }
+}

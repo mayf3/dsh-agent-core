@@ -29,6 +29,8 @@
 
 import { randomUUID } from 'node:crypto'
 
+import { hasExactDeathEvidence } from './process-registry-death-evidence.js'
+
 /**
  * CAS(EMPTY -> STARTUP) — synchronous, before any further async work.
  *
@@ -97,10 +99,11 @@ function busyProcess(proc) {
  * Create the route-aware ensureRunning variant bound to one registry's slot
  * machinery. All slot mutations stay inside the registry's identity-CAS
  * discipline; this gate only adds the route-identity comparison and the
- * mismatched-idle controlled shutdown.
+ * mismatched-idle controlled shutdown. The READY reuse gate runs the shared
+ * exact-death-evidence predicate (process-registry-death-evidence.js).
  */
 export function createRouteGate({
-  log, lifecycleSlots, installStartup, bootstrapStartup, assertRunnable, isDisposing,
+  log, lifecycleSlots, installStartup, bootstrapStartup, assertRunnable, isDisposing, prepareWanted,
 }) {
   /**
    * Bounded slot resolution: the same slot object may be re-entered only
@@ -126,10 +129,10 @@ export function createRouteGate({
     }
     if (slot?.state === 'READY') {
       const proc = slot.processRef
-      if (proc.exit !== undefined) {
+      if (hasExactDeathEvidence(proc)) {
         lifecycleSlots.delete(agentId)
-        log.log(`process for ${agentId} exited (${proc.exit?.code ?? 'signal'}); will respawn`)
-      } else if (wanted.routeIdentity === undefined || slot.routeIdentity === wanted.routeIdentity) {
+        log.log(`process for ${agentId} is dead (exit ${proc?.exit?.code ?? 'unobserved'}, state ${proc?.state ?? 'n/a'}); will respawn`)
+      } else if (!proc.deliveryTransportFailed && (wanted.routeIdentity === undefined || slot.routeIdentity === wanted.routeIdentity)) {
         return { status: 'ready', proc }
       } else {
         if (busyProcess(proc)) {
@@ -153,6 +156,10 @@ export function createRouteGate({
       await slot.resultPromise.catch(() => {})
       return resolveSlot(agentId, wanted, seenStates)
     } else if (slot?.state === 'REAP') {
+      // V4 C-007: every REAP slot reports 'reaping' — the executor keeps its
+      // bounded convergence wait. The exact REAP -> EMPTY cleanup belongs to
+      // the process exit sequence alone (C-009); this gate never deletes a
+      // fence, not even over a proven-dead process.
       return { status: 'reaping', generation: slot.generation }
     }
     const entry = installStartup(agentId)
@@ -177,6 +184,7 @@ export function createRouteGate({
     }
     try {
       assertRunnable(agentId)
+      wanted = prepareWanted?.(agentId, wanted) ?? wanted
     } catch (error) {
       return Promise.reject(error)
     }

@@ -1,0 +1,633 @@
+TAP version 13
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/rq-router-startup-UYkQW6/bindings-135117b5f7f59.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# Subtest: RQ-005 Router startup consumes configured evidence before publishing its registry and reports invalid custody
+ok 1 - RQ-005 Router startup consumes configured evidence before publishing its registry and reports invalid custody
+  ---
+  duration_ms: 61.593666
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/rq-router-fixture-FU7Jkh/bindings-76ba368b7d42b.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# Subtest: RQ-005 fixture drives real Router apply: consume before service publication, then admit fleet
+ok 2 - RQ-005 fixture drives real Router apply: consume before service publication, then admit fleet
+  ---
+  duration_ms: 92.45775
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/rq-router-inert-FmE7UO/bindings-0971394c10855.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# Subtest: RQ-007 production composition stays inert without a bootstrapped launcher even if evidence custody passes
+ok 3 - RQ-007 production composition stays inert without a bootstrapped launcher even if evidence custody passes
+  ---
+  duration_ms: 96.455375
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t1-BDPSYj/bindings-aded8dc74f87a.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_gen-safety ready pid=9101 (1ms)
+# Subtest: T1 fresh store: first runtime mints generation 1
+ok 4 - T1 fresh store: first runtime mints generation 1
+  ---
+  duration_ms: 17.251167
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t2-ZSIPT3/bindings-b905c016e77fa.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_gen-safety ready pid=9102 (0ms)
+# [router] [router] agent agt_gen-safety ready pid=9103 (0ms)
+# [router] [router] agent agt_gen-safety ready pid=9104 (0ms)
+# Subtest: T2 same-runtime respawn: generations 1 -> 2 -> 3
+ok 5 - T2 same-runtime respawn: generations 1 -> 2 -> 3
+  ---
+  duration_ms: 20.538875
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t3-yv8wnC/bindings-ad6df9846ac41.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_gen-safety ready pid=9105 (1ms)
+# Subtest: T3 REGRESSION runtime restart above durable history: fresh allocator mints strictly above the collision boundary (RED on the in-memory-only allocator)
+ok 6 - T3 REGRESSION runtime restart above durable history: fresh allocator mints strictly above the collision boundary (RED on the in-memory-only allocator)
+  ---
+  duration_ms: 59.035
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t4-eD1uFl/bindings-66b82b5282c6c8.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_gen-safety ready pid=9106 (0ms)
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t4-eD1uFl/bindings-6df1b2b4d250d.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_gen-safety ready pid=9107 (0ms)
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t4-eD1uFl/bindings-7c633c1e0a7c88.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_gen-safety ready pid=9108 (1ms)
+# Subtest: T4 multiple restarts: consecutive restarts never reissue a durable generation
+ok 7 - T4 multiple restarts: consecutive restarts never reissue a durable generation
+  ---
+  duration_ms: 85.4535
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t5-ZMbQrC/bindings-01874270429e1.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_gen-safety-b ready pid=9109 (0ms)
+# [router] [router] agent agt_gen-safety ready pid=9110 (1ms)
+# Subtest: T5 per-agent isolation: agent A durable history never lifts or pollutes agent B
+ok 8 - T5 per-agent isolation: agent A durable history never lifts or pollutes agent B
+  ---
+  duration_ms: 35.961125
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t6-SzXGim/bindings-3313b8f2b101a8.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_gen-safety ready pid=9111 (0ms)
+# Subtest: T6 empty durable history behaves exactly like a fresh store
+ok 9 - T6 empty durable history behaves exactly like a fresh store
+  ---
+  duration_ms: 10.885667
+  type: 'test'
+  ...
+# [router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1793433028338,"sequence":1,"category":"other","agentId":null,"code":"AGENT_PROCESS_RECOVERY_STARTUP_BLOCKED","reason":"durable_store_invalid","categoryCount":1,"windowCount":1}
+# [router] ERROR delivery-failure-alert {"kind":"delivery_failure_alert","tsWallMs":1793433028338,"category":"other","windowCount":1,"threshold":1,"windowMs":300000,"agentId":null,"code":"AGENT_PROCESS_RECOVERY_STARTUP_BLOCKED","reason":"durable_store_invalid"}
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t7-pqtO2K/bindings-a327746c3ac928.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# Subtest: T7 malformed durable store: fail loud, never mints from a fallback generation 1, store untouched
+ok 10 - T7 malformed durable store: fail loud, never mints from a fallback generation 1, store untouched
+  ---
+  duration_ms: 3.544667
+  type: 'test'
+  ...
+# [router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1793433028801,"sequence":1,"category":"other","agentId":null,"code":"AGENT_PROCESS_RECOVERY_STARTUP_BLOCKED","reason":"durable_store_invalid","categoryCount":1,"windowCount":1}
+# [router] ERROR delivery-failure-alert {"kind":"delivery_failure_alert","tsWallMs":1793433028801,"category":"other","windowCount":1,"threshold":1,"windowMs":300000,"agentId":null,"code":"AGENT_PROCESS_RECOVERY_STARTUP_BLOCKED","reason":"durable_store_invalid"}
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t8-bmTUoM/bindings-7b470d565afc08.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# Subtest: T8 existing overlapping store: stays fail-closed, allocator never runs, store never self-heals
+ok 11 - T8 existing overlapping store: stays fail-closed, allocator never runs, store never self-heals
+  ---
+  duration_ms: 463.043291
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t9-KvVfIu/bindings-c388dc16cc71e.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_gen-safety ready pid=9112 (0ms)
+# Subtest: T9 concurrent ensureRunning stays single-flight: exactly one allocation (generation 1)
+ok 12 - T9 concurrent ensureRunning stays single-flight: exactly one allocation (generation 1)
+  ---
+  duration_ms: 10.434542
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t10-i9TiS9/bindings-6553124231d4d8.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_gen-safety ready pid=9113 (0ms)
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t10-i9TiS9/bindings-928045e0a3bd28.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_gen-safety ready pid=9114 (0ms)
+# Subtest: T10 crash before the first turn: reissue after restart is safe (nothing durable collided)
+ok 13 - T10 crash before the first turn: reissue after restart is safe (nothing durable collided)
+  ---
+  duration_ms: 9.520875
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t11-Bdbmpp/bindings-6fd9c18678e918.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# Subtest: T11 generation exhaustion: MAX_SAFE_INTEGER durable floor fails before STARTUP mutation or spawn
+ok 14 - T11 generation exhaustion: MAX_SAFE_INTEGER durable floor fails before STARTUP mutation or spawn
+  ---
+  duration_ms: 35.614667
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t12-Is1kAs/bindings-c5c75a96afabe.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_gen-safety ready pid=9115 (0ms)
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/gen-safety-t12-Is1kAs/bindings-35a6fda74e9ef8.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_gen-safety ready pid=9116 (0ms)
+# Subtest: T12 restart integration: durable store -> spawn -> restart -> spawn -> validator PASS with disjoint ranges
+ok 15 - T12 restart integration: durable store -> spawn -> restart -> spawn -> validator PASS with disjoint ranges
+  ---
+  duration_ms: 68.15225
+  type: 'test'
+  ...
+# Subtest: V3 parsed terminal and child exit remain uncommitted together when durable settlement fails
+ok 16 - V3 parsed terminal and child exit remain uncommitted together when durable settlement fails
+  ---
+  duration_ms: 86.05725
+  type: 'test'
+  ...
+# Subtest: V3 over-cap durable record keeps startup business admission fail closed
+ok 17 - V3 over-cap durable record keeps startup business admission fail closed
+  ---
+  duration_ms: 37.083958
+  type: 'test'
+  ...
+# Subtest: V3 unavailable durable path keeps startup business admission fail closed
+ok 18 - V3 unavailable durable path keeps startup business admission fail closed
+  ---
+  duration_ms: 0.655292
+  type: 'test'
+  ...
+# Subtest: V3 restored durable fence blocks the real outer entry with closed structured diagnostics
+ok 19 - V3 restored durable fence blocks the real outer entry with closed structured diagnostics
+  ---
+  duration_ms: 71.841625
+  type: 'test'
+  ...
+# Subtest: V3 invalid durable store blocks the real outer entry before route execution
+ok 20 - V3 invalid durable store blocks the real outer entry before route execution
+  ---
+  duration_ms: 7.858916
+  type: 'test'
+  ...
+# Subtest: V3 old-generation cleanup cannot clear a newer generation fence
+ok 21 - V3 old-generation cleanup cannot clear a newer generation fence
+  ---
+  duration_ms: 0.475417
+  type: 'test'
+  ...
+# Subtest: RQ-009 verified startup proof survives the real durable validator without inventing child exit
+ok 22 - RQ-009 verified startup proof survives the real durable validator without inventing child exit
+  ---
+  duration_ms: 103.63675
+  type: 'test'
+  ...
+# Subtest: V3 durable unknown reservation and fence survive a store reopen
+ok 23 - V3 durable unknown reservation and fence survive a store reopen
+  ---
+  duration_ms: 59.789333
+  type: 'test'
+  ...
+# Subtest: V3 C-024 preserves the exact pre-write hard deadline when unknown is marked later
+ok 24 - V3 C-024 preserves the exact pre-write hard deadline when unknown is marked later
+  ---
+  duration_ms: 0.257167
+  type: 'test'
+  ...
+# Subtest: V3 restart mints a fresh runtime epoch while old durable handles remain queryable
+ok 25 - V3 restart mints a fresh runtime epoch while old durable handles remain queryable
+  ---
+  duration_ms: 40.736417
+  type: 'test'
+  ...
+# Subtest: V3 restart converts a crash-interrupted prompt write into a durable blocked fence
+ok 26 - V3 restart converts a crash-interrupted prompt write into a durable blocked fence
+  ---
+  duration_ms: 40.009084
+  type: 'test'
+  ...
+# Subtest: V3 restart settles a reservation with no prompt-write attempt as proven not admitted
+ok 27 - V3 restart settles a reservation with no prompt-write attempt as proven not admitted
+  ---
+  duration_ms: 31.237208
+  type: 'test'
+  ...
+# Subtest: V3 durable write failure rolls back the transition and closes business admission
+ok 28 - V3 durable write failure rolls back the transition and closes business admission
+  ---
+  duration_ms: 28.20425
+  type: 'test'
+  ...
+# Subtest: V3 restart settles durable child exit but keeps REAP fence without registry cleanup proof
+ok 29 - V3 restart settles durable child exit but keeps REAP fence without registry cleanup proof
+  ---
+  duration_ms: 93.484125
+  type: 'test'
+  ...
+# Subtest: V3 restart completes a normal late-evidence fence cleanup without a new prompt
+ok 30 - V3 restart completes a normal late-evidence fence cleanup without a new prompt
+  ---
+  duration_ms: 72.923334
+  type: 'test'
+  ...
+# Subtest: V3 restart clears a REAP fence only after durable registry cleanup proof
+ok 31 - V3 restart clears a REAP fence only after durable registry cleanup proof
+  ---
+  duration_ms: 104.582417
+  type: 'test'
+  ...
+# Subtest: V3 invalid durable store keeps startup business admission fail closed
+ok 32 - V3 invalid durable store keeps startup business admission fail closed
+  ---
+  duration_ms: 1.25625
+  type: 'test'
+  ...
+# Subtest: V3 durable schema drift keeps startup business admission fail closed
+ok 33 - V3 durable schema drift keeps startup business admission fail closed
+  ---
+  duration_ms: 17.423917
+  type: 'test'
+  ...
+# Subtest: V3 invalid durable top-level and issuance authority fail startup closed
+ok 34 - V3 invalid durable top-level and issuance authority fail startup closed
+  ---
+  duration_ms: 51.65025
+  type: 'test'
+  ...
+# Subtest: V3 repeated restart and mutation keeps durable runtime epochs bounded
+ok 35 - V3 repeated restart and mutation keeps durable runtime epochs bounded
+  ---
+  duration_ms: 6415.769875
+  type: 'test'
+  ...
+# Subtest: V3 resolved record eviction atomically retires caller correlation capacity and bytes
+ok 36 - V3 resolved record eviction atomically retires caller correlation capacity and bytes
+  ---
+  duration_ms: 11.232
+  type: 'test'
+  ...
+# Subtest: V3 caller correlation keys are type-safe and byte-bounded before authority mutation
+ok 37 - V3 caller correlation keys are type-safe and byte-bounded before authority mutation
+  ---
+  duration_ms: 0.157291
+  type: 'test'
+  ...
+# Subtest: V3 durable record correlation must match the durable exact secondary index
+ok 38 - V3 durable record correlation must match the durable exact secondary index
+  ---
+  duration_ms: 14.5535
+  type: 'test'
+  ...
+# Subtest: V3 impossible unresolved-cleared durable state keeps startup admission fail closed
+ok 39 - V3 impossible unresolved-cleared durable state keeps startup admission fail closed
+  ---
+  duration_ms: 29.880167
+  type: 'test'
+  ...
+# Subtest: V3 durable recovery stores answer evidence without storing answer bytes
+ok 40 - V3 durable recovery stores answer evidence without storing answer bytes
+  ---
+  duration_ms: 39.947167
+  type: 'test'
+  ...
+# Subtest: crash-orphaned UNKNOWN stays fenced across restarts; no gate replays or settles it
+ok 41 - crash-orphaned UNKNOWN stays fenced across restarts; no gate replays or settles it
+  ---
+  duration_ms: 41.574125
+  type: 'test'
+  ...
+# Subtest: admin abandonment unblocks admission only; the UNKNOWN record is never settled or erased
+ok 42 - admin abandonment unblocks admission only; the UNKNOWN record is never settled or erased
+  ---
+  duration_ms: 115.093458
+  type: 'test'
+  ...
+# Subtest: restart-quiescence evidence without an authenticated context settles nothing (fail-closed)
+ok 43 - restart-quiescence evidence without an authenticated context settles nothing (fail-closed)
+  ---
+  duration_ms: 0.57525
+  type: 'test'
+  ...
+# Subtest: R3 route: one real startup-blocked request enters shared alert feed once
+ok 44 - R3 route: one real startup-blocked request enters shared alert feed once
+  ---
+  duration_ms: 3.097625
+  type: 'test'
+  ...
+# Subtest: R3 route: one real per-agent fence rejection enters shared alert feed once
+ok 45 - R3 route: one real per-agent fence rejection enters shared alert feed once
+  ---
+  duration_ms: 39.781541
+  type: 'test'
+  ...
+# Subtest: R3 deliver: one real startup-blocked request enters shared alert feed once
+ok 46 - R3 deliver: one real startup-blocked request enters shared alert feed once
+  ---
+  duration_ms: 0.850708
+  type: 'test'
+  ...
+# Subtest: R3 deliver: one real per-agent fence rejection enters shared alert feed once
+ok 47 - R3 deliver: one real per-agent fence rejection enters shared alert feed once
+  ---
+  duration_ms: 29.836208
+  type: 'test'
+  ...
+# Subtest: R3 product: one real startup-blocked request enters shared alert feed once
+ok 48 - R3 product: one real startup-blocked request enters shared alert feed once
+  ---
+  duration_ms: 0.729333
+  type: 'test'
+  ...
+# Subtest: R3 product: one real per-agent fence rejection enters shared alert feed once
+ok 49 - R3 product: one real per-agent fence rejection enters shared alert feed once
+  ---
+  duration_ms: 31.2665
+  type: 'test'
+  ...
+# Subtest: R3 website: one real startup-blocked request enters shared alert feed once
+ok 50 - R3 website: one real startup-blocked request enters shared alert feed once
+  ---
+  duration_ms: 0.833458
+  type: 'test'
+  ...
+# Subtest: R3 website: one real per-agent fence rejection enters shared alert feed once
+ok 51 - R3 website: one real per-agent fence rejection enters shared alert feed once
+  ---
+  duration_ms: 32.58225
+  type: 'test'
+  ...
+# Subtest: R3 blocked observation accepts only bounded code/reason/agent metadata
+ok 52 - R3 blocked observation accepts only bounded code/reason/agent metadata
+  ---
+  duration_ms: 0.189209
+  type: 'test'
+  ...
+# Subtest: R3 a blocked process acquisition already counted by the chain is not counted again by ingress
+ok 53 - R3 a blocked process acquisition already counted by the chain is not counted again by ingress
+  ---
+  duration_ms: 10.204958
+  type: 'test'
+  ...
+# Subtest: R3 website: late blocked acquisition alerts once without exposing raw Agent identity
+ok 54 - R3 website: late blocked acquisition alerts once without exposing raw Agent identity
+  ---
+  duration_ms: 7.294583
+  type: 'test'
+  ...
+# Subtest: R3 product: observing rejection preserves its existing raw-fence fallback
+ok 55 - R3 product: observing rejection preserves its existing raw-fence fallback
+  ---
+  duration_ms: 31.758208
+  type: 'test'
+  ...
+# Subtest: R3 website: observing rejection preserves its existing raw-fence fallback
+ok 56 - R3 website: observing rejection preserves its existing raw-fence fallback
+  ---
+  duration_ms: 27.027
+  type: 'test'
+  ...
+# Subtest: R3 real router initialization alerts on an invalid startup store before any delivery
+ok 57 - R3 real router initialization alerts on an invalid startup store before any delivery
+  ---
+  duration_ms: 2.971542
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/native-router-6dq8tj/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] switch: mcp:pilot... -> agent agt_pilot + session main + workspace (agent default)
+# [router] route-chain {"kind":"route_attempt","tsWallMs":1793433036990,"routeChainId":"single-route","agentId":"agt_pilot","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+# [router] route-chain {"kind":"route_chain_final","tsWallMs":1793433036990,"routeChainId":"single-route","agentId":"agt_pilot","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+# Subtest: real Router ProductSurface seam preserves dedicated binding/main and hands source metadata to original chain
+ok 58 - real Router ProductSurface seam preserves dedicated binding/main and hands source metadata to original chain
+  ---
+  duration_ms: 52.297375
+  type: 'test'
+  ...
+# Subtest: real AgentProcess receipt-only product surface holds trusted context until original terminal
+ok 59 - real AgentProcess receipt-only product surface holds trusted context until original terminal
+  ---
+  duration_ms: 2.85825
+  type: 'test'
+  ...
+# Subtest: source owner retains exact native reply before publication, survives reset and restart
+ok 60 - source owner retains exact native reply before publication, survives reset and restart
+  ---
+  duration_ms: 89.139916
+  type: 'test'
+  ...
+# Subtest: source reserve fails before followup when durable retention is unavailable
+ok 61 - source reserve fails before followup when durable retention is unavailable
+  ---
+  duration_ms: 0.352625
+  type: 'test'
+  ...
+# Subtest: B002: visible text and its native ID survive an empty completion anchor in the same exact turn
+ok 62 - B002: visible text and its native ID survive an empty completion anchor in the same exact turn
+  ---
+  duration_ms: 73.198208
+  type: 'test'
+  ...
+# Subtest: B002: a wholly-empty native completion records no visible reply rather than retaining an empty business answer
+ok 63 - B002: a wholly-empty native completion records no visible reply rather than retaining an empty business answer
+  ---
+  duration_ms: 49.257041
+  type: 'test'
+  ...
+# Subtest: \#1332 fresh spawn + suspended 59243-event resume: no prompt before application readiness
+ok 64 - \#1332 fresh spawn + suspended 59243-event resume: no prompt before application readiness
+  ---
+  duration_ms: 4.0145
+  type: 'test'
+  ...
+# Subtest: CTR-R2 fresh/idle transport failure respawns twice with exponential delay, one reply/dispatch
+ok 65 - CTR-R2 fresh/idle transport failure respawns twice with exponential delay, one reply/dispatch
+  ---
+  duration_ms: 9.712
+  type: 'test'
+  ...
+# Subtest: CTR-R3 exhaustion durably retains original message, coordinates and explicit resend semantics
+ok 66 - CTR-R3 exhaustion durably retains original message, coordinates and explicit resend semantics
+  ---
+  duration_ms: 9.178083
+  type: 'test'
+  ...
+# Subtest: CTR-R2 no replay after unsafe/unknown event {"type":"assistant/message","data":{"message":{"content":[{"type":"text","text":"partial"}]}}}
+ok 67 - CTR-R2 no replay after unsafe/unknown event {"type":"assistant/message","data":{"message":{"content":[{"type":"text","text":"partial"}]}}}
+  ---
+  duration_ms: 0.605333
+  type: 'test'
+  ...
+# Subtest: CTR-R2 no replay after unsafe/unknown event {"type":"assistant/message","data":{"message":{"content":[{"type":"tool-call","name":"write"}]}}}
+ok 68 - CTR-R2 no replay after unsafe/unknown event {"type":"assistant/message","data":{"message":{"content":[{"type":"tool-call","name":"write"}]}}}
+  ---
+  duration_ms: 0.491458
+  type: 'test'
+  ...
+# Subtest: CTR-R2 no replay after unsafe/unknown event {"type":"tool/start","data":{}}
+ok 69 - CTR-R2 no replay after unsafe/unknown event {"type":"tool/start","data":{}}
+  ---
+  duration_ms: 0.435
+  type: 'test'
+  ...
+# Subtest: CTR-R2 no replay after unsafe/unknown event {"type":"unrecognized/provider-event","data":{}}
+ok 70 - CTR-R2 no replay after unsafe/unknown event {"type":"unrecognized/provider-event","data":{}}
+  ---
+  duration_ms: 0.481875
+  type: 'test'
+  ...
+# Subtest: CTR-R5 final unknown increments caller-bound class without replay or respawn
+ok 71 - CTR-R5 final unknown increments caller-bound class without replay or respawn
+  ---
+  duration_ms: 901.854917
+  type: 'test'
+  ...
+# Subtest: CTR-R2/R3 async admission returns one receipt then recovers delayed failures and persists exhaustion
+ok 72 - CTR-R2/R3 async admission returns one receipt then recovers delayed failures and persists exhaustion
+  ---
+  duration_ms: 12.209375
+  type: 'test'
+  ...
+# Subtest: CTR-R3 failed exact generation reap still retains message and resend notice
+ok 73 - CTR-R3 failed exact generation reap still retains message and resend notice
+  ---
+  duration_ms: 7.53275
+  type: 'test'
+  ...
+# Subtest: CTR-R2 arbitrary fetch-failed text never provides replay authority
+ok 74 - CTR-R2 arbitrary fetch-failed text never provides replay authority
+  ---
+  duration_ms: 1.894583
+  type: 'test'
+  ...
+# Subtest: CTR-R5 all four categories and threshold are recomputable from structured log events
+ok 75 - CTR-R5 all four categories and threshold are recomputable from structured log events
+  ---
+  duration_ms: 0.528583
+  type: 'test'
+  ...
+# Subtest: CTR-R5 real child exit after receipt counts child_exit_without_outcome and never retries
+ok 76 - CTR-R5 real child exit after receipt counts child_exit_without_outcome and never retries
+  ---
+  duration_ms: 2.00475
+  type: 'test'
+  ...
+# Subtest: CTR-R2 parent RPC observation denies replay even without assistant/tool events
+ok 77 - CTR-R2 parent RPC observation denies replay even without assistant/tool events
+  ---
+  duration_ms: 1.605041
+  type: 'test'
+  ...
+# Subtest: accepted original-source custody forbids a second prompt and retains failed original
+ok 78 - accepted original-source custody forbids a second prompt and retains failed original
+  ---
+  duration_ms: 8.41975
+  type: 'test'
+  ...
+# Subtest: CTR-R1 never-serviceable preparation respawns twice and dead-letters without any prompt
+ok 79 - CTR-R1 never-serviceable preparation respawns twice and dead-letters without any prompt
+  ---
+  duration_ms: 5.92075
+  type: 'test'
+  ...
+# Subtest: CTR-R3 real ingress failure reply keeps its prefix and explicitly says 请重发
+ok 80 - CTR-R3 real ingress failure reply keeps its prefix and explicitly says 请重发
+  ---
+  duration_ms: 8.611583
+  type: 'test'
+  ...
+# Subtest: scenario 7 runs in a clean child-process environment
+ok 81 - scenario 7 runs in a clean child-process environment
+  ---
+  duration_ms: 31.757625
+  type: 'test'
+  ...
+# Subtest: real HTTP/store/Router chain/AgentProcess FIFO/native message/source observer produces one own final
+ok 82 - real HTTP/store/Router chain/AgentProcess FIFO/native message/source observer produces one own final
+  ---
+  duration_ms: 77.882958
+  type: 'test'
+  ...
+# Subtest: retained original projection repairs result-commit loss after canonical main reset without resend
+ok 83 - retained original projection repairs result-commit loss after canonical main reset without resend
+  ---
+  duration_ms: 96.918083
+  type: 'test'
+  ...
+# Subtest: default OFF runtime composition performs no dependency IO or service access
+ok 84 - default OFF runtime composition performs no dependency IO or service access
+  ---
+  duration_ms: 1.442167
+  type: 'test'
+  ...
+# Subtest: lost real receipt preserves UNKNOWN delivery independently from exact completed reply; never resends
+ok 85 - lost real receipt preserves UNKNOWN delivery independently from exact completed reply; never resends
+  ---
+  duration_ms: 98.450417
+  type: 'test'
+  ...
+# Subtest: original resident entry flags reach the real website config and mount boundary
+ok 86 - original resident entry flags reach the real website config and mount boundary
+  ---
+  duration_ms: 9.449916
+  type: 'test'
+  ...
+# Subtest: OFF original entry does zero website filesystem, credential or network IO and preserves resident start/stop
+ok 87 - OFF original entry does zero website filesystem, credential or network IO and preserves resident start/stop
+  ---
+  duration_ms: 2.847958
+  type: 'test'
+  ...
+# Subtest: incomplete, wrong, unsafe and symlink config inputs disable only new routes with sanitized503
+ok 88 - incomplete, wrong, unsafe and symlink config inputs disable only new routes with sanitized503
+  ---
+  duration_ms: 13.910667
+  type: 'test'
+  ...
+# Subtest: current file ACL revocation denies next own-read; scope and pinned storage/key/JWKS changes never migrate existing identities
+ok 89 - current file ACL revocation denies next own-read; scope and pinned storage/key/JWKS changes never migrate existing identities
+  ---
+  duration_ms: 5.791083
+  type: 'test'
+  ...
+# Subtest: canonical main getter parses header only, rejects corrupt header and symlink escape
+ok 90 - canonical main getter parses header only, rejects corrupt header and symlink escape
+  ---
+  duration_ms: 5.53475
+  type: 'test'
+  ...
+1..90
+# tests 90
+# suites 0
+# pass 90
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11159.414916

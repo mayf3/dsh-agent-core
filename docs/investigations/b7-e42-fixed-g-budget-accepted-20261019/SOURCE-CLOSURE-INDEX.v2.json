@@ -1,0 +1,109 @@
+{
+  "kind": "E42_Q2_FIXED_CALLER_CONTRACT_SOURCE_CLOSURE_V2",
+  "status": "PROPOSED_NOT_ACCEPTED_NO_IMPLEMENTATION",
+  "contract": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q2-fixed-g-budget-contract/PROPOSED-E42-FIXED-G-BUDGET-CALLER-CONTRACT.v2.md",
+    "bytes": 14462,
+    "sha256": "70abd83505b0af98fb6346753d0014834c346e93d20b7bcdfb5d757d2d8e521d"
+  },
+  "canonical_refs": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-Q2-FINITE-PLANNING-CIRCULARITY-ORIGINAL-TECHNICAL-DISPOSITION-20261019.json",
+      "bytes": 8961,
+      "sha256": "007458fb6bd4ffb9bc51d96966f2d464f96575a61797febc8c2a88582b66e0bb"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/PROPOSED-E42-Q2-FIXED-G-BUDGET-CONTINUATION.v1.md",
+      "bytes": 7529,
+      "sha256": "6adee2abf4caef7ffc75334212620d95054d620e4f79d9445badc65626258176"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-Q2-FINITE-PLAN-STOP-BOUNDARY-SOL-20261019.json",
+      "bytes": 16580,
+      "sha256": "42de119aa8ae7e4bc1838d3091434cd7f765f57e30d7c862a2bfa924f617f0cf"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-OFFLINE-TYPED-CALLPLAN-P0-COUNTS-SOL-20261019.json",
+      "bytes": 11842,
+      "sha256": "50c0e073e1e68aba29ce5ed566f3f2855f5dea473b5b623ca1a150c6b7693697"
+    }
+  ],
+  "source_facts_attributed_to": "/root/capacity_a_sol; exact finite receipt reused, no source rerun",
+  "fixed_sources": [
+    {
+      "root": "WB",
+      "relative_path": "delegated_owner_session.py",
+      "bytes": 37950,
+      "sha256": "39e47fd661332afb38457cccfb435659b619090fefcea0b147e2670a6f5856a4",
+      "hash_status": "VERIFIED_IN_THIS_BOUNDED_TASK",
+      "new_spans": [
+        "408-523",
+        "562-585",
+        "713-735"
+      ],
+      "reused_held_spans": [
+        "155-255",
+        "592-615",
+        "659-672"
+      ],
+      "limited_selector_read": "Function/branch line selectors within this exact file only."
+    },
+    {
+      "root": "R38",
+      "relative_path": "docs/evidence/shared-codex-auth-deployment-root-refreeze-v2-20261002/owner-router-closure-g2-g7-v23.sh",
+      "bytes": 40784,
+      "sha256": "d323f7022f164b00fc744f37f0144bfadbbe43955e57ad3efb342e8d2f4c7f45",
+      "hash_status": "VERIFIED_IN_THIS_BOUNDED_TASK",
+      "new_spans": [
+        "200-333"
+      ]
+    },
+    {
+      "root": "R39",
+      "relative_path": "docs/evidence/openai-codex-refresh-token-reused-v1-20260910/owner-authsvc-plugin-upgrade-r13.sh",
+      "bytes": 103362,
+      "sha256": "ba571c774dc01b897a074d031a52ec324163382071fb15c1e747563b642d32a0",
+      "hash_status": "REUSED_PREVIOUSLY_VERIFIED_PIN",
+      "new_spans": [
+        "382-489",
+        "1349-1373",
+        "1562-1645"
+      ]
+    },
+    {
+      "root": "R41",
+      "relative_path": "control-source/v53_r34_execution_source.py",
+      "bytes": 72769,
+      "sha256": "78546c711470ad91c2936e420dfe26b2a7c7fd4d0cc78a1f7c70908c75179993",
+      "hash_status": "VERIFIED_IN_THIS_BOUNDED_TASK",
+      "new_spans": [
+        "150-190",
+        "238-335",
+        "425-458",
+        "535-570"
+      ]
+    }
+  ],
+  "new_semantic_ceiling": [
+    "WB/delegated_owner_session.py only fixed plan loader/context-return cap/specific catch and no-resend outcome/finally",
+    "one new sealed data member e42-owner-budget-plan.json; original authority/capsule/pin mechanical assembly"
+  ],
+  "original_seal_basis": {
+    "executor_sha256": "968d42e94b2d6345aaac2220714c96c105483902f823ad2af48a23f892db212b",
+    "function": "existing seal_authority_closure; same-directory root sealed AUTH/PIN readable snapshots; not a new getter or permission"
+  },
+  "future_values": {
+    "G_budget": null,
+    "actual_G": null,
+    "final_J": null,
+    "admission": null,
+    "native_TX": null
+  },
+  "transport": {
+    "status": "NOT_SENT",
+    "route_count": 0,
+    "exclusive_dispatch_owner": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "technical_recipient": "01a1378d-e052-7021-9992-f0760eb9f9e7"
+  },
+  "implementation_or_effects": false
+}

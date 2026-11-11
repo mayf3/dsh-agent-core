@@ -1,0 +1,356 @@
+{
+  "kind": "E42_FIXED_PRE_NPM_INPUT_LINEAGE_AND_EXTRA_MEMBERSHIP_BASIS_V1",
+  "schemaVersion": 1,
+  "subject": {
+    "packet": "b7-packet-r41-5a07e742664460c2-e42",
+    "manifest": "5a07e742664460c28aa169d134e72e2ded0fe86c8fa2ae323f5b712a7a3d1000",
+    "worker": "490bd9570d7915e29213b78bffb625e6970ce3158eb67afc7b4128db5284bc79",
+    "SC": "5cd372cf79c29ee1d95f949119e1fa2b164d14bf9b0c721e5b2e65832cf93721"
+  },
+  "references": {
+    "sourceClosure": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/SOURCE-CLOSURE.v1.json",
+      "bytes": 9231,
+      "sha256": "ad2e75218d00a73b62e90283d06dcdc045ca4c47f344286b45a5843953c9901e"
+    }
+  },
+  "classification": "UNPROVEN",
+  "reason": "MISSING_PRIMARY",
+  "nativeBinding": {
+    "status": "UNKNOWN",
+    "reason": "LINEAGE_UNBOUND",
+    "expectedReference": [
+      {
+        "path": "/usr/local/lib/node_modules/npm/package.json",
+        "sha256": "1e6c1475248247276dad8a00cb25a0af567a02a37ed549c1fb2d26739011d5d9",
+        "bytes": 6616
+      },
+      {
+        "path": "/usr/local/lib/node_modules/npm/node_modules/pacote/lib/file.js",
+        "sha256": "e56e384ee34175b52b960bbb52e0f4127978cca1df3d5e7b1edaff5a24d1fba4",
+        "bytes": 2547
+      },
+      {
+        "path": "/usr/local/lib/node_modules/npm/node_modules/pacote/lib/fetcher.js",
+        "sha256": "45eabb392a0c7c332ab342875d513b9932032e7b0b65faec283810488346ad44",
+        "bytes": 17383
+      },
+      {
+        "path": "/usr/local/lib/node_modules/npm/node_modules/cacache/lib/util/tmp.js",
+        "sha256": "9bc9bad862208b2ee66aeae5222d8b1d8d1d288f335fdf3ff998ad200f71ce64",
+        "bytes": 696
+      },
+      {
+        "path": "/usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js",
+        "sha256": "80408671d1d6f5b9c03e0bf7c1cfaa0267edac3699a46743b7c776ef359cd5b1",
+        "bytes": 55865
+      }
+    ],
+    "requestedCommand": "npm",
+    "callerPATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "expectedResolution": "/usr/local/bin/npm -> /usr/local/lib/node_modules/npm/bin/npm-cli.js",
+    "actualResolution": null,
+    "contentVersion": null,
+    "currentFivePins": null,
+    "currentCustody": null,
+    "installationEvent": null,
+    "retentionToUse": null
+  },
+  "prefixInputs": [
+    {
+      "target": "agt_data-engineer-agent",
+      "prefix": "/Users/authsvc/.agent-core/homes/agt_data-engineer-agent/profiles",
+      "status": "UNKNOWN",
+      "reason": "INPUT_GRAPH_UNBOUND",
+      "originalPreimageRecord": null,
+      "rootPackage": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "packageLock": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "npmShrinkwrap": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "workspaceAndLocalReferenceClosure": null,
+      "installedBaseline": null,
+      "preNpmTransform": {
+        "fixedCallerRef": "provision",
+        "nestedProfileTemplateRef": "app-profile-production-package.json",
+        "importedIndexExpectedSha256": "9dfabed9cf9046193d5ca73ce4e6cdd0fb60dff3e6befd68770a1b96e2822ec6",
+        "importedIndexOriginalBody": null,
+        "sourceComplete": false
+      },
+      "effectivePackageMembers": null,
+      "phaseIdentity": null
+    },
+    {
+      "target": "agt_family-insurance-manager-agent",
+      "prefix": "/Users/authsvc/.agent-core/homes/agt_family-insurance-manager-agent/profiles",
+      "status": "UNKNOWN",
+      "reason": "INPUT_GRAPH_UNBOUND",
+      "originalPreimageRecord": null,
+      "rootPackage": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "packageLock": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "npmShrinkwrap": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "workspaceAndLocalReferenceClosure": null,
+      "installedBaseline": null,
+      "preNpmTransform": {
+        "fixedCallerRef": "provision",
+        "nestedProfileTemplateRef": "app-profile-production-package.json",
+        "importedIndexExpectedSha256": "9dfabed9cf9046193d5ca73ce4e6cdd0fb60dff3e6befd68770a1b96e2822ec6",
+        "importedIndexOriginalBody": null,
+        "sourceComplete": false
+      },
+      "effectivePackageMembers": null,
+      "phaseIdentity": null
+    },
+    {
+      "target": "agt_investment-manager-agent",
+      "prefix": "/Users/authsvc/.agent-core/homes/agt_investment-manager-agent/profiles",
+      "status": "UNKNOWN",
+      "reason": "INPUT_GRAPH_UNBOUND",
+      "originalPreimageRecord": null,
+      "rootPackage": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "packageLock": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "npmShrinkwrap": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "workspaceAndLocalReferenceClosure": null,
+      "installedBaseline": null,
+      "preNpmTransform": {
+        "fixedCallerRef": "provision",
+        "nestedProfileTemplateRef": "app-profile-production-package.json",
+        "importedIndexExpectedSha256": "9dfabed9cf9046193d5ca73ce4e6cdd0fb60dff3e6befd68770a1b96e2822ec6",
+        "importedIndexOriginalBody": null,
+        "sourceComplete": false
+      },
+      "effectivePackageMembers": null,
+      "phaseIdentity": null
+    },
+    {
+      "target": "agt_lw-lifecycle-canary",
+      "prefix": "/Users/authsvc/.agent-core/homes/agt_lw-lifecycle-canary/profiles",
+      "status": "UNKNOWN",
+      "reason": "INPUT_GRAPH_UNBOUND",
+      "originalPreimageRecord": null,
+      "rootPackage": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "packageLock": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "npmShrinkwrap": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "workspaceAndLocalReferenceClosure": null,
+      "installedBaseline": null,
+      "preNpmTransform": {
+        "fixedCallerRef": "provision",
+        "nestedProfileTemplateRef": "app-profile-production-package.json",
+        "importedIndexExpectedSha256": "9dfabed9cf9046193d5ca73ce4e6cdd0fb60dff3e6befd68770a1b96e2822ec6",
+        "importedIndexOriginalBody": null,
+        "sourceComplete": false
+      },
+      "effectivePackageMembers": null,
+      "phaseIdentity": null
+    },
+    {
+      "target": "agt_machine-learning-engineer-agent",
+      "prefix": "/Users/authsvc/.agent-core/homes/agt_machine-learning-engineer-agent/profiles",
+      "status": "UNKNOWN",
+      "reason": "INPUT_GRAPH_UNBOUND",
+      "originalPreimageRecord": null,
+      "rootPackage": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "packageLock": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "npmShrinkwrap": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "workspaceAndLocalReferenceClosure": null,
+      "installedBaseline": null,
+      "preNpmTransform": {
+        "fixedCallerRef": "provision",
+        "nestedProfileTemplateRef": "app-profile-production-package.json",
+        "importedIndexExpectedSha256": "9dfabed9cf9046193d5ca73ce4e6cdd0fb60dff3e6befd68770a1b96e2822ec6",
+        "importedIndexOriginalBody": null,
+        "sourceComplete": false
+      },
+      "effectivePackageMembers": null,
+      "phaseIdentity": null
+    },
+    {
+      "target": "agt_technical-writer-agent",
+      "prefix": "/Users/authsvc/.agent-core/homes/agt_technical-writer-agent/profiles",
+      "status": "UNKNOWN",
+      "reason": "INPUT_GRAPH_UNBOUND",
+      "originalPreimageRecord": null,
+      "rootPackage": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "packageLock": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "npmShrinkwrap": {
+        "presence": "UNKNOWN",
+        "originalArtifactMember": null,
+        "bytes": null,
+        "sha256": null
+      },
+      "workspaceAndLocalReferenceClosure": null,
+      "installedBaseline": null,
+      "preNpmTransform": {
+        "fixedCallerRef": "provision",
+        "nestedProfileTemplateRef": "app-profile-production-package.json",
+        "importedIndexExpectedSha256": "9dfabed9cf9046193d5ca73ce4e6cdd0fb60dff3e6befd68770a1b96e2822ec6",
+        "importedIndexOriginalBody": null,
+        "sourceComplete": false
+      },
+      "effectivePackageMembers": null,
+      "phaseIdentity": null
+    }
+  ],
+  "effectiveMaterializationBasis": {
+    "packageMembership": {
+      "status": "UNKNOWN",
+      "sourceRules": [
+        "provision:113-119,435-489",
+        "fixed-plugin-package.json"
+      ],
+      "actualInputRefs": null,
+      "effect": "UNKNOWN",
+      "extraMemberRefs": null
+    },
+    "copyTopology": {
+      "status": "UNKNOWN",
+      "sourceRules": [
+        "nativeAllowance",
+        "preparation:285-288"
+      ],
+      "actualInputRefs": null,
+      "effect": "UNKNOWN",
+      "extraMemberRefs": null
+    },
+    "normalAuxMembership": {
+      "status": "UNKNOWN",
+      "sourceRules": [
+        "nativeAllowance",
+        "resolution:field_resolutions.c_materialization_relevant_config_and_aux"
+      ],
+      "actualInputRefs": null,
+      "effect": "UNKNOWN",
+      "extraMemberRefs": null
+    }
+  },
+  "branchOccupancyAndAux": {
+    "status": "UNKNOWN",
+    "reason": "COST_UNBOUND",
+    "memberCharges": null,
+    "originalPluginTerm": {
+      "conditional": true,
+      "P": 192720896,
+      "T": 22233088,
+      "sixCallBytes": 2579447808,
+      "actualConditionMatch": null
+    },
+    "typedAuxMembership": {
+      "normalCacheLogHelperBytes": 134217728,
+      "withinOriginalTypedAuxBytes": 1073741824,
+      "actualConditionMatch": null
+    },
+    "phasePeaks": null,
+    "incrementalEvidenceCost": null,
+    "overlapProof": null,
+    "maximumBranch": null
+  },
+  "producerEntryAndPhase": {
+    "producerRole": "Original1437 sole source/provisioning evidence assembler",
+    "mode": "RETAINED_ORIGINAL_LINEAGE_ONLY",
+    "inputClosure": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/SOURCE-CLOSURE.v1.json",
+    "output": "PRE-NPM-INPUT-LINEAGE-BASIS.v1.json",
+    "originalAuthorityRefs": [
+      "resolution:one_minimal_material_delta.permissible_preparation_now",
+      "accepted531/536 documentary consumption only"
+    ],
+    "issuer": {
+      "nativeOriginalReceipt": null,
+      "prefixOriginalRecord": null,
+      "currentMaterialAuthor": "/root/sol_execution_continuation"
+    },
+    "phase": "PRE_NUMERIC_ADMISSION_DOCUMENTARY_JOIN_NOT_NEW_RUNTIME_PRODUCER",
+    "retention": null,
+    "consumer": "Original531/536 capacity arithmetic; no automatic numeric admission",
+    "failure": "UNKNOWN/null for missing primary; contradiction REFUSED; no new read/retry",
+    "sourceCeiling": [],
+    "runtimeEffects": [],
+    "cost": {
+      "newRuntimeCost": 0,
+      "documentaryEvidencePhysicalAllocation": null,
+      "JChanged": false
+    }
+  }
+}

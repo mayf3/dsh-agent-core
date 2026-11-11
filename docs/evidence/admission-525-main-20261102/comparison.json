@@ -1,0 +1,51 @@
+{
+  "base_head": "26178b4f459cdc2737724f6614b5e2bc9bdc77b0",
+  "candidate_head": "d0aedb647056d9457bc185320bc0de873eae2961",
+  "failure_names_added": {},
+  "failure_names_removed": {},
+  "existing_test_names_removed": {},
+  "test_names_added": {
+    "GET /health carries additive admission readiness; absent handler stays null (PRODUCT \\#525 P1)": 1,
+    "unknown-kid refresh failure keeps the AUTH_JWKS_UNAVAILABLE kind — infra evidence, not a bad token": 1,
+    "missing jwksUrl fails construction loud — a permanently-401 verifier can never mount": 1,
+    "unreachable JWKS keeps the frozen 401 wire and flips admissionHealth with one bounded warn": 1,
+    "ordinary invalid tokens never flip infra state; recovery warns exactly once": 1,
+    "admissionHealth payload is key-pinned and identity-free": 1,
+    "unknown-kid refresh failure during a JWKS outage surfaces as auth_unavailable, not a silent bad token": 1,
+    "PRODUCT \\#525 P1: product API enabled without AGENT_DIRECTORY_AUTH_JWKS_URL refuses composition (fail loud, never perma-401)": 1,
+    "PRODUCT \\#525 P1: product API enabled with the JWKS seam composes; /health carries additive admission readiness": 1,
+    "PRODUCT \\#525 P1: the JWKS-seam gate precedes all downstream composition wiring (log-order pin)": 1
+  },
+  "base_failure_count": 10,
+  "candidate_failure_count": 10,
+  "counts_base": {
+    "tests": 618,
+    "suites": 0,
+    "pass": 603,
+    "fail": 10,
+    "cancelled": 0,
+    "skipped": 5,
+    "todo": 0
+  },
+  "counts_candidate": {
+    "tests": 628,
+    "suites": 0,
+    "pass": 613,
+    "fail": 10,
+    "cancelled": 0,
+    "skipped": 5,
+    "todo": 0
+  },
+  "full_packages_all_green": false,
+  "focused_suite": {
+    "tests": 84,
+    "pass": 84,
+    "fail": 0,
+    "rc": 0
+  },
+  "assertions": {
+    "failure_multiset_equal": true,
+    "no_base_names_lost": true,
+    "ten_expected_added_tests": true
+  }
+}

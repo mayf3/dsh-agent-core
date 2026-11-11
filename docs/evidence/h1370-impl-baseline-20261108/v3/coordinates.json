@@ -1,0 +1,13 @@
+{
+  "command": "NGC_HARNESS_ROOT=/Users/yanfenma/workspace/worktrees/codex-native-goal-enqueue-20261027 /usr/local/bin/node --test packages/agent-router/test/route-chain/*.test.js",
+  "start": "2026-11-08T06:51:33.244462+00:00",
+  "end": "2026-11-08T06:51:40.870785+00:00",
+  "exit_code": 0,
+  "cwd": "/Users/yanfenma/workspace/project/worktrees/h1370-impl",
+  "core_head": "95a8e1cb512fc99dc018209d837250dd51b4d08f",
+  "harness_root": "/Users/yanfenma/workspace/worktrees/codex-native-goal-enqueue-20261027",
+  "harness_head": "9d8678057be9bdbcc37b640ad8cb18279dc5f971",
+  "node": "v25.6.1",
+  "log_sha256": "831bba88cbb3629bcdd8083c1094d5600a3d62cc69ad9b8a59e9beb9455f7129",
+  "log_bytes": 29495
+}

@@ -1,0 +1,1171 @@
+du: /usr/sbin/authserver: Permission denied
+du: /usr/local/libexec/agent-core.bak-20261106-075814/config: Permission denied
+du: /usr/local/libexec/agent-core.bak-20261105-063639/config: Permission denied
+du: /usr/local/libexec/agent-core.bak-20261106-080439/config: Permission denied
+du: /usr/local/libexec/agent-core.bak-20261105-064520/config: Permission denied
+du: /usr/local/libexec/agent-deploy-system/.observation-5715d21-maintenance: Permission denied
+du: /usr/local/libexec/agent-core.bak-20261105-073646/config: Permission denied
+du: /usr/local/libexec/agent-core.bak-20261105-075119/config: Permission denied
+du: /usr/local/libexec/agent-core/config: Permission denied
+du: /usr/local/libexec/agent-core/.cache: Permission denied
+du: /usr/local/libexec/agent-core.bak-20261106-081212/config: Permission denied
+du: /usr/local/libexec/agent-core.bak-20261105-062306/config: Permission denied
+du: /usr/local/var/agent-core-deploy-backups/hr-dispatcher-termination-settlement.2026-09-14T213250200Z: Permission denied
+du: /usr/local/var/agent-core-deploy-backups/self-ops-phase1.OVDHV1: Permission denied
+du: /usr/local/var/agent-core/scheduler-self-healing-v7c-apponly: Permission denied
+du: /usr/local/var/agent-core/scheduler-self-healing-v8-apponly: Permission denied
+du: /usr/local/var/agent-core/scheduler-self-healing-v8/receipts: Permission denied
+du: /usr/local/var/agent-core/scheduler-self-healing-v6/receipts: Permission denied
+du: /usr/local/var/agent-core/scheduler-self-healing-v7/receipts: Permission denied
+du: /usr/local/var/agent-core/scheduler-self-healing-v9/receipts: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r15-retired-20261022: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.W5-stampNL2-retired-20261104: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r175-parked-intent-retired-r53: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r173-aborted-retired: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.W5-stampNL-retired-20261104: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.W5-stage05-inflight-retired-20261104: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r182-attempt-retired: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r176-abort-retired: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r172-attempt-retired: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.W5-stampNL-retired2-20261104: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r166-attempt-retired: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r169-attempt-retired: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r174-abort-retired: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r170-attempt-retired: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.v5b-n2s9w7-stage06fail-retired-20261104: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r167-attempt-retired: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r8-retired-20261021: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r14-retired-20261021: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r168-attempt-retired: Permission denied
+du: /usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r7-retired-20261020: Permission denied
+du: /usr/local/var/agent-core/scheduler-self-healing-v7-apponly: Permission denied
+du: /usr/local/var/agent-core/scheduler-self-healing-v5/receipts: Permission denied
+du: /usr/local/var/agent-core-retained-fixture/b7-retained-cand-green-92678-1791426544642: Permission denied
+du: /Library/Application Support/Apple/Screen Sharing/Keys: Permission denied
+du: /Library/Application Support/Apple/ParentalControls/Users: Permission denied
+du: /Library/Application Support/Apple/AssetCache/Data: Permission denied
+du: /Library/Application Support/ApplePushService: Permission denied
+du: /Library/Application Support/SubmitDiagInfo: Permission denied
+du: /Library/Tailscale: Permission denied
+du: /Library/AgentCoreRunbooks/pr66-stability-fix-v1/patches: Permission denied
+du: /Library/Caches/com.apple.amsengagementd.classicdatavault: Operation not permitted
+du: /Library/Caches/com.apple.aneuserd: Operation not permitted
+du: /Library/Caches/Desktop Pictures/3E8EEAA5-49B5-45CF-BB48-CF2ECC470556: Permission denied
+du: /Library/Caches/Desktop Pictures/07D56A3A-99A0-4B72-A109-944A2B02E08E: Permission denied
+du: /Library/Caches/com.apple.iconservices.store: Permission denied
+du: /Library/Caches/com.apple.aned: Operation not permitted
+du: /System/Library/DirectoryServices/DefaultLocalDB/Default: Permission denied
+du: /System/Library/Templates/Data/Library/Application Support/Apple/ParentalControls/Users: Permission denied
+du: /System/Library/Templates/Data/private/etc/cups/certs: Permission denied
+du: /System/Library/Templates/Data/private/var/install: Permission denied
+du: /System/Library/Templates/Data/private/var/ma: Permission denied
+du: /System/Library/Templates/Data/private/var/spool/mqueue: Permission denied
+du: /System/Library/Templates/Data/private/var/spool/postfix/saved: Permission denied
+du: /System/Library/Templates/Data/private/var/spool/postfix/trace: Permission denied
+du: /System/Library/Templates/Data/private/var/spool/postfix/defer: Permission denied
+du: /System/Library/Templates/Data/private/var/spool/postfix/flush: Permission denied
+du: /System/Library/Templates/Data/private/var/spool/postfix/deferred: Permission denied
+du: /System/Library/Templates/Data/private/var/spool/postfix/corrupt: Permission denied
+du: /System/Library/Templates/Data/private/var/spool/postfix/public: Permission denied
+du: /System/Library/Templates/Data/private/var/spool/postfix/private: Permission denied
+du: /System/Library/Templates/Data/private/var/spool/postfix/incoming: Permission denied
+du: /System/Library/Templates/Data/private/var/spool/postfix/active: Permission denied
+du: /System/Library/Templates/Data/private/var/spool/postfix/maildrop: Permission denied
+du: /System/Library/Templates/Data/private/var/spool/postfix/hold: Permission denied
+du: /System/Library/Templates/Data/private/var/spool/postfix/bounce: Permission denied
+du: /System/Library/Templates/Data/private/var/spool/cups: Permission denied
+du: /System/Library/Templates/Data/private/var/jabberd: Permission denied
+du: /System/Library/Templates/Data/private/var/audit: Permission denied
+du: /System/Library/Templates/Data/private/var/root: Permission denied
+du: /System/Library/Templates/Data/private/var/lib/postfix: Permission denied
+du: /System/Library/Templates/Data/private/var/db/appinstalld: Permission denied
+du: /System/Library/Templates/Data/private/var/db/diskimagesiod: Permission denied
+du: /System/Library/Templates/Data/private/var/db/locationd: Permission denied
+du: /System/Library/Templates/Data/private/var/db/modelmanagerd: Permission denied
+du: /System/Library/Templates/Data/private/var/db/terminus: Permission denied
+du: /System/Library/Templates/Data/private/var/db/sysdiagnose/com.apple.sysdiagnose: Permission denied
+du: /System/Library/Templates/Data/private/var/db/analyticsd: Permission denied
+du: /System/Library/Templates/Data/private/var/db/rmd: Permission denied
+du: /System/Library/Templates/Data/private/var/db/knowledgegraphd: Permission denied
+du: /System/Library/Templates/Data/private/var/db/coreml: Permission denied
+du: /System/Library/Templates/Data/private/var/db/nsurlsessiond: Permission denied
+du: /System/Library/Templates/Data/private/var/db/fpsd: Permission denied
+du: /System/Library/Templates/Data/private/var/db/hidd: Permission denied
+du: /System/Library/Templates/Data/private/var/db/installcoordinationd: Permission denied
+du: /System/Library/Templates/Data/private/var/db/geod: Permission denied
+du: /System/Library/Templates/Data/private/var/db/reportmemoryexception: Permission denied
+du: /System/Library/Templates/Data/private/var/db/Sandbox: Permission denied
+du: /System/Library/Templates/Data/private/var/db/ctkd: Permission denied
+du: /System/Library/Templates/Data/private/var/db/lockdown: Permission denied
+du: /System/Library/Templates/Data/private/var/db/biome: Permission denied
+du: /System/Library/Templates/Data/private/var/db/datadetectors: Permission denied
+du: /System/Library/Templates/Data/private/var/db/cmiodalassistants: Permission denied
+du: /System/Library/Templates/Data/private/var/db/com.apple.xpc.roleaccountd.staging: Permission denied
+du: /System/Library/Templates/Data/private/var/db/dslocal/nodes/Default: Permission denied
+du: /System/Library/Templates/Data/private/var/db/nearbyd: Permission denied
+du: /System/Library/Templates/Data/private/var/db/mmaintenanced: Permission denied
+du: /System/Library/Templates/Data/private/var/db/timed: Permission denied
+du: /System/Library/Templates/Data/private/var/db/applepay: Permission denied
+du: /System/Library/Templates/Data/private/var/db/darwindaemon: Permission denied
+du: /System/Library/Templates/Data/private/var/db/securityagent: Permission denied
+du: /System/Library/Templates/Data/private/var/db/accessoryupdater: Permission denied
+du: /System/Library/Templates/Data/private/var/db/ConfigurationProfiles/Store: Permission denied
+du: /System/Library/Templates/Data/private/var/db/caches/opendirectory: Permission denied
+du: /System/Library/Templates/Data/private/var/at/tabs: Permission denied
+du: /System/Library/Templates/Data/private/var/at/tmp: Permission denied
+du: /System/Library/Templates/Data/private/var/backups: Permission denied
+du: /System/Library/Templates/Data/private/var/agentx: Permission denied
+du: /System/Library/AssetsV2/com_apple_MobileAsset_UAF_FM_Overrides: Operation not permitted
+du: /System/Library/Caches/com.apple.appstored: Permission denied
+du: /System/Library/Caches/com.apple.coresymbolicationd: Permission denied
+du: /System/Volumes/Data/usr/local/libexec/agent-core.bak-20261106-075814/config: Permission denied
+du: /System/Volumes/Data/usr/local/libexec/agent-core.bak-20261105-063639/config: Permission denied
+du: /System/Volumes/Data/usr/local/libexec/agent-core.bak-20261106-080439/config: Permission denied
+du: /System/Volumes/Data/usr/local/libexec/agent-core.bak-20261105-064520/config: Permission denied
+du: /System/Volumes/Data/usr/local/libexec/agent-deploy-system/.observation-5715d21-maintenance: Permission denied
+du: /System/Volumes/Data/usr/local/libexec/agent-core.bak-20261105-073646/config: Permission denied
+du: /System/Volumes/Data/usr/local/libexec/agent-core.bak-20261105-075119/config: Permission denied
+du: /System/Volumes/Data/usr/local/libexec/agent-core/config: Permission denied
+du: /System/Volumes/Data/usr/local/libexec/agent-core/.cache: Permission denied
+du: /System/Volumes/Data/usr/local/libexec/agent-core.bak-20261106-081212/config: Permission denied
+du: /System/Volumes/Data/usr/local/libexec/agent-core.bak-20261105-062306/config: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core-deploy-backups/hr-dispatcher-termination-settlement.2026-09-14T213250200Z: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core-deploy-backups/self-ops-phase1.OVDHV1: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/scheduler-self-healing-v7c-apponly: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/scheduler-self-healing-v8-apponly: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/scheduler-self-healing-v8/receipts: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/scheduler-self-healing-v6/receipts: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/scheduler-self-healing-v7/receipts: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/scheduler-self-healing-v9/receipts: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r15-retired-20261022: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.W5-stampNL2-retired-20261104: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r175-parked-intent-retired-r53: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r173-aborted-retired: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.W5-stampNL-retired-20261104: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.W5-stage05-inflight-retired-20261104: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r182-attempt-retired: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r176-abort-retired: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r172-attempt-retired: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.W5-stampNL-retired2-20261104: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r166-attempt-retired: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r169-attempt-retired: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r174-abort-retired: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r170-attempt-retired: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.v5b-n2s9w7-stage06fail-retired-20261104: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r167-attempt-retired: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r8-retired-20261021: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r14-retired-20261021: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r168-attempt-retired: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock.e42r7-retired-20261020: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/scheduler-self-healing-v7-apponly: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core/scheduler-self-healing-v5/receipts: Permission denied
+du: /System/Volumes/Data/usr/local/var/agent-core-retained-fixture/b7-retained-cand-green-92678-1791426544642: Permission denied
+du: /System/Volumes/Data/.Spotlight-V100: Permission denied
+du: /System/Volumes/Data/Library/Application Support/Apple/Screen Sharing/Keys: Permission denied
+du: /System/Volumes/Data/Library/Application Support/Apple/ParentalControls/Users: Permission denied
+du: /System/Volumes/Data/Library/Application Support/Apple/AssetCache/Data: Permission denied
+du: /System/Volumes/Data/Library/Application Support/ApplePushService: Permission denied
+du: /System/Volumes/Data/Library/Application Support/SubmitDiagInfo: Permission denied
+du: /System/Volumes/Data/Library/Tailscale: Permission denied
+du: /System/Volumes/Data/Library/AgentCoreRunbooks/pr66-stability-fix-v1/patches: Permission denied
+du: /System/Volumes/Data/Library/Caches/com.apple.amsengagementd.classicdatavault: Operation not permitted
+du: /System/Volumes/Data/Library/Caches/com.apple.aneuserd: Operation not permitted
+du: /System/Volumes/Data/Library/Caches/Desktop Pictures/3E8EEAA5-49B5-45CF-BB48-CF2ECC470556: Permission denied
+du: /System/Volumes/Data/Library/Caches/Desktop Pictures/07D56A3A-99A0-4B72-A109-944A2B02E08E: Permission denied
+du: /System/Volumes/Data/Library/Caches/com.apple.iconservices.store: Permission denied
+du: /System/Volumes/Data/Library/Caches/com.apple.aned: Operation not permitted
+du: /System/Volumes/Data/System/Library/AssetsV2/com_apple_MobileAsset_UAF_FM_Overrides: Operation not permitted
+du: /System/Volumes/Data/System/Library/Caches/com.apple.appstored: Permission denied
+du: /System/Volumes/Data/System/Library/Caches/com.apple.coresymbolicationd: Permission denied
+du: /System/Volumes/Data/.fseventsd: Permission denied
+du: /System/Volumes/Data/private/etc/cups/certs: Permission denied
+du: /System/Volumes/Data/private/var/networkd/Library: Permission denied
+du: /System/Volumes/Data/private/var/networkd/db: Operation not permitted
+du: /System/Volumes/Data/private/var/install: Permission denied
+du: /System/Volumes/Data/private/var/ma: Permission denied
+du: /System/Volumes/Data/private/var/spool/mqueue: Permission denied
+du: /System/Volumes/Data/private/var/spool/postfix/saved: Permission denied
+du: /System/Volumes/Data/private/var/spool/postfix/trace: Permission denied
+du: /System/Volumes/Data/private/var/spool/postfix/defer: Permission denied
+du: /System/Volumes/Data/private/var/spool/postfix/flush: Permission denied
+du: /System/Volumes/Data/private/var/spool/postfix/deferred: Permission denied
+du: /System/Volumes/Data/private/var/spool/postfix/corrupt: Permission denied
+du: /System/Volumes/Data/private/var/spool/postfix/public: Permission denied
+du: /System/Volumes/Data/private/var/spool/postfix/private: Permission denied
+du: /System/Volumes/Data/private/var/spool/postfix/incoming: Permission denied
+du: /System/Volumes/Data/private/var/spool/postfix/active: Permission denied
+du: /System/Volumes/Data/private/var/spool/postfix/maildrop: Permission denied
+du: /System/Volumes/Data/private/var/spool/postfix/hold: Permission denied
+du: /System/Volumes/Data/private/var/spool/postfix/bounce: Permission denied
+du: /System/Volumes/Data/private/var/spool/cups: Permission denied
+du: /System/Volumes/Data/private/var/jabberd: Permission denied
+du: /System/Volumes/Data/private/var/OOPJit: Operation not permitted
+du: /System/Volumes/Data/private/var/audit: Permission denied
+du: /System/Volumes/Data/private/var/root: Permission denied
+du: /System/Volumes/Data/private/var/lib/postfix: Permission denied
+du: /System/Volumes/Data/private/var/db/appinstalld: Operation not permitted
+du: /System/Volumes/Data/private/var/db/diskimagesiod: Permission denied
+du: /System/Volumes/Data/private/var/db/ExtensibleSSO/Configuration: Operation not permitted
+du: /System/Volumes/Data/private/var/db/Spotlight: Operation not permitted
+du: /System/Volumes/Data/private/var/db/agent-deploy-shim-config: Permission denied
+du: /System/Volumes/Data/private/var/db/locationd/Library: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deployd: Permission denied
+du: /System/Volumes/Data/private/var/db/modelmanagerd: Permission denied
+du: /System/Volumes/Data/private/var/db/terminus: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-first-live-p4r15r4-retained: Permission denied
+du: /System/Volumes/Data/private/var/db/sysdiagnose/com.apple.sysdiagnose: Operation not permitted
+du: /System/Volumes/Data/private/var/db/agent-deploy-first-live-p4r12-superseded: Permission denied
+du: /System/Volumes/Data/private/var/db/DumpPanic: Operation not permitted
+du: /System/Volumes/Data/private/var/db/analyticsd: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-bootstrap: Permission denied
+du: /System/Volumes/Data/private/var/db/AppleIntelligencePlatform: Operation not permitted
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-r52a20261029: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-59e0f1f22686: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-14bb49427329: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-9f87be00cf33: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-976625d4957e: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-6fpr85qiy3aw: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-6bd27c7f8bb7: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-53b4525a85f7: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-ca7b935a60fd: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-05e18763bc11: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-e8f8a2bb891b: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-74eb01cded92: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-3jvxv3timbls: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-5805ce678209: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-ec145a5f48d8: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-a93992cd662c: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-r68a20261030: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-bfb31551c4be: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-0e1dd8d1957f: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-42f74aa76bd8: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-1a08369879c0: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-8639807b849f: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-bd3845ddebb8: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-f5cf0372ec75: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-cc6682af633e: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-f01f5faa5d88: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-c072080f2484: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-0f70b33f28d0: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-44cba8503d24: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-1f35bd8e987e: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-1a5a6287cc58: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-f0b02375e1bf: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-fad5efc2bc99: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-eda9e734b223: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-3c72c5d33f25: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-0f8d5438e84b: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-6416e6b1be3a: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-ce73ffbe20c5: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-r68b20261030: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-r60a20261029: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-642a85374468: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-5940a219dcb0: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-9b5e5a7f4ecb: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-072db049e776: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-53753c669309: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-7ef0ec10121d: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-6xp6hokybbac: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-9df8cbe77a92: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-dbb6fe216a3c: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-d3ea286c3d22: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-dd0b5b336f56: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-8e72b77ede00: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-c3c45024fb82: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-1cb619cf62bd: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-r64a20261029: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-bdb7673b8ad8: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-3aa917afc409: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-385b61a0f0c4: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-ec484112a241: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-92d60525a873: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-5a3f0525e9d0: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-cf3bddb36032: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-b31eb69ca7d5: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-c46df3b64f5f: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-76d91cc91f52: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-683870a49f80: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-4739fe6937d2: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-b82fe16878c8: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-b4b6d7ca13c8: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-04aaef316500: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-7b27cd6bbd36: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-lfeijiq7ijbn: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-r57a20261029: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-0be99df89000: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-08d5c040bcb4: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-23f3b296b984: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-27b8e980add8: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-a67ee9307160: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-5220e6dcb5dc: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-88df39740879: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-45ae0f52fe15: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-ad8c8c153ff0: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-9ee76f1672e4: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/inbox/ds-reader-pair-8973434c2ef4: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/wec-system-product-api-8788: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system/.r52-publication: Permission denied
+du: /System/Volumes/Data/private/var/db/rmd: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-review: Permission denied
+du: /System/Volumes/Data/private/var/db/knowledgegraphd: Permission denied
+du: /System/Volumes/Data/private/var/db/coreml: Permission denied
+du: /System/Volumes/Data/private/var/db/nsurlsessiond: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-first-live-p4r14r2-retained: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-shim-fixed-ds-install: Permission denied
+du: /System/Volumes/Data/private/var/db/softwareupdate/Library/WebKit: Permission denied
+du: /System/Volumes/Data/private/var/db/softwareupdate/Library/Preferences: Permission denied
+du: /System/Volumes/Data/private/var/db/fpsd: Permission denied
+du: /System/Volumes/Data/private/var/db/hidd: Permission denied
+du: /System/Volumes/Data/private/var/db/installcoordinationd: Operation not permitted
+du: /System/Volumes/Data/private/var/db/Spotlight-V100: Operation not permitted
+du: /System/Volumes/Data/private/var/db/geod: Permission denied
+du: /System/Volumes/Data/private/var/db/oah: Operation not permitted
+du: /System/Volumes/Data/private/var/db/reportmemoryexception: Permission denied
+du: /System/Volumes/Data/private/var/db/Sandbox: Permission denied
+du: /System/Volumes/Data/private/var/db/ctkd: Permission denied
+du: /System/Volumes/Data/private/var/db/lockdown: Operation not permitted
+du: /System/Volumes/Data/private/var/db/biome: Permission denied
+du: /System/Volumes/Data/private/var/db/KernelExtensionManagement/Staging: Operation not permitted
+du: /System/Volumes/Data/private/var/db/agent-deploy-shim/inbox/b7-r3-maint-20261005-387968878476: Permission denied
+du: /System/Volumes/Data/private/var/db/datadetectors: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system-driven/.r39-input-placement: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system-driven/.r36-input-placement: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system-driven/.r31-input-placement: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system-driven/.r38-input-placement: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system-driven/.r37-input-placement: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system-driven/.r32-input-placement: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system-driven/.r41-v2-input-placement: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system-driven/.r40-input-placement: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system-driven/.r35-input-placement: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system-driven/.r41-input-placement: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system-driven/.r34-input-placement: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system-driven/.r33-input-placement: Permission denied
+du: /System/Volumes/Data/private/var/db/cmiodalassistants: Permission denied
+du: /System/Volumes/Data/private/var/db/DifferentialPrivacy: Operation not permitted
+du: /System/Volumes/Data/private/var/db/assetsubscriptiond/StagingLogs: Permission denied
+du: /System/Volumes/Data/private/var/db/assetsubscriptiond/history: Permission denied
+du: /System/Volumes/Data/private/var/db/com.apple.xpc.roleaccountd.staging: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system-execution: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-system-config: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-core/releases/scheduler-failure-evidence-71132803-20261013: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-core/b7-single-entry-receipts: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-core/phase2-inputs: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-core/authsvc-codex-migration: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-core/production-transaction.lock: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-core/phase2-routing-candidates: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-core/deployments: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-first-live-p4r16r3-retained: Permission denied
+du: /System/Volumes/Data/private/var/db/dslocal/nodes/Default: Permission denied
+du: /System/Volumes/Data/private/var/db/com.apple.findmy.findmybeaconingd: Permission denied
+du: /System/Volumes/Data/private/var/db/sudo: Permission denied
+du: /System/Volumes/Data/private/var/db/nearbyd: Permission denied
+du: /System/Volumes/Data/private/var/db/MobileIdentityService: Operation not permitted
+du: /System/Volumes/Data/private/var/db/mmaintenanced: Permission denied
+du: /System/Volumes/Data/private/var/db/dhcpclient: Permission denied
+du: /System/Volumes/Data/private/var/db/timed: Permission denied
+du: /System/Volumes/Data/private/var/db/applepay: Permission denied
+du: /System/Volumes/Data/private/var/db/SystemKeys: Operation not permitted
+du: /System/Volumes/Data/private/var/db/darwindaemon: Permission denied
+du: /System/Volumes/Data/private/var/db/audiomxd/Library: Permission denied
+du: /System/Volumes/Data/private/var/db/securityagent: Permission denied
+du: /System/Volumes/Data/private/var/db/accessoryupdater: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-first-live: Permission denied
+du: /System/Volumes/Data/private/var/db/searchparty: Operation not permitted
+du: /System/Volumes/Data/private/var/db/CoreDuet/Knowledge: Operation not permitted
+du: /System/Volumes/Data/private/var/db/CoreDuet/People/Feedback/CNA: Permission denied
+du: /System/Volumes/Data/private/var/db/CoreDuet/Caches: Permission denied
+du: /System/Volumes/Data/private/var/db/ConfigurationProfiles/Store: Operation not permitted
+du: /System/Volumes/Data/private/var/db/fseventsd: Permission denied
+du: /System/Volumes/Data/private/var/db/agent-deploy-first-live-p4r9-superseded: Permission denied
+du: /System/Volumes/Data/private/var/db/caches/opendirectory: Permission denied
+du: /System/Volumes/Data/private/var/at/tabs: Permission denied
+du: /System/Volumes/Data/private/var/at/tmp: Permission denied
+du: /System/Volumes/Data/private/var/folders/km/wqrbvphj093dr9shp11jb4p80000gq/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/km/wqrbvphj093dr9shp11jb4p80000gq/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.ScreenTimeAgent: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.lockoutagent: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.progressd/ClassKit: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.exchangesync: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.LaunchServices.dv: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/dmd: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.nsurlsessiond: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.SharedWebCredentials: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.routined/dv: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/C/com.apple.WorkflowKit.BackgroundShortcutRunner.ShortcutsSandboxCache: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/C/com.apple.WebKit.WebContent.Sandbox: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/C/com.apple.siriactionsd.ShortcutsSandboxCache: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/C/com.apple.WebKit.Networking.Sandbox: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/C/com.apple.quicklook.ThumbnailsAgent/com.apple.QuickLook.thumbnailcache: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/C/com.apple.WebKit.GPU.Sandbox: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/42/l9f4kxvn5kx1w9qg5gqwd6440000l4/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/42/l9f4kxvn5kx1w9qg5gqwd6440000l4/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/0z/_pmfmsm15q5889kj52p0q0jr0000gq/0/com.apple.LaunchServices.dv: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/0z/_pmfmsm15q5889kj52p0q0jr0000gq/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/0z/_pmfmsm15q5889kj52p0q0jr0000gq/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000012m00008n/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000012m00008n/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000b000002r/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000b000002r/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000010r000086/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000010r000086/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000sm00006d/0: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000sm00006d/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000sm00006d/C: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000b400002s/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000b400002s/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n0000150000098/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n0000150000098/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000012800008k/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000012800008k/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000011h00008c/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000011h00008c/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000003000000r/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000003000000r/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000s800006_/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000s800006_/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n0000084000021/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n0000084000021/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000013800008t/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000013800008t/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000tm00006n/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000tm00006n/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000010w000087/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000010w000087/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000y800007k/0/com.apple.nsurlsessiond: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000y800007k/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000y800007k/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n0000108000082/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n0000108000082/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000016h00009m/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000016h00009m/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n0000114000089/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n0000114000089/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000003800000t/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000003800000t/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000014r000096/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000014r000096/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/0/com.apple.ScreenTimeAgent: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/0/com.apple.lockoutagent: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/0/com.apple.exchangesync: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/0/com.apple.Spotlight: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/0/dmd: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/0/com.apple.nsurlsessiond: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/0/com.apple.routined/dv: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000006w00001q/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000006w00001q/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n0000144000091/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n0000144000091/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000s0000068/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000s0000068/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000012r00008p/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000012r00008p/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000012400008j/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000012400008j/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000th00006m/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000th00006m/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000xc00007b/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000xc00007b/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000010h000084/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000010h000084/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000016800009k/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000016800009k/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000016c00009l/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000016c00009l/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000yw00007q/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000yw00007q/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000bh00002w/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n00000bh00002w/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/0/com.apple.revisiond/com.apple.revisiond.temp: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/0/com.apple.Spotlight: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/0/com.apple.LaunchServices.dv: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000011w00008g/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/zz/zyxvpxvq6csfxvn_n000011w00008g/C: Permission denied
+du: /System/Volumes/Data/private/var/folders/7t/7fn9_9pn2wzft8swqcrjr5_r0000gs/0/com.apple.LaunchServices.dv: Operation not permitted
+du: /System/Volumes/Data/private/var/folders/7t/7fn9_9pn2wzft8swqcrjr5_r0000gs/T: Permission denied
+du: /System/Volumes/Data/private/var/folders/7t/7fn9_9pn2wzft8swqcrjr5_r0000gs/C: Permission denied
+du: /System/Volumes/Data/private/var/run/mds: Permission denied
+du: /System/Volumes/Data/private/var/protected/xprotect/db: Operation not permitted
+du: /System/Volumes/Data/private/var/protected/trustd/private: Operation not permitted
+du: /System/Volumes/Data/private/var/protected/sfanalytics/FFFFEEEE-DDDD-CCCC-BBBB-AAAA00000059: Permission denied
+du: /System/Volumes/Data/private/var/protected/sfanalytics/A3D654DD-5988-43DC-8356-0DC1A3DBFE40: Permission denied
+du: /System/Volumes/Data/private/var/protected/sfanalytics/FFFFEEEE-DDDD-CCCC-BBBB-AAAA000000EB: Permission denied
+du: /System/Volumes/Data/private/var/protected/sfanalytics/FFFFEEEE-DDDD-CCCC-BBBB-AAAA00000106: Permission denied
+du: /System/Volumes/Data/private/var/protected/sfanalytics/FFFFEEEE-DDDD-CCCC-BBBB-AAAA0000001A: Permission denied
+du: /System/Volumes/Data/private/var/protected/sfanalytics/FFFFEEEE-DDDD-CCCC-BBBB-AAAA00000116: Permission denied
+du: /System/Volumes/Data/private/var/protected/sfanalytics/3E8EEAA5-49B5-45CF-BB48-CF2ECC470556: Permission denied
+du: /System/Volumes/Data/private/var/protected/sfanalytics/FFFFEEEE-DDDD-CCCC-BBBB-AAAA000000CD: Permission denied
+du: /System/Volumes/Data/private/var/protected/sfanalytics/07D56A3A-99A0-4B72-A109-944A2B02E08E: Permission denied
+du: /System/Volumes/Data/private/var/protected/sfanalytics/FFFFEEEE-DDDD-CCCC-BBBB-AAAA000000F8: Permission denied
+du: /System/Volumes/Data/private/var/protected/sfanalytics/43C5A7C2-EFC3-443C-A546-638A8ABF680A: Permission denied
+du: /System/Volumes/Data/private/var/dirs_cleaner: Permission denied
+du: /System/Volumes/Data/private/var/tmp/auth-session-inspection-v2-receipts.2aAAvw: Permission denied
+du: /System/Volumes/Data/private/var/tmp/wau-20260906-authoring-v1-r3: Permission denied
+du: /System/Volumes/Data/private/var/tmp/wau-20260906-authoring-v1-r2: Permission denied
+du: /System/Volumes/Data/private/var/tmp/auth-session-inspection-v2-receipts.SEiSBS: Permission denied
+du: /System/Volumes/Data/private/var/tmp/auth-v1-preimage-recovery-receipts.2fvVXH: Permission denied
+du: /System/Volumes/Data/private/var/tmp/wau-20260906-authoring-v4-r2: Permission denied
+du: /System/Volumes/Data/private/var/tmp/auth-v1-preimage-recovery-receipts.2d7nYv: Permission denied
+du: /System/Volumes/Data/private/var/tmp/auth-v1-preimage-recovery-receipts.xJNX8M: Permission denied
+du: /System/Volumes/Data/private/var/tmp/auth-session-inspection-v2-receipts.geP1o5: Permission denied
+du: /System/Volumes/Data/private/var/tmp/dsh-arm64-505-proof-4bee1cda-1788792478338881000/state/notification-ingress: Permission denied
+du: /System/Volumes/Data/private/var/tmp/b7-e38-provenance-root-fixture-20261019: Permission denied
+du: /System/Volumes/Data/private/var/tmp/auth-v1-preimage-recovery-receipts.rPNwft: Permission denied
+du: /System/Volumes/Data/private/var/tmp/wau-20260906-authoring-v1-r1: Permission denied
+du: /System/Volumes/Data/private/var/tmp/auth-session-inspection-v2-receipts.6IJqxb: Permission denied
+du: /System/Volumes/Data/private/var/tmp/auth-v1-preimage-recovery-receipts.QIihqZ: Permission denied
+du: /System/Volumes/Data/private/var/tmp/b7-e38-root-fd-preimage-construction-20261019: Permission denied
+du: /System/Volumes/Data/private/var/tmp/wau-20260906-authoring-v4-r1: Permission denied
+du: /System/Volumes/Data/private/var/backups: Permission denied
+du: /System/Volumes/Data/private/var/agentx: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.bMJMMw: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.UdQACw: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.bJKIBZ: Permission denied
+du: /System/Volumes/Data/private/tmp/node-compile-cache: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.Cav7tJ: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.jFbuQG: Permission denied
+du: /System/Volumes/Data/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/restore-proof/prod/control/incident-backups: Permission denied
+du: /System/Volumes/Data/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/restore-proof/prod/control/scheduler-watchdog: Permission denied
+du: /System/Volumes/Data/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/restore-proof/trusted/.cache: Permission denied
+du: /System/Volumes/Data/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/apps/cli/lib: Permission denied
+du: /System/Volumes/Data/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/external-preimage/control/incident-backups: Permission denied
+du: /System/Volumes/Data/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/external-preimage/control/scheduler-watchdog: Permission denied
+du: /System/Volumes/Data/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/fs/usr/local/libexec/agent-core/config: Permission denied
+du: /System/Volumes/Data/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/fs/usr/local/libexec/agent-core/.cache: Permission denied
+du: /System/Volumes/Data/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/fs/Users/authsvc/.agent-core: Permission denied
+du: /System/Volumes/Data/private/tmp/w7-k26-requal-r6-20261107-9t72zm46/preimage-full/.cache: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.EooWvO: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.dbGkWj: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.leCDb3: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.vEvsVC: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.1mxwnC: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.6dbiWE: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.u13r8D: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.vSRS2G: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.ed8AHM: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.8a7XeA: Permission denied
+du: /System/Volumes/Data/private/tmp/w6-state-forensics-20261106-v1: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.4Y6Q8t: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.qPpEer: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window.g7NdAP: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.qmXdc1: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window.wC7HLq: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.Wz2YHu: Permission denied
+du: /System/Volumes/Data/private/tmp/w6-state-compat: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.HWBNU8: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.73eUVR: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window.54mkre: Permission denied
+du: /System/Volumes/Data/private/tmp/fleet-binding-window-v5.QPsXUw: Permission denied
+du: /System/Volumes/Data/.DocumentRevisions-V100: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/workspace/artifacts/ac549-eacces-repro/locked: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/workspace/project/dsh-agent-core/"/Users/yanfenma/.recovery-backups/workflow-recovery-20260821T145031Z": Permission denied
+du: /System/Volumes/Data/Users/yanfenma/.recovery-backups/workflow-recovery-20260821T145031Z/trusted-agent-core/config: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/.openclaw/workspace-8f73b419-fbe6-462d-ab15-9c0ecf971834: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/.openclaw/workspace-88ddf8a8-36d5-447a-8da8-f0e8791fb9fb: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/.openclaw/agents/1254361d-69f6-4b3c-8211-380e5f09d29c: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/.openclaw/agents/2ce932dd-6c02-4579-969b-c2d4762ca0a2: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/.openclaw/agents/8f73b419-fbe6-462d-ab15-9c0ecf971834: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/.openclaw/agents/cac8eb99-c18b-4c55-8d61-72e27a35968a: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/.openclaw/agents/88ddf8a8-36d5-447a-8da8-f0e8791fb9fb: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/.openclaw/workspace-cac8eb99-c18b-4c55-8d61-72e27a35968a: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/.openclaw/extensions/openviking/node_modules/.cache/jiti: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/.openclaw/extensions/openclaw-tavily/node_modules/.cache/jiti: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/.openclaw/extensions/openclaw-lark/node_modules/.cache/jiti: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/.openclaw/workspace-1254361d-69f6-4b3c-8211-380e5f09d29c: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/.openclaw/workspace-2ce932dd-6c02-4579-969b-c2d4762ca0a2: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/.openclaw/credentials: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round71-owned/publication/supervisor-phase-a-once: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round71-owned/publication/supervisor-phase-a-once.attempt-retired-080153: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round54-owned/TRANSACTION-EVIDENCE: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round54-owned/PREIMAGE: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round54-owned/native-evidence/native: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round54-owned/native-evidence/prepare: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round72-owned/publication/supervisor-phase-a-once: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-7eauyy97: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-cmu7mqg1: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-thactkeq: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-288ccd0r: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-m9iczv27: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-h26jhh0o: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/tree-wpmzurqi: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-k75u2cde: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-ac4xdyhv: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-p7dmo5r1: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/placement-stage: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round61-owned/admission-evidence: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round61-owned/native-evidence/native: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round61-owned/native-evidence/prepare: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round61-owned/T2-original-wrapper: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round61-owned/phase1-transaction: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round61-owned/phase2-transaction: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round61-owned/retained-r181: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round63-owned/PREIMAGE: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round65-owned/superseded-initial-stop: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round65-owned/publication65/run-once: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round65-owned/MARKER-PREIMAGE: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round65-owned/marker65/PREIMAGE: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round65-owned/marker65/material: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round62-owned/T2-original-wrapper: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round62-owned/authority-evidence: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round59-owned/admission-evidence: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round59-owned/PREIMAGE: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round59-owned/ENGINE-READBACK: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round59-owned/native-evidence/native: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round59-owned/native-evidence/prepare: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round59-owned/phase2-materialized: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round59-owned/phase1-transaction: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round59-owned/phase2-transaction: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round64-owned/publication/supervisor-phase-a-once: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round64-owned/BACKUP-CENSUS-ATTEMPT-v3-incomplete: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round64-owned/BACKUP-CENSUS-ATTEMPT-v2: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round64-owned/BACKUP-ARCHIVE: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round66-owned/original-transaction-evidence: Permission denied
+du: /System/Volumes/Data/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round66-owned/m3/old-marker-preimage: Permission denied
+du: /System/Volumes/Data/Users/Shared/auth-session-inspection-v2-reactivation-authority: Permission denied
+du: /System/Volumes/Data/Users/Shared/auth-hr-session-inspection-grant-v1-r2-authority: Permission denied
+du: /System/Volumes/Data/Users/Shared/oc-canary-runtime/.openclaw/agents: Permission denied
+du: /System/Volumes/Data/Users/Shared/auth-session-trace-readiness-v1-authority: Permission denied
+du: /System/Volumes/Data/Users/Shared/auth-hr-session-inspection-grant-v1-r2-receipts: Permission denied
+du: /System/Volumes/Data/Users/Shared/auth-v1-preimage-recovery-authority: Permission denied
+du: /System/Volumes/Data/Users/root: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/.b7-r27-op7-products-disposal-tx-762385b2a530f581f78e87f1: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/.huanhuan-v4-backup-20260903T042927Z: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/.b7-six-link-option-b-tx-f50c4824612e4479b040c4f8b0baa358: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/.b7-r27-prestage-disposal-tx-21a1f7d0278b80b7723c73bf: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_305c3109a22e46988e71807a269ca3e2/sessions: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_305c3109a22e46988e71807a269ca3e2/profiles/node_modules/dsh-codex.realdir-bak-20261025-080742-17714: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_305c3109a22e46988e71807a269ca3e2/profiles/node_modules/dsh-codex.realdir-bak-20261025-081322-11273: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_305c3109a22e46988e71807a269ca3e2/profiles/node_modules/dsh-codex.realdir-bak-20261028-220551-13367: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_305c3109a22e46988e71807a269ca3e2/profiles/node_modules/dsh-codex.realdir-bak-20261028-223626-2330: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_305c3109a22e46988e71807a269ca3e2/profiles/node_modules/dsh-codex.realdir-bak-20261028-230144-5075: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_edc319c8f4f6438f959cf6a127d12539/profiles/node_modules/dsh-codex.realdir-bak-20261025-080742-23610: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_edc319c8f4f6438f959cf6a127d12539/profiles/node_modules/dsh-codex.realdir-bak-20261028-223626-17739: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_edc319c8f4f6438f959cf6a127d12539/profiles/node_modules/dsh-codex.realdir-bak-20261028-220552-3205: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_edc319c8f4f6438f959cf6a127d12539/profiles/node_modules/dsh-codex.realdir-bak-20261028-230145-11831: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_edc319c8f4f6438f959cf6a127d12539/profiles/node_modules/dsh-codex.realdir-bak-20261025-081724-1380: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_27df27d350304c5da1edd7149db3a531/profiles/node_modules/dsh-codex.realdir-bak-20261028-221403-4665: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_27df27d350304c5da1edd7149db3a531/profiles/node_modules/dsh-codex.realdir-bak-20261028-231557-32623: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_27df27d350304c5da1edd7149db3a531/profiles/node_modules/dsh-codex.realdir-bak-20261025-081122-17648: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_27df27d350304c5da1edd7149db3a531/profiles/node_modules/dsh-codex.realdir-bak-20261025-080742-10817: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_b7d8ea383b9f4e2abfb9f1c9a7c466d5/profiles/node_modules/dsh-codex.realdir-bak-20261025-080742-25433: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_b7d8ea383b9f4e2abfb9f1c9a7c466d5/profiles/node_modules/dsh-codex.realdir-bak-20261028-231557-22775: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_b7d8ea383b9f4e2abfb9f1c9a7c466d5/profiles/node_modules/dsh-codex.realdir-bak-20261028-221403-2703: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_b7d8ea383b9f4e2abfb9f1c9a7c466d5/profiles/node_modules/dsh-codex.realdir-bak-20261025-081323-3783: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/homes/agt_cto-agent.pre-permrepair-20260822-061954: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/.b7-r27-op7-products-disposal-tx-7d724cd326c8313a9d6bcfcf: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/scheduler: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/.b7-r27-e4b-products-disposal-tx-b60aeff0c398385319061fd1: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/.huanhuan-v5-backup-20260903T044547Z: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/logs: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/.b7-r27-homecodex-disposal-tx-50defe9ecdb398824ba20251: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/.huanhuan-v3-backup-20260903T041949Z: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/.huanhuan-v6-backup-20260903T045635Z: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/bindings: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/.b7-r27-binlinks-disposal-tx-76324692c07fa9eb7c8e5dd8: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/.b7-r27-deadlock-disposal-tx-16dd2a12ff8ec1053d21d910: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/notification-ingress: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/.huanhuan-v7-backup-20260903T051712Z: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/.b7-r27-e4-products-disposal-tx-b0858ae7239b990ea38dc981: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/control: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/.huanhuan-v8-backup-20260903T053611Z: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.agent-core/.b7-r27-homecodex-disposal2-tx-721965892a782e3aaaf8a290: Permission denied
+du: /System/Volumes/Data/Users/authsvc/.dsh: Permission denied
+du: /System/Volumes/Data/.exclave/5d03c7a3-ae8a-4723-99d0-d5d8f238cb02/MobileAssetsMeta: Permission denied
+du: /System/Volumes/Data/.exclave/5d03c7a3-ae8a-4723-99d0-d5d8f238cb02/catalogue: Permission denied
+du: /private/etc/cups/certs: Permission denied
+du: /private/var/networkd/Library: Permission denied
+du: /private/var/networkd/db: Operation not permitted
+du: /private/var/install: Permission denied
+du: /private/var/ma: Permission denied
+du: /private/var/spool/mqueue: Permission denied
+du: /private/var/spool/postfix/saved: Permission denied
+du: /private/var/spool/postfix/trace: Permission denied
+du: /private/var/spool/postfix/defer: Permission denied
+du: /private/var/spool/postfix/flush: Permission denied
+du: /private/var/spool/postfix/deferred: Permission denied
+du: /private/var/spool/postfix/corrupt: Permission denied
+du: /private/var/spool/postfix/public: Permission denied
+du: /private/var/spool/postfix/private: Permission denied
+du: /private/var/spool/postfix/incoming: Permission denied
+du: /private/var/spool/postfix/active: Permission denied
+du: /private/var/spool/postfix/maildrop: Permission denied
+du: /private/var/spool/postfix/hold: Permission denied
+du: /private/var/spool/postfix/bounce: Permission denied
+du: /private/var/spool/cups: Permission denied
+du: /private/var/jabberd: Permission denied
+du: /private/var/OOPJit: Operation not permitted
+du: /private/var/audit: Permission denied
+du: /private/var/root: Permission denied
+du: /private/var/lib/postfix: Permission denied
+du: /private/var/db/appinstalld: Operation not permitted
+du: /private/var/db/diskimagesiod: Permission denied
+du: /private/var/db/ExtensibleSSO/Configuration: Operation not permitted
+du: /private/var/db/Spotlight: Operation not permitted
+du: /private/var/db/agent-deploy-shim-config: Permission denied
+du: /private/var/db/locationd/Library: Permission denied
+du: /private/var/db/agent-deployd: Permission denied
+du: /private/var/db/modelmanagerd: Permission denied
+du: /private/var/db/terminus: Permission denied
+du: /private/var/db/agent-deploy-first-live-p4r15r4-retained: Permission denied
+du: /private/var/db/sysdiagnose/com.apple.sysdiagnose: Operation not permitted
+du: /private/var/db/agent-deploy-first-live-p4r12-superseded: Permission denied
+du: /private/var/db/DumpPanic: Operation not permitted
+du: /private/var/db/analyticsd: Permission denied
+du: /private/var/db/agent-deploy-bootstrap: Permission denied
+du: /private/var/db/AppleIntelligencePlatform: Operation not permitted
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-r52a20261029: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-59e0f1f22686: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-14bb49427329: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-9f87be00cf33: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-976625d4957e: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-6fpr85qiy3aw: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-6bd27c7f8bb7: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-53b4525a85f7: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-ca7b935a60fd: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-05e18763bc11: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-e8f8a2bb891b: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-74eb01cded92: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-3jvxv3timbls: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-5805ce678209: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-ec145a5f48d8: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-a93992cd662c: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-r68a20261030: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-bfb31551c4be: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-0e1dd8d1957f: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-42f74aa76bd8: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-1a08369879c0: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-8639807b849f: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-bd3845ddebb8: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-f5cf0372ec75: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-cc6682af633e: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-f01f5faa5d88: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-c072080f2484: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-0f70b33f28d0: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-44cba8503d24: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-1f35bd8e987e: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-1a5a6287cc58: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-f0b02375e1bf: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-fad5efc2bc99: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-eda9e734b223: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-3c72c5d33f25: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-0f8d5438e84b: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-6416e6b1be3a: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-ce73ffbe20c5: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-r68b20261030: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-r60a20261029: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-642a85374468: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-5940a219dcb0: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-9b5e5a7f4ecb: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-072db049e776: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-53753c669309: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-7ef0ec10121d: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-6xp6hokybbac: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-9df8cbe77a92: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-dbb6fe216a3c: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-d3ea286c3d22: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-dd0b5b336f56: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-8e72b77ede00: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-c3c45024fb82: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-1cb619cf62bd: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-r64a20261029: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-bdb7673b8ad8: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-3aa917afc409: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-385b61a0f0c4: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-ec484112a241: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-92d60525a873: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-5a3f0525e9d0: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-cf3bddb36032: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-b31eb69ca7d5: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-c46df3b64f5f: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-76d91cc91f52: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-683870a49f80: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-4739fe6937d2: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-b82fe16878c8: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-b4b6d7ca13c8: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-04aaef316500: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-7b27cd6bbd36: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-lfeijiq7ijbn: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-r57a20261029: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-0be99df89000: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-08d5c040bcb4: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-23f3b296b984: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-27b8e980add8: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-a67ee9307160: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-5220e6dcb5dc: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-88df39740879: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-45ae0f52fe15: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-ad8c8c153ff0: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-9ee76f1672e4: Permission denied
+du: /private/var/db/agent-deploy-system/inbox/ds-reader-pair-8973434c2ef4: Permission denied
+du: /private/var/db/agent-deploy-system/wec-system-product-api-8788: Permission denied
+du: /private/var/db/agent-deploy-system/.r52-publication: Permission denied
+du: /private/var/db/rmd: Permission denied
+du: /private/var/db/agent-deploy-review: Permission denied
+du: /private/var/db/knowledgegraphd: Permission denied
+du: /private/var/db/coreml: Permission denied
+du: /private/var/db/nsurlsessiond: Permission denied
+du: /private/var/db/agent-deploy-first-live-p4r14r2-retained: Permission denied
+du: /private/var/db/agent-deploy-shim-fixed-ds-install: Permission denied
+du: /private/var/db/softwareupdate/Library/WebKit: Permission denied
+du: /private/var/db/softwareupdate/Library/Preferences: Permission denied
+du: /private/var/db/fpsd: Permission denied
+du: /private/var/db/hidd: Permission denied
+du: /private/var/db/installcoordinationd: Operation not permitted
+du: /private/var/db/Spotlight-V100: Operation not permitted
+du: /private/var/db/geod: Permission denied
+du: /private/var/db/oah: Operation not permitted
+du: /private/var/db/reportmemoryexception: Permission denied
+du: /private/var/db/Sandbox: Permission denied
+du: /private/var/db/ctkd: Permission denied
+du: /private/var/db/lockdown: Operation not permitted
+du: /private/var/db/biome: Permission denied
+du: /private/var/db/KernelExtensionManagement/Staging: Operation not permitted
+du: /private/var/db/agent-deploy-shim/inbox/b7-r3-maint-20261005-387968878476: Permission denied
+du: /private/var/db/datadetectors: Permission denied
+du: /private/var/db/agent-deploy-system-driven/.r39-input-placement: Permission denied
+du: /private/var/db/agent-deploy-system-driven/.r36-input-placement: Permission denied
+du: /private/var/db/agent-deploy-system-driven/.r31-input-placement: Permission denied
+du: /private/var/db/agent-deploy-system-driven/.r38-input-placement: Permission denied
+du: /private/var/db/agent-deploy-system-driven/.r37-input-placement: Permission denied
+du: /private/var/db/agent-deploy-system-driven/.r32-input-placement: Permission denied
+du: /private/var/db/agent-deploy-system-driven/.r41-v2-input-placement: Permission denied
+du: /private/var/db/agent-deploy-system-driven/.r40-input-placement: Permission denied
+du: /private/var/db/agent-deploy-system-driven/.r35-input-placement: Permission denied
+du: /private/var/db/agent-deploy-system-driven/.r41-input-placement: Permission denied
+du: /private/var/db/agent-deploy-system-driven/.r34-input-placement: Permission denied
+du: /private/var/db/agent-deploy-system-driven/.r33-input-placement: Permission denied
+du: /private/var/db/cmiodalassistants: Permission denied
+du: /private/var/db/DifferentialPrivacy: Operation not permitted
+du: /private/var/db/assetsubscriptiond/StagingLogs: Permission denied
+du: /private/var/db/assetsubscriptiond/history: Permission denied
+du: /private/var/db/com.apple.xpc.roleaccountd.staging: Permission denied
+du: /private/var/db/agent-deploy-system-execution: Permission denied
+du: /private/var/db/agent-deploy-system-config: Permission denied
+du: /private/var/db/agent-core/releases/scheduler-failure-evidence-71132803-20261013: Permission denied
+du: /private/var/db/agent-core/b7-single-entry-receipts: Permission denied
+du: /private/var/db/agent-core/phase2-inputs: Permission denied
+du: /private/var/db/agent-core/authsvc-codex-migration: Permission denied
+du: /private/var/db/agent-core/production-transaction.lock: Permission denied
+du: /private/var/db/agent-core/phase2-routing-candidates: Permission denied
+du: /private/var/db/agent-core/deployments: Permission denied
+du: /private/var/db/agent-deploy-first-live-p4r16r3-retained: Permission denied
+du: /private/var/db/dslocal/nodes/Default: Permission denied
+du: /private/var/db/com.apple.findmy.findmybeaconingd: Permission denied
+du: /private/var/db/sudo: Permission denied
+du: /private/var/db/nearbyd: Permission denied
+du: /private/var/db/MobileIdentityService: Operation not permitted
+du: /private/var/db/mmaintenanced: Permission denied
+du: /private/var/db/dhcpclient: Permission denied
+du: /private/var/db/timed: Permission denied
+du: /private/var/db/applepay: Permission denied
+du: /private/var/db/SystemKeys: Operation not permitted
+du: /private/var/db/darwindaemon: Permission denied
+du: /private/var/db/audiomxd/Library: Permission denied
+du: /private/var/db/securityagent: Permission denied
+du: /private/var/db/accessoryupdater: Permission denied
+du: /private/var/db/agent-deploy-first-live: Permission denied
+du: /private/var/db/searchparty: Operation not permitted
+du: /private/var/db/CoreDuet/Knowledge: Operation not permitted
+du: /private/var/db/CoreDuet/People/Feedback/CNA: Permission denied
+du: /private/var/db/CoreDuet/Caches: Permission denied
+du: /private/var/db/ConfigurationProfiles/Store: Operation not permitted
+du: /private/var/db/fseventsd: Permission denied
+du: /private/var/db/agent-deploy-first-live-p4r9-superseded: Permission denied
+du: /private/var/db/caches/opendirectory: Permission denied
+du: /private/var/at/tabs: Permission denied
+du: /private/var/at/tmp: Permission denied
+du: /private/var/folders/km/wqrbvphj093dr9shp11jb4p80000gq/T: Permission denied
+du: /private/var/folders/km/wqrbvphj093dr9shp11jb4p80000gq/C: Permission denied
+du: /private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.ScreenTimeAgent: Operation not permitted
+du: /private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.lockoutagent: Operation not permitted
+du: /private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.progressd/ClassKit: Operation not permitted
+du: /private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.exchangesync: Operation not permitted
+du: /private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.LaunchServices.dv: Operation not permitted
+du: /private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/dmd: Operation not permitted
+du: /private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.nsurlsessiond: Operation not permitted
+du: /private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.SharedWebCredentials: Operation not permitted
+du: /private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/0/com.apple.routined/dv: Operation not permitted
+du: /private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/C/com.apple.WorkflowKit.BackgroundShortcutRunner.ShortcutsSandboxCache: Operation not permitted
+du: /private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/C/com.apple.WebKit.WebContent.Sandbox: Operation not permitted
+du: /private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/C/com.apple.siriactionsd.ShortcutsSandboxCache: Operation not permitted
+du: /private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/C/com.apple.WebKit.Networking.Sandbox: Operation not permitted
+du: /private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/C/com.apple.quicklook.ThumbnailsAgent/com.apple.QuickLook.thumbnailcache: Operation not permitted
+du: /private/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/C/com.apple.WebKit.GPU.Sandbox: Operation not permitted
+du: /private/var/folders/42/l9f4kxvn5kx1w9qg5gqwd6440000l4/T: Permission denied
+du: /private/var/folders/42/l9f4kxvn5kx1w9qg5gqwd6440000l4/C: Permission denied
+du: /private/var/folders/0z/_pmfmsm15q5889kj52p0q0jr0000gq/0/com.apple.LaunchServices.dv: Operation not permitted
+du: /private/var/folders/0z/_pmfmsm15q5889kj52p0q0jr0000gq/T: Permission denied
+du: /private/var/folders/0z/_pmfmsm15q5889kj52p0q0jr0000gq/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000012m00008n/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000012m00008n/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000b000002r/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000b000002r/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000010r000086/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000010r000086/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000sm00006d/0: Operation not permitted
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000sm00006d/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000sm00006d/C: Operation not permitted
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000b400002s/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000b400002s/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n0000150000098/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n0000150000098/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000012800008k/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000012800008k/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000011h00008c/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000011h00008c/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000003000000r/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000003000000r/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000s800006_/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000s800006_/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n0000084000021/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n0000084000021/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000013800008t/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000013800008t/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000tm00006n/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000tm00006n/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000010w000087/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000010w000087/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000y800007k/0/com.apple.nsurlsessiond: Operation not permitted
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000y800007k/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000y800007k/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n0000108000082/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n0000108000082/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000016h00009m/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000016h00009m/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n0000114000089/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n0000114000089/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000003800000t/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000003800000t/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000014r000096/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000014r000096/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/0/com.apple.ScreenTimeAgent: Operation not permitted
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/0/com.apple.lockoutagent: Operation not permitted
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/0/com.apple.exchangesync: Operation not permitted
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/0/com.apple.Spotlight: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/0/dmd: Operation not permitted
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/0/com.apple.nsurlsessiond: Operation not permitted
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/0/com.apple.routined/dv: Operation not permitted
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000z000007r/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000006w00001q/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000006w00001q/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n0000144000091/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n0000144000091/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000s0000068/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000s0000068/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000012r00008p/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000012r00008p/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000012400008j/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000012400008j/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000th00006m/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000th00006m/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000xc00007b/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000xc00007b/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000010h000084/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000010h000084/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000016800009k/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000016800009k/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000016c00009l/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000016c00009l/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000yw00007q/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000yw00007q/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000bh00002w/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n00000bh00002w/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/0/com.apple.revisiond/com.apple.revisiond.temp: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/0/com.apple.Spotlight: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/0/com.apple.LaunchServices.dv: Operation not permitted
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/C: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000011w00008g/T: Permission denied
+du: /private/var/folders/zz/zyxvpxvq6csfxvn_n000011w00008g/C: Permission denied
+du: /private/var/folders/7t/7fn9_9pn2wzft8swqcrjr5_r0000gs/0/com.apple.LaunchServices.dv: Operation not permitted
+du: /private/var/folders/7t/7fn9_9pn2wzft8swqcrjr5_r0000gs/T: Permission denied
+du: /private/var/folders/7t/7fn9_9pn2wzft8swqcrjr5_r0000gs/C: Permission denied
+du: /private/var/run/mds: Permission denied
+du: /private/var/protected/xprotect/db: Operation not permitted
+du: /private/var/protected/trustd/private: Operation not permitted
+du: /private/var/protected/sfanalytics/FFFFEEEE-DDDD-CCCC-BBBB-AAAA00000059: Permission denied
+du: /private/var/protected/sfanalytics/A3D654DD-5988-43DC-8356-0DC1A3DBFE40: Permission denied
+du: /private/var/protected/sfanalytics/FFFFEEEE-DDDD-CCCC-BBBB-AAAA000000EB: Permission denied
+du: /private/var/protected/sfanalytics/FFFFEEEE-DDDD-CCCC-BBBB-AAAA00000106: Permission denied
+du: /private/var/protected/sfanalytics/FFFFEEEE-DDDD-CCCC-BBBB-AAAA0000001A: Permission denied
+du: /private/var/protected/sfanalytics/FFFFEEEE-DDDD-CCCC-BBBB-AAAA00000116: Permission denied
+du: /private/var/protected/sfanalytics/3E8EEAA5-49B5-45CF-BB48-CF2ECC470556: Permission denied
+du: /private/var/protected/sfanalytics/FFFFEEEE-DDDD-CCCC-BBBB-AAAA000000CD: Permission denied
+du: /private/var/protected/sfanalytics/07D56A3A-99A0-4B72-A109-944A2B02E08E: Permission denied
+du: /private/var/protected/sfanalytics/FFFFEEEE-DDDD-CCCC-BBBB-AAAA000000F8: Permission denied
+du: /private/var/protected/sfanalytics/43C5A7C2-EFC3-443C-A546-638A8ABF680A: Permission denied
+du: /private/var/dirs_cleaner: Permission denied
+du: /private/var/tmp/auth-session-inspection-v2-receipts.2aAAvw: Permission denied
+du: /private/var/tmp/wau-20260906-authoring-v1-r3: Permission denied
+du: /private/var/tmp/wau-20260906-authoring-v1-r2: Permission denied
+du: /private/var/tmp/auth-session-inspection-v2-receipts.SEiSBS: Permission denied
+du: /private/var/tmp/auth-v1-preimage-recovery-receipts.2fvVXH: Permission denied
+du: /private/var/tmp/wau-20260906-authoring-v4-r2: Permission denied
+du: /private/var/tmp/auth-v1-preimage-recovery-receipts.2d7nYv: Permission denied
+du: /private/var/tmp/auth-v1-preimage-recovery-receipts.xJNX8M: Permission denied
+du: /private/var/tmp/auth-session-inspection-v2-receipts.geP1o5: Permission denied
+du: /private/var/tmp/dsh-arm64-505-proof-4bee1cda-1788792478338881000/state/notification-ingress: Permission denied
+du: /private/var/tmp/b7-e38-provenance-root-fixture-20261019: Permission denied
+du: /private/var/tmp/auth-v1-preimage-recovery-receipts.rPNwft: Permission denied
+du: /private/var/tmp/wau-20260906-authoring-v1-r1: Permission denied
+du: /private/var/tmp/auth-session-inspection-v2-receipts.6IJqxb: Permission denied
+du: /private/var/tmp/auth-v1-preimage-recovery-receipts.QIihqZ: Permission denied
+du: /private/var/tmp/b7-e38-root-fd-preimage-construction-20261019: Permission denied
+du: /private/var/tmp/wau-20260906-authoring-v4-r1: Permission denied
+du: /private/var/backups: Permission denied
+du: /private/var/agentx: Permission denied
+du: /private/tmp/fleet-binding-window-v5.bMJMMw: Permission denied
+du: /private/tmp/fleet-binding-window-v5.UdQACw: Permission denied
+du: /private/tmp/fleet-binding-window-v5.bJKIBZ: Permission denied
+du: /private/tmp/node-compile-cache: Permission denied
+du: /private/tmp/fleet-binding-window-v5.Cav7tJ: Permission denied
+du: /private/tmp/fleet-binding-window-v5.jFbuQG: Permission denied
+du: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/restore-proof/prod/control/incident-backups: Permission denied
+du: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/restore-proof/prod/control/scheduler-watchdog: Permission denied
+du: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/restore-proof/trusted/.cache: Permission denied
+du: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/harness-source/apps/cli/lib: Permission denied
+du: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/external-preimage/control/incident-backups: Permission denied
+du: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/external-preimage/control/scheduler-watchdog: Permission denied
+du: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/fs/usr/local/libexec/agent-core/config: Permission denied
+du: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/fs/usr/local/libexec/agent-core/.cache: Permission denied
+du: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/fs/Users/authsvc/.agent-core: Permission denied
+du: /private/tmp/w7-k26-requal-r6-20261107-9t72zm46/preimage-full/.cache: Permission denied
+du: /private/tmp/fleet-binding-window-v5.EooWvO: Permission denied
+du: /private/tmp/fleet-binding-window-v5.dbGkWj: Permission denied
+du: /private/tmp/fleet-binding-window-v5.leCDb3: Permission denied
+du: /private/tmp/fleet-binding-window-v5.vEvsVC: Permission denied
+du: /private/tmp/fleet-binding-window-v5.1mxwnC: Permission denied
+du: /private/tmp/fleet-binding-window-v5.6dbiWE: Permission denied
+du: /private/tmp/fleet-binding-window-v5.u13r8D: Permission denied
+du: /private/tmp/fleet-binding-window-v5.vSRS2G: Permission denied
+du: /private/tmp/fleet-binding-window-v5.ed8AHM: Permission denied
+du: /private/tmp/fleet-binding-window-v5.8a7XeA: Permission denied
+du: /private/tmp/w6-state-forensics-20261106-v1: Permission denied
+du: /private/tmp/fleet-binding-window-v5.4Y6Q8t: Permission denied
+du: /private/tmp/fleet-binding-window-v5.qPpEer: Permission denied
+du: /private/tmp/fleet-binding-window.g7NdAP: Permission denied
+du: /private/tmp/fleet-binding-window-v5.qmXdc1: Permission denied
+du: /private/tmp/fleet-binding-window.wC7HLq: Permission denied
+du: /private/tmp/fleet-binding-window-v5.Wz2YHu: Permission denied
+du: /private/tmp/w6-state-compat: Permission denied
+du: /private/tmp/fleet-binding-window-v5.HWBNU8: Permission denied
+du: /private/tmp/fleet-binding-window-v5.73eUVR: Permission denied
+du: /private/tmp/fleet-binding-window.54mkre: Permission denied
+du: /private/tmp/fleet-binding-window-v5.QPsXUw: Permission denied
+du: /Users/yanfenma/workspace/artifacts/ac549-eacces-repro/locked: Permission denied
+du: /Users/yanfenma/workspace/project/dsh-agent-core/"/Users/yanfenma/.recovery-backups/workflow-recovery-20260821T145031Z": Permission denied
+du: /Users/yanfenma/.recovery-backups/workflow-recovery-20260821T145031Z/trusted-agent-core/config: Permission denied
+du: /Users/yanfenma/.openclaw/workspace-8f73b419-fbe6-462d-ab15-9c0ecf971834: Permission denied
+du: /Users/yanfenma/.openclaw/workspace-88ddf8a8-36d5-447a-8da8-f0e8791fb9fb: Permission denied
+du: /Users/yanfenma/.openclaw/agents/1254361d-69f6-4b3c-8211-380e5f09d29c: Permission denied
+du: /Users/yanfenma/.openclaw/agents/2ce932dd-6c02-4579-969b-c2d4762ca0a2: Permission denied
+du: /Users/yanfenma/.openclaw/agents/8f73b419-fbe6-462d-ab15-9c0ecf971834: Permission denied
+du: /Users/yanfenma/.openclaw/agents/cac8eb99-c18b-4c55-8d61-72e27a35968a: Permission denied
+du: /Users/yanfenma/.openclaw/agents/88ddf8a8-36d5-447a-8da8-f0e8791fb9fb: Permission denied
+du: /Users/yanfenma/.openclaw/workspace-cac8eb99-c18b-4c55-8d61-72e27a35968a: Permission denied
+du: /Users/yanfenma/.openclaw/extensions/openviking/node_modules/.cache/jiti: Permission denied
+du: /Users/yanfenma/.openclaw/extensions/openclaw-tavily/node_modules/.cache/jiti: Permission denied
+du: /Users/yanfenma/.openclaw/extensions/openclaw-lark/node_modules/.cache/jiti: Permission denied
+du: /Users/yanfenma/.openclaw/workspace-1254361d-69f6-4b3c-8211-380e5f09d29c: Permission denied
+du: /Users/yanfenma/.openclaw/workspace-2ce932dd-6c02-4579-969b-c2d4762ca0a2: Permission denied
+du: /Users/yanfenma/.openclaw/credentials: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round71-owned/publication/supervisor-phase-a-once: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round71-owned/publication/supervisor-phase-a-once.attempt-retired-080153: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round54-owned/TRANSACTION-EVIDENCE: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round54-owned/PREIMAGE: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round54-owned/native-evidence/native: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round54-owned/native-evidence/prepare: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round72-owned/publication/supervisor-phase-a-once: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-7eauyy97: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-cmu7mqg1: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-thactkeq: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-288ccd0r: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-m9iczv27: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-h26jhh0o: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/tree-wpmzurqi: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-k75u2cde: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-ac4xdyhv: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/publication/tests/case-p7dmo5r1: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round56-owned/placement-stage: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round61-owned/admission-evidence: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round61-owned/native-evidence/native: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round61-owned/native-evidence/prepare: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round61-owned/T2-original-wrapper: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round61-owned/phase1-transaction: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round61-owned/phase2-transaction: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round61-owned/retained-r181: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round63-owned/PREIMAGE: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round65-owned/superseded-initial-stop: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round65-owned/publication65/run-once: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round65-owned/MARKER-PREIMAGE: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round65-owned/marker65/PREIMAGE: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round65-owned/marker65/material: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round62-owned/T2-original-wrapper: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round62-owned/authority-evidence: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round59-owned/admission-evidence: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round59-owned/PREIMAGE: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round59-owned/ENGINE-READBACK: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round59-owned/native-evidence/native: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round59-owned/native-evidence/prepare: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round59-owned/phase2-materialized: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round59-owned/phase1-transaction: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round59-owned/phase2-transaction: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round64-owned/publication/supervisor-phase-a-once: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round64-owned/BACKUP-CENSUS-ATTEMPT-v3-incomplete: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round64-owned/BACKUP-CENSUS-ATTEMPT-v2: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round64-owned/BACKUP-ARCHIVE: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round66-owned/original-transaction-evidence: Permission denied
+du: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r16-24-receipts/r63v4-continuation/s3round66-owned/m3/old-marker-preimage: Permission denied
+du: /Users/Shared/auth-session-inspection-v2-reactivation-authority: Permission denied
+du: /Users/Shared/auth-hr-session-inspection-grant-v1-r2-authority: Permission denied
+du: /Users/Shared/oc-canary-runtime/.openclaw/agents: Permission denied
+du: /Users/Shared/auth-session-trace-readiness-v1-authority: Permission denied
+du: /Users/Shared/auth-hr-session-inspection-grant-v1-r2-receipts: Permission denied
+du: /Users/Shared/auth-v1-preimage-recovery-authority: Permission denied
+du: /Users/root: Permission denied
+du: /Users/authsvc/.agent-core/.b7-r27-op7-products-disposal-tx-762385b2a530f581f78e87f1: Permission denied
+du: /Users/authsvc/.agent-core/.huanhuan-v4-backup-20260903T042927Z: Permission denied
+du: /Users/authsvc/.agent-core/.b7-six-link-option-b-tx-f50c4824612e4479b040c4f8b0baa358: Permission denied
+du: /Users/authsvc/.agent-core/.b7-r27-prestage-disposal-tx-21a1f7d0278b80b7723c73bf: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_305c3109a22e46988e71807a269ca3e2/sessions: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_305c3109a22e46988e71807a269ca3e2/profiles/node_modules/dsh-codex.realdir-bak-20261025-080742-17714: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_305c3109a22e46988e71807a269ca3e2/profiles/node_modules/dsh-codex.realdir-bak-20261025-081322-11273: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_305c3109a22e46988e71807a269ca3e2/profiles/node_modules/dsh-codex.realdir-bak-20261028-220551-13367: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_305c3109a22e46988e71807a269ca3e2/profiles/node_modules/dsh-codex.realdir-bak-20261028-223626-2330: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_305c3109a22e46988e71807a269ca3e2/profiles/node_modules/dsh-codex.realdir-bak-20261028-230144-5075: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_edc319c8f4f6438f959cf6a127d12539/profiles/node_modules/dsh-codex.realdir-bak-20261025-080742-23610: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_edc319c8f4f6438f959cf6a127d12539/profiles/node_modules/dsh-codex.realdir-bak-20261028-223626-17739: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_edc319c8f4f6438f959cf6a127d12539/profiles/node_modules/dsh-codex.realdir-bak-20261028-220552-3205: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_edc319c8f4f6438f959cf6a127d12539/profiles/node_modules/dsh-codex.realdir-bak-20261028-230145-11831: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_edc319c8f4f6438f959cf6a127d12539/profiles/node_modules/dsh-codex.realdir-bak-20261025-081724-1380: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_27df27d350304c5da1edd7149db3a531/profiles/node_modules/dsh-codex.realdir-bak-20261028-221403-4665: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_27df27d350304c5da1edd7149db3a531/profiles/node_modules/dsh-codex.realdir-bak-20261028-231557-32623: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_27df27d350304c5da1edd7149db3a531/profiles/node_modules/dsh-codex.realdir-bak-20261025-081122-17648: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_27df27d350304c5da1edd7149db3a531/profiles/node_modules/dsh-codex.realdir-bak-20261025-080742-10817: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_b7d8ea383b9f4e2abfb9f1c9a7c466d5/profiles/node_modules/dsh-codex.realdir-bak-20261025-080742-25433: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_b7d8ea383b9f4e2abfb9f1c9a7c466d5/profiles/node_modules/dsh-codex.realdir-bak-20261028-231557-22775: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_b7d8ea383b9f4e2abfb9f1c9a7c466d5/profiles/node_modules/dsh-codex.realdir-bak-20261028-221403-2703: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_b7d8ea383b9f4e2abfb9f1c9a7c466d5/profiles/node_modules/dsh-codex.realdir-bak-20261025-081323-3783: Permission denied
+du: /Users/authsvc/.agent-core/homes/agt_cto-agent.pre-permrepair-20260822-061954: Permission denied
+du: /Users/authsvc/.agent-core/.b7-r27-op7-products-disposal-tx-7d724cd326c8313a9d6bcfcf: Permission denied
+du: /Users/authsvc/.agent-core/scheduler: Permission denied
+du: /Users/authsvc/.agent-core/.b7-r27-e4b-products-disposal-tx-b60aeff0c398385319061fd1: Permission denied
+du: /Users/authsvc/.agent-core/.huanhuan-v5-backup-20260903T044547Z: Permission denied
+du: /Users/authsvc/.agent-core/logs: Permission denied
+du: /Users/authsvc/.agent-core/.b7-r27-homecodex-disposal-tx-50defe9ecdb398824ba20251: Permission denied
+du: /Users/authsvc/.agent-core/.huanhuan-v3-backup-20260903T041949Z: Permission denied
+du: /Users/authsvc/.agent-core/.huanhuan-v6-backup-20260903T045635Z: Permission denied
+du: /Users/authsvc/.agent-core/bindings: Permission denied
+du: /Users/authsvc/.agent-core/.b7-r27-binlinks-disposal-tx-76324692c07fa9eb7c8e5dd8: Permission denied
+du: /Users/authsvc/.agent-core/.b7-r27-deadlock-disposal-tx-16dd2a12ff8ec1053d21d910: Permission denied
+du: /Users/authsvc/.agent-core/notification-ingress: Permission denied
+du: /Users/authsvc/.agent-core/.huanhuan-v7-backup-20260903T051712Z: Permission denied
+du: /Users/authsvc/.agent-core/.b7-r27-e4-products-disposal-tx-b0858ae7239b990ea38dc981: Permission denied
+du: /Users/authsvc/.agent-core/control: Permission denied
+du: /Users/authsvc/.agent-core/.huanhuan-v8-backup-20260903T053611Z: Permission denied
+du: /Users/authsvc/.agent-core/.b7-r27-homecodex-disposal2-tx-721965892a782e3aaaf8a290: Permission denied
+du: /Users/authsvc/.dsh: Permission denied

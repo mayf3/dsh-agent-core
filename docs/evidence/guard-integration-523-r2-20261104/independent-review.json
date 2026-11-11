@@ -1,0 +1,28 @@
+{
+  "recordedAt": "2026-11-04T05:11:11.451496+00:00",
+  "reviewer": "/root/failure_audit",
+  "reviewTargetHead": "492d579d185a524a9b56dd91ce8c3728fe6818a2",
+  "baseHead": "f767e8d6608cdb0917aad2d471ba0454d0966a0f",
+  "evidenceReview": "PASS",
+  "equalFailureSetGate": "FAIL",
+  "publicationDisposition": "STOP_NO_PUSH_NO_PR",
+  "retainedBlocker": "REQUIRED_GATE_FAILURE: baseline failure set unequal",
+  "newReviewBlockers": 0,
+  "comparisonSha256": "d2e6e906e87b3723734f0b04a7a226693530664c983da065d606a41452e48d8a",
+  "method": "Independent parsing of both raw TAP logs without executing compare-tap.py or tests; read-only local source state and dependency manifest checks.",
+  "result": {
+    "sharedPass": 577,
+    "sharedFail": 13,
+    "sharedSkip": 2,
+    "integrationFailBaselinePass": 7,
+    "integrationOnlyGuardPass": 9,
+    "baselineOnlyFail": 0,
+    "duplicateTitles": 0
+  },
+  "causality": "SOURCE_CODE_INTRODUCTION_CAUSALITY=UNKNOWN; manifest equality does not establish R1 historical topology or fixed-fixture equality.",
+  "limitations": [
+    "Bounded R2 evidence and attribution-language review only; not a fresh full source audit.",
+    "No remote query, tests, file writes, or production actions by reviewer."
+  ],
+  "verbatimReviewerReport": "只读独立复核 PASS；相等 gate 仍 FAIL，维持 STOP / 不 push / 不开 PR。\n\n- 候选：`492d579d185a524a9b56dd91ce8c3728fe6818a2`；基线：`f767e8d6608cdb0917aad2d471ba0454d0966a0f`。现场 HEAD 一致；两侧 tracked/staged diff 为空，基线 status 为空。\n- 独立解析两份原始 TAP，未执行 `compare-tap.py` 或任何测试。候选 SHA256 `0725db8bc5de77a29d8db961342ac71fb17f55fca67386bfbcec781aa141de59`；基线 SHA256 `678673687b8e6f2e0e2c9b86b5cb5bfc342b6e4ba9c5556671e3661179cc0b06`。\n- 无重复标题或嵌套失败重复计数。共同 599 项：577 同 PASS、13 同 FAIL、2 同 SKIP、7 候选 FAIL / 基线 PASS；另有候选独有的 9 个 guard PASS。两个 SKIP 的标题与理由逐字一致。\n- `comparison.json` 的全部 outcome 与集合数组符合独立解析，SHA256 `d2e6e906e87b3723734f0b04a7a226693530664c983da065d606a41452e48d8a`。\n- 七项差集准确：broker-rpc 三项、delivery 两项、primary-workspace 一项为 `EEXIST`；feishu-v2-normal 一项为 undefined `turns`。基线独有失败为 0。\n- 新旧七个关键依赖的当前版本/manifest 哈希与记录一致；这不证明 R1 历史拓扑或公共 fixture 状态一致。收据正确保留 `SOURCE_CODE_INTRODUCTION_CAUSALITY=UNKNOWN`，没有把失败差集写成已证实的 guard 源码致因。\n\n未发现需要更正的实质错误。`RECEIPT-523-R2.md` 与 `STOPPED-523-R2.md` 的停止结论受证据支持；既有 `REQUIRED_GATE_FAILURE` 保留，新增 review blocker=0。独立复核只覆盖本轮证据与归因表述；未查询远端、未测试、未写文件或执行生产操作。"
+}

@@ -1,0 +1,325 @@
+{
+  "observed_at_utc": "2026-11-07T15:49:04.451744+00:00",
+  "scope": "all tracked current root repository files; audit self refs excluded; no production DB/live Agent data",
+  "results": [
+    {
+      "path": "/private/tmp/w7-k26-requal-r6-20261107-9t72zm46",
+      "command": [
+        "git",
+        "grep",
+        "-n",
+        "-F",
+        "w7-k26-requal-r6-20261107-9t72zm46",
+        "--",
+        ".",
+        ":!docs/evidence/disk-stage1-20261107"
+      ],
+      "rc": 1,
+      "hits": [],
+      "hit_count": 0,
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/sw-367",
+      "command": [
+        "git",
+        "grep",
+        "-n",
+        "-F",
+        "sw-367",
+        "--",
+        ".",
+        ":!docs/evidence/disk-stage1-20261107"
+      ],
+      "rc": 1,
+      "hits": [],
+      "hit_count": 0,
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/gcr-svc-target",
+      "command": [
+        "git",
+        "grep",
+        "-n",
+        "-F",
+        "gcr-svc-target",
+        "--",
+        ".",
+        ":!docs/evidence/disk-stage1-20261107"
+      ],
+      "rc": 1,
+      "hits": [],
+      "hit_count": 0,
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/sw-1347-evidence",
+      "command": [
+        "git",
+        "grep",
+        "-n",
+        "-F",
+        "sw-1347-evidence",
+        "--",
+        ".",
+        ":!docs/evidence/disk-stage1-20261107"
+      ],
+      "rc": 1,
+      "hits": [],
+      "hit_count": 0,
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/sw-aa-r4-evidence",
+      "command": [
+        "git",
+        "grep",
+        "-n",
+        "-F",
+        "sw-aa-r4-evidence",
+        "--",
+        ".",
+        ":!docs/evidence/disk-stage1-20261107"
+      ],
+      "rc": 1,
+      "hits": [],
+      "hit_count": 0,
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/sw-d6-fix",
+      "command": [
+        "git",
+        "grep",
+        "-n",
+        "-F",
+        "sw-d6-fix",
+        "--",
+        ".",
+        ":!docs/evidence/disk-stage1-20261107"
+      ],
+      "rc": 1,
+      "hits": [],
+      "hit_count": 0,
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/dsh-548-r2-iwl_bczh",
+      "command": [
+        "git",
+        "grep",
+        "-n",
+        "-F",
+        "dsh-548-r2-iwl_bczh",
+        "--",
+        ".",
+        ":!docs/evidence/disk-stage1-20261107"
+      ],
+      "rc": 1,
+      "hits": [],
+      "hit_count": 0,
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/darwinx64-fix",
+      "command": [
+        "git",
+        "grep",
+        "-n",
+        "-F",
+        "darwinx64-fix",
+        "--",
+        ".",
+        ":!docs/evidence/disk-stage1-20261107"
+      ],
+      "rc": 1,
+      "hits": [],
+      "hit_count": 0,
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/fleet-w6-s04",
+      "command": [
+        "git",
+        "grep",
+        "-n",
+        "-F",
+        "fleet-w6-s04",
+        "--",
+        ".",
+        ":!docs/evidence/disk-stage1-20261107"
+      ],
+      "rc": 1,
+      "hits": [],
+      "hit_count": 0,
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/dsh-523-impl",
+      "command": [
+        "git",
+        "grep",
+        "-n",
+        "-F",
+        "dsh-523-impl",
+        "--",
+        ".",
+        ":!docs/evidence/disk-stage1-20261107"
+      ],
+      "rc": 0,
+      "hits": [
+        {
+          "coordinate": "BRIEF-523-R3.md:38",
+          "excerpt": "OBSERVATIONS = tracked/staged tree clean at 492d579d; node_modules is a symlink to /tmp/dsh-523-impl/node_modules; R1/R2 evidence retained; accepted D-008 amendment is already in exact base."
+        },
+        {
+          "coordinate": "RECEIPT-523-R3.md:12",
+          "excerpt": "lpath=`/private/tmp/dsh-523-integration/node_modules`\u3002\u65e7 symlink \u539f\u6837\u79fb\u5230 `/private/tmp/dsh-523-r3-dependencies/original-node_modules-link`\uff0ctarget \u4ecd `/tmp/dsh-523-impl/node_modules`\uff1b\u672a\u64cd\u4f5c\u65e7 target\u3002"
+        },
+        {
+          "coordinate": "RECEIPT-523.md:111",
+          "excerpt": "\u73af\u5883\u4fa7\u5f71\u54cd\uff1a\u672c\u8f6e\u5c06 `node_modules` \u94fe\u63a5\u5230 `/tmp/dsh-523-impl/node_modules`\u3002\u5305\u91cc\u7684\u73b0\u6709 provisioning \u4f1a\u7ecf\u6b64\u5171\u4eab\u76ee\u5f55\u4fee\u6539\u672c\u5730 workspace symlink\uff1b\u672c\u8f6e log \u7684 EEXIST \u548c\u53ea\u8bfb post-state \u5747\u663e\u793a\u8fd9\u4e00\u8def\u5f84\u3002\u590d\u7528\u76ee\u5f55\u7684\u53ef\u5199\u6027\u4f7f\u6d4b\u8bd5\u73af\u5883\u9694\u79bb\u4e0d\u8db3\uff1b\u672a\u4fdd\u7559\u539f symlink preimage\uff0c\u56e0\u6b64\u5176\u7cbe\u786e\u53d8\u66f4\u96c6\u5408=`UNKNOWN`\u3002\u5df2\u8bb0\u5f55 [dependency-side-effect.json](doc"
+        },
+        {
+          "coordinate": "docs/evidence/guard-integration-523-20261104/checks.json:16",
+          "excerpt": "      \"packageJson\": \"/private/tmp/dsh-523-impl/node_modules/@deepseek-ai/schemastery/package.json\","
+        },
+        {
+          "coordinate": "docs/evidence/guard-integration-523-20261104/checks.json:21",
+          "excerpt": "      \"packageJson\": \"/private/tmp/dsh-523-impl/node_modules/@deepseek-ai/cordis/package.json\","
+        },
+        {
+          "coordinate": "docs/evidence/guard-integration-523-20261104/dependency-side-effect.json:3",
+          "excerpt": "  \"dependencyLink\": \"/tmp/dsh-523-impl/node_modules\","
+        },
+        {
+          "coordinate": "docs/evidence/guard-integration-523-r2-20261104/dependency-comparison.pretest.json:6",
+          "excerpt": "      \"path\": \"/private/tmp/dsh-523-impl/node_modules/@deepseek-ai/schemastery/package.json\","
+        },
+        {
+          "coordinate": "docs/evidence/guard-integration-523-r2-20261104/dependency-comparison.pretest.json:20",
+          "excerpt": "      \"path\": \"/private/tmp/dsh-523-impl/node_modules/@deepseek-ai/cordis/package.json\","
+        },
+        {
+          "coordinate": "docs/evidence/guard-integration-523-r2-20261104/dependency-comparison.pretest.json:34",
+          "excerpt": "      \"path\": \"/private/tmp/dsh-523-impl/node_modules/@deepseek-ai/dsh-session/package.json\","
+        },
+        {
+          "coordinate": "docs/evidence/guard-integration-523-r2-20261104/dependency-comparison.pretest.json:48",
+          "excerpt": "      \"path\": \"/private/tmp/dsh-523-impl/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/package.json\","
+        },
+        {
+          "coordinate": "docs/evidence/guard-integration-523-r2-20261104/dependency-comparison.pretest.json:62",
+          "excerpt": "      \"path\": \"/private/tmp/dsh-523-impl/node_modules/@larksuiteoapi/node-sdk/package.json\","
+        },
+        {
+          "coordinate": "docs/evidence/guard-integration-523-r2-20261104/dependency-comparison.pretest.json:76",
+          "excerpt": "      \"path\": \"/private/tmp/dsh-523-impl/node_modules/croner/package.json\","
+        },
+        {
+          "coordinate": "docs/evidence/guard-integration-523-r2-20261104/dependency-comparison.pretest.json:90",
+          "excerpt": "      \"path\": \"/private/tmp/dsh-523-impl/node_modules/sherpa-onnx-node/package.json\","
+        },
+        {
+          "coordinate": "docs/evidence/guard-integration-523-r3-20261104/install.json:4",
+          "excerpt": "  \"oldLinkTarget\": \"/tmp/dsh-523-impl/node_modules\","
+        }
+      ],
+      "hit_count": 14,
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/dsh-548-r5-evidence",
+      "command": [
+        "git",
+        "grep",
+        "-n",
+        "-F",
+        "dsh-548-r5-evidence",
+        "--",
+        ".",
+        ":!docs/evidence/disk-stage1-20261107"
+      ],
+      "rc": 1,
+      "hits": [],
+      "hit_count": 0,
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/dsh-548-r4-evidence",
+      "command": [
+        "git",
+        "grep",
+        "-n",
+        "-F",
+        "dsh-548-r4-evidence",
+        "--",
+        ".",
+        ":!docs/evidence/disk-stage1-20261107"
+      ],
+      "rc": 1,
+      "hits": [],
+      "hit_count": 0,
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/fleet-v5-candidate",
+      "command": [
+        "git",
+        "grep",
+        "-n",
+        "-F",
+        "fleet-v5-candidate",
+        "--",
+        ".",
+        ":!docs/evidence/disk-stage1-20261107"
+      ],
+      "rc": 0,
+      "hits": [
+        {
+          "coordinate": "RECEIPT-WINDOW-ANARROWED-R2.md:625",
+          "excerpt": "isolation/c7-selftest-t7y8u_9h/canary-recorder.mjs /usr/local/v5-boot-isolation/c7-selftest-t7y8u_9h /usr/local/v5-boot-isolation/assembled-root /tmp/fleet-v5-candidate/scripts/lib/trusted-cp-fresh-child-boot-canary.mjs`\uff1brc=0\u3002"
+        },
+        {
+          "coordinate": "docs/reports/c7-selftest-20261104/SOURCE.diff:1046",
+          "excerpt": "+HELPER = Path('/tmp/fleet-v5-candidate/scripts/lib/trusted-cp-fresh-child-boot-canary.mjs')"
+        },
+        {
+          "coordinate": "docs/reports/c7-selftest-20261104/canary-recorder.command.json:7",
+          "excerpt": "    \"/tmp/fleet-v5-candidate/scripts/lib/trusted-cp-fresh-child-boot-canary.mjs\""
+        },
+        {
+          "coordinate": "docs/reports/fleet-window-merge-c7-20261104/conflict-resolution.json:11",
+          "excerpt": "n')\\n+ASSEMBLED = ROOT / 'assembled-root'\\n+MATERIALS_SEAL = 'c3595d20ac56cfe21fbcb011a75252879b7780411d4d30f6656d41e4989ed4ea'\\n+HELPER = Path('/tmp/fleet-v5-candidate/scripts/lib/trusted-cp-fresh-child-boot-canary.mjs')\\n+HELPER_SEAL = 'b737d6b42460383f305a741fb9d5f12babe9b1e292f933d3735d68a907447802'\\n+NODE = ASSEMBLED / 'node-runtime/bin/node'\\n+LAST_OUT = None\\"
+        },
+        {
+          "coordinate": "docs/reports/fleet-window-merge-c7-20261104/source-snapshot.json:7",
+          "excerpt": "tion')\\nASSEMBLED = ROOT / 'assembled-root'\\nMATERIALS_SEAL = 'c3595d20ac56cfe21fbcb011a75252879b7780411d4d30f6656d41e4989ed4ea'\\nHELPER = Path('/tmp/fleet-v5-candidate/scripts/lib/trusted-cp-fresh-child-boot-canary.mjs')\\nHELPER_SEAL = 'b737d6b42460383f305a741fb9d5f12babe9b1e292f933d3735d68a907447802'\\nNODE = ASSEMBLED / 'node-runtime/bin/node'\\nLAST_OUT = None\\n\\n"
+        },
+        {
+          "coordinate": "docs/reports/fleet-window-merge-c7-20261104/stopped-state.json:51",
+          "excerpt": "n')\\n+ASSEMBLED = ROOT / 'assembled-root'\\n+MATERIALS_SEAL = 'c3595d20ac56cfe21fbcb011a75252879b7780411d4d30f6656d41e4989ed4ea'\\n+HELPER = Path('/tmp/fleet-v5-candidate/scripts/lib/trusted-cp-fresh-child-boot-canary.mjs')\\n+HELPER_SEAL = 'b737d6b42460383f305a741fb9d5f12babe9b1e292f933d3735d68a907447802'\\n+NODE = ASSEMBLED / 'node-runtime/bin/node'\\n+LAST_OUT = None\\"
+        },
+        {
+          "coordinate": "scripts/fleet-window/ASSEMBLY-RECIPE-C5R3.md:22",
+          "excerpt": "\u56fa\u5b9a\u8f93\u5165\uff1aapp=/tmp/fleet-v5-candidate\uff1bHARNESS_SRC=/Users/yanfenma/workspace/github/deepseek-harness\uff1b\u88c5\u914d\u8f93\u51fa=/tmp/v5-rebuild/assembled-root\u3002\u8981\u6c42 app HEAD/status \u7b26\u5408 C3-R2\uff1bharness HEAD \u5fc5\u987b\u7cbe\u786e\u7b49\u4e8e\u672c\u8f6e\u8fdc\u7aef master/#9 merge \u7684 13ecda5c759263c7ce7ab93b678f862"
+        },
+        {
+          "coordinate": "scripts/fleet-window/ASSEMBLY-RECIPE-C5R3.md:40",
+          "excerpt": "\u672c\u8f6e\u56fa\u5b9a\u8f93\u5165\uff1a`REPO_SRC=/tmp/fleet-v5-candidate`\uff1b`MAIN_REPO=/tmp/fleet-roll-src`\uff08\u7b2c\u4e09\u65b9 dev-install \u8f93\u5165\uff0c\u53ea\u8bfb\uff09\uff1b\u5df2\u901a\u8fc7 r5 \u7684 `assembled-root/harness` \u4e0e `node-runtime` \u539f\u4f4d\u590d\u7528\uff1bharness \u6e90\u4ecd\u4e3a `/tmp/v5-rebuild/harness-src` exact HEAD `13ecda5c759263c7ce7ab93b678f862f6"
+        },
+        {
+          "coordinate": "scripts/fleet-window/assemble-runner.sh:10",
+          "excerpt": "REPO_SRC=/tmp/fleet-v5-candidate"
+        },
+        {
+          "coordinate": "scripts/fleet-window/window-selftest.py:21",
+          "excerpt": "HELPER = Path('/tmp/fleet-v5-candidate/scripts/lib/trusted-cp-fresh-child-boot-canary.mjs')"
+        }
+      ],
+      "hit_count": 10,
+      "stderr": ""
+    }
+  ]
+}

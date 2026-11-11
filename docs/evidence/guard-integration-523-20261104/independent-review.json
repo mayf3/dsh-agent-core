@@ -1,0 +1,68 @@
+{
+  "schema_version": 2,
+  "reviewer": "/root/review_523",
+  "author_independence": "PASS",
+  "review_kind": "AFFECTED_CONTRACT",
+  "review_scope": "DELTA",
+  "review_target_head": "492d579d185a524a9b56dd91ce8c3728fe6818a2",
+  "base_head": "f767e8d6608cdb0917aad2d471ba0454d0966a0f",
+  "current_base_head": "f767e8d6608cdb0917aad2d471ba0454d0966a0f",
+  "scope": [
+    "exact three-file byte integration from reviewed ecff head",
+    "D-008 amendment preservation and main impact",
+    "parent-RPC admission before all bookmark/Binding writes",
+    "channel-independent predicate, workspace resolution, code/message/audit",
+    "public Router.switchAgent and Product API preserved",
+    "fresh guard/package TAP provenance and hashes"
+  ],
+  "authority_review": "PASS",
+  "primitive_boundary_review": "PASS",
+  "contract_review": "PASS (source only)",
+  "mandate_scope_review": "PASS",
+  "source_byte_integration": "PASS",
+  "observations": [
+    "source-parent..main changes only #527 scheduler; relevant authorities/router/Product API unchanged",
+    "guard is synchronous before calling switchAgent; mismatch cannot enter setLastSession/persistBinding",
+    "index changes only createProcessRegistry callback; exposed service/Product API still use unguarded domain operation",
+    "fresh guard 9/9 rc0; package 608 tests, 586 pass, 20 fail, 2 skip, rc1",
+    "reviewer independently recomputed both raw log SHA256 values; no test reruns"
+  ],
+  "logs": {
+    "guard": {
+      "sha256": "c74e9ef6f260701997a9568ee8c4941f4551023bf54dd019c9cb3694a444421a",
+      "exitCode": 0
+    },
+    "agent-router": {
+      "sha256": "0725db8bc5de77a29d8db961342ac71fb17f55fca67386bfbcec781aa141de59",
+      "exitCode": 1
+    }
+  },
+  "frozen_blocker_union": [
+    {
+      "id": "REQUIRED_GATE_FAILURE:agent-router-check",
+      "class": "REQUIRED_GATE_FAILURE",
+      "source": "current user mandate: failure or UNKNOWN requires STOPPED-523.md and stop",
+      "counterexample": "agent-router package check exitCode=1, 20 failures; full raw TAP retained",
+      "impact": "push/PR/merge readiness NO; no production permission",
+      "minimal_closure": "this attempt stops with truthful receipts; any later resumption needs an attributable environment/failure disposition; no baseline waiver inferred",
+      "affected_readiness": {
+        "PUSH_READY": "NO",
+        "PR_READY": "NO",
+        "MERGE_READY": "NO"
+      }
+    }
+  ],
+  "acceptance_coverage_review": "FAIL",
+  "evidence_reviewability": "PASS",
+  "blockers": 1,
+  "spec_gaps": 0,
+  "follow_ups": 0,
+  "delivery_readiness": "FAIL",
+  "operation_allowed": "NO",
+  "next_action": "STOP",
+  "limitations": [
+    "independent reviewer authored no source/evidence files and ran no tests",
+    "no claim package failures are a subset of historical five; baseline not rerun and scope/environment differ",
+    "no merge/deployment/runtime/business verification"
+  ]
+}

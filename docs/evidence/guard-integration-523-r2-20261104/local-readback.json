@@ -1,0 +1,31 @@
+{
+  "observedAt": "2026-11-04T05:09:15.194980+00:00",
+  "head": "492d579d185a524a9b56dd91ce8c3728fe6818a2",
+  "parent": "f767e8d6608cdb0917aad2d471ba0454d0966a0f",
+  "trackedDiff": "",
+  "stagedDiff": "",
+  "blobs": {
+    "packages/agent-router/src/binding-resolution.js": {
+      "commit": "172859f387a44828c892cd090dcc15e8b081bc66",
+      "worktree": "172859f387a44828c892cd090dcc15e8b081bc66"
+    },
+    "packages/agent-router/src/index.js": {
+      "commit": "d0a8ca89965ab01718c34f3db93660d5bb2e1fd3",
+      "worktree": "d0a8ca89965ab01718c34f3db93660d5bb2e1fd3"
+    },
+    "packages/agent-router/test/route-chain/switch-workspace-guard.test.js": {
+      "commit": "edc2fe101b63c14c27a7efaf60d83b22e5b9904e",
+      "worktree": "edc2fe101b63c14c27a7efaf60d83b22e5b9904e"
+    },
+    "docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md": {
+      "commit": "0c3f6f6005794edec2faf666e4fb035a9c87b009",
+      "worktree": "0c3f6f6005794edec2faf666e4fb035a9c87b009"
+    }
+  },
+  "push": "NOT_INVOKED",
+  "pr": "NOT_CREATED",
+  "merge": "NOT_INVOKED",
+  "production": "NOT_INVOKED",
+  "sourceCausality": "UNKNOWN",
+  "publicationReady": false
+}

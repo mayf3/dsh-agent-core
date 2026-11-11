@@ -1,0 +1,316 @@
+diff --git a/packages/workflow-execution/src/engine.js b/packages/workflow-execution/src/engine.js
+index d98e1225..512c9915 100644
+--- a/packages/workflow-execution/src/engine.js
++++ b/packages/workflow-execution/src/engine.js
+@@ -13,6 +13,7 @@ import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeStaleFrom
+ import { createOwnerAssistanceResumeOperations } from './owner-assistance-resume-engine.js'
+ import { createAttemptLimitEscalation, createTerminalAttemptOperations } from './terminal-attempt-operations.js'
+ import { reconcileDeliveryEvidence } from './projection.js'
++import { createAdmissionBudget } from './ledger-admission.js'
+ export const DEFAULT_POLL_INTERVAL_MS = 30_000
+ export const DEFAULT_MAX_ADMISSIONS_PER_POLL = 25
+ 
+@@ -51,6 +52,7 @@ export function createWorkflowExecutionEngine({
+     if (fn === undefined) throw new TypeError(`workflow-execution: engine dep ${name} is required`)
+   }
+   const maxAdmissions = config.maxAdmissionsPerPoll ?? DEFAULT_MAX_ADMISSIONS_PER_POLL
++  const admissionBudget = createAdmissionBudget(maxAdmissions)
+   const staleNoProgressThresholdMs = config.staleNoProgressThresholdMs ?? DEFAULT_STALE_NO_PROGRESS_THRESHOLD_MS
+   if (!Number.isInteger(staleNoProgressThresholdMs) || staleNoProgressThresholdMs < 1) {
+     throw new TypeError(`workflow-execution: config.staleNoProgressThresholdMs must be a positive integer (got ${JSON.stringify(config.staleNoProgressThresholdMs)})`)
+@@ -81,7 +83,7 @@ export function createWorkflowExecutionEngine({
+    * precedes Router invocation and post-invocation failures remain terminal.
+    * CTR-SRE-004: unproven quiescence defers before mint, preserving eligibility.
+    */
+-  async function admitDueIntent(rawIntent) {
++  async function admitDueIntent(rawIntent, recordAttemptResult = () => {}) {
+     const attemptResult = await ledger.beginAttemptIfAbsent({
+       dispatchIntentId: rawIntent.dispatchIntentId,
+       nodeVisitId: rawIntent.nodeVisitId,
+@@ -126,6 +128,7 @@ export function createWorkflowExecutionEngine({
+         }
+       }
+     }, hasQuiescentTurn, ownerResumeOps.prepareAttemptPlan, (attempt) => ownerResumeOps.canOwnerResume(attempt, ownerResumeOps.queryTurnReconciliation))
++    recordAttemptResult(attemptResult)
+     if (!attemptResult.created) {
+       if (attemptResult.cause === 'pre_plan_unavailable' || attemptResult.cause === 'owner_resume_proof_unavailable') {
+         return { action: 'pre_plan_unavailable', nodeVisitId: rawIntent.nodeVisitId, ...(attemptResult.attempt?.attemptId === undefined ? {} : { attemptId: attemptResult.attempt.attemptId }) }
+@@ -319,7 +322,7 @@ export function createWorkflowExecutionEngine({
+     const admissions = []
+     const skipped = []
+     let pages = 0
+-    let newAttempts = 0
++    const budget = admissionBudget.begin()
+     let boundReached = false
+     let boundSkipped = 0
+     let cursor
+@@ -365,28 +368,29 @@ export function createWorkflowExecutionEngine({
+           log.warn?.(`workflow-execution: skipped malformed due record (${normalized.reason})`)
+           continue
+         }
+-        if (newAttempts >= maxAdmissions) {
++        if (!budget.take(normalized.intent.nodeVisitId)) {
+           boundReached = true
+           boundSkipped += 1
+           continue
+         }
+         try {
+-          const result = await admitDueIntent(normalized.intent)
++          const result = await admitDueIntent(normalized.intent, budget.recordCreated)
+           admissions.push(result)
+-          if (result.action !== 'already_attempted' && result.action !== 'deferred_quiescence') newAttempts += 1
++          budget.recordResult(result.action)
+         } catch (error) {
+           log.error?.(`workflow-execution: admission error: ${error?.message ?? error}`)
+           admissions.push({ action: 'engine_error', error: String(error?.message ?? error) })
+-          newAttempts += 1
++          budget.recordUnknown()
+         }
+       }
+       if (exhausted) break
+       cursor = { afterNextEligibleAt: last.nextEligibleAt, afterDispatchIntentId: last.dispatchIntentId }
+     }
++    if (!drainedEarly) budget.finish()
+     if (boundReached) {
+-      log.warn?.(`workflow-execution: admission bound (${maxAdmissions}) reached; ${boundSkipped} due intents left unadmitted — they stay due and are re-discovered next sweep`)
++      log.warn?.(`workflow-execution: bounded admission probes (${JSON.stringify(budget.stats)}); ${boundSkipped} due intents deferred to a later probe rotation`)
+     }
+-    return { ok: true, reconciled, admissions, skipped, pages }
++    return { ok: true, reconciled, admissions, skipped, pages, admissionBudget: { ...budget.stats } }
+   }
+ 
+ 
+diff --git a/packages/workflow-execution/src/ledger-admission.js b/packages/workflow-execution/src/ledger-admission.js
+index 3b724ce0..8128ad35 100644
+--- a/packages/workflow-execution/src/ledger-admission.js
++++ b/packages/workflow-execution/src/ledger-admission.js
+@@ -4,6 +4,58 @@ import { ownerResumeEligible, recordDeliveryCompletion } from './owner-assistanc
+ import { ownerResumePlanIsValid } from './ledger-events.js'
+ const STALE_NO_PROGRESS_JUDGMENT = 'stale_no_progress'
+ 
++/** Probe work is bounded independently of NEW attempts (CTR-WAE-001b).
++ * IDs only defer probes until the current static feed has had an opportunity;
++ * they never authorize admission/recovery. Nothing persists across restart.
++ * Full keyset discovery remains exhaustive; an incomplete sweep commits no IDs.
++ */
++export function createAdmissionBudget(maxAdmissions) {
++  if (!Number.isSafeInteger(maxAdmissions) || maxAdmissions < 0) {
++    throw new TypeError('workflow-execution: maxAdmissionsPerPoll must be a nonnegative safe integer')
++  }
++  const maxFailures = Math.max(1, maxAdmissions)
++  const maxScans = maxFailures * 2
++  let visited = new Set()
++  return {
++    begin() {
++      const working = new Set(visited)
++      const seen = new Set()
++      const stats = { scanned: 0, failed: 0, created: 0, unknown: 0, deferred: 0, rotated: 0 }
++      return {
++        stats,
++        take(nodeVisitId) {
++          seen.add(nodeVisitId)
++          if (working.has(nodeVisitId)) {
++            stats.rotated += 1
++            return false
++          }
++          if (stats.scanned >= maxScans || stats.failed >= maxFailures
++            || stats.created >= maxAdmissions || stats.unknown > 0) {
++            stats.deferred += 1
++            return false
++          }
++          working.add(nodeVisitId)
++          stats.scanned += 1
++          return true
++        },
++        recordCreated: result => { if (result.created) stats.created += 1 },
++        recordResult(action) {
++          if (['pre_plan_unavailable', 'blocked', 'needs_review'].includes(action)) stats.failed += 1
++        },
++        recordUnknown() {
++          // A throw can follow a durable mint. Stop further probes this sweep;
++          // never classify an unreturned ledger outcome as created:false.
++          stats.unknown += 1
++          stats.failed += 1
++        },
++        finish() {
++          visited = stats.deferred === 0 ? new Set() : new Set([...working].filter(id => seen.has(id)))
++        },
++      }
++    },
++  }
++}
++
+ /**
+  * The atomic one-attempt-per-NodeVisit fence. Creates the attempt (and
+  * appends attempt_planned) only for a new visit or a terminal stale attempt
+diff --git a/packages/workflow-execution/test/continuation.test.js b/packages/workflow-execution/test/continuation.test.js
+index 3baafbfb..7dc5f1f9 100644
+--- a/packages/workflow-execution/test/continuation.test.js
++++ b/packages/workflow-execution/test/continuation.test.js
+@@ -24,6 +24,166 @@ import { ExecutionLedger, attemptIdFor } from '../src/ledger.js'
+ import { createWorkflowExecutionEngine, DUE_PAGE_LIMIT } from '../src/engine.js'
+ import { completeCurrentActivationDetail } from '../test-support/current-activation-detail.js'
+ 
++// #1364: real engine + durable ledger; only external policy/detail/Router I/O is synthetic.
++function budgetFixture(badCount, { healthyCount = 1, config = {}, deliveryOk = true } = {}) {
++  const dir = mkdtempSync(join(tmpdir(), 'wfe-budget-'))
++  const items = makeIntents(1, badCount + healthyCount)
++  const bad = new Set(items.slice(0, badCount).map(item => item.nodeVisitId))
++  const calls = { probes: [], deliveries: [], pages: [] }
++  const ledger = new ExecutionLedger({ dir, resolveManagedAttempt: async intent => {
++    calls.probes.push(intent.nodeVisitId)
++    return bad.has(intent.nodeVisitId) ? undefined : false
++  } })
++  const engine = createWorkflowExecutionEngine({
++    ledger, config,
++    fetchDuePage: async request => {
++      calls.pages.push(request)
++      if (calls.pageErrorAfter !== undefined && request.afterDispatchIntentId !== undefined) {
++        return { ok: false, code: 'synthetic_read_error' }
++      }
++      const start = request.afterDispatchIntentId === undefined ? 0
++        : items.findIndex(item => item.dispatchIntentId === request.afterDispatchIntentId) + 1
++      return { ok: true, items: items.slice(start, start + request.limit) }
++    },
++    resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
++    deliverRun: async request => {
++      assert.equal(bad.has(request.messageOrigin.nodeVisitId), false, 'unavailable policy is never delivered')
++      assert.equal(ledger.get(request.messageOrigin.nodeVisitId).phase, 'delivery_started', 'WAL precedes delivery')
++      calls.deliveries.push(request)
++      return deliveryOk ? { ok: true, sessionId: 'main', reconciliationHandle: `turn:${request.requestId}` }
++        : { ok: false, code: 'synthetic_rejection' }
++    },
++    getTurnReconciliation: () => ({ state: 'pending' }),
++    readInstanceDetail: async ({ workflowInstanceId }) => ({ ok: true, body: completeCurrentActivationDetail({
++      visibility: 'full', detail: {
++        instance: { workflow_state_version: 1 },
++        current_node_visit_id: items.find(item => item.workflowInstanceId === workflowInstanceId)?.nodeVisitId,
++      },
++    }, { workflowInstanceId, ownerPrincipalId: OWNER }) }),
++  })
++  return { engine, ledger, items, calls, restorePolicy: nodeVisitId => bad.delete(nodeVisitId),
++    cleanup: () => rmSync(dir, { recursive: true, force: true }) }
++}
++
++test('#1364 RED/GREEN: 25 stable pre-plan failures cannot starve the healthy 26th intent for three polls', async () => {
++  const fixture = budgetFixture(25)
++  try {
++    const rounds = []
++    for (let round = 1; round <= 3; round += 1) {
++      const before = fixture.calls.probes.length
++      const result = await fixture.engine.pollOnce()
++      assert.equal(result.ok, true)
++      rounds.push({ round, probes: fixture.calls.probes.length - before,
++        failures: result.admissions.filter(item => item.action === 'pre_plan_unavailable').length,
++        attempts: fixture.ledger.snapshot().length, deliveries: fixture.calls.deliveries.length })
++    }
++    console.log(`#1364 observations ${JSON.stringify(rounds)}`)
++    assert.equal(fixture.calls.deliveries.length, 1, 'healthy tail must receive exactly one opportunity within three polls')
++    assert.equal(fixture.ledger.snapshot().length, 1, 'failed pre-plans mint no attempts')
++  } finally { fixture.cleanup() }
++})
++
++test('#1364 control: 24 stable pre-plan failures leave the healthy 25th reachable', async () => {
++  const fixture = budgetFixture(24)
++  try {
++    await fixture.engine.pollOnce()
++    assert.equal(fixture.calls.deliveries.length, 1)
++    assert.equal(fixture.ledger.snapshot().length, 1)
++  } finally { fixture.cleanup() }
++})
++
++test('#1364 bounded rotation passes 250 abnormal heads across pages and returns to repaired heads', async () => {
++  const fixture = budgetFixture(250, { healthyCount: 2 })
++  try {
++    const bound = Math.ceil(fixture.items.length / 25)
++    for (let round = 1; round <= bound; round += 1) {
++      const before = fixture.calls.probes.length
++      const result = await fixture.engine.pollOnce()
++      assert.equal(result.ok, true)
++      assert.equal(result.pages, 3, 'discovery remains exhaustive even when probe budget is spent')
++      assert.ok(fixture.calls.probes.length - before <= 50, 'finite admission-scan budget S')
++      assert.ok(result.admissionBudget.failed <= 25, 'finite failure budget F')
++      assert.ok(result.admissionBudget.created <= 25, 'separate actual-mint budget A')
++      assert.equal(result.admissionBudget.scanned, fixture.calls.probes.length - before)
++    }
++    assert.equal(fixture.calls.deliveries.length, 2, `healthy tail reached within ${bound} polls`)
++    assert.equal(fixture.ledger.snapshot().length, 2)
++    const firstHead = fixture.items[0]
++    fixture.restorePolicy(firstHead.nodeVisitId)
++    await fixture.engine.pollOnce()
++    assert.ok(fixture.ledger.get(firstHead.nodeVisitId), 'a completed cycle must revisit a repaired head')
++    assert.equal(fixture.calls.deliveries.length, 3, 'already admitted tail is never delivered again')
++  } finally { fixture.cleanup() }
++})
++
++test('#1364 scan cap also bounds already-attempted ledger probes; refusals are not new attempts', async () => {
++  const fixture = budgetFixture(0, { healthyCount: 8, config: { maxAdmissionsPerPoll: 2 } })
++  try {
++    for (let round = 0; round < 4; round += 1) {
++      const result = await fixture.engine.pollOnce()
++      assert.equal(result.admissionBudget.created, 2)
++    }
++    assert.equal(fixture.calls.deliveries.length, 8)
++    const before = fixture.calls.probes.length
++    const replay = await fixture.engine.pollOnce()
++    assert.equal(replay.admissionBudget.scanned, 4)
++    assert.equal(fixture.calls.probes.length - before, 4)
++    assert.equal(replay.admissionBudget.created, 0)
++    assert.equal(replay.admissionBudget.failed, 0)
++    assert.equal(fixture.calls.deliveries.length, 8)
++  } finally { fixture.cleanup() }
++})
++
++test('#1364 minted delivery failures still consume the actual new-attempt budget', async () => {
++  const fixture = budgetFixture(0, { healthyCount: 6, config: { maxAdmissionsPerPoll: 2 }, deliveryOk: false })
++  try {
++    const result = await fixture.engine.pollOnce()
++    assert.deepEqual(result.admissions.map(item => item.action), ['needs_review', 'needs_review'])
++    assert.equal(result.admissionBudget.created, 2)
++    assert.equal(result.admissionBudget.failed, 2)
++    assert.equal(fixture.ledger.snapshot().length, 2)
++  } finally { fixture.cleanup() }
++})
++
++test('#1364 unknown post-mint exception halts probes but preserves exhaustive discovery and the fence', async () => {
++  const fixture = budgetFixture(0, { healthyCount: 201, config: { maxAdmissionsPerPoll: 2 } })
++  const begin = fixture.ledger.beginAttemptIfAbsent.bind(fixture.ledger)
++  fixture.ledger.beginAttemptIfAbsent = async (...args) => {
++    await begin(...args)
++    throw new Error('synthetic failure after mint and delivery')
++  }
++  try {
++    const result = await fixture.engine.pollOnce()
++    assert.equal(result.pages, 3)
++    assert.equal(result.admissionBudget.unknown, 1)
++    assert.equal(result.admissionBudget.created, 0, 'missing return is not fabricated created evidence')
++    assert.equal(fixture.calls.probes.length, 1, 'unknown mint stops further admission probes')
++    assert.equal(fixture.calls.deliveries.length, 1)
++    assert.equal(fixture.ledger.snapshot().length, 1)
++    fixture.ledger.beginAttemptIfAbsent = begin
++    await fixture.engine.pollOnce()
++    const requests = fixture.calls.deliveries.map(item => item.requestId)
++    assert.equal(new Set(requests).size, requests.length, 'UNKNOWN is never replayed')
++  } finally { fixture.cleanup() }
++})
++
++test('#1364 incomplete discovery commits no probe rotation; the next sweep retries from page one', async () => {
++  const fixture = budgetFixture(100)
++  try {
++    fixture.calls.pageErrorAfter = 1
++    const failed = await fixture.engine.pollOnce()
++    assert.equal(failed.ok, false)
++    assert.equal(failed.code, 'synthetic_read_error')
++    const before = fixture.calls.probes.length
++    fixture.calls.pageErrorAfter = undefined
++    const result = await fixture.engine.pollOnce()
++    assert.equal(result.ok, true)
++    assert.equal(fixture.calls.probes[before], fixture.items[0].nodeVisitId)
++    assert.equal(result.admissionBudget.rotated, 0, 'partial sweep did not commit the cycle')
++    assert.equal(fixture.calls.pages[2].afterDispatchIntentId, undefined)
++  } finally { fixture.cleanup() }
++})
++
+ const INSTANCE = '4d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e55'
+ const OWNER = '5d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e66'
+ const AGENT = 'agt_target-agent'

@@ -1,0 +1,179 @@
+{
+  "kind": "FIXED_FRESH_CARRIER_ORIGINAL_READER_AFFECTED_SOURCE_RECEIPT_V2",
+  "at_utc": "2026-10-19T17:44:13.341837+00:00",
+  "disposition": "PASS_SOURCE_ONLY",
+  "blocking_source_findings": [],
+  "attribution": {
+    "reader": "/root/sol_e40_independent_reader",
+    "author": "/root/sol_execution_continuation",
+    "requested_model": "gpt-6.1-sol/ultra",
+    "native_observed_model": "UNKNOWN",
+    "chain": "Original same nonauthor reader, no new reviewer/gate. Reader actual reads/static checks/owned counter below; writer test/build observations separately attributed."
+  },
+  "fixed_inputs": {
+    "initial_source_index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v1/SOURCE-REVIEW-INDEX.v1.json",
+      "bytes": 17955,
+      "sha256": "e64eccca81528efe4125502783bd26ab3d850a593cee0682e5c8c267d853eaef"
+    },
+    "final_delta_index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v2/SOURCE-DELTA-INDEX.v2.json",
+      "bytes": 6934,
+      "sha256": "adcfd3fa35a040656e2d56019737eea4a2ab3718416c892c10931c14fdfa0306"
+    },
+    "accepted_exact_unit": "c9c606481cf6f98721dbdb1ed8b917ab918eace6b3f7276d50457db1a94ade2b",
+    "accepted_decision": "02f7a36660fc340277f3075079af87ea9deea4a7a4ff026e73cbda10c5aff158",
+    "accepted_main": "e69240fc9d857d28661e025b536f33158c16bb87",
+    "preflight": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v1/DEVELOPMENT_PREFLIGHT.json",
+      "bytes": 5279,
+      "sha256": "ddc8f3a2bd2c9ef74d229ec121fc920266f630266f9721b3cf09ef59e0c23ba2"
+    }
+  },
+  "final_semantic_sources": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v2/packet/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/b7-fixed-plugin-materializer.mjs",
+      "bytes": 28557,
+      "sha256": "00bb8302eba5783378fe3c4cd1e0b7f61def9f5f24d213c6edaa93cb9fc6b056"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v2/packet/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/six-target-provision.mjs",
+      "bytes": 33202,
+      "sha256": "74593ccbebd7d18b72b41d0d73ca5aebfae3dbaec13b435fc34fbb91a36c3b64"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v2/packet/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/b7-preparation.mjs",
+      "bytes": 38121,
+      "sha256": "ab12c45b51df77ac120bb6351ce8ca6a888f1dfd299a41c442db03e154275d8f"
+    }
+  ],
+  "scope": "Only new three-file fresh-carrier algorithm/entry and same-block home-identity repair. PASS source-only for bounded isolated implementation/evidence scope, not full artifact/APP closure, coherent candidate freeze, P0 or actual business capability. Old B7/R41 methods/suites/authority not re-reviewed.",
+  "personally_checked": [
+    "Verified all49 initial indexed refs and17 final delta refs to bytes/SHA. Read entire initial helper, full P6/prep diffs, source/evidence ledgers and needed affected legacy recovery consumer. Matched full original->v1 diffs and v1->v2 diffs exactly; preparation unchanged v2.",
+    "Checked original9 function body slices remain exact: appendFleetStub/loadProvisioning/farmLinksOf/ensureFarmLinks/heldPeerDirectory/readPeerPackage/ensurePeerLinks/recordTreeFiles/doRecover. Slice records differ only whether trailing LF included, which was accounted for; no semantic/source mismatch. This proves preserved source, not actual peer/farm/credential execution.",
+    "New builder/parser/catalog/runtime code checked for fixed-source/no selectors, tar path/duplicate/type/mode/link rejection, closed catalog/integer/totals/digest, bounded content/count/depth/path/catalog limits, nofollow held ancestry, content/metadata bookends, exclusive staging/rename, mode fixes, fsync/full readback, typed refusal and journal retention. Source paths and controls are fixed; no npm fallback or live graph/native/config path used by new copier.",
+    "P6 fresh check occurs before new PreimageStore/Journal and dynamic loadProvisioning; existing static candidate-local plugin-artifact import is unchanged and not newly proven. Preparation existing-batch lstat refusal is before prior read/recovery branch, for file/dir/link/uncertain outcomes. Original upstream writes/TX semantics remain, so refusal is not global zero-write.",
+    "Recovery integration read only at affected consumer: original pending mutation refuses retaining all state; completed HOME_ABSENT requires exact recorded leaves/file hashes/peer proof before deletion. No recovery mutation or false cleanup credit claimed for synthetic partials.",
+    "Final F1 delta changes only runtime_copy function plus mkdir-result identity and private JS home capability/phase checks. Embedded Python builder and every other function AST equal7ad. Exact helper/P6 delta read; actual created-home tuple now retained with6 FDs/private WeakMap, checked by Node at phases/whole-batch terminal and Python before catalog reads or copy writes. New retained FD cost is constant6, not per payload object; closed with scope. Actual runtime FD limit not measured.",
+    "Read all15 versioned evidence-group reports and native raw witnesses referenced by per-case records. Native rc vs outer fixture pass distinguished. No original test group rerun by reader; only one new small synthetic binding counter and one same-bytes fixed replay. No actual869b or partial tree read/list/hash."
+  ],
+  "finding_F1_closed": {
+    "original": "After exclusive home creation, original7ad tracked only stable homes parent. Replacing created home with sameUID/mode directory left guard.verify valid; runtime reopened foreign directory, self-compared its new identity and returned COMPLETE after publishing plugin into it.",
+    "original_counter": {
+      "driver": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/independent-sol-readback/fresh_created_home_replacement_counterexample.v1.py",
+        "bytes": 5554,
+        "sha256": "42b13575b4ea1a7d8f7e170ac5e737fc3919226732011a0e8c70d61da22ecd2a"
+      },
+      "process": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/independent-sol-readback/READER-HOME-REPLACEMENT.v1.PROCESS.json",
+        "bytes": 3901,
+        "sha256": "2e527efb6c6403bfa9609883edc49f59a5669f0feea80da5d9456893ba213f3b"
+      },
+      "native_node_rc": 0,
+      "counter_driver_rc": 1,
+      "result": "different inode; complete=true,published_into_replacement=true,original_created_home_empty=true. Explicit owned UID/path model, not production exploit claim."
+    },
+    "fix": "00bb captures mkdir result tuple, retains initial homeFD and tuple privately; copy validates original tuple before source/copy; P6 verifies home across write phases and all6 before COMPLETE. Parent is still held; no adoption of reopened replacement.",
+    "independent_fixed_replay": {
+      "same_driver_bytes_copied": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/independent-sol-readback/home-binding-fixed-v2/fresh_created_home_replacement_counterexample.v1.py",
+        "bytes": 5554,
+        "sha256": "42b13575b4ea1a7d8f7e170ac5e737fc3919226732011a0e8c70d61da22ecd2a"
+      },
+      "process": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/independent-sol-readback/home-binding-fixed-v2/READER-HOME-REPLACEMENT.v1.PROCESS.json",
+        "bytes": 4058,
+        "sha256": "7f467209ff17a15e1c164856fbf2540dc21b35a4d139e6fd3b6fd71432e24519"
+      },
+      "wrapper_process": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/independent-sol-readback/home-binding-fixed-v2/DRIVER.PROCESS.json",
+        "bytes": 1986,
+        "sha256": "d61c76b7ee2512e950cd029910013eb36a9ae9c82e0eb185808b50baeb95fbf9"
+      },
+      "native_node_rc": 0,
+      "counter_driver_rc": 0,
+      "result": "FRESH_SCOPE_INADMISSIBLE; complete=false,published_into_replacement=false,foreign marker preserved,original home empty. Source bytes unchanged."
+    },
+    "actual_vs_model": "Actual owned synthetic tgz/build, held parent, exclusive mkdir, inode replacement, content copy/readback and native refusal; original root UID/custody/paths mapped to owned UID502/temp paths. No actual869b/sourceRoot/protected/DS calls; owned synthetic temp removed only by its own TemporaryDirectory."
+  },
+  "writer_evidence_versions_not_combined": [
+    {
+      "group": "entry parent RED -> early source GREEN",
+      "result": "Foreign home native nonzero; actual store/journal/dynamic APP import unreachable in model. Root/test env and static peer import explicitly stubbed. Not real APP execution."
+    },
+    {
+      "group": "synthetic initial050fd",
+      "result": "8pass/1fail; link mode source corrected. Original failure retained; not attributed to final source."
+    },
+    {
+      "group": "7afd six-copy",
+      "result": "Native0 but outer fixture expected8 vs actual7objects caused wrapper1. Original error and mechanical7object readback retained, no fabricated GREEN."
+    },
+    {
+      "group": "7afd runtime",
+      "result": "5pass/3 owned EACCES fixture errors; only3 fixed fixture cases rerun3pass. Not full8GREEN."
+    },
+    {
+      "group": "umask",
+      "result": "Actual owned root0700 under umask077 RED onf881, corrected0755 GREEN on2cb6; no artifact reread."
+    },
+    {
+      "group": "preparation batch",
+      "result": "Actual stage prefix parent0/3 -> candidate3/3 for existing file/dir/link. Original guard/source/holder/capture explicitly modeled; no original full stage invocation."
+    },
+    {
+      "group": "finalv1 7ad/c8b",
+      "result": "Owned copied six1pass, closed-scope/missing-parent/rootmode3pass, actual P6 fresh refusal1pass, commandspy14 fixed Python calls/0npm. Root/custody/admission/APP are models. Not real peer/farm/auth or actual869b build."
+    },
+    {
+      "group": "finalv2 00bb/7459",
+      "result": "Author same42b driver native0/counterfalse; one copied synthetic six group native0/pass. Reader separately replayed same42b once. Old unchanged groups reused; no aggregate suite."
+    }
+  ],
+  "fixed_artifact_real_stop": {
+    "intent": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v1/actual-fixed-artifact-build/INTENT.json",
+      "bytes": 934,
+      "sha256": "d709a89b18e73462be19c23fc7c716030938b39340d21c1cd31ff00d7fb3afa0"
+    },
+    "process": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v1/actual-fixed-artifact-build/PROCESS.json",
+      "bytes": 583,
+      "sha256": "8938ce95599b2baa1a6c09bf58336e6947a99e068a28a4faca9889e9545c2fa3"
+    },
+    "stderr": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v1/actual-fixed-artifact-build/stderr.raw",
+      "bytes": 1705,
+      "sha256": "6f8fd36fe60f5020aac23f7c09cceefcfa66133482f672653eddfb1e5037e57a"
+    },
+    "terminal": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v1/actual-fixed-artifact-build/BUILD-TERMINAL-INDEX.v1.json",
+      "bytes": 3979,
+      "sha256": "1cb9683808d098aa99eca3951c27c69d287d2ff450ae3954404798afc589900a"
+    },
+    "source": "f8811ccafeec1bc521b1cc86ae17a33b7b8cb2f556f73277b1d84b2f8229edd1",
+    "issued": 1,
+    "allowed": 1,
+    "native_rc": 1,
+    "outer_code": "PAYLOAD_BINDING",
+    "inner_subpredicate": "NOT_CAPTURED",
+    "state": "STOP/BUILD_FAILED/no catalog",
+    "partial_saved_observation_only": {
+      "files": 21736,
+      "directories": 1837,
+      "logicalBytes": 120505552,
+      "conservative_rounded": 192720896,
+      "complete_payload": false
+    },
+    "causal_boundary": "Output root existence plus originalf881 source control flow implies regular input/full expected hash completed, not independent reader hash observation. Partial at ceiling does not prove exact failure cause or complete P. Reader did not access input/partial or retry/build. Later synthetic source fixes do not explain/repair this real failure by themselves."
+  },
+  "dependent_unproven": [
+    "Actual fixed payload/catalog/P/C/M/bin/full artifact compatibility and final costs remain unready. No valid catalog or actual complete package quantities derived from partial/fixtures.",
+    "Selectede1c APP direct shared-codex/plugin-artifact/ensure-symlink primary bodies/pins not held; candidate-local peer import identity separately unproved. Heldb85 bridge finite selected output/Lshared also unresolved. No dependent coherent tuple/freeze/P0; source-only independent materializer may proceed within its accepted scope.",
+    "No new actual carrier input read; packaging allowance consumed. Any exact additional offline read/builder continuation still requires its own qualified decision, not this source receipt.",
+    "No full12P+Lhome+Lshadow+Lshared+Lreceipt/J/remaining/plan/capacity proof, mandatory/control installation, root/runtime/home facts, sourceP3 resolution, retry/collection allowance or business acceptance."
+  ],
+  "line_count_precision": "Author followup corrected shorthand: original P6 parent530lines, final P6510, helper409. Fixed index values used; line count is not correctness evidence.",
+  "reader_limits": "No old suite/full code review, sourceRoot/Git/native5/config/env/npm/production/DS query, real869b archive/partial read or F mutation. Candidate/indices unchanged. Only owned counter artifacts and this receipt written."
+}

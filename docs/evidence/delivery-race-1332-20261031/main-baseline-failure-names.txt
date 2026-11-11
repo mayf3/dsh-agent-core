@@ -1,0 +1,116 @@
+special-bit store mode is rejected instead of treated as exact 0600
+harness resolution is worktree-aware and cliBin fails loud without a checkout
+seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept)
+seam: a structured gateway failure passes through declared codes verbatim at the correct depth
+E: valid canonical credential — child initializes on the openai-codex route
+F: missing credential fails loud on the real chain — never a silent fallback
+G: unsafe credential (group/world readable) fails loud on the real chain
+packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js
+R3: a settled or unknown turnExecutionId proves nothing (absent leaf)
+scripted native rounds obtain fresh parent proof after prior settlement through real child transport
+real child timeout removes native queued admission before old owner release
+real child cancel removes native queued admission before old owner release
+registers exactly the agent_core_switch_agent tool
+workflow_execute: manifest freezes the unified four-operation write contract (§25 amendment)
+ACC-CMR-005: six executable zero-side-effect oracles across the full resolution matrix
+GATE: allowed verdict forwards to onEvent, no receipt
+GATE: rejection FAILS CLOSED — onEvent never called, fixed receipt sent once
+AC-GATE-MALFORMED-FAIL-CLOSED: only a non-null object with literal allowed=true passes
+GATE: diagnostic verdict getters are never invoked and cannot suppress rejection receipt
+GATE: accessor-based allowed verdict fails closed without invoking getter
+GATE: a throwing gate FAILS CLOSED too (gate_error)
+GATE: NO gate installed = fail-closed drop (spec §9 startup ordering — never legacy forward)
+GATE: wired after construction takes effect immediately (live config, like setCallback)
+GATE: self-echo never reaches the gate (residual guard before admission)
+GATE: handler awaits the FULL onEvent turn before resolving
+GATE: onEvent rejection propagates to the SDK public error pipeline
+GATE: current Router-style {error} outcome remains a handler failure
+IDENTITY: group message with UNRESOLVED bot identity fails closed (error + drop)
+IDENTITY: p2p message with unresolved identity still reaches the gate (p2p needs no identity for adjudication)
+IDENTITY: identity resolved but openId empty fails closed for group too
+packages/feishu-connector/test/bridge.test.js
+packages/feishu-connector/test/current-main-full-turn.test.js
+packages/feishu-connector/test/frozen-config.test.js
+packages/feishu-connector/test/full-ingress-differential.test.js
+packages/feishu-connector/test/golden-vectors.test.js
+packages/feishu-connector/test/log-redaction-adversarial.test.js
+packages/feishu-connector/test/log-redaction.test.js
+packages/feishu-connector/test/mention-config.test.js
+packages/feishu-connector/test/mount.test.js
+packages/feishu-connector/test/outbound.test.js
+packages/feishu-connector/test/processing-reaction.test.js
+packages/feishu-connector/test/real-binding-replay.test.js
+packages/feishu-connector/test/reply-card/reply-card.test.js
+packages/feishu-connector/test/reply-card/scheduler-card.test.js
+packages/feishu-connector/test/reply-card/ux-phase1-v3-display.test.js
+packages/feishu-connector/test/sdk-pipeline.test.js
+packages/feishu-connector/test/standalone-log-redaction.test.js
+packages/feishu-connector/test/ux-phase1-v2.test.js
+C-IDM-009 AC-IDM-04 F-14 W2: crash AFTER reserve, BEFORE Router -> boot sweep -> outcome_unknown, no re-delivery
+C-IDM-007 AC-IDM-08 F-23: concurrent same-key requests -> ONE Router call, ONE shared terminal outcome
+TEXT_NONEMPTY: real utterance (macOS say, zh_CN) transcribes to non-empty text
+ACC-ADT-005: name-only caller discovers the canonical id and the send lands in the target main
+E2E negative: unknown name → not_found and ZERO deliveries anywhere
+E2E negative: whitespace-only query → invalid_arguments envelope, ZERO deliveries
+E2E disabled target: resolves enabled:false (existence truth) and the send is refused
+E2E list: the full composed stack lists both agents in directory shape
+ACC-013: real relay/parent/gateway/runtime reads pending and terminal with no target admission
+ACC-009/013: a foreign actual caller cannot reuse another callers exact coordinate
+ACC-008/013: access_denied never enters the actual reader
+ACC-008/013: transport_failure never enters the actual reader
+ACC-012/013: missing composed provider is unsupported and never falls back
+B9 lifecycle: canonical materialization admits, principal deactivation invalidates, scopes never escalate
+B9 flow: sender identity, receiver identity, durable receipt and reply association across a full restart
+Case C + G: receipt-only accepted; the provenance sidecar is runtime-owned and exact
+ACC-ASM2-004/007: granted inspect crosses gateway, provider, audit and one exact artifact
+Case A: the existing main is reused — same process, two sends, two Runs
+Case B: concurrent first sends to an absent main share ONE startup generation
+Case F: an unauthorized sender is access_denied with zero target deliveries
+Case F (F23): a grant-check transport outage is transport_failure, never access_denied
+disabled target is target_disabled with zero target process or prompt
+Case G: model-supplied identity fields are rejected before any delivery
+R12: L0 rows never carry business detail; the target reply never reaches the audit file
+composition pins the credentialFile to the runtime deployment root (own root accepted)
+composition provides the full existing service graph over the production layout
+composition forwards the trusted exact-agent native policy resolver into process startup
+notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox
+scheduler engine consumes a job from the production store through the router seam
+B15 production evidence preserves scheduled outcome_unknown reconciliation data
+graceful stop closes the HTTP surfaces and writes stopped-able state
+runtime state carries no demo artifacts anywhere
+C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths — no credentials, no secret env
+C-HIST compose wires the HistoryStore over layout.historyDir into the scheduler and provides the /scheduler/* services
+C-HIST schedulerAuth opts provide a JWKS verifier; unconfigured stays null
+MOBILE_SESSION_HISTORY_V1: productApi.history crosses the composition contract (default OFF unchanged; explicit enable reaches the module and fails closed)
+A-D1 zero config: every un-overridden Agent resolves to the Luna default with its subscription mount
+A-D2 runtime env override wins over the default; composition config wins over env
+A-D3 explicit OpenCode Go agent override wins; un-overridden Agents keep the Luna default
+composition freezes the own-domain artifact and refuses drift before the next process boundary
+RED base: missing adapter implementation does not block the channel-OFF base path
+enabled channel + missing adapter implementation fails composition LOUD (fail closed)
+RED base: channel OFF + invalid mention switch composes the base runtime (warn, not fatal)
+RED base: channel OFF + invalid reply render mode composes the base runtime (warn, not fatal)
+RED base: channel OFF + invalid processing-reaction switch composes the base runtime (warn, not fatal)
+enabled channel + invalid mention switch fails composition LOUD (fail closed)
+enabled channel + invalid reply render mode fails composition LOUD (fail closed)
+enabled channel + invalid identity credentials fail composition LOUD (fail closed)
+A6: a delivery parked in flight at the controlled stop leaves a durable reserved admission, quiesce receipts, and a closed ingress surface
+A6: runtime restart on the same root reuses the in-flight admission idempotently — outcome_unknown, zero Router re-admission
+production composition applies the runtime proxy gate before any mount or layout read
+composition resolves the v3 primary to target and the global route to another Agent
+target-only rollback rewrites the config file; non-target PID and route unchanged
+malformed config fails target respawn loud without disturbing a running non-target
+actual arm64 Node and internal links pass closure inspection
+installer probes before backup and never grants root Git trust
+wiring: the import map reaches workspace-bootstrap AND the spawned process (cwd base + env)
+absent primary-workspaces.json → behavior identical to today (default derivation)
+invalid import entry (relative path) → startup fails loud with PRIMARY_WORKSPACE_INVALID
+invalid import entry (missing directory) → startup fails loud
+malformed primary-workspaces.json (bad JSON / non-object) → startup fails loud
+I: the same static config file yields the identical primary across restarts
+compose stop persists the boundary receipt across the controlled shutdown (quiesce begin/end)
+cross-agent scheduler authorization flows one target-owned fresh Run into HistoryStore without source authority propagation or replay
+production-pinned payload executes migration with distinct source and destination groups
+postdeploy finalize readback gate survives the authsvc/runtime-reader gid split
+routing receipt readback fails closed on a wrong control gid
+watchdog deployment source retains the accepted Session Trace lineage in its overlay

@@ -1,0 +1,95 @@
+{
+  "kind": "E42_SELECTED_FINITE_STOP_ONLY_REMAINING_CALLPLAN",
+  "status": "PROPOSED_STATIC_PLAN_NOT_EXECUTION_OR_CAPACITY_PASS",
+  "operation_id": "b7-packet-r41-5a07e742664460c2-e42",
+  "actual_TX": null,
+  "selection_actor": "/root/sol_execution_continuation under current original delegated task",
+  "G": {
+    "actual": null,
+    "planning_upper_bound": 256,
+    "basis": "capture-boundaries7fe28dcd:168 consumer<=256; canary-producer2a8420e1:25-33 one group perconsumer; tighter same-op route/provision bound not held"
+  },
+  "schedule_choice": "delegation at most once; any failure/UNKNOWN stops this external executor schedule; sameRID/status readback only; no repeated gate or extra external recovery/prepare in this finite schedule",
+  "calls": [
+    {
+      "stage": "place-delegation if needed before normalbusiness",
+      "max_calls": 1,
+      "prepare_driven_per_call": 1,
+      "source": "executor968d42e9:635-638;660-663 EXCL does not prevent paid failedinvocation",
+      "classification": "D<=1, actualDunknown"
+    },
+    {
+      "stage": "release-b7",
+      "max_calls": 1,
+      "prepare_driven_per_call": 1,
+      "source": "308-313"
+    },
+    {
+      "stage": "gate-receipt context",
+      "max_calls": 1,
+      "prepare_driven_per_call": 1,
+      "source": "421-429/context consumer"
+    },
+    {
+      "stage": "place-material perrepresentative",
+      "max_calls": "G",
+      "prepare_driven_per_call": 1,
+      "source": "433-437"
+    },
+    {
+      "stage": "bind-act",
+      "max_calls": 1,
+      "prepare_driven_per_call": 1,
+      "source": "421-429"
+    },
+    {
+      "stage": "commit gate",
+      "max_calls": 1,
+      "prepare_driven_per_call": 1,
+      "source": "673-693"
+    },
+    {
+      "stage": "witnessed pergroup",
+      "max_calls": "G",
+      "prepare_driven_per_call": 1,
+      "source": "673-693"
+    },
+    {
+      "stage": "confirm gate",
+      "max_calls": 1,
+      "prepare_driven_per_call": 1,
+      "source": "673-693"
+    },
+    {
+      "stage": "status exactoriginalrequest/op only",
+      "max_calls": "original lawful boundedreadback asneeded",
+      "prepare_driven_per_call": 0,
+      "source": "695-703"
+    }
+  ],
+  "normal_max_formula": "5+2*G+D, D<=1; n<=6+2G",
+  "failure": {
+    "external_followups": "STOP; no additional mutation/gate/prepare in selected plan",
+    "retention": "all completed invocation copies plus actual/possible current partial retained",
+    "outer_internal_rollback": "original required outer recovery remains applicable; its3N+2S occupancy retained, not an extra executorprepare"
+  },
+  "UNKNOWN": {
+    "external_followups": "retain original request/result; read same request/status only, no resend/newID/attempt",
+    "R": 0,
+    "note": "R=0 is a chosen stop-only schedule, not a statement every original future recovery authority is canceled"
+  },
+  "E_plan_upper": 1,
+  "E_actual": null,
+  "n_upper": 518,
+  "conditional_nJ_at_Gmax": 775145742336,
+  "per_invocation_J_saved_basis": 1496420352,
+  "new_helper_bytes_need_increase_J_if_joined_to_driven": true,
+  "second_business_operation_included": false,
+  "additional_required_call_rule": "if actual original phase needs an additional legitimate externalcall, enumerate it and recompute genuine remaining before that call; do not execute it under this plan or turn this selected bound into a universalcap",
+  "canonical_source_OBS": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-OFFLINE-TYPED-CALLPLAN-P0-COUNTS-SOL-20261019.json",
+    "bytes": 11842,
+    "sha256": "50c0e073e1e68aba29ce5ed566f3f2855f5dea473b5b623ca1a150c6b7693697",
+    "provenance": "Root supplied independent Sol fixed-pin counts; not rerun by this author"
+  }
+}

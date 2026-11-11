@@ -1,0 +1,6 @@
+{
+  "scope": "all official selected base source files except six declared overlay paths; no dependency proof",
+  "base": "393a0afccedc5cce7be8b492c82d68d8d52206f6",
+  "checked": 349,
+  "mismatches": []
+}

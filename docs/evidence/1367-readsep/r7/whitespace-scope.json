@@ -1,0 +1,61 @@
+{
+  "ruling_id": "603-R7-RAW-CLASS-001",
+  "provenance": "same standing raw-capture class; new R7 txt files are exact combined stdout/stderr",
+  "pathspec_exclusions": [
+    ":(exclude)docs/evidence/**/*.diff",
+    ":(exclude)docs/evidence/**/*.stderr",
+    ":(exclude)docs/evidence/**/*.stdout",
+    ":(exclude)docs/evidence/**/*.log",
+    ":(exclude)docs/evidence/1367-readsep/RED.txt",
+    ":(exclude)docs/evidence/1367-readsep/R2-RED.txt",
+    ":(exclude)docs/evidence/1367-readsep/R3-diff-check.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/RED.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/regression.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/target8.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/diagnostic11.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/observation-cas.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/workflow.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/integration.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/broker.txt",
+    ":(exclude)docs/evidence/1367-readsep/r7/shutdown-api.txt"
+  ],
+  "new_raw_files": [
+    {
+      "path": "docs/evidence/1367-readsep/r7/RED.txt",
+      "sha256": "f35a55c3e60718cbfdf8fd25387df0e311d529a20675ee6d575316a0dfed5511"
+    },
+    {
+      "path": "docs/evidence/1367-readsep/r7/regression.txt",
+      "sha256": "35fcafd430f635299f89415cc54479d5cf50a6604726b04032777b6b3f427fa6"
+    },
+    {
+      "path": "docs/evidence/1367-readsep/r7/target8.txt",
+      "sha256": "a76b3883e76382df77ffaf8608e7d63bfaf837f2eedf30427e380438f0300770"
+    },
+    {
+      "path": "docs/evidence/1367-readsep/r7/diagnostic11.txt",
+      "sha256": "9abd8a63f112a3d0dcfeb198cd560773a87fc679a69608436ee9cab97dbee0a8"
+    },
+    {
+      "path": "docs/evidence/1367-readsep/r7/observation-cas.txt",
+      "sha256": "7fdb57f00e5689661b80a7b3aeb347032f5e2182b3d996ece86b2ffacea6fa19"
+    },
+    {
+      "path": "docs/evidence/1367-readsep/r7/workflow.txt",
+      "sha256": "f79350087e717d893a17d46907212c6db113e1a70da4088401910632910aa561"
+    },
+    {
+      "path": "docs/evidence/1367-readsep/r7/integration.txt",
+      "sha256": "0e5416886c4a5917eb8fc260aec387d64223a9f92419c3a6f8465780ff597356"
+    },
+    {
+      "path": "docs/evidence/1367-readsep/r7/broker.txt",
+      "sha256": "abc395652c081645d4007209cac5534bd2f74e81e138958279e24c12aed51633"
+    },
+    {
+      "path": "docs/evidence/1367-readsep/r7/shutdown-api.txt",
+      "sha256": "b600bb130b3c49a05d33363ed90e1f5c1b222b15eda963be3fd7b712247d1904"
+    }
+  ],
+  "fully_checked": "all authored source, tests, Markdown, JSON, Python and other non-raw paths; original captures remain unchanged"
+}

@@ -1,0 +1,23 @@
+{
+  "gate": "regression",
+  "cwd": "/private/tmp/h1257",
+  "head": "28608313cb88e37fee95385f30cbcb9d915bcdd5",
+  "command": [
+    "node",
+    "--test",
+    "packages/production-runtime/test/shutdown-result.test.js",
+    "packages/production-runtime/test/workflow-execution-shutdown.test.js",
+    "packages/production-runtime/test/restart-boundary.test.js",
+    "packages/production-runtime/test/scheduler/restart-drain.test.js",
+    "packages/production-runtime/test/scheduler/deployment-runtime-restart.test.js",
+    "packages/agent-router/test/route-chain/blocked-delivery-alerts.test.js",
+    "packages/agent-router/test/process-lifecycle/shutdown.test.js",
+    "packages/agent-router/test/process-lifecycle/late-settlement.test.js",
+    "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js"
+  ],
+  "startedAt": "2026-11-06T23:04:21.287717+00:00",
+  "finishedAt": "2026-11-06T23:04:31.522194+00:00",
+  "exitCode": 1
+}

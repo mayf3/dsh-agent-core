@@ -1,0 +1,598 @@
+TAP version 13
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# Subtest: real gateway resolves late-mounted workflowProgressAccess and records checkpoint
+ok 1 - real gateway resolves late-mounted workflowProgressAccess and records checkpoint
+  ---
+  duration_ms: 195.786917
+  type: 'test'
+  ...
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# Subtest: real gateway rejects untrusted turn and model-carried coordinates
+ok 2 - real gateway rejects untrusted turn and model-carried coordinates
+  ---
+  duration_ms: 129.894875
+  type: 'test'
+  ...
+# Subtest: workflow_progress tool shape exposes no identity/provenance arguments
+ok 3 - workflow_progress tool shape exposes no identity/provenance arguments
+  ---
+  duration_ms: 3.556958
+  type: 'test'
+  ...
+# Subtest: parent-owned workflow origin resolves before delivery receipt and after context cache eviction
+ok 4 - parent-owned workflow origin resolves before delivery receipt and after context cache eviction
+  ---
+  duration_ms: 3.678625
+  type: 'test'
+  ...
+# Subtest: trusted Workflow turn records and reads the current checkpoint
+ok 5 - trusted Workflow turn records and reads the current checkpoint
+  ---
+  duration_ms: 132.882167
+  type: 'test'
+  ...
+# Subtest: ordinary, wrong-agent and conflicting-turn contexts fail closed
+ok 6 - ordinary, wrong-agent and conflicting-turn contexts fail closed
+  ---
+  duration_ms: 116.721167
+  type: 'test'
+  ...
+# Subtest: model-carried workflow coordinates and transcript-sized payloads are rejected
+ok 7 - model-carried workflow coordinates and transcript-sized payloads are rejected
+  ---
+  duration_ms: 114.442291
+  type: 'test'
+  ...
+# Subtest: terminal attempts cannot accept another checkpoint
+ok 8 - terminal attempts cannot accept another checkpoint
+  ---
+  duration_ms: 158.899416
+  type: 'test'
+  ...
+# Subtest: A: resolve fail → zero Run → identity repaired → explicit recovery → exactly ONE Run, same attemptId
+ok 9 - A: resolve fail → zero Run → identity repaired → explicit recovery → exactly ONE Run, same attemptId
+  ---
+  duration_ms: 160.412041
+  type: 'test'
+  ...
+# Subtest: B: replaying the recovery command after completion → RECOVERY_INAPPLICABLE (delivery domain), zero appends
+ok 10 - B: replaying the recovery command after completion → RECOVERY_INAPPLICABLE (delivery domain), zero appends
+  ---
+  duration_ms: 197.094875
+  type: 'test'
+  ...
+# Subtest: C: two concurrent recovery invocations → one recovery owner, at most one Run
+ok 11 - C: two concurrent recovery invocations → one recovery owner, at most one Run
+  ---
+  duration_ms: 190.761916
+  type: 'test'
+  ...
+# Subtest: D: crash after authorization but before delivery_started → still recoverable, later invocation proceeds
+ok 12 - D: crash after authorization but before delivery_started → still recoverable, later invocation proceeds
+  ---
+  duration_ms: 127.250459
+  type: 'test'
+  ...
+# Subtest: E: crash after delivery_started before run_delivered → NOT recoverable, reconcile lands NEEDS_REVIEW
+ok 13 - E: crash after delivery_started before run_delivered → NOT recoverable, reconcile lands NEEDS_REVIEW
+  ---
+  duration_ms: 207.546458
+  type: 'test'
+  ...
+# Subtest: STORE-FALSE-NEGATIVE: delivery_started present + Router answers never_existed → STILL not recoverable
+ok 14 - STORE-FALSE-NEGATIVE: delivery_started present + Router answers never_existed → STILL not recoverable
+  ---
+  duration_ms: 119.934458
+  type: 'test'
+  ...
+# Subtest: E1: no authorityRef → the call is refused with zero ledger effect
+ok 15 - E1: no authorityRef → the call is refused with zero ledger effect
+  ---
+  duration_ms: 92.689708
+  type: 'test'
+  ...
+# Subtest: E2/E3: no attempt → NO_OP_NO_ATTEMPT; terminal attempt → NO_OP_TERMINAL with zero appends
+ok 16 - E2/E3: no attempt → NO_OP_NO_ATTEMPT; terminal attempt → NO_OP_TERMINAL with zero appends
+  ---
+  duration_ms: 164.955833
+  type: 'test'
+  ...
+# Subtest: E4 classes: planned-only shape, pending correlation, missing correlation seam, delivery-domain phases
+ok 17 - E4 classes: planned-only shape, pending correlation, missing correlation seam, delivery-domain phases
+  ---
+  duration_ms: 710.111709
+  type: 'test'
+  ...
+# Subtest: E5: world drift (visit no longer current) → recovery_refused → terminal NEEDS_REVIEW
+ok 18 - E5: world drift (visit no longer current) → recovery_refused → terminal NEEDS_REVIEW
+  ---
+  duration_ms: 118.129333
+  type: 'test'
+  ...
+# Subtest: E5: unreadable instance state → refused (fail-closed), zero admission
+ok 19 - E5: unreadable instance state → refused (fail-closed), zero admission
+  ---
+  duration_ms: 98.658
+  type: 'test'
+  ...
+# Subtest: Identity NOT yet repaired: recovery re-blocks with zero Runs (designed interim behavior)
+ok 20 - Identity NOT yet repaired: recovery re-blocks with zero Runs (designed interim behavior)
+  ---
+  duration_ms: 123.693125
+  type: 'test'
+  ...
+# Subtest: Ledger discipline: at-most-one delivery_started (second = corrupt fail-loud); resolve_failed: is not a writable delivery_failed reason
+ok 21 - Ledger discipline: at-most-one delivery_started (second = corrupt fail-loud); resolve_failed: is not a writable delivery_failed reason
+  ---
+  duration_ms: 74.191584
+  type: 'test'
+  ...
+# Subtest: E4: contradictory attributable evidence (never_existed + handle) refuses
+ok 22 - E4: contradictory attributable evidence (never_existed + handle) refuses
+  ---
+  duration_ms: 85.623458
+  type: 'test'
+  ...
+# Subtest: E5: visit-current but assignee drifted on the wire → refused (exact compare)
+ok 23 - E5: visit-current but assignee drifted on the wire → refused (exact compare)
+  ---
+  duration_ms: 132.553375
+  type: 'test'
+  ...
+# Subtest: Ledger discipline: the mutation record seam is scope-bound — post-callback append fails loud
+ok 24 - Ledger discipline: the mutation record seam is scope-bound — post-callback append fails loud
+  ---
+  duration_ms: 77.198875
+  type: 'test'
+  ...
+# Subtest: Surface discipline: recovery is engine/runtime-component surface only — no broker capability exposes it
+ok 25 - Surface discipline: recovery is engine/runtime-component surface only — no broker capability exposes it
+  ---
+  duration_ms: 11.692375
+  type: 'test'
+  ...
+# Subtest: Router outcome_unknown preserves its reconciliation handle as active Run linkage with no replay
+ok 26 - Router outcome_unknown preserves its reconciliation handle as active Run linkage with no replay
+  ---
+  duration_ms: 317.015375
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-fgB8jS/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-fgB8jS/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_target-agent ready pid=9101 (1ms)
+# [router] route-chain {"kind":"route_attempt","tsWallMs":1794094584904,"routeChainId":"single-route","agentId":"agt_target-agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+# [router] route-chain {"kind":"route_chain_final","tsWallMs":1794094584904,"routeChainId":"single-route","agentId":"agt_target-agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+# [router] deliver accepted: agent agt_target-agent session main requestId wfeat-7290b7a752186e3768... (new-message) in 64ms
+# Subtest: settled active fence preserves stale successor liveness: correlation=false, clean baseline=false
+ok 27 - settled active fence preserves stale successor liveness: correlation=false, clean baseline=false
+  ---
+  duration_ms: 478.781833
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-6goPum/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-6goPum/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_target-agent ready pid=9101 (0ms)
+# [router] route-chain {"kind":"route_attempt","tsWallMs":1794094585226,"routeChainId":"single-route","agentId":"agt_target-agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+# [router] route-chain {"kind":"route_chain_final","tsWallMs":1794094585226,"routeChainId":"single-route","agentId":"agt_target-agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+# [router] deliver accepted: agent agt_target-agent session main requestId wfeat-7290b7a752186e3768... (new-message) in 63ms
+# Subtest: settled active fence preserves stale successor liveness: correlation=false, clean baseline=true
+ok 28 - settled active fence preserves stale successor liveness: correlation=false, clean baseline=true
+  ---
+  duration_ms: 330.195
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-Su4gmx/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-Su4gmx/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_target-agent ready pid=9101 (1ms)
+# [router] route-chain {"kind":"route_attempt","tsWallMs":1794094585613,"routeChainId":"single-route","agentId":"agt_target-agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+# [router] route-chain {"kind":"route_chain_final","tsWallMs":1794094585613,"routeChainId":"single-route","agentId":"agt_target-agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+# [router] deliver accepted: agent agt_target-agent session main requestId wfeat-7290b7a752186e3768... (new-message) in 68ms
+# Subtest: settled active fence preserves stale successor liveness: correlation=true, clean baseline=false
+ok 29 - settled active fence preserves stale successor liveness: correlation=true, clean baseline=false
+  ---
+  duration_ms: 383.911542
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-aVUioF/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-aVUioF/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] [router] agent agt_target-agent ready pid=9101 (2ms)
+# [router] route-chain {"kind":"route_attempt","tsWallMs":1794094585974,"routeChainId":"single-route","agentId":"agt_target-agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+# [router] route-chain {"kind":"route_chain_final","tsWallMs":1794094585974,"routeChainId":"single-route","agentId":"agt_target-agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+# [router] deliver accepted: agent agt_target-agent session main requestId wfeat-7290b7a752186e3768... (new-message) in 72ms
+# Subtest: settled active fence preserves stale successor liveness: correlation=true, clean baseline=true
+ok 30 - settled active fence preserves stale successor liveness: correlation=true, clean baseline=true
+  ---
+  duration_ms: 376.075583
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: active fence, correlation=false
+ok 31 - positive quiescence evidence: active fence, correlation=false
+  ---
+  duration_ms: 99.629292
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: blocked recovery, correlation=false
+ok 32 - positive quiescence evidence: blocked recovery, correlation=false
+  ---
+  duration_ms: 101.128917
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: both blockers, correlation=false
+ok 33 - positive quiescence evidence: both blockers, correlation=false
+  ---
+  duration_ms: 99.526625
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: UNKNOWN, correlation=false
+ok 34 - positive quiescence evidence: UNKNOWN, correlation=false
+  ---
+  duration_ms: 96.371417
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: pending, correlation=false
+ok 35 - positive quiescence evidence: pending, correlation=false
+  ---
+  duration_ms: 83.787791
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: recovering, correlation=false
+ok 36 - positive quiescence evidence: recovering, correlation=false
+  ---
+  duration_ms: 75.018208
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: failed, correlation=false
+ok 37 - positive quiescence evidence: failed, correlation=false
+  ---
+  duration_ms: 107.478625
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: missing state, correlation=false
+ok 38 - positive quiescence evidence: missing state, correlation=false
+  ---
+  duration_ms: 89.612625
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: missing result, correlation=false
+ok 39 - positive quiescence evidence: missing result, correlation=false
+  ---
+  duration_ms: 55.5465
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: throwing read, correlation=false
+ok 40 - positive quiescence evidence: throwing read, correlation=false
+  ---
+  duration_ms: 59.597333
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unreadable snapshot, correlation=false
+ok 41 - positive quiescence evidence: unreadable snapshot, correlation=false
+  ---
+  duration_ms: 57.345458
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: invalid snapshot null, correlation=false
+ok 42 - positive quiescence evidence: invalid snapshot null, correlation=false
+  ---
+  duration_ms: 58.731542
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: invalid snapshot false, correlation=false
+ok 43 - positive quiescence evidence: invalid snapshot false, correlation=false
+  ---
+  duration_ms: 58.100167
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: invalid snapshot [], correlation=false
+ok 44 - positive quiescence evidence: invalid snapshot [], correlation=false
+  ---
+  duration_ms: 59.787542
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: invalid snapshot "settled", correlation=false
+ok 45 - positive quiescence evidence: invalid snapshot "settled", correlation=false
+  ---
+  duration_ms: 69.346208
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: contradictory snapshot state, correlation=false
+ok 46 - positive quiescence evidence: contradictory snapshot state, correlation=false
+  ---
+  duration_ms: 56.631833
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unsupported fenceState "future_enum", correlation=false
+ok 47 - positive quiescence evidence: unsupported fenceState "future_enum", correlation=false
+  ---
+  duration_ms: 53.796333
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unsupported fenceState false, correlation=false
+ok 48 - positive quiescence evidence: unsupported fenceState false, correlation=false
+  ---
+  duration_ms: 58.070208
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unsupported fenceState {}, correlation=false
+ok 49 - positive quiescence evidence: unsupported fenceState {}, correlation=false
+  ---
+  duration_ms: 56.695792
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unsupported fenceState [], correlation=false
+ok 50 - positive quiescence evidence: unsupported fenceState [], correlation=false
+  ---
+  duration_ms: 56.096
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unsupported recoveryState "future_enum", correlation=false
+ok 51 - positive quiescence evidence: unsupported recoveryState "future_enum", correlation=false
+  ---
+  duration_ms: 62.936625
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unsupported recoveryState false, correlation=false
+ok 52 - positive quiescence evidence: unsupported recoveryState false, correlation=false
+  ---
+  duration_ms: 54.146125
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unsupported recoveryState {}, correlation=false
+ok 53 - positive quiescence evidence: unsupported recoveryState {}, correlation=false
+  ---
+  duration_ms: 66.035042
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unsupported recoveryState [], correlation=false
+ok 54 - positive quiescence evidence: unsupported recoveryState [], correlation=false
+  ---
+  duration_ms: 60.651542
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: legacy state only, correlation=false
+ok 55 - positive quiescence evidence: legacy state only, correlation=false
+  ---
+  duration_ms: 73.903875
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: default fields, correlation=false
+ok 56 - positive quiescence evidence: default fields, correlation=false
+  ---
+  duration_ms: 72.793167
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: nullable fields, correlation=false
+ok 57 - positive quiescence evidence: nullable fields, correlation=false
+  ---
+  duration_ms: 71.283417
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: producer defaults, correlation=false
+ok 58 - positive quiescence evidence: producer defaults, correlation=false
+  ---
+  duration_ms: 74.983125
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: normal completion, correlation=false
+ok 59 - positive quiescence evidence: normal completion, correlation=false
+  ---
+  duration_ms: 67.352334
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: active fence, correlation=true
+ok 60 - positive quiescence evidence: active fence, correlation=true
+  ---
+  duration_ms: 63.503708
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: blocked recovery, correlation=true
+ok 61 - positive quiescence evidence: blocked recovery, correlation=true
+  ---
+  duration_ms: 58.516042
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: both blockers, correlation=true
+ok 62 - positive quiescence evidence: both blockers, correlation=true
+  ---
+  duration_ms: 60.985125
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: UNKNOWN, correlation=true
+ok 63 - positive quiescence evidence: UNKNOWN, correlation=true
+  ---
+  duration_ms: 62.7675
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: pending, correlation=true
+ok 64 - positive quiescence evidence: pending, correlation=true
+  ---
+  duration_ms: 54.735083
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: recovering, correlation=true
+ok 65 - positive quiescence evidence: recovering, correlation=true
+  ---
+  duration_ms: 59.024083
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: failed, correlation=true
+ok 66 - positive quiescence evidence: failed, correlation=true
+  ---
+  duration_ms: 60.992708
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: missing state, correlation=true
+ok 67 - positive quiescence evidence: missing state, correlation=true
+  ---
+  duration_ms: 57.761583
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: missing result, correlation=true
+ok 68 - positive quiescence evidence: missing result, correlation=true
+  ---
+  duration_ms: 58.296333
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: throwing read, correlation=true
+ok 69 - positive quiescence evidence: throwing read, correlation=true
+  ---
+  duration_ms: 73.257375
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unreadable snapshot, correlation=true
+ok 70 - positive quiescence evidence: unreadable snapshot, correlation=true
+  ---
+  duration_ms: 51.157
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: invalid snapshot null, correlation=true
+ok 71 - positive quiescence evidence: invalid snapshot null, correlation=true
+  ---
+  duration_ms: 58.066417
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: invalid snapshot false, correlation=true
+ok 72 - positive quiescence evidence: invalid snapshot false, correlation=true
+  ---
+  duration_ms: 56.258417
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: invalid snapshot [], correlation=true
+ok 73 - positive quiescence evidence: invalid snapshot [], correlation=true
+  ---
+  duration_ms: 69.283625
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: invalid snapshot "settled", correlation=true
+ok 74 - positive quiescence evidence: invalid snapshot "settled", correlation=true
+  ---
+  duration_ms: 60.320125
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: contradictory snapshot state, correlation=true
+ok 75 - positive quiescence evidence: contradictory snapshot state, correlation=true
+  ---
+  duration_ms: 55.031083
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unsupported fenceState "future_enum", correlation=true
+ok 76 - positive quiescence evidence: unsupported fenceState "future_enum", correlation=true
+  ---
+  duration_ms: 63.340708
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unsupported fenceState false, correlation=true
+ok 77 - positive quiescence evidence: unsupported fenceState false, correlation=true
+  ---
+  duration_ms: 62.415958
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unsupported fenceState {}, correlation=true
+ok 78 - positive quiescence evidence: unsupported fenceState {}, correlation=true
+  ---
+  duration_ms: 54.556666
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unsupported fenceState [], correlation=true
+ok 79 - positive quiescence evidence: unsupported fenceState [], correlation=true
+  ---
+  duration_ms: 57.4765
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unsupported recoveryState "future_enum", correlation=true
+ok 80 - positive quiescence evidence: unsupported recoveryState "future_enum", correlation=true
+  ---
+  duration_ms: 56.783125
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unsupported recoveryState false, correlation=true
+ok 81 - positive quiescence evidence: unsupported recoveryState false, correlation=true
+  ---
+  duration_ms: 57.267542
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unsupported recoveryState {}, correlation=true
+ok 82 - positive quiescence evidence: unsupported recoveryState {}, correlation=true
+  ---
+  duration_ms: 70.618042
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: unsupported recoveryState [], correlation=true
+ok 83 - positive quiescence evidence: unsupported recoveryState [], correlation=true
+  ---
+  duration_ms: 65.842166
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: legacy state only, correlation=true
+ok 84 - positive quiescence evidence: legacy state only, correlation=true
+  ---
+  duration_ms: 69.028667
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: default fields, correlation=true
+ok 85 - positive quiescence evidence: default fields, correlation=true
+  ---
+  duration_ms: 141.072916
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: nullable fields, correlation=true
+ok 86 - positive quiescence evidence: nullable fields, correlation=true
+  ---
+  duration_ms: 64.126625
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: producer defaults, correlation=true
+ok 87 - positive quiescence evidence: producer defaults, correlation=true
+  ---
+  duration_ms: 65.070958
+  type: 'test'
+  ...
+# Subtest: positive quiescence evidence: normal completion, correlation=true
+ok 88 - positive quiescence evidence: normal completion, correlation=true
+  ---
+  duration_ms: 58.944875
+  type: 'test'
+  ...
+# Subtest: WORKFLOW_STALE_REENTRY_V1 r2 wiring — threshold resolution: default, env, config, fail-loud
+ok 89 - WORKFLOW_STALE_REENTRY_V1 r2 wiring — threshold resolution: default, env, config, fail-loud
+  ---
+  duration_ms: 2.013292
+  type: 'test'
+  ...
+# Subtest: WORKFLOW_STALE_REENTRY_V1 r2 wiring — quiescence-gated redispatch over the REAL gateway/read seams; no mutation seam exists
+ok 90 - WORKFLOW_STALE_REENTRY_V1 r2 wiring — quiescence-gated redispatch over the REAL gateway/read seams; no mutation seam exists
+  ---
+  duration_ms: 134.593584
+  type: 'test'
+  ...
+# Subtest: normal READY poll drains pages, rereads after restart, rejects malformed projections and never falls back
+ok 91 - normal READY poll drains pages, rereads after restart, rejects malformed projections and never falls back
+  ---
+  duration_ms: 2833.377417
+  type: 'test'
+  ...
+1..91
+# tests 91
+# suites 0
+# pass 91
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9038.75925

@@ -142,6 +142,47 @@ authority.
 | ACC-IAD-004 |004| diff/structure gate/write spies/secret sentinels | closed file set; zero side effects/disclosure; digest absent |
 | ACC-IAD-005 |005| consumer integration at pinned accepted owning heads | Workflow admission fail-closed intact; varied internal callers resolve; no premature Goal completion |
 
+## Additive amendment for #525 — proposed for independent acceptance
+
+Owner direction supplied in the 2026-11-02 execution task: "#525 接受".
+This bounded delta is proposed together with PR #535's source integration under
+accepted governance adoption V3's atomic AMEND + DURABLE route. Existing
+CTR-IAD-001..006 remain accepted and unchanged; the two new IDs below require
+independent review and explicit acceptance before merge. This section grants no
+production operation and does not change caller eligibility or target enabled truth.
+
+### CTR-IAD-007 — Configuration failure before resource acquisition
+
+When the production Product API is enabled (explicit composition option takes
+precedence over PRODUCT_API_ENABLED), its directory handler MUST require a nonempty
+JWKS URL at construction. A missing URL MUST reject composition before channel
+connections, listeners, scheduler or workflow engines are acquired. A disabled
+Product API MUST NOT construct this handler or require its JWKS configuration.
+Construction performs no network probe and proves configuration presence only.
+Invalid tokens and unavailable JWKS at request time retain CTR-IAD-002's fail-closed
+401 response, subject to CTR-IAD-003's existing operation deadline; no authorization
+or enabled gate is bypassed.
+
+### CTR-IAD-008 — Identity-free verifier observations
+
+The existing loopback Product API GET /health retains HTTP 200, ok:true and its
+service identifier, and adds admission: null when no directory handler is mounted,
+or {configured:true,state} for a configured handler. State starts as unproven;
+a successful token verification sets ready; an observed JWKS infrastructure
+verification failure sets auth_unavailable. Ordinary invalid tokens do not change
+state. A later successful verification restores ready without automatic retry.
+Ready may use the verifier's accepted bounded JWKS cache; it proves neither current
+JWKS reachability, caller scope, target enabled status nor cross-service/business
+success. This is request-driven observation, not an active canary or alert SLA.
+Warn once on entering auth_unavailable and once on recovery to ready. Health and
+warnings contain no token, principal, credential or target identity; a failing warn
+sink MUST NOT change admission. Directory response shapes remain unchanged.
+
+| Acceptance | Contracts | Method/environment/evidence | Expected / failure |
+|---|---|---|---|
+| ACC-IAD-007 |007| isolated production composition fixtures at exact candidate, enabled/disabled env and option combinations, ordering observation | missing URL rejects before resource mounts; disabled composition succeeds without JWKS; no network needed at construction; contrary behavior fails |
+| ACC-IAD-008 |008| signed JWT/JWKS fault fixtures plus loopback /health tests at exact candidate, secret sentinels and failing log sink | unproven/ready/auth_unavailable/recovery, bounded warnings, invalid-token neutrality and frozen wire shapes pass; identity disclosure, false readiness claim or admission gated by logging fails |
+
 ## Status and alternatives
 
 Rejected: keeping the dedicated single-caller admission route (Owner-superseded);

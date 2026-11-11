@@ -1,0 +1,19 @@
+{
+  "command": [
+    "git",
+    "diff",
+    "--cached",
+    "--check",
+    "--",
+    ".",
+    ":(exclude)docs/evidence/guard-integration-523-20261104/agent-router.tap",
+    ":(exclude)docs/evidence/guard-integration-523-r2-20261104/baseline-agent-router.tap",
+    ":(exclude)docs/evidence/guard-integration-523-r2-20261104/integration-only-failures.raw.txt",
+    ":(exclude)docs/evidence/guard-integration-523-r3-20261104/agent-router.tap"
+  ],
+  "exitCode": 0,
+  "at": "2026-11-04T05:29:30.573785+00:00",
+  "log": "source-manual-doc-diff.raw.txt",
+  "bytes": 0,
+  "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -1,0 +1,77 @@
+{
+  "schema": "M2_SYNTHETIC_COPY_EXECUTION",
+  "observedAt": "2026-10-31T13:39:46.405Z",
+  "semanticHead": "0c59a9f9bea7b39a8e8ee58f973b23e717cda06a",
+  "productionSourceRead": false,
+  "evidence": [
+    {
+      "kind": "structured",
+      "sourceSha256": "8e6bdce7f6548b94048b7fcc4dcd042e06321caf879a80f81519dca9c4b8eac8",
+      "copySha256": "8e6bdce7f6548b94048b7fcc4dcd042e06321caf879a80f81519dca9c4b8eac8",
+      "coreMode": "400",
+      "receipt": {
+        "status": "CREATED_COPY",
+        "mode": "MIGRATION_COPY",
+        "writerActive": false,
+        "source": {
+          "bytes": 195,
+          "sha256": "8e6bdce7f6548b94048b7fcc4dcd042e06321caf879a80f81519dca9c4b8eac8",
+          "format": "STRUCTURED"
+        },
+        "planStatus": "NOOP",
+        "beforeSha256": "8e6bdce7f6548b94048b7fcc4dcd042e06321caf879a80f81519dca9c4b8eac8",
+        "afterSha256": "8e6bdce7f6548b94048b7fcc4dcd042e06321caf879a80f81519dca9c4b8eac8",
+        "txid": "migration-86a2eeaf9ea38808d929f64ed4944c733b31cb90584501c7bc983ca3ae34b182",
+        "protocolBytes": 1883,
+        "ledger": "memory/.agent-memory-v2",
+        "published": false
+      }
+    },
+    {
+      "kind": "freeform",
+      "sourceSha256": "aac45bd05a89ee8388c1b9ffbd9ed4264a67edbcbb122f5463451ef57ec9d061",
+      "copySha256": "aac45bd05a89ee8388c1b9ffbd9ed4264a67edbcbb122f5463451ef57ec9d061",
+      "coreMode": "400",
+      "receipt": {
+        "status": "CREATED_COPY",
+        "mode": "MIGRATION_COPY",
+        "writerActive": false,
+        "source": {
+          "bytes": 45,
+          "sha256": "aac45bd05a89ee8388c1b9ffbd9ed4264a67edbcbb122f5463451ef57ec9d061",
+          "format": "FREEFORM"
+        },
+        "planStatus": "READ_ONLY_FORMAT",
+        "beforeSha256": "aac45bd05a89ee8388c1b9ffbd9ed4264a67edbcbb122f5463451ef57ec9d061",
+        "afterSha256": null,
+        "txid": "migration-8486621721ecd02fd634b39f467067ce8cc62ef97a3e01089e76a13616fd9b4c",
+        "protocolBytes": 1567,
+        "ledger": "memory/.agent-memory-v2",
+        "published": false
+      }
+    },
+    {
+      "kind": "mixed",
+      "sourceSha256": "e82b1e12cc985497579c1899ea4c16d8cb41d0285b176b15bd02d2441c10b2ba",
+      "copySha256": "e82b1e12cc985497579c1899ea4c16d8cb41d0285b176b15bd02d2441c10b2ba",
+      "coreMode": "400",
+      "receipt": {
+        "status": "CREATED_COPY",
+        "mode": "MIGRATION_COPY",
+        "writerActive": false,
+        "source": {
+          "bytes": 306,
+          "sha256": "e82b1e12cc985497579c1899ea4c16d8cb41d0285b176b15bd02d2441c10b2ba",
+          "format": "MIXED"
+        },
+        "planStatus": "READY",
+        "beforeSha256": "e82b1e12cc985497579c1899ea4c16d8cb41d0285b176b15bd02d2441c10b2ba",
+        "afterSha256": "4b0257559fcc8e04b520e8f2ee3ff86d172d431f0382f529d90164b921e53662",
+        "txid": "migration-4038929a802bb7a3d4a413b6d33fea261e015459ae544aef68b32de8a8229045",
+        "protocolBytes": 3111,
+        "ledger": "memory/.agent-memory-v2",
+        "published": false
+      }
+    }
+  ]
+}

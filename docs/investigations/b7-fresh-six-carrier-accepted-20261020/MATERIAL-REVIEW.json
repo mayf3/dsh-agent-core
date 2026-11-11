@@ -1,0 +1,100 @@
+{
+  "kind": "FIXED_FRESH_SIX_TARGET_OFFLINE_CARRIER_ORIGINAL_READER_MATERIAL_RECEIPT_V2",
+  "at_utc": "2026-10-19T16:45:18.872052+00:00",
+  "disposition": "PASS_PROPOSAL_MATERIAL_ONLY",
+  "blocking_material_findings": [],
+  "attribution": {
+    "reader": "/root/sol_e40_independent_reader",
+    "author": "/root/sol_execution_continuation",
+    "requested_model": "gpt-6.1-sol/ultra",
+    "native_observed_model": "UNKNOWN",
+    "role": "Same original material reader; qualified acceptance belongs to original1378 via exclusive14c relay. No additional reviewer/Owner or full code-review gate created."
+  },
+  "final_unit": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/PROPOSED-FIXED-FRESH-SIX-TARGET-OFFLINE-CARRIER.v2.md",
+    "bytes": 24967,
+    "sha256": "c9c606481cf6f98721dbdb1ed8b917ab918eace6b3f7276d50457db1a94ade2b"
+  },
+  "final_index": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/INDEX.v2.json",
+    "bytes": 3926,
+    "sha256": "316261060b100cfb8012d7cbb09a7d2c5c781dd22d788a269133b9874ede576f"
+  },
+  "unchanged_closure": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/SOURCE-CLOSURE.v1.json",
+    "bytes": 7550,
+    "sha256": "e0440427753c43269fa133c250bb4968e1ee3655739bbc239bcdb91cdb29d7be"
+  },
+  "predecessor": {
+    "index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/INDEX.v1.json",
+      "bytes": 3141,
+      "sha256": "f7ec11fa1951b9ba9b45b7fefaea58e10ff17c2f799781cdbc0ad68d8666ed45"
+    },
+    "unit": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/PROPOSED-FIXED-FRESH-SIX-TARGET-OFFLINE-CARRIER.v1.md",
+      "bytes": 23917,
+      "sha256": "628156444ebe197654684068bcd3a9adba71d4a171b46be79c8d22e2655fb0b6"
+    },
+    "diff": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/v1-to-v2-METADATA-SHADOW-COST.diff",
+      "bytes": 6009,
+      "sha256": "cb8df54c810030864132e3fede57dae418e052969205add6f8cb6a2c49f77077"
+    }
+  },
+  "scope": "One new fresh-only deterministic offline payload/catalog mechanism replacing original six-target npm calls in one newly derived prospective candidate; includes explicit selectede1c APP pin and exact first-write guard applicability question. Material-only readiness for qualified decision, not source/effect acceptance, implementation-ready status, build proof or runtime admission.",
+  "personally_checked": [
+    "Verified initial3141B/f7ec index,23917B/6281 unit,7550B/e044 closure and1463B/72d1 saved-scope fact. Read complete material. Verified final3926B/3162 index,24967B/c9c6 unit and6009B/cb8d delta; only unit lines51 and62 changed, all other text exact v1.",
+    "Re-parsed only saved C result111092B/6d9179 to confirm exactly92 unique H selection IDs and no literal fixed-six member. No copy of full private result/selected rows and no new host observation.",
+    "Hashed fixed saved dd96/0081/e1c/package JSON to their stated pins; read bounded existing source ranges: dd96:73-118,121-145,369-405,413-516;00811809:234-271,279-290;e1c:291-309; small package bin metadata. No old archive, large pair, inventory or installed/sourceRoot file opened.",
+    "Compared new fresh guard location with original preparation:242-246 prior batch read/recovery and original doExecute:419-423 preimage/journal/import effects. Proposed guard-before-these locations is explicit; upstream native/app writes remain separately acknowledged.",
+    "Checked deterministic source/catalog/output/runtime ABI, no npm fallback, bounded sequential FDs/nofollow/hash/readback/EXCL/parent durability, typed failure retention, immutable candidate/Q2-subject derivation and future source/effect authorization limits. No code/tests/build or actual fresh guard run.",
+    "Identified one concrete missing shadow-metadata multiplicity in v1; checked same-round v2 repairs lifecycle bounds while retaining the12P mechanism and unchanged scope. No numerical quantity/fit or actual successful build inferred."
+  ],
+  "material_assessment": {
+    "different_mechanism": "Explicit new module/build/runtime functions are proposed, not asserted existing. Offline pinned tgz builds sealed payload/catalog; original business writer copies it only into six absent homes. It avoids resolving an unknown prefix graph or failed native npm/config inputs, without declaring the old missing tuple true.",
+    "fresh_exclusion": "Before preparation242 old batch read/recovery: any existing/uncertain batch refuses. Before doExecute419-420/422 effects: all6 terminal homes must be absent under stable parent binding. Creation exclusive/rechecked; existing/partial/raced home is refusal, never adoption/delete/repair or another-ID probe. Guard not exposed as standalone fact getter.",
+    "existing_vs_proposed_effects": "Original peer/farm/auth/reference guards and outer/native/TX/ACK/rollback remain. Fixed payload and bin copy, fresh-only branch exclusion, new catalog reads and APP expected pin change are actual proposed semantic differences, not disguised equivalent behavior. Proposal asks qualified whether exact first-write guard is covered, identifying an exact uncovered effect if needed; does not self-waive no-retry or invent OS issuer.",
+    "APP_binding": "9df/e1c/ba397 remain distinct. Explicit9df->e1c21325 expected pin needs acceptance; selected APP code is not modified now. Original APIs/farm map/credential boundary preserved; full candidate import/member lineage still must qualify and exact absent direct source named, without reopening old archives/failed live paths.",
+    "input_and_copy_ABI": "One fixed public tgz869b offline read/build only after acceptance; closed sorted catalog with exact bytes/hash/type/mode/link/size pins. Escape/duplicate/special/link hazards rejected offline. Runtime accepts only root-sealed fixed catalog/payload and fixed six target IDs; no path/env/command/identity selector/native npm or graph/config read. All partial states retain original journal/status, not global zero-write.",
+    "cost_and_identity": "P_new ceiling192720896 is prospective, not measured. Source-side payload/catalog/helper copies and true J/preimage/tmp overlap must be derived offline.12P plus lifecycle metadata and unchanged complete original branches remain conservative symbolic requirements. Actual S/H growth/remaining/affordable plan/current mandatory are original consumption facts, not conditions imposed on starting already source-accepted finite implementation.",
+    "current_scope": "Material provides a concrete mechanism/ceiling for decision rather than a future unnamed getter. It does not establish that current homes are absent, that runtime will succeed, or that a new candidate/plan/op is registered/admissible. Original documentary route/A/main/old methods are not reopened."
+  },
+  "finding_closed": {
+    "id": "F1_METADATA_SHADOW_MULTIPLICITY",
+    "v1_problem": "P_new is package payload only and L_new was described as fresh metadata, while later copyExact copies payload-external .bin/19peer/10farm links and parents as well. Removing shadow/dsh-codex does not remove those copies. Fixed6 not in measuredH92, so H cannot pay them. A bare extra6P did not explicitly bound those second metadata allocations.",
+    "primary": "00811809:152-158,285-288; dd96:127-145,493-495; selectede1c:291-309; independently confirmed savedC disjointness.",
+    "v2_fix": "Line51 defines lifecycle L_new=L_home+L_shadow+L_shared+L_receipt. L_shadow explicitly charges up to6 second copies of external links/parents, shadow roots and replacement plugin link; L_shared includes APP bridge effects/refusal; L_receipt includes normal/failure/retained/recovery outputs and temporary/final manifest overlap. Line62 requires every branch b/phase t extraAllocation<=12P+all4L, with no deletion/skip/H credit.",
+    "closure": "Definition/inequality gap closed. All quantities remain future offline source/build outputs, not fixture values, current facts, numerical capacity proof or new resource permission. Original v1/diff preserved."
+  },
+  "saved_scope_fact": {
+    "artifact": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/HELD-C-FIXED-SIX-SCOPE-FACT.v1.json",
+      "bytes": 1463,
+      "sha256": "72d1b20b1f646474c7eabe068d98ba6faede5a4b379b6351c87f422950aeee79"
+    },
+    "primary": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-source-readiness-diagnostic/business-readiness-producer-order-amendment/successor-r40-binding/successor-r41-binding-v2/actual-business-admission/capacity-facts-only/actual-observation-public-selector-v2/RESULT.json",
+      "bytes": 111092,
+      "sha256": "6d9179ad1b2c57e791498cc1d2b784621cc9391e1ad560fbfa53ba1c1291b342"
+    },
+    "reader_derived": {
+      "selected_unique_count": 92,
+      "fixed_six_intersection": []
+    },
+    "implication": "H53592064 does not measure those six literal prefixes; cannot infer any current absence/presence/graph/quantity/permission from disjointness. No actual fresh qualification performed."
+  },
+  "preimplementation_and_use_boundary": [
+    "Qualified exact acceptance must cover fresh-only/zero-npm design, finite3-file semantic ceiling, explicit APP pin and separately stated original first-write guard applicability; existing authority not silently narrowed or extended.",
+    "Only after accepted docs/base/PREFLIGHT: finite isolated source/offline fixed-artifact build/owned tests and necessary coherent SC/tool/worker/manifest/op/policy/AUTH/PIN/capsule/Q2 joins. No current source change authorized by this material receipt.",
+    "Before P0/runtime: actual catalog/source/full import closure/size/count/compatibility and P_new ceiling, lifecycle L buckets, all source-side/DRIVEN J copies, true remaining/Q2plan, original source readiness/mandatory/window/actor/custody/fences. These are future facts, not values created here.",
+    "No installed APP/module read now, third collector/new ID/access retry, permission/identity/root/channel/sourceRoot change, HR/Auth effect or original business attempt. Source P3 remains unsolved/UNKNOWN."
+  ],
+  "evidence_boundaries": {
+    "old_decisions_and_A": "fb058/35e21/mainPR538 metadata reused from author references; no old scope/A decision re-review.",
+    "artifacts": "No R30/R33/tgz extraction or hash, no large pair/newsource/native module body read by reader. Only previously saved small source artifacts read/hash.",
+    "implementation": "No new source, owned fixture, offline build, runtime/home guard/call, policy adoption, actual quantity or total suite PASS. Future tests/source review remain outside this material disposition."
+  },
+  "route_state": "NOT_SENT,route0; qualified finalunit v2 only,14c exclusively relays. Reader did not route/send others.",
+  "reader_mutation": "Only own material receipt under independent-sol-readback; frozen author v1/v2/index/closure unchanged."
+}

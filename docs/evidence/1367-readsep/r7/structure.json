@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/usr/local/bin/node",
+    "scripts/verify-code-structure.mjs",
+    "--base",
+    "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+    "--head",
+    "e9f57a5a568a91a0179444ecf775349b96f8d7e5",
+    "--json"
+  ],
+  "cwd": "/private/tmp/h1367-readsep",
+  "started_at_utc": "2026-11-07T12:10:37.622576+00:00",
+  "finished_at_utc": "2026-11-07T12:10:39.458223+00:00",
+  "actual_rc": 0,
+  "stdout_sha256": "f42fa8a17a7adebb19dacd6154b31f60b084c8a87481d97ceb53ffcf8f75404d",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

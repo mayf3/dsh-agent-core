@@ -1,0 +1,80 @@
+{
+  "observed_at": "2026-11-08T08:32:59.850246+00:00",
+  "task_parent": "0e0e0327c944216ce9965646e4d9e7d6b6298142",
+  "main_snapshot": "5360707882b4f85813d842037f660f54fd2496c8",
+  "D_source": "95a8e1cb512fc99dc018209d837250dd51b4d08f",
+  "authority_files": [
+    {
+      "path": ".agents/README.md",
+      "parent_sha256": "18d2ee74877c9871b7a086bbc8ec02ae8219146c61e6ecfc4f33038b881c98e2",
+      "main_sha256": "18d2ee74877c9871b7a086bbc8ec02ae8219146c61e6ecfc4f33038b881c98e2"
+    },
+    {
+      "path": ".agents/local/README.md",
+      "parent_sha256": "31f8456a417aac5e0623bd7bef676357586420234ab95d15237a5f39b443343d",
+      "main_sha256": "31f8456a417aac5e0623bd7bef676357586420234ab95d15237a5f39b443343d"
+    },
+    {
+      "path": "docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md",
+      "parent_sha256": "c8d2627086cb202dcf0e70d9e0d0a9aeb174ea1d74b0b9cfd54339d28c33fe9b",
+      "main_sha256": "c8d2627086cb202dcf0e70d9e0d0a9aeb174ea1d74b0b9cfd54339d28c33fe9b"
+    },
+    {
+      "path": "docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md",
+      "parent_sha256": "fcc3603d8f1ab7b1ab10eda7088a56fb2e5095792336311d63a92f74fba6e160",
+      "main_sha256": "fcc3603d8f1ab7b1ab10eda7088a56fb2e5095792336311d63a92f74fba6e160"
+    },
+    {
+      "path": "docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V3.md",
+      "parent_sha256": "1c37687e473df7ce977e5cc571f74d9a6dc0470f3aca95a599d4c9066e52321f",
+      "main_sha256": "1c37687e473df7ce977e5cc571f74d9a6dc0470f3aca95a599d4c9066e52321f"
+    },
+    {
+      "path": "docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V4.md",
+      "parent_sha256": "4bf8511905551ffae6d255844e893deb45dcd2844eed28078804b37f394eaf7a",
+      "main_sha256": "4bf8511905551ffae6d255844e893deb45dcd2844eed28078804b37f394eaf7a"
+    },
+    {
+      "path": "docs/specs/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2.md",
+      "parent_sha256": "638d8ac78ff6583bb85434ae7d780890687a57549f179378bca3fd16172e3a69",
+      "main_sha256": "638d8ac78ff6583bb85434ae7d780890687a57549f179378bca3fd16172e3a69"
+    },
+    {
+      "path": "docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V3.md",
+      "parent_sha256": "a3d2dbebdea895882b76d0944a6064518d5d111202388216a9c863ff5a24d342",
+      "main_sha256": "a3d2dbebdea895882b76d0944a6064518d5d111202388216a9c863ff5a24d342"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_BACKUP_RETENTION_V1.md",
+      "parent_sha256": "b97382af664b6677a89546cea5d851f427bef0fb14619eae969e8fc32b06edb2",
+      "main_sha256": "b97382af664b6677a89546cea5d851f427bef0fb14619eae969e8fc32b06edb2"
+    },
+    {
+      "path": "docs/specs/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1.md",
+      "parent_sha256": "c46b84ef91637a88929dd0f297bfb794ca80ee6b2719f495f90d0034aaa84e25",
+      "main_sha256": "c46b84ef91637a88929dd0f297bfb794ca80ee6b2719f495f90d0034aaa84e25"
+    }
+  ],
+  "checklist_sources": [
+    {
+      "path": "packages/production-runtime/src/scheduler/restart-drain.js",
+      "worktree_sha256": "016ef8a6b26a4567dc7075c6dd039e05bf8217b80869d47a1882e66ac2c85b0f",
+      "fixed95_sha256": "016ef8a6b26a4567dc7075c6dd039e05bf8217b80869d47a1882e66ac2c85b0f"
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-launchd.js",
+      "worktree_sha256": "27f26b2d0527fa50a965d9f9c3fdc478c3a2c6f945c7cd3fe543cfff2f6a45d9",
+      "fixed95_sha256": "27f26b2d0527fa50a965d9f9c3fdc478c3a2c6f945c7cd3fe543cfff2f6a45d9"
+    },
+    {
+      "path": "packages/production-runtime/src/restart-boundary.js",
+      "worktree_sha256": "24e816235906dcd7822b2aa92588fc0f74c6860bd75c17413a22c68d23f54bf7",
+      "fixed95_sha256": "24e816235906dcd7822b2aa92588fc0f74c6860bd75c17413a22c68d23f54bf7"
+    },
+    {
+      "path": "packages/agent-router/src/parent-rpc-relay.js",
+      "worktree_sha256": "faf18a6ae6c1b4a6385582d05cd2400332ebb86cd9cb5d38d8ed5f14b5532cc5",
+      "fixed95_sha256": "faf18a6ae6c1b4a6385582d05cd2400332ebb86cd9cb5d38d8ed5f14b5532cc5"
+    }
+  ]
+}

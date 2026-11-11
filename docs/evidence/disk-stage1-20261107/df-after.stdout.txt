@@ -1,0 +1,12 @@
+Filesystem     1024-blocks      Used  Available Capacity  iused      ifree %iused  Mounted on
+/dev/disk3s1s1   971298980  12342928  180599192     7%   458732 1805991920    0%   /
+devfs                  200       200          0   100%      692          0  100%   /dev
+/dev/disk3s6     971298980  17829212  180599192     9%       17 1805991920    0%   /System/Volumes/VM
+/dev/disk3s2     971298980   8872772  180599192     5%     1473 1805991920    0%   /System/Volumes/Preboot
+/dev/disk3s4     971298980      2320  180599192     1%       73 1805991920    0%   /System/Volumes/Update
+/dev/disk1s2        563200      6164     542384     2%        1    5423840    0%   /System/Volumes/xarts
+/dev/disk1s1        563200      5992     542384     2%       29    5423840    0%   /System/Volumes/iSCPreboot
+/dev/disk1s3        563200      3756     542384     1%      115    5423840    0%   /System/Volumes/Hardware
+/dev/disk3s5     971298980 749849196  180599192    81% 19292460 1805991920    1%   /System/Volumes/Data
+map auto_home            0         0          0   100%        0          0     -   /System/Volumes/Data/home
+/dev/disk4s1    2000563712  78534144 1922029568     4%        1          0  100%   /Volumes/My PSSD

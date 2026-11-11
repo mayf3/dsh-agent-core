@@ -1,0 +1,5 @@
+--- a/execution_client.py
++++ b/v50_execution_client_source.py
+@@ -71 +71 @@
+-  if dv is not None and p['operation_id']==E30OP:
++  if dv is not None and p['operation_id'] in (E30OP,'b7-packet-r27-2edfbaeef5c352f2e-e31'):

@@ -1,0 +1,25 @@
+TAP version 13
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-delivery-Yg9ND3/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] route-chain {"kind":"route_attempt","tsWallMs":1793769792463,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+# [router] route-chain {"kind":"route_chain_final","tsWallMs":1793769792463,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+# [router] deliver accepted: agent agt_delivery-v0-1 session main requestId job-1... (msg-1) in 2ms
+# [router] route-chain {"kind":"route_attempt","tsWallMs":1793769792464,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+# [router] route-chain {"kind":"route_chain_final","tsWallMs":1793769792464,"routeChainId":"single-route","agentId":"agt_delivery-v0-1","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+# [router] deliver accepted: agent agt_delivery-v0-1 session main requestId job-2... (msg-2) in 0ms
+# Subtest: D2 main again: same fixed session, process reused, no second mapping
+ok 1 - D2 main again: same fixed session, process reused, no second mapping
+  ---
+  duration_ms: 5.987292
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 56.432208

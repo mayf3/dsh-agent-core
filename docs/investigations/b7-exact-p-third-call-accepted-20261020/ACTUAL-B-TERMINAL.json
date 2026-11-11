@@ -1,0 +1,129 @@
+{
+  "A_source": {
+    "module": {
+      "bytes": 35114,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/packet/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/b7-fixed-plugin-materializer.mjs",
+      "sha256": "883fa2a815a84438276113ad8e31bec2ce627b9dc43ff8fd5b4fccbe5766622b"
+    },
+    "receipt": {
+      "bytes": 18874,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/independent-sol-readback/CONTINUATION-A-AFFECTED-SOURCE-RECEIPT.v1.json",
+      "sha256": "1bd50ca8d0abacc71590c4acc00e18fac7105b4df44a5a95790796bd6d41882f"
+    },
+    "terminal": {
+      "bytes": 4383,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/SOURCE-A-TERMINAL-INDEX.v1.json",
+      "sha256": "e28bdb6edeeddd13adbb488f105cbe1033dd671e795dc7ed68dd1935b609ad7a"
+    }
+  },
+  "Pceiling": 192720896,
+  "actualOwnEvidenceRoundedBeforeIndex": 45056,
+  "actualResult": {
+    "catalogBytes": 4694846,
+    "catalogSha": null,
+    "code": "PAYLOAD_BINDING",
+    "completeEnumeration": true,
+    "kind": "FIXED_B7_OFFLINE_BUILD_RESULT_V1",
+    "logicalBytes": 120514792,
+    "maxDepth": 11,
+    "objectCount": 23575,
+    "outputPublished": false,
+    "payloadRoundedBytes": 192733184,
+    "reason": "PAYLOAD_ALLOCATION_LIMIT",
+    "stage": "QUANTITY_DECIDED",
+    "status": "REFUSED"
+  },
+  "at": "2026-10-19T18:43:56.001591+00:00",
+  "boundedOwnEvidenceMatchesPreissueTopology": true,
+  "business": "0/2",
+  "collector": {
+    "remaining": 0,
+    "total": 2
+  },
+  "effects": "Only accepted one extra unprivileged offline fixed input read and own receipt writes; no payload/catalog/F/runtime/operation/production/new source or collector.",
+  "evidence": [
+    {
+      "bytes": 10228,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/INTENT.json",
+      "sha256": "7a9f53bfeab1354709f2c7c30b2c9195f1cc49569ed36627bfcaeb3c0c95c06f"
+    },
+    {
+      "bytes": 457,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/ISSUED.json",
+      "sha256": "7ab1d3e7cd3e58d9a33e5f3afa649dba0fd3e1073361be18fe4b3af08ffc90d5"
+    },
+    {
+      "bytes": 377,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/NATIVE-HANDLE.json",
+      "sha256": "4a7ead0c195ada711823f1037d046b736b617ac83ddb37e3e5246ef3f12d3481"
+    },
+    {
+      "bytes": 713,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/stdout.raw",
+      "sha256": "57d582baa27b71a21494f09bd5067bfead2cd228ad5722f15c8e86474effca76"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1291,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/PROCESS.json",
+      "sha256": "f9655c18fd6668c6b238960600faaf26ffbaa6c17f2fe8be2f79fa2e66a4eda0"
+    },
+    {
+      "bytes": 2341,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/RESULT-READBACK.json",
+      "sha256": "22afc7c91f5a47f399c2ced1bb76922f035cd2db9c5ef9e047cbac288198de9a"
+    },
+    {
+      "bytes": 743,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/OWN-CLEANUP.json",
+      "sha256": "f39c71ad2ac92f1c005aeb181a18339b61a17b7b47bce50fd577f7300ebcde9d"
+    }
+  ],
+  "excessP": 12288,
+  "floor": 53687091200,
+  "kind": "FIXED_869B_ADDITIONAL_B_TERMINAL_INDEX",
+  "nativeLineage": {
+    "historicalCall": 1,
+    "maximum": 2,
+    "newB": 1,
+    "noThird": true,
+    "remaining": 0,
+    "total": 2
+  },
+  "nativePid": 9687,
+  "nativeReturncode": 2,
+  "next": "Dependent carrier publication/P0 STOP at completeP 192733184 >192720896. A genuinely new exact numerical/source/count-boundary decision would be needed for any further read/publication; current unit grants no third. APP direct closure/Lshared remains independently unproven. Prepare only precise material if required, no call/source change.",
+  "operation": "e42 UNREGISTERED attempt0",
+  "preissue": {
+    "budget": {
+      "bytes": 2673,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/OWNED-B-BUDGET.v1.json",
+      "sha256": "c43cdf31c60ab94284959a2dd265d8db05b94a286f0ef846e6a6a5a4cd5a59ed"
+    },
+    "pins": {
+      "bytes": 1509,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/NONPRODUCTION-BUILD-PINS.v1.json",
+      "sha256": "7faf17ad97d7d7dc9759864d4396b0ba7c43880ef20c82ebab5174e559e57478"
+    },
+    "seal": {
+      "bytes": 9123,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/FINAL-SOURCE-SEAL.json",
+      "sha256": "930179a01db591d801dcd00c3ed42b1d6a3a2898cc4ebad373b7df630c98d378"
+    }
+  },
+  "publication": {
+    "absence": {
+      "fixed-plugin-catalog.json": true,
+      "fixed-plugin-payload": true
+    },
+    "catalog": false,
+    "payload": false
+  },
+  "reservedIndexMax": 65536,
+  "settled": true,
+  "state": "SETTLED_REFUSED_COMPLETE_P_OVER_FIXED_CAP"
+}

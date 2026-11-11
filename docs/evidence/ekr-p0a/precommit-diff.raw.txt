@@ -1,0 +1,7 @@
+COMMAND: git diff --check
+
+EXIT_CODE: 0
+COMMAND: git diff --cached --check
+packages/workflow-execution/test/observation-cas/stale-reentry.test.js:472: new blank line at EOF.
+
+EXIT_CODE: 2

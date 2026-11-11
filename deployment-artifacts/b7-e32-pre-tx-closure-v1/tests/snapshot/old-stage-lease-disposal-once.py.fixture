@@ -1,0 +1,1110 @@
+#!/usr/bin/python3
+"""One stale PREPARING-lease disposal for the fixed-capture B7 package. No apply.
+
+The defined exit for a B7 apply that failed before migration-transaction.json existed.
+Admits exactly two lease identities, each bound to its own frozen material:
+  1. the pinned 2026-10-06 stale lease (binding canonical-sha == LEGACY_BINDING_SHA,
+     material = the 20261006 parent candidate pins + its exact stale-seed pin), or
+  2. a lease whose binding hashes/paths match THIS sealed package (material = this
+     package's pins; the seed must be the worker-generated seed bound to this lease's
+     own stage by its codeDigests tree digests).
+Then proves zero production mutation under the lease (the receipt states the exact
+checked scope) and removes ONLY the lease's own objects: placement stage, seed, placed
+public artifacts, holder + lock dir. Any drift refuses before the first unlink. A
+transaction file that exists is never disposed here; it keeps its own recovery path.
+
+Delta vs the reviewed v2 entry (DELTA-REVIEW 2026-10-07, B1-B4):
+  B1 the original holder's real mutex is taken on the holder open-file-description
+     (flock LOCK_EX|LOCK_NB, the same mutex the original worker holds) and stays held
+     until every namespace removal and fsync is complete; a live lock is refused, and
+     holder inode/nonce and lock/root namespace identity are re-verified in the same
+     protected operation before each mutation and before the final absence proofs.
+  B2 the full stage/seed/artifact inventory is bound to the admitted lease's frozen
+     material (the three part archives, the operation archive, the worker pin);
+     unknown members refuse and are preserved; every removed object is re-verified by
+     object identity (dev/ino) immediately before its unlink/rmdir, and by digest
+     where bounded (seed, artifacts).
+  B3 a per-operation journal inside the lease's own lock dir (fsync'd before the first
+     mutation, updated at every step boundary, removed together with the lock) gives
+     each unlink/rmdir/fsync/process-death boundary a bounded exit: rerunning this
+     same entry resumes from the recorded facts and either completes or refuses; a
+     fresh invocation never downgrades a prior partial operation to STOP_BEFORE_WRITE.
+  B4 the legacy branch keeps the exact stale-seed SHA pin; the package-matched branch
+     validates the seed structurally against this package's own template (only the
+     three buildSeed mutations may differ) and binds its codeDigests to the actual
+     stage trees, so a seed the new worker actually generated is admissible while an
+     arbitrary seed is not.
+All root paths arrive through main(); the checked functions take a Paths namespace so
+the isolated fixture tests never touch the real filesystem layout.
+"""
+import base64
+import contextlib
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import posixpath
+import re
+import stat
+import sys
+import tarfile
+
+PACKAGE = Path('/private/var/db/agent-deploy-system/inputs/task-7-preflight-key/b7-wired-inputs')
+ENTRY_DIR = Path('/private/var/db/agent-deploy-system/inputs/task-9-disposal-census-repair/b7-wired-candidate/fixed')
+PINS_SHA = '65741d56112b2844ea1416d3a768ddb3986385e1312992e19ec38f0cfca08007'
+TEMPLATE_SHA = '54c0f92764d752ad57066ccdd50da87404edb70849d98ac6b7ca83786c08b65d'
+WORKER_SHA = '711df56479d8b99760e3e8c0b4d52206474802075ae546098f5f8f33937de2cb'
+RECOVERY = Path('/var/db/agent-core/authsvc-codex-migration')
+STAGE_NAME = 'activation-code-input'
+SEED_NAME = 'b7-preparation-input.json'
+TX_NAME = 'migration-transaction.json'
+FENCE_NAME = 'migration-fence.json'
+LOCK = Path('/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock')
+DEPLOYMENT = Path('/Users/authsvc/.agent-core')
+AGENT_CORE = Path('/usr/local/share/agent-core')
+ARTIFACTS = AGENT_CORE / 'artifacts'
+STALE_SEED_SHA = '1c0825a43c7366ac5db4ac4e4e4bb105b00f3d3620df8ce89a6ce7629a85afaf'
+LEGACY_BINDING_SHA = '8a8613275b3c12f9e10f51926852c6e4d9061bf23d5b1538954f09ce537553e7'
+LEGACY_PACKAGE = Path('/private/var/db/agent-deploy-system/inputs/task-4/b7-current-release-candidate-20261006-j2qswuli')
+LEGACY_PINS_SHA = 'b49e2b37063aaff8ab7856045162ab2197ee9dcc0baadcdc89e49ab9454d07a4'
+LEGACY_ENTRY_DIR = 'b7-current-stage-seed-20261006-23gqm4sd'
+LEGACY_WORKER_SHA = '93cf499877fc6b08504a11a768c2eb77320898dc93faaaa3f557af5e4780c04d'
+TOOL_REL = {
+ 'outerSha256': 'docs/evidence/shared-codex-auth-deployment-root-refreeze-v2-20261002/owner-router-closure-g2-g7-v23.sh',
+ 'carrierSha256': 'docs/evidence/openai-codex-refresh-token-reused-v1-20260910/owner-authsvc-plugin-upgrade-r13.sh',
+ 'toolSha256': 'scripts/lib/deployment-reuse/transaction-recovery.mjs',
+ 'migrationToolSha256': 'scripts/lib/trusted-cp-fleet-config-v2v3-migration.mjs',
+ 'preparationToolSha256': 'scripts/lib/deployment-reuse/b7-preparation.mjs',
+ 'sixTargetProducerSha256': 'scripts/lib/deployment-reuse/six-target-provision.mjs',
+ 'installerSha256': 'scripts/trusted-cp-deploy-install.sh',
+ 'canaryProducerSha256': 'scripts/lib/deployment-reuse/canary-producer.mjs',
+ 'ownerRecorderSha256': 'scripts/lib/deployment-reuse/b7-owner-confirmation.py',
+}
+PUBLIC = ('dsh-codex-0.2.3-release.tgz', 'codex-deps-scopes-rc8.tgz', 'dsh-codex-0.2.3-source-stamp.prepared.json')
+STAGE_TOP = ('app', 'b7-entry-code', 'harness', 'node-runtime')
+CODE_NAME = 'b7-entry-code'
+WORKER_LEAF = 'seed-materials.mjs'
+MATERIALS = {
+ 'legacy-pin': {'pins': LEGACY_PACKAGE / 'INSTALL-PINS.json', 'pins_sha': LEGACY_PINS_SHA,
+                'pkg_dir': LEGACY_PACKAGE.name, 'entry_dir': LEGACY_ENTRY_DIR, 'worker_sha': LEGACY_WORKER_SHA,
+                'seed_mode': 'legacy-pin', 'template': None, 'template_sha': None},
+ 'package-matched': {'pins': PACKAGE / 'INSTALL-PINS.json', 'pins_sha': PINS_SHA,
+                     'pkg_dir': PACKAGE.name, 'entry_dir': 'b7-wired-stage', 'worker_sha': WORKER_SHA,
+                     'seed_mode': 'template-bound', 'template': PACKAGE / 'SEED-TEMPLATE.UNINSTALLABLE.json',
+                     'template_sha': TEMPLATE_SHA},
+}
+JOURNAL_NAME = 'disposal-journal.json'
+JOURNAL_TMP = 'disposal-journal.tmp'
+JOURNAL_KIND = 'B7_DISPOSAL_JOURNAL_V1'
+JOURNAL_BOUND = 268435456
+SEED_BOUND = 65536
+STAGE_ENTRY_BOUND = 400000
+STAGE_DEPTH_BOUND = 64
+NOFOLLOW = os.O_NOFOLLOW
+DIRECTORY = os.O_DIRECTORY
+
+class Refused(RuntimeError): pass
+
+class Paths:
+ """Production roots; fixture tests substitute their own namespace."""
+ def __init__(self,recovery,lock,deployment,share,package_dir):
+  self.recovery=Path(recovery);self.lock=Path(lock);self.deployment=Path(deployment)
+  self.share=Path(share);self.package_dir=Path(package_dir)
+  self.agent_core=self.share/'agent-core';self.artifacts=self.agent_core/'artifacts'
+  self.stage_name=STAGE_NAME;self.seed_name=SEED_NAME;self.tx_name=TX_NAME;self.fence_name=FENCE_NAME
+
+def require_invocation(args, uid, euid):
+ if args or uid != 0 or euid != 0: raise Refused('FIXED_ROOT_ENTRY_REQUIRES_NO_ARGUMENTS')
+
+def stamp(s):
+ return (s.st_dev,s.st_ino,s.st_size,s.st_mtime_ns,s.st_ctime_ns,s.st_uid,s.st_gid,s.st_mode,s.st_nlink)
+
+def check_directory(fd, protected=False):
+ s=os.fstat(fd)
+ if not stat.S_ISDIR(s.st_mode): raise Refused('DIRECTORY_REQUIRED')
+ if protected and (s.st_uid!=0 or s.st_mode & 0o022): raise Refused('ROOT_DIRECTORY_CUSTODY')
+ return s
+
+def open_dir_at(parent, name, protected=False):
+ if not name or '/' in name or name in ('.','..'): raise Refused('DIRECTORY_COMPONENT')
+ before=os.stat(name,dir_fd=parent,follow_symlinks=False)
+ fd=os.open(name,os.O_RDONLY|DIRECTORY|NOFOLLOW,dir_fd=parent)
+ try:
+  opened=check_directory(fd,protected);after=os.stat(name,dir_fd=parent,follow_symlinks=False)
+  if (before.st_dev,before.st_ino)!=(opened.st_dev,opened.st_ino) or (after.st_dev,after.st_ino)!=(opened.st_dev,after.st_ino):raise Refused('DIRECTORY_OPEN_DRIFT')
+  return fd
+ except BaseException:os.close(fd);raise
+
+def physical(path):
+ text=str(path)
+ if text=='/var' or text.startswith('/var/'):
+  s=os.lstat('/var')
+  if not stat.S_ISLNK(s.st_mode) or s.st_uid!=0 or s.st_nlink!=1 or os.readlink('/var')!='private/var': raise Refused('SYSTEM_VAR_ALIAS')
+  return Path('/private/var'+text[4:])
+ return Path(text)
+
+def open_directory(path,protected=False):
+ p=physical(path)
+ if not p.is_absolute() or str(p)!=posixpath.normpath(str(p)):raise Refused('ABSOLUTE_CANONICAL_DIRECTORY')
+ fd=os.open('/',os.O_RDONLY|DIRECTORY|NOFOLLOW)
+ try:
+  check_directory(fd,protected)
+  for name in p.parts[1:]:
+   next_fd=open_dir_at(fd,name,protected);os.close(fd);fd=next_fd
+  return fd
+ except BaseException:os.close(fd);raise
+
+def require_absent(fd,name):
+ try:os.stat(name,dir_fd=fd,follow_symlinks=False)
+ except FileNotFoundError:return
+ raise Refused('EXISTING_OBJECT:'+name)
+
+class Receipts:
+ def __init__(self,out,prior=None):self.out=out;self.possible=[];self.facts=[];self.prior=list(prior or [])
+ def emit(self,phase,**fields):
+  self.out.write(json.dumps(dict(kind='B7_STALE_LEASE_DISPOSAL_V1',phase=phase,**fields),sort_keys=True)+'\n');self.out.flush()
+ def intent(self,path,operation):
+  self.emit('INTENT',path=str(path),operation=operation)
+  self.possible.append(str(path))
+ def fact(self,path,**fields):
+  self.facts.append(dict(path=str(path),**fields));self.emit('FACTS',**self.facts[-1])
+ def stop(self,reason):
+  # A prior partial operation recorded by this same operation chain (the journal) is
+  # never downgraded to STOP_BEFORE_WRITE by a fresh process (B3).
+  partial=bool(self.possible) or bool(self.prior)
+  self.emit('STOP_PARTIAL' if partial else 'STOP_BEFORE_WRITE',reason=reason,confirmed=self.facts,possibly_written=self.possible,prior_operation=self.prior,retained=True)
+
+class PinnedFile:
+ def __init__(self,path,digest,size=None,max_size=None):self.path=Path(path);self.digest=digest;self.size=size;self.max_size=max_size
+ def __enter__(self):
+  self.parent=open_directory(self.path.parent)
+  try:
+   before=os.stat(self.path.name,dir_fd=self.parent,follow_symlinks=False)
+   if not stat.S_ISREG(before.st_mode) or before.st_nlink!=1:raise Refused('PINNED_REGULAR_SINGLELINK')
+   if self.size is not None and before.st_size!=self.size:raise Refused('PINNED_SIZE')
+   if self.max_size is not None and before.st_size>self.max_size:raise Refused('PINNED_BOUND')
+   fd=os.open(self.path.name,os.O_RDONLY|NOFOLLOW,dir_fd=self.parent)
+   self.file=os.fdopen(fd,'rb')
+   if stamp(before)!=stamp(os.fstat(fd)):raise Refused('PINNED_OPEN_DRIFT')
+   self.before=before
+   h=hashlib.sha256()
+   while True:
+    b=self.file.read(1048576)
+    if not b:break
+    h.update(b)
+   if h.hexdigest()!=self.digest:raise Refused('PINNED_HASH:'+self.path.name)
+   self.stable();self.file.seek(0);return self
+  except BaseException:
+   if hasattr(self,'file'):self.file.close()
+   os.close(self.parent);raise
+ def stable(self):
+  actual_parent=open_directory(self.path.parent)
+  try:
+   a=os.fstat(actual_parent);b=os.fstat(self.parent)
+   if (a.st_dev,a.st_ino)!=(b.st_dev,b.st_ino):raise Refused('PINNED_PARENT_CHANGED')
+  finally:os.close(actual_parent)
+  after=os.fstat(self.file.fileno());leaf=os.stat(self.path.name,dir_fd=self.parent,follow_symlinks=False)
+  if stamp(self.before)!=stamp(after) or stamp(self.before)!=stamp(leaf):raise Refused('PINNED_INPUT_CHANGED:'+self.path.name)
+ def __exit__(self,typ,value,trace):
+  try:
+   if typ is None:self.stable()
+  finally:self.file.close();os.close(self.parent)
+
+def file_digest(p):
+ h=hashlib.sha256()
+ with Path(p).open('rb') as f:
+  for b in iter(lambda:f.read(1048576),b''):h.update(b)
+ return h.hexdigest()
+
+def check_operator_environment(env=None):
+ env=os.environ if env is None else env
+ if any(k in env for k in ('BASH_ENV','ENV','SHELLOPTS','BASHOPTS')) or any(k.startswith('BASH_FUNC_') for k in env):raise Refused('SHELL_STARTUP_ENV_REFUSED')
+ if any(env.get(k) is not None for k in ('NODE_OPTIONS','NODE_PATH','DYLD_INSERT_LIBRARIES','DYLD_LIBRARY_PATH','PYTHONPATH','PYTHONHOME','TRUSTED_CP_SELFTEST_PROVENANCE','B7_PROBE_BASE','B7_COHORT_RUNTIME')):raise Refused('OPERATOR_STARTUP_OR_FIXTURE_ENV_REFUSED')
+
+def package_binding(paths):
+ """Recompute the binding a lease must carry to be attributable to this package."""
+ tool=paths.package_dir/'dsh-agent-core'
+ stage_physical=str(physical(paths.recovery)).rstrip('/')+'/'+STAGE_NAME+'/'+CODE_NAME+'/'+paths.package_dir.name+'/dsh-agent-core/'
+ binding={k:file_digest(tool/rel) for k,rel in TOOL_REL.items()}
+ binding.update({'deploymentRoot':'/Users/authsvc/.agent-core','trustedRoot':'/usr/local/libexec/agent-core','recoveryRoot':str(paths.recovery),
+  'outerPath':stage_physical+TOOL_REL['outerSha256'],
+  'carrierPath':stage_physical+TOOL_REL['carrierSha256']})
+ return binding
+
+def admit_binding(binding, pkg_binding, legacy_sha):
+ if not isinstance(binding,dict):raise Refused('HOLDER_BINDING_TYPE')
+ tx=binding.get('txId')
+ if not isinstance(tx,str) or not re.fullmatch(r'tx-[A-Za-z0-9-]{1,100}',tx):raise Refused('HOLDER_TX_ID')
+ canonical=json.dumps(binding,sort_keys=True).encode()
+ if hashlib.sha256(canonical).hexdigest()==legacy_sha:return tx,'legacy-pin'
+ for k in TOOL_REL:
+  if binding.get(k)!=pkg_binding.get(k):raise Refused('HOLDER_BINDING_MISMATCH:'+k)
+ for k in ('deploymentRoot','trustedRoot','recoveryRoot','outerPath','carrierPath'):
+  if binding.get(k)!=pkg_binding.get(k):raise Refused('HOLDER_BINDING_MISMATCH:'+k)
+ return tx,'package-matched'
+
+def open_holder(lock_fd):
+ """Open the holder, take its real mutex non-blocking, then read it (B1).
+
+ The flock is taken on this exact open-file-description — the same mutex the
+ original worker holds on FD9 — and must stay held until every namespace removal
+ and fsync is complete. A live writer makes this busy and the disposal refuses.
+ """
+ s=os.stat('holder',dir_fd=lock_fd,follow_symlinks=False)
+ if not stat.S_ISREG(s.st_mode) or s.st_nlink!=1:raise Refused('HOLDER_CUSTODY')
+ if s.st_size>SEED_BOUND:raise Refused('HOLDER_SIZE')
+ fd=os.open('holder',os.O_RDWR|NOFOLLOW,dir_fd=lock_fd)
+ try:
+  opened=os.fstat(fd)
+  if stamp(s)!=stamp(opened):raise Refused('HOLDER_OPEN_DRIFT')
+  try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except BlockingIOError:raise Refused('HOLDER_MUTEX_BUSY')
+  raw=os.read(fd,SEED_BOUND)
+  if stamp(opened)!=stamp(os.fstat(fd)):raise Refused('HOLDER_READ_DRIFT')
+  leaf=os.stat('holder',dir_fd=lock_fd,follow_symlinks=False)
+  if (leaf.st_dev,leaf.st_ino)!=(opened.st_dev,opened.st_ino):raise Refused('HOLDER_NAME_DRIFT')
+  record=json.loads(raw)
+  if record.get('format')!='B7_GLOBAL_HOLDER_V1':raise Refused('HOLDER_FORMAT')
+  if not re.fullmatch(r'[a-f0-9]{32}',record.get('nonce','')):raise Refused('HOLDER_NONCE')
+  if record.get('phase')!='PREPARING':raise Refused('HOLDER_PHASE_NOT_PREPARING:'+str(record.get('phase')))
+  identity={'dev':opened.st_dev,'ino':opened.st_ino,'size':opened.st_size,'sha256':hashlib.sha256(raw).hexdigest()}
+  return fd,record,identity
+ except BaseException:os.close(fd);raise
+
+def holder_still_original(fd,identity,record,lock_fd):
+ """Re-verify the held holder still is the admitted object at the fixed name (B1)."""
+ opened=os.fstat(fd)
+ if opened.st_nlink!=1 or (opened.st_dev,opened.st_ino)!=(identity['dev'],identity['ino']):raise Refused('HOLDER_REPLACED_AFTER_PLAN')
+ leaf=os.stat('holder',dir_fd=lock_fd,follow_symlinks=False)
+ if (leaf.st_dev,leaf.st_ino)!=(identity['dev'],identity['ino']):raise Refused('HOLDER_REPLACED_AFTER_PLAN')
+ os.lseek(fd,0,os.SEEK_SET)
+ raw=os.read(fd,SEED_BOUND)
+ if hashlib.sha256(raw).hexdigest()!=identity['sha256']:raise Refused('HOLDER_REPLACED_AFTER_PLAN')
+ if json.loads(raw).get('nonce')!=record.get('nonce'):raise Refused('HOLDER_REPLACED_AFTER_PLAN')
+
+def prove_no_mutation(paths,rec_fd,dep_fd,tx,nonce16):
+ """Refuse if any post-creation production effect of this lease exists.
+
+ The receipt states exactly what was checked; other-nonce/other-tx resources,
+ activation assets, live workers and already dispatched effects are outside this
+ proof and stay untouched.
+ """
+ scope=['tx','fence','preparation-marker','accepted-marker','post-conditions','runtime-gen:'+nonce16,'control-preimage:'+nonce16]
+ require_absent(rec_fd,paths.tx_name)
+ require_absent(rec_fd,paths.fence_name)
+ require_absent(rec_fd,'b7-preparation-'+tx+'.json')
+ require_absent(rec_fd,'b7-accepted-'+tx+'.json')
+ require_absent(rec_fd,'b7-post-conditions-'+tx)
+ try:control=open_dir_at(dep_fd,'control')
+ except FileNotFoundError:return scope
+ try:
+  try:runtime_dir=open_dir_at(control,'codex-plugin-runtime')
+  except FileNotFoundError:runtime_dir=None
+  if runtime_dir is not None:
+   try:require_absent(runtime_dir,'gen-b7-'+tx+'-'+nonce16)
+   finally:os.close(runtime_dir)
+  require_absent(control,'codex-plugin-preimage-b7-'+tx+'-'+nonce16)
+ finally:os.close(control)
+ return scope
+
+def archive_headers(file,part):
+ """Same member validation the placement entry applied when it built the stage."""
+ file.seek(0)
+ with tarfile.open(fileobj=file,mode='r:gz') as tf:rows=tf.getmembers()
+ seen={};links=set()
+ for h in rows:
+  name=h.name
+  if name.endswith('/') and h.isdir():name=name.rstrip('/')
+  if not name or name.startswith('/') or name!=posixpath.normpath(name) or any(x in ('','.', '..') for x in name.split('/')) or name.split('/')[0]!=part:raise Refused('ARCHIVE_MEMBER_PATH')
+  h.name=name
+  if name in seen:raise Refused('ARCHIVE_DUPLICATE')
+  if not (h.isdir() or h.isreg() or h.issym()) or h.islnk():raise Refused('ARCHIVE_TYPE')
+  if h.uid<0 or h.gid<0 or h.mode<0 or h.mode & ~0o7777 or h.size<0:raise Refused('ARCHIVE_METADATA')
+  if h.issym():
+   target=h.linkname
+   if not target or target.startswith('/') or '\x00' in target:raise Refused('ARCHIVE_LINK')
+   resolved=posixpath.normpath(posixpath.join(posixpath.dirname(name),target))
+   if part=='app':
+    if (name,target)!=('app/node_modules/@deepseek-ai','../../harness/node_modules/.pnpm/node_modules/@deepseek-ai'):raise Refused('APP_LINK_EXCEPTION')
+   elif part=='harness':
+    if resolved!='harness' and not resolved.startswith('harness/'):raise Refused('HARNESS_LINK_ESCAPE')
+   else:raise Refused('NODE_LINK_FORBIDDEN')
+   links.add(name)
+  seen[name]=h
+ for name in seen:
+  parts=name.split('/')
+  for i in range(1,len(parts)):
+   ancestor='/'.join(parts[:i])
+   if ancestor in links or (ancestor in seen and not seen[ancestor].isdir()):raise Refused('ARCHIVE_PARENT_TYPE')
+   if ancestor not in seen:raise Refused('ARCHIVE_MISSING_DIRECTORY_HEADER')
+ for name in links:
+  h=seen[name];current=name.split('/')[:-1];pending=h.linkname.split('/');expansions=0
+  while pending:
+   component=pending.pop(0)
+   if component in ('','.'):continue
+   if component=='..':
+    if not current:raise Refused('LINK_GRAPH_ESCAPE')
+    current.pop();continue
+   current.append(component);candidate='/'.join(current)
+   if candidate in links:
+    expansions+=1
+    if expansions>128:raise Refused('LINK_GRAPH_CYCLE')
+    target=seen[candidate].linkname;current.pop();pending=target.split('/')+pending
+  if part=='harness' and (not current or current[0]!='harness'):raise Refused('LINK_GRAPH_ESCAPE')
+ return rows
+
+def archive_member_map(path,row,part):
+ """Pinned frozen archive -> {member name: [kind, mode, uid, gid, size, digest|target]}."""
+ expected={}
+ with PinnedFile(path,row['sha256'],row['bytes']) as pinned:
+  rows=archive_headers(pinned.file,part)
+  pinned.file.seek(0)
+  with tarfile.open(fileobj=pinned.file,mode='r:gz') as tf:
+   for h in rows:
+    if h.isdir():rec=['dir',h.mode&0o7777,h.uid,h.gid,0,None]
+    elif h.issym():rec=['link',h.mode&0o7777,h.uid,h.gid,0,h.linkname]
+    else:
+     digest=hashlib.sha256()
+     src=tf.extractfile(h)
+     while True:
+      b=src.read(1048576)
+      if not b:break
+      digest.update(b)
+     rec=['file',h.mode&0o7777,h.uid,h.gid,h.size,digest.hexdigest()]
+    expected[h.name]=rec
+ return expected
+
+def ascii_name(name):
+ if not name or any(ord(c)>=128 or ord(c)<32 for c in name):raise Refused('STAGE_NAME_CHARSET')
+ return name
+
+def stage_walk(rec_fd,stage_name,custody_uid=0):
+ """Full inventory of the stage via nofollow dirfds; also exact treeDigest inputs.
+
+ Returns (inventory, part_entries, top). inventory: rel -> {kind,mode,uid,gid,size,
+ dev,ino, sha256|target}. part_entries holds the arrays the original node
+ treeDigest() serialises: root '.', children './name' (same rel convention and
+ metadata order), so tree_digest_from_entries(part_entries[p]) equals the digest
+ the worker computed when it generated the seed.
+ """
+ inventory={};part_entries={};counts=[0]
+ def read_file(parent,name):
+  fd=os.open(name,os.O_RDONLY|NOFOLLOW,dir_fd=parent)
+  try:
+   h=hashlib.sha256();total=0
+   while True:
+    b=os.read(fd,1048576)
+    if not b:break
+    h.update(b);total+=len(b)
+   s=os.fstat(fd)
+   if total!=s.st_size:raise Refused('STAGE_FILE_READ_SHORT')
+   return h.hexdigest(),s
+  finally:os.close(fd)
+ def walk(fd,inv_rel,entry_rel,depth,part):
+  counts[0]+=1
+  if counts[0]>STAGE_ENTRY_BOUND:raise Refused('STAGE_INVENTORY_BOUND')
+  if depth>STAGE_DEPTH_BOUND:raise Refused('STAGE_DEPTH_BOUND')
+  for name in sorted(os.listdir(fd)):
+   ascii_name(name)
+   child_inv=inv_rel+'/'+name if inv_rel else name
+   child_entry=entry_rel+'/'+name
+   s=os.lstat(name,dir_fd=fd)
+   mode=s.st_mode&0o7777
+   if stat.S_ISLNK(s.st_mode):
+    target=os.readlink(name,dir_fd=fd)
+    if not target or target.startswith('/') or '\x00' in target:raise Refused('STAGE_LINK:'+child_inv)
+    inventory[child_inv]={'kind':'link','mode':mode,'uid':s.st_uid,'gid':s.st_gid,'size':0,'dev':s.st_dev,'ino':s.st_ino,'target':target}
+    if part:part_entries[part].append([child_entry,'link',s.st_uid,s.st_gid,mode,target])
+   elif stat.S_ISDIR(s.st_mode):
+    inventory[child_inv]={'kind':'dir','mode':mode,'uid':s.st_uid,'gid':s.st_gid,'size':0,'dev':s.st_dev,'ino':s.st_ino}
+    if part:part_entries[part].append([child_entry,'dir',s.st_uid,s.st_gid,mode])
+    sub=open_dir_at(fd,name)
+    try:walk(sub,child_inv,child_entry,depth+1,part)
+    finally:os.close(sub)
+   elif stat.S_ISREG(s.st_mode):
+    if s.st_nlink!=1:raise Refused('STAGE_ENTRY_NLINK:'+child_inv)
+    digest,opened=read_file(fd,name)
+    if (opened.st_dev,opened.st_ino)!=(s.st_dev,s.st_ino) or stamp(s)!=stamp(opened):raise Refused('STAGE_FILE_DRIFT:'+child_inv)
+    inventory[child_inv]={'kind':'file','mode':mode,'uid':s.st_uid,'gid':s.st_gid,'size':s.st_size,'dev':s.st_dev,'ino':s.st_ino,'sha256':digest}
+    if part:part_entries[part].append([child_entry,'file',s.st_uid,s.st_gid,mode,digest])
+   else:raise Refused('STAGE_ENTRY_TYPE:'+child_inv)
+ try:
+  fd=open_dir_at(rec_fd,stage_name)
+ except FileNotFoundError:
+  return None,{},[]
+ try:
+  s=os.fstat(fd)
+  if s.st_uid!=custody_uid or (s.st_mode&0o7777)!=0o700:raise Refused('STAGE_CUSTODY')
+  top=sorted(os.listdir(fd))
+  for name in top:
+   if name not in STAGE_TOP:raise Refused('STAGE_UNEXPECTED:'+name)
+  for name in top:
+   part=name if name in ('app','harness','node-runtime') else None
+   root=os.lstat(name,dir_fd=fd)
+   inventory[name]={'kind':'dir','mode':root.st_mode&0o7777,'uid':root.st_uid,'gid':root.st_gid,'size':0,'dev':root.st_dev,'ino':root.st_ino}
+   if part:part_entries[part]=[['.','dir',root.st_uid,root.st_gid,root.st_mode&0o7777]]
+   sub=open_dir_at(fd,name)
+   try:walk(sub,name,'.',1,part)
+   finally:os.close(sub)
+  return inventory,part_entries,top
+ finally:os.close(fd)
+
+def tree_digest_from_entries(entries):
+ """sha256 of the exact JSON bytes the original node treeDigest() hashes."""
+ return hashlib.sha256(json.dumps(entries,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
+
+def stage_records(inventory):
+ return {rel:[rec['kind'],rec['mode'],rec['uid'],rec['gid'],rec['size'],rec.get('sha256') if rec['kind']=='file' else rec.get('target')]
+         for rel,rec in inventory.items()}
+
+def stage_identity(inventory):
+ return {rel:[rec['dev'],rec['ino']] for rel,rec in inventory.items()}
+
+def archive_part(row):
+ """First member root of a pinned archive (its policy part label)."""
+ with PinnedFile(row['path'],row['sha256'],row['bytes']) as pinned:
+  pinned.file.seek(0)
+  with tarfile.open(fileobj=pinned.file,mode='r:gz') as tf:
+   first=tf.next()
+  return first.name.rstrip('/').split('/')[0]
+
+def material_membership(paths,material,override,mat_pins):
+ """Expected stage inventory derived from the admitted lease's own frozen material.
+
+ override is the stage root (uid,gid): production (0,0) — exactly the custody the
+ placement entry applied to the code copy and the explicit placement directories.
+ Part archives are the non-public, non-operation pinned archives; each must carry
+ exactly one of the three placement part roots.
+ """
+ expected={}
+ parts={'app','harness','node-runtime'}
+ skip=set(PUBLIC)|{Path(mat_pins['operationSourceArchive']).name}
+ seen_parts=set()
+ for name,row in sorted(mat_pins['artifactPins'].items()):
+  if name in skip:continue
+  policy=archive_part(row)
+  if policy not in parts:raise Refused('MATERIAL_UNKNOWN_PART:'+name)
+  if policy in seen_parts:raise Refused('MATERIAL_PART_DUPLICATE:'+policy)
+  seen_parts.add(policy)
+  for member,rec in archive_member_map(Path(row['path']),row,policy).items():
+   if member in expected and expected[member]!=rec:raise Refused('MATERIAL_DIR_CONFLICT:'+member)
+   expected[member]=rec
+ if seen_parts!=parts:raise Refused('MATERIAL_PART_MISSING:'+','.join(sorted(parts-seen_parts)))
+ op_row=mat_pins['artifactPins'][Path(mat_pins['operationSourceArchive']).name]
+ for member,rec in archive_member_map(Path(op_row['path']),op_row,'dsh-agent-core').items():
+  rec=[rec[0],rec[1],override[0],override[1],rec[4],rec[5]]
+  expected[CODE_NAME+'/'+material['pkg_dir']+'/'+member]=rec
+ for rel in (CODE_NAME,CODE_NAME+'/'+material['pkg_dir'],CODE_NAME+'/'+material['entry_dir']):
+  expected[rel]=['dir',0o700,override[0],override[1],0,None]
+ expected[CODE_NAME+'/'+material['entry_dir']+'/'+WORKER_LEAF]=['file',0o644,override[0],override[1],None,material['worker_sha']]
+ return expected
+
+def compare_stage(inventory,records,allow_missing=False):
+ """Unknown members always refuse; present members must match the frozen material."""
+ for rel,rec in sorted(inventory.items()):
+  exp=records.get(rel)
+  if exp is None:raise Refused('STAGE_MEMBER_UNKNOWN:'+rel)
+  kind,mode,uid,gid,size,digest=exp
+  got=inventory[rel]
+  if got['kind']!=kind or got['mode']!=mode or got['uid']!=uid or got['gid']!=gid:raise Refused('STAGE_MEMBER_DRIFT:'+rel)
+  if kind=='file':
+   if (size is not None and got['size']!=size) or got.get('sha256')!=digest:raise Refused('STAGE_MEMBER_DRIFT:'+rel)
+  elif kind=='link' and got.get('target')!=digest:raise Refused('STAGE_MEMBER_DRIFT:'+rel)
+ if not allow_missing:
+  missing=sorted(set(records)-set(inventory))
+  if missing:raise Refused('STAGE_MEMBER_MISSING:'+','.join(missing[:8]))
+
+def bounded_read(rec_fd,name,bound):
+ """Custody-bounded read of a small regular file; returns (bytes, stamp, dev, ino)."""
+ s=os.stat(name,dir_fd=rec_fd,follow_symlinks=False)
+ if not stat.S_ISREG(s.st_mode) or s.st_nlink!=1:raise Refused('SEED_CUSTODY')
+ if s.st_size>bound:raise Refused('SEED_BOUND')
+ fd=os.open(name,os.O_RDONLY|NOFOLLOW,dir_fd=rec_fd)
+ try:
+  opened=os.fstat(fd)
+  if stamp(s)!=stamp(opened):raise Refused('SEED_OPEN_DRIFT')
+  chunks=[];total=0
+  while True:
+   b=os.read(fd,65536)
+   if not b:break
+   total+=len(b)
+   if total>bound:raise Refused('SEED_BOUND')
+   chunks.append(b)
+  if stamp(s)!=stamp(os.fstat(fd)):raise Refused('SEED_READ_DRIFT')
+  return b''.join(chunks),stamp(s),s.st_dev,s.st_ino
+ finally:os.close(fd)
+
+def _template_leaves(obj,path):
+ out=[]
+ if isinstance(obj,dict):
+  for k in sorted(obj):out.extend(_template_leaves(obj[k],path+'.'+k if path else k))
+ elif isinstance(obj,list):
+  for i,v in enumerate(obj):out.extend(_template_leaves(v,path+'.'+str(i)))
+ else:out.append((path,obj))
+ return out
+
+_MISSING=object()
+def _get_path(obj,path):
+ cur=obj
+ for c in path.split('.'):
+  if not isinstance(cur,dict) or c not in cur:return _MISSING
+  cur=cur[c]
+ return cur
+
+def seed_template_fields(seed,template):
+ """Every template leaf must survive buildSeed unchanged except the three mutations."""
+ for path,value in _template_leaves(template,''):
+  # buildSeed may replace these subtrees wholesale: exempt the whole subtree, not just the exact node
+  if any(path==m or path.startswith(m+'.') for m in ('activation.cohortPreparation.serviceUid','activation.cohortPreparation.routing','activation.codeDigests')):continue
+  if _get_path(seed,path)!=value:raise Refused('SEED_TEMPLATE_FIELD:'+path)
+
+def admit_seed(paths,rec_fd,material,stage_inventory,part_entries,journal):
+ """B4: the legacy branch keeps the exact stale-seed pin; the package-matched
+ branch validates the worker's actual seed against this package's own template
+ and binds its codeDigests to this lease's stage trees."""
+ try:
+  raw,leaf,dev,ino=bounded_read(rec_fd,paths.seed_name,SEED_BOUND)
+ except FileNotFoundError:
+  if journal is not None and journal.get('seed') is not None and not journal['steps'].get('seed'):
+   raise Refused('SEED_UNEXPECTEDLY_ABSENT')
+  return None
+ digest=hashlib.sha256(raw).hexdigest()
+ if journal is not None:
+  recorded=journal.get('seed')
+  if recorded is None:raise Refused('SEED_REAPPEARED_AFTER_PLAN')
+  if recorded.get('sha256')!=digest:raise Refused('SEED_DIGEST_MISMATCH')
+ mode=material['seed_mode']
+ if mode=='legacy-pin':
+  if digest!=STALE_SEED_SHA:raise Refused('PINNED_HASH:'+paths.seed_name)
+  return {'sha256':digest,'bytes_b64':base64.b64encode(raw).decode(),'stamp':leaf,'dev':dev,'ino':ino,'mode':mode}
+ template=json.loads(_pinned_bytes(material['template'],material['template_sha'],SEED_BOUND))
+ try:seed=json.loads(raw)
+ except ValueError:raise Refused('SEED_JSON')
+ if not isinstance(seed,dict):raise Refused('SEED_JSON')
+ seed_template_fields(seed,template)
+ routing=seed.get('activation',{}).get('cohortPreparation',{}).get('routing')
+ if not isinstance(routing,dict) or routing.get('source')!='runtime_env':raise Refused('SEED_ROUTING')
+ service_uid=seed.get('activation',{}).get('cohortPreparation',{}).get('serviceUid')
+ if not isinstance(service_uid,int) or isinstance(service_uid,bool) or service_uid<=0:raise Refused('SEED_PRINCIPAL')
+ digests=seed.get('activation',{}).get('codeDigests')
+ if not isinstance(digests,dict) or sorted(digests)!=['app','harness','node-runtime']:raise Refused('SEED_CODE_DIGESTS')
+ if stage_inventory is None:raise Refused('SEED_UNBOUND_WITHOUT_STAGE')
+ for part in ('app','harness','node-runtime'):
+  value=digests.get(part)
+  if not isinstance(value,str) or not re.fullmatch(r'[a-f0-9]{64}',value):raise Refused('SEED_CODE_DIGESTS')
+  if value!=tree_digest_from_entries(part_entries[part]):raise Refused('SEED_STAGE_DIGEST_MISMATCH:'+part)
+ return {'sha256':digest,'bytes_b64':base64.b64encode(raw).decode(),'stamp':leaf,'dev':dev,'ino':ino,'mode':mode}
+
+def artifacts_plan(paths,mat_pins,journal):
+ """Fresh: the exact six public members. Resume: a subset of them (the journal
+ records what this operation already removed); present members re-verified."""
+ full=[]
+ for name in PUBLIC:
+  full.extend([name,name+'.sha256'])
+ try:
+  fd=open_directory(paths.artifacts,protected=True)
+ except FileNotFoundError:
+  if journal is not None and journal.get('artifacts') is not None:raise Refused('ARTIFACTS_UNEXPECTEDLY_ABSENT')
+  return None
+ try:
+  names=sorted(os.listdir(fd))
+  records={}
+  for name in PUBLIC:
+   row=mat_pins['artifactPins'][name]
+   side=(row['sha256']+'  '+name+'\n').encode()
+   records[name]={'sha256':row['sha256'],'bytes':row['bytes']}
+   records[name+'.sha256']={'sha256':hashlib.sha256(side).hexdigest(),'bytes':len(side)}
+  if journal is None:
+   if names!=sorted(full):raise Refused('ARTIFACTS_UNEXPECTED:'+','.join(names))
+  else:
+   recorded=journal.get('artifacts')
+   if recorded is None:raise Refused('ARTIFACTS_REAPPEARED_AFTER_PLAN')
+   if not set(names)<=set(full):raise Refused('ARTIFACTS_UNEXPECTED:'+','.join(sorted(set(names)-set(full))))
+  for leaf in names:
+   rec=records[leaf]
+   with PinnedFile(paths.artifacts/leaf,rec['sha256'],rec['bytes']):pass
+   if journal is not None:
+    prior=recorded.get(leaf)
+    if prior is not None and (prior.get('sha256'),prior.get('bytes'))!=(rec['sha256'],rec['bytes']):raise Refused('ARTIFACT_JOURNAL_MISMATCH:'+leaf)
+  return {leaf:records[leaf] for leaf in names}
+ finally:os.close(fd)
+
+def agent_core_plan(paths):
+ try:
+  fd=open_directory(paths.agent_core,protected=True)
+ except FileNotFoundError:
+  return False
+ try:
+  if sorted(os.listdir(fd))!=['artifacts']:raise Refused('AGENT_CORE_DIR_UNEXPECTED')
+  return True
+ finally:os.close(fd)
+
+def journal_allowed(names):
+ if names==['holder']:return 'fresh'
+ if not names:raise Refused('LOCK_DIR_UNEXPECTED:EMPTY')
+ if set(names)<=set(['holder',JOURNAL_NAME,JOURNAL_TMP]) and JOURNAL_NAME in names:return 'resume'
+ if set(names)=={JOURNAL_TMP}:return 'resume-tmp'
+ raise Refused('LOCK_DIR_UNEXPECTED:'+','.join(names))
+
+def journal_write(lock_fd,lock_path,journal,receipt):
+ body=(json.dumps(journal,sort_keys=True)+'\n').encode()
+ if len(body)>JOURNAL_BOUND:raise Refused('JOURNAL_BOUND')
+ fd=os.open(JOURNAL_TMP,os.O_WRONLY|os.O_CREAT|os.O_TRUNC|NOFOLLOW,0o600,dir_fd=lock_fd)
+ try:
+  view=memoryview(body)
+  while view:
+   n=os.write(fd,view)
+   if n<=0:raise Refused('JOURNAL_SHORT_WRITE')
+   view=view[n:]
+  os.fsync(fd)
+ finally:os.close(fd)
+ receipt.intent(lock_path/JOURNAL_NAME,'journal-write')
+ os.replace(JOURNAL_TMP,JOURNAL_NAME,src_dir_fd=lock_fd,dst_dir_fd=lock_fd)
+ os.fsync(lock_fd)
+ receipt.fact(JOURNAL_NAME,steps=journal.get('steps',{}),fsynced=True)
+
+def journal_parse_bytes(raw):
+ try:journal=json.loads(raw)
+ except ValueError:raise Refused('JOURNAL_CORRUPT')
+ if not isinstance(journal,dict) or journal.get('kind')!=JOURNAL_KIND or journal.get('version')!=1:raise Refused('JOURNAL_CORRUPT')
+ if not re.fullmatch(r'tx-[A-Za-z0-9-]{1,100}',journal.get('tx') or ''):raise Refused('JOURNAL_CORRUPT')
+ if not re.fullmatch(r'[a-f0-9]{32}',journal.get('nonce') or ''):raise Refused('JOURNAL_CORRUPT')
+ if journal.get('admission') not in MATERIALS:raise Refused('JOURNAL_CORRUPT')
+ for key in ('holder','steps','stage','seed','artifacts'):
+  if key not in journal:raise Refused('JOURNAL_CORRUPT')
+ if not isinstance(journal['holder'],dict) or not isinstance(journal['steps'],dict):raise Refused('JOURNAL_CORRUPT')
+ return journal
+
+def journal_read_file(lock_fd,name):
+ try:
+  s=os.stat(name,dir_fd=lock_fd,follow_symlinks=False)
+ except FileNotFoundError:
+  return None
+ if not stat.S_ISREG(s.st_mode) or s.st_nlink!=1 or s.st_size>JOURNAL_BOUND:raise Refused('JOURNAL_CORRUPT')
+ fd=os.open(name,os.O_RDONLY|NOFOLLOW,dir_fd=lock_fd)
+ try:
+  opened=os.fstat(fd)
+  if stamp(s)!=stamp(opened):raise Refused('JOURNAL_CORRUPT')
+  raw=os.read(fd,JOURNAL_BOUND)
+  if len(raw)!=s.st_size or stamp(s)!=stamp(os.fstat(fd)):raise Refused('JOURNAL_CORRUPT')
+ finally:os.close(fd)
+ return journal_parse_bytes(raw)
+
+def plan_and_verify(paths,rec_fd,lock_parent_fd,lock_name,dep_fd,receipt,
+                    legacy_sha=LEGACY_BINDING_SHA,materials=None,custody_uid=0):
+ """All read-only checks (the journal is written by execute). Returns the removal plan."""
+ materials=materials or MATERIALS
+ if lock_name is None:raise Refused('NOTHING_TO_DISPOSE')
+ try:
+  lock_fd=os.open(lock_name,os.O_RDONLY|DIRECTORY|NOFOLLOW,dir_fd=lock_parent_fd)
+ except FileNotFoundError:
+  raise Refused('NOTHING_TO_DISPOSE')
+ holder_fd=None
+ try:
+  mode=journal_allowed(sorted(os.listdir(lock_fd)))
+  journal=None
+  if mode in ('resume','resume-tmp'):
+   try:
+    journal=journal_read_file(lock_fd,JOURNAL_NAME)
+   except Refused:
+    if mode=='resume-tmp':raise
+    receipt.prior=['B7_DISPOSAL_JOURNAL_PRESENT_UNPARSED']
+    journal=journal_read_file(lock_fd,JOURNAL_TMP)
+    if journal is None:
+     raise Refused('JOURNAL_CORRUPT')
+  if journal is not None:
+   receipt.prior=['resumed-journal:'+json.dumps(journal.get('steps',{}),sort_keys=True)]
+  holder_present='holder' in sorted(os.listdir(lock_fd))
+  if holder_present:
+   holder_fd,record,identity=open_holder(lock_fd)
+   tx,kind=admit_binding(record.get('binding'),package_binding(paths),legacy_sha)
+   if journal is not None:
+    if journal['steps'].get('holder') is True:raise Refused('JOURNAL_HOLDER_MISMATCH')
+    if (journal.get('tx'),journal.get('admission'),journal.get('nonce'))!=(tx,kind,record.get('nonce')):raise Refused('JOURNAL_HOLDER_MISMATCH')
+    if journal['holder'].get('sha256')!=identity['sha256'] or [journal['holder'].get('dev'),journal['holder'].get('ino')]!=[identity['dev'],identity['ino']]:raise Refused('JOURNAL_HOLDER_MISMATCH')
+  elif journal is not None:
+   tx,kind,record,identity=journal['tx'],journal['admission'],{'nonce':journal['nonce'],'binding':None},journal['holder']
+  else:
+   raise Refused('LOCK_DIR_UNEXPECTED:')
+  material=materials[kind]
+  receipt.emit('BINDING_ADMITTED',txId=tx,admission=kind,holderPhase='PREPARING' if holder_present else 'HOLDER-REMOVED-BY-THIS-OPERATION',resume=journal is not None)
+  scope=prove_no_mutation(paths,rec_fd,dep_fd,tx,record['nonce'][:16])
+  receipt.emit('NO_MUTATION_PROVEN',txId=tx,checkedScope=scope,
+               notExamined=['other-nonce-or-other-tx-resources','activation-<tx>-assets','live-workers','dispatched-effects'])
+  stage_inventory,part_entries,top=stage_walk(rec_fd,paths.stage_name,custody_uid)
+  seed=admit_seed(paths,rec_fd,material,stage_inventory,part_entries,journal)
+  mat_pins=json.loads(_pinned_bytes(material['pins'],material['pins_sha'],1048576))
+  expected=None
+  if stage_inventory is not None:
+   root=os.stat(paths.stage_name,dir_fd=rec_fd,follow_symlinks=False)
+   expected=material_membership(paths,material,(root.st_uid,root.st_gid),mat_pins)
+   if journal is not None:
+    recorded_stage=journal.get('stage')
+    if not isinstance(recorded_stage,dict):raise Refused('JOURNAL_CORRUPT')
+    if not recorded_stage.get('present'):raise Refused('STAGE_REAPPEARED_AFTER_PLAN')
+    compare_stage(stage_inventory,expected,allow_missing=True)
+   else:
+    compare_stage(stage_inventory,expected)
+   # the worker record's size is only knowable from the verified inventory; resolve it
+   # (absent on resume when a prior partial step already removed it) so the journal
+   # snapshot and the re-derived expectation are comparable
+   worker_rel=CODE_NAME+'/'+material['entry_dir']+'/'+WORKER_LEAF
+   if worker_rel in stage_inventory:expected[worker_rel][4]=stage_inventory[worker_rel]['size']
+   if journal is not None:
+    recorded=recorded_stage.get('records')
+    if not isinstance(recorded,dict) or set(recorded)!=set(expected):raise Refused('JOURNAL_INVENTORY_DRIFT')
+    for rel,exp in expected.items():
+     got=recorded[rel]
+     exp=list(exp)
+     if exp[4] is None:exp[4]=got[4]
+     if list(got)!=exp:raise Refused('JOURNAL_INVENTORY_DRIFT:'+rel)
+  elif journal is not None:
+   recorded_stage=journal.get('stage')
+   if isinstance(recorded_stage,dict) and recorded_stage.get('present'):raise Refused('STAGE_UNEXPECTEDLY_ABSENT')
+  artifacts=artifacts_plan(paths,mat_pins,journal)
+  agent_core_present=agent_core_plan(paths) if artifacts is not None else False
+  records=stage_records(stage_inventory) if stage_inventory is not None else None
+  inventory_digest=hashlib.sha256(json.dumps(records,sort_keys=True).encode()).hexdigest() if records is not None else None
+  receipt.emit('DISPOSAL_PLAN',seed=None if seed is None else seed['sha256'],stage=stage_inventory is not None,
+               artifacts=None if artifacts is None else len(artifacts),agentCoreDir=agent_core_present,
+               holder=holder_present,lockDir=True,admission=kind,txId=tx,resume=journal is not None,
+               stageInventorySha256=inventory_digest)
+  def di(fd):
+   fs=os.fstat(fd)
+   return (fs.st_dev,fs.st_ino)
+  return {'tx':tx,'kind':kind,'journal':journal,'resume':journal is not None,'material':material,'mat_pins':mat_pins,
+          'holder_fd':holder_fd,'holder_present':holder_present,'holder_record':record,'holder_identity':identity,
+          'roots':{'recovery':di(rec_fd),'lock_parent':di(lock_parent_fd),'share':di(open_directory(paths.share,protected=True)),'lock':di(lock_fd)},
+          'lock_fd':lock_fd,'lock_name':lock_name,'scope':scope,'custody_uid':custody_uid,
+          'seed':seed,'stage_present':stage_inventory is not None,'stage_inventory':stage_inventory,
+          'stage_records':records,'stage_identity':stage_identity(stage_inventory) if stage_inventory is not None else None,
+          'stage_inventory_sha256':inventory_digest,'artifacts':artifacts,'agent_core':agent_core_present}
+ except BaseException:
+  if holder_fd is not None:os.close(holder_fd)
+  os.close(lock_fd)
+  raise
+
+def execute(paths,rec_fd,lock_parent_fd,lock_name,share_fd,plan,receipt):
+ """Removes only the plan's verified objects; journal-gated, identity-checked."""
+ tx=plan['tx'];kind=plan['kind'];lock_fd=plan['lock_fd'];holder_fd=plan['holder_fd']
+ journal=plan['journal']
+ if journal is None:
+  journal={'version':1,'kind':JOURNAL_KIND,'tx':tx,'admission':kind,'nonce':plan['holder_record']['nonce'],
+           'holder':plan['holder_identity'],'seed':plan['seed'],'steps':{}}
+ def save_journal():
+  journal_write(lock_fd,paths.lock,journal,receipt)
+ def root_unchanged(path,expected,protected,label):
+  check=open_directory(path,protected=protected)
+  try:
+   s=os.fstat(check)
+   if (s.st_dev,s.st_ino)!=expected:raise Refused('ROOT_NAMESPACE_REPLACED:'+label)
+  finally:os.close(check)
+ # B1: the namespaces the PLAN verified must still be the current ones.
+ root_unchanged(paths.recovery,plan['roots']['recovery'],True,'recovery')
+ root_unchanged(paths.lock.parent,plan['roots']['lock_parent'],True,'lock-parent')
+ root_unchanged(paths.share,plan['roots']['share'],True,'share')
+ s=os.stat(lock_name,dir_fd=lock_parent_fd,follow_symlinks=False)
+ if not stat.S_ISDIR(s.st_mode):raise Refused('LOCK_NOT_DIRECTORY')
+ if (s.st_dev,s.st_ino)!=plan['roots']['lock']:raise Refused('LOCK_DIR_REPLACED_AFTER_PLAN')
+ try:
+  if not plan['resume']:
+   journal['stage']={'present':plan['stage_present'],'records':plan['stage_records'],
+                     'identity':plan['stage_identity'],'inventorySha256':plan['stage_inventory_sha256']}
+   journal['artifacts']=plan['artifacts']
+   journal['agentCore']=plan['agent_core']
+   save_journal()
+  # The six-target batch entered the same transaction: its writes roll back HERE,
+  # while this operation holds the original mutex and BEFORE any lease object is
+  # removed — never from main() ahead of the lock, and never outside execute().
+  if journal['steps'].get('six_target') is not True:
+   recover_six_target_batch(paths,rec_fd,receipt)
+   journal['steps']['six_target']=True;save_journal()
+  # seed (identity + digest re-verified immediately before the unlink; B2)
+  if plan['seed'] is not None and not journal['steps'].get('seed'):
+   raw,leaf,dev,ino=bounded_read(rec_fd,paths.seed_name,SEED_BOUND)
+   if (dev,ino)!=(plan['seed']['dev'],plan['seed']['ino']) or hashlib.sha256(raw).hexdigest()!=plan['seed']['sha256']:
+    raise Refused('SEED_REPLACED_AFTER_PLAN')
+   receipt.intent(paths.recovery/paths.seed_name,'unlink');os.unlink(paths.seed_name,dir_fd=rec_fd)
+   receipt.fact(paths.recovery/paths.seed_name,removed=True)
+   journal['steps']['seed']=True;save_journal()
+  # stage (per-member object identity + digest re-verified before each removal; B2)
+  if plan['stage_present'] and not journal['steps'].get('stage'):
+   records_map=journal['stage']['records'] if plan['resume'] else plan['stage_records']
+   identity_map=plan['stage_identity']
+   if plan['resume']:
+    fresh_inventory,_,_=stage_walk(rec_fd,paths.stage_name,plan['custody_uid'])
+    identity_map=stage_identity(fresh_inventory)
+    compare_stage(fresh_inventory,journal['stage']['records'],allow_missing=True)
+   stage_fd=open_dir_at(rec_fd,paths.stage_name)
+   def remove_dir(fd,rel):
+    for child in sorted(os.listdir(fd)):
+     child_rel=rel+'/'+child if rel else child
+     s=os.lstat(child,dir_fd=fd)
+     rec=identity_map.get(child_rel)
+     if rec is None or [s.st_dev,s.st_ino]!=rec:raise Refused('STAGE_MEMBER_REPLACED:'+child_rel)
+     kind_now='dir' if stat.S_ISDIR(s.st_mode) and not stat.S_ISLNK(s.st_mode) else ('link' if stat.S_ISLNK(s.st_mode) else 'file')
+     expected_rec=records_map.get(child_rel)
+     if expected_rec is None or expected_rec[0]!=kind_now:raise Refused('STAGE_MEMBER_REPLACED:'+child_rel)
+     if kind_now=='dir':
+      sub=open_dir_at(fd,child)
+      try:remove_dir(sub,child_rel)
+      finally:os.close(sub)
+      receipt.intent(paths.recovery/paths.stage_name/child_rel,'rmdir');os.rmdir(child,dir_fd=fd)
+     elif kind_now=='link':
+      # re-verify the recorded target via readlink only; opening a link with
+      # O_NOFOLLOW is ELOOP and a link is removed by its own name alone
+      if os.readlink(child,dir_fd=fd)!=expected_rec[5]:raise Refused('STAGE_MEMBER_REPLACED:'+child_rel)
+      receipt.intent(paths.recovery/paths.stage_name/child_rel,'unlink');os.unlink(child,dir_fd=fd)
+     else:
+      h=hashlib.sha256()
+      fd_leaf=os.open(child,os.O_RDONLY|NOFOLLOW,dir_fd=fd)
+      try:
+       while True:
+        b=os.read(fd_leaf,1048576)
+        if not b:break
+        h.update(b)
+       if stamp(s)!=stamp(os.fstat(fd_leaf)):raise Refused('STAGE_MEMBER_REPLACED:'+child_rel)
+      finally:os.close(fd_leaf)
+      if h.hexdigest()!=expected_rec[5]:raise Refused('STAGE_MEMBER_REPLACED:'+child_rel)
+      receipt.intent(paths.recovery/paths.stage_name/child_rel,'unlink');os.unlink(child,dir_fd=fd)
+     receipt.fact(paths.recovery/paths.stage_name/child_rel,removed=True)
+   try:remove_dir(stage_fd,'')
+   finally:os.close(stage_fd)
+   receipt.intent(paths.recovery/paths.stage_name,'rmdir');os.rmdir(paths.stage_name,dir_fd=rec_fd)
+   receipt.fact(paths.recovery/paths.stage_name,removed=True)
+   journal['steps']['stage']=True;save_journal()
+  # artifacts (full re-hash immediately before each unlink; B2)
+  if plan['artifacts'] is not None and not journal['steps'].get('artifacts'):
+   art_fd=open_directory(paths.artifacts,protected=True)
+   try:
+    for name in sorted(os.listdir(art_fd)):
+     rec=plan['artifacts'].get(name)
+     if rec is None:raise Refused('ARTIFACTS_UNEXPECTED:'+name)
+     s=os.lstat(name,dir_fd=art_fd)
+     if s.st_size!=rec['bytes']:raise Refused('ARTIFACT_REPLACED:'+name)
+     h=hashlib.sha256()
+     fd=os.open(name,os.O_RDONLY|NOFOLLOW,dir_fd=art_fd)
+     try:
+      while True:
+       b=os.read(fd,1048576)
+       if not b:break
+       h.update(b)
+      if stamp(s)!=stamp(os.fstat(fd)):raise Refused('ARTIFACT_REPLACED:'+name)
+     finally:os.close(fd)
+     if h.hexdigest()!=rec['sha256']:raise Refused('ARTIFACT_REPLACED:'+name)
+     receipt.intent(paths.artifacts/name,'unlink');os.unlink(name,dir_fd=art_fd);receipt.fact(paths.artifacts/name,removed=True)
+   finally:os.close(art_fd)
+   journal['steps']['artifacts']=True
+   agent_fd=open_dir_at(share_fd,paths.agent_core.name)
+   try:
+    receipt.intent(paths.artifacts,'rmdir');os.rmdir('artifacts',dir_fd=agent_fd);receipt.fact(paths.artifacts,removed=True)
+   finally:os.close(agent_fd)
+   journal['steps']['artifacts_dir']=True
+   if plan['agent_core']:
+    receipt.intent(paths.agent_core,'rmdir');os.rmdir(paths.agent_core.name,dir_fd=share_fd);receipt.fact(paths.agent_core,removed=True)
+   journal['steps']['agent_core_dir']=True;save_journal()
+  # holder: unlink only while this operation still holds the original mutex (B1)
+  if not journal['steps'].get('holder'):
+   if holder_fd is not None:
+    holder_still_original(holder_fd,plan['holder_identity'],plan['holder_record'],lock_fd)
+    receipt.intent(paths.lock/'holder','unlink');os.unlink('holder',dir_fd=lock_fd);receipt.fact(paths.lock/'holder',removed=True)
+   else:
+    try:os.stat('holder',dir_fd=lock_fd,follow_symlinks=False)
+    except FileNotFoundError:pass
+    else:raise Refused('HOLDER_STATE_UNEXPECTED')
+   journal['steps']['holder']=True;save_journal()
+  # lock dir: the journal (this operation's own object) is removed with a receipt
+  # immediately before the rmdir; the fsync completes while the mutex fd is still
+  # held (B1/B3). A crash in the one-syscall window after the journal unlink leaves
+  # an EMPTY lock dir — refused as LOCK_DIR_UNEXPECTED:EMPTY with a documented
+  # runbook exit (the empty dir contains no lease object).
+  if journal['steps'].get('lock') is not True:
+   receipt.intent(paths.lock/JOURNAL_NAME,'unlink');os.unlink(JOURNAL_NAME,dir_fd=lock_fd)
+   receipt.fact(paths.lock/JOURNAL_NAME,removed=True)
+   journal['steps']['lock']=True
+  receipt.intent(paths.lock,'rmdir');os.rmdir(lock_name,dir_fd=lock_parent_fd);os.fsync(lock_parent_fd)
+  receipt.fact(paths.lock,removed=True)
+ finally:
+  if holder_fd is not None:os.close(holder_fd)
+ # final absence on freshly re-resolved namespaces — never the plan's fds (B1)
+ fresh=open_directory(paths.recovery,protected=True)
+ try:
+  require_absent(fresh,paths.seed_name);require_absent(fresh,paths.stage_name)
+  require_absent(fresh,paths.tx_name);require_absent(fresh,paths.fence_name)
+ finally:os.close(fresh)
+ fresh=open_directory(paths.lock.parent,protected=True)
+ try:require_absent(fresh,lock_name)
+ finally:os.close(fresh)
+ receipt.emit('DISPOSAL_COMPLETE',txId=tx,admission=kind,
+              freshEntryPreconditions='lock-absent stage-absent seed-absent tx-absent artifacts-removed',
+              checkedScope=plan['scope'],stageInventorySha256=plan['stage_inventory_sha256'])
+ os.close(lock_fd)
+
+class _DirFd:
+ def __init__(self,path,protected=False):self.path=path;self.protected=protected
+ def __enter__(self):self.fd=open_directory(self.path,protected=self.protected);return self.fd
+ def __exit__(self,*a):os.close(self.fd)
+
+def batch_link_targets(paths,manifest):
+ """rel->target facts for the batch's created links, read from the manifest-bound
+ batch journal (manifest.journalFile, sha-checked against manifest.journalSha256).
+
+ Every link the producer records in created[] is journaled as a FACTS row carrying
+ its exact target (farm links and install bin links alike); the manifest binds those
+ bytes by digest, so they are checkpoint material, not live observations. The
+ rollback preflight verifies each created link's on-disk target against the recorded
+ one and refuses target drift. A journal written by a producer that predates
+ target-fact recording — or a created rel without a journal fact — yields no entry
+ for that rel: those checkpoints admit symlink-shape identity only, the sealed
+ pre-census semantics. Nothing here grants admission to an unrecorded object."""
+ name=manifest.get('journalFile')
+ if not isinstance(name,str) or not name or '/' in name or name in ('.','..'):raise Refused('SIX_TARGET_BATCH_CORRUPT')
+ jp=os.path.join(paths.recovery,name)
+ try:raw=open(jp,'rb').read()
+ except FileNotFoundError:raise Refused('SIX_TARGET_BATCH_CORRUPT')
+ if hashlib.sha256(raw).hexdigest()!=manifest.get('journalSha256'):raise Refused('SIX_TARGET_BATCH_DRIFT:journal')
+ homes=[];prefixes=[]
+ for t in manifest.get('targets',[]):
+  tid=t.get('id')
+  if isinstance(tid,str):homes.append(tid);prefixes.append(os.path.join(paths.deployment,'homes',tid,''))
+ out={}
+ for line in raw.splitlines():
+  if not line.strip():continue
+  try:row=json.loads(line)
+  except ValueError:raise Refused('SIX_TARGET_BATCH_CORRUPT')
+  if not isinstance(row,dict) or row.get('phase')!='FACTS':continue
+  p=row.get('path');target=row.get('target')
+  if not isinstance(p,str) or not isinstance(target,str) or not target:continue
+  for tid,prefix in zip(homes,prefixes):
+   if p.startswith(prefix):out[(tid,p[len(prefix):])]=target;break
+ return out
+
+def recover_six_target_batch(paths,rec_fd,receipt):
+ """If a six-target batch manifest exists in the recovery root, roll back its writes
+ before the lease disposal: batch-created homes are removed ONLY while every leaf
+ still matches the durable census (batch-owned, business-untouched); PARTIAL (canary)
+ profile bytes are restored from the preimage store UNDER THE DEPLOYMENT ROOT
+ (manifest rels are home-relative, the same frame verifySixTargetBatchAt checks),
+ batch-created links are unlinked (symlink-only), and the installed plugin tree is
+ removed. The manifest is then removed. Any drift stops and preserves the scene.
+ MUST run while this operation holds the lease mutex (called from execute, never
+ before the lock).
+
+ Census contract (two producer-shape repairs, same fail-closed boundary):
+  - a created[] link whose target is a directory is a legitimate batch object: the
+    exact-inventory walk lists it under dirs but never descends into it, so the
+    recorded link itself is the only leaf under its name; recorded symlinked
+    directories are admitted, unrecorded ones still refuse;
+  - every created[] link must still BE a symlink and, when the manifest-bound
+    journal carries its fact, must still point at the recorded target — a link
+    replaced by a regular file or silently retargeted refuses."""
+ recovery=paths.recovery
+ bp=os.path.join(recovery,'b7-six-target-batch.json')
+ try:s=os.stat(bp)
+ except FileNotFoundError:return
+ if not stat.S_ISREG(s.st_mode) or s.st_nlink!=1:raise Refused('SIX_TARGET_BATCH_CORRUPT')
+ manifest=json.loads(open(bp,'rb').read())
+ if any(t.get('pending') for t in manifest.get('targets',[])):raise Refused('SIX_TARGET_PENDING_MUTATION_RETAINED')
+ link_targets=batch_link_targets(paths,manifest)
+ # PHASE 1 — preflight the ENTIRE batch against the durable checkpoint BEFORE any
+ # restore/delete. HOME_ABSENT homes are batch-owned end to end: recorded leaves
+ # must match AND be the only leaves present (a business file added after the
+ # checkpoint refuses, because the rollback would delete it). PARTIAL homes are
+ # pre-existing: only the batch-owned scope is enforced (recorded files incl. the
+ # installed tree, created links) — business edits there refuse; business additions
+ # OUTSIDE that scope are preserved, never clobbered or removed.
+ for t in manifest.get('targets',[]):
+  home=os.path.join(paths.deployment,'homes',t['id'])
+  recorded=set(list((t.get('files') or {}).keys())+list(t.get('created') or []))
+  if t.get('prestate')=='HOME_ABSENT':
+   for rel,want in (t.get('files') or {}).items():
+    fp=os.path.join(home,rel)
+    try:got=hashlib.sha256(open(fp,'rb').read()).hexdigest()
+    except FileNotFoundError:raise Refused('SIX_TARGET_HOME_MODIFIED:'+rel)
+    if got!=want:raise Refused('SIX_TARGET_HOME_MODIFIED:'+rel)
+   for root_dir,dirs,files_ in os.walk(home):
+    for name in files_:
+     rel=os.path.relpath(os.path.join(root_dir,name),home)
+     if rel not in recorded:raise Refused('SIX_TARGET_HOME_MODIFIED:'+rel)
+    for name in list(dirs):
+     fp=os.path.join(root_dir,name)
+     if os.path.islink(fp):
+      rel=os.path.relpath(fp,home)
+      if rel not in recorded:raise Refused('SIX_TARGET_HOME_MODIFIED:'+rel)
+   for rel in recorded:
+    if not os.path.lexists(os.path.join(home,rel)):raise Refused('SIX_TARGET_HOME_MODIFIED:'+rel)
+   for rel in (t.get('created') or []):
+    s=os.lstat(os.path.join(home,rel))
+    if not stat.S_ISLNK(s.st_mode):raise Refused('SIX_TARGET_CREATED_NOT_LINK:'+rel)
+    want=link_targets.get((t['id'],rel))
+    if want is not None and os.readlink(os.path.join(home,rel))!=want:raise Refused('SIX_TARGET_LINK_TARGET_CHANGED:'+rel)
+  elif t.get('prestate')=='PARTIAL':
+   for rel,want in (t.get('files') or {}).items():
+    fp=os.path.join(home,rel)
+    try:got=hashlib.sha256(open(fp,'rb').read()).hexdigest()
+    except FileNotFoundError:raise Refused('SIX_TARGET_HOME_MODIFIED:'+rel)
+    if got!=want:raise Refused('SIX_TARGET_HOME_MODIFIED:'+rel)
+   for rel in t.get('created') or []:
+    link=os.path.join(home,rel)
+    try:s=os.lstat(link)
+    except FileNotFoundError:raise Refused('SIX_TARGET_HOME_MODIFIED:'+rel)
+    if not stat.S_ISLNK(s.st_mode):raise Refused('SIX_TARGET_CREATED_NOT_LINK:'+rel)
+    want=link_targets.get((t['id'],rel))
+    if want is not None and os.readlink(link)!=want:raise Refused('SIX_TARGET_LINK_TARGET_CHANGED:'+rel)
+ receipt.emit('SIX_TARGET_BATCH_ROLLBACK',targets=[t.get('id') for t in manifest.get('targets',[])])
+ # PHASE 2 — mutation, only after every target verified.
+ for t in manifest.get('targets',[]):
+  home=os.path.join(paths.deployment,'homes',t['id'])
+  if t.get('prestate')=='HOME_ABSENT':
+   receipt.intent(home,'rmdir-recursive');import shutil;shutil.rmtree(home)
+   receipt.fact(home,removed=True)
+  elif t.get('prestate')=='PARTIAL':
+   store=manifest.get('preimageStore')
+   for pre in t.get('preimages',[]):
+    dst=os.path.join(home,pre['rel'])
+    receipt.intent(dst,'restore-bytes')
+    open(dst,'wb').write(open(os.path.join(store,pre['storeFile']),'rb').read())
+    receipt.fact(dst,restored=True)
+   for rel in t.get('created') or []:
+    link=os.path.join(home,rel)
+    receipt.intent(link,'unlink');os.unlink(link);receipt.fact(link,removed=True)
+   plug=os.path.join(home,'profiles/node_modules/dsh-codex')
+   if os.path.exists(plug):
+    receipt.intent(plug,'rmdir-recursive');import shutil;shutil.rmtree(plug)
+    receipt.fact(plug,removed=True)
+ os.unlink(bp);os.fsync(rec_fd)
+
+def main():
+ require_invocation(sys.argv[1:],os.getuid(),os.geteuid())
+ os.umask(0o077)
+ check_operator_environment()
+ if str(Path(__file__).resolve())!=str(ENTRY_DIR/'stage-lease-disposal-once.py'):raise Refused('FIXED_ENTRY_LOCATION')
+ receipt=Receipts(sys.stdout)
+ try:
+  receipt.emit('READ_ONLY_PREFLIGHT',package=str(PACKAGE),pins_sha256=PINS_SHA)
+  with contextlib.ExitStack() as stack:
+   pins=json.loads(_pinned_bytes(PACKAGE/'INSTALL-PINS.json',PINS_SHA))
+   paths=Paths(RECOVERY,LOCK,DEPLOYMENT,AGENT_CORE.parent,PACKAGE)
+   rec_fd=stack.enter_context(_DirFd(paths.recovery,protected=True))
+   lock_parent_fd=stack.enter_context(_DirFd(paths.lock.parent,protected=True))
+   dep_fd=stack.enter_context(_DirFd(paths.deployment))
+   share_fd=stack.enter_context(_DirFd(paths.share,protected=True))
+   s=os.stat(paths.lock.name,dir_fd=lock_parent_fd,follow_symlinks=False)
+   if not stat.S_ISDIR(s.st_mode):raise Refused('LOCK_NOT_DIRECTORY')
+   plan=plan_and_verify(paths,rec_fd,lock_parent_fd,paths.lock.name,dep_fd,receipt)
+   execute(paths,rec_fd,lock_parent_fd,paths.lock.name,share_fd,plan,receipt)
+ except BaseException as e:
+  try:receipt.stop(str(e)[:400])
+  except BaseException:pass
+  raise
+
+def _pinned_bytes(path,digest_hex,max_size=1048576):
+ with PinnedFile(path,digest_hex,max_size=max_size) as p:return p.file.read()
+
+if __name__=='__main__':
+ try:main()
+ except BaseException as e:
+  try:sys.stderr.write('FIXED_LEASE_DISPOSAL_STOP: '+str(e)[:400]+'\n')
+  except BaseException:pass
+  sys.exit(1)

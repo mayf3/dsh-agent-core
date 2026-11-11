@@ -1,0 +1,11 @@
+{
+  "prior_manifest": "docs/reports/fleet-window-merge-c7-20261104/evidence-manifest.json",
+  "prior_manifest_sha256": "be0131af0d4f953cce303f90159ad28cca90de9f51711d78bacd315fa27330af",
+  "verified_items": 27,
+  "reused_not_rerun": [
+    "SyntheticTree 10/10",
+    "Selftest+Consumers 7/7",
+    "original stdout/stderr dry-run byte diff empty"
+  ],
+  "rationale": "Six product/selftest sources unchanged. Only C7Close function extraction changes in harness; SyntheticTree/Selftest/Consumers AST unchanged as independently reviewed."
+}

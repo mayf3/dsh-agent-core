@@ -1,0 +1,61 @@
+✖ CTR-R2 fresh/idle transport failure respawns twice with exponential delay, one reply/dispatch (5.346875ms)
+✖ CTR-R3 exhaustion durably retains original message, coordinates and explicit resend semantics (1.958125ms)
+✔ CTR-R2 no replay after unsafe/unknown event {"type":"assistant/message","data":{"message":{"content":[{"type":"text","text":"partial"}]}}} (1.07225ms)
+✔ CTR-R2 no replay after unsafe/unknown event {"type":"assistant/message","data":{"message":{"content":[{"type":"tool-call","name":"write"}]}}} (0.469791ms)
+✔ CTR-R2 no replay after unsafe/unknown event {"type":"tool/start","data":{}} (0.404625ms)
+✔ CTR-R2 no replay after unsafe/unknown event {"type":"unrecognized/provider-event","data":{}} (0.476459ms)
+✖ CTR-R5 final unknown increments caller-bound class without replay or respawn (900.742208ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 4
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 962.2715
+
+✖ failing tests:
+
+test at packages/agent-router/test/route-chain/delivery-resilience.test.js:70:1
+✖ CTR-R2 fresh/idle transport failure respawns twice with exponential delay, one reply/dispatch (5.346875ms)
+  Error [ProviderError]: TRANSPORT: fetch failed
+      at sanitizeProviderError (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/provider-errors.js:47:24)
+      at AgentProcess.trySettleExecution (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/event-correlation.js:212:21)
+      at AgentProcess.onSessionStatus (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/evidence-buffer.js:139:77)
+      at AgentProcess.onStdout (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/rpc-channel.js:52:14)
+      at Object.handler (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/process/spawn.js:81:45)
+      at Object.emit (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/helpers/fake-child.js:116:34)
+      at Object.emitStatus (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/helpers/fake-child.js:118:40)
+      at file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/route-chain/delivery-resilience.test.js:53:18
+      at node:internal/process/task_queues:151:7
+      at AsyncResource.runInAsyncScope (node:async_hooks:226:14) {
+    code: 'provider_runtime_rejection',
+    class: 'provider_runtime_rejection',
+    layer: 'provider',
+    agentId: 'agt_fx',
+    provider: 'openai-codex',
+    model: 'gpt-5.6-luna',
+    status: 'failed',
+    envelope: 'failed',
+    reconciliationHandle: 'turn:7fb944bc-e32b-4c52-932e-125aa1be48af:a1:g1:s1',
+    evidence: { eventWatermarkSeq: 0, promptRequestId: 'req-1-2', messageId: 'message-1', promptReceipt: 'accepted', terminationEvidence: 'exact_terminal_then_idle', phase: 'terminal' },
+    routeChain: { routeChainId: 'single-route', totalRouteAttempts: 1, finalOutcome: 'stop:post_admission_failure', failureClass: null }
+  }
+
+test at packages/agent-router/test/route-chain/delivery-resilience.test.js:85:1
+✖ CTR-R3 exhaustion durably retains original message, coordinates and explicit resend semantics (1.958125ms)
+  TypeError: Cannot read properties of undefined (reading 'retriesExhausted')
+      at Object.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/route-chain/delivery-resilience.test.js:89:40)
+      at expectedException (node:assert:547:17)
+      at expectsError (node:assert:672:21)
+      at strict.rejects (node:assert:738:3)
+      at async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/route-chain/delivery-resilience.test.js:88:3)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+
+test at packages/agent-router/test/route-chain/delivery-resilience.test.js:118:1
+✖ CTR-R5 final unknown increments caller-bound class without replay or respawn (900.742208ms)
+  TypeError: fx.executor.deliveryFailuresSnapshot is not a function
+      at TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/route-chain/delivery-resilience.test.js:123:32)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)

@@ -1,0 +1,41 @@
+{
+  "kind": "ACCEPTED_METHOD_DOCS_ONLY_BASE",
+  "base_commit": "33ebceb9c80df668c27ad61d162ed9afa0c08da8",
+  "author": "/root/sol_execution_continuation",
+  "decision_actor": "01a1378d-e052-7021-9992-f0760eb9f9e7",
+  "not_human_owner_signature": true,
+  "requested_model": "gpt-6.1-sol",
+  "requested_reasoning": "ultra",
+  "native_effective_model": "UNKNOWN",
+  "originals": [
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-capacity-plan-a-20261019/PROPOSED-E42-REMAINING-PHASE-CAPACITY-A-V2.md",
+      "bytes": 14938,
+      "sha256": "398303ca62e6104e8ec3a98300b69936cdb31e6b3b579cd76cbfd61b0bafff0d",
+      "repository_target": "docs/specs/AGENT_CORE_B7_E42_REMAINING_PHASE_CAPACITY_METHOD_V2.md#exact-accepted-method-unit"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-capacity-plan-a-20261019/MAX-FUTURE-EVENT-OCCUPANCY-TABLE-V2.json",
+      "bytes": 11610,
+      "sha256": "2aafeecbe704143b5a47dd932ec711a386941daba4e96510ab14a704ff86e4c5",
+      "repository_target": "docs/reports/e42-capacity-method-a-v2-20261019/MAX-FUTURE-EVENT-OCCUPANCY-TABLE-V2.json"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-CAPACITY-PLAN-A-V2-ORIGINAL-QUALIFIED-DECISION-20261019.json",
+      "bytes": 16490,
+      "sha256": "bc89e7683b1ae1aaf2f993b61aff930ff7a3d00497b92f187fbb35ebe6485a47",
+      "repository_target": "docs/reports/e42-capacity-method-a-v2-20261019/E42-CAPACITY-PLAN-A-V2-ORIGINAL-QUALIFIED-DECISION-20261019.json"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-capacity-plan-a-20261019/independent-review/REVIEW-RECEIPT-V2.json",
+      "bytes": 22644,
+      "sha256": "68b4fa6b522be0ca4266c48feb6fa7efb009d3733e0ed87fdde9610d8a201b4d",
+      "repository_target": "docs/reports/e42-capacity-method-a-v2-20261019/REVIEW-RECEIPT-V2.json"
+    }
+  ],
+  "method_embedded_inverse": "EXACT",
+  "table_decision_review_copy_inverse": "EXACT",
+  "new_product_code": [],
+  "numeric_remaining_accepted": false,
+  "dynamic_admission": false
+}

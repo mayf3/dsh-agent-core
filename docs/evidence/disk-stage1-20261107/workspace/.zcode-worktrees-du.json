@@ -1,0 +1,15 @@
+{
+  "command": [
+    "du",
+    "-x",
+    "-k",
+    "-d",
+    "1",
+    "/Users/yanfenma/workspace/.zcode-worktrees"
+  ],
+  "started_at": "2026-11-07T15:46:22.604955+00:00",
+  "ended_at": "2026-11-07T15:46:30.595144+00:00",
+  "rc": 0,
+  "stdout": "3368\t/Users/yanfenma/workspace/.zcode-worktrees/agent-control-governance-ci\n5320\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+auth-service\n4507236\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+svc-workflow\n4\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+e12-canary+c12-repo\n2124\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+.zcode-worktrees+workspace+project+dsh-agent-core+ac-887+agent-control-ac886\n26404\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+ac-mechanism-447\n4\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+e12-canary+c13-repo\n110484\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+site-audits+progress-entry-20261013\n8076\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+agent-workspaces+ac-975-runtime-snapshot\n3668\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+agent-control-e12\n71148\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+site-audits+site-display-improvements-20261017+source-base\n1956\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+agent-workspaces+agent-control-447-batchc-reconcile\n20100\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+deployment-artifacts+b7-release-b7b554b1-import+dsh-agent-core\n816\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+agent-forum\n2872\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dot-read-mcp\n323408\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+github+deepseek-harness\n924\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+github+dsh-codex\n31271912\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core\n21644\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+production-dsh-agent-core\n36381468\t/Users/yanfenma/workspace/.zcode-worktrees\n",
+  "stderr": ""
+}

@@ -1,0 +1,23 @@
+{
+  "name": "remote-preflight",
+  "argv": [
+    "git",
+    "ls-remote",
+    "origin",
+    "refs/heads/main",
+    "refs/heads/ac-ctr-s4-reverify",
+    "refs/heads/ac-ctr-s4-runtime-prep"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "started_at": "2026-11-07T05:08:48.973149+00:00",
+  "head": "87735ecee0e0ebfaa575f889785d7c5037ab9145",
+  "environment": "Inherited; no secret or proxy values recorded",
+  "ended_at": "2026-11-07T05:08:50.526580+00:00",
+  "rc": 0,
+  "stdout": "remote-preflight.stdout.log",
+  "stderr": "remote-preflight.stderr.log",
+  "sha256": {
+    "stdout": "fec430a57bef719f80cd9220b90f958415afb7018b6c21233719d15d9ee39f9e",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

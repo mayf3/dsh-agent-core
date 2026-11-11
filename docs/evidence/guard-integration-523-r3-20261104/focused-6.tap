@@ -1,0 +1,24 @@
+TAP version 13
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2normal-PgX4L6/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] binding created: channelConversation feishu:oc_92332c45c1cac2... -> agent agt_stock_agent + session main + workspace (agent default)
+# [router] channelConversation feishu:oc_92332c45c1cac2... -> binding -> agent agt_stock_agent + session main (channel=group chat=oc_92332c45c1cac2ef89857abfee8ed762 sender=ou_sen text="hello")
+# [router] route-chain {"kind":"route_attempt","tsWallMs":1793769792584,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+# [router] route-chain {"kind":"route_chain_final","tsWallMs":1793769792584,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+# [router] agent agt_stock_agent (pid 9301) produced a 8B reply
+# Subtest: V2 normal: the conversation-derived workspace is NEVER chosen
+ok 1 - V2 normal: the conversation-derived workspace is NEVER chosen
+  ---
+  duration_ms: 9.308167
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 62.586208

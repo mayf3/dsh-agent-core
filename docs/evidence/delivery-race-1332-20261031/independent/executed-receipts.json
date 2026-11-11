@@ -1,0 +1,50 @@
+{
+  "focused": {
+    "command": [
+      "node",
+      "--test",
+      "packages/agent-router/test/route-chain/delivery-race-repro.test.js",
+      "packages/agent-router/test/route-chain/delivery-readiness.test.js",
+      "packages/agent-router/test/route-chain/delivery-resilience.test.js",
+      "packages/demo-server/test/delivery-readiness.test.js"
+    ],
+    "cwd": "/private/tmp/dsh-1332-delivery-race-fix",
+    "head": "3259d8cc2c6a3cb0d8e8f16edaacc0c01f0ca3bb",
+    "started_at_utc": "2026-10-30T23:54:36.630132+00:00",
+    "elapsed_seconds": 1.073,
+    "rc": 0,
+    "output_sha256": "213d6944d93b589922e7c66fa9af610aca2eb293d51e1da2ed3ab2b548ec89b0",
+    "bytes": 3517
+  },
+  "independent-probes": {
+    "command": [
+      "node",
+      "/private/tmp/dsh-1332-independent/independent-probes.mjs"
+    ],
+    "cwd": "/private/tmp/dsh-1332-delivery-race-fix",
+    "head": "3259d8cc2c6a3cb0d8e8f16edaacc0c01f0ca3bb",
+    "started_at_utc": "2026-10-30T23:54:37.703262+00:00",
+    "elapsed_seconds": 0.113,
+    "rc": 0,
+    "output_sha256": "10ed6fa14d8e1334a09f13944757201f3ad3b9f32725864710c6fa428adfa15c",
+    "bytes": 2376
+  },
+  "structure": {
+    "command": [
+      "node",
+      "scripts/verify-code-structure.mjs",
+      "--base",
+      "0b64aca3615aec203b95aa960eff39d635bd26c1",
+      "--head",
+      "3259d8cc2c6a3cb0d8e8f16edaacc0c01f0ca3bb",
+      "--json"
+    ],
+    "cwd": "/private/tmp/dsh-1332-delivery-race-fix",
+    "head": "3259d8cc2c6a3cb0d8e8f16edaacc0c01f0ca3bb",
+    "started_at_utc": "2026-10-30T23:54:37.816338+00:00",
+    "elapsed_seconds": 0.823,
+    "rc": 0,
+    "output_sha256": "c70a4fb409cc0590a5cd2cda197cd79078136461e64d7ae209b5616fa70c678e",
+    "bytes": 63205
+  }
+}

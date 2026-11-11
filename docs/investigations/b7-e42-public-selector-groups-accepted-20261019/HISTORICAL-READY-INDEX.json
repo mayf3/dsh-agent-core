@@ -1,0 +1,52 @@
+{
+  "kind": "E42_PUBLIC_SELECTOR_INDEPENDENT_GROUPS_READY_INDEX_V1_1",
+  "created_utc": "2026-10-19T14:06:20.408640+00:00",
+  "status": "READY_CONTRACT_MATERIAL_ONLY_NOT_ACCEPTED",
+  "unit": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-public-selector-independent-groups/PROPOSED-E42-PUBLIC-SELECTOR-AND-INDEPENDENT-GROUPS.v1.1.md",
+    "bytes": 18664,
+    "sha256": "6241dcd1212295b7179d7fbcafe6032aef2425fe5dd4c7394cb7612128090ab9"
+  },
+  "closure": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-public-selector-independent-groups/SOURCE-CLOSURE-INDEX.v1.1.json",
+    "bytes": 3943,
+    "sha256": "6fa56a7fb683fad5d0fccc821861656f5a2cbb9ab0c3ddb2596841b1d0e038c2"
+  },
+  "review": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-public-selector-independent-groups/independent-sol-readback/E42-PUBLIC-SELECTOR-INDEPENDENT-GROUPS-MATERIAL-RECEIPT.v1.1.json",
+    "bytes": 8748,
+    "sha256": "2f9d83c830d083d32152e5be7c6f2fb2d16e71a6f665849c80d3a09ba3badc86"
+  },
+  "acceptance_items": {
+    "S": "Finite internal public H projection/canonical original four-key subset + independent groups/closed V2 output + necessary source joins; accepted docs/PREFLIGHT required before code.",
+    "C": "Separately decide exactly one additional native after reviewed S and actual maintenance admission; proposed lineage total2, no third. Not derived from S or new PID/path."
+  },
+  "decision_fields": [
+    "accepted_source_result_delta",
+    "implementation_spec_ready",
+    "accepted_additional_fixed_collection",
+    "total_lineage_native_cap",
+    "unaccepted_deltas",
+    "scope"
+  ],
+  "decision_output": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-public-selector-independent-groups/ORIGINAL-E42-PUBLIC-SELECTOR-GROUPS-AND-FIXED-CONTINUATION-TECHNICAL-DECISION.json",
+  "proposed_fixed_collection": {
+    "identity": "E42_CAPACITY_FACTS_PUBLIC_SELECTOR_CONTINUATION_V2",
+    "destination": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-source-readiness-diagnostic/business-readiness-producer-order-amendment/successor-r40-binding/successor-r41-binding-v2/actual-business-admission/capacity-facts-only/actual-observation-public-selector-v2",
+    "predecessor_intent_sha256": "ce4436675363e2c4a989192266134915fb2cbd4eaf236affd1e042ed57afe406",
+    "predecessor_result_sha256": "ae9a42799b6880d1c54b867282b39ff26daf32aa1691796376e60d30e7212306"
+  },
+  "actual_original_quota_remaining": 0,
+  "effects_executed_by_new_unit": 0,
+  "dispatch": {
+    "status": "NOT_SENT",
+    "route_count": 0,
+    "exclusive_sender": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "target": "01a1378d-e052-7021-9992-f0760eb9f9e7"
+  },
+  "cleanup": {
+    "deleted_files": 0,
+    "deleted_bytes": 0,
+    "reason": "All proposed versions, exact source dependencies and review are active unique evidence. No new scan or deletable redundancy."
+  }
+}

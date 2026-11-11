@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "node",
+    "scripts/verify-code-structure.mjs",
+    "--base",
+    "b40a495dce664b4f95463849f8937e08c8c072f6",
+    "--head",
+    "e2fdeffcf77d48cbfe00030843833e6b6090a052",
+    "--json"
+  ],
+  "cwd": "/private/tmp/dsh-fleet-window-tools",
+  "rc": 0,
+  "head": "e2fdeffcf77d48cbfe00030843833e6b6090a052",
+  "at": "2026-11-04T14:00:16.019880+00:00"
+}

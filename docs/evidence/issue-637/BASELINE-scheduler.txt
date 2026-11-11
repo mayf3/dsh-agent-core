@@ -1,0 +1,1061 @@
+
+> dsh-agent-core@0.0.0 test:scheduler
+> node --test packages/scheduler/test/*.test.js packages/scheduler/test/*/*.test.js
+
+✔ ACC-020 accepted authority disposition remains intact (3.3795ms)
+✔ ACC-032 CLI is control-only and exposes occurrence/fence reconciliation projection (0.580334ms)
+✔ ACC-036 all seven frozen implementation preconditions remain present (0.957041ms)
+✔ ACC-037 import tooling remains dry-run by default and performs no deploy (0.298292ms)
+✔ 37/37 contract and acceptance manifests are complete and sequential (1.920375ms)
+✔ 23/23 fault matrix manifest is complete and mapped to acceptance (0.335916ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/auto-reconcile.test.js (55.445958ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/control-cli.test.js (54.170083ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/cross-agent.test.js (50.136458ms)
+✔ ACC-006 two preloaded writers re-read under lock and preserve monotonic seq + projection union (166.839417ms)
+✔ ACC-006 load read-heal-install runs after an already-started writer under the same lock (132.421ms)
+✔ ACC-006 replay heal detects a complete-seq projection with a missing record (91.317958ms)
+✔ R7 query reads monthly projections directly and prunes unrelated months (75.923917ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/history.test.js (54.306792ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/import.test.js (50.990833ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/logical-key.test.js (66.916875ms)
+✔ ACC-023 identity derivation is deterministic per logical coordinates (1.465541ms)
+✔ ACC-023 runId/idempotencyKey derive from occurrenceId; session is fresh + non-main (0.143209ms)
+✔ ACC-023 natural/catchup jointly occupy the nominal slot space; retry occupies its predecessor (0.844334ms)
+✔ ACC-023 structured collision error is fail-loud and structured (0.274583ms)
+✔ ACC-006 state machine: legal transitions and hard rejections (0.070958ms)
+✔ ACC-006 applyTransition appends history and rejects illegal transitions (0.290791ms)
+✔ ACC-006 late settlement leaves the unknown history auditable (0.082208ms)
+✔ ACC-022 buildOccurrenceRecord carries every authority field (C-022) (0.303375ms)
+✔ ACC-022 corrupt occurrence records fail loud on validation (authority corruption) (0.245875ms)
+✔ ACC-006/011 unknown-to-terminal history without trusted lateSettlement fails loud (0.287167ms)
+✔ ACC-004/022 failed authority requires a valid terminalEvidence kind (0.227ms)
+✔ ACC-022 default timeout falls back to the safety timeout (C-025) (0.106542ms)
+✔ ACC-024 payloadHash: canonical JSON, key order irrelevant, delivery excluded (0.147375ms)
+✔ ACC-024 canonicalJSON sorts keys recursively (0.056041ms)
+✔ ACC-028 rebuildFences derives fences from unresolved unknowns only (0.138458ms)
+✔ ACC-028 isUnresolvedUnknown + terminal helpers (0.050208ms)
+✔ findOccurrenceByCoords locates records by logical coordinates (0.123458ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ RUNBOOK §3.1 backfill tool: offline --selftest passes on a stub store (Owner discipline) (48.364083ms)
+✔ RUNBOOK §1 preflight tool: parser selftest passes (CI-safe, host-independent) (39.299792ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/process-faults.test.js (65.686416ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/retry-stale-revision.test.js (51.747833ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/schedule.test.js (48.319125ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/scheduler-history.test.js (65.040834ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/scheduler.test.js (43.80625ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/self-service/clone-disabled-source-intent.test.js (50.420875ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/self-service/clone-disabled.test.js (50.767834ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/self-service/critical-job-guard.test.js (46.734291ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/self-service/never-materialized-fail-closed.test.js (47.798625ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/self-service/reconcile-transactional.test.js (46.094041ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/self-service/self-healing-findings.test.js (42.884375ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/self-service/self-healing.test.js (49.074458ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/self-service/self-ops-cross-layer-faults.test.js (45.509ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/self-service/self-ops-termination-write.test.js (43.313083ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/self-service/self-ops-v3.test.js (45.407916ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/self-service/self-service.test.js (47.702833ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/self-service/session-disposition.test.js (45.886833ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/sigkill-lock.test.js (47.786625ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/slot-accounting.test.js (45.51075ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/store-v2.test.js (47.450792ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/terminal-proof-containment.test.js (42.970583ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/watchdog/alert-dedupe.test.js (46.718875ms)
+✔ T01 paired missed/block facts for six occurrences compile to exactly six root incidents (6.351458ms)
+✔ T25 root identity is closed and stable; no suffix/name/chat/time identity (0.203375ms)
+✔ T10/T21 unchanged incident across ticks/restart emits one deterministic opening only (0.809542ms)
+✔ T21/T26 delivery readback updates the same outbox key without minting another intent (0.942625ms)
+✔ T11/T32 acknowledgment and recovery closures are deterministic and mutually exclusive (0.358084ms)
+✔ T25 occurrence incidents never reopen; recurrent control-plane roots increment episode (0.237792ms)
+✔ T10 producer observation domains never close or reopen a peer incident (0.142292ms)
+✔ T21 producer and first authorized delivery binding are immutable across replay (0.217ms)
+✔ T27 legacy paired symptoms collapse without re-alert when any member has delivery proof (0.248541ms)
+✔ T27 acknowledged and retired legacy roots migrate closed without fabricating alerts (0.150916ms)
+✔ T27 migrated incidents retain the canonical producer for pending and recovery delivery (0.144917ms)
+✔ T27/T28 ambiguous delivery evidence and malformed state fail loud without empty reset (0.0945ms)
+✔ T-DP-1 runtime unhealthy subsumes mechanically-attributable occurrence failures, not unrelated ones (8.614167ms)
+✔ T-DP-2 job CONSECUTIVE_FAILURE suppresses same-window child RUN_FAILED spam; first failure and post-recovery failures page (0.81425ms)
+✔ T-DP-3 same-occurrence RUN_STUCK + RUN_STUCK_OUTCOME_UNKNOWN coalesce to one OPEN and one RECOVERED (0.471792ms)
+✔ T-DP-4 simultaneous pair transitions still yield exactly one OPEN and one RECOVERED, deterministically (0.685417ms)
+✔ T-DP-5 a NEW that already recovered before delivery is suppressed; only the truthful RECOVERED pages (0.14375ms)
+✔ T-DP-6 restart/replay is idempotent and the projection never mutates durable state (54.438125ms)
+✔ T-DP-7 internal evidence stays complete: every fact, incident and transition survives projection-only suppression (0.357208ms)
+✔ T-DP-8 user-facing text is human-readable and action-oriented; legacy intents keep the frozen wire format (0.252625ms)
+✔ T-DP-9 runtime outage subsumes the same-occurrence stuck pair: only the runtime incident pages (0.291667ms)
+✔ historical cross-episode delivery updates only its bound outbox intent (4.175667ms)
+✔ historical transition delivery cannot overwrite the current revision in the same episode (0.47675ms)
+✔ current logical transition delivery still synchronizes its incident record (0.215875ms)
+✔ T21/T26 ambiguous transport replay keeps the exact key, payload, and downstream idempotency coordinate (0.387208ms)
+✔ T26 attempt start is durable before I/O and delayed restart remains eligible for readback (0.162208ms)
+✔ T21 delivered intents are never retried; failed route keeps the same logical opening pending repair (0.224417ms)
+✔ T26 provider readback recognizes only the exact durable notification marker (0.080083ms)
+✔ T26 crash recovery sends only after complete provider readback proves absence (0.070833ms)
+✔ T26 transport adapter separates definitive rejection from ambiguous post-send loss (0.150208ms)
+✔ T26 recovered runner delivery reads back before any resend and preserves ambiguous outcomes (0.193958ms)
+✔ T21 W2 cannot claim a W1 outbox intent (0.07425ms)
+✔ T21 malformed attempted notification fails closed instead of disappearing from retry inspection (0.230041ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/watchdog/disposition-alert-lifecycle.test.js (44.139542ms)
+✔ failed-cutover replay preserves committed incidents and imports only newly proven legacy roots (328.659834ms)
+✔ failed-cutover replay carries forward a committed root absent from a later snapshot (257.891917ms)
+✔ failed-cutover replay monotonically enriches a committed root without changing lifecycle or alert state (246.310666ms)
+✔ failed-cutover replay replaces volatile detail for one stable fingerprint without growing state (201.71ms)
+✔ failed-cutover replay stays bounded across repeated volatile generations (1240.392125ms)
+✔ incident durability rejects invalid lifecycle, missing delivery, orphan and duplicate transition identities (2.650041ms)
+✔ incident durability binds persisted delivery to canonical routing authority (2.122875ms)
+✔ delivery commit compares exact predecessor and rejects evidence-erasing regression to PENDING (178.86075ms)
+✔ protected control tree rejects symlink and writable ancestors before any receipt write (10.428041ms)
+✔ T26 state/outbox commit is atomic and expected-hash guarded (76.883916ms)
+✔ T26 injected crash before rename preserves preimage bytes and leaves no accepted new state (68.992334ms)
+✔ T28 unsafe mode, symlink and concurrent lock fail loud without resetting state (58.834041ms)
+✔ T28 only a well-formed lock whose exact PID is proven dead may be reaped (106.160375ms)
+✔ T28 two processes reaping one stale lock cannot delete the replacement live lock or corrupt state (122.923875ms)
+✔ T27 file migration freezes all sources, retains hash-addressed backups, and reads back exact state (123.550083ms)
+✔ T27 source drift aborts before incident-state commit (17.414834ms)
+✔ T27 migration derives delivery only from frozen evidence and rejects contradictions (7.2825ms)
+✔ T30 local ops sink is private, no-follow, locked, and append durable (94.488042ms)
+✔ T27 formal migration entrypoint consumes only frozen protected source files (197.373042ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/watchdog/health.test.js (46.574458ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/watchdog/isolation-integration.test.js (48.213167ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/watchdog/late-outcome-selfheal.test.js (43.347792ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/watchdog/no-next-run-regressions.test.js (41.696291ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/watchdog/no-next-run.test.js (43.547333ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/watchdog/notification-integration.test.js (43.255ms)
+✔ T34 executable path census has no retired watchdog, alert-state, or ambient-chat route (170.121583ms)
+✔ T05 age/timeout alone never proves failure or fence release (0.52325ms)
+✔ T06/T07 trusted exact business outcome wins success/failure and releases only its contribution (0.132417ms)
+✔ T08 fresh exact live evidence retains the fence (0.541625ms)
+✔ T09/T24 ambiguous stale conflicting or cross-occurrence evidence is quarantine and zero-write (0.184708ms)
+✔ T20/T24 exact termination-only dispatches to existing settlement seam and never classifier mutation (0.476917ms)
+✔ T24 every ordered evidence path dispatches at most one seam (0.173792ms)
+✔ T23 aggregate fence remains until every unresolved contribution for exact Job settles (0.131542ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/watchdog/restart-convergence-matrix.test.js (40.960708ms)
+✔ T12 the three route classes resolve only through their accepted precedence (0.833833ms)
+✔ persisted control-plane binding must match canonical ops target and routing generation (0.728333ms)
+✔ T30 protected manifest reader uses no-follow identity checks and returns secret-safe provenance (42.788167ms)
+✔ T30 production default parent boundary (/) walks real ancestors to the filesystem root (44.169416ms)
+✔ T13 missing Job/owner target falls to canonical ops with durable marker, never job.delivery/session (0.181209ms)
+✔ T14 missing canonical ops route fails loud into local sink without forbidden fallback (0.056125ms)
+✔ T30 manifest schema is closed and rejects unsupported/empty/unknown routing data (0.141334ms)
+✔ T30 protected route/incident paths fail closed for symlink, mode, owner, parent write, ACL (0.101542ms)
+✔ T16/T30 routing readback is secret-safe and contains provenance only (0.083208ms)
+✔ audit Blocker-2 regression: W1 and W2 templates share ONE state dir (mutual heartbeat must see its peer) (0.73125ms)
+✔ audit: W1/W2 are DISTINCT failure domains (uid + label) and neither is scheduled by the scheduler (0.277667ms)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:784:25)
+    at moduleResolve (node:internal/modules/esm/resolve:873:18)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.7.0
+✖ packages/scheduler/test/watchdog/watchdog.test.js (35.504042ms)
+ℹ tests 137
+ℹ suites 0
+ℹ pass 99
+ℹ fail 38
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2451.704208
+
+✖ failing tests:
+
+test at packages/scheduler/test/auto-reconcile.test.js:1:1
+✖ packages/scheduler/test/auto-reconcile.test.js (55.445958ms)
+  'test failed'
+
+test at packages/scheduler/test/control-cli.test.js:1:1
+✖ packages/scheduler/test/control-cli.test.js (54.170083ms)
+  'test failed'
+
+test at packages/scheduler/test/cross-agent.test.js:1:1
+✖ packages/scheduler/test/cross-agent.test.js (50.136458ms)
+  'test failed'
+
+test at packages/scheduler/test/history.test.js:1:1
+✖ packages/scheduler/test/history.test.js (54.306792ms)
+  'test failed'
+
+test at packages/scheduler/test/import.test.js:1:1
+✖ packages/scheduler/test/import.test.js (50.990833ms)
+  'test failed'
+
+test at packages/scheduler/test/logical-key.test.js:1:1
+✖ packages/scheduler/test/logical-key.test.js (66.916875ms)
+  'test failed'
+
+test at packages/scheduler/test/packet-tools.test.js:8:1
+✖ RUNBOOK §3.1 backfill tool: offline --selftest passes on a stub store (Owner discipline) (48.364083ms)
+  Error: Command failed: /opt/homebrew/Cellar/node/26.7.0/bin/node /private/tmp/h637-fix/scripts/agentcore-cron-backfill.mjs --selftest
+  node:internal/modules/package_json_reader:301
+    throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+          ^
+  
+  Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js
+      at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+      at packageResolve (node:internal/modules/esm/resolve:784:25)
+      at moduleResolve (node:internal/modules/esm/resolve:873:18)
+      at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+      at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+      at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+      at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+      at #resolve (node:internal/modules/esm/loader:690:17)
+      at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+      at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {
+    code: 'ERR_MODULE_NOT_FOUND'
+  }
+  
+  Node.js v26.7.0
+  
+      at genericNodeError (node:internal/errors:999:15)
+      at wrappedFn (node:internal/errors:544:14)
+      at checkExecSyncError (node:child_process:942:11)
+      at execFileSync (node:child_process:978:15)
+      at TestContext.<anonymous> (file:///private/tmp/h637-fix/packages/scheduler/test/packet-tools.test.js:9:15)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.start (node:internal/test_runner/test:1257:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    status: 1,
+    signal: null,
+    output: [ null, '', "node:internal/modules/package_json_reader:301\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.7.0\n" ],
+    pid: 21798,
+    stdout: '',
+    stderr: "node:internal/modules/package_json_reader:301\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'croner' imported from /private/tmp/h637-fix/packages/scheduler/src/schedule.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.7.0\n"
+  }
+
+test at packages/scheduler/test/process-faults.test.js:1:1
+✖ packages/scheduler/test/process-faults.test.js (65.686416ms)
+  'test failed'
+
+test at packages/scheduler/test/retry-stale-revision.test.js:1:1
+✖ packages/scheduler/test/retry-stale-revision.test.js (51.747833ms)
+  'test failed'
+
+test at packages/scheduler/test/schedule.test.js:1:1
+✖ packages/scheduler/test/schedule.test.js (48.319125ms)
+  'test failed'
+
+test at packages/scheduler/test/scheduler-history.test.js:1:1
+✖ packages/scheduler/test/scheduler-history.test.js (65.040834ms)
+  'test failed'
+
+test at packages/scheduler/test/scheduler.test.js:1:1
+✖ packages/scheduler/test/scheduler.test.js (43.80625ms)
+  'test failed'
+
+test at packages/scheduler/test/self-service/clone-disabled-source-intent.test.js:1:1
+✖ packages/scheduler/test/self-service/clone-disabled-source-intent.test.js (50.420875ms)
+  'test failed'
+
+test at packages/scheduler/test/self-service/clone-disabled.test.js:1:1
+✖ packages/scheduler/test/self-service/clone-disabled.test.js (50.767834ms)
+  'test failed'
+
+test at packages/scheduler/test/self-service/critical-job-guard.test.js:1:1
+✖ packages/scheduler/test/self-service/critical-job-guard.test.js (46.734291ms)
+  'test failed'
+
+test at packages/scheduler/test/self-service/never-materialized-fail-closed.test.js:1:1
+✖ packages/scheduler/test/self-service/never-materialized-fail-closed.test.js (47.798625ms)
+  'test failed'
+
+test at packages/scheduler/test/self-service/reconcile-transactional.test.js:1:1
+✖ packages/scheduler/test/self-service/reconcile-transactional.test.js (46.094041ms)
+  'test failed'
+
+test at packages/scheduler/test/self-service/self-healing-findings.test.js:1:1
+✖ packages/scheduler/test/self-service/self-healing-findings.test.js (42.884375ms)
+  'test failed'
+
+test at packages/scheduler/test/self-service/self-healing.test.js:1:1
+✖ packages/scheduler/test/self-service/self-healing.test.js (49.074458ms)
+  'test failed'
+
+test at packages/scheduler/test/self-service/self-ops-cross-layer-faults.test.js:1:1
+✖ packages/scheduler/test/self-service/self-ops-cross-layer-faults.test.js (45.509ms)
+  'test failed'
+
+test at packages/scheduler/test/self-service/self-ops-termination-write.test.js:1:1
+✖ packages/scheduler/test/self-service/self-ops-termination-write.test.js (43.313083ms)
+  'test failed'
+
+test at packages/scheduler/test/self-service/self-ops-v3.test.js:1:1
+✖ packages/scheduler/test/self-service/self-ops-v3.test.js (45.407916ms)
+  'test failed'
+
+test at packages/scheduler/test/self-service/self-service.test.js:1:1
+✖ packages/scheduler/test/self-service/self-service.test.js (47.702833ms)
+  'test failed'
+
+test at packages/scheduler/test/self-service/session-disposition.test.js:1:1
+✖ packages/scheduler/test/self-service/session-disposition.test.js (45.886833ms)
+  'test failed'
+
+test at packages/scheduler/test/sigkill-lock.test.js:1:1
+✖ packages/scheduler/test/sigkill-lock.test.js (47.786625ms)
+  'test failed'
+
+test at packages/scheduler/test/slot-accounting.test.js:1:1
+✖ packages/scheduler/test/slot-accounting.test.js (45.51075ms)
+  'test failed'
+
+test at packages/scheduler/test/store-v2.test.js:1:1
+✖ packages/scheduler/test/store-v2.test.js (47.450792ms)
+  'test failed'
+
+test at packages/scheduler/test/terminal-proof-containment.test.js:1:1
+✖ packages/scheduler/test/terminal-proof-containment.test.js (42.970583ms)
+  'test failed'
+
+test at packages/scheduler/test/watchdog/alert-dedupe.test.js:1:1
+✖ packages/scheduler/test/watchdog/alert-dedupe.test.js (46.718875ms)
+  'test failed'
+
+test at packages/scheduler/test/watchdog/disposition-alert-lifecycle.test.js:1:1
+✖ packages/scheduler/test/watchdog/disposition-alert-lifecycle.test.js (44.139542ms)
+  'test failed'
+
+test at packages/scheduler/test/watchdog/health.test.js:1:1
+✖ packages/scheduler/test/watchdog/health.test.js (46.574458ms)
+  'test failed'
+
+test at packages/scheduler/test/watchdog/isolation-integration.test.js:1:1
+✖ packages/scheduler/test/watchdog/isolation-integration.test.js (48.213167ms)
+  'test failed'
+
+test at packages/scheduler/test/watchdog/late-outcome-selfheal.test.js:1:1
+✖ packages/scheduler/test/watchdog/late-outcome-selfheal.test.js (43.347792ms)
+  'test failed'
+
+test at packages/scheduler/test/watchdog/no-next-run-regressions.test.js:1:1
+✖ packages/scheduler/test/watchdog/no-next-run-regressions.test.js (41.696291ms)
+  'test failed'
+
+test at packages/scheduler/test/watchdog/no-next-run.test.js:1:1
+✖ packages/scheduler/test/watchdog/no-next-run.test.js (43.547333ms)
+  'test failed'
+
+test at packages/scheduler/test/watchdog/notification-integration.test.js:1:1
+✖ packages/scheduler/test/watchdog/notification-integration.test.js (43.255ms)
+  'test failed'
+
+test at packages/scheduler/test/watchdog/restart-convergence-matrix.test.js:1:1
+✖ packages/scheduler/test/watchdog/restart-convergence-matrix.test.js (40.960708ms)
+  'test failed'
+
+test at packages/scheduler/test/watchdog/watchdog.test.js:1:1
+✖ packages/scheduler/test/watchdog/watchdog.test.js (35.504042ms)
+  'test failed'

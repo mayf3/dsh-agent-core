@@ -1,3 +1,4 @@
+import { expectedIdentity } from '../test-support/observation-identity.js'
 import assert from 'node:assert/strict'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -41,7 +42,8 @@ function fixture(t) {
         visibility: 'full',
         detail: {
           current_node_visit_id: VISIT,
-          instance: { is_terminal: false, workflow_state_version: 7 },
+          current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
+          instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 7 },
         },
       },
     }),
@@ -157,7 +159,7 @@ for (const judgment of ['run_outcome_unknown', 'settle_check_unavailable', 'deli
     const f = fixture(t)
     await f.engine.admitDueIntent(intent)
     await f.ledger.recordReconciled({
-      nodeVisitId: VISIT, expectedPhase: 'run_delivered',
+      ...expectedIdentity(f.ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered',
       verdict: 'NEEDS_REVIEW', judgment, reason: 'unknown execution evidence',
     })
     const predecessor = f.ledger.get(VISIT)
@@ -170,7 +172,13 @@ for (const judgment of ['run_outcome_unknown', 'settle_check_unavailable', 'deli
     assert.equal(f.ledger.get(VISIT).attemptId, predecessor.attemptId)
     assert.equal(f.ledger.get(VISIT).judgment, judgment)
     assert.equal(f.delivered.length, 1)
-    assert.deepEqual(f.bytes(), before, 'timeout never rewrites durable UNKNOWN as stale')
+    if (judgment === 'settle_check_unavailable') {
+      assert.ok(f.bytes().startsWith(before), 'original UNKNOWN bytes remain')
+      const appended = f.bytes().slice(before.length).trim().split('\n').map(JSON.parse)
+      assert.ok(appended.length > 0)
+      assert.ok(appended.every(event => event.kind === 'readback_checked' && event.result === 'scheduled'))
+      assert.equal(f.ledger.get(VISIT).readback.status, 'pending')
+    } else assert.deepEqual(f.bytes(), before, 'timeout never rewrites durable UNKNOWN as stale')
   })
 }
 

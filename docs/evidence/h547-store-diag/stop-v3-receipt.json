@@ -1,0 +1,30 @@
+{
+  "schema_version": 3,
+  "status": "STOPPED",
+  "stage": "local_offline_harness_design_inspection",
+  "actor": "/root/offline_design_review",
+  "root_parent": "c8036802f1543b108eddce3f8fce474bdc2d4d99",
+  "command": "rg -n 'fault|r28|history|businessAdmissionStatus|assertBusiness' packages/agent-router/src/reconciliation/store.js packages/agent-router/src/index.js packages/agent-router/src/reconciliation/authority-capacity.js packages/agent-router/src/reconciliation/dispatch-faults.js",
+  "rc": 2,
+  "error_output_verbatim": "rg: packages/agent-router/src/reconciliation/dispatch-faults.js: No such file or directory (os error 2)",
+  "tool_chunk_id": "d460e0",
+  "error_occurred_at_utc": "UNKNOWN",
+  "root_stop_receipt_clock_utc": "2026-11-08 07:13:49 UTC",
+  "wall_time_seconds": 0.000002834,
+  "provenance": "Exact command/error/rc reported by helper from its already executed tool output; not rerun. Successful matching source lines from the same rg were not retained here.",
+  "already_scheduled_following_reads": [
+    {"command": "sed -n '1274,1401p' docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V4.md", "rc": 0},
+    {"command": "sed -n '418,430p' docs/specs/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2.md", "rc": 0},
+    {"command": "sed -n '624,638p' docs/specs/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2.md", "rc": 0}
+  ],
+  "immediate_per_command_stop": false,
+  "new_diagnostic_attempt_after_root_stop": false,
+  "v3_production_read_commands": 0,
+  "v3_production_write_commands": 0,
+  "v3_authsvc_commands": 0,
+  "fresh_capture": "NOT_RUN",
+  "full_offline_load": "NOT_RUN",
+  "tests": "NOT_RUN",
+  "cause_classification": "LOCAL_QUERY_ERROR_NOT_STORE_VALIDATOR_FAILURE",
+  "next_action": "STOP; preserve evidence and deliver existing PR; no automatic retry"
+}

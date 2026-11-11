@@ -1,0 +1,6 @@
+{
+  "candidateCount": 71,
+  "baselineCount": 71,
+  "manifestComparison": "all hoisted registry packages by name, version, package.json SHA256; no topology equivalence claim",
+  "differences": []
+}

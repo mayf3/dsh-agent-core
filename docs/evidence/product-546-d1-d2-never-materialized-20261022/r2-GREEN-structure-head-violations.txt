@@ -1,0 +1,11 @@
+DIRECTORY_OVER_CEILING packages/agent-router/test
+DIRECTORY_OVER_CEILING packages/production-runtime/test
+DIRECTORY_OVER_CEILING scripts
+UNREGISTERED_LEGACY_DIRECTORY packages
+UNREGISTERED_LEGACY_DIRECTORY packages/agent-router/test/process-lifecycle
+UNREGISTERED_LEGACY_DIRECTORY packages/broker/src/capabilities
+UNREGISTERED_LEGACY_DIRECTORY packages/broker/test
+UNREGISTERED_LEGACY_DIRECTORY packages/production-runtime/src
+UNREGISTERED_LEGACY_DIRECTORY packages/production-runtime/test/scheduler
+UNREGISTERED_LEGACY_DIRECTORY scripts/lib
+UNREGISTERED_LEGACY_DIRECTORY scripts/lib/hr-s256-one-shot

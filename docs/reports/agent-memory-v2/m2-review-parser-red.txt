@@ -1,0 +1,117 @@
+✔ explicit entry content splice preserves preamble maintenance unknown blocks separators and final bytes (2.300334ms)
+✔ CRLF fields and body are writable without normalizing any surrounding bytes (0.271292ms)
+✔ freeform malformed unterminated duplicate and ambiguous input keep a read-only candidate (0.448375ms)
+✔ fenced and metadata-like examples cannot become writable entries (0.072125ms)
+✔ preimage and entry guards reject drift including a caller-mutated document (0.151458ms)
+✔ delete preserves original separator and unknown tail while NOOP never changes timestamps (0.295583ms)
+✔ invalid UTF-8 and oversized fields never produce a rewrite (0.446958ms)
+✔ rollback candidate only inverts the exact postimage and retains a later delta (0.180416ms)
+✔ unknown inner headings remain read-only rather than being swallowed by a body replacement (0.201042ms)
+✔ body metadata echoes cannot override structural metadata or read-only eligibility (0.288625ms)
+✔ same parsed content is a byte NOOP even when human content retains surrounding whitespace (0.146959ms)
+✔ noncanonical metadata spacing cannot create an unsafe field rewrite range (0.092833ms)
+✔ multiple selected entries splice independently and leave the unselected entry exact (0.28475ms)
+✖ empty structural metadata never borrows a source or timestamp from body prose (1.896917ms)
+✖ invalid importance remains a retained read-only proposal rather than acquiring a default (0.336958ms)
+✖ entries in multiline HTML comments remain raw unknown bytes without writable identity (0.098083ms)
+✖ unknown or damaged tag delimiters do not acquire writable empty-tag semantics (0.185625ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 13
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 57.996708
+
+✖ failing tests:
+
+test at packages/agent-memory/test/document.test.js:155:1
+✖ empty structural metadata never borrows a source or timestamp from body prose (1.896917ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(doc.readOnlyReason === 'READ_ONLY_FORMAT' || (doc.entries[0].source === '' && doc.entries[0].updatedAt === ''))
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core/.worktree/ac-task-1248-m2-protocol-migration/packages/agent-memory/test/document.test.js:158:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at packages/agent-memory/test/document.test.js:167:1
+✖ invalid importance remains a retained read-only proposal rather than acquiring a default (0.336958ms)
+  AssertionError [ERR_ASSERTION]: banana
+  + actual - expected
+  
+  + 'READY'
+  - 'READ_ONLY_FORMAT'
+         ^
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core/.worktree/ac-task-1248-m2-protocol-migration/packages/agent-memory/test/document.test.js:172:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'READY',
+    expected: 'READ_ONLY_FORMAT',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/agent-memory/test/document.test.js:177:1
+✖ entries in multiline HTML comments remain raw unknown bytes without writable identity (0.098083ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core/.worktree/ac-task-1248-m2-protocol-migration/packages/agent-memory/test/document.test.js:180:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/agent-memory/test/document.test.js:185:1
+✖ unknown or damaged tag delimiters do not acquire writable empty-tag semantics (0.185625ms)
+  AssertionError [ERR_ASSERTION]: garbage
+  + actual - expected
+  
+  + 'READY'
+  - 'READ_ONLY_FORMAT'
+         ^
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core/.worktree/ac-task-1248-m2-protocol-migration/packages/agent-memory/test/document.test.js:190:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'READY',
+    expected: 'READ_ONLY_FORMAT',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,17 @@
+{
+  "packages/production-runtime/src/compose.js": "db102db7850cce132b2ee3a9ab2000d0e3a57dad192d7810c29538088ddfab77",
+  "packages/production-runtime/src/context.js": "0acbe959c6b2de7cf48a1d84d77b53607f2bbb0f1f67225462a339e85e249f83",
+  "packages/production-runtime/src/entry.js": "5f5c0e0ce2139e9a71ff791cf1d72f13e6e3f0b886e35d3bcbd72e834b48d5f8",
+  "packages/production-runtime/src/restart-boundary.js": "24e816235906dcd7822b2aa92588fc0f74c6860bd75c17413a22c68d23f54bf7",
+  "packages/production-runtime/src/scheduler/deployment-launchd.js": "27f26b2d0527fa50a965d9f9c3fdc478c3a2c6f945c7cd3fe543cfff2f6a45d9",
+  "packages/production-runtime/src/scheduler/deployment-runtime-restart.js": "18b201576ce93e18fcf0ab91c36137e58bedd40f983096c26f8d5eb5a26de1c1",
+  "packages/agent-router/src/process-registry-startup.js": "e772509df54011cee65bed188c6c1033164f2a4ecfb6c8681292e34e8348a92d",
+  "packages/production-runtime/test/scheduler/deployment-runtime-restart.test.js": "49bcdab9a32b9699c30a1c4459098fec5ddcf2d30133cb20c2a69a0a04b5a1c6",
+  "packages/production-runtime/test/scheduler/deployment-launchd.test.js": "cf5db5d0d131acf3d9f9f247d481fb44847df6ec88ec5ab3bd4b53009e2bb9b8",
+  "packages/production-runtime/test/scheduler/restart-drain.test.js": "53c9e27146ba81f3681ed70c06a2f92d1532ad2d519a680a39fdbb48a644d03d",
+  "packages/production-runtime/test/restart-boundary.test.js": "980f8c8cd65dcc77bdc87efe9614672cc54151953a3f039399670d6a29cd5691",
+  "packages/production-runtime/test/workflow-execution-shutdown.test.js": "5ce571445cefc99976b5d4202e6fbdcfdcf131cd1761feb984829c34ff6ea193",
+  "packages/production-runtime/test/agent-session/website-inquiry-startup.test.js": "797b5328a5d403da411426410d347d4fbdc982ad0132f360f281a7a4c1de8d03",
+  "packages/agent-router/test/process-lifecycle/shutdown.test.js": "f4831de4e75824ee6e335063ae5bd0ba7a56fa6ac57ae8d56110a11cbbb8495a",
+  "packages/production-runtime/test/compose-fixture.js": "c50e3503d2e9d2a2620a9bd8909a5e55348d27367beabe2097af306b52ed602a"
+}

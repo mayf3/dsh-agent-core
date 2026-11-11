@@ -1,0 +1,142 @@
+[
+  {
+    "name": "df-before",
+    "argv": [
+      "df",
+      "-k"
+    ],
+    "started_at": "2026-11-07T15:45:01.838778+00:00",
+    "ended_at": "2026-11-07T15:45:01.842904+00:00",
+    "elapsed_seconds": 0.004,
+    "rc": 0
+  },
+  {
+    "name": "apfs-before",
+    "argv": [
+      "diskutil",
+      "apfs",
+      "list",
+      "-plist"
+    ],
+    "started_at": "2026-11-07T15:45:01.843138+00:00",
+    "ended_at": "2026-11-07T15:45:02.058405+00:00",
+    "elapsed_seconds": 0.215,
+    "rc": 0
+  },
+  {
+    "name": "data-info",
+    "argv": [
+      "diskutil",
+      "info",
+      "-plist",
+      "/System/Volumes/Data"
+    ],
+    "started_at": "2026-11-07T15:45:02.058850+00:00",
+    "ended_at": "2026-11-07T15:45:02.230519+00:00",
+    "elapsed_seconds": 0.172,
+    "rc": 0
+  },
+  {
+    "name": "snapshots-data",
+    "argv": [
+      "diskutil",
+      "apfs",
+      "listSnapshots",
+      "/System/Volumes/Data"
+    ],
+    "started_at": "2026-11-07T15:45:02.230914+00:00",
+    "ended_at": "2026-11-07T15:45:02.255354+00:00",
+    "elapsed_seconds": 0.024,
+    "rc": 0
+  },
+  {
+    "name": "snapshots-root",
+    "argv": [
+      "diskutil",
+      "apfs",
+      "listSnapshots",
+      "/"
+    ],
+    "started_at": "2026-11-07T15:45:02.255690+00:00",
+    "ended_at": "2026-11-07T15:45:02.280721+00:00",
+    "elapsed_seconds": 0.025,
+    "rc": 0
+  },
+  {
+    "name": "tm-local",
+    "argv": [
+      "tmutil",
+      "listlocalsnapshots",
+      "/"
+    ],
+    "started_at": "2026-11-07T15:45:02.281059+00:00",
+    "ended_at": "2026-11-07T15:45:02.307611+00:00",
+    "elapsed_seconds": 0.027,
+    "rc": 0
+  },
+  {
+    "name": "du-data-depth2",
+    "argv": [
+      "du",
+      "-x",
+      "-k",
+      "-d",
+      "2",
+      "/System/Volumes/Data"
+    ],
+    "started_at": "2026-11-07T15:45:02.307919+00:00",
+    "ended_at": "2026-11-07T15:48:23.690253+00:00",
+    "elapsed_seconds": 201.382,
+    "rc": 1
+  },
+  {
+    "name": "df-after",
+    "argv": [
+      "df",
+      "-k"
+    ],
+    "started_at": "2026-11-07T15:48:23.691008+00:00",
+    "ended_at": "2026-11-07T15:48:23.697769+00:00",
+    "elapsed_seconds": 0.007,
+    "rc": 0
+  },
+  {
+    "name": "apfs-after",
+    "argv": [
+      "diskutil",
+      "apfs",
+      "list",
+      "-plist"
+    ],
+    "started_at": "2026-11-07T15:48:23.697991+00:00",
+    "ended_at": "2026-11-07T15:48:23.866629+00:00",
+    "elapsed_seconds": 0.169,
+    "rc": 0
+  },
+  {
+    "name": "du-system-depth1",
+    "argv": [
+      "du",
+      "-x",
+      "-k",
+      "-d",
+      "1",
+      "/"
+    ],
+    "started_at": "2026-11-07T15:48:23.866903+00:00",
+    "ended_at": "2026-11-07T15:54:53.708283+00:00",
+    "elapsed_seconds": 389.84,
+    "rc": 1
+  },
+  {
+    "name": "df-final",
+    "argv": [
+      "df",
+      "-k"
+    ],
+    "started_at": "2026-11-07T15:54:53.708783+00:00",
+    "ended_at": "2026-11-07T15:54:53.713298+00:00",
+    "elapsed_seconds": 0.005,
+    "rc": 0
+  }
+]

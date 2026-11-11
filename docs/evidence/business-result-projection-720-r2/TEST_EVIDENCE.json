@@ -1,0 +1,2701 @@
+{
+  "schema_version": 1,
+  "scope": "source isolated tests only; not installation, runtime, original-instance, or business acceptance",
+  "integration_base": "491faec46877d8078dd5be4a491f8fc047f83c82",
+  "baseline_head": "324d3265ea791e43d1ac86e80b2e7ca059f7661d",
+  "implementation_head": "54a235c55f52b209e6f3b17fa1e23eea73c9da2f",
+  "environment": {
+    "node": "v26.7.0",
+    "npm": "11.19.0",
+    "dependencies": "existing external /tmp/ac720-test-deps/node_modules; croner@10.0.1 and @deepseek-ai/schemastery@3.18.1; no manifests changed"
+  },
+  "regression_command": "node --test --test-reporter=tap packages/workflow-execution/test/*.test.js packages/execution-history/test/*.test.js",
+  "logs": {
+    "baseline_initial": {
+      "path": "/tmp/720-r2-baseline.tap",
+      "sha256": "afb44e559de80ae3bf2234115e084da61d2862c10dae8bd8ae800761a7466a05",
+      "known_rc": 1,
+      "bytes": 64382,
+      "summary": {
+        "tests": 253,
+        "suites": 0,
+        "pass": 251,
+        "fail": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "result_count": 253,
+      "tap_outcome_consistent_with_known_rc": true
+    },
+    "baseline_repaired": {
+      "path": "/tmp/720-r2-baseline-deps.tap",
+      "sha256": "7dd0b6d1118f177de8ca12a7a62e74234b20763a5b0681228cb12094918661bb",
+      "known_rc": 0,
+      "bytes": 85204,
+      "summary": {
+        "tests": 330,
+        "suites": 0,
+        "pass": 330,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "result_count": 330,
+      "tap_outcome_consistent_with_known_rc": true
+    },
+    "feature_red": {
+      "path": "/tmp/720-r2-feature-red.tap",
+      "sha256": "1aaa32931ffff62728125fe5d5882329fb129f46504812fdb0ede62590d92939",
+      "known_rc": 1,
+      "bytes": 26694,
+      "summary": {
+        "tests": 23,
+        "suites": 0,
+        "pass": 0,
+        "fail": 23,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "result_count": 23,
+      "tap_outcome_consistent_with_known_rc": true
+    },
+    "pagination_red": {
+      "path": "/tmp/720-r2-pagination-red.tap",
+      "sha256": "32694513009b2d199c9e3b06fbd08e97b9689c81b0a6f1a0f1b337270aaa0982",
+      "known_rc": 1,
+      "bytes": 2472,
+      "summary": {
+        "tests": 7,
+        "suites": 0,
+        "pass": 6,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "result_count": 7,
+      "tap_outcome_consistent_with_known_rc": true
+    },
+    "hardening_red": {
+      "path": "/tmp/720-r2-hardening-red.tap",
+      "sha256": "1b93460b59af95d99307e4712e5fd06300fade3c1a33c2b726ce75863fe2a4d6",
+      "known_rc": 1,
+      "bytes": 6508,
+      "summary": {
+        "tests": 25,
+        "suites": 0,
+        "pass": 23,
+        "fail": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "result_count": 25,
+      "tap_outcome_consistent_with_known_rc": true
+    },
+    "feature_green": {
+      "path": "/tmp/720-r2-feature-green.tap",
+      "sha256": "181568ba3e8b05336cd80f985e2ade910a84e5efd8a40c9115649aa2e53fdedb",
+      "known_rc": 0,
+      "bytes": 6765,
+      "summary": {
+        "tests": 32,
+        "suites": 0,
+        "pass": 32,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "result_count": 32,
+      "tap_outcome_consistent_with_known_rc": true
+    },
+    "regression": {
+      "path": "/tmp/720-r2-regression.tap",
+      "sha256": "209c6f4ca55abac19ba5c485423aad369e42a6ddb64379eb149cee4ce6b482ba",
+      "known_rc": 0,
+      "bytes": 90421,
+      "summary": {
+        "tests": 356,
+        "suites": 0,
+        "pass": 356,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "result_count": 356,
+      "tap_outcome_consistent_with_known_rc": true
+    },
+    "structure": {
+      "path": "/tmp/720-r2-structure.json",
+      "sha256": "1858b1d1d399c98315abd586f3a315c9ff59c038daf10b11dfbe23501152c604",
+      "known_rc": 0,
+      "bytes": 62912,
+      "structure_summary": {
+        "exit_code": 0,
+        "in_scope_files": 900,
+        "candidate_violations": 0,
+        "baseline_debt": 32,
+        "resolved_debt": 0
+      },
+      "candidate_result": "CANDIDATE_DELTA_PASS_WITH_BASELINE_DEBT",
+      "base_oid": "491faec46877d8078dd5be4a491f8fc047f83c82",
+      "head_oid": "52243fbcc8a9b51d434798fca28537c6cb25e3fc",
+      "recorded_exit_code": 0,
+      "recorded_rc_consistent_with_known_rc": true
+    },
+    "review_red": {
+      "path": "/tmp/720-r2-review-red.tap",
+      "sha256": "12a451d765035b974666f135c7ca06834bfb89d5ed9079a6c1ec52eb74d2f8d9",
+      "bytes": 10148,
+      "known_rc": 1,
+      "expected_rc": null,
+      "summary": {
+        "tests": 36,
+        "suites": 0,
+        "pass": 32,
+        "fail": 4,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "result_count": 36,
+      "terminal_summary": true,
+      "tap_indicated_outcome_rc": 1,
+      "tap_outcome_consistent_with_known_rc": true
+    },
+    "review_green": {
+      "path": "/tmp/720-r2-review-green.tap",
+      "sha256": "affa602c22c062a456c16dd95b3ebbbb8dd96fc9b35e375486a196776ad8a5f9",
+      "bytes": 7726,
+      "known_rc": 0,
+      "expected_rc": null,
+      "summary": {
+        "tests": 36,
+        "suites": 0,
+        "pass": 36,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "result_count": 36,
+      "terminal_summary": true,
+      "tap_indicated_outcome_rc": 0,
+      "tap_outcome_consistent_with_known_rc": true
+    },
+    "regression_final": {
+      "path": "/tmp/720-r2-regression-final.tap",
+      "sha256": "01deaab1ef0cd4e306c908bb1ec19498caa9f293fab9f5467c24ba675beb820b",
+      "bytes": 91400,
+      "known_rc": 0,
+      "expected_rc": 0,
+      "summary": {
+        "tests": 360,
+        "suites": 0,
+        "pass": 360,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "result_count": 360,
+      "terminal_summary": true,
+      "tap_indicated_outcome_rc": 0,
+      "tap_outcome_consistent_with_known_rc": true,
+      "process_rc_provenance": "root observed exact process rc0 from session 98485"
+    },
+    "structure_final": {
+      "path": "/tmp/720-r2-structure-final.json",
+      "bytes": 62912,
+      "sha256": "7462c706d171c6a8e8b480517f819a8dcba835d72e16b595b24dfb661e923346",
+      "known_rc": 0,
+      "process_rc_provenance": "root supplied observed rc0",
+      "recorded_exit_code": 0,
+      "candidate_result": "CANDIDATE_DELTA_PASS_WITH_BASELINE_DEBT",
+      "base_oid": "491faec46877d8078dd5be4a491f8fc047f83c82",
+      "head_oid": "54a235c55f52b209e6f3b17fa1e23eea73c9da2f",
+      "structure_summary": {
+        "exit_code": 0,
+        "in_scope_files": 900,
+        "candidate_violations": 0,
+        "baseline_debt": 32,
+        "resolved_debt": 0
+      },
+      "recorded_rc_consistent_with_known_rc": true
+    }
+  },
+  "comparison": {
+    "baseline_count": 330,
+    "candidate_count": 360,
+    "added_count": 30,
+    "removed_count": 0,
+    "changed_outcome_count": 0,
+    "added": [
+      {
+        "name": "#720 existing reader: SETTLED + RETURN exposes independent RETURNED/UNPROVEN",
+        "tap_name": "\\#720 existing reader: SETTLED + RETURN exposes independent RETURNED/UNPROVEN",
+        "parents": [],
+        "path": [
+          "#720 existing reader: SETTLED + RETURN exposes independent RETURNED/UNPROVEN"
+        ],
+        "indent": 0,
+        "number": 19,
+        "outcome": "ok",
+        "line": 111
+      },
+      {
+        "name": "#720 existing reader: SETTLED + ADVANCE exposes independent FORWARD/ACCEPTED",
+        "tap_name": "\\#720 existing reader: SETTLED + ADVANCE exposes independent FORWARD/ACCEPTED",
+        "parents": [],
+        "path": [
+          "#720 existing reader: SETTLED + ADVANCE exposes independent FORWARD/ACCEPTED"
+        ],
+        "indent": 0,
+        "number": 20,
+        "outcome": "ok",
+        "line": 117
+      },
+      {
+        "name": "#720 RETURN/cancel/admin/termination never promote settlement to acceptance",
+        "tap_name": "\\#720 RETURN/cancel/admin/termination never promote settlement to acceptance",
+        "parents": [],
+        "path": [
+          "#720 RETURN/cancel/admin/termination never promote settlement to acceptance"
+        ],
+        "indent": 0,
+        "number": 21,
+        "outcome": "ok",
+        "line": 123
+      },
+      {
+        "name": "#720 strict terminal opt-in proof is structural acceptance with native evidence only",
+        "tap_name": "\\#720 strict terminal opt-in proof is structural acceptance with native evidence only",
+        "parents": [],
+        "path": [
+          "#720 strict terminal opt-in proof is structural acceptance with native evidence only"
+        ],
+        "indent": 0,
+        "number": 22,
+        "outcome": "ok",
+        "line": 129
+      },
+      {
+        "name": "#720 acceptance stays UNPROVEN: undeclared acceptance",
+        "tap_name": "\\#720 acceptance stays UNPROVEN: undeclared acceptance",
+        "parents": [],
+        "path": [
+          "#720 acceptance stays UNPROVEN: undeclared acceptance"
+        ],
+        "indent": 0,
+        "number": 23,
+        "outcome": "ok",
+        "line": 135
+      },
+      {
+        "name": "#720 acceptance stays UNPROVEN: missing definition",
+        "tap_name": "\\#720 acceptance stays UNPROVEN: missing definition",
+        "parents": [],
+        "path": [
+          "#720 acceptance stays UNPROVEN: missing definition"
+        ],
+        "indent": 0,
+        "number": 24,
+        "outcome": "ok",
+        "line": 141
+      },
+      {
+        "name": "#720 acceptance stays UNPROVEN: wrong version",
+        "tap_name": "\\#720 acceptance stays UNPROVEN: wrong version",
+        "parents": [],
+        "path": [
+          "#720 acceptance stays UNPROVEN: wrong version"
+        ],
+        "indent": 0,
+        "number": 25,
+        "outcome": "ok",
+        "line": 147
+      },
+      {
+        "name": "#720 acceptance stays UNPROVEN: nonterminal target",
+        "tap_name": "\\#720 acceptance stays UNPROVEN: nonterminal target",
+        "parents": [],
+        "path": [
+          "#720 acceptance stays UNPROVEN: nonterminal target"
+        ],
+        "indent": 0,
+        "number": 26,
+        "outcome": "ok",
+        "line": 153
+      },
+      {
+        "name": "#720 acceptance stays UNPROVEN: not primary ADVANCE",
+        "tap_name": "\\#720 acceptance stays UNPROVEN: not primary ADVANCE",
+        "parents": [],
+        "path": [
+          "#720 acceptance stays UNPROVEN: not primary ADVANCE"
+        ],
+        "indent": 0,
+        "number": 27,
+        "outcome": "ok",
+        "line": 159
+      },
+      {
+        "name": "#720 acceptance stays UNPROVEN: wrong annotation",
+        "tap_name": "\\#720 acceptance stays UNPROVEN: wrong annotation",
+        "parents": [],
+        "path": [
+          "#720 acceptance stays UNPROVEN: wrong annotation"
+        ],
+        "indent": 0,
+        "number": 28,
+        "outcome": "ok",
+        "line": 165
+      },
+      {
+        "name": "#720 acceptance stays UNPROVEN: stale Context",
+        "tap_name": "\\#720 acceptance stays UNPROVEN: stale Context",
+        "parents": [],
+        "path": [
+          "#720 acceptance stays UNPROVEN: stale Context"
+        ],
+        "indent": 0,
+        "number": 29,
+        "outcome": "ok",
+        "line": 171
+      },
+      {
+        "name": "#720 acceptance stays UNPROVEN: wrong report revision",
+        "tap_name": "\\#720 acceptance stays UNPROVEN: wrong report revision",
+        "parents": [],
+        "path": [
+          "#720 acceptance stays UNPROVEN: wrong report revision"
+        ],
+        "indent": 0,
+        "number": 30,
+        "outcome": "ok",
+        "line": 177
+      },
+      {
+        "name": "#720 acceptance stays UNPROVEN: missing submission",
+        "tap_name": "\\#720 acceptance stays UNPROVEN: missing submission",
+        "parents": [],
+        "path": [
+          "#720 acceptance stays UNPROVEN: missing submission"
+        ],
+        "indent": 0,
+        "number": 31,
+        "outcome": "ok",
+        "line": 183
+      },
+      {
+        "name": "#720 acceptance stays UNPROVEN: wrong digest",
+        "tap_name": "\\#720 acceptance stays UNPROVEN: wrong digest",
+        "parents": [],
+        "path": [
+          "#720 acceptance stays UNPROVEN: wrong digest"
+        ],
+        "indent": 0,
+        "number": 32,
+        "outcome": "ok",
+        "line": 189
+      },
+      {
+        "name": "#720 acceptance stays UNPROVEN: wrong transition",
+        "tap_name": "\\#720 acceptance stays UNPROVEN: wrong transition",
+        "parents": [],
+        "path": [
+          "#720 acceptance stays UNPROVEN: wrong transition"
+        ],
+        "indent": 0,
+        "number": 33,
+        "outcome": "ok",
+        "line": 195
+      },
+      {
+        "name": "#720 acceptance stays UNPROVEN: duplicate submission conflict",
+        "tap_name": "\\#720 acceptance stays UNPROVEN: duplicate submission conflict",
+        "parents": [],
+        "path": [
+          "#720 acceptance stays UNPROVEN: duplicate submission conflict"
+        ],
+        "indent": 0,
+        "number": 34,
+        "outcome": "ok",
+        "line": 201
+      },
+      {
+        "name": "#720 acceptance stays UNPROVEN: missing criterion",
+        "tap_name": "\\#720 acceptance stays UNPROVEN: missing criterion",
+        "parents": [],
+        "path": [
+          "#720 acceptance stays UNPROVEN: missing criterion"
+        ],
+        "indent": 0,
+        "number": 35,
+        "outcome": "ok",
+        "line": 207
+      },
+      {
+        "name": "#720 acceptance stays UNPROVEN: duplicate criterion",
+        "tap_name": "\\#720 acceptance stays UNPROVEN: duplicate criterion",
+        "parents": [],
+        "path": [
+          "#720 acceptance stays UNPROVEN: duplicate criterion"
+        ],
+        "indent": 0,
+        "number": 36,
+        "outcome": "ok",
+        "line": 213
+      },
+      {
+        "name": "#720 acceptance stays UNPROVEN: non-PASS criterion",
+        "tap_name": "\\#720 acceptance stays UNPROVEN: non-PASS criterion",
+        "parents": [],
+        "path": [
+          "#720 acceptance stays UNPROVEN: non-PASS criterion"
+        ],
+        "indent": 0,
+        "number": 37,
+        "outcome": "ok",
+        "line": 219
+      },
+      {
+        "name": "#720 acceptance stays UNPROVEN: invalid catalog",
+        "tap_name": "\\#720 acceptance stays UNPROVEN: invalid catalog",
+        "parents": [],
+        "path": [
+          "#720 acceptance stays UNPROVEN: invalid catalog"
+        ],
+        "indent": 0,
+        "number": 38,
+        "outcome": "ok",
+        "line": 225
+      },
+      {
+        "name": "#720 assistance, late/conflicting receipts, missing linkage and unreadable sources remain UNKNOWN",
+        "tap_name": "\\#720 assistance, late/conflicting receipts, missing linkage and unreadable sources remain UNKNOWN",
+        "parents": [],
+        "path": [
+          "#720 assistance, late/conflicting receipts, missing linkage and unreadable sources remain UNKNOWN"
+        ],
+        "indent": 0,
+        "number": 39,
+        "outcome": "ok",
+        "line": 231
+      },
+      {
+        "name": "#720 repeated frozen inputs are deterministic; execution fields are never business authority",
+        "tap_name": "\\#720 repeated frozen inputs are deterministic; execution fields are never business authority",
+        "parents": [],
+        "path": [
+          "#720 repeated frozen inputs are deterministic; execution fields are never business authority"
+        ],
+        "indent": 0,
+        "number": 40,
+        "outcome": "ok",
+        "line": 237
+      },
+      {
+        "name": "#720 denied definition reads stay UNPROVEN; repeated history reads add no source writes",
+        "tap_name": "\\#720 denied definition reads stay UNPROVEN; repeated history reads add no source writes",
+        "parents": [],
+        "path": [
+          "#720 denied definition reads stay UNPROVEN; repeated history reads add no source writes"
+        ],
+        "indent": 0,
+        "number": 41,
+        "outcome": "ok",
+        "line": 243
+      },
+      {
+        "name": "#720 malformed successful DTOs degrade instead of throwing",
+        "tap_name": "\\#720 malformed successful DTOs degrade instead of throwing",
+        "parents": [],
+        "path": [
+          "#720 malformed successful DTOs degrade instead of throwing"
+        ],
+        "indent": 0,
+        "number": 42,
+        "outcome": "ok",
+        "line": 249
+      },
+      {
+        "name": "#720 Svc proof revisions change the boundary even with the same row count; pages keep the same result",
+        "tap_name": "\\#720 Svc proof revisions change the boundary even with the same row count; pages keep the same result",
+        "parents": [],
+        "path": [
+          "#720 Svc proof revisions change the boundary even with the same row count; pages keep the same result"
+        ],
+        "indent": 0,
+        "number": 43,
+        "outcome": "ok",
+        "line": 255
+      },
+      {
+        "name": "#720 review existing reader: missing cursor cannot prove movement and remains in the read boundary",
+        "tap_name": "\\#720 review existing reader: missing cursor cannot prove movement and remains in the read boundary",
+        "parents": [],
+        "path": [
+          "#720 review existing reader: missing cursor cannot prove movement and remains in the read boundary"
+        ],
+        "indent": 0,
+        "number": 44,
+        "outcome": "ok",
+        "line": 261
+      },
+      {
+        "name": "#720 review existing reader: invalid rows cannot prove movement and remains in the read boundary",
+        "tap_name": "\\#720 review existing reader: invalid rows cannot prove movement and remains in the read boundary",
+        "parents": [],
+        "path": [
+          "#720 review existing reader: invalid rows cannot prove movement and remains in the read boundary"
+        ],
+        "indent": 0,
+        "number": 45,
+        "outcome": "ok",
+        "line": 267
+      },
+      {
+        "name": "#720 timeline follows the deployed camelCase cursor and marks stalled pagination incomplete",
+        "tap_name": "\\#720 timeline follows the deployed camelCase cursor and marks stalled pagination incomplete",
+        "parents": [],
+        "path": [
+          "#720 timeline follows the deployed camelCase cursor and marks stalled pagination incomplete"
+        ],
+        "indent": 0,
+        "number": 60,
+        "outcome": "ok",
+        "line": 357
+      },
+      {
+        "name": "#720 review: a cursor cannot skip unreturned native sequence ranges",
+        "tap_name": "\\#720 review: a cursor cannot skip unreturned native sequence ranges",
+        "parents": [],
+        "path": [
+          "#720 review: a cursor cannot skip unreturned native sequence ranges"
+        ],
+        "indent": 0,
+        "number": 61,
+        "outcome": "ok",
+        "line": 363
+      },
+      {
+        "name": "#720 review: clipping an oversized final page always reports truncation",
+        "tap_name": "\\#720 review: clipping an oversized final page always reports truncation",
+        "parents": [],
+        "path": [
+          "#720 review: clipping an oversized final page always reports truncation"
+        ],
+        "indent": 0,
+        "number": 62,
+        "outcome": "ok",
+        "line": 369
+      }
+    ],
+    "removed": [],
+    "changed_outcomes": [],
+    "baseline_nested_result_count": 9,
+    "candidate_nested_result_count": 9
+  },
+  "repair_delta": {
+    "baseline_count": 356,
+    "candidate_count": 360,
+    "added_count": 4,
+    "removed_count": 0,
+    "changed_outcome_count": 0,
+    "added": [
+      {
+        "name": "#720 review existing reader: missing cursor cannot prove movement and remains in the read boundary",
+        "tap_name": "\\#720 review existing reader: missing cursor cannot prove movement and remains in the read boundary",
+        "parents": [],
+        "path": [
+          "#720 review existing reader: missing cursor cannot prove movement and remains in the read boundary"
+        ],
+        "indent": 0,
+        "number": 44,
+        "outcome": "ok",
+        "line": 261
+      },
+      {
+        "name": "#720 review existing reader: invalid rows cannot prove movement and remains in the read boundary",
+        "tap_name": "\\#720 review existing reader: invalid rows cannot prove movement and remains in the read boundary",
+        "parents": [],
+        "path": [
+          "#720 review existing reader: invalid rows cannot prove movement and remains in the read boundary"
+        ],
+        "indent": 0,
+        "number": 45,
+        "outcome": "ok",
+        "line": 267
+      },
+      {
+        "name": "#720 review: a cursor cannot skip unreturned native sequence ranges",
+        "tap_name": "\\#720 review: a cursor cannot skip unreturned native sequence ranges",
+        "parents": [],
+        "path": [
+          "#720 review: a cursor cannot skip unreturned native sequence ranges"
+        ],
+        "indent": 0,
+        "number": 61,
+        "outcome": "ok",
+        "line": 363
+      },
+      {
+        "name": "#720 review: clipping an oversized final page always reports truncation",
+        "tap_name": "\\#720 review: clipping an oversized final page always reports truncation",
+        "parents": [],
+        "path": [
+          "#720 review: clipping an oversized final page always reports truncation"
+        ],
+        "indent": 0,
+        "number": 62,
+        "outcome": "ok",
+        "line": 369
+      }
+    ],
+    "removed": [],
+    "changed_outcomes": [],
+    "baseline_nested_result_count": 9,
+    "candidate_nested_result_count": 9
+  },
+  "baseline_test_files": [
+    "packages/execution-history/test/agent-session-list.test.js",
+    "packages/execution-history/test/broker-manifest-registration.test.js",
+    "packages/execution-history/test/consumption-ban.test.js",
+    "packages/execution-history/test/counterexamples.test.js",
+    "packages/execution-history/test/loaders.test.js",
+    "packages/execution-history/test/progress-checkpoint-privacy.test.js",
+    "packages/execution-history/test/query-roots.test.js",
+    "packages/execution-history/test/session-index.test.js",
+    "packages/execution-history/test/session-traceability.test.js",
+    "packages/execution-history/test/workflow-node-history.test.js",
+    "packages/workflow-execution/test/attention.test.js",
+    "packages/workflow-execution/test/continuation.test.js",
+    "packages/workflow-execution/test/engine.test.js",
+    "packages/workflow-execution/test/execution-control.test.js",
+    "packages/workflow-execution/test/forum-projection.test.js",
+    "packages/workflow-execution/test/instruction.test.js",
+    "packages/workflow-execution/test/judgment.test.js",
+    "packages/workflow-execution/test/ledger.test.js",
+    "packages/workflow-execution/test/managed-obligation.test.js",
+    "packages/workflow-execution/test/owner-assistance-resume-engine.test.js",
+    "packages/workflow-execution/test/owner-assistance-resume.test.js",
+    "packages/workflow-execution/test/product-449-distribution-recovery.test.js",
+    "packages/workflow-execution/test/progress-checkpoint.test.js",
+    "packages/workflow-execution/test/recovery.test.js",
+    "packages/workflow-execution/test/runtime-ready-pagination.test.js",
+    "packages/workflow-execution/test/runtime-wiring.test.js",
+    "packages/workflow-execution/test/shutdown-contract.test.js",
+    "packages/workflow-execution/test/stale-quiescence.test.js",
+    "packages/workflow-execution/test/stale-reentry.test.js",
+    "packages/workflow-execution/test/terminal-attempt-operations.test.js"
+  ],
+  "baseline_test_names": [
+    {
+      "path": [
+        "T1: both agents own a session literally named main — listing is per-agent, never a bare-sessionId global key"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T6: restart/rebuild — deleting the derived index changes nothing in the listing (rebuilt from durable journals)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T7: privacy — the listing is self-only and coordinate-only (no content fields ever)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "B2: a journal created after the index exists is discovered by the next listing (NEW_SESSION_JOURNAL_CREATED)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "C1/C2: the listing scans ONLY the caller subtree — it never builds or reads the fleet-wide index and never inherits its cap"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "C5: a base64url cursor decoding to a non-finite timestamp is rejected, never a repeating first page"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "F1: listing core rejects invalid pagination (no clamping, no silent drop)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "F1: direct parent-RPC calls to the trusted handler fail closed on invalid pagination (never clamped or dropped)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CTR-SCT-002: keyset pagination is deterministic and exhaustive"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CTR-SCT-002: scheduler-kind sessions carry their occurrence coordinate; origins reflect journal sidecars"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "A3: a symlink or hardlink planted in the caller subtree can never pull a foreign journal into the listing"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "A3b: a symlinked sessions root is honest absence — the substituted tree is never listed"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "B-B: swapping a caller session directory for a symlink to another agent's tree cannot leak foreign coordinates"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "E2: a message body quoting perfectly-shaped coordinates does not fabricate listing origins or coordinates"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "D4: occurrence coordinates must match the real id shape — message text quoting a fake id is not a touched coordinate"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "registry: agent_session_list is registered in DEFAULT_MANIFESTS exactly once"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CTR-SCT-002/D-SCT-2: the listing is a zero-Auth self surface with NO identity argument"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CTR-SCT-002: the error table is closed and fail-closed codes are declared"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T7: no production execution path imports the execution-history read view (§4.5)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T7: the lawful importer set is exactly the wiring surface (no drift)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T7: forbidden execution paths are structurally clean even if refactored later"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "一-1 send_intent alone never mints ACCEPTED; the proven receipt does; timeout stays unknown"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "一-2 an enabled job that never ran yields NO admission verdict from its existence"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "一-3 gen-1 delivered receipt and gen-2 supersession are BOTH visible — no masking"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "二-1 an occurrence-scoped query never mixes sibling runs when the authority ledger is unreadable"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "二-2 with the ledger readable, an occurrence-scoped query stays scoped"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "三-1 sidecar-only world: the correlation source is the session record, no synthesized ASM row, caller gap open, NO loss claim from a mere missing archive"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "三-2 loss is claimed only when structurally provable: rotations visible + no archive"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T3c: a not_created occurrence NEVER joins a canonical journal planted on disk — no SessionRef, no R5"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "五-1 an unreadable newest journal is skipped WITHOUT consuming a page slot — older readable sessions stay reachable"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "五-2 a homes root that is not a readable directory is history_unavailable — never a fabricated empty listing"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "五-3 a symlinked session.jsonl is skipped before resolution — an in-tree target is never listed twice"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T1 attempts ledger: multi-generation attempts stay separate and project in order"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T2 ASM audit loader: archive rows survive; whole-line dedupe; outcome row carries receipt loss visibly"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T3 source loaders degrade instead of throwing (bad lines, missing files)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T3 scheduler store: admission facts for jobs and occurrences; routing agent resolution"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T3 runtime evidence + scheduler history loaders surface invocation and terminal facts"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "session journal loader: tolerant parse, projection with sidecars/tool coordinates/spliced ids"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "execution-history redacts progress checkpoint body but keeps trusted coordinates"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T4 workflow root: full chain svc event bridge + attempts + correlated session (owned view)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T4 workflow root visibility: svc-unvisible instance is not found for self scope, degraded for audit"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T4 pagination: vector cursor stable; pages concatenate to the whole; closure constant across pages"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T6 ownership: session root forbids foreign self query; audit reaches it but content is redacted"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T9 message root: native messageId reverse-locates journal+audit; msg_sh1_* rejected; requestId works; ownership enforced"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "scheduler root: never-run job still answers admission facts; occurrence joins cron-run session + wake_sent links"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T2 no-receipt attempt and unknown outcomes produce explicit UNKNOWN verdicts, never silent success"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "view=report renders human-readable report with five dimensions and gaps"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T5 journal-0700: an unreadable session journal degrades the session query — never EACCES"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T3 assistance case classifies LEGAL_WAIT — human wait is never an execution failure"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T5 an unreadable source (EACCES) degrades the query — never a hard failure with raw OS codes"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "§4.3 owned session full content: owner sees full text within caps; audit viewer of foreign sessions never does"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "index builds coordinate-only entries; no message text ever lands in the index file"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "ensureFresh rebuilds on drift (append + mtime bump) and is stable when untouched"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "extractJournalCoordinates: partial scan flag and dedupe"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T2: scheduler run resolves its SessionRef — ledger disposition + journal existence proof, and the honest gap when the journal is gone"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T3: pre-start rejection → SESSION_CREATED=NO with the persisted reason; no fabricated sessionId, no session correlation"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T3b: disposition table equivalence — scheduler projection vs execution-history core agree on the frozen mapping"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T5: workflow attempt carries its SessionRef and the receipt messageId; a receipt-less row stays honestly absent"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T8: no fuzzy join — with the journal gone the scheduler→session join becomes an explicit gap, never a success"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CTR-SCT-007 blocker regression: ledger-absent AND journal-absent world still emits the honest session gap (rotated occurrence)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "B1: a foreign-agent journal or a suffix-compatible unrelated session can NEVER be promoted to the exact scheduler SessionRef"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "G1: a late pre-start rejection persists its discriminator in history — ledger-rotated world answers not_created, never unknown-with-session"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "G1b: ledger-rotated late pre-start rejection answers not_created from HISTORY alone (no ledger row)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "C3: occurrence-scoped query for a rotated occurrence still emits the session answer (honest gap, never silence)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T8-A: deleting the invocation evidence NEVER demotes the exact join — journal identity is the proof (invocation rows are auxiliary)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "D1: exact scheduler joins expose the NATIVE session id (decoded), never the directory encoding"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "D2: job-level queries give a session answer to EVERY job run record — runs beyond the ledger slice are never stranded"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "node_history: every generation is listed, stably sorted, with the supersession chain"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "node_history: multi-session history — each generation carries its own SessionRef"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "node_history: missing session — no receipt ⇒ no SessionRef, no fabricated coordinates"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "node_history: index-only redaction — the journal is never opened, no content surfaces"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "node_history: svc visibility gates self scope; audit proceeds on local facts with explicit gaps"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "node_history: instance scoping + unknown visit answers honestly (empty + CORRELATION_GAP)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "node_history: every consulted source absent → history_unavailable; arguments fail closed"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "broker manifests: node_history is declared on both query tools with a closed argument set"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "runtime wiring: node_history handler is mounted for both scopes, validates fail-closed, and gates self scope"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "attention: UNKNOWN/reconciliation states are attention with evidence coordinates"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "attention: OWNER_PENDING exposes the escalation fact; budget exhaustion only from that fact"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "attention: stale, blocked and run-ended ledger judgments are attention"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "attention: normal-running and terminal-OK visits produce NO attention conditions"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "attention: empty ledger snapshot is an empty summary; input is never mutated"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "full-page handoff: cursor is the EXACT last-item strings; short page ends the sweep"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "NO finite page cap: >100 FULL pages are consumed to exhaustion (B-O1 guard)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "STARVATION (goal-required, consumer side): >100 due with the first 100 attempted => 101+ still discovered and admitted, never re-attempted"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "per-request error stops the sweep loud; page-1 admissions stand"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "a feed that ignores the cursor (identical full page repeated) stops loud instead of spinning"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "cursor protocol violation: a full page whose last record is malformed stops the sweep"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "both-or-neither propagation: the engine never sends a half cursor"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "happy chain: due intent -> one attempt -> assignee Run with provenance -> SETTLED"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "duplicate triggers (re-poll, second intent, HR double-fire) never create a second attempt or Run"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "cross-process reconcile cannot terminalize another poller during planned-to-delivered admission"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "cross-process failover refreshes a stale empty projection before reconciliation"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "NEGATIVE (goal-required): run completed, model replied 完成了, visit still current => NEEDS_REVIEW, not silent, not rerun"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "outcome unknown (handle lost, correlation lost) + still current => NEEDS_REVIEW run_outcome_unknown, never rerun"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "settle probe fails (credential/read error) => NEEDS_REVIEW settle_check_unavailable, never assumed settled"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "assignee unresolvable after exact pre-plan baseline is recoverably blocked with zero Runs"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "pre-plan exact current-visit mismatch mints and delivers nothing"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "deliver rejected (agent disabled) => NEEDS_REVIEW delivery_rejected, no retry on the next poll"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "restart: a fresh engine over the same ledger reconciles via the requestId correlation (no duplicate attempt)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "due feed failure: loud no-op pass, zero mutations"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "malformed due records are skipped loudly; valid ones still admitted"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "maxAdmissionsPerPoll bounds a burst; excess due intents stay due (no admission, no ledger rows)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CTR-WEC1-002: every ledger fact class maps to its executionState"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CTR-WEC1-001: projection groups by workflowInstanceId and exposes the attempt chain"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CTR-WEC1-004: the fence refuses a mint past maxAttemptsPerVisit (default 3)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CTR-WEC1-005: a terminal generation at the cap escalates once before stale supersession"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "Case 3: run_ended_no_submission re-enters after the retry delay; Case 7: outcome_unknown never does"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CTR-WEC1-006: kick triggers one poll; a poll in flight coalesces further kicks"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "Case 9: restart — the trace projection recovers from the replayed ledger file"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "config validation: non-positive retryDelayMs fails loud"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "forumMessageFor covers the Goal Scope G execution events"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "no thread yet → events hold (offset unchanged); thread appears → all events post in order"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "restart: the persisted offset + posted keys prevent re-posting the committed window"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "posting failure holds the offset and retries; a new event still posts once recovered"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "poster throwing never propagates (guarded pass)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "ledger larger than 4 MiB drains from persisted offset without starting mid-line"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "large historical unknown events advance offset to a later projectable event"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "lost local state reads remote eventKeys before reposting a confirmed Forum message"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "unavailable remote readback holds the event and does not post"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "instruction is deterministic and carries the exact coordinates"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "instruction states the special semantics (acks are not facts; transition receipt is the commitment)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "instruction rejects malformed ids (fail loud, never prompt with garbage coordinates)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "transition instruction binds CAS and definition ids to the same fresh detail using live response paths"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "broker transition description teaches the same live detail paths and exact-copy rule"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "blocked work routes to current-assignee workflow_assistance_request open, never scheduler-only escalation"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "missing Assistance capability is reported with real failure facts, never a fabricated case or fallback write"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "normalizeDueIntent: exact 7-field camelCase contract, UUID-checked, canonicalized"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "judgeSettleFromDetail: full view with a different current visit => SETTLED"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "judgeSettleFromDetail: full view still on our visit => still_current"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "judgeSettleFromDetail: historical_participant mechanically proves the visit moved on (visibility invariant)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "judgeSettleFromDetail: unreadable states are unavailable, NEVER silently settled"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "judgeAttempt: run pending => stays ACTIVE (no settle probe, no LLM heartbeat needed)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "judgeAttempt: run ended + still current => NEEDS_REVIEW even if the model said it finished (negative case)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "judgeAttempt: lost/unknowable run outcome + still current => NEEDS_REVIEW, never a rerun"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "judgeAttempt: terminal run + settled business fact => SETTLED regardless of turn record loss"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "judgeAttempt: settle probe unavailable => NEEDS_REVIEW (unknown is never settled, never rerun)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "judgeAttempt: no verified Run linkage => NEEDS_REVIEW delivery_unverified (no second delivery)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "attemptIdFor is deterministic per NodeVisit and grammar-checked"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "beginAttemptIfAbsent: first call creates, ANY existing attempt blocks a second (no re-run after NEEDS_REVIEW)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "concurrent beginAttemptIfAbsent for one NodeVisit mints exactly one attempt"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "full lifecycle: planned -> delivered -> reconciled SETTLED; terminal attempts refuse further appends"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "reconciled verdict ACTIVE is not a ledger event (only terminal verdicts land)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "restart replay: a fresh ledger over the same dir restores the exact projection (dedupe survives restarts)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "torn tail: repair under lock preserves the next fence across another restart"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "complete tail without newline is sealed before the next durable append"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "newline seal I/O failure aborts the locked mutation before event append"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "first fence syncs the ledger directory and fails loud when publication durability is unavailable"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "new ledger directory is published before the first event-file directory entry"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "records for unknown NodeVisits fail loud (never fabricate linkage)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "managed cap is three under the actual lock despite global 99, concurrent triggers, and restart"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "unknown classification admits zero attempts; explicit unmanaged retains configured bound"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "settled Owner assistance resumes the exact visit once, with a fresh proof and cap bypass"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "unsettled predecessor cannot use Owner evidence or bypass the attempt fence"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "pre-plan refuses mismatched current activation identity and terminal instances",
+        "instance identity"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "pre-plan refuses mismatched current activation identity and terminal instances",
+        "visit identity"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "pre-plan refuses mismatched current activation identity and terminal instances",
+        "assignee identity"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "pre-plan refuses mismatched current activation identity and terminal instances",
+        "terminal instance"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "pre-plan refuses mismatched current activation identity and terminal instances"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "execution-policy Assistance proof is bound to the exact persisted opaque predecessor ID"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "attempt-cap policy assistance preserves the run-ended predecessor and admits one authorized next generation"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "a higher-generation predecessor rejects its superseded policy case and UNKNOWN stays fenced",
+        "policy evidence bound to a superseded generation cannot resume the latest attempt"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "a higher-generation predecessor rejects its superseded policy case and UNKNOWN stays fenced",
+        "run_outcome_unknown does not read Owner evidence or resume"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "a higher-generation predecessor rejects its superseded policy case and UNKNOWN stays fenced"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "planned Owner-resume crash continues the same attempt only on exact never_existed proof"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "planned Owner-resume recheck drift falls through to delivery_unverified without a delivery failure event"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "planned Owner-resume with contradictory never_existed fields is fenced without replay"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "planned Owner-resume stays fenced for pending or unknown Router correlation",
+        "pending"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "planned Owner-resume stays fenced for pending or unknown Router correlation",
+        "unknown"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "planned Owner-resume stays fenced for pending or unknown Router correlation",
+        "settled"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "planned Owner-resume stays fenced for pending or unknown Router correlation"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "managed per-Visit cap cannot use the legacy Owner-resume exemption"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "accepts exact current-assignee Assistance proof after the previous attempt baseline"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "accepts execution-policy proof bound to the exact opaque previous attempt"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "rejects identity drift, non-active activation, or version drift"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "rejects events outside the previous-baseline and current-version interval"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "ordinary ingress requires current assignee requester and null policy fields"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "policy ingress requires an enumerated reason and persisted previous attempt ID"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "rejects malformed, missing, or extra evidence fields without coercion"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "replay admits one Owner-resume generation with complete settled predecessor and preserves the consumed case"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "replay refuses an Owner-resume plan against unknown, unsettled, or mismatched predecessor"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "replay refuses a reused case ID and malformed Owner proof on a later generation"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "AC2: a no-progress visit is dispatched at most maxAttempts times, then escalates exactly once and is never dispatched again"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "AC4: duplicate due records (same page and across sweeps) mint exactly ONE attempt — the ledger is the audit"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "AC4b: UNKNOWN is never replayed — a delivery whose outcome is unproven is never re-dispatched"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "scoped: canonical principal resolution failure stops dispatch at the fence and stays visible as BLOCKED"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "checkpoint is replayable resume metadata and never changes execution state"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "checkpoint does not reset stale-no-progress eligibility clock"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "checkpoint rejects stale attempt, wrong reporter/session and terminal attempts"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "checkpoint schema is bounded and closed"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "A: resolve fail → zero Run → identity repaired → explicit recovery → exactly ONE Run, same attemptId"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "B: replaying the recovery command after completion → RECOVERY_INAPPLICABLE (delivery domain), zero appends"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "C: two concurrent recovery invocations → one recovery owner, at most one Run"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "D: crash after authorization but before delivery_started → still recoverable, later invocation proceeds"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "E: crash after delivery_started before run_delivered → NOT recoverable, reconcile lands NEEDS_REVIEW"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "STORE-FALSE-NEGATIVE: delivery_started present + Router answers never_existed → STILL not recoverable"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "E1: no authorityRef → the call is refused with zero ledger effect"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "E2/E3: no attempt → NO_OP_NO_ATTEMPT; terminal attempt → NO_OP_TERMINAL with zero appends"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "E4 classes: planned-only shape, pending correlation, missing correlation seam, delivery-domain phases"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "E5: world drift (visit no longer current) → recovery_refused → terminal NEEDS_REVIEW"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "E5: unreadable instance state → refused (fail-closed), zero admission"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "Identity NOT yet repaired: recovery re-blocks with zero Runs (designed interim behavior)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "Ledger discipline: at-most-one delivery_started (second = corrupt fail-loud); resolve_failed: is not a writable delivery_failed reason"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "E4: contradictory attributable evidence (never_existed + handle) refuses"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "E5: visit-current but assignee drifted on the wire → refused (exact compare)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "Ledger discipline: the mutation record seam is scope-bound — post-callback append fails loud"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "Surface discipline: recovery is engine/runtime-component surface only — no broker capability exposes it"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "mounted READY sweep rejects non-adjacent repeated 100-row page before WEC, then starts fresh"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "mounted READY sweep rejects non-adjacent repeated 1-row page before WEC, then starts fresh"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "Router outcome_unknown preserves its reconciliation handle as active Run linkage with no replay"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "settled active fence preserves stale successor liveness: correlation=false, clean baseline=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "settled active fence preserves stale successor liveness: correlation=false, clean baseline=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "settled active fence preserves stale successor liveness: correlation=true, clean baseline=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "settled active fence preserves stale successor liveness: correlation=true, clean baseline=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: active fence, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: blocked recovery, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: both blockers, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: UNKNOWN, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: pending, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: recovering, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: failed, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: missing state, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: missing result, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: throwing read, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unreadable snapshot, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: invalid snapshot null, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: invalid snapshot false, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: invalid snapshot [], correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: invalid snapshot \"settled\", correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: contradictory snapshot state, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unsupported fenceState \"future_enum\", correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unsupported fenceState false, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unsupported fenceState {}, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unsupported fenceState [], correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unsupported recoveryState \"future_enum\", correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unsupported recoveryState false, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unsupported recoveryState {}, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unsupported recoveryState [], correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: legacy state only, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: default fields, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: nullable fields, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: producer defaults, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: normal completion, correlation=false"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: active fence, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: blocked recovery, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: both blockers, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: UNKNOWN, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: pending, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: recovering, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: failed, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: missing state, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: missing result, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: throwing read, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unreadable snapshot, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: invalid snapshot null, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: invalid snapshot false, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: invalid snapshot [], correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: invalid snapshot \"settled\", correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: contradictory snapshot state, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unsupported fenceState \"future_enum\", correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unsupported fenceState false, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unsupported fenceState {}, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unsupported fenceState [], correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unsupported recoveryState \"future_enum\", correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unsupported recoveryState false, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unsupported recoveryState {}, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: unsupported recoveryState [], correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: legacy state only, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: default fields, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: nullable fields, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: producer defaults, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "positive quiescence evidence: normal completion, correlation=true"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "WORKFLOW_STALE_REENTRY_V1 r2 wiring — threshold resolution: default, env, config, fail-loud"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "WORKFLOW_STALE_REENTRY_V1 r2 wiring — quiescence-gated redispatch over the REAL gateway/read seams; no mutation seam exists"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "normal READY poll drains pages, rereads after restart, rejects malformed projections and never falls back"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T42-fixed: stop() awaits the bounded drain — no delivery after the awaited stop"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T42+T67-fixed: result surface after drain is truthful — ledger carries zero post-stop facts"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T42-r2 A: busy ticks keep the drain attribution — stop() waits for the REAL poll"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "T42-r2 B: startup catch-up reconcile is drain-owned — stop() awaits it"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "stale successor defers without a ledger append when recovering with an active unknown fence"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "stale successor defers without a ledger append when both Router reads throw"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "stale successor defers without a ledger append when both Router reads return no result"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "stale successor defers without a ledger append when Router response has no state"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "stale successor defers without a ledger append when unsupported failure state"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "stale successor defers without a ledger append when new unrecognized state"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "stale successor defers without a ledger append when correlation fallback still recovering"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "stale successor admits one new generation after trusted completed turn"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "stale successor admits one new generation after trusted failed turn"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "stale successor admits one new generation after settled-before-compaction"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "stale successor admits one new generation after exact process-generation restart convergence"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "stale successor admits one new generation after positive non-issuance proof"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "exact settled correlation still admits when the primary lookup is unavailable"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "terminal run_outcome_unknown remains ineligible past the one-hour stale threshold"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "terminal settle_check_unavailable remains ineligible past the one-hour stale threshold"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "terminal delivery_unverified remains ineligible past the one-hour stale threshold"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "proven run-ended-no-submission still continues after the stale threshold"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "parked second poller defers after another poller stale-settles: recovering with an active unknown fence"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "parked second poller defers after another poller stale-settles: both Router reads throw"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "parked second poller defers after another poller stale-settles: both Router reads return no result"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "parked second poller admits with fresh positive evidence: trusted completed turn"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "parked second poller admits with fresh positive evidence: trusted failed turn"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "parked second poller admits with fresh positive evidence: settled-before-compaction"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "parked second poller admits with fresh positive evidence: exact process-generation restart convergence"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "parked second poller admits with fresh positive evidence: positive non-issuance proof"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "locked stale admission refuses a missing guard before any append"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "locked stale admission refuses a undefined guard before any append"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "locked stale admission refuses a truthy object guard before any append"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "locked stale admission refuses a async true guard before any append"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "locked stale admission refuses a throwing guard before any append"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "locked stale admission refuses a async rejection guard before any append"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "locked stale admission refuses a promise rejection guard before any append"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "missing locked re-entry guard never invokes a supplied delivery callback"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CASE 1 — delivered 30m with version unchanged: active lease, never redispatched"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CASE 2 — stale settlement restores BUSINESS eligibility; delivery defers until the execution converges"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CASE 3 — version advanced (agent transitioned): normal business verdict, no redispatch"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CASE 3b — version advanced while visit still current (assistance/human action): never stale"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CASE 4 — RETURN moved the visit: never redispatched to the old ownership"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CASE 5 — instance terminal: never stale"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CASE 5b — probe unavailable: never stale (conservative)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CASE 5c — no dispatch-time baseline (probe failed at delivery): never stale"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CASE 6 — fencing layers: execution concurrency excluded by the gate, data race by svc version CAS"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "CASE 7 — repeated scans: one settlement per occurrence; rate bounded by threshold × quiescence"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "quiescence gate — correlation fallback honours the same gate; restart convergence admits"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "replay — generation-1 events stay byte-compatible; gen-2 replays from disk"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "corrupt guards — illegal replans and illegal stale sources fail loud"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "ledger CAS — recordStaleSuperseded refuses a changed attempt (double-settle loser)"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "judgment table — judgeStaleFromDetail / judgeDispatchVersionFromDetail"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "config — threshold validation and default"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "terminal attempt at cap escalates once and remains NEEDS_REVIEW for Owner resume"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "under-cap stale terminal candidate settles; non-confirmed candidates do not mutate"
+      ],
+      "outcome": "ok"
+    },
+    {
+      "path": [
+        "existing escalation fact prevents another attempt-cap request"
+      ],
+      "outcome": "ok"
+    }
+  ],
+  "known_environment_failures": [
+    {
+      "file": "packages/execution-history/test/session-traceability.test.js",
+      "reason": "ERR_MODULE_NOT_FOUND croner"
+    },
+    {
+      "file": "packages/workflow-execution/test/runtime-wiring.test.js",
+      "reason": "ERR_MODULE_NOT_FOUND @deepseek-ai/schemastery"
+    }
+  ],
+  "rc_provenance": "review_red rc1 and review_green rc0 supplied by parent; final regression process rc0 observed by root from session 98485 and attributed to implementation head 54a235c55f52b209e6f3b17fa1e23eea73c9da2f. Structure-final rc0 supplied by root and independently agrees with JSON summary.exit_code. Old rc provenance retained from prior comparison.",
+  "flags": []
+}

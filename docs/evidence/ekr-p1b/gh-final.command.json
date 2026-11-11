@@ -1,0 +1,14 @@
+{
+  "command": [
+    "gh",
+    "api",
+    "repos/mayf3/dsh-agent-core/commits/main",
+    "--jq",
+    ".sha"
+  ],
+  "startedAt": "2026-11-05T19:33:57.420904+00:00",
+  "finishedAt": "2026-11-05T19:34:07.456491+00:00",
+  "rc": 1,
+  "raw": "docs/evidence/ekr-p1b/gh-final.raw.txt",
+  "sha256": "32db89e40a3c707883971783cd886ee80b127553aed6cef7cba44e237bc924fe"
+}

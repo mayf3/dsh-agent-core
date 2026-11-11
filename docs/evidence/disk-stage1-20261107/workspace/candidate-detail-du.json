@@ -1,0 +1,98 @@
+[
+  {
+    "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810",
+    "command": [
+      "du",
+      "-x",
+      "-k",
+      "-d",
+      "1",
+      "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810"
+    ],
+    "started_at": "2026-11-07T15:48:02.463314+00:00",
+    "ended_at": "2026-11-07T15:48:03.462500+00:00",
+    "rc": 0,
+    "stdout": "25577912\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence\n8\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/profile-integration\n12\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/bundle-integration\n12\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/.agents\n8608\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/docs\n8\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/profile-production\n8\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/profile-demo\n8\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/profile-integration-agent\n8\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/bundle-agent-switch\n44\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/examples\n648\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/scripts\n1628\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/packages\n8\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/bundle-memory\n8\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/bundle-broker\n8\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/profile-memory\n2040\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/deployment-artifacts\n8\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/bundle-demo\n25591000\t/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810\n",
+    "stderr": ""
+  },
+  {
+    "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029",
+    "command": [
+      "du",
+      "-x",
+      "-k",
+      "-d",
+      "1",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029"
+    ],
+    "started_at": "2026-11-07T15:48:02.463499+00:00",
+    "ended_at": "2026-11-07T15:48:02.633221+00:00",
+    "rc": 0,
+    "stdout": "1475128\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/helper-crate\n78352\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/service-runtime\n268\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/repro-034\n8\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/guard-repro\n2650852\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/build-worktree\n4206956\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029\n",
+    "stderr": ""
+  },
+  {
+    "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028",
+    "command": [
+      "du",
+      "-x",
+      "-k",
+      "-d",
+      "1",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028"
+    ],
+    "started_at": "2026-11-07T15:48:02.633278+00:00",
+    "ended_at": "2026-11-07T15:48:03.777149+00:00",
+    "rc": 0,
+    "stdout": "56\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/attempt-01-cli-initialize\n104616\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/core-runtime-candidate-policy-ack\n60\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/attempt-02-cli-initialize\n72\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/attempt-05-cli-policy-ack-loaded-tool-trace\n104604\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/core-runtime-candidate\n60\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/attempt-04-cli-policy-ack\n1523048\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate\n60\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/attempt-03-cli-initialize\n1732596\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028\n",
+    "stderr": ""
+  },
+  {
+    "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028",
+    "command": [
+      "du",
+      "-x",
+      "-k",
+      "-d",
+      "1",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028"
+    ],
+    "started_at": "2026-11-07T15:48:03.462575+00:00",
+    "ended_at": "2026-11-07T15:48:04.637917+00:00",
+    "rc": 0,
+    "stdout": "104616\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/core-runtime-candidate-policy-ack\n1523184\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate\n104676\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/core-runtime-candidate-g6-9b57\n1732476\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028\n",
+    "stderr": ""
+  },
+  {
+    "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna",
+    "command": [
+      "du",
+      "-x",
+      "-k",
+      "-d",
+      "1",
+      "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna"
+    ],
+    "started_at": "2026-11-07T15:48:03.777223+00:00",
+    "ended_at": "2026-11-07T15:48:04.911467+00:00",
+    "rc": 0,
+    "stdout": "6616\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/runtime-staging-darwin-x64-9d867805\n8\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-fixture\n1522944\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate\n8\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/old-native-runtime-fixture\n1529660\t/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna\n",
+    "stderr": ""
+  },
+  {
+    "path": "/Users/yanfenma/workspace/project/svc-workflow",
+    "command": [
+      "du",
+      "-x",
+      "-k",
+      "-d",
+      "1",
+      "/Users/yanfenma/workspace/project/svc-workflow"
+    ],
+    "started_at": "2026-11-07T15:48:04.638003+00:00",
+    "ended_at": "2026-11-07T15:48:06.836144+00:00",
+    "rc": 0,
+    "stdout": "128\t/Users/yanfenma/workspace/project/svc-workflow/migrations\n16\t/Users/yanfenma/workspace/project/svc-workflow/.pytest_cache\n4059220\t/Users/yanfenma/workspace/project/svc-workflow/target\n164\t/Users/yanfenma/workspace/project/svc-workflow/contracts\n1676\t/Users/yanfenma/workspace/project/svc-workflow/tests\n392\t/Users/yanfenma/workspace/project/svc-workflow/docs\n48\t/Users/yanfenma/workspace/project/svc-workflow/release-artifacts\n640\t/Users/yanfenma/workspace/project/svc-workflow/sdk\n32\t/Users/yanfenma/workspace/project/svc-workflow/scripts\n13301112\t/Users/yanfenma/workspace/project/svc-workflow/.worktrees\n32\t/Users/yanfenma/workspace/project/svc-workflow/.zcode\n209068\t/Users/yanfenma/workspace/project/svc-workflow/.git\n1524\t/Users/yanfenma/workspace/project/svc-workflow/src\n17575308\t/Users/yanfenma/workspace/project/svc-workflow\n",
+    "stderr": ""
+  }
+]

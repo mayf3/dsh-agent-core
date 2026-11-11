@@ -1,0 +1,3325 @@
+{
+  "observed_start_utc": "2026-11-07T15:46:49.641795+00:00",
+  "scope": "metadata only for sessions, archived_sessions, worktrees, DB, Secret, active agent data; never execute source scripts",
+  "du": [
+    {
+      "argv": [
+        "/usr/bin/du",
+        "-k",
+        "-d",
+        "2",
+        "/Users/yanfenma/.codex/sessions"
+      ],
+      "start_utc": "2026-11-07T15:46:49.642008+00:00",
+      "end_utc": "2026-11-07T15:46:49.883981+00:00",
+      "rc": 0,
+      "stdout": "0\t/Users/yanfenma/.codex/sessions/2026/03\n0\t/Users/yanfenma/.codex/sessions/2026/04\n0\t/Users/yanfenma/.codex/sessions/2026/05\n1060948\t/Users/yanfenma/.codex/sessions/2026/11\n4226780\t/Users/yanfenma/.codex/sessions/2026/10\n0\t/Users/yanfenma/.codex/sessions/2026/07\n169128\t/Users/yanfenma/.codex/sessions/2026/09\n0\t/Users/yanfenma/.codex/sessions/2026/08\n0\t/Users/yanfenma/.codex/sessions/2026/06\n5456856\t/Users/yanfenma/.codex/sessions/2026\n5456856\t/Users/yanfenma/.codex/sessions\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/du",
+        "-k",
+        "-d",
+        "2",
+        "/Users/yanfenma/.codex/archived_sessions"
+      ],
+      "start_utc": "2026-11-07T15:46:49.884051+00:00",
+      "end_utc": "2026-11-07T15:46:49.894018+00:00",
+      "rc": 0,
+      "stdout": "343384\t/Users/yanfenma/.codex/archived_sessions\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/du",
+        "-k",
+        "-d",
+        "2",
+        "/Users/yanfenma/.codex/worktrees"
+      ],
+      "start_utc": "2026-11-07T15:46:49.894148+00:00",
+      "end_utc": "2026-11-07T15:46:52.589180+00:00",
+      "rc": 0,
+      "stdout": "28976\t/Users/yanfenma/.codex/worktrees/ac-task-720-business-projection/dsh-agent-core\n28976\t/Users/yanfenma/.codex/worktrees/ac-task-720-business-projection\n24432\t/Users/yanfenma/.codex/worktrees/demo-server-native-policy-ack/dsh-agent-core\n24432\t/Users/yanfenma/.codex/worktrees/demo-server-native-policy-ack\n104552\t/Users/yanfenma/.codex/worktrees/a37-core-runtime/dsh-agent-core\n104552\t/Users/yanfenma/.codex/worktrees/a37-core-runtime\n320\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/native\n304\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/python\n4\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/patches\n76\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/website\n1412544\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/node_modules\n16396\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/.agents\n0\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/.claude\n4252\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/docs\n4520\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/examples\n2336\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/scripts\n90812\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/packages\n216\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/.github\n3236\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/apps\n1976\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/vendor\n1539256\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh\n0\t/Users/yanfenma/.codex/worktrees/hr-maintenance-authority\n24368\t/Users/yanfenma/.codex/worktrees/assignee-field-semantics/dsh-agent-core\n24368\t/Users/yanfenma/.codex/worktrees/assignee-field-semantics\n105620\t/Users/yanfenma/.codex/worktrees/trusted-native-policy-core/dsh-agent-core\n105620\t/Users/yanfenma/.codex/worktrees/trusted-native-policy-core\n0\t/Users/yanfenma/.codex/worktrees/hr-quick-recovery\n44\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/evidence\n8\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/profile-integration\n12\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/bundle-integration\n81216\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/node_modules\n276\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/.agents\n11128\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/docs\n8\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/profile-production\n8\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/profile-demo\n8\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/profile-integration-agent\n8\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/bundle-agent-switch\n44\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/examples\n2308\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/scripts\n8436\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/packages\n8\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/bundle-memory\n8\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/bundle-broker\n8\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/profile-memory\n2056\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/deployment-artifacts\n8\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/bundle-demo\n20\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/vendor\n105636\t/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator\n24384\t/Users/yanfenma/.codex/worktrees/native-tool-policy-dsh/dsh-agent-core\n24384\t/Users/yanfenma/.codex/worktrees/native-tool-policy-dsh\n320\t/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/native\n304\t/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/python\n4\t/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/patches\n84\t/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/website\n1412576\t/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/node_modules\n16396\t/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/.agents\n0\t/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/.claude\n4252\t/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/docs\n4520\t/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/examples\n2336\t/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/scripts\n90968\t/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/packages\n216\t/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/.github\n3252\t/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/apps\n1976\t/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/vendor\n1539536\t/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy\n24836\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec/gcr-autocreate-wait-core\n24864\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec/admission-observation-spec-core\n105260\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec/dsh-agent-core\n24808\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec/gcr-current-reference\n179768\t/Users/yanfenma/.codex/worktrees/native-tool-policy-spec\n3676528\t/Users/yanfenma/.codex/worktrees\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/du",
+        "-k",
+        "-d",
+        "2",
+        "/Users/yanfenma/.codex/rollout-migrations"
+      ],
+      "start_utc": "2026-11-07T15:46:52.589266+00:00",
+      "end_utc": "2026-11-07T15:46:52.592760+00:00",
+      "rc": 0,
+      "stdout": "0\t/Users/yanfenma/.codex/rollout-migrations\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/du",
+        "-k",
+        "-d",
+        "2",
+        "/Users/yanfenma/.codex/memories"
+      ],
+      "start_utc": "2026-11-07T15:46:52.592832+00:00",
+      "end_utc": "2026-11-07T15:46:52.609981+00:00",
+      "rc": 0,
+      "stdout": "12\t/Users/yanfenma/.codex/memories/extensions/ad_hoc\n12\t/Users/yanfenma/.codex/memories/extensions\n428\t/Users/yanfenma/.codex/memories/rollout_summaries\n0\t/Users/yanfenma/.codex/memories/skills/docs-grounded-architecture-audit\n4\t/Users/yanfenma/.codex/memories/skills/offline-animated-html\n8\t/Users/yanfenma/.codex/memories/skills/fixed-sha-pr-audit\n12\t/Users/yanfenma/.codex/memories/skills\n632\t/Users/yanfenma/.codex/memories/.git/objects\n4\t/Users/yanfenma/.codex/memories/.git/info\n8\t/Users/yanfenma/.codex/memories/.git/logs\n44\t/Users/yanfenma/.codex/memories/.git/hooks\n4\t/Users/yanfenma/.codex/memories/.git/refs\n716\t/Users/yanfenma/.codex/memories/.git\n1676\t/Users/yanfenma/.codex/memories\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/du",
+        "-k",
+        "-d",
+        "2",
+        "/Users/yanfenma/.codex/memories_v2"
+      ],
+      "start_utc": "2026-11-07T15:46:52.610086+00:00",
+      "end_utc": "2026-11-07T15:46:52.618595+00:00",
+      "rc": 0,
+      "stdout": "0\t/Users/yanfenma/.codex/memories_v2/.codex-baseline/.git\n0\t/Users/yanfenma/.codex/memories_v2/.codex-baseline\n4\t/Users/yanfenma/.codex/memories_v2/extensions/ad_hoc\n4\t/Users/yanfenma/.codex/memories_v2/extensions\n132\t/Users/yanfenma/.codex/memories_v2/rollout_summaries\n156\t/Users/yanfenma/.codex/memories_v2/.git/objects\n4\t/Users/yanfenma/.codex/memories_v2/.git/info\n8\t/Users/yanfenma/.codex/memories_v2/.git/logs\n44\t/Users/yanfenma/.codex/memories_v2/.git/hooks\n4\t/Users/yanfenma/.codex/memories_v2/.git/refs\n240\t/Users/yanfenma/.codex/memories_v2/.git\n388\t/Users/yanfenma/.codex/memories_v2\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/du",
+        "-k",
+        "-d",
+        "2",
+        "/Users/yanfenma/.codex/identity-census"
+      ],
+      "start_utc": "2026-11-07T15:46:52.618696+00:00",
+      "end_utc": "2026-11-07T15:46:52.772071+00:00",
+      "rc": 0,
+      "stdout": "76\t/Users/yanfenma/.codex/identity-census/20260914-v1/foundation-review-archive\n315300\t/Users/yanfenma/.codex/identity-census/20260914-v1/auth-implementation\n34988\t/Users/yanfenma/.codex/identity-census/20260914-v1/agent-dev-center.git\n4672\t/Users/yanfenma/.codex/identity-census/20260914-v1/auth-authority\n4692\t/Users/yanfenma/.codex/identity-census/20260914-v1/auth-child\n363440\t/Users/yanfenma/.codex/identity-census/20260914-v1\n220\t/Users/yanfenma/.codex/identity-census/protected-closure-v1/canonical-subject-enrollment-production-apply-20260918\n152\t/Users/yanfenma/.codex/identity-census/protected-closure-v1/canonical-subject-enrollment-production-plan-20260917\n12\t/Users/yanfenma/.codex/identity-census/protected-closure-v1/__pycache__\n16\t/Users/yanfenma/.codex/identity-census/protected-closure-v1/foundation-production-install-v1\n2236\t/Users/yanfenma/.codex/identity-census/protected-closure-v1/binding-ledger-20260916\n2220\t/Users/yanfenma/.codex/identity-census/protected-closure-v1/u1-u2-canonical-reference-migration-20260919\n164\t/Users/yanfenma/.codex/identity-census/protected-closure-v1/canonical-subject-enrollment-production-bootstrap-20260917\n1076\t/Users/yanfenma/.codex/identity-census/protected-closure-v1/canonical-subject-enrollment-packet-20260916\n732\t/Users/yanfenma/.codex/identity-census/protected-closure-v1/canonical-subject-enrollment-production-bootstrap-20260918\n18364\t/Users/yanfenma/.codex/identity-census/protected-closure-v1\n381804\t/Users/yanfenma/.codex/identity-census\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/du",
+        "-k",
+        "-d",
+        "2",
+        "/Users/yanfenma/.codex/.tmp"
+      ],
+      "start_utc": "2026-11-07T15:46:52.772185+00:00",
+      "end_utc": "2026-11-07T15:46:52.941666+00:00",
+      "rc": 0,
+      "stdout": "69084\t/Users/yanfenma/.codex/.tmp/plugins/plugins\n68\t/Users/yanfenma/.codex/.tmp/plugins/.agents\n26064\t/Users/yanfenma/.codex/.tmp/plugins/.git\n95224\t/Users/yanfenma/.codex/.tmp/plugins\n34176\t/Users/yanfenma/.codex/.tmp/bundled-marketplaces/openai-bundled\n34176\t/Users/yanfenma/.codex/.tmp/bundled-marketplaces\n10200\t/Users/yanfenma/.codex/.tmp/plugins-backup-dKlgFz/repo\n10200\t/Users/yanfenma/.codex/.tmp/plugins-backup-dKlgFz\n0\t/Users/yanfenma/.codex/.tmp/marketplaces\n139612\t/Users/yanfenma/.codex/.tmp\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/du",
+        "-k",
+        "-d",
+        "2",
+        "/Users/yanfenma/.codex/log"
+      ],
+      "start_utc": "2026-11-07T15:46:52.941762+00:00",
+      "end_utc": "2026-11-07T15:46:52.944446+00:00",
+      "rc": 0,
+      "stdout": "8\t/Users/yanfenma/.codex/log\n",
+      "stderr": ""
+    }
+  ],
+  "errors": [],
+  "open_paths": {
+    "start_utc": "2026-11-07T15:46:52.944494+00:00",
+    "end_utc": "2026-11-07T15:46:53.623349+00:00",
+    "rc": 0,
+    "stderr": "",
+    "matching_rows": [
+      {
+        "pid": "30709",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/memories_1.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/memories_1.sqlite"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/memories_1.sqlite-wal"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/memories_1.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite-wal"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite-shm"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-20-01a1b6ae-a37d-7063-a7ed-c30974ca6065.jsonl"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-43-24-01a1b6ad-c6b6-7f00-a7b9-d5fe23f7aeec.jsonl"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-31-01a1b6ae-cbf3-70e2-85e0-bc69ef726da5.jsonl"
+      },
+      {
+        "pid": "30709",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-40-01a1b6ae-ee9a-7622-a99d-9b479d42ae92.jsonl"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/memories_1.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/memories_1.sqlite"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/memories_1.sqlite-wal"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/memories_1.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite-wal"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/memories_v2_1.sqlite-shm"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-13-01a1b6ae-8542-79e2-9ff1-6c10e387d208.jsonl"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-43-59-01a1b6ae-4e57-7201-adad-8505428ce432.jsonl"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-42-33-01a1b6ac-f9ff-7d01-b907-1883e01ef5d2.jsonl"
+      },
+      {
+        "pid": "30817",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-24-01a1b6ae-afd0-7751-a846-6529519ac1ac.jsonl"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T21-48-56-01a1b644-f994-70e1-b1a7-4063679a6b61.jsonl"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T21-48-42-01a1b644-c437-77a0-bfa7-695682347ae5.jsonl"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T21-51-04-01a1b646-ef17-7f00-bb08-754d2411b59a.jsonl"
+      },
+      {
+        "pid": "55249",
+        "command": "codex",
+        "path": "/Users/yanfenma/.codex/sessions/2026/09/13/rollout-2026-09-13T13-53-38-01a09954-1165-7ae2-a5fb-e6f3b480121a.jsonl"
+      }
+    ],
+    "limitation": "no matched handle does not prove no reference; lsof visibility constrained to current identity"
+  },
+  "metadata": {
+    "sessions": {
+      "files": 2319,
+      "logical_bytes": 5578300680,
+      "allocated_bytes_no_inode_dedup": 5587820544,
+      "by_path_month": {
+        "2026/11": {
+          "files": 893,
+          "allocated_bytes": 1086410752
+        },
+        "2026/10": {
+          "files": 1422,
+          "allocated_bytes": 4328222720
+        },
+        "2026/09": {
+          "files": 4,
+          "allocated_bytes": 173187072
+        }
+      },
+      "by_birth_local_day": {
+        "2026-11-03": {
+          "files": 56,
+          "allocated_bytes": 79863808
+        },
+        "2026-11-04": {
+          "files": 144,
+          "allocated_bytes": 146890752
+        },
+        "2026-11-05": {
+          "files": 28,
+          "allocated_bytes": 35979264
+        },
+        "2026-11-02": {
+          "files": 83,
+          "allocated_bytes": 85614592
+        },
+        "2026-11-07": {
+          "files": 285,
+          "allocated_bytes": 348520448
+        },
+        "2026-11-01": {
+          "files": 173,
+          "allocated_bytes": 257486848
+        },
+        "2026-11-06": {
+          "files": 124,
+          "allocated_bytes": 132055040
+        },
+        "2026-10-03": {
+          "files": 21,
+          "allocated_bytes": 5328896
+        },
+        "2026-10-04": {
+          "files": 10,
+          "allocated_bytes": 1208320
+        },
+        "2026-10-05": {
+          "files": 1,
+          "allocated_bytes": 24576
+        },
+        "2026-10-20": {
+          "files": 34,
+          "allocated_bytes": 380203008
+        },
+        "2026-10-23": {
+          "files": 51,
+          "allocated_bytes": 75526144
+        },
+        "2026-10-21": {
+          "files": 39,
+          "allocated_bytes": 457191424
+        },
+        "2026-10-25": {
+          "files": 95,
+          "allocated_bytes": 124506112
+        },
+        "2026-10-18": {
+          "files": 57,
+          "allocated_bytes": 84647936
+        },
+        "2026-10-19": {
+          "files": 29,
+          "allocated_bytes": 205942784
+        },
+        "2026-10-27": {
+          "files": 103,
+          "allocated_bytes": 415784960
+        },
+        "2026-10-11": {
+          "files": 2,
+          "allocated_bytes": 41947136
+        },
+        "2026-10-29": {
+          "files": 167,
+          "allocated_bytes": 514150400
+        },
+        "2026-10-16": {
+          "files": 30,
+          "allocated_bytes": 18706432
+        },
+        "2026-10-17": {
+          "files": 22,
+          "allocated_bytes": 9633792
+        },
+        "2026-10-28": {
+          "files": 183,
+          "allocated_bytes": 337543168
+        },
+        "2026-10-26": {
+          "files": 95,
+          "allocated_bytes": 646402048
+        },
+        "2026-10-22": {
+          "files": 66,
+          "allocated_bytes": 355450880
+        },
+        "2026-10-07": {
+          "files": 13,
+          "allocated_bytes": 458752
+        },
+        "2026-10-31": {
+          "files": 125,
+          "allocated_bytes": 194600960
+        },
+        "2026-10-30": {
+          "files": 59,
+          "allocated_bytes": 253710336
+        },
+        "2026-10-24": {
+          "files": 78,
+          "allocated_bytes": 25796608
+        },
+        "2026-10-15": {
+          "files": 75,
+          "allocated_bytes": 35774464
+        },
+        "2026-10-13": {
+          "files": 35,
+          "allocated_bytes": 151199744
+        },
+        "2026-10-12": {
+          "files": 3,
+          "allocated_bytes": 2510848
+        },
+        "2026-10-14": {
+          "files": 33,
+          "allocated_bytes": 163160064
+        }
+      },
+      "top20_by_allocation": [
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/21/rollout-2026-10-21T09-15-37-01a15c07-31b7-73f0-885c-0f82c5533cb8.jsonl",
+          "size_bytes": 407463427,
+          "allocated_bytes": 407465984,
+          "dev": 16777229,
+          "inode": 220940134,
+          "nlink": 1,
+          "birth_utc": "2026-10-21T01:15:38.417403+00:00",
+          "mtime_utc": "2026-10-31T15:25:13.168381+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/22/rollout-2026-10-22T22-35-05-01a16409-7acb-70b3-b250-87b4f04c58b2.jsonl",
+          "size_bytes": 276813301,
+          "allocated_bytes": 276815872,
+          "dev": 16777229,
+          "inode": 228192191,
+          "nlink": 1,
+          "birth_utc": "2026-10-22T14:35:08.733157+00:00",
+          "mtime_utc": "2026-10-31T15:25:10.436239+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/27/rollout-2026-10-27T22-59-31-01a17ddf-a4c3-73c0-9f4a-8cbb952a7519.jsonl",
+          "size_bytes": 179564908,
+          "allocated_bytes": 179568640,
+          "dev": 16777229,
+          "inode": 279451949,
+          "nlink": 1,
+          "birth_utc": "2026-10-27T14:59:31.320193+00:00",
+          "mtime_utc": "2026-10-28T15:45:49.972363+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/14/rollout-2026-10-14T07-16-47-01a1378d-e052-7021-9992-f0760eb9f9e7.jsonl",
+          "size_bytes": 126838396,
+          "allocated_bytes": 126840832,
+          "dev": 16777229,
+          "inode": 193597472,
+          "nlink": 1,
+          "birth_utc": "2026-10-13T23:16:47.421814+00:00",
+          "mtime_utc": "2026-11-02T23:43:27.725102+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/26/rollout-2026-10-26T09-54-14-01a175ea-5880-7b23-b40e-1738883401f1.jsonl",
+          "size_bytes": 125906593,
+          "allocated_bytes": 125906944,
+          "dev": 16777229,
+          "inode": 269511731,
+          "nlink": 1,
+          "birth_utc": "2026-10-26T01:54:15.371372+00:00",
+          "mtime_utc": "2026-11-01T02:20:38.323206+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/09/17/rollout-2026-09-17T09-40-56-01a0ad06-249f-7632-809b-961b93c3b113.jsonl.zst",
+          "size_bytes": 123922010,
+          "allocated_bytes": 123924480,
+          "dev": 16777229,
+          "inode": 227786972,
+          "nlink": 1,
+          "birth_utc": "2026-10-13T01:37:48.700705+00:00",
+          "mtime_utc": "2026-10-13T01:37:48.700705+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/19/rollout-2026-10-19T20-41-26-01a1542e-5bec-7901-88c0-76aee187beba.jsonl",
+          "size_bytes": 84564240,
+          "allocated_bytes": 84566016,
+          "dev": 16777229,
+          "inode": 318692003,
+          "nlink": 1,
+          "birth_utc": "2026-10-20T01:48:38.448413+00:00",
+          "mtime_utc": "2026-10-31T13:48:38.973310+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/16/rollout-2026-10-16T14-52-40-01a1437b-f9f3-7a33-a253-8f7fce9459f3.jsonl.zst",
+          "size_bytes": 78536295,
+          "allocated_bytes": 78536704,
+          "dev": 16777229,
+          "inode": 296661556,
+          "nlink": 1,
+          "birth_utc": "2026-10-20T02:19:27.737136+00:00",
+          "mtime_utc": "2026-10-20T02:19:27.737136+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/26/rollout-2026-10-26T07-37-39-01a1756d-4b14-7473-9d49-a77f34ff5adb.jsonl.zst",
+          "size_bytes": 70632818,
+          "allocated_bytes": 70635520,
+          "dev": 16777229,
+          "inode": 344777044,
+          "nlink": 1,
+          "birth_utc": "2026-10-26T00:02:02.256895+00:00",
+          "mtime_utc": "2026-10-26T00:02:02.256895+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/27/rollout-2026-10-27T23-00-04-01a17de0-289d-7431-b5cc-f3076b20aa3a.jsonl",
+          "size_bytes": 67651867,
+          "allocated_bytes": 67653632,
+          "dev": 16777229,
+          "inode": 279453283,
+          "nlink": 1,
+          "birth_utc": "2026-10-27T15:00:05.001822+00:00",
+          "mtime_utc": "2026-10-28T06:05:21.776694+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/19/rollout-2026-10-19T20-42-06-01a1542e-f778-7033-a649-d53d19ce3b01.jsonl.zst",
+          "size_bytes": 66986572,
+          "allocated_bytes": 66990080,
+          "dev": 16777229,
+          "inode": 296660755,
+          "nlink": 1,
+          "birth_utc": "2026-10-19T14:28:20.715249+00:00",
+          "mtime_utc": "2026-10-19T14:28:20.715249+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/13/rollout-2026-10-13T07-46-42-01a13282-e895-78f3-a0ba-cea68de7b4cb.jsonl.zst",
+          "size_bytes": 53108332,
+          "allocated_bytes": 53108736,
+          "dev": 16777229,
+          "inode": 296660370,
+          "nlink": 1,
+          "birth_utc": "2026-10-19T07:56:21.688030+00:00",
+          "mtime_utc": "2026-10-19T07:56:21.688030+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/28/rollout-2026-10-28T01-15-05-01a17e5b-c1ae-79e2-9bdd-3225f844b3c2.jsonl",
+          "size_bytes": 49246157,
+          "allocated_bytes": 49246208,
+          "dev": 16777229,
+          "inode": 279877213,
+          "nlink": 1,
+          "birth_utc": "2026-10-27T17:15:05.156605+00:00",
+          "mtime_utc": "2026-10-28T16:28:12.766942+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/20/rollout-2026-10-20T20-15-16-01a1593c-c2c2-7f30-a312-be82c9f81837.jsonl.zst",
+          "size_bytes": 47960082,
+          "allocated_bytes": 47964160,
+          "dev": 16777229,
+          "inode": 344777066,
+          "nlink": 1,
+          "birth_utc": "2026-10-23T02:06:27.952155+00:00",
+          "mtime_utc": "2026-10-23T02:06:27.952155+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/09/13/rollout-2026-09-13T13-53-38-01a09954-1165-7ae2-a5fb-e6f3b480121a.jsonl",
+          "size_bytes": 41868505,
+          "allocated_bytes": 42733568,
+          "dev": 16777229,
+          "inode": 357107727,
+          "nlink": 1,
+          "birth_utc": "2026-10-22T13:01:56.978063+00:00",
+          "mtime_utc": "2026-11-07T14:07:14.707510+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/11/rollout-2026-10-11T23-14-09-01a12b87-4ba6-70f2-8661-90d3d485159c.jsonl",
+          "size_bytes": 41921767,
+          "allocated_bytes": 41922560,
+          "dev": 16777229,
+          "inode": 189817418,
+          "nlink": 1,
+          "birth_utc": "2026-10-11T15:14:10.155783+00:00",
+          "mtime_utc": "2026-10-30T14:55:55.810793+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/26/rollout-2026-10-26T08-53-13-01a175b2-79ff-7813-9116-5fc51a5e1719.jsonl.zst",
+          "size_bytes": 39754486,
+          "allocated_bytes": 39755776,
+          "dev": 16777229,
+          "inode": 344776996,
+          "nlink": 1,
+          "birth_utc": "2026-10-26T01:01:28.903035+00:00",
+          "mtime_utc": "2026-10-26T01:01:28.903035+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/26/rollout-2026-10-26T07-38-01-01a1756d-a0b9-7890-accf-d4c1eb8b1b81.jsonl.zst",
+          "size_bytes": 37743353,
+          "allocated_bytes": 37744640,
+          "dev": 16777229,
+          "inode": 344777015,
+          "nlink": 1,
+          "birth_utc": "2026-10-25T23:57:27.144344+00:00",
+          "mtime_utc": "2026-10-25T23:57:27.144344+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/18/rollout-2026-10-18T07-42-56-01a14c3f-4210-76f2-86ce-f7bcf7da1d38.jsonl.zst",
+          "size_bytes": 36661227,
+          "allocated_bytes": 36663296,
+          "dev": 16777229,
+          "inode": 296661766,
+          "nlink": 1,
+          "birth_utc": "2026-10-20T02:19:16.038264+00:00",
+          "mtime_utc": "2026-10-20T02:19:16.038264+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/10/26/rollout-2026-10-26T21-41-51-01a17872-2db6-7ca1-ae91-564ee0d3f95f.jsonl.zst",
+          "size_bytes": 36627068,
+          "allocated_bytes": 36630528,
+          "dev": 16777229,
+          "inode": 348915936,
+          "nlink": 1,
+          "birth_utc": "2026-10-26T15:37:48.032441+00:00",
+          "mtime_utc": "2026-10-26T15:37:48.032441+00:00"
+        }
+      ],
+      "latest10_by_mtime": [
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-43-59-01a1b6ae-4e57-7201-adad-8505428ce432.jsonl",
+          "size_bytes": 896038,
+          "allocated_bytes": 954368,
+          "dev": 16777229,
+          "inode": 359377180,
+          "nlink": 1,
+          "birth_utc": "2026-11-07T15:43:59.091356+00:00",
+          "mtime_utc": "2026-11-07T15:46:50.683482+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-43-24-01a1b6ad-c6b6-7f00-a7b9-d5fe23f7aeec.jsonl",
+          "size_bytes": 1054480,
+          "allocated_bytes": 2101248,
+          "dev": 16777229,
+          "inode": 359376901,
+          "nlink": 1,
+          "birth_utc": "2026-11-07T15:43:30.350774+00:00",
+          "mtime_utc": "2026-11-07T15:46:49.538884+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-13-01a1b6ae-8542-79e2-9ff1-6c10e387d208.jsonl",
+          "size_bytes": 742361,
+          "allocated_bytes": 761856,
+          "dev": 16777229,
+          "inode": 359377355,
+          "nlink": 1,
+          "birth_utc": "2026-11-07T15:44:13.156813+00:00",
+          "mtime_utc": "2026-11-07T15:46:48.729718+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-24-01a1b6ae-afd0-7751-a846-6529519ac1ac.jsonl",
+          "size_bytes": 722472,
+          "allocated_bytes": 761856,
+          "dev": 16777229,
+          "inode": 359377380,
+          "nlink": 1,
+          "birth_utc": "2026-11-07T15:44:24.048887+00:00",
+          "mtime_utc": "2026-11-07T15:46:46.395767+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-42-33-01a1b6ac-f9ff-7d01-b907-1883e01ef5d2.jsonl",
+          "size_bytes": 924195,
+          "allocated_bytes": 987136,
+          "dev": 16777229,
+          "inode": 359376381,
+          "nlink": 1,
+          "birth_utc": "2026-11-07T15:42:34.019890+00:00",
+          "mtime_utc": "2026-11-07T15:46:46.256241+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-31-01a1b6ae-cbf3-70e2-85e0-bc69ef726da5.jsonl",
+          "size_bytes": 946364,
+          "allocated_bytes": 950272,
+          "dev": 16777229,
+          "inode": 359377411,
+          "nlink": 1,
+          "birth_utc": "2026-11-07T15:44:31.251983+00:00",
+          "mtime_utc": "2026-11-07T15:46:41.884959+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-40-01a1b6ae-ee9a-7622-a99d-9b479d42ae92.jsonl",
+          "size_bytes": 803017,
+          "allocated_bytes": 815104,
+          "dev": 16777229,
+          "inode": 359377563,
+          "nlink": 1,
+          "birth_utc": "2026-11-07T15:44:40.121099+00:00",
+          "mtime_utc": "2026-11-07T15:46:25.695234+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-44-20-01a1b6ae-a37d-7063-a7ed-c30974ca6065.jsonl",
+          "size_bytes": 875578,
+          "allocated_bytes": 876544,
+          "dev": 16777229,
+          "inode": 359377374,
+          "nlink": 1,
+          "birth_utc": "2026-11-07T15:44:20.888492+00:00",
+          "mtime_utc": "2026-11-07T15:46:19.964261+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-15-18-01a1b694-00e2-7a00-83de-dfdc4bf6def8.jsonl",
+          "size_bytes": 1262686,
+          "allocated_bytes": 1265664,
+          "dev": 16777229,
+          "inode": 359355736,
+          "nlink": 1,
+          "birth_utc": "2026-11-07T15:15:18.118901+00:00",
+          "mtime_utc": "2026-11-07T15:26:45.407273+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/sessions/2026/11/07/rollout-2026-11-07T23-15-56-01a1b694-a0c9-77f1-8a9f-169841a300b5.jsonl",
+          "size_bytes": 917609,
+          "allocated_bytes": 921600,
+          "dev": 16777229,
+          "inode": 359356024,
+          "nlink": 1,
+          "birth_utc": "2026-11-07T15:15:56.267154+00:00",
+          "mtime_utc": "2026-11-07T15:26:23.370879+00:00"
+        }
+      ],
+      "errors": []
+    },
+    "archived_sessions": {
+      "files": 445,
+      "logical_bytes": 350718671,
+      "allocated_bytes_no_inode_dedup": 351625216,
+      "by_path_month": {},
+      "by_birth_local_day": {
+        "2026-07-17": {
+          "files": 3,
+          "allocated_bytes": 3641344
+        },
+        "2026-09-01": {
+          "files": 55,
+          "allocated_bytes": 32796672
+        },
+        "2026-07-14": {
+          "files": 30,
+          "allocated_bytes": 8134656
+        },
+        "2026-09-04": {
+          "files": 8,
+          "allocated_bytes": 6316032
+        },
+        "2026-07-15": {
+          "files": 18,
+          "allocated_bytes": 6758400
+        },
+        "2026-07-16": {
+          "files": 7,
+          "allocated_bytes": 6356992
+        },
+        "2026-09-15": {
+          "files": 14,
+          "allocated_bytes": 26800128
+        },
+        "2026-09-06": {
+          "files": 16,
+          "allocated_bytes": 3616768
+        },
+        "2026-05-31": {
+          "files": 4,
+          "allocated_bytes": 2404352
+        },
+        "2026-09-02": {
+          "files": 14,
+          "allocated_bytes": 6967296
+        },
+        "2026-09-05": {
+          "files": 9,
+          "allocated_bytes": 3080192
+        },
+        "2026-05-21": {
+          "files": 1,
+          "allocated_bytes": 61440
+        },
+        "2026-05-17": {
+          "files": 5,
+          "allocated_bytes": 946176
+        },
+        "2026-08-11": {
+          "files": 3,
+          "allocated_bytes": 651264
+        },
+        "2026-09-16": {
+          "files": 10,
+          "allocated_bytes": 23171072
+        },
+        "2026-05-13": {
+          "files": 5,
+          "allocated_bytes": 3284992
+        },
+        "2026-08-22": {
+          "files": 1,
+          "allocated_bytes": 708608
+        },
+        "2026-08-20": {
+          "files": 13,
+          "allocated_bytes": 3612672
+        },
+        "2026-06-28": {
+          "files": 1,
+          "allocated_bytes": 4083712
+        },
+        "2026-09-13": {
+          "files": 3,
+          "allocated_bytes": 2863104
+        },
+        "2026-06-23": {
+          "files": 1,
+          "allocated_bytes": 1146880
+        },
+        "2026-05-10": {
+          "files": 1,
+          "allocated_bytes": 929792
+        },
+        "2026-08-02": {
+          "files": 3,
+          "allocated_bytes": 1048576
+        },
+        "2026-08-28": {
+          "files": 4,
+          "allocated_bytes": 1146880
+        },
+        "2026-07-13": {
+          "files": 3,
+          "allocated_bytes": 659456
+        },
+        "2026-09-14": {
+          "files": 46,
+          "allocated_bytes": 13107200
+        },
+        "2026-08-10": {
+          "files": 1,
+          "allocated_bytes": 57344
+        },
+        "2026-10-12": {
+          "files": 2,
+          "allocated_bytes": 1638400
+        },
+        "2026-10-13": {
+          "files": 9,
+          "allocated_bytes": 3571712
+        },
+        "2026-08-12": {
+          "files": 6,
+          "allocated_bytes": 4980736
+        },
+        "2026-06-05": {
+          "files": 2,
+          "allocated_bytes": 5918720
+        },
+        "2026-08-31": {
+          "files": 11,
+          "allocated_bytes": 6955008
+        },
+        "2026-08-09": {
+          "files": 4,
+          "allocated_bytes": 2359296
+        },
+        "2026-05-07": {
+          "files": 1,
+          "allocated_bytes": 1183744
+        },
+        "2026-08-14": {
+          "files": 1,
+          "allocated_bytes": 3506176
+        },
+        "2026-07-10": {
+          "files": 5,
+          "allocated_bytes": 1916928
+        },
+        "2026-04-15": {
+          "files": 3,
+          "allocated_bytes": 573440
+        },
+        "2026-07-11": {
+          "files": 3,
+          "allocated_bytes": 1003520
+        },
+        "2026-07-22": {
+          "files": 2,
+          "allocated_bytes": 311296
+        },
+        "2026-08-21": {
+          "files": 9,
+          "allocated_bytes": 5832704
+        },
+        "2026-09-03": {
+          "files": 12,
+          "allocated_bytes": 16285696
+        },
+        "2026-08-19": {
+          "files": 12,
+          "allocated_bytes": 4292608
+        },
+        "2026-07-12": {
+          "files": 7,
+          "allocated_bytes": 2183168
+        },
+        "2026-04-10": {
+          "files": 1,
+          "allocated_bytes": 77824
+        },
+        "2026-03-23": {
+          "files": 5,
+          "allocated_bytes": 831488
+        },
+        "2026-07-26": {
+          "files": 3,
+          "allocated_bytes": 1671168
+        },
+        "2026-05-03": {
+          "files": 4,
+          "allocated_bytes": 4612096
+        },
+        "2026-05-24": {
+          "files": 4,
+          "allocated_bytes": 1323008
+        },
+        "2026-06-26": {
+          "files": 1,
+          "allocated_bytes": 126976
+        },
+        "2026-04-26": {
+          "files": 2,
+          "allocated_bytes": 516096
+        },
+        "2026-05-23": {
+          "files": 1,
+          "allocated_bytes": 126976
+        },
+        "2026-05-30": {
+          "files": 2,
+          "allocated_bytes": 262144
+        },
+        "2026-07-03": {
+          "files": 1,
+          "allocated_bytes": 10788864
+        },
+        "2026-07-19": {
+          "files": 1,
+          "allocated_bytes": 3305472
+        },
+        "2026-07-31": {
+          "files": 1,
+          "allocated_bytes": 42594304
+        },
+        "2026-05-14": {
+          "files": 2,
+          "allocated_bytes": 389120
+        },
+        "2026-10-14": {
+          "files": 2,
+          "allocated_bytes": 11374592
+        },
+        "2026-08-18": {
+          "files": 3,
+          "allocated_bytes": 1167360
+        },
+        "2026-08-03": {
+          "files": 2,
+          "allocated_bytes": 503808
+        },
+        "2026-09-17": {
+          "files": 7,
+          "allocated_bytes": 16130048
+        },
+        "2026-05-22": {
+          "files": 1,
+          "allocated_bytes": 81920
+        },
+        "2026-06-18": {
+          "files": 1,
+          "allocated_bytes": 299008
+        },
+        "2026-08-13": {
+          "files": 2,
+          "allocated_bytes": 1581056
+        },
+        "2026-04-29": {
+          "files": 1,
+          "allocated_bytes": 294912
+        },
+        "2026-08-01": {
+          "files": 3,
+          "allocated_bytes": 868352
+        },
+        "2026-04-11": {
+          "files": 1,
+          "allocated_bytes": 786432
+        },
+        "2026-04-28": {
+          "files": 1,
+          "allocated_bytes": 434176
+        },
+        "2026-10-15": {
+          "files": 1,
+          "allocated_bytes": 7155712
+        },
+        "2026-06-03": {
+          "files": 1,
+          "allocated_bytes": 958464
+        },
+        "2026-05-05": {
+          "files": 1,
+          "allocated_bytes": 135168
+        },
+        "2026-07-18": {
+          "files": 4,
+          "allocated_bytes": 1142784
+        },
+        "2026-07-08": {
+          "files": 1,
+          "allocated_bytes": 24576
+        },
+        "2026-08-30": {
+          "files": 1,
+          "allocated_bytes": 634880
+        },
+        "2026-06-21": {
+          "files": 1,
+          "allocated_bytes": 479232
+        },
+        "2026-04-16": {
+          "files": 1,
+          "allocated_bytes": 1769472
+        },
+        "2026-08-08": {
+          "files": 3,
+          "allocated_bytes": 1544192
+        },
+        "2026-07-28": {
+          "files": 1,
+          "allocated_bytes": 204800
+        },
+        "2026-04-24": {
+          "files": 2,
+          "allocated_bytes": 1630208
+        },
+        "2026-06-04": {
+          "files": 1,
+          "allocated_bytes": 991232
+        },
+        "2026-08-04": {
+          "files": 2,
+          "allocated_bytes": 2547712
+        },
+        "2026-05-18": {
+          "files": 1,
+          "allocated_bytes": 118784
+        },
+        "2026-06-02": {
+          "files": 1,
+          "allocated_bytes": 864256
+        },
+        "2026-05-20": {
+          "files": 1,
+          "allocated_bytes": 131072
+        },
+        "2026-07-25": {
+          "files": 1,
+          "allocated_bytes": 3375104
+        },
+        "2026-06-09": {
+          "files": 1,
+          "allocated_bytes": 905216
+        }
+      },
+      "top20_by_allocation": [
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-07-28T22-11-18-019fa910-ceb2-74e3-a1b9-e1f495896141.jsonl.zst",
+          "size_bytes": 42590546,
+          "allocated_bytes": 42594304,
+          "dev": 16777229,
+          "inode": 216580520,
+          "nlink": 1,
+          "birth_utc": "2026-07-31T00:11:28.263771+00:00",
+          "mtime_utc": "2026-07-31T00:11:28.263771+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-09-14T22-41-22-01a0a05d-93b0-7693-b24b-abb81f436028.jsonl.zst",
+          "size_bytes": 13118162,
+          "allocated_bytes": 13119488,
+          "dev": 16777229,
+          "inode": 216578037,
+          "nlink": 1,
+          "birth_utc": "2026-09-16T03:27:16.283773+00:00",
+          "mtime_utc": "2026-09-16T03:27:16.283773+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-06-08T08-38-40-019ea4aa-d7f2-7091-87f0-d7d290995276.jsonl.zst",
+          "size_bytes": 10786862,
+          "allocated_bytes": 10788864,
+          "dev": 16777229,
+          "inode": 216578640,
+          "nlink": 1,
+          "birth_utc": "2026-07-03T13:12:44.287232+00:00",
+          "mtime_utc": "2026-07-03T13:12:44.287232+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-10-12T07-29-50-01a12d4d-1b84-7a22-80ca-96b2f0275fc6.jsonl.zst",
+          "size_bytes": 10674900,
+          "allocated_bytes": 10678272,
+          "dev": 16777229,
+          "inode": 227785311,
+          "nlink": 1,
+          "birth_utc": "2026-10-13T20:52:09.015859+00:00",
+          "mtime_utc": "2026-10-13T20:52:09.015859+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-09-13T23-29-20-01a09b63-218e-7603-8d11-c001eca47120.jsonl.zst",
+          "size_bytes": 8126991,
+          "allocated_bytes": 8130560,
+          "dev": 16777229,
+          "inode": 216579370,
+          "nlink": 1,
+          "birth_utc": "2026-09-15T12:12:35.312725+00:00",
+          "mtime_utc": "2026-09-15T12:12:35.312725+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-10-13T08-05-30-01a13294-2024-7083-a0d4-c9ab53ef6ae1.jsonl.zst",
+          "size_bytes": 7155592,
+          "allocated_bytes": 7155712,
+          "dev": 16777229,
+          "inode": 227785426,
+          "nlink": 1,
+          "birth_utc": "2026-10-14T23:57:40.987369+00:00",
+          "mtime_utc": "2026-10-14T23:57:40.987369+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-09-14T08-11-38-01a09d41-4f7f-70d1-b4d9-bca0a2aacf39.jsonl.zst",
+          "size_bytes": 6238229,
+          "allocated_bytes": 6242304,
+          "dev": 16777229,
+          "inode": 216581187,
+          "nlink": 1,
+          "birth_utc": "2026-09-15T14:16:48.043696+00:00",
+          "mtime_utc": "2026-09-15T14:16:48.043696+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-09-16T07-02-33-01a0a74e-ca7d-7852-a31c-d6f81e820e4c.jsonl.zst",
+          "size_bytes": 5746411,
+          "allocated_bytes": 5746688,
+          "dev": 16777229,
+          "inode": 216580503,
+          "nlink": 1,
+          "birth_utc": "2026-09-16T23:37:27.284300+00:00",
+          "mtime_utc": "2026-09-16T23:37:27.284300+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-09-03T00-26-41-01a062f1-ae1b-78c2-944c-560dd77c9113.jsonl.zst",
+          "size_bytes": 5560357,
+          "allocated_bytes": 5562368,
+          "dev": 16777229,
+          "inode": 216580748,
+          "nlink": 1,
+          "birth_utc": "2026-09-03T01:44:09.266501+00:00",
+          "mtime_utc": "2026-09-03T01:44:09.266501+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-09-13T13-28-21-01a0993c-ea35-75d1-9bc0-cc97914a3fd0.jsonl.zst",
+          "size_bytes": 5275000,
+          "allocated_bytes": 5275648,
+          "dev": 16777229,
+          "inode": 216580604,
+          "nlink": 1,
+          "birth_utc": "2026-09-14T21:33:38.261712+00:00",
+          "mtime_utc": "2026-09-14T21:33:38.261712+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-05-13T09-24-24-019e1eef-5df8-7c51-8254-22a98e34aa09.jsonl.zst",
+          "size_bytes": 4900305,
+          "allocated_bytes": 4902912,
+          "dev": 16777229,
+          "inode": 216580157,
+          "nlink": 1,
+          "birth_utc": "2026-06-04T23:06:52.019710+00:00",
+          "mtime_utc": "2026-06-04T23:06:52.019710+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-09-16T08-32-52-01a0a064-7ae6-7500-9362-143ba58d0f25_01a0a7a1-7728-7973-b2b8-4a4398a73d7a.jsonl.zst",
+          "size_bytes": 4804784,
+          "allocated_bytes": 4808704,
+          "dev": 16777229,
+          "inode": 216579388,
+          "nlink": 1,
+          "birth_utc": "2026-09-17T00:02:42.193538+00:00",
+          "mtime_utc": "2026-09-17T00:02:42.193538+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-07-15T07-47-37-019f6307-65e6-7e31-b594-b142b539173e.jsonl.zst",
+          "size_bytes": 4704374,
+          "allocated_bytes": 4706304,
+          "dev": 16777229,
+          "inode": 216581216,
+          "nlink": 1,
+          "birth_utc": "2026-07-15T17:24:20.516865+00:00",
+          "mtime_utc": "2026-07-15T17:24:20.516865+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-06-19T06-44-18-019edce8-1512-7442-a2c3-639767deba25.jsonl.zst",
+          "size_bytes": 4081434,
+          "allocated_bytes": 4083712,
+          "dev": 16777229,
+          "inode": 216580578,
+          "nlink": 1,
+          "birth_utc": "2026-06-28T02:01:41.506895+00:00",
+          "mtime_utc": "2026-06-28T02:01:41.506895+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-08-13T23-04-48-019ffba7-89b2-78c1-863d-90f34fe35764.jsonl.zst",
+          "size_bytes": 3502126,
+          "allocated_bytes": 3506176,
+          "dev": 16777229,
+          "inode": 216581083,
+          "nlink": 1,
+          "birth_utc": "2026-08-13T19:06:55.518176+00:00",
+          "mtime_utc": "2026-08-13T19:06:55.518176+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-09-15T00-36-36-01a0a0c7-1350-7011-9170-ce22df5e4fd1.jsonl.zst",
+          "size_bytes": 3500348,
+          "allocated_bytes": 3502080,
+          "dev": 16777229,
+          "inode": 216581227,
+          "nlink": 1,
+          "birth_utc": "2026-09-16T01:48:59.711457+00:00",
+          "mtime_utc": "2026-09-16T01:48:59.711457+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-07-22T23-00-32-019f8a57-b8d0-7d51-8e91-b850d268ecee.jsonl.zst",
+          "size_bytes": 3373727,
+          "allocated_bytes": 3375104,
+          "dev": 16777229,
+          "inode": 216581208,
+          "nlink": 1,
+          "birth_utc": "2026-07-25T01:08:04.322967+00:00",
+          "mtime_utc": "2026-07-25T01:08:04.322967+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-05-02T13-39-17-019de732-c671-7511-b4fd-c747ae94143c.jsonl.zst",
+          "size_bytes": 3306343,
+          "allocated_bytes": 3309568,
+          "dev": 16777229,
+          "inode": 216581134,
+          "nlink": 1,
+          "birth_utc": "2026-05-03T01:28:51.931258+00:00",
+          "mtime_utc": "2026-05-03T01:28:51.931258+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-07-18T20-32-59-019f7537-3101-7491-adb5-a0066fc71805.jsonl.zst",
+          "size_bytes": 3305066,
+          "allocated_bytes": 3305472,
+          "dev": 16777229,
+          "inode": 216579628,
+          "nlink": 1,
+          "birth_utc": "2026-07-18T18:29:46.695876+00:00",
+          "mtime_utc": "2026-07-18T18:29:46.695876+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-08-31T23-19-49-01a05867-be00-7170-bb1f-5d2820a0c345.jsonl.zst",
+          "size_bytes": 3225644,
+          "allocated_bytes": 3227648,
+          "dev": 16777229,
+          "inode": 216581169,
+          "nlink": 1,
+          "birth_utc": "2026-08-31T23:43:34.616751+00:00",
+          "mtime_utc": "2026-08-31T23:43:34.616751+00:00"
+        }
+      ],
+      "latest10_by_mtime": [
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-10-13T08-05-30-01a13294-2024-7083-a0d4-c9ab53ef6ae1.jsonl.zst",
+          "size_bytes": 7155592,
+          "allocated_bytes": 7155712,
+          "dev": 16777229,
+          "inode": 227785426,
+          "nlink": 1,
+          "birth_utc": "2026-10-14T23:57:40.987369+00:00",
+          "mtime_utc": "2026-10-14T23:57:40.987369+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-10-12T07-29-50-01a12d4d-1b84-7a22-80ca-96b2f0275fc6.jsonl.zst",
+          "size_bytes": 10674900,
+          "allocated_bytes": 10678272,
+          "dev": 16777229,
+          "inode": 227785311,
+          "nlink": 1,
+          "birth_utc": "2026-10-13T20:52:09.015859+00:00",
+          "mtime_utc": "2026-10-13T20:52:09.015859+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-10-13T20-00-11-01a13522-6df9-7b33-b113-90da8b217d11.jsonl.zst",
+          "size_bytes": 694838,
+          "allocated_bytes": 696320,
+          "dev": 16777229,
+          "inode": 227786415,
+          "nlink": 1,
+          "birth_utc": "2026-10-13T20:46:10.645633+00:00",
+          "mtime_utc": "2026-10-13T20:46:10.645633+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-10-13T19-43-40-01a13513-5027-7363-9a72-c0f034acc847.jsonl.zst",
+          "size_bytes": 390651,
+          "allocated_bytes": 393216,
+          "dev": 16777229,
+          "inode": 227785331,
+          "nlink": 1,
+          "birth_utc": "2026-10-13T15:57:25.871811+00:00",
+          "mtime_utc": "2026-10-13T15:57:25.871811+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-10-13T19-59-37-01a13521-e933-7401-984d-78ca2532d7a0.jsonl.zst",
+          "size_bytes": 663039,
+          "allocated_bytes": 663552,
+          "dev": 16777229,
+          "inode": 227786665,
+          "nlink": 1,
+          "birth_utc": "2026-10-13T15:00:41.437798+00:00",
+          "mtime_utc": "2026-10-13T15:00:41.437798+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-10-13T19-43-50-01a13513-75c9-7c63-a79c-a37659e1ed55.jsonl.zst",
+          "size_bytes": 180936,
+          "allocated_bytes": 184320,
+          "dev": 16777229,
+          "inode": 227786704,
+          "nlink": 1,
+          "birth_utc": "2026-10-13T11:46:05.710822+00:00",
+          "mtime_utc": "2026-10-13T11:46:05.710822+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-10-13T19-29-43-01a13506-884c-7742-93aa-4ef8d308c8a8.jsonl.zst",
+          "size_bytes": 208682,
+          "allocated_bytes": 208896,
+          "dev": 16777229,
+          "inode": 227786638,
+          "nlink": 1,
+          "birth_utc": "2026-10-13T11:33:18.159226+00:00",
+          "mtime_utc": "2026-10-13T11:33:18.159226+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-10-13T19-29-33-01a13506-6206-7d23-82b3-1257257867fa.jsonl.zst",
+          "size_bytes": 244894,
+          "allocated_bytes": 245760,
+          "dev": 16777229,
+          "inode": 227786749,
+          "nlink": 1,
+          "birth_utc": "2026-10-13T11:33:07.961271+00:00",
+          "mtime_utc": "2026-10-13T11:33:07.961271+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-10-13T19-29-20-01a13506-3104-70d3-9707-ff3aa56c4570.jsonl.zst",
+          "size_bytes": 209314,
+          "allocated_bytes": 212992,
+          "dev": 16777229,
+          "inode": 227786592,
+          "nlink": 1,
+          "birth_utc": "2026-10-13T11:32:55.096689+00:00",
+          "mtime_utc": "2026-10-13T11:32:55.096689+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/archived_sessions/rollout-2026-10-13T08-06-13-01a13294-c502-70d3-8438-3bc323592987.jsonl.zst",
+          "size_bytes": 660734,
+          "allocated_bytes": 663552,
+          "dev": 16777229,
+          "inode": 227785230,
+          "nlink": 1,
+          "birth_utc": "2026-10-13T01:40:23.102286+00:00",
+          "mtime_utc": "2026-10-13T01:40:23.102286+00:00"
+        }
+      ],
+      "errors": []
+    },
+    "worktrees": {
+      "files": 164815,
+      "logical_bytes": 3305432406,
+      "allocated_bytes_no_inode_dedup": 3764764672,
+      "by_path_month": {},
+      "by_birth_local_day": {
+        "2026-09-01": {
+          "files": 1,
+          "allocated_bytes": 0
+        },
+        "2026-10-31": {
+          "files": 1895,
+          "allocated_bytes": 29671424
+        },
+        "2026-10-28": {
+          "files": 45835,
+          "allocated_bytes": 768839680
+        },
+        "2026-10-25": {
+          "files": 111912,
+          "allocated_bytes": 2889605120
+        },
+        "2026-09-26": {
+          "files": 1,
+          "allocated_bytes": 0
+        },
+        "2026-09-28": {
+          "files": 1,
+          "allocated_bytes": 0
+        },
+        "2026-10-29": {
+          "files": 5170,
+          "allocated_bytes": 76648448
+        }
+      },
+      "top20_by_allocation": [
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/node_modules/.pnpm/@anthropic-ai+claude-agent-sdk-darwin-arm64@0.3.220/node_modules/@anthropic-ai/claude-agent-sdk-darwin-arm64/claude",
+          "size_bytes": 256908272,
+          "allocated_bytes": 256909312,
+          "dev": 16777229,
+          "inode": 298864986,
+          "nlink": 1,
+          "birth_utc": "2026-10-25T01:57:21.607927+00:00",
+          "mtime_utc": "2026-10-25T01:57:21.872864+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/node_modules/.pnpm/@anthropic-ai+claude-agent-sdk-darwin-arm64@0.3.220/node_modules/@anthropic-ai/claude-agent-sdk-darwin-arm64/claude",
+          "size_bytes": 256908272,
+          "allocated_bytes": 256909312,
+          "dev": 16777229,
+          "inode": 299145976,
+          "nlink": 1,
+          "birth_utc": "2026-10-25T01:57:21.607927+00:00",
+          "mtime_utc": "2026-10-25T01:57:21.872864+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/node_modules/.pnpm/@openai+codex@0.147.0-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex",
+          "size_bytes": 219997536,
+          "allocated_bytes": 220000256,
+          "dev": 16777229,
+          "inode": 298865896,
+          "nlink": 1,
+          "birth_utc": "2026-10-25T01:57:30.987494+00:00",
+          "mtime_utc": "2026-10-25T01:57:31.021011+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/node_modules/.pnpm/@openai+codex@0.147.0-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex",
+          "size_bytes": 219997536,
+          "allocated_bytes": 220000256,
+          "dev": 16777229,
+          "inode": 299147282,
+          "nlink": 1,
+          "birth_utc": "2026-10-25T01:57:30.987494+00:00",
+          "mtime_utc": "2026-10-25T01:57:31.021011+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/node_modules/.pnpm/@openai+codex@0.147.0-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex-code-mode-host",
+          "size_bytes": 49991616,
+          "allocated_bytes": 49991680,
+          "dev": 16777229,
+          "inode": 298865899,
+          "nlink": 1,
+          "birth_utc": "2026-10-25T01:57:31.056225+00:00",
+          "mtime_utc": "2026-10-25T01:57:31.150484+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/node_modules/.pnpm/@openai+codex@0.147.0-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex-code-mode-host",
+          "size_bytes": 49991616,
+          "allocated_bytes": 49991680,
+          "dev": 16777229,
+          "inode": 299147285,
+          "nlink": 1,
+          "birth_utc": "2026-10-25T01:57:31.056225+00:00",
+          "mtime_utc": "2026-10-25T01:57:31.150484+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/a37-core-runtime/dsh-agent-core/node_modules/sherpa-onnx-darwin-arm64/libonnxruntime.dylib",
+          "size_bytes": 29006384,
+          "allocated_bytes": 29007872,
+          "dev": 16777229,
+          "inode": 297382508,
+          "nlink": 1,
+          "birth_utc": "2026-10-27T17:45:32+00:00",
+          "mtime_utc": "2026-10-27T17:45:32+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/trusted-native-policy-core/dsh-agent-core/node_modules/sherpa-onnx-darwin-arm64/libonnxruntime.dylib",
+          "size_bytes": 29006384,
+          "allocated_bytes": 29007872,
+          "dev": 16777229,
+          "inode": 299061344,
+          "nlink": 1,
+          "birth_utc": "2026-10-28T02:16:53.354155+00:00",
+          "mtime_utc": "2026-10-28T02:16:53.450421+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/broker-native-policy-discriminator/node_modules/sherpa-onnx-darwin-arm64/libonnxruntime.dylib",
+          "size_bytes": 29006384,
+          "allocated_bytes": 29007872,
+          "dev": 16777229,
+          "inode": 299271669,
+          "nlink": 1,
+          "birth_utc": "2026-10-28T02:45:14.509758+00:00",
+          "mtime_utc": "2026-10-28T02:45:14.859651+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/native-tool-policy-spec/dsh-agent-core/node_modules/sherpa-onnx-darwin-arm64/libonnxruntime.dylib",
+          "size_bytes": 29006384,
+          "allocated_bytes": 29007872,
+          "dev": 16777229,
+          "inode": 301475281,
+          "nlink": 1,
+          "birth_utc": "2026-10-28T06:16:43.119464+00:00",
+          "mtime_utc": "2026-10-28T06:16:43.191723+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/node_modules/.pnpm/@rolldown+binding-darwin-arm64@1.1.1/node_modules/@rolldown/binding-darwin-arm64/rolldown-binding.darwin-arm64.node",
+          "size_bytes": 23675456,
+          "allocated_bytes": 23678976,
+          "dev": 16777229,
+          "inode": 298838969,
+          "nlink": 1,
+          "birth_utc": "2026-10-25T01:57:07.168404+00:00",
+          "mtime_utc": "2026-10-25T01:57:07.170384+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/node_modules/.pnpm/@rolldown+binding-darwin-arm64@1.1.1/node_modules/@rolldown/binding-darwin-arm64/rolldown-binding.darwin-arm64.node",
+          "size_bytes": 23675456,
+          "allocated_bytes": 23678976,
+          "dev": 16777229,
+          "inode": 299119810,
+          "nlink": 1,
+          "birth_utc": "2026-10-25T01:57:07.168404+00:00",
+          "mtime_utc": "2026-10-25T01:57:07.170384+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/node_modules/.pnpm/@oxlint-tsgolint+darwin-arm64@7.0.2001/node_modules/@oxlint-tsgolint/darwin-arm64/tsgolint",
+          "size_bytes": 21873218,
+          "allocated_bytes": 21876736,
+          "dev": 16777229,
+          "inode": 298838545,
+          "nlink": 1,
+          "birth_utc": "2026-10-25T01:57:03.717586+00:00",
+          "mtime_utc": "2026-10-25T01:57:03.721717+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/node_modules/.pnpm/@oxlint-tsgolint+darwin-arm64@7.0.2001/node_modules/@oxlint-tsgolint/darwin-arm64/tsgolint",
+          "size_bytes": 21873218,
+          "allocated_bytes": 21876736,
+          "dev": 16777229,
+          "inode": 299119438,
+          "nlink": 1,
+          "birth_utc": "2026-10-25T01:57:03.717586+00:00",
+          "mtime_utc": "2026-10-25T01:57:03.721717+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/node_modules/.pnpm/@rolldown+binding-darwin-arm64@1.0.3/node_modules/@rolldown/binding-darwin-arm64/rolldown-binding.darwin-arm64.node",
+          "size_bytes": 18778272,
+          "allocated_bytes": 18780160,
+          "dev": 16777229,
+          "inode": 298829830,
+          "nlink": 1,
+          "birth_utc": "2026-10-25T01:56:58.894351+00:00",
+          "mtime_utc": "2026-10-25T01:56:58.896354+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/node_modules/.pnpm/@rolldown+binding-darwin-arm64@1.0.3/node_modules/@rolldown/binding-darwin-arm64/rolldown-binding.darwin-arm64.node",
+          "size_bytes": 18778272,
+          "allocated_bytes": 18780160,
+          "dev": 16777229,
+          "inode": 299109635,
+          "nlink": 1,
+          "birth_utc": "2026-10-25T01:56:58.894351+00:00",
+          "mtime_utc": "2026-10-25T01:56:58.896354+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/native-tool-policy-spec-dsh/node_modules/.pnpm/@img+sharp-libvips-darwin-arm64@1.3.2/node_modules/@img/sharp-libvips-darwin-arm64/lib/libvips-cpp.8.18.3.dylib",
+          "size_bytes": 17765992,
+          "allocated_bytes": 17768448,
+          "dev": 16777229,
+          "inode": 298841549,
+          "nlink": 1,
+          "birth_utc": "2026-10-25T01:57:16.521653+00:00",
+          "mtime_utc": "2026-10-25T01:57:16.523945+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/dsh-native-tool-policy/node_modules/.pnpm/@img+sharp-libvips-darwin-arm64@1.3.2/node_modules/@img/sharp-libvips-darwin-arm64/lib/libvips-cpp.8.18.3.dylib",
+          "size_bytes": 17765992,
+          "allocated_bytes": 17768448,
+          "dev": 16777229,
+          "inode": 299122526,
+          "nlink": 1,
+          "birth_utc": "2026-10-25T01:57:16.521653+00:00",
+          "mtime_utc": "2026-10-25T01:57:16.523945+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/a37-core-runtime/dsh-agent-core/node_modules/@larksuiteoapi/node-sdk/types/index.d.ts",
+          "size_bytes": 17667489,
+          "allocated_bytes": 17670144,
+          "dev": 16777229,
+          "inode": 297382069,
+          "nlink": 1,
+          "birth_utc": "2026-10-27T17:45:32+00:00",
+          "mtime_utc": "2026-10-27T17:45:32+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/trusted-native-policy-core/dsh-agent-core/node_modules/@larksuiteoapi/node-sdk/types/index.d.ts",
+          "size_bytes": 17667489,
+          "allocated_bytes": 17670144,
+          "dev": 16777229,
+          "inode": 299062653,
+          "nlink": 1,
+          "birth_utc": "2026-10-28T02:16:53.429390+00:00",
+          "mtime_utc": "2026-10-28T02:16:53.453174+00:00"
+        }
+      ],
+      "latest10_by_mtime": [
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/ac-task-720-business-projection/dsh-agent-core/docs/investigations/WORKFLOW_BUSINESS_PROJECTION_720_PREFLIGHT_V1.md",
+          "size_bytes": 11120,
+          "allocated_bytes": 12288,
+          "dev": 16777229,
+          "inode": 334941560,
+          "nlink": 1,
+          "birth_utc": "2026-10-31T11:28:46.249748+00:00",
+          "mtime_utc": "2026-10-31T11:31:26.088984+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/ac-task-720-business-projection/dsh-agent-core/vendor/proxy-agent-negotiate/package.json",
+          "size_bytes": 972,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 334909551,
+          "nlink": 1,
+          "birth_utc": "2026-10-31T11:23:46.825832+00:00",
+          "mtime_utc": "2026-10-31T11:23:46.825855+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/ac-task-720-business-projection/dsh-agent-core/vendor/proxy-agent-negotiate/dist/index.js.map",
+          "size_bytes": 1214,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 334909550,
+          "nlink": 1,
+          "birth_utc": "2026-10-31T11:23:46.825791+00:00",
+          "mtime_utc": "2026-10-31T11:23:46.825813+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/ac-task-720-business-projection/dsh-agent-core/vendor/proxy-agent-negotiate/dist/index.js",
+          "size_bytes": 1371,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 334909549,
+          "nlink": 1,
+          "birth_utc": "2026-10-31T11:23:46.825745+00:00",
+          "mtime_utc": "2026-10-31T11:23:46.825769+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/ac-task-720-business-projection/dsh-agent-core/vendor/proxy-agent-negotiate/dist/index.d.ts.map",
+          "size_bytes": 469,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 334909548,
+          "nlink": 1,
+          "birth_utc": "2026-10-31T11:23:46.825706+00:00",
+          "mtime_utc": "2026-10-31T11:23:46.825727+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/ac-task-720-business-projection/dsh-agent-core/vendor/proxy-agent-negotiate/dist/index.d.ts",
+          "size_bytes": 483,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 334909547,
+          "nlink": 1,
+          "birth_utc": "2026-10-31T11:23:46.825662+00:00",
+          "mtime_utc": "2026-10-31T11:23:46.825685+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/ac-task-720-business-projection/dsh-agent-core/scripts/verify-issue-562-submission-examples.py",
+          "size_bytes": 7438,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 334909543,
+          "nlink": 1,
+          "birth_utc": "2026-10-31T11:23:46.825537+00:00",
+          "mtime_utc": "2026-10-31T11:23:46.825564+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/ac-task-720-business-projection/dsh-agent-core/scripts/verify-issue-562-authoring-file-entry.mjs",
+          "size_bytes": 15451,
+          "allocated_bytes": 16384,
+          "dev": 16777229,
+          "inode": 334909542,
+          "nlink": 1,
+          "birth_utc": "2026-10-31T11:23:46.825335+00:00",
+          "mtime_utc": "2026-10-31T11:23:46.825513+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/ac-task-720-business-projection/dsh-agent-core/scripts/verify-code-structure.mjs",
+          "size_bytes": 24855,
+          "allocated_bytes": 28672,
+          "dev": 16777229,
+          "inode": 334909541,
+          "nlink": 1,
+          "birth_utc": "2026-10-31T11:23:46.825098+00:00",
+          "mtime_utc": "2026-10-31T11:23:46.825306+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/worktrees/ac-task-720-business-projection/dsh-agent-core/scripts/trusted-credential-broker-v1-verify.mjs",
+          "size_bytes": 25860,
+          "allocated_bytes": 28672,
+          "dev": 16777229,
+          "inode": 334909540,
+          "nlink": 1,
+          "birth_utc": "2026-10-31T11:23:46.825017+00:00",
+          "mtime_utc": "2026-10-31T11:23:46.825073+00:00"
+        }
+      ],
+      "errors": []
+    },
+    "rollout-migrations": {
+      "files": 0,
+      "logical_bytes": 0,
+      "allocated_bytes_no_inode_dedup": 0,
+      "by_path_month": {},
+      "by_birth_local_day": {},
+      "top20_by_allocation": [],
+      "latest10_by_mtime": [],
+      "errors": []
+    },
+    "memories": {
+      "files": 151,
+      "logical_bytes": 1374500,
+      "allocated_bytes_no_inode_dedup": 1716224,
+      "by_path_month": {},
+      "by_birth_local_day": {
+        "2026-07-15": {
+          "files": 2,
+          "allocated_bytes": 303104
+        },
+        "2026-10-30": {
+          "files": 1,
+          "allocated_bytes": 208896
+        },
+        "2026-11-01": {
+          "files": 7,
+          "allocated_bytes": 57344
+        },
+        "2026-09-08": {
+          "files": 1,
+          "allocated_bytes": 4096
+        },
+        "2026-10-27": {
+          "files": 1,
+          "allocated_bytes": 4096
+        },
+        "2026-10-18": {
+          "files": 3,
+          "allocated_bytes": 28672
+        },
+        "2026-10-14": {
+          "files": 3,
+          "allocated_bytes": 28672
+        },
+        "2026-08-20": {
+          "files": 1,
+          "allocated_bytes": 8192
+        },
+        "2026-09-19": {
+          "files": 1,
+          "allocated_bytes": 8192
+        },
+        "2026-09-26": {
+          "files": 3,
+          "allocated_bytes": 28672
+        },
+        "2026-09-07": {
+          "files": 7,
+          "allocated_bytes": 57344
+        },
+        "2026-08-21": {
+          "files": 1,
+          "allocated_bytes": 8192
+        },
+        "2026-10-20": {
+          "files": 3,
+          "allocated_bytes": 28672
+        },
+        "2026-09-10": {
+          "files": 1,
+          "allocated_bytes": 8192
+        },
+        "2026-10-24": {
+          "files": 1,
+          "allocated_bytes": 8192
+        },
+        "2026-10-12": {
+          "files": 2,
+          "allocated_bytes": 20480
+        },
+        "2026-11-02": {
+          "files": 3,
+          "allocated_bytes": 16384
+        },
+        "2026-11-03": {
+          "files": 2,
+          "allocated_bytes": 8192
+        },
+        "2026-09-17": {
+          "files": 2,
+          "allocated_bytes": 16384
+        },
+        "2026-10-15": {
+          "files": 1,
+          "allocated_bytes": 8192
+        },
+        "2026-09-18": {
+          "files": 2,
+          "allocated_bytes": 16384
+        },
+        "2026-10-21": {
+          "files": 3,
+          "allocated_bytes": 28672
+        },
+        "2026-10-17": {
+          "files": 2,
+          "allocated_bytes": 16384
+        },
+        "2026-10-23": {
+          "files": 3,
+          "allocated_bytes": 20480
+        },
+        "2026-09-14": {
+          "files": 1,
+          "allocated_bytes": 4096
+        },
+        "2026-11-04": {
+          "files": 91,
+          "allocated_bytes": 741376
+        },
+        "2026-07-23": {
+          "files": 1,
+          "allocated_bytes": 8192
+        },
+        "2026-10-26": {
+          "files": 1,
+          "allocated_bytes": 12288
+        },
+        "2026-08-03": {
+          "files": 1,
+          "allocated_bytes": 8192
+        }
+      },
+      "top20_by_allocation": [
+        {
+          "path": "/Users/yanfenma/.codex/memories/raw_memories.md",
+          "size_bytes": 296453,
+          "allocated_bytes": 299008,
+          "dev": 16777229,
+          "inode": 10233351,
+          "nlink": 1,
+          "birth_utc": "2026-07-14T23:48:47.595096+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.369281+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/MEMORY.md",
+          "size_bytes": 208710,
+          "allocated_bytes": 208896,
+          "dev": 16777229,
+          "inode": 327898474,
+          "nlink": 1,
+          "birth_utc": "2026-10-30T15:22:53.916925+00:00",
+          "mtime_utc": "2026-11-04T01:41:24.939519+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/.git/objects/2e/545addb5cf114cfbf2c489106f974b33ad2306",
+          "size_bytes": 152715,
+          "allocated_bytes": 155648,
+          "dev": 16777229,
+          "inode": 350669328,
+          "nlink": 1,
+          "birth_utc": "2026-11-04T01:42:28.909395+00:00",
+          "mtime_utc": "2026-11-04T01:42:28.910514+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/.git/objects/1c/3e61b430f0285620ddfb67e709892262495fb6",
+          "size_bytes": 99957,
+          "allocated_bytes": 102400,
+          "dev": 16777229,
+          "inode": 350669342,
+          "nlink": 1,
+          "birth_utc": "2026-11-04T01:42:28.912558+00:00",
+          "mtime_utc": "2026-11-04T01:42:28.913222+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/memory_summary.md",
+          "size_bytes": 11114,
+          "allocated_bytes": 12288,
+          "dev": 16777229,
+          "inode": 341758491,
+          "nlink": 1,
+          "birth_utc": "2026-11-01T08:45:45.897007+00:00",
+          "mtime_utc": "2026-11-04T01:41:41.958063+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-09-25T11-14-41-YjPU-svc_workflow_launch_readiness_governance_deployment_census.md",
+          "size_bytes": 8847,
+          "allocated_bytes": 12288,
+          "dev": 16777229,
+          "inode": 109993936,
+          "nlink": 1,
+          "birth_utc": "2026-09-25T17:52:26.031433+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.360727+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-10-12T23-46-42-7tHl-private_progress_site_agent_control_inquiry_diagnostic.md",
+          "size_bytes": 9844,
+          "allocated_bytes": 12288,
+          "dev": 16777229,
+          "inode": 218014436,
+          "nlink": 1,
+          "birth_utc": "2026-10-20T11:13:46.529414+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.361612+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-10-15T22-43-45-miku-readonly_workflow_409_and_daily_blog_job_lineage.md",
+          "size_bytes": 9933,
+          "allocated_bytes": 12288,
+          "dev": 16777229,
+          "inode": 210392512,
+          "nlink": 1,
+          "birth_utc": "2026-10-17T23:43:26.820468+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.362794+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-10-13T00-05-30-iEZr-b7_e6_hr_architecture_and_zcode_followup.md",
+          "size_bytes": 8853,
+          "allocated_bytes": 12288,
+          "dev": 16777229,
+          "inode": 194047387,
+          "nlink": 1,
+          "birth_utc": "2026-10-14T11:02:07.667448+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.362044+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-09-02T16-26-41-FhAv-core_runtime_master_goal_acceptance_merge_and_auth_prereq.md",
+          "size_bytes": 9303,
+          "allocated_bytes": 12288,
+          "dev": 16777229,
+          "inode": 68051852,
+          "nlink": 1,
+          "birth_utc": "2026-09-07T12:29:14.743584+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.357323+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-09-17T01-40-56-LWOn-production_control_plane_hr_availability_recovery.md",
+          "size_bytes": 9945,
+          "allocated_bytes": 12288,
+          "dev": 16777229,
+          "inode": 192668049,
+          "nlink": 1,
+          "birth_utc": "2026-10-12T11:13:53.796518+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.359759+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-09-25T11-14-38-OncC-auth_service_launch_readiness_credential_custody_recovery.md",
+          "size_bytes": 12060,
+          "allocated_bytes": 12288,
+          "dev": 16777229,
+          "inode": 220756413,
+          "nlink": 1,
+          "birth_utc": "2026-10-20T22:27:32.184195+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.360590+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-10-20T11-13-13-yDtS-workflow_stagnation_and_shopping_outcome_unknown_analysis.md",
+          "size_bytes": 8903,
+          "allocated_bytes": 12288,
+          "dev": 16777229,
+          "inode": 268353267,
+          "nlink": 1,
+          "birth_utc": "2026-10-25T18:54:41.588772+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.364257+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/.git/index",
+          "size_bytes": 9677,
+          "allocated_bytes": 12288,
+          "dev": 16777229,
+          "inode": 350669467,
+          "nlink": 1,
+          "birth_utc": "2026-11-04T01:42:28.942429+00:00",
+          "mtime_utc": "2026-11-04T01:42:28.943416+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-10-17T05-53-55-vqft-coordinate_deployment_website_mcp_continuation.md",
+          "size_bytes": 4687,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 212616859,
+          "nlink": 1,
+          "birth_utc": "2026-10-18T06:00:01.268523+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.363714+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-10-13T14-17-34-SqVe-ai_evolution_video_opus_style_production.md",
+          "size_bytes": 5508,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 193818134,
+          "nlink": 1,
+          "birth_utc": "2026-10-14T04:38:05.808142+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.362221+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-08-18T23-21-45-gmHQ-chatgpt_subscription_provider_spec_and_implementation_merge.md",
+          "size_bytes": 5945,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 41757541,
+          "nlink": 1,
+          "birth_utc": "2026-08-20T11:52:53.007800+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.356169+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-09-15T12-11-47-LWzk-outcome_unknown_recovery_and_lark_canary_freeze.md",
+          "size_bytes": 6943,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 87838347,
+          "nlink": 1,
+          "birth_utc": "2026-09-19T07:17:35.750111+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.359439+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-09-05T05-18-38-03uk-visit_activation_production_deployment_preflight_partial.md",
+          "size_bytes": 6471,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 68051859,
+          "nlink": 1,
+          "birth_utc": "2026-09-07T12:29:14.744036+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.357718+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-08-20T12-43-33-W8Zw-glm53_human_feishu_retry_paused_at_smoke.md",
+          "size_bytes": 4701,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 43998009,
+          "nlink": 1,
+          "birth_utc": "2026-08-21T14:13:23.126860+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.356410+00:00"
+        }
+      ],
+      "latest10_by_mtime": [
+        {
+          "path": "/Users/yanfenma/.codex/memories/raw_memories.md",
+          "size_bytes": 296453,
+          "allocated_bytes": 299008,
+          "dev": 16777229,
+          "inode": 10233351,
+          "nlink": 1,
+          "birth_utc": "2026-07-14T23:48:47.595096+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.369281+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-11-02T15-39-21-nSCg-zcode_network_reconnect_upstream_502_503.md",
+          "size_bytes": 2101,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 347916213,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T23:35:15.330808+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.366642+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-11-02T01-22-25-4qVe-pelican_bicycle_animated_html.md",
+          "size_bytes": 2762,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 347916212,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T23:35:15.330727+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.366572+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-11-02T01-22-19-07wl-pelican_bike_animation_html.md",
+          "size_bytes": 2866,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 347016153,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T10:39:40.006673+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.366352+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-10-29T05-01-01-OUyZ-podcast_third_voice_handoff_v11_duration_and_audio_path.md",
+          "size_bytes": 5464,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 345318991,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T04:05:12.394635+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.366231+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-10-26T01-54-14-E5qN-unattended_workflow_watchdog_mechanism_audit.md",
+          "size_bytes": 5731,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 341745530,
+          "nlink": 1,
+          "birth_utc": "2026-11-01T08:41:00.466435+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.365841+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-10-22T14-35-05-PUuC-final_halloween_welcome_poster_and_red_text_delivery.md",
+          "size_bytes": 4614,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 339850102,
+          "nlink": 1,
+          "birth_utc": "2026-11-01T01:52:39.351687+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.365763+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-10-22T14-18-48-2Ok8-agent_control_1256_source_only_continuation_complete.md",
+          "size_bytes": 6303,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 245212981,
+          "nlink": 1,
+          "birth_utc": "2026-10-23T22:42:49.894315+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.365669+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-10-22T01-51-42-9AWN-medal_print_readiness_supervised_petg_trial.md",
+          "size_bytes": 3725,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 237000643,
+          "nlink": 1,
+          "birth_utc": "2026-10-23T04:09:48.907610+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.365243+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories/rollout_summaries/2026-10-21T01-15-37-2NBe-supervised_print_and_validated_single_page_a4_layout.md",
+          "size_bytes": 3784,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 339850101,
+          "nlink": 1,
+          "birth_utc": "2026-11-01T01:52:39.350978+00:00",
+          "mtime_utc": "2026-11-06T02:14:28.365130+00:00"
+        }
+      ],
+      "errors": []
+    },
+    "memories_v2": {
+      "files": 87,
+      "logical_bytes": 185009,
+      "allocated_bytes_no_inode_dedup": 397312,
+      "by_path_month": {},
+      "by_birth_local_day": {
+        "2026-10-22": {
+          "files": 3,
+          "allocated_bytes": 24576
+        },
+        "2026-11-02": {
+          "files": 61,
+          "allocated_bytes": 262144
+        },
+        "2026-10-11": {
+          "files": 1,
+          "allocated_bytes": 4096
+        },
+        "2026-10-20": {
+          "files": 6,
+          "allocated_bytes": 28672
+        },
+        "2026-10-13": {
+          "files": 2,
+          "allocated_bytes": 16384
+        },
+        "2026-10-21": {
+          "files": 10,
+          "allocated_bytes": 45056
+        },
+        "2026-10-19": {
+          "files": 1,
+          "allocated_bytes": 4096
+        },
+        "2026-10-16": {
+          "files": 1,
+          "allocated_bytes": 4096
+        },
+        "2026-10-14": {
+          "files": 2,
+          "allocated_bytes": 8192
+        }
+      },
+      "top20_by_allocation": [
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/memory_summary.md",
+          "size_bytes": 9477,
+          "allocated_bytes": 12288,
+          "dev": 16777229,
+          "inode": 227560820,
+          "nlink": 1,
+          "birth_utc": "2026-10-22T11:45:26.650276+00:00",
+          "mtime_utc": "2026-11-02T15:40:38.732241+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/rollout_summaries/2026-09-17T01-40-56-LWOn-production_backlog_progressive_rollout_hr_availability_and_d.md",
+          "size_bytes": 9350,
+          "allocated_bytes": 12288,
+          "dev": 16777229,
+          "inode": 193337155,
+          "nlink": 1,
+          "birth_utc": "2026-10-13T14:18:04.617404+00:00",
+          "mtime_utc": "2026-11-02T15:39:40.033102+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/rollout_summaries/2026-10-14T15-49-58-vqRI-mcp_dot_native_pilot_production_readiness_and_bounded_recove.md",
+          "size_bytes": 6109,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 218012235,
+          "nlink": 1,
+          "birth_utc": "2026-10-20T11:13:29.231741+00:00",
+          "mtime_utc": "2026-11-02T15:39:40.036728+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/rollout_summaries/2026-09-25T11-14-38-OncC-auth_service_launch_readiness_and_credential_recovery_2026_0.md",
+          "size_bytes": 4300,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 220757175,
+          "nlink": 1,
+          "birth_utc": "2026-10-20T22:29:07.179223+00:00",
+          "mtime_utc": "2026-11-02T15:39:40.033891+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/rollout_summaries/2026-10-13T23-16-47-IFYr-b7_deployment_and_memory_governance.md",
+          "size_bytes": 4184,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 227540202,
+          "nlink": 1,
+          "birth_utc": "2026-10-22T11:42:46.672103+00:00",
+          "mtime_utc": "2026-11-02T15:39:40.036208+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/.git/index",
+          "size_bytes": 4943,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 347790496,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:40:43.174716+00:00",
+          "mtime_utc": "2026-11-02T15:40:43.176312+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/.git/objects/66/9bc3fd1fa8cd797e8e34d0a7ec1f1d33fc92d2",
+          "size_bytes": 5851,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 347790449,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:40:43.150737+00:00",
+          "mtime_utc": "2026-11-02T15:40:43.151055+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/.git/objects/99/6ff0bc4d91c0278645fb53307a9bc9688c2599",
+          "size_bytes": 4197,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 347790427,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:40:43.144199+00:00",
+          "mtime_utc": "2026-11-02T15:40:43.144271+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/.git/objects/77/73223f51457d19aef3b8f6272ab412d842c0ec",
+          "size_bytes": 5906,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 347790483,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:40:43.157990+00:00",
+          "mtime_utc": "2026-11-02T15:40:43.158050+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/extensions/ad_hoc/instructions.md",
+          "size_bytes": 733,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 189817423,
+          "nlink": 1,
+          "birth_utc": "2026-10-11T15:14:10.157024+00:00",
+          "mtime_utc": "2026-10-11T15:14:10.157115+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/rollout_summaries/2026-10-20T12-15-16-jIjR-pumpkin_magic_costume_v8_print_validation_and_p1s_supervised.md",
+          "size_bytes": 3132,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 225885715,
+          "nlink": 1,
+          "birth_utc": "2026-10-22T01:51:55.339161+00:00",
+          "mtime_utc": "2026-11-02T15:39:40.038320+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/rollout_summaries/2026-10-11T22-16-31-Q4NY-agent_control_922_authsvc_temporary_recovery_and_b7_long_ter.md",
+          "size_bytes": 2294,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 192950937,
+          "nlink": 1,
+          "birth_utc": "2026-10-12T23:46:44.434649+00:00",
+          "mtime_utc": "2026-11-02T15:39:40.034449+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/rollout_summaries/2026-10-26T01-54-14-E5qN-production_workflow_watchdog_unattended_mechanism_audit.md",
+          "size_bytes": 3081,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 347789679,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:39:40.038553+00:00",
+          "mtime_utc": "2026-11-02T15:39:40.038616+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/rollout_summaries/2026-10-21T01-15-37-2NBe-star_moon_cape_printing_and_one_page_color_layout.md",
+          "size_bytes": 1877,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 347789678,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:39:40.038406+00:00",
+          "mtime_utc": "2026-11-02T15:39:40.038476+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/rollout_summaries/2026-10-17T05-53-55-vqft-query_and_continue_deployment_website_mcp_codex_sessions.md",
+          "size_bytes": 2349,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 218012240,
+          "nlink": 1,
+          "birth_utc": "2026-10-20T11:13:29.232136+00:00",
+          "mtime_utc": "2026-11-02T15:39:40.037534+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/rollout_summaries/2026-10-20T11-13-13-yDtS-workflow_progress_audit_qoder_repair_and_bip409_investigatio.md",
+          "size_bytes": 3734,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 220757183,
+          "nlink": 1,
+          "birth_utc": "2026-10-20T22:29:07.182144+00:00",
+          "mtime_utc": "2026-11-02T15:39:40.037965+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/rollout_summaries/2026-11-02T01-22-19-07wl-pelican_bike_animation_html.md",
+          "size_bytes": 969,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 347789681,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:39:40.038814+00:00",
+          "mtime_utc": "2026-11-02T15:39:40.038872+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/rollout_summaries/2026-10-29T05-01-01-OUyZ-podcast_v11_breathing_pause_review_and_intro_delivery.md",
+          "size_bytes": 2206,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 347789680,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:39:40.038684+00:00",
+          "mtime_utc": "2026-11-02T15:39:40.038742+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/rollout_summaries/2026-10-18T14-12-51-CGtc-mac_storage_audit_and_conditional_cleanup_2026_10_18.md",
+          "size_bytes": 1735,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 220757180,
+          "nlink": 1,
+          "birth_utc": "2026-10-20T22:29:07.181838+00:00",
+          "mtime_utc": "2026-11-02T15:39:40.037635+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/rollout_summaries/2026-10-16T00-26-26-Mwrw-b7_e29_closure_e30_partial_stage_source_validator_fix.md",
+          "size_bytes": 2000,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 220757179,
+          "nlink": 1,
+          "birth_utc": "2026-10-20T22:29:07.181525+00:00",
+          "mtime_utc": "2026-11-02T15:39:40.037340+00:00"
+        }
+      ],
+      "latest10_by_mtime": [
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/.git/codex-baseline-version",
+          "size_bytes": 2,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 347790498,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:40:43.176674+00:00",
+          "mtime_utc": "2026-11-02T15:40:43.176713+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/.git/index",
+          "size_bytes": 4943,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 347790496,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:40:43.174716+00:00",
+          "mtime_utc": "2026-11-02T15:40:43.176312+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/.git/logs/refs/heads/main",
+          "size_bytes": 174,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 347790495,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:40:43.158936+00:00",
+          "mtime_utc": "2026-11-02T15:40:43.159039+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/.git/logs/HEAD",
+          "size_bytes": 174,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 347790492,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:40:43.158674+00:00",
+          "mtime_utc": "2026-11-02T15:40:43.158754+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/.git/refs/heads/main",
+          "size_bytes": 41,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 347790490,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:40:43.158592+00:00",
+          "mtime_utc": "2026-11-02T15:40:43.158621+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/.git/objects/b1/256dbb66642c3644f7bd4837aee63f37cae547",
+          "size_bytes": 166,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 347790487,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:40:43.158325+00:00",
+          "mtime_utc": "2026-11-02T15:40:43.158360+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/.git/objects/89/f1e4fbb4315a79fe70c65b44aecce27325cf2f",
+          "size_bytes": 139,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 347790485,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:40:43.158180+00:00",
+          "mtime_utc": "2026-11-02T15:40:43.158211+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/.git/objects/77/73223f51457d19aef3b8f6272ab412d842c0ec",
+          "size_bytes": 5906,
+          "allocated_bytes": 8192,
+          "dev": 16777229,
+          "inode": 347790483,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:40:43.157990+00:00",
+          "mtime_utc": "2026-11-02T15:40:43.158050+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/.git/objects/e5/bc749b124167d3ad4a04a0d2ac59cc3ce0884f",
+          "size_bytes": 2207,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 347790481,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:40:43.157757+00:00",
+          "mtime_utc": "2026-11-02T15:40:43.157800+00:00"
+        },
+        {
+          "path": "/Users/yanfenma/.codex/memories_v2/.git/objects/48/ec732ced2315931d5b8f7ea5827d97f3100a9e",
+          "size_bytes": 2379,
+          "allocated_bytes": 4096,
+          "dev": 16777229,
+          "inode": 347790479,
+          "nlink": 1,
+          "birth_utc": "2026-11-02T15:40:43.157539+00:00",
+          "mtime_utc": "2026-11-02T15:40:43.157606+00:00"
+        }
+      ],
+      "errors": []
+    }
+  },
+  "launchd_config_survey": [
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.agent-core.capability-host.plist",
+      "sha256": "1afcf808b0907e14aa3a686aa586010598776a7c2aa65f770941535e95f83bbd",
+      "label": "com.agent-core.capability-host",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.google.keystone.xpcservice.plist",
+      "sha256": "97704a8960b4facceef54397a08fb5d0a456247c3627359215aa2a27df22656c",
+      "label": null,
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.openclaw.control-api.plist",
+      "sha256": "79f90d176b5a9abb09748374ecc9b15623e80a0eeb76f071e2779f2601137638",
+      "label": "com.openclaw.control-api",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.yanfenma.podcast-workbench-v2.plist",
+      "sha256": "6339c74b72da930dfef712837a5eb17f2374bc5a79ed27c3adc98243d6af7781",
+      "label": "com.yanfenma.podcast-workbench-v2",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.google.keystone.agent.plist",
+      "sha256": "97704a8960b4facceef54397a08fb5d0a456247c3627359215aa2a27df22656c",
+      "label": null,
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/ai.agent-core-websearch-sweep.plist",
+      "sha256": "5f8b3c832b53db126051790eb17f949e6b86b69b0e054ef0bfc3670249fc30d2",
+      "label": "ai.agent-core-websearch-sweep",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.svc-workflow-monitor.plist",
+      "sha256": "ba4554e2e18345338f0a6bbda7015713effedeac396d53bff264babf25a76c82",
+      "label": "com.svc-workflow-monitor",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.svc-workflow.plist",
+      "sha256": "b1a22e7004e251edf3472158abb5b1ec88b8e4c82c63faa80f91f23dd5909c95",
+      "label": "com.svc-workflow",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.mayf3.dot-read-mcp.v1.plist",
+      "sha256": "a072e37a502f30f6aa8738bdb9722dcff46f7b9df3c071b76decb8951effe5e1",
+      "label": "com.mayf3.dot-read-mcp.v1",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.yanfenma.podcast-workbench-v2-8792.plist",
+      "sha256": "88e5dd4ee0965d4ab510d6bd49fd4a7338845576459e2e66b76a20fe67082dad",
+      "label": "com.yanfenma.podcast-workbench-v2-8792",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.mayf3.makerlab.site.plist",
+      "sha256": "e07ca5e0744b9b042366f62bb8c64c351ea856b4bab7e73dc8f4339b3fe9e3d1",
+      "label": "com.mayf3.makerlab.site",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.openclaw.agent-node-502.plist",
+      "sha256": "9e158bc5b5a1c29588572a0a644d94f24aebec5ff8cb0b042b65f661ebceb3bd",
+      "label": "com.openclaw.agent-node-502",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.yanfenma.workbench.plist",
+      "sha256": "8d07c9788b6dcfed93937515dd5296bd9d94fa59d4f560fab4142c9d16a11204",
+      "label": "com.yanfenma.workbench",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.codex.zcode-hourly-watch.plist",
+      "sha256": "fc25c4312c3d4ff430dc935766f9dd0c3926ecf84a0e8525f0d6a6315462dc93",
+      "label": "com.codex.zcode-hourly-watch",
+      "matches_preserv_codex_archive_backup": true,
+      "ProgramArguments": [
+        "/usr/bin/python3",
+        "/Users/yanfenma/.codex-zcode-watch/bin/zcode_hourly_watch.py"
+      ],
+      "RunAtLoad": true,
+      "StartInterval": 3600,
+      "StandardOutPath": "/Users/yanfenma/.codex-zcode-watch/logs/launchagent.stdout.log",
+      "StandardErrorPath": "/Users/yanfenma/.codex-zcode-watch/logs/launchagent.stderr.log"
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.llmwiki.local.plist",
+      "sha256": "983f6550030d9e9f1499af914dc5f8620a7cb7c58be5c635a213ebd40cf468f4",
+      "label": "com.llmwiki.local",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/homebrew.mxcl.syncthing.plist",
+      "sha256": "0387ecd475a21468eecd2a0dd1adc993985ee3efd13680912029feaf4edce6c1",
+      "label": "homebrew.mxcl.syncthing",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.article-review-canary.plist",
+      "sha256": "40ae24a9d7e58aad8be2840cec45e6f587ec23e4e1a76845df9d0a9ac49ed79f",
+      "label": "com.article-review-canary",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.opencode.server.plist",
+      "sha256": "bff997a11932bd3e0a35db43f2a44f5ab9b502baa48422a1eee237aad602f16f",
+      "label": "com.opencode.server",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.agent-core.feishu-connector.plist",
+      "sha256": "e4393cdb26e029faa626127bc4462ff2b60983da0ad2d3ee2ef0ca5f52579af1",
+      "label": "com.agent-core.feishu-connector",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/dev.omdsh.dsh.desktop.plist",
+      "sha256": "73a4585a88c041840582f2aa1501a3adb5a9ef0f19d9030f2481d0c382291df5",
+      "label": "dev.omdsh.dsh.desktop",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.yanfenma.podcast-workbench-ai-v1.plist",
+      "sha256": "916441d933e0e34092743d48d50c1cfbe882ec450a05e38c90075a2e42f1b7a2",
+      "label": "com.yanfenma.podcast-workbench-ai-v1",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/ai.openclaw.gateway.plist",
+      "status": "PERMISSION_DENIED",
+      "error_type": "PermissionError"
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.agent-core.coding-harness.plist",
+      "sha256": "632db61c55209e384bbd23d27cabb2966f5b1baaa28a4dec67966888d42a4a6b",
+      "label": "com.agent-core.coding-harness",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.dsh.web.plist",
+      "sha256": "7ee3cac1d28bd06d1d627ae9ad89da97ea58c0a9b50dad787f13ce419dde3aa0",
+      "label": "com.dsh.web",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.irbridge.secure.plist",
+      "sha256": "863a8a3a4f7c6c56ffb94ac598cfe04895cfcafbc876bd7060b13dbac3b7d80d",
+      "label": "com.irbridge.secure",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.opencode.serve.plist",
+      "sha256": "a31c321e0bec2bbaf342f237223bbd7a66713ba078f766320b9533d6da5a0cd4",
+      "label": "com.opencode.serve",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.svc-forum.watchdog.plist",
+      "sha256": "c5496eb15d07cf099491328aa5a10dd80bbf3fceb9e6a4912990e59fd6809a0f",
+      "label": "com.svc-forum.watchdog",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.videobridge.plist",
+      "sha256": "37b59d4f62d758e33bd23c7011a40263c15089f19b17bc649b5187b33f48417c",
+      "label": "com.videobridge",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/homebrew.mxcl.ollama.plist",
+      "sha256": "9d2ed9af1fe1be17315016ed0ea776351d84660eaeb9ff4f718aa46e98d53d76",
+      "label": "homebrew.mxcl.ollama",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.mayf3.sixpack-watchdog.plist",
+      "sha256": "395d551849d43c353c59387142c06ceb7112cdf4f40d07efbc983c6a565d6755",
+      "label": "com.mayf3.sixpack-watchdog",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.r124-wait-sweep.plist",
+      "sha256": "46a517e4a2eb8544fea09c2314fb124abfeb04618a4daa52e13ad27d25fa1064",
+      "label": "com.r124-wait-sweep",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.yanfenma.clash-doh-guard.plist",
+      "sha256": "8e4284dded68206587196d6486abd6fb782590cd095303cfda157f79d6e8d5ce",
+      "label": "com.yanfenma.clash-doh-guard",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.brave.cdp.plist",
+      "sha256": "9a378ba43bbc60ec4743cddd4a6808ec24b07172429a9cc6d120c2267217682d",
+      "label": "com.brave.cdp",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.openclaw.auto-repair.plist",
+      "sha256": "857a2737baa4877830168823ddc444d04f5205e812f00cb3f2b8172ec74abcd0",
+      "label": "com.openclaw.auto-repair",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.mayf3.chatgpt-local-controller.plist",
+      "sha256": "4b9b01a770d47972d2590a1a77932f809f59707c162ff13c7ee8419de14f4b0d",
+      "label": "com.mayf3.chatgpt-local-controller",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.mayf3.progress-direct-tasks.v1.plist",
+      "sha256": "8465d582e9ad22a86eae85c1d7947d57fec69b1d3719a7e6d0d0b0fe9ac9118c",
+      "label": "com.mayf3.progress-direct-tasks.v1",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.workflow-audit.deterministic.plist",
+      "sha256": "34d102bdda5eb1d70f7ae46f794894f3f3969d333b36ebedbd8a781d23aea69c",
+      "label": "com.workflow-audit.deterministic",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.google.GoogleUpdater.wake.plist",
+      "sha256": "0570166c716a3b643ea39c54e4fdb31b38676ca8b7ec55338e549ee4f2b420fd",
+      "label": "com.google.GoogleUpdater.wake",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.xiaomusic.secure.plist",
+      "sha256": "86660a621cb93031454d26948ce7387ca7503d853ff243b906ad4c25953502dd",
+      "label": "com.xiaomusic.secure",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.agent-core.kernel.plist",
+      "sha256": "c0417e4f42b75fdf7201192a121259416ee83169831fd04cf742dd47254e866f",
+      "label": "com.agent-core.kernel",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/com.desktopcommander.remote.plist",
+      "sha256": "2bb0d0afe33411c114006d14f808e560389ff4ee2a3e700a1632abd83f27278a",
+      "label": "com.desktopcommander.remote",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Users/yanfenma/Library/LaunchAgents/disabled-20261105/ai.agent-core.runtime.plist",
+      "sha256": "3f5a4ee96709a588b7b6db95ff31974eb1f79d1d65bdfaa1db84cd4f8dc388e5",
+      "label": "ai.agent-core.runtime",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchAgents/com.adobe.AdobeCreativeCloud.plist",
+      "sha256": "02cc442d10a9c523a089aca563352ca2f5983bdcbac1921f4aefcb4083a16adc",
+      "label": "com.adobe.AdobeCreativeCloud",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchAgents/com.adobe.ccxprocess.plist",
+      "sha256": "fe64c6ba5a45c1d44d35b8fb8d49d02f6c29a5694a92bd1a58b9d2be2eb5c447",
+      "label": "com.adobe.ccxprocess",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchAgents/com.sogou.SogouServices.plist",
+      "sha256": "d5c810a4cd7482440342e2340daaa278d16dd9a2edca9bed10170c72ebb183f5",
+      "label": "com.sogou.SogouServices",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchAgents/com.microsoft.SyncReporter.plist",
+      "sha256": "620658ea7c5e265c1e0acfac6dc399a6cf98452407e39122fffd258bfbf174c8",
+      "label": "com.microsoft.SyncReporter",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchAgents/com.sogou.SogouTaskManager.plist",
+      "sha256": "4fdab6913c4ca3717e50c7fa0b643b878d2b0d0ae351601fd3fcbfd626151fb2",
+      "label": "com.sogou.SogouTaskManager",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchAgents/com.microsoft.OneDriveStandaloneUpdater.plist",
+      "sha256": "d786dba8c871205090c92623152a0a2a412aa327999c86ebec747533f0390eae",
+      "label": "com.microsoft.OneDriveStandaloneUpdater",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchAgents/com.microsoft.update.agent.plist",
+      "sha256": "4bf85d4f2cc934e9e063ca51aa032703dd3b31d66743af307f45f2f4b044d77e",
+      "label": "com.microsoft.update.agent",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.microsoft.OneDriveStandaloneUpdaterDaemon.plist",
+      "sha256": "f18f984ee92d3046617c4096eb6be2c2d3175d8bdc6fe070f3ee410c2f38ac87",
+      "label": "com.microsoft.OneDriveStandaloneUpdaterDaemon",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.openclaw.forum-scheduler.plist",
+      "status": "PERMISSION_DENIED",
+      "error_type": "PermissionError"
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-deploy-system.plist",
+      "sha256": "9861fe868f97fffaf0323746a9f150bc7829656a1a76df8974a768bf745e1339",
+      "label": "ai.agent-deploy-system",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-deploy-shim.plist",
+      "sha256": "e6c619a74e9a06186ef5470dba82bdb91edf697df2853f92f3db6904169640d7",
+      "label": "ai.agent-deploy-shim",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.docker.vmnetd.plist",
+      "sha256": "d6a940b8092f06d36f1d04afb1a1eceed6f8df7aa629e331621e5ec6abf17714",
+      "label": "com.docker.vmnetd",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.auth-service.plist",
+      "sha256": "ce944332a414d9cf79cf18ba4059fd5a91111e56e4728748e3b4998cf4849c9e",
+      "label": "com.auth-service",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w2.plist",
+      "sha256": "d867170319b18a38db057c9769b6b97ff1c37358587be7753302190928bf1b7f",
+      "label": "ai.agent-core.scheduler-watchdog-w2",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.microsoft.OneDriveUpdaterDaemon.plist",
+      "sha256": "ffac408af17876197e3aa43484678a1db038ba82cf65c2d30d28426adabf65f9",
+      "label": "com.microsoft.OneDriveUpdaterDaemon",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.docker.socket.plist",
+      "sha256": "7cf7e924e0675eae76e7a49d6ae1c1bb9b21cc99628df3a92b459e1d41ec5275",
+      "label": "com.docker.socket",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.svc-workflow-monitor.plist",
+      "sha256": "bb531525db599a1336e29ded2375f69bc308983f88932dc27437e624bc2f8dfe",
+      "label": "com.svc-workflow-monitor",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.west2online.ClashXPro.ProxyConfigHelper.plist",
+      "sha256": "1f0b413c4a6758574ad88f368ad49361febc3e2b82523a35d95efde9d2269b25",
+      "label": "com.west2online.ClashXPro.ProxyConfigHelper",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.agentcore.auth-tunnel.plist",
+      "sha256": "b550c23974a6baeab0b3e42b71e7c94732b757799145b5d41d8184c56345cefa",
+      "label": "com.agentcore.auth-tunnel",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w1.plist",
+      "sha256": "26eec717e32fe667e8468cd3779247e012ecfa7d4f44e861748a9d86377cf1ab",
+      "label": "ai.agent-core.scheduler-watchdog-w1",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/homebrew.mxcl.syncthing.plist",
+      "sha256": "dca9c2ce3f1ada660512c20a3eddf4cf5df3f148daab4f9acfe83d0ba00ea254",
+      "label": "homebrew.mxcl.syncthing",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.deepseek-harness.mobile-proxy.plist",
+      "sha256": "dc54be37f2d2ae2612f0e1652e898f8deb1d0bca35c3eb2d935a78b7375915b3",
+      "label": "com.deepseek-harness.mobile-proxy",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core-fence-janitor.plist",
+      "sha256": "cd778d5279b74e640b3b5d99e933da1789eccd0077b5304849007c353fd5465e",
+      "label": "ai.agent-core-fence-janitor",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.dsh.web.plist",
+      "sha256": "1d690fbefacc3cb18f4fad91e00eb121a59d73e08f67d6773aa002a30683128d",
+      "label": "com.dsh.web",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/local.codex-remote.cloudcli.plist",
+      "sha256": "be5d37254c1d1e3e616324e38213ad0b67a526bab6ec19deae7aa0855adc8b0f",
+      "label": "local.codex-remote.cloudcli",
+      "matches_preserv_codex_archive_backup": true,
+      "ProgramArguments": [
+        "/opt/homebrew/bin/node",
+        "/Users/yanfenma/workspace/project/codex-remote/cloudcli/node_modules/@cloudcli-ai/cloudcli/dist-server/server/index.js"
+      ],
+      "WorkingDirectory": "/Users/yanfenma/workspace/project/codex-remote/cloudcli",
+      "RunAtLoad": true,
+      "KeepAlive": true,
+      "StandardOutPath": "/Users/yanfenma/workspace/project/codex-remote/.runtime/cloudcli/server.log",
+      "StandardErrorPath": "/Users/yanfenma/workspace/project/codex-remote/.runtime/cloudcli/server-error.log"
+    },
+    {
+      "path": "/Library/LaunchDaemons/zcode.fda-check.plist",
+      "status": "READ_ERROR",
+      "error_type": "ValueError"
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.mayf3.zcode-dashboard.plist",
+      "sha256": "d5d4976f0e66aef1aea66ed9905c6549b561fedc3240b1deb6d713a0f6365156",
+      "label": "com.mayf3.zcode-dashboard",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core-artifacts-watchdog.plist",
+      "sha256": "fa934595b909491944d571a3f7f4451258179271e6519b5b56badcb00894c5d5",
+      "label": "ai.agent-core-artifacts-watchdog",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-deployd.plist",
+      "sha256": "c09e24824db86db2267da236594b94d1d36399171e9d6b25e78a928c66af095b",
+      "label": "ai.agent-deployd",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.agentcore.product-tunnel.plist",
+      "sha256": "eda29e5f5ddebedc79ba10d5124e5b9ab8cfe4bd8a4abe8db4cb2975805a963c",
+      "label": "com.agentcore.product-tunnel",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.adobe.acc.installer.v2.plist",
+      "sha256": "c5f23707714b8603744fa5bc27a9b962555e44d39f31832afa9d0912d055b041",
+      "label": "com.adobe.acc.installer.v2",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.openclaw.gateway.plist",
+      "status": "PERMISSION_DENIED",
+      "error_type": "PermissionError"
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core.runtime.plist",
+      "sha256": "0e2908a0672bff8afe1436e439141228a9a53096a95fbd46076df3970fe0a3c9",
+      "label": "ai.agent-core.runtime",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.yanfenma.remote-readiness.plist",
+      "sha256": "ba3d0c682635522efe73ada55754aba79ff7296e4bd81e4a181bc3cfb009cdc3",
+      "label": "com.yanfenma.remote-readiness",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.openclaw.workflow-dispatcher.plist",
+      "status": "PERMISSION_DENIED",
+      "error_type": "PermissionError"
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.microsoft.office.licensingV2.helper.plist",
+      "sha256": "e0a9edfc0ad8f9e9bc895b13b99d130bcb3b20af0fe354c257f297697f4f010c",
+      "label": "com.microsoft.office.licensingV2.helper",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.openclaw.host-exec-runner.plist",
+      "status": "PERMISSION_DENIED",
+      "error_type": "PermissionError"
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core-transport-watchdog.plist",
+      "sha256": "c8d4e30e02f96572073c331cd03d711a5185cc76552dc096bbbbea631bab4d44",
+      "label": "ai.agent-core-transport-watchdog",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.microsoft.autoupdate.helper.plist",
+      "sha256": "5f09db608a32d9dad4a52e29f999ebeb2bafe9ae46c503c9b642e3230b871c2d",
+      "label": "com.microsoft.autoupdate.helper",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.tailscale.tailscaled.plist",
+      "sha256": "d8b2ca94c6fe9d417f7541c882d87b95a4bdea8a5a6a4e80484e7e9a7e11ffdf",
+      "label": "com.tailscale.tailscaled",
+      "matches_preserv_codex_archive_backup": false
+    },
+    {
+      "path": "/Library/LaunchDaemons/homebrew.mxcl.postgresql@16.plist",
+      "sha256": "d0d7fa41929e43706992cf84e45604b2d11dcb096e67e664bdf227c83467d0bd",
+      "label": "homebrew.mxcl.postgresql@16",
+      "matches_preserv_codex_archive_backup": false
+    }
+  ],
+  "crontab_filtered": {
+    "argv": [
+      "/usr/bin/crontab",
+      "-l"
+    ],
+    "start_utc": "2026-11-07T15:47:00.226751+00:00",
+    "end_utc": "2026-11-07T15:47:00.233404+00:00",
+    "rc": 0,
+    "stdout": "0 3 * * * bash /Users/yanfenma/workspace/openclaw-backup/backup-all.sh >> /Users/yanfenma/workspace/openclaw-backup/cron-backup.log 2>&1\n0 7 * * * /Users/yanfenma/workspace/scripts/project-scripts/backup-local-mac.sh >> /Users/yanfenma/workspace/project/backups/local-db-backup.log 2>&1",
+    "stderr": ""
+  },
+  "loaded_codex_jobs": {
+    "argv": [
+      "/bin/launchctl",
+      "list"
+    ],
+    "start_utc": "2026-11-07T15:47:00.233589+00:00",
+    "end_utc": "2026-11-07T15:47:00.240448+00:00",
+    "rc": 0,
+    "stdout": "37261\t0\tcom.openai.codex-sparkle-progress\n55169\t0\tapplication.com.openai.codex.348070397.348070403\n-\t-9\tcom.apple.SecureBackupDaemon\n37260\t0\tcom.openai.codex-sparkle-updater",
+    "stderr": ""
+  },
+  "automations_metadata": [
+    {
+      "path": "/Users/yanfenma/.codex/automations/pdc-progressive-rollout-overnight/automation.toml",
+      "sha256": "a4d4770dc6695c6f921ccd13ab01b3df2a4025c8f6baf9f82b23fc8653f36ef8",
+      "id": "pdc-progressive-rollout-overnight",
+      "name": "PDC progressive rollout",
+      "status": "PAUSED",
+      "rrule": "FREQ=MINUTELY;INTERVAL=15",
+      "created_at": 1790263792124,
+      "updated_at": 1790552405929,
+      "prompt_mentions": {
+        "preservation": false,
+        "archived_sessions": false,
+        "rollout": false,
+        "backup": false,
+        "archive": false
+      },
+      "prompt_not_exported": true
+    },
+    {
+      "path": "/Users/yanfenma/.codex/automations/hr-b7/automation.toml",
+      "sha256": "aeb7a2cb433555a8610f0a234d0fefb5a2c012e4b10a618cd03199506eb97061",
+      "id": "hr-b7",
+      "name": "原 ZCode 额度恢复后单次接续",
+      "status": "PAUSED",
+      "rrule": "FREQ=DAILY;BYHOUR=4;BYMINUTE=10;BYSECOND=0;COUNT=1",
+      "created_at": 1791818075792,
+      "updated_at": 1792008675222,
+      "prompt_mentions": {
+        "preservation": false,
+        "archived_sessions": false,
+        "rollout": false,
+        "backup": false,
+        "archive": false
+      },
+      "prompt_not_exported": true
+    },
+    {
+      "path": "/Users/yanfenma/.codex/automations/xcode-mac-presence/automation.toml",
+      "sha256": "1756b499e60d5d4e25a3285198275df543d85f073a9cf372d0303e14fe1caa53",
+      "id": "xcode-mac-presence",
+      "name": "Xcode 就绪后继续 Mac Presence",
+      "status": "PAUSED",
+      "rrule": "FREQ=MINUTELY;INTERVAL=5",
+      "created_at": 1789177008675,
+      "updated_at": 1789177508844,
+      "prompt_mentions": {
+        "preservation": false,
+        "archived_sessions": false,
+        "rollout": false,
+        "backup": false,
+        "archive": false
+      },
+      "prompt_not_exported": true
+    },
+    {
+      "path": "/Users/yanfenma/.codex/automations/dsh-arm64-goal/automation.toml",
+      "sha256": "ea88d10261c203ac517262a9cf5dc9ac42b91bf3579761e3a6a34a84f17fc7b8",
+      "id": "dsh-arm64-goal",
+      "name": "DSH ARM64 同一 Goal 续跑",
+      "status": "PAUSED",
+      "rrule": "FREQ=MINUTELY;INTERVAL=10",
+      "created_at": 1788792513256,
+      "updated_at": 1788816468758,
+      "prompt_mentions": {
+        "preservation": false,
+        "archived_sessions": false,
+        "rollout": false,
+        "backup": false,
+        "archive": false
+      },
+      "prompt_not_exported": true
+    }
+  ],
+  "source_coordinates": [
+    {
+      "path": "/Users/yanfenma/.codex-zcode-watch/bin/delivery_guard_cli.py",
+      "sha256": "61e5e5f9b1fc18702d4d15bf039e8b228319b2b6f86ed7bf67be640beeaf1e3b",
+      "size_bytes": 23645,
+      "matching_safe_lines": [
+        {
+          "line": 9,
+          "text": "BASE=HOME/'.codex/automations/pdc-progressive-rollout-overnight'"
+        },
+        {
+          "line": 17,
+          "text": "        self.proc=subprocess.Popen([str(CODEX),'app-server','--stdio'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)"
+        },
+        {
+          "line": 119,
+          "text": "        root=HOME/'.codex/sessions'"
+        },
+        {
+          "line": 191,
+          "text": "        root=HOME/'workspace/artifacts/DEPLOYMENT_BACKLOG'"
+        },
+        {
+          "line": 235,
+          "text": "    root=HOME/'.codex/sessions'"
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/.codex-zcode-watch/bin/zcode_hourly_watch.py",
+      "sha256": "c6db5e70df278ad441687f73ea4162c49804d0112cfffddaa4a03463019034bc",
+      "size_bytes": 19058,
+      "matching_safe_lines": [
+        {
+          "line": 358,
+          "text": "    command = ["
+        },
+        {
+          "line": 367,
+          "text": "    proc = subprocess.Popen("
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/.codex-zcode-watch/bin/codex_continuation_worker.py",
+      "sha256": "208cd4f796130fdd8d84d5b80ee918a1863c957e7248a0e470f71542e4ff7700",
+      "size_bytes": 4265,
+      "matching_safe_lines": [
+        {
+          "line": 51,
+          "text": "    command = ["
+        },
+        {
+          "line": 52,
+          "text": "        codex_config[\"binary\"], \"exec\","
+        },
+        {
+          "line": 79,
+          "text": "    command = build_command(config[\"codex\"], args.session_id)"
+        },
+        {
+          "line": 93,
+          "text": "        proc = subprocess.Popen("
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/workspace/openclaw-backup/backup-all.sh",
+      "sha256": "e6b1167403dc65e5e60df441a49fd7ca8bced4eb78acff5c1018b510c0ccb07f",
+      "size_bytes": 7300,
+      "matching_safe_lines": [
+        {
+          "line": 3,
+          "text": "# 创建：2026-06-15 (itops-agent)"
+        },
+        {
+          "line": 4,
+          "text": "# 策略：只备份关键配置和数据文件，不备份 session 日志、媒体文件、node_modules"
+        },
+        {
+          "line": 5,
+          "text": "# 调度：crontab 每天 3:00 AM"
+        },
+        {
+          "line": 6,
+          "text": "# 保留：最近 7 天"
+        },
+        {
+          "line": 8,
+          "text": "BACKUP_ROOT=\"/Users/yanfenma/workspace/openclaw-backup\""
+        },
+        {
+          "line": 10,
+          "text": "BACKUP_DIR=\"$BACKUP_ROOT/$DATE\""
+        },
+        {
+          "line": 11,
+          "text": "LOG_FILE=\"$BACKUP_ROOT/backup.log\""
+        },
+        {
+          "line": 14,
+          "text": "RETENTION_DAYS=7"
+        },
+        {
+          "line": 148,
+          "text": "log \"🧹 清理 ${RETENTION_DAYS} 天前的旧备份...\""
+        },
+        {
+          "line": 150,
+          "text": "for old_dir in \"$BACKUP_ROOT\"/20[0-9]*/; do"
+        },
+        {
+          "line": 154,
+          "text": "    cutoff_ts=$(date -v-${RETENTION_DAYS}d +%s 2>/dev/null || echo 0)"
+        },
+        {
+          "line": 169,
+          "text": "log \"   保留: 最近 ${RETENTION_DAYS} 天\""
+        }
+      ]
+    },
+    {
+      "path": "/Users/yanfenma/workspace/scripts/project-scripts/backup-local-mac.sh",
+      "sha256": "17abd8eb5c7f01d54100137aaede8dd772dd4333df4ab1d9cd83d5a49d34316e",
+      "size_bytes": 3029,
+      "matching_safe_lines": [
+        {
+          "line": 5,
+          "text": "# 保留：30 天"
+        },
+        {
+          "line": 11,
+          "text": "BACKUP_ROOT=\"${WORKSPACE}/backups/local-db\""
+        },
+        {
+          "line": 13,
+          "text": "RETENTION_DAYS=30"
+        },
+        {
+          "line": 17,
+          "text": "mkdir -p \"$BACKUP_ROOT\""
+        },
+        {
+          "line": 49,
+          "text": "    local count=$(find \"$dir\" -type d -maxdepth 1 -mtime +${RETENTION_DAYS} 2>/dev/null | wc -l | tr -d ' ')"
+        },
+        {
+          "line": 50,
+          "text": "    find \"$dir\" -type d -maxdepth 1 -mtime +${RETENTION_DAYS} -exec rm -rf {} + 2>/dev/null || true"
+        },
+        {
+          "line": 51,
+          "text": "    [ \"$count\" -gt 0 ] && log \"🧹 ${label}: 清理 $count 个旧备份 (超过 ${RETENTION_DAYS} 天)\""
+        },
+        {
+          "line": 59,
+          "text": "  \"${BACKUP_ROOT}/shopping-list/${TIMESTAMP}\" \"Shopping List\""
+        },
+        {
+          "line": 63,
+          "text": "  \"${BACKUP_ROOT}/kpi-dashboard/${TIMESTAMP}\" \"KPI Dashboard\""
+        },
+        {
+          "line": 67,
+          "text": "  \"${BACKUP_ROOT}/llm-todo/${TIMESTAMP}\" \"LLM Todo\""
+        },
+        {
+          "line": 69,
+          "text": "  \"${BACKUP_ROOT}/llm-todo/${TIMESTAMP}\" \"LLM Todo (todo)\""
+        },
+        {
+          "line": 71,
+          "text": "  \"${BACKUP_ROOT}/llm-todo/${TIMESTAMP}\" \"LLM Todo (root)\""
+        },
+        {
+          "line": 75,
+          "text": "  \"${BACKUP_ROOT}/personal-platform/${TIMESTAMP}\" \"Baby Growth\""
+        },
+        {
+          "line": 77,
+          "text": "  \"${BACKUP_ROOT}/personal-platform/${TIMESTAMP}\" \"Profile\""
+        },
+        {
+          "line": 81,
+          "text": "  \"${BACKUP_ROOT}/account-dashboard/${TIMESTAMP}\" \"Account Dashboard\""
+        },
+        {
+          "line": 84,
+          "text": "log \"清理 ${RETENTION_DAYS} 天前的旧备份...\""
+        },
+        {
+          "line": 86,
+          "text": "  cleanup_old \"${BACKUP_ROOT}/${group}\" \"$group\""
+        }
+      ]
+    }
+  ],
+  "observed_end_utc": "2026-11-07T15:47:00.249786+00:00"
+}

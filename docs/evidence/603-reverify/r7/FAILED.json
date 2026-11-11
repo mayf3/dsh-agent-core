@@ -1,0 +1,26 @@
+{
+  "schema_version": 2,
+  "observed_at": "2026-11-07T05:28:51.955833+00:00",
+  "blocker_id": "603-R7-GATE-001",
+  "class": "REQUIRED_GATE_FAILURE",
+  "source": "R7 fail-stop and R6 command-failure stop boundary",
+  "cause": "Root launched wrappers concurrently; newly added git write-tree metadata acquired shared worktree index lock",
+  "failed_wrappers": [
+    "old-pr-final-readback",
+    "new-pr-final-readback",
+    "remote-lifecycle-readback"
+  ],
+  "wrapper_exit_code": 1,
+  "nested_git_write_tree_exit_code": 128,
+  "actual_target_commands": "NOT_INVOKED: exception before record.write_text and subprocess.run(argv)",
+  "tool_combined_output_utf8_sha256": "283d34cbcea92e4c390b989d5610740c38e052e81a4bf557a34de8d5269c6479",
+  "tool_combined_output_base64": "ZmF0YWw6IFVuYWJsZSB0byBjcmVhdGUgJy9Vc2Vycy95YW5mZW5tYS93b3Jrc3BhY2UvcHJvamVjdC9kc2gtYWdlbnQtY29yZS8uZ2l0L3dvcmt0cmVlcy9oNjAzLXJldmVyaWZ5L2luZGV4LmxvY2snOiBGaWxlIGV4aXN0cy4KCkFub3RoZXIgZ2l0IHByb2Nlc3Mgc2VlbXMgdG8gYmUgcnVubmluZyBpbiB0aGlzIHJlcG9zaXRvcnksIGUuZy4KYW4gZWRpdG9yIG9wZW5lZCBieSAnZ2l0IGNvbW1pdCcuIFBsZWFzZSBtYWtlIHN1cmUgYWxsIHByb2Nlc3NlcwphcmUgdGVybWluYXRlZCB0aGVuIHRyeSBhZ2Fpbi4gSWYgaXQgc3RpbGwgZmFpbHMsIGEgZ2l0IHByb2Nlc3MKbWF5IGhhdmUgY3Jhc2hlZCBpbiB0aGlzIHJlcG9zaXRvcnkgZWFybGllcjoKcmVtb3ZlIHRoZSBmaWxlIG1hbnVhbGx5IHRvIGNvbnRpbnVlLgpUcmFjZWJhY2sgKG1vc3QgcmVjZW50IGNhbGwgbGFzdCk6CiAgRmlsZSAiL3ByaXZhdGUvdG1wL2g2MDMtcmV2ZXJpZnkvZG9jcy9ldmlkZW5jZS82MDMtcmV2ZXJpZnkvcjcvY2FwdHVyZS1jb21tYW5kLnB5IiwgbGluZSAyMSwgaW4gPG1vZHVsZT4KICAgICdpbmRleF90cmVlX2JlZm9yZV9jb21tYW5kJzogc3VicHJvY2Vzcy5jaGVja19vdXRwdXQoWydnaXQnLCAnd3JpdGUtdHJlZSddLCBjd2Q9Uk9PVCwgdGV4dD1UcnVlKS5zdHJpcCgpLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXgogIEZpbGUgIi9vcHQvaG9tZWJyZXcvQ2VsbGFyL3B5dGhvbkAzLjE0LzMuMTQuNy9GcmFtZXdvcmtzL1B5dGhvbi5mcmFtZXdvcmsvVmVyc2lvbnMvMy4xNC9saWIvcHl0aG9uMy4xNC9zdWJwcm9jZXNzLnB5IiwgbGluZSA0NzMsIGluIGNoZWNrX291dHB1dAogICAgcmV0dXJuIHJ1bigqcG9wZW5hcmdzLCBzdGRvdXQ9UElQRSwgdGltZW91dD10aW1lb3V0LCBjaGVjaz1UcnVlLAogICAgICAgICAgIH5+fl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXgogICAgICAgICAgICAgICAqKmt3YXJncykuc3Rkb3V0CiAgICAgICAgICAgICAgIF5eXl5eXl5eXgogIEZpbGUgIi9vcHQvaG9tZWJyZXcvQ2VsbGFyL3B5dGhvbkAzLjE0LzMuMTQuNy9GcmFtZXdvcmtzL1B5dGhvbi5mcmFtZXdvcmsvVmVyc2lvbnMvMy4xNC9saWIvcHl0aG9uMy4xNC9zdWJwcm9jZXNzLnB5IiwgbGluZSA1NzgsIGluIHJ1bgogICAgcmFpc2UgQ2FsbGVkUHJvY2Vzc0Vycm9yKHJldGNvZGUsIHByb2Nlc3MuYXJncywKICAgICAgICAgICAgICAgICAgICAgICAgICAgICBvdXRwdXQ9c3Rkb3V0LCBzdGRlcnI9c3RkZXJyKQpzdWJwcm9jZXNzLkNhbGxlZFByb2Nlc3NFcnJvcjogQ29tbWFuZCAnWydnaXQnLCAnd3JpdGUtdHJlZSddJyByZXR1cm5lZCBub24temVybyBleGl0IHN0YXR1cyAxMjguCg==",
+  "output_provenance": "Transcribed exact combined UTF8 tool-return output for each failed exec_command; original stdout/stderr split was not captured and remains UNKNOWN",
+  "no_command_json_created_for_failed_wrappers": true,
+  "affected_readiness": {
+    "FINAL_RECEIPT_PUBLISHED": "NO",
+    "TASK_DONE": "NO"
+  },
+  "preserved_results": "Class whitespace rc0, 843 source PASS, first docs commit/push, #647 create/readback and #603 comment/readback/close command rc0",
+  "next_action": "STOP dependent writes; facts-only receipt and fresh read-only reconciliation; no retry, repair, lock deletion, commit, push, or PR write"
+}

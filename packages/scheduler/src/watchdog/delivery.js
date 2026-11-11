@@ -89,6 +89,17 @@ const OPEN_ACTIONS = Object.freeze({
   SCHEDULER_RUNTIME_UNHEALTHY: 'automatic recovery monitoring active; attributable occurrence alerts are recorded as evidence',
 })
 
+const NEXT_RUN_PROBE_TEXT = Object.freeze({
+  next_run_projection_missing: {
+    summary: 'enabled job next-run projection missing',
+    action: 'inspect the job next-run projection; its definition and ledger may still permit execution',
+  },
+  no_remaining_run: {
+    summary: 'enabled job has no remaining scheduled run',
+    action: 'inspect the job schedule and retry state; operator action is required',
+  },
+})
+
 function incidentDeliveryText(intent) {
   const incident = intent.incident
   const label = intent.transitionKind === 'CLOSED_RECOVERED' ? 'RECOVERED'
@@ -97,7 +108,10 @@ function incidentDeliveryText(intent) {
   const subject = incident.stableSubjectId
     ? `Subject: ${incident.stableSubjectId}`
     : `Agent: ${fact.agentId ?? 'unknown'}  Job: ${fact.logicalKey ?? 'unknown'} (${incident.jobId ?? 'unknown'})`
-  const summary = ROOT_CAUSE_SUMMARY[incident.rootCauseClass] ?? incident.rootCauseClass
+  // Scope new text to new probe facts: existing immutable notification
+  // bindings, including other JOB_CONFIGURATION_INVALID facts, stay valid.
+  const probe = incident.rootCauseClass === 'JOB_CONFIGURATION_INVALID' ? NEXT_RUN_PROBE_TEXT[fact.reason] : null
+  const summary = probe?.summary ?? ROOT_CAUSE_SUMMARY[incident.rootCauseClass] ?? incident.rootCauseClass
   const lines = [
     `Scheduler incident ${label} — ${summary}`,
     subject,
@@ -107,7 +121,7 @@ function incidentDeliveryText(intent) {
     const symptoms = Array.isArray(incident.symptoms) && incident.symptoms.length ? ` (also observed: ${incident.symptoms.join(', ')})` : ''
     lines.push(
       `Current state: ACTIVE${symptoms}`,
-      `Action: ${OPEN_ACTIONS[incident.rootCauseClass] ?? 'automatic recovery monitoring active'}`,
+      `Action: ${probe?.action ?? OPEN_ACTIONS[incident.rootCauseClass] ?? 'automatic recovery monitoring active'}`,
     )
   } else {
     lines.push(

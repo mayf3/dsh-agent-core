@@ -1,0 +1,25 @@
+{
+  "command": [
+    "lsof",
+    "-nP",
+    "-F",
+    "pcn"
+  ],
+  "started_at": "2026-11-07T15:49:25.497095+00:00",
+  "ended_at": "2026-11-07T15:49:25.944767+00:00",
+  "rc": 0,
+  "stderr": "",
+  "scope": "visible processes only; pathname filter; no raw all-process list persisted",
+  "matches": {
+    "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-current-input-implementation/target": [],
+    "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/svc-combined-integration-20261027/target-clean-f4a1": [],
+    "/Users/yanfenma/workspace/github/deepseek-harness.hold-b7-20261001/node_modules": [],
+    "/Users/yanfenma/workspace/project/svc-workflow/target": [],
+    "/Users/yanfenma/workspace/worktrees/52bd-svc-workflow-20261101/target": [],
+    "/Users/yanfenma/workspace/worktrees/m2-dispatch-intent-20261101/target": [],
+    "/Users/yanfenma/workspace/worktrees/codex-wec-kick-token-renewal-20261028/target": [],
+    "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/build-worktree/target": [],
+    "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a76-pr106-owner-node-reference-candidate-20261029/helper-crate/target": [],
+    "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+svc-workflow/ac-1301-7cd-revise-fix/target": []
+  }
+}

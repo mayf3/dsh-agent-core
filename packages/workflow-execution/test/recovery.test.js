@@ -1,3 +1,4 @@
+import { expectedIdentity } from '../test-support/observation-identity.js'
 /**
  * WORKFLOW_AGENT_EXECUTION_V2 — the controlled-recovery acceptance matrix
  * (CTR-WAE-011/012/013; Owner-ruled cases A–F plus the entry-state dispatch
@@ -17,6 +18,7 @@ import { join } from 'node:path'
 
 import { ExecutionLedger, attemptIdFor } from '../src/ledger.js'
 import { createWorkflowExecutionEngine } from '../src/engine.js'
+import { completeCurrentActivationDetail } from '../test-support/current-activation-detail.js'
 
 const VISIT = 'ca11ef0a-0000-4a7e-9a3f-5d1c2b0a9e11'
 const INTENT = '2d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e33'
@@ -24,7 +26,7 @@ const INSTANCE = '4d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e55'
 const OWNER = '5d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e66'
 const AGENT = 'agt_writing-style-analyst-agent'
 const AUTHORITY = 'OWNER_RULING_TEST_AUTHORITATION'
-const STILL_CURRENT = () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: VISIT } } })
+const STILL_CURRENT = () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: VISIT } } })
 
 /**
  * Engine fixture with fully mutable seams. `state.resolve.ok` models the
@@ -47,14 +49,12 @@ function makeFixture({
     log: { log: () => {}, warn: () => {}, error: () => {} },
     fetchDuePage: async () => {
       calls.dueRequests += 1
-      // First page carries the due intent; the short page ends the sweep.
-      return calls.dueRequests === 1
-        ? { ok: true, items: [{
+      // The current activation stays due for both sweep and locked validation.
+      return { ok: true, items: [{
             dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE,
             ownerPrincipalId: OWNER, nextEligibleAt: '2026-09-10T01:00:00Z',
             createdAt: '2026-09-10T00:00:00Z', updatedAt: '2026-09-10T00:30:00Z',
           }] }
-        : { ok: true, items: [] }
     },
     resolvePrincipalToAgent: async () => {
       calls.resolves += 1
@@ -66,9 +66,12 @@ function makeFixture({
     },
     getTurnReconciliation: () => ({ state: 'never_existed' }),
     resolveCallerCorrelation: ({ requestId }) => state.correlation({ requestId }),
-    readInstanceDetail: async () => {
+    readInstanceDetail: async ({ workflowInstanceId }) => {
       calls.probes += 1
-      return state.detail()
+      const read = calls.probes <= 2 ? STILL_CURRENT() : state.detail()
+      return read?.ok ? { ...read, body: completeCurrentActivationDetail(read.body, {
+        workflowInstanceId, ownerPrincipalId: OWNER,
+      }) } : read
     },
   })
   const eventsFile = () => join(dir, 'attempts.jsonl')
@@ -241,7 +244,7 @@ test('E2/E3: no attempt → NO_OP_NO_ATTEMPT; terminal attempt → NO_OP_TERMINA
     await seedBlocked(fx.engine)
     fx.state.resolveOk = true // the identity repair, through its own authority
     await fx.engine.recoverAttempt({ nodeVisitId: VISIT, authorityRef: AUTHORITY }) // completes → run_delivered
-    await fx.ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'SETTLED', judgment: 'business_commitment_observed', reason: 'node_visit_no_longer_current' })
+    await fx.ledger.recordReconciled({ ...expectedIdentity(fx.ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'SETTLED', judgment: 'business_commitment_observed', reason: 'node_visit_no_longer_current' })
     const sizeBefore = fx.eventsBytes()
     const replay = await fx.engine.recoverAttempt({ nodeVisitId: VISIT, authorityRef: AUTHORITY })
     assert.equal(replay.outcome, 'NO_OP_TERMINAL')
@@ -374,7 +377,7 @@ test('Ledger discipline: at-most-one delivery_started (second = corrupt fail-lou
     await fx.ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
     await fx.ledger.recordDeliveryStarted({ nodeVisitId: VISIT })
     await assert.rejects(() => fx.ledger.recordDeliveryStarted({ nodeVisitId: VISIT }), /corrupt ledger — delivery_started twice/)
-    await assert.rejects(() => fx.ledger.recordDeliveryFailed({ nodeVisitId: VISIT, reason: 'resolve_failed:agent_mapping_missing' }), /recordResolutionBlocked/)
+    await assert.rejects(() => fx.ledger.recordDeliveryFailed({ ...expectedIdentity(fx.ledger.get(VISIT)), nodeVisitId: VISIT, reason: 'resolve_failed:agent_mapping_missing' }), /recordResolutionBlocked/)
   } finally {
     fx.cleanup()
   }

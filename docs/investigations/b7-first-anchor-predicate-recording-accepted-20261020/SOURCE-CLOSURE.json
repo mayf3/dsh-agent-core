@@ -1,0 +1,131 @@
+{
+  "kind": "FIXED_FIRST_ANCHOR_BLOB_SHAPE_DOCUMENTARY_SOURCE_CLOSURE_V1_1",
+  "unit": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract/PROPOSED-FIXED-FIRST-ANCHOR-BLOB-SHAPE-PREDICATE-RECORDING-CONTRACT.v1.1.md",
+    "bytes": 15193,
+    "sha256": "20a1c8ef74415e4dc6dd7d4611f7859443189ff7ed9b0e7b7cdb33dd1ca6ddbe"
+  },
+  "source_attribution": "Only newc932 fullread; original96a1 source context already held, all other pins reused from heldrecords/c932 inputs. No source/failedpath/API/oldreview reopened.",
+  "refs": [
+    {
+      "role": "newdirection; onlyprimarynewdocumentreadthisworkblock",
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/actual-export-launch-v1/ORIGINAL-ACTUAL-BLOB-SHAPE-EXHAUSTED-E-TECHNICAL-DECISION.v1.json",
+      "bytes": 22404,
+      "sha256": "c932e3bd663d6a83af0f2e4152699072725ca65e746f5d20ba7528c00ed3c8c4"
+    },
+    {
+      "role": "heldparent sourcecontext; NOT reopened",
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/tools/fixed_selected_e1c_app_export.py",
+      "bytes": 18689,
+      "sha256": "96a1e16f7ea97aab0013f02781f00cd977780421699240158344a734605b5c38"
+    },
+    {
+      "role": "heldoriginalsamechainsourcePASS; NOT rereviewed",
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/independent-sol-readback/FIXED-APP-GIT-EXPORT-AFFECTED-SOURCE-RECEIPT.v1.json",
+      "bytes": 20246,
+      "sha256": "ab3b0ae3e55cf606317fe2cfec7c7fb051f4075cf4357e6516aa9aad1b215fd0"
+    },
+    {
+      "role": "existinggoverninganonymousquota; heldpin",
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/ORIGINAL-FIXED-BOUNDED-PUBLIC-GIT-TRANSPORT-AMENDMENT-TECHNICAL-DECISION.v1.json",
+      "bytes": 20902,
+      "sha256": "5e8b07450772b58bea4d17b95c09ddd00e468be7e1e961f09211152fe3c63c05"
+    },
+    {
+      "role": "savedoldfailedpin, onlyc932.inputs reused; no newread/stat: failure",
+      "bytes": 1226,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/actual-fixed-git-object-export-v1/FAILURE.json",
+      "sha256": "e59ec43357f2b0f79e86ec92b37e9733efe7cb288dbc4bc77b22ec99bb014f25"
+    },
+    {
+      "role": "savedoldfailedpin, onlyc932.inputs reused; no newread/stat: handle",
+      "bytes": 156,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/actual-export-launch-v1/NATIVE-HANDLE.json",
+      "sha256": "77e8183dd6fe75d1cc2797e9da0650a75dbd8ada39a3c501dd0cd39f8d936b0b"
+    },
+    {
+      "role": "savedoldfailedpin, onlyc932.inputs reused; no newread/stat: innerIntent",
+      "bytes": 667,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/actual-fixed-git-object-export-v1/INTENT.json",
+      "sha256": "57ff6eb43cd3ea24014212afb58d595c773b3275b65f8cd9b785bf1ba5010bd1"
+    },
+    {
+      "role": "savedoldfailedpin, onlyc932.inputs reused; no newread/stat: issued",
+      "bytes": 225,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/actual-export-launch-v1/ISSUED.json",
+      "sha256": "3285c485aa517044b719729402501b2a012315fb00b7b92cb90985957ba43e2f"
+    },
+    {
+      "role": "savedoldfailedpin, onlyc932.inputs reused; no newread/stat: outerIntent",
+      "bytes": 1728,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/actual-export-launch-v1/INTENT.json",
+      "sha256": "871f108e47432335f7ff2c106e5dfd78a1567f2d9f80dd1c9c0f6379ab5348a4"
+    },
+    {
+      "role": "savedoldfailedpin, onlyc932.inputs reused; no newread/stat: process",
+      "bytes": 1632,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/actual-export-launch-v1/PROCESS.json",
+      "sha256": "3e4a018ab680ba905fb355940d60a07770935bdb6909cbecd18559c366923532"
+    },
+    {
+      "role": "savedoldfailedpin, onlyc932.inputs reused; no newread/stat: requests",
+      "bytes": 470,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/actual-fixed-git-object-export-v1/requests.jsonl",
+      "sha256": "518aad949477f467b78ecaeb6c248a95501e6ae1a6b321db9dc1470d754d22f1"
+    },
+    {
+      "role": "savedoldfailedpin, onlyc932.inputs reused; no newread/stat: stdout",
+      "bytes": 1226,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/actual-export-launch-v1/stdout.raw",
+      "sha256": "e59ec43357f2b0f79e86ec92b37e9733efe7cb288dbc4bc77b22ec99bb014f25"
+    },
+    {
+      "role": "savedoldfailedpin, onlyc932.inputs reused; no newread/stat: terminal",
+      "bytes": 7977,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/actual-export-launch-v1/EXPORT-TERMINAL-INDEX.v1.json",
+      "sha256": "8b6729d01048b50345ddee256caf7b0de7bd175ee6e57933627466aed8c243d7"
+    }
+  ],
+  "future_source_ceiling": [
+    "samefixedhelper firstanchorEngine.blob evaluation +purecloseddiagnostic",
+    "blank/mainclosedV2 error/resultserialization +existingpubjoins",
+    "necessaryexistingclosedresultvalidator/recorderkind/key recognition andpinjoins only"
+  ],
+  "unchanged": [
+    "originalconjunction/order",
+    "anchorbytes/hash/order",
+    "transport/principal/readset/GETbudget/window",
+    "all quotas/custody/retention/EXCL/fsync",
+    "APP/runtime/production"
+  ],
+  "runtime_effects_requested": [],
+  "new_E": 0,
+  "validation_now": {
+    "source_edits": 0,
+    "tests": 0,
+    "input_reads": 0,
+    "failedpath_stats": 0,
+    "runtime_calls": 0
+  },
+  "future_cost_model": {
+    "diagnostic_serialization_bytes_max": 2048,
+    "unchanged_whole_result_max": 65536,
+    "full_record_disk_carriers_max": 5,
+    "diagnostic_only_rounding_increment_max": 20480,
+    "new_source_evidence_and_phaseoverlaps": "Actualfuturecost separatelymeasured; oldfitnotinherited",
+    "budget_accepted_here": false
+  },
+  "same_review_delta": {
+    "prior_unit": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract/PROPOSED-FIXED-FIRST-ANCHOR-BLOB-SHAPE-PREDICATE-RECORDING-CONTRACT.v1.md",
+      "bytes": 14908,
+      "sha256": "91dea0680d53589a03580fb93e59466eaef435cb239388b20613bd37c2e937fb"
+    },
+    "diff": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract/V1-TO-V1.1-PROVENANCE.diff",
+      "bytes": 3243,
+      "sha256": "4b9a7fb79e9d10634883ee0b88599b6cb0ff91222f79143ab7685d4fde461142"
+    },
+    "scope": "Only nullable unavailablehelperprovenance/RECORDEDqualification clarification. No actualhelper/source/failedpathread/test/effect."
+  }
+}

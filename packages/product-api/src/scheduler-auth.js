@@ -160,12 +160,11 @@ export function createJwksTokenVerifier(opts = {}) {
       }
     }
     if (cache.keys.has(kid)) return cache.keys.get(kid)
-    // Unknown kid: exactly one immediate refresh, then reject.
-    try {
-      await fetchJwks()
-    } catch {
-      throw new TokenVerifyError('TOKEN_INVALID_OR_EXPIRED', `unknown token kid: ${kid}`)
-    }
+    // Unknown kid: exactly one immediate refresh, then reject. A failed refresh
+    // propagates as AUTH_JWKS_UNAVAILABLE — infra evidence for observability
+    // consumers (every consumer still gates to 401) — while a COMPLETED
+    // refresh that still lacks the kid proves the token itself unknown.
+    await fetchJwks()
     if (cache.keys.has(kid)) return cache.keys.get(kid)
     throw new TokenVerifyError('TOKEN_INVALID_OR_EXPIRED', `unknown token kid: ${kid}`)
   }

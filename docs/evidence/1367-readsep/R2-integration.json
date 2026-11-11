@@ -1,0 +1,23 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "packages/product-api/test/workflow-execution-api.test.js",
+    "packages/production-runtime/test/workflow-execution-shutdown.test.js",
+    "packages/production-runtime/test/workflow-owner-assistance-wake.test.js",
+    "packages/production-runtime/test/workflow-progress-gateway.test.js",
+    "packages/production-runtime/test/workflow-progress-runtime.test.js"
+  ],
+  "source_parent": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "file_sha256": {
+    "packages/product-api/test/workflow-execution-api.test.js": "9152d63f74dd28385cf7f385540e732bdfc08eb53d7b2399d4d8bb1e8102ee43",
+    "packages/production-runtime/test/workflow-execution-shutdown.test.js": "203c818496c86a6c0a1aa19c8837d5c803eb769a6a8363ce6f7e8c1fcd2187a0",
+    "packages/production-runtime/test/workflow-owner-assistance-wake.test.js": "8492701b5d5eb6244b47ed155e581fc161a99dd3663ad48dc34b6a5934d3a7f8",
+    "packages/production-runtime/test/workflow-progress-gateway.test.js": "39514be142448e3032fdfe0c7151e1b3bb51004c2f5756afb77b3ca56df8e576",
+    "packages/production-runtime/test/workflow-progress-runtime.test.js": "8e3b11babe6dd93c99928324841fa3c8ea273a15fdec0e3e6cc3923788bd3d69"
+  },
+  "actual_rc": 1,
+  "expected_rc": 0,
+  "timestamp_utc": "2026-11-07T11:08:03.814399+00:00",
+  "excluded": {}
+}

@@ -1,0 +1,39 @@
+$ git diff --cached --check
+scope: all staged files, including byte-preserved raw logs and unified patches
+This was an extra packaging diagnostic, not a frozen product gate.
+Actual command stdout/stderr:
+docs/evidence/1377-b2-r4/blocked-targeted.txt:68: trailing whitespace.
++  
+docs/evidence/1377-b2-r4/blocked-targeted.txt:73: trailing whitespace.
++  
+docs/evidence/1377-b2-r4/blocked-targeted.txt:90: trailing whitespace.
++  
+docs/evidence/1377-b2-r4/blocked-targeted.txt:95: trailing whitespace.
++  
+docs/evidence/1377-b2-r4/source-delta.patch:7: trailing whitespace.
++ 
+docs/evidence/1377-b2-r4/source-delta.patch:11: trailing whitespace.
++ 
+docs/evidence/1377-b2-r4/source-delta.patch:28: trailing whitespace.
++ 
+docs/evidence/1377-b2-r4/source-delta.patch:38: trailing whitespace.
++ 
+docs/evidence/1377-b2-r4/source-delta.patch:48: trailing whitespace.
++ 
+docs/evidence/1377-b2-r4/source-delta.patch:60: trailing whitespace.
++ 
+docs/evidence/1377-b2-r4/source-delta.patch:70: trailing whitespace.
++ 
+docs/evidence/1377-b2-r5/source-delta.patch:65: trailing whitespace.
++ 
+command_exit_code: 2
+Python check=True wrapper exit_code: 1
+No documentation commit was executed after this diagnostic in that invocation.
+
+Disposition: preserve historical stdout and patch bytes. Frozen required syntax,
+source whitespace, targeted46, full93, broker31, regression135, ledger12,
+structure and independent semantic review all passed before this observation.
+No source/test repair or test rerun is warranted. Scope the handwritten-file
+whitespace check to source/docs, excluding raw evidence; independent final HEAD
+review must inspect this disposition. Do not report this raw-artifact diagnostic
+as rc0 or rewrite the archived logs to hide it.

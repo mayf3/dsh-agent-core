@@ -1,0 +1,94 @@
+TAP version 13
+# Subtest: R3 route: one real startup-blocked request enters shared alert feed once
+ok 1 - R3 route: one real startup-blocked request enters shared alert feed once
+  ---
+  duration_ms: 28.658792
+  type: 'test'
+  ...
+# Subtest: R3 route: one real per-agent fence rejection enters shared alert feed once
+ok 2 - R3 route: one real per-agent fence rejection enters shared alert feed once
+  ---
+  duration_ms: 42.263792
+  type: 'test'
+  ...
+# Subtest: R3 deliver: one real startup-blocked request enters shared alert feed once
+ok 3 - R3 deliver: one real startup-blocked request enters shared alert feed once
+  ---
+  duration_ms: 0.945833
+  type: 'test'
+  ...
+# Subtest: R3 deliver: one real per-agent fence rejection enters shared alert feed once
+ok 4 - R3 deliver: one real per-agent fence rejection enters shared alert feed once
+  ---
+  duration_ms: 32.878792
+  type: 'test'
+  ...
+# Subtest: R3 product: one real startup-blocked request enters shared alert feed once
+ok 5 - R3 product: one real startup-blocked request enters shared alert feed once
+  ---
+  duration_ms: 0.740667
+  type: 'test'
+  ...
+# Subtest: R3 product: one real per-agent fence rejection enters shared alert feed once
+ok 6 - R3 product: one real per-agent fence rejection enters shared alert feed once
+  ---
+  duration_ms: 36.724125
+  type: 'test'
+  ...
+# Subtest: R3 website: one real startup-blocked request enters shared alert feed once
+ok 7 - R3 website: one real startup-blocked request enters shared alert feed once
+  ---
+  duration_ms: 3.49825
+  type: 'test'
+  ...
+# Subtest: R3 website: one real per-agent fence rejection enters shared alert feed once
+ok 8 - R3 website: one real per-agent fence rejection enters shared alert feed once
+  ---
+  duration_ms: 65.538292
+  type: 'test'
+  ...
+# Subtest: R3 blocked observation accepts only bounded code/reason/agent metadata
+ok 9 - R3 blocked observation accepts only bounded code/reason/agent metadata
+  ---
+  duration_ms: 0.164875
+  type: 'test'
+  ...
+# Subtest: R3 a blocked process acquisition already counted by the chain is not counted again by ingress
+ok 10 - R3 a blocked process acquisition already counted by the chain is not counted again by ingress
+  ---
+  duration_ms: 16.780083
+  type: 'test'
+  ...
+# Subtest: R3 website: late blocked acquisition alerts once without exposing raw Agent identity
+ok 11 - R3 website: late blocked acquisition alerts once without exposing raw Agent identity
+  ---
+  duration_ms: 20.294833
+  type: 'test'
+  ...
+# Subtest: R3 product: observing rejection preserves its existing raw-fence fallback
+ok 12 - R3 product: observing rejection preserves its existing raw-fence fallback
+  ---
+  duration_ms: 72.848875
+  type: 'test'
+  ...
+# Subtest: R3 website: observing rejection preserves its existing raw-fence fallback
+ok 13 - R3 website: observing rejection preserves its existing raw-fence fallback
+  ---
+  duration_ms: 94.212708
+  type: 'test'
+  ...
+# Subtest: R3 real router initialization alerts on an invalid startup store before any delivery
+ok 14 - R3 real router initialization alerts on an invalid startup store before any delivery
+  ---
+  duration_ms: 12.9295
+  type: 'test'
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 526.781584

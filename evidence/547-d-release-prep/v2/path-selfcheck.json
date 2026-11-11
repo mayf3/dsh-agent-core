@@ -1,0 +1,25 @@
+{
+  "observed_at": "2026-11-08T08:28:31.974937+00:00",
+  "paths": [
+    {
+      "path": "/Users/yanfenma/workspace/project/worktrees/h547-release-prep/BRIEF-547-D-RELEASE-PREP.md",
+      "exists": true
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/pack-provenance.json",
+      "exists": true
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+      "exists": true
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+      "exists": true
+    },
+    {
+      "path": "/Users/Shared/r129d-rollback-20261108/DEPLOY-RECEIPT.md",
+      "exists": true
+    }
+  ]
+}

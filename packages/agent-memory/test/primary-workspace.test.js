@@ -1,3 +1,4 @@
+import './helpers/isolated-workspace.js'
 /**
  * AGENT_PRIMARY_WORKSPACE_IMPORT_V1 (accepted @d823750) — memory seam tests
  * (task E + Spec §4/AC4).
@@ -75,6 +76,8 @@ async function mount(t, { env = {}, config = {} } = {}) {
       dailyNotes: false,
       ...config,
     })
+    // Await the synthetic mount's eager directory creation before teardown.
+    await mkdir(join(ctx.get('agentMemory').workspace, 'memory'), { recursive: true })
     t.after(() => {
       dispose?.()
       restore()

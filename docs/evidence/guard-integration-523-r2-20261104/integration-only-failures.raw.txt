@@ -1,0 +1,147 @@
+not ok 56 - D1 main first deliver: accepted, sessionId fixed main, one process, one prompt
+  ---
+  duration_ms: 47.630083
+  type: 'test'
+  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/delivery.test.js:147:1'
+  failureType: 'testCodeFailure'
+  error: "EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/packages/feishu-connector' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/feishu-connector'"
+  code: 'EEXIST'
+  stack: |-
+    startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)
+    failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)
+    failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)
+    startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)
+    bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13)
+  ...
+BASELINE: PASS / TAP 56 / L414
+
+not ok 57 - D2 main again: same fixed session, process reused, no second mapping
+  ---
+  duration_ms: 37.59125
+  type: 'test'
+  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/delivery.test.js:163:1'
+  failureType: 'testCodeFailure'
+  error: "EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/packages/workspace-bootstrap' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/workspace-bootstrap'"
+  code: 'EEXIST'
+  stack: |-
+    startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)
+    failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)
+    failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)
+    startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)
+    bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13)
+  ...
+BASELINE: PASS / TAP 57 / L429
+
+not ok 104 - D: imported agent — spawn hands the process the imported workspace + env mechanically
+  ---
+  duration_ms: 120.334666
+  type: 'test'
+  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/primary-workspace.test.js:159:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + Error: EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/bundle-agent-switch' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-agent-switch'
+    +     at startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)
+    +     at failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)
+    +     at failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)
+    +     at startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)
+    +     at bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13) {
+    +   agentId: 'agt_stock_agent',
+    +   code: 'EEXIST',
+    +   processGeneration: 1,
+    +   routeChain: {
+    +     failureClass: 'spawn_failed_without_child',
+    +     finalOutcome: 'spawn_failed_without_child',
+    +     routeChainId: 'single-route',
+    +     totalRouteAttempts: 1
+    +   },
+    +   startupFailureStage: 'provisionHome'
+    + }
+    - undefined
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  actual:
+  error: "EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/bundle-agent-switch' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-agent-switch'"
+  stack: |-
+    startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)
+    failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)
+    failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)
+    startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)
+    bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13)
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///private/tmp/dsh-523-integration/packages/agent-router/test/primary-workspace.test.js:164:10)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+BASELINE: PASS / TAP 104 / L1155
+
+not ok 82 - V2 normal: the conversation-derived workspace is NEVER chosen
+  ---
+  duration_ms: 91.918458
+  type: 'test'
+  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/feishu-v2-normal.test.js:147:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'turns')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (file:///private/tmp/dsh-523-integration/packages/agent-router/test/feishu-v2-normal.test.js:150:26)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+  ...
+BASELINE: PASS / TAP 82 / L865
+
+not ok 31 - broker RPC: delayed turn-A carrier cannot inherit live turn-B ingress context
+  ---
+  duration_ms: 36.785042
+  type: 'test'
+  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/broker-rpc.test.js:170:1'
+  failureType: 'testCodeFailure'
+  error: "EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/bundle-demo' -> '/tmp/home/agt_a/profiles/node_modules/@agent-core/bundle-demo'"
+  code: 'EEXIST'
+  stack: |-
+    startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)
+    failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)
+    failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)
+    startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)
+    bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13)
+  ...
+BASELINE: PASS / TAP 31 / L210
+
+not ok 29 - broker RPC: passes the exact immutable active-turn context beside actual agentId
+  ---
+  duration_ms: 22.809667
+  type: 'test'
+  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/broker-rpc.test.js:112:1'
+  failureType: 'testCodeFailure'
+  error: "EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/packages/fixed-operation' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/fixed-operation'"
+  code: 'EEXIST'
+  stack: |-
+    startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)
+    failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)
+    failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)
+    startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)
+    bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13)
+  ...
+BASELINE: PASS / TAP 29 / L188
+
+not ok 30 - broker RPC: stale generation, settled execution, and cleared turn never forward ingress context
+  ---
+  duration_ms: 47.834875
+  type: 'test'
+  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/broker-rpc.test.js:146:1'
+  failureType: 'testCodeFailure'
+  error: "EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/bundle-agent-switch' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-agent-switch'"
+  code: 'EEXIST'
+  stack: |-
+    startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)
+    failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)
+    failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)
+    startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)
+    bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13)
+  ...
+BASELINE: PASS / TAP 30 / L200

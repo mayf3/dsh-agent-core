@@ -1,0 +1,1085 @@
+{
+  "observed_at": "2026-11-07T15:51:39.869875+00:00",
+  "roots": [
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules",
+      "started_at": "2026-11-07T15:51:34.224683+00:00",
+      "ended_at": "2026-11-07T15:51:36.190028+00:00",
+      "aggregate": {
+        "regular_files": 56173,
+        "unique_regular_inodes": 56173,
+        "logical_bytes_unique": 1255991394,
+        "allocated_bytes_unique": 1420910592,
+        "private_bytes_nlink1": 4096,
+        "private_bytes_all_links_in_root": 4096,
+        "hardlink_inodes": 0,
+        "clone_refcount_gt1_files": 56142,
+        "attr_unsupported_files": 0,
+        "nonregular_allocated_bytes": 0
+      },
+      "errors": [],
+      "largest_files": [
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@anthropic-ai+claude-agent-sdk-darwin-arm64@0.3.220/node_modules/@anthropic-ai/claude-agent-sdk-darwin-arm64/claude",
+          "logical_bytes": 256908272,
+          "allocated_bytes": 256909312,
+          "dev": 16777229,
+          "inode": 299487782,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265480729,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@openai+codex@0.147.0-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex",
+          "logical_bytes": 219997536,
+          "allocated_bytes": 220000256,
+          "dev": 16777229,
+          "inode": 299447985,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265488538,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@openai+codex@0.147.0-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex-code-mode-host",
+          "logical_bytes": 49991616,
+          "allocated_bytes": 49991680,
+          "dev": 16777229,
+          "inode": 299447986,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265488539,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@rolldown+binding-darwin-arm64@1.1.1/node_modules/@rolldown/binding-darwin-arm64/rolldown-binding.darwin-arm64.node",
+          "logical_bytes": 23675456,
+          "allocated_bytes": 23678976,
+          "dev": 16777229,
+          "inode": 299466926,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265443450,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@oxlint-tsgolint+darwin-arm64@7.0.2001/node_modules/@oxlint-tsgolint/darwin-arm64/tsgolint",
+          "logical_bytes": 21873218,
+          "allocated_bytes": 21876736,
+          "dev": 16777229,
+          "inode": 299463253,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265412811,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@rolldown+binding-darwin-arm64@1.0.3/node_modules/@rolldown/binding-darwin-arm64/rolldown-binding.darwin-arm64.node",
+          "logical_bytes": 18778272,
+          "allocated_bytes": 18780160,
+          "dev": 16777229,
+          "inode": 299490306,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265399038,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@img+sharp-libvips-darwin-arm64@1.3.2/node_modules/@img/sharp-libvips-darwin-arm64/lib/libvips-cpp.8.18.3.dylib",
+          "logical_bytes": 17765992,
+          "allocated_bytes": 17768448,
+          "dev": 16777229,
+          "inode": 299455934,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265480390,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/mermaid@11.16.0/node_modules/mermaid/dist/mermaid.js.map",
+          "logical_bytes": 13276891,
+          "allocated_bytes": 13279232,
+          "dev": 16777229,
+          "inode": 299492857,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265420072,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/mermaid@11.16.0/node_modules/mermaid/dist/mermaid.min.js.map",
+          "logical_bytes": 13266635,
+          "allocated_bytes": 13266944,
+          "dev": 16777229,
+          "inode": 299493521,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265420099,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/lefthook-darwin-arm64@2.1.9/node_modules/lefthook-darwin-arm64/bin/lefthook",
+          "logical_bytes": 13141154,
+          "allocated_bytes": 13144064,
+          "dev": 16777229,
+          "inode": 299486040,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265403129,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@oxlint+binding-darwin-arm64@1.76.0/node_modules/@oxlint/binding-darwin-arm64/oxlint.darwin-arm64.node",
+          "logical_bytes": 12446144,
+          "allocated_bytes": 12447744,
+          "dev": 16777229,
+          "inode": 299439217,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265420762,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@esbuild+darwin-arm64@0.28.1/node_modules/@esbuild/darwin-arm64/bin/esbuild",
+          "logical_bytes": 10573778,
+          "allocated_bytes": 10575872,
+          "dev": 16777229,
+          "inode": 299463958,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265400010,
+            "extended_flags": 65,
+            "clone_refcount": 10
+          }
+        }
+      ],
+      "clone_groups_top20": [
+        {
+          "device": 16777229,
+          "clone_id": 265480729,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 256909312,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@anthropic-ai+claude-agent-sdk-darwin-arm64@0.3.220/node_modules/@anthropic-ai/claude-agent-sdk-darwin-arm64/claude"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265488538,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 220000256,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@openai+codex@0.147.0-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265488539,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 49991680,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@openai+codex@0.147.0-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex-code-mode-host"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265443450,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 23678976,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@rolldown+binding-darwin-arm64@1.1.1/node_modules/@rolldown/binding-darwin-arm64/rolldown-binding.darwin-arm64.node"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265412811,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 21876736,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@oxlint-tsgolint+darwin-arm64@7.0.2001/node_modules/@oxlint-tsgolint/darwin-arm64/tsgolint"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265399038,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 18780160,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@rolldown+binding-darwin-arm64@1.0.3/node_modules/@rolldown/binding-darwin-arm64/rolldown-binding.darwin-arm64.node"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265480390,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 17768448,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@img+sharp-libvips-darwin-arm64@1.3.2/node_modules/@img/sharp-libvips-darwin-arm64/lib/libvips-cpp.8.18.3.dylib"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265420072,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 13279232,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/mermaid@11.16.0/node_modules/mermaid/dist/mermaid.js.map"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265420099,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 13266944,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/mermaid@11.16.0/node_modules/mermaid/dist/mermaid.min.js.map"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265403129,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 13144064,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/lefthook-darwin-arm64@2.1.9/node_modules/lefthook-darwin-arm64/bin/lefthook"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265420762,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 12447744,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@oxlint+binding-darwin-arm64@1.76.0/node_modules/@oxlint/binding-darwin-arm64/oxlint.darwin-arm64.node"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265400010,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 10,
+          "allocated_bytes_one": 10575872,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@esbuild+darwin-arm64@0.28.1/node_modules/@esbuild/darwin-arm64/bin/esbuild"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265480712,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 10,
+          "allocated_bytes_one": 9936896,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@esbuild+darwin-arm64@0.25.12/node_modules/@esbuild/darwin-arm64/bin/esbuild"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265470911,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 10,
+          "allocated_bytes_one": 9863168,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@esbuild+darwin-arm64@0.21.5/node_modules/@esbuild/darwin-arm64/bin/esbuild"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265409182,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 9146368,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/typescript@6.0.3/node_modules/typescript/lib/typescript.js"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265397919,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 8519680,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/lightningcss-darwin-arm64@1.32.0/node_modules/lightningcss-darwin-arm64/lightningcss.darwin-arm64.node"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265419298,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 8216576,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/mermaid@11.16.0/node_modules/mermaid/dist/mermaid.js"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265471426,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 8,
+          "allocated_bytes_one": 6311936,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/node-pty@1.2.0-beta.15_patch_hash=b40ae545608897914bd25fb009c97eeac478c34e8a910298ddcb01b746534bb0/node_modules/node-pty/prebuilds/win32-x64/conpty.pdb"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265409158,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 6242304,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/typescript@6.0.3/node_modules/typescript/lib/_tsc.js"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265471365,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 8,
+          "allocated_bytes_one": 5918720,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a45-trusted-native-tool-policy-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/node-pty@1.2.0-beta.15_patch_hash=b40ae545608897914bd25fb009c97eeac478c34e8a910298ddcb01b746534bb0/node_modules/node-pty/prebuilds/win32-arm64/conpty.pdb"
+          ]
+        }
+      ],
+      "interpretation": "private bytes is metadata estimate for unshared data; nlink and open handles/snapshot/time drift still gate actual release; candidate authorization is separate; union-clone final-link release may exceed private sum; no file content read"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules",
+      "started_at": "2026-11-07T15:51:36.201491+00:00",
+      "ended_at": "2026-11-07T15:51:37.887913+00:00",
+      "aggregate": {
+        "regular_files": 56173,
+        "unique_regular_inodes": 56173,
+        "logical_bytes_unique": 1255991394,
+        "allocated_bytes_unique": 1420910592,
+        "private_bytes_nlink1": 1420910592,
+        "private_bytes_all_links_in_root": 1420910592,
+        "hardlink_inodes": 0,
+        "clone_refcount_gt1_files": 0,
+        "attr_unsupported_files": 0,
+        "nonregular_allocated_bytes": 0
+      },
+      "errors": [],
+      "largest_files": [
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@anthropic-ai+claude-agent-sdk-darwin-arm64@0.3.220/node_modules/@anthropic-ai/claude-agent-sdk-darwin-arm64/claude",
+          "logical_bytes": 256908272,
+          "allocated_bytes": 256909312,
+          "dev": 16777229,
+          "inode": 300371961,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 256909312,
+            "clone_id": 300371961,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@openai+codex@0.147.0-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex",
+          "logical_bytes": 219997536,
+          "allocated_bytes": 220000256,
+          "dev": 16777229,
+          "inode": 300331653,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 220000256,
+            "clone_id": 300331653,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@openai+codex@0.147.0-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex-code-mode-host",
+          "logical_bytes": 49991616,
+          "allocated_bytes": 49991680,
+          "dev": 16777229,
+          "inode": 300331656,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 49991680,
+            "clone_id": 300331656,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@rolldown+binding-darwin-arm64@1.1.1/node_modules/@rolldown/binding-darwin-arm64/rolldown-binding.darwin-arm64.node",
+          "logical_bytes": 23675456,
+          "allocated_bytes": 23678976,
+          "dev": 16777229,
+          "inode": 300350763,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 23678976,
+            "clone_id": 300350763,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@oxlint-tsgolint+darwin-arm64@7.0.2001/node_modules/@oxlint-tsgolint/darwin-arm64/tsgolint",
+          "logical_bytes": 21873218,
+          "allocated_bytes": 21876736,
+          "dev": 16777229,
+          "inode": 300347014,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 21876736,
+            "clone_id": 300347014,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@rolldown+binding-darwin-arm64@1.0.3/node_modules/@rolldown/binding-darwin-arm64/rolldown-binding.darwin-arm64.node",
+          "logical_bytes": 18778272,
+          "allocated_bytes": 18780160,
+          "dev": 16777229,
+          "inode": 300374499,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 18780160,
+            "clone_id": 300374499,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@img+sharp-libvips-darwin-arm64@1.3.2/node_modules/@img/sharp-libvips-darwin-arm64/lib/libvips-cpp.8.18.3.dylib",
+          "logical_bytes": 17765992,
+          "allocated_bytes": 17768448,
+          "dev": 16777229,
+          "inode": 300339632,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 17768448,
+            "clone_id": 300339632,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/mermaid@11.16.0/node_modules/mermaid/dist/mermaid.js.map",
+          "logical_bytes": 13276891,
+          "allocated_bytes": 13279232,
+          "dev": 16777229,
+          "inode": 300376974,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 13279232,
+            "clone_id": 300376974,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/mermaid@11.16.0/node_modules/mermaid/dist/mermaid.min.js.map",
+          "logical_bytes": 13266635,
+          "allocated_bytes": 13266944,
+          "dev": 16777229,
+          "inode": 300377614,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 13266944,
+            "clone_id": 300377614,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/lefthook-darwin-arm64@2.1.9/node_modules/lefthook-darwin-arm64/bin/lefthook",
+          "logical_bytes": 13141154,
+          "allocated_bytes": 13144064,
+          "dev": 16777229,
+          "inode": 300370236,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 13144064,
+            "clone_id": 300370236,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@oxlint+binding-darwin-arm64@1.76.0/node_modules/@oxlint/binding-darwin-arm64/oxlint.darwin-arm64.node",
+          "logical_bytes": 12446144,
+          "allocated_bytes": 12447744,
+          "dev": 16777229,
+          "inode": 300322733,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 12447744,
+            "clone_id": 300322733,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a46-cross-definition-runtime-20261028/native-runtime-candidate/node_modules/.pnpm/@esbuild+darwin-arm64@0.28.1/node_modules/@esbuild/darwin-arm64/bin/esbuild",
+          "logical_bytes": 10573778,
+          "allocated_bytes": 10575872,
+          "dev": 16777229,
+          "inode": 300347732,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 10575872,
+            "clone_id": 300347732,
+            "extended_flags": 0,
+            "clone_refcount": 1
+          }
+        }
+      ],
+      "clone_groups_top20": [],
+      "interpretation": "private bytes is metadata estimate for unshared data; nlink and open handles/snapshot/time drift still gate actual release; candidate authorization is separate; union-clone final-link release may exceed private sum; no file content read"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules",
+      "started_at": "2026-11-07T15:51:37.889850+00:00",
+      "ended_at": "2026-11-07T15:51:39.859662+00:00",
+      "aggregate": {
+        "regular_files": 56173,
+        "unique_regular_inodes": 56173,
+        "logical_bytes_unique": 1255991087,
+        "allocated_bytes_unique": 1420910592,
+        "private_bytes_nlink1": 0,
+        "private_bytes_all_links_in_root": 0,
+        "hardlink_inodes": 0,
+        "clone_refcount_gt1_files": 56143,
+        "attr_unsupported_files": 0,
+        "nonregular_allocated_bytes": 0
+      },
+      "errors": [],
+      "largest_files": [
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@anthropic-ai+claude-agent-sdk-darwin-arm64@0.3.220/node_modules/@anthropic-ai/claude-agent-sdk-darwin-arm64/claude",
+          "logical_bytes": 256908272,
+          "allocated_bytes": 256909312,
+          "dev": 16777229,
+          "inode": 288050153,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265480729,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@openai+codex@0.147.0-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex",
+          "logical_bytes": 219997536,
+          "allocated_bytes": 220000256,
+          "dev": 16777229,
+          "inode": 287988987,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265488538,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@openai+codex@0.147.0-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex-code-mode-host",
+          "logical_bytes": 49991616,
+          "allocated_bytes": 49991680,
+          "dev": 16777229,
+          "inode": 287988988,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265488539,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@rolldown+binding-darwin-arm64@1.1.1/node_modules/@rolldown/binding-darwin-arm64/rolldown-binding.darwin-arm64.node",
+          "logical_bytes": 23675456,
+          "allocated_bytes": 23678976,
+          "dev": 16777229,
+          "inode": 288018697,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265443450,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@oxlint-tsgolint+darwin-arm64@7.0.2001/node_modules/@oxlint-tsgolint/darwin-arm64/tsgolint",
+          "logical_bytes": 21873218,
+          "allocated_bytes": 21876736,
+          "dev": 16777229,
+          "inode": 288012968,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265412811,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@rolldown+binding-darwin-arm64@1.0.3/node_modules/@rolldown/binding-darwin-arm64/rolldown-binding.darwin-arm64.node",
+          "logical_bytes": 18778272,
+          "allocated_bytes": 18780160,
+          "dev": 16777229,
+          "inode": 288053811,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265399038,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@img+sharp-libvips-darwin-arm64@1.3.2/node_modules/@img/sharp-libvips-darwin-arm64/lib/libvips-cpp.8.18.3.dylib",
+          "logical_bytes": 17765992,
+          "allocated_bytes": 17768448,
+          "dev": 16777229,
+          "inode": 288001414,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265480390,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/mermaid@11.16.0/node_modules/mermaid/dist/mermaid.js.map",
+          "logical_bytes": 13276891,
+          "allocated_bytes": 13279232,
+          "dev": 16777229,
+          "inode": 288057340,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265420072,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/mermaid@11.16.0/node_modules/mermaid/dist/mermaid.min.js.map",
+          "logical_bytes": 13266635,
+          "allocated_bytes": 13266944,
+          "dev": 16777229,
+          "inode": 288058247,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265420099,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/lefthook-darwin-arm64@2.1.9/node_modules/lefthook-darwin-arm64/bin/lefthook",
+          "logical_bytes": 13141154,
+          "allocated_bytes": 13144064,
+          "dev": 16777229,
+          "inode": 288047561,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265403129,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@oxlint+binding-darwin-arm64@1.76.0/node_modules/@oxlint/binding-darwin-arm64/oxlint.darwin-arm64.node",
+          "logical_bytes": 12446144,
+          "allocated_bytes": 12447744,
+          "dev": 16777229,
+          "inode": 287974528,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265420762,
+            "extended_flags": 65,
+            "clone_refcount": 7
+          }
+        },
+        {
+          "path": "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@esbuild+darwin-arm64@0.28.1/node_modules/@esbuild/darwin-arm64/bin/esbuild",
+          "logical_bytes": 10573778,
+          "allocated_bytes": 10575872,
+          "dev": 16777229,
+          "inode": 288014085,
+          "nlink": 1,
+          "attr": {
+            "status": "OK",
+            "returned_fork_mask": "0x1308",
+            "length": 52,
+            "private_bytes": 0,
+            "clone_id": 265400010,
+            "extended_flags": 65,
+            "clone_refcount": 10
+          }
+        }
+      ],
+      "clone_groups_top20": [
+        {
+          "device": 16777229,
+          "clone_id": 265480729,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 256909312,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@anthropic-ai+claude-agent-sdk-darwin-arm64@0.3.220/node_modules/@anthropic-ai/claude-agent-sdk-darwin-arm64/claude"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265488538,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 220000256,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@openai+codex@0.147.0-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265488539,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 49991680,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@openai+codex@0.147.0-darwin-arm64/node_modules/@openai/codex/vendor/aarch64-apple-darwin/bin/codex-code-mode-host"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265443450,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 23678976,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@rolldown+binding-darwin-arm64@1.1.1/node_modules/@rolldown/binding-darwin-arm64/rolldown-binding.darwin-arm64.node"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265412811,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 21876736,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@oxlint-tsgolint+darwin-arm64@7.0.2001/node_modules/@oxlint-tsgolint/darwin-arm64/tsgolint"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265399038,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 18780160,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@rolldown+binding-darwin-arm64@1.0.3/node_modules/@rolldown/binding-darwin-arm64/rolldown-binding.darwin-arm64.node"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265480390,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 17768448,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@img+sharp-libvips-darwin-arm64@1.3.2/node_modules/@img/sharp-libvips-darwin-arm64/lib/libvips-cpp.8.18.3.dylib"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265420072,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 13279232,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/mermaid@11.16.0/node_modules/mermaid/dist/mermaid.js.map"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265420099,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 13266944,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/mermaid@11.16.0/node_modules/mermaid/dist/mermaid.min.js.map"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265403129,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 13144064,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/lefthook-darwin-arm64@2.1.9/node_modules/lefthook-darwin-arm64/bin/lefthook"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265420762,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 12447744,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@oxlint+binding-darwin-arm64@1.76.0/node_modules/@oxlint/binding-darwin-arm64/oxlint.darwin-arm64.node"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265400010,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 10,
+          "allocated_bytes_one": 10575872,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@esbuild+darwin-arm64@0.28.1/node_modules/@esbuild/darwin-arm64/bin/esbuild"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265480712,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 10,
+          "allocated_bytes_one": 9936896,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@esbuild+darwin-arm64@0.25.12/node_modules/@esbuild/darwin-arm64/bin/esbuild"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265470911,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 10,
+          "allocated_bytes_one": 9863168,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/@esbuild+darwin-arm64@0.21.5/node_modules/@esbuild/darwin-arm64/bin/esbuild"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265409182,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 9146368,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/typescript@6.0.3/node_modules/typescript/lib/typescript.js"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265397919,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 8519680,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/lightningcss-darwin-arm64@1.32.0/node_modules/lightningcss-darwin-arm64/lightningcss.darwin-arm64.node"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265419298,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 8216576,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/mermaid@11.16.0/node_modules/mermaid/dist/mermaid.js"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265471426,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 8,
+          "allocated_bytes_one": 6311936,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/node-pty@1.2.0-beta.15_patch_hash=b40ae545608897914bd25fb009c97eeac478c34e8a910298ddcb01b746534bb0/node_modules/node-pty/prebuilds/win32-x64/conpty.pdb"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265409158,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 7,
+          "allocated_bytes_one": 6242304,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/typescript@6.0.3/node_modules/typescript/lib/_tsc.js"
+          ]
+        },
+        {
+          "device": 16777229,
+          "clone_id": 265471365,
+          "observed_inode_count": 1,
+          "reported_clone_refcount": 8,
+          "allocated_bytes_one": 5918720,
+          "samples": [
+            "/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a29-native-tool-env-luna/native-runtime-candidate/node_modules/.pnpm/node-pty@1.2.0-beta.15_patch_hash=b40ae545608897914bd25fb009c97eeac478c34e8a910298ddcb01b746534bb0/node_modules/node-pty/prebuilds/win32-arm64/conpty.pdb"
+          ]
+        }
+      ],
+      "interpretation": "private bytes is metadata estimate for unshared data; nlink and open handles/snapshot/time drift still gate actual release; candidate authorization is separate; union-clone final-link release may exceed private sum; no file content read"
+    }
+  ]
+}

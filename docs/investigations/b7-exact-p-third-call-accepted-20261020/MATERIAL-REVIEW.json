@@ -1,0 +1,164 @@
+{
+  "kind": "EXACT_P_CAP_AND_THIRD_PACKAGING_BOUNDARY_MATERIAL_REVIEW",
+  "version": "v1 receipt; reviewed unit v1.1",
+  "created_at": "2026-10-19T18:49:24.592408+00:00",
+  "disposition": "PASS_PROPOSAL_MATERIAL_ONLY",
+  "blocking_findings": [],
+  "reader": {
+    "agent": "/root/sol_e40_independent_reader",
+    "role": "Original same-chain nonauthor reader",
+    "requested_model": "gpt-6.1-sol",
+    "requested_reasoning": "ultra",
+    "native_observed_model": "UNKNOWN",
+    "attribution": "Personally read the fixed new unit/index and saved primary B intent/issue/process/raw/readback/terminal records, plus only relevant accepted Spec/decision fields. No input or partial read, source/code/test rerun, fresh native observation or count grant by this reader."
+  },
+  "unit": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-complete-p-cap-and-third-packaging-boundary/PROPOSED-EXACT-P-CAP-AND-THIRD-PACKAGING-BOUNDARY.v1.1.md",
+    "bytes": 9832,
+    "sha256": "23a4621b7de85c06e0603adf30993bc046a226fffb5b1ed7cb73e9a474eecf22"
+  },
+  "index": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-complete-p-cap-and-third-packaging-boundary/INDEX.v1.1.json",
+    "bytes": 8090,
+    "sha256": "7f2ec5c86e8900f08ade8581aea118905b87305bb8dc6681c5fd4511e89ac135"
+  },
+  "reused_A_source_review": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/independent-sol-readback/CONTINUATION-A-AFFECTED-SOURCE-RECEIPT.v1.json",
+    "bytes": 18874,
+    "sha256": "1bd50ca8d0abacc71590c4acc00e18fac7105b4df44a5a95790796bd6d41882f"
+  },
+  "scope": "Only new numerical amendment N, explicit third-invocation effect/mandate boundary E and quantity/retained-evidence/APP boundary R. A source PASS/883f and old runtime/inverse/tests remain unchanged; no new implementation or production decision.",
+  "primary_evidence": {
+    "terminal": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/BUILD-TERMINAL-INDEX.v1.json",
+      "bytes": 6415,
+      "sha256": "46007dff9d3319c8d2447522514fc079ac98386801ac121d20475574fe0a4fcc"
+    },
+    "same_process_readback": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/RESULT-READBACK.json",
+      "bytes": 2341,
+      "sha256": "22afc7c91f5a47f399c2ced1bb76922f035cd2db9c5ef9e047cbac288198de9a"
+    },
+    "process": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/PROCESS.json",
+      "bytes": 1291,
+      "sha256": "f9655c18fd6668c6b238960600faaf26ffbaa6c17f2fe8be2f79fa2e66a4eda0"
+    },
+    "stdout": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/stdout.raw",
+      "bytes": 713,
+      "sha256": "57d582baa27b71a21494f09bd5067bfead2cd228ad5722f15c8e86474effca76"
+    },
+    "stderr": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/stderr.raw",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "intent": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/INTENT.json",
+      "bytes": 10228,
+      "sha256": "7a9f53bfeab1354709f2c7c30b2c9195f1cc49569ed36627bfcaeb3c0c95c06f"
+    },
+    "issued": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/ISSUED.json",
+      "bytes": 457,
+      "sha256": "7ab1d3e7cd3e58d9a33e5f3afa649dba0fd3e1073361be18fe4b3af08ffc90d5"
+    },
+    "existing_accepted_repository_spec": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/docs-review-worktrees/e42-fixed-offline-continuation-accepted-20261020/docs/specs/AGENT_CORE_B7_FIXED_OFFLINE_CARRIER_CONTINUATION_V1.md",
+      "bytes": 14790,
+      "sha256": "3af49b3bcd981a8cd096c25b40062cdeac6c8692ff537a64ad1bc5a8dc7d71d5"
+    },
+    "existing_qualified_decision": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/ORIGINAL-FIXED-869B-OFFLINE-CARRIER-CONTINUATION-TECHNICAL-DECISION.v2.1.json",
+      "bytes": 27978,
+      "sha256": "dc465111190fab7fe88cf5c987950d40830c660836423bca67a2a929acd7d53c"
+    }
+  },
+  "checked_actual_B_facts": {
+    "attribution": "Author-run native invocation; saved same-process records and raw result verified by this reader. No independent re-invocation or remeasurement.",
+    "pid": 9687,
+    "recorded_uid": 502,
+    "recorded_returncode": 2,
+    "settled": true,
+    "started_at": "2026-10-19T18:42:05.932194+00:00",
+    "ended_at": "2026-10-19T18:42:06.988107+00:00",
+    "source_sha256_recorded_before_and_after": "883fa2a815a84438276113ad8e31bec2ce627b9dc43ff8fd5b4fccbe5766622b",
+    "result": {
+      "kind": "FIXED_B7_OFFLINE_BUILD_RESULT_V1",
+      "stage": "QUANTITY_DECIDED",
+      "status": "REFUSED",
+      "code": "PAYLOAD_BINDING",
+      "reason": "PAYLOAD_ALLOCATION_LIMIT",
+      "completeEnumeration": true,
+      "outputPublished": false,
+      "payloadRoundedBytes": 192733184,
+      "logicalBytes": 120514792,
+      "objectCount": 23575,
+      "maxDepth": 11,
+      "catalogBytes": 4694846,
+      "catalogSha": null
+    },
+    "payload_and_catalog_absent": "Saved same-process readback confirms both absent; this reader did not stat output paths.",
+    "packaging_total": 2,
+    "packaging_remaining": 0,
+    "collector_total": 2,
+    "collector_remaining": 0,
+    "meaning": "Complete proposed in-memory quantities, refused before OUTPUT_STARTED. No catalog file/digest, published carrier, capacity result or business evidence. Historical first failure subpredicate remains NOT_CAPTURED."
+  },
+  "N_numerical_and_source_amendment": {
+    "material_finding": "No substantive defect found in the bounded request.",
+    "unit_lines": "13,19,23,35-37",
+    "old_payload_cap": 192720896,
+    "proposed_payload_cap": 192733184,
+    "delta": 12288,
+    "proposed_only_source_changes": "Exact 883f parent: runtime/catalog P comparison at original line112 and build P comparison at line241; inverse only these two numerical comparisons must restore exact 883f. This is explicitly a runtime catalog admission change as well as an offline builder change.",
+    "unchanged_logical_limit_at_original_line220": 192720896,
+    "unchanged_bounds": "Compressed input/length/hash, row/depth/path, extension metadata/catalog bounds, root/object/empty-file formula, type/link/mode/home guards and P6/preparation/APP/native/outer.",
+    "acceptance_separation": "A source PASS and measured P do not accept N. Exact docs/base/PREFLIGHT and affected source closure are future implementation requirements already stated in the unit, not performed by this material review."
+  },
+  "E_third_invocation_boundary": {
+    "material_finding": "Request is explicit and honestly incompatible with current cap2/no-third, rather than treating a renamed publication as remaining quota.",
+    "unit_lines": "3,15,19,21,23,27-31,41",
+    "current_third_call_authorized": false,
+    "accepted_restriction_coordinates": "Repository Spec C-OFFLINE-4 line20 and embedded original body line61; dc465 disposition.total_fixed_869b_packaging_lineage_cap=2 and B_additional_effect_decision.third_packaging_call_allowed=false.",
+    "proposed_change": "Exactly one actual additional invocation, lineage total maximum3, same fixed input/entry/actor/channel/output, separate private EXCL0600 durable journal retaining predecessors; issue consumes on every outcome and leaves zero remaining/no fourth.",
+    "mandate": "Original delegated technical1378 is the precise first decision role identified by dc465. The new request asks that role to affirm jurisdiction over this count exception; it does not presume the role can waive an original-user boundary. If outside delegation, return the exact limiting citation and original-user boundary, without a generic Owner/OS gate.",
+    "no_permission_from_this_review": "N/arithmetic/source acceptance is not E permission. Until an effective exact E acceptance, no new input consumption or invocation; no change of name/path/identity/tool/channel reopens quota. UNKNOWN is same-handle/artifact recovery only.",
+    "no_new_access_scope": "No alternate input/denied-access retry, OS permission, SourceRoot/npm/config/APP/DB/collector/runtime/F/operation/production effect is conferred."
+  },
+  "R_cost_and_independent_gap": {
+    "material_finding": "Saved quantities are correctly kept separate from artifact, actual allocation/J/P0 and independent APP closure.",
+    "unit_lines": "7,17,29,31,35-39",
+    "arithmetic": {
+      "old12P": 2312650752,
+      "new12P": 2312798208,
+      "delta12P": 147456,
+      "proposed_catalog_length": 4694846,
+      "proposed_catalog_rounded": 4698112
+    },
+    "no_total_fit_claim": "147456 changes only 12P. It is not total new cost, free space, remaining capacity or admission. New publication separately includes one P payload, catalog<=16777216 and actual source/pin/intent/result/parent/temp overlaps; fixed final catalog and SHA remain absent.",
+    "retained_costs": "Protected first partial192720896, both prior ledgers/raw/metadata and future normal/failure/shadow/receipt overlaps remain charged. Lhome/Lshadow/Lshared/Lreceipt, archive/input/source/preimage/copy, original3N/2S/H/generation/rollback/growth/aux and genuine final J remain independent; no old4MiB/J/free-space/skip/delete credit.",
+    "saved_S_H": "Saved S/H values and H selected92 are historical references, not new measurements or evidence covering six target baselines.",
+    "APP": "c9f9 selected-e1c shared-codex.js/plugin-artifact.js/ensure-symlink.js primary bodies/pins, finite inventory and P6-local binding remain UNPROVEN. No APP read/implementation grant or Lshared=0; dependent integration/tuple/P0 remains stopped independently of this material decision.",
+    "old_failure": "New complete-P refusal does not prove the historical first failure cause."
+  },
+  "decision_material_readiness": {
+    "sufficient_for": "Original qualified role to decide N and E separately and acknowledge/reject limited-evidence boundary R with explicit jurisdiction/limitations.",
+    "status": "PROPOSED_NOT_ACCEPTED / NOT_SENT / route_count0 as frozen; exclusive new14c dispatch. This reader does not route to qualified actor.",
+    "not_a_grant": [
+      "Source implementation",
+      "A new fixed input read/build/publication",
+      "Changing cap or quota",
+      "APP integration",
+      "Capacity/P0/business admission"
+    ]
+  },
+  "reader_effects": {
+    "candidate_or_source_changes": 0,
+    "input_or_partial_reads": 0,
+    "build_or_test_calls": 0,
+    "F_or_production_effects": 0,
+    "owned_material_receipt_only": true
+  }
+}

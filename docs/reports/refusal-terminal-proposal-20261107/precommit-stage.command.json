@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "git",
+    "add",
+    "--",
+    "BRIEF-REFUSAL-PROPOSAL.md",
+    "STOPPED-REFUSAL-PROPOSAL.md",
+    "RECEIPT-REFUSAL-PROPOSAL.md",
+    "docs/specs/AGENT_CORE_REFUSAL_TERMINAL_HANDOFF_V1.md",
+    "docs/reports/refusal-terminal-proposal-20261107"
+  ],
+  "started_at_utc": "2026-11-07T13:11:03.430427+00:00",
+  "finished_at_utc": "2026-11-07T13:11:03.445787+00:00",
+  "cwd": "/private/tmp/h-refusal-proposal",
+  "rc": 0,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

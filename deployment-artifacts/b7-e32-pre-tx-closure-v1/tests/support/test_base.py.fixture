@@ -1,0 +1,352 @@
+"""Independent isolated tests of the candidate's actual e29 installation wiring.
+
+No production service is loaded or called. Later behavior cases execute the real
+sealed modules and original top-level installation statements against owned I/O.
+"""
+import ast
+import copy
+import contextlib
+import fcntl
+import hashlib
+import io
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import socket
+import stat
+import subprocess
+import sys
+import tempfile
+import time
+import types
+import unittest
+from unittest.mock import patch
+
+WB = Path(__file__).resolve().parent
+SERVER = WB / "staging/deployment_system.py"
+CLIENT = WB / "staging/ds_client.py"
+OP = "b7-packet-r27-83054332f5c352f2e-e29"
+PACKET = "b7-native-execution-r27-new-candidate-uninstallable"
+MANIFEST = "830543323f22ccd3717a38a55c178e97716a61615fcc16b17860d84ba10e659c"
+SOURCE = "cac1c3a334e6ff92e0fd113e598149ba553f3098f22009372b88eb9a0e120e85"
+OLD_REG_POLICY = "86c5b153b8c6bcbe4b68e9c1455e54e5e5135cb159aeb879e8e2f75a98c284f5"
+OLD_EXEC_POLICY = "ece098a90d756db62277e0ebc9367ce8ddf1402bdfc6b5a0b3baa47291a4a44e"
+STATUS = "DS_B7_EXECUTION_STATUS_V2"
+DISPOSE = "B7_PACKET_DISPOSAL_V3"
+RESULTS = []
+
+
+def canonical(value):
+    return json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+class Candidate:
+    def __init__(self):
+        self.raw = SERVER.read_bytes()
+        self.sha256 = sha(self.raw)
+        self.tree = ast.parse(self.raw, filename=str(SERVER))
+        self.client_raw = CLIENT.read_bytes()
+        self.client_sha256 = sha(self.client_raw)
+        self.client_tree = ast.parse(self.client_raw, filename=str(CLIENT))
+        # Parse once; every fixture executes fresh classes and actual hook calls.
+        self.wiring = []
+        started = False
+        for node in self.tree.body:
+            if isinstance(node, ast.Import) and any(a.asname == "_b7_types" for a in node.names):
+                started = True
+            if started:
+                if isinstance(node, ast.If):
+                    break  # Never execute the daemon's __main__/serve branch.
+                self.wiring.append(node)
+        assert self.wiring, "real B7 installation block not found"
+
+
+class PathRelocation(ast.NodeTransformer):
+    def __init__(self, fixture):
+        self.fixture = fixture
+
+    def visit_Constant(self, node):
+        if isinstance(node.value, str) and node.value.startswith("/"):
+            # Preserve the interpreter required by the real policy validator;
+            # subprocess creation is separately prohibited during all requests.
+            if node.value != "/usr/bin/python3":
+                return ast.copy_location(ast.Constant(self.fixture.relocate(node.value)), node)
+        return node
+
+
+class Fixture:
+    """Root ownership is modeled; modes, file bytes, fd reads and locks are real.
+
+    All filesystem effects are confined to an exclusive mkdtemp. Production
+    functions/classes are not patched. Only immutable policy paths and the
+    E29_CLOSURE fixture pins are configured before the real installation calls.
+    """
+    def __init__(self, candidate):
+        self.candidate = candidate
+        self.root = Path(tempfile.mkdtemp(prefix="codex-e29-integration-"))
+        self.uid_by_path = {}
+        self.writes = []
+        self.reads = []
+        self.stop_before_terminal = False
+        self.after_write = None
+        self.response_transform = None
+        self.denied_paths = set()
+        self.ds = types.ModuleType("_isolated_e29_" + self.root.name.replace("-", "_"))
+        sys.modules[self.ds.__name__] = self.ds
+        self.configured_modules = set()
+        self._install_host_io()
+        self.reg_path = Path(self.ds.receipt_path(OP))
+        self.exec_path = self.reg_path.with_name(OP + ".b7-execution.json")
+        identity = dict(operation_id=OP, binding=dict(packetId=PACKET,
+            manifestSha256=MANIFEST, sourceSha256=SOURCE),
+            registered_peer_uid=502, policy_sha256=OLD_REG_POLICY)
+        self.reg = dict(kind="DS_B7_PACKET_REGISTRATION_V1", version=1,
+            action="B7_PACKET_REGISTER_V1", state="REGISTERED_ONLY", **identity,
+            request_sha256=sha(canonical(identity)))
+        self.state = dict(kind="DS_B7_EXECUTION_V2", operation_id=OP,
+            registration_sha256=self.reg["request_sha256"],
+            execution_policy_sha256=OLD_EXEC_POLICY, phase="RETAINED", tx_id=None,
+            attempt=1, terminal_output=False, input_sequence=0,
+            input_pending=None, reason="EXECUTION_INTENT")
+        self.reg_raw = canonical(self.reg)
+        self.exec_raw = canonical(self.state)
+        self.journal_raw = (b'{"kind":"B7_SIX_TARGET_BATCH_V1","phase":"READ_ONLY_PREFLIGHT"}\n'
+                            b'{"kind":"B7_SIX_TARGET_BATCH_V1","phase":"EXECUTE_COMPLETE"}\n')
+        self.fixture_pins = dict(operation_id=OP, packet_id=PACKET,
+            manifest_sha256=MANIFEST, source_sha256=SOURCE,
+            registration_receipt_sha256=sha(self.reg_raw),
+            registration_policy_sha256=OLD_REG_POLICY,
+            registration_request_sha256=self.reg["request_sha256"],
+            registered_peer_uid=502, execution_record_sha256=sha(self.exec_raw),
+            execution_policy_sha256=OLD_EXEC_POLICY, execution_phase="RETAINED",
+            execution_attempt=1, journal_sha256=sha(self.journal_raw))
+        self.put(self.reg_path, self.reg_raw, 0o644)
+        self.put(self.exec_path, self.exec_raw, 0o600)
+        self._execute_actual_installation()
+        self.registration = self.ds._b7_registration_instance
+        self.execution = self.ds._b7_execution_instance
+        self.policy = self.execution.policy["packets"][PACKET]
+        self.tx_path = Path(self.policy["nativeTransactionPath"])
+        self.holder_path = Path(self.policy["nativeLockPath"])
+        self.tx_path.parent.mkdir(parents=True, exist_ok=True)
+        self.holder_path.parent.mkdir(parents=True, exist_ok=True)
+        self.journal_path = self.tx_path.parent / ".b7-six-journal.jsonl"
+        self.put(self.journal_path, self.journal_raw, 0o600)
+        self.auth_path = self.reg_path.with_name(OP + ".b7-execution.b7-disposal-auth.json")
+        self.terminal_path = self.reg_path.with_name(OP + ".b7-execution.b7-disposal-terminal.json")
+
+    def close(self):
+        sys.modules.pop(self.ds.__name__, None)
+        if hasattr(self, "client"):
+            sys.modules.pop(self.client.__name__, None)
+        shutil.rmtree(self.root)
+
+    def relocate(self, value):
+        return str(self.root / "fs" / value.lstrip("/"))
+
+    def confined(self, path, allow_leaf_symlink=False):
+        path = Path(path)
+        assert path.is_absolute() and path.is_relative_to(self.root), str(path)
+        for parent in [path, *path.parents]:
+            if parent == self.root.parent:
+                break
+            if not (allow_leaf_symlink and parent == path):
+                assert not parent.is_symlink(), "fixture path must never traverse a symlink"
+        return path
+
+    def put(self, path, raw, mode=0o600):
+        path = self.confined(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(raw)
+        path.chmod(mode)
+        self.uid_by_path[str(path)] = 0
+
+    def _install_host_io(self):
+        ds = self.ds
+        ds.__dict__.update(json=json, os=os, re=re, fcntl=fcntl, hashlib=hashlib, time=time,
+            TEST_MODE=False, AUTHORIZED_OWNER_UID=502, REQUEST_LIMIT=1 << 20,
+            STATE_ROOT=self.relocate("/private/var/db/agent-deploy-system"),
+            OP_ID=re.compile(r"[A-Za-z0-9._-]{1,128}"),
+            OBSERVATION_ACTIONS={}, LEGACY_ACTION_FIELDS={}, OBSERVATION_CONFIG_PATHS={})
+        names = {"Failure", "ObservationFailure", "_observation_need",
+                 "_observation_pairs", "_observation_json", "_observation_root_owners",
+                 "observation_admission", "mutation_lock", "state_path",
+                 "_observation_time", "observation_envelope"}
+        nodes = [n for n in self.candidate.tree.body
+                 if isinstance(n, (ast.ClassDef, ast.FunctionDef)) and n.name in names]
+        for n in self.candidate.tree.body:
+            if isinstance(n, ast.Assign) and any(isinstance(a, ast.Name) and a.id == "OBSERVATION_ERRORS" for a in n.targets):
+                ds.OBSERVATION_ERRORS = ast.literal_eval(n.value)
+        assert len(nodes) == len(names), "original admission/error primitives missing"
+        exec(compile(ast.Module(body=nodes, type_ignores=[]), "<real-host-primitives>", "exec"), ds.__dict__)
+        ds.canonical = canonical
+        ds.sha_bytes = sha
+        ds.receipt_path = lambda op: str(Path(ds.STATE_ROOT) / "receipts" / (op + ".json"))
+        Path(ds.STATE_ROOT).mkdir(parents=True)
+        self.put(Path(ds.STATE_ROOT) / "mutation.lock", b"", 0o644)
+        ds.handle = lambda raw, peer=None: (_ for _ in ()).throw(AssertionError("unrouted native request"))
+        ds.BoundedDispatcher = type("OriginalDispatcher", (), {})
+
+        def read_file(path, obj, owners, limit=65536, exact_mode=None):
+            path = self.confined(path)
+            self.reads.append((str(path), exact_mode))
+            try:
+                fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+            except FileNotFoundError:
+                raise ds.ObservationFailure("NOT_FOUND", "read", obj)
+            try:
+                meta = os.fstat(fd)
+                ds._observation_need(stat.S_ISREG(meta.st_mode) and meta.st_nlink == 1,
+                                     "CUSTODY_INVALID", "read", obj)
+                ds._observation_need(self.uid_by_path.get(str(path), 0) in owners,
+                                     "CUSTODY_INVALID", "read", obj)
+                ds._observation_need(exact_mode is None or stat.S_IMODE(meta.st_mode) == exact_mode,
+                                     "CUSTODY_INVALID", "read", obj)
+                raw = os.read(fd, limit + 1)
+                ds._observation_need(len(raw) <= limit, "INVALID_SHAPE", "read", obj)
+                return raw
+            finally:
+                os.close(fd)
+
+        def atomic_write(path, raw, mode, **kwargs):
+            path = self.confined(path)
+            if self.stop_before_terminal and path.name.endswith(".b7-disposal-terminal.json"):
+                raise OSError("isolated interruption before terminal persistence")
+            path.parent.mkdir(parents=True, exist_ok=True)
+            fd, temporary = tempfile.mkstemp(prefix=".atomic-", dir=path.parent)
+            try:
+                os.fchmod(fd, mode)
+                os.write(fd, raw)
+                os.fsync(fd)
+            finally:
+                os.close(fd)
+            os.replace(temporary, path)
+            directory_fd = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
+            try:
+                os.fsync(directory_fd)
+            finally:
+                os.close(directory_fd)
+            self.uid_by_path[str(path)] = 0
+            self.writes.append(str(path))
+            if self.after_write is not None:
+                self.after_write(path)
+
+        fixture = self
+        class ObservationPath:
+            def __init__(self, path, obj, owners):
+                self.path = fixture.confined(path, allow_leaf_symlink=True)
+                self.name = self.path.name
+                self.parent = None
+                self.obj = obj
+            def __enter__(self):
+                if str(self.path) in fixture.denied_paths:
+                    raise ds.ObservationFailure("ACCESS_DENIED", "read", self.obj)
+                self.parent = os.open(self.path.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+                return self
+            def __exit__(self, *_):
+                os.close(self.parent)
+        ds.observation_read_file = read_file
+        ds.atomic_write = atomic_write
+        ds.ObservationPath = ObservationPath
+        ds.write_receipt = lambda op, data: atomic_write(ds.receipt_path(op), canonical(data), 0o644)
+
+    def _execute_actual_installation(self):
+        hook_count = 0
+        for original in self.candidate.wiring:
+            node = copy.deepcopy(original)
+            for call in ast.walk(node):
+                if isinstance(call, ast.Call) and isinstance(call.func, (ast.Name, ast.Attribute)):
+                    name = call.func.id if isinstance(call.func, ast.Name) else call.func.attr
+                    if name in {"install_hooks", "install_execution_hooks"}:
+                        for i, arg in enumerate(call.args):
+                            if isinstance(arg, ast.Dict):
+                                call.args[i] = PathRelocation(self).visit(arg)
+                    if name == "install_e29_closure":
+                        hook_count += 1
+            # A just-loaded closure module gets fixture pins exactly once, before
+            # the next original installation statement consumes its constants.
+            exec(compile(ast.fix_missing_locations(ast.Module(body=[node], type_ignores=[])),
+                         "<actual-server-wiring>", "exec"), self.ds.__dict__)
+            for module in list(self.ds.__dict__.values()):
+                if isinstance(module, types.ModuleType) and isinstance(getattr(module, "E29_CLOSURE", None), dict):
+                    if id(module) not in self.configured_modules:
+                        module.E29_CLOSURE.update(self.fixture_pins)
+                        self.configured_modules.add(id(module))
+        assert hook_count == 1, "candidate did not execute its real e29 installation hook"
+        assert getattr(self.ds._b7_execution_instance, "_e29_closure_installed", False), "real closure installation did not complete"
+
+    def request(self, action, peer=502, op=OP, **fields):
+        with patch.object(subprocess, "Popen", side_effect=AssertionError("process creation forbidden in isolated closure tests")):
+            result, restart = self.ds.handle(canonical(dict(action=action, operation_id=op, **fields)), peer=peer)
+        assert restart is None
+        RESULTS.append(dict(test_case=getattr(self, "test_case", "unassigned"),
+                            action=action, ok=result.get("ok"), error=result.get("error"),
+                            persisted_record_writes=len(self.writes)))
+        return result
+
+    def client_request(self, action, op=OP, **fields):
+        if not hasattr(self, "client"):
+            self.client = types.ModuleType(self.ds.__name__ + "_paired_client")
+            self.client.__file__ = str(CLIENT)
+            sys.modules[self.client.__name__] = self.client
+            body = [node for node in self.candidate.client_tree.body
+                    if not (isinstance(node, ast.If) and
+                            isinstance(node.test, ast.Compare) and
+                            isinstance(node.test.left, ast.Name) and node.test.left.id == "__name__")]
+            exec(compile(ast.Module(body=body, type_ignores=[]),
+                         "<actual-paired-client-source-and-hooks>", "exec"), self.client.__dict__)
+            self.client.SOCK = str(self.root / "isolated.sock")
+            fixture = self
+            class InMemorySocket:
+                def __init__(self):
+                    self.buffer = b""
+                def settimeout(self, value):
+                    assert value > 0
+                def connect(self, path):
+                    assert path == fixture.client.SOCK
+                def sendall(self, raw):
+                    assert raw.endswith(b"\n")
+                    response, restart = fixture.ds.handle(raw[:-1], peer=502)
+                    assert restart is None
+                    if fixture.response_transform is not None:
+                        response = fixture.response_transform(copy.deepcopy(response))
+                    self.buffer = json.dumps(response).encode() + b"\n"
+                def recv(self, limit):
+                    chunk, self.buffer = self.buffer[:limit], self.buffer[limit:]
+                    return chunk
+                def close(self):
+                    pass
+            def isolated_socket(family, kind):
+                assert (family, kind) == (socket.AF_UNIX, socket.SOCK_STREAM)
+                return InMemorySocket()
+            self.client.socket = types.SimpleNamespace(socket=isolated_socket,
+                AF_UNIX=socket.AF_UNIX, SOCK_STREAM=socket.SOCK_STREAM, timeout=socket.timeout)
+        with patch.object(subprocess, "Popen", side_effect=AssertionError("process creation forbidden")):
+            result = self.client.request(dict(action=action, operation_id=op, **fields))
+        RESULTS.append(dict(test_case=getattr(self, "test_case", "unassigned"),
+            transport="actual_paired_client_via_isolated_socket_to_real_ds_handle",
+            action=action, ok=result.get("ok"), error=result.get("error"),
+            persisted_record_writes=len(self.writes)))
+        return result
+
+    def mutate_record(self, path, transform):
+        record = json.loads(path.read_bytes())
+        transform(record)
+        self.put(path, canonical(record), stat.S_IMODE(path.stat().st_mode))
+
+    def snapshot(self):
+        result = {}
+        for path in self.root.rglob("*"):
+            metadata = path.lstat()
+            content = path.read_bytes() if stat.S_ISREG(metadata.st_mode) else (
+                os.readlink(path) if stat.S_ISLNK(metadata.st_mode) else None)
+            result[str(path.relative_to(self.root))] = (metadata.st_mode, content)
+        return result
+
+

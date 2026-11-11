@@ -1,7 +1,7 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V1
 title: Workflow Execution Control — execution trace read model, bounded continuation, Domain Owner assistance, durable owner wake, push-first kick, forum projection
-status: accepted
+status: superseded
 accepted_date: 2026-09-24
 accepted_by: mayf3
 accepted_reviewed_head: e28c7666eb305dfb208da89cf9890cf85f9b08af
@@ -37,7 +37,7 @@ external_authorities:
     revision: 71882c48593599c550259892e255ec9c3d73b7f2
     relation: interoperates_with
 supersedes: []
-superseded_by: null
+superseded_by: AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V2
 owners:
   - mayf3
 production_apply_authority: none

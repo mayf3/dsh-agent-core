@@ -1,0 +1,70 @@
+{
+  "status": "STOPPED_REQUIRED_REVIEW_FAILURE",
+  "observed_at_utc": "2026-11-07T04:22:12.080486+00:00",
+  "worktree": "/private/tmp/h603-reverify",
+  "branch": "ac-ctr-s4-reverify",
+  "base": "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed",
+  "head": "91e224bc079f26cef285cba6da0872cb640ed330",
+  "head_tree": "1a81d165e269c21a571d2f8e3c3d01a69ef98b5f",
+  "candidate": "HEAD plus uncommitted source/test diff; UNVERIFIED",
+  "working_diff_sha256": "97b6ab2023001868f229bf5040f279744a28bd8ac1a35244c4090de388e073cf",
+  "reviewed_product_diff_sha256": "1c65a0b85be434886c45514b180de860837f5bdd1a0f1147b13d5ba422a42947",
+  "files": [
+    {
+      "path": "packages/production-runtime/src/compose.js",
+      "sha256": "5767d595754b8dd457fb55bbfa76ba39b29162c4e61433cdaf398f18406d4df7",
+      "bytes": 27195,
+      "physical_lines": 500,
+      "git_blob": "400f993f2a95f9c5c772adce359f74d7b45930a8",
+      "tests_executed": false
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/auto-reconcile-runtime.js",
+      "sha256": "18239889e1375e657035679bcb9c127bc2c69d2174562bc5b05a1840fbde81a4",
+      "bytes": 4712,
+      "physical_lines": 87,
+      "git_blob": "6f5ba4c4c0b64d6ca73aa94fc45a6548ec9aa32b",
+      "tests_executed": false
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/composition-runtime.js",
+      "sha256": "e966a414b0a21d6f864ea24f5c7836011525ba790d2a7114797f9b3d6e849c6a",
+      "bytes": 2724,
+      "physical_lines": 47,
+      "git_blob": "21d72b5a982c73270e3a2019f5964cfde4215e37",
+      "tests_executed": false
+    },
+    {
+      "path": "packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js",
+      "sha256": "efdb18f4b87b32250c58b2b17a9939171af893e30d0762d2963272d5bc6cf84e",
+      "bytes": 17508,
+      "physical_lines": 323,
+      "git_blob": "29d16b97006c6ed64900b603c4244a0dc08fad80",
+      "tests_executed": false
+    },
+    {
+      "path": "packages/production-runtime/test/workflow-execution-shutdown.test.js",
+      "sha256": "3fc0098e8492a9229f05562a4bb01b1ee4292b3fb6c8152408f302d18af0f333",
+      "bytes": 12253,
+      "physical_lines": 279,
+      "git_blob": "5561c03c83422b3e362cf9f0c902240aa229f192",
+      "tests_executed": false
+    },
+    {
+      "path": "scripts/trusted-cp-deploy-install.sh",
+      "sha256": "dba2f136af78b6d89bf58d1b9ab0c15259efa3bf4f4d4f904e9494fd11d7741e",
+      "bytes": 76467,
+      "physical_lines": 1315,
+      "git_blob": "356899a8ec0726f245790379429f97dfc6ea3bfb",
+      "tests_executed": false
+    }
+  ],
+  "frozen_blocker_union": [
+    "603-REVIEW-001"
+  ],
+  "independent_reviewer": "/root/audit_gates",
+  "review_result": "FAIL - source analysis, not an executed test",
+  "test_and_gate_execution": "NOT_RUN",
+  "production_writes": 0,
+  "remote_writes": 0
+}

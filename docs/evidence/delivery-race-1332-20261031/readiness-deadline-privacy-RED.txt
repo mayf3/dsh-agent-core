@@ -1,0 +1,81 @@
+✔ R1 readiness: initialize ready cannot bypass session preparation acknowledgement (3.261833ms)
+✔ R1 readiness: absent capability and mismatched acknowledgement fail closed (2.165834ms)
+✔ R1 readiness: never-ready child respects caller deadline and late ack cannot admit (37.3455ms)
+✔ R4 readiness: process state and newly installed UNKNOWN fence gate acknowledgement (1.230167ms)
+✔ R1 readiness: each call obtains a fresh ack; expired caller budget writes nothing (0.625875ms)
+✖ R1 readiness: an acknowledgement processed beyond the absolute budget cannot admit (5.72575ms)
+✖ R1 readiness preserves private-session log suppression without forwarding custody payload (0.96425ms)
+[demo-server] session main resumed (59243 events) cwd=/tmp/resume-workspace
+✔ R1 fresh spawn + 59243-event resume: no readiness ack or prompt before replay completes (3.350291ms)
+✔ R1 readiness validates version/session and propagates workspace mismatch without admission (0.335792ms)
+✖ readiness preserves private-session resolution and redacts its rejection details (0.501958ms)
+✔ R1 stdio integration: fresh child acknowledges initialize before suspended resume is deliverable (52.002416ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 8
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 138.21375
+
+✖ failing tests:
+
+test at packages/agent-router/test/process-lifecycle/delivery-readiness.test.js:92:1
+✖ R1 readiness: an acknowledgement processed beyond the absolute budget cannot admit (5.72575ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/delivery-readiness.test.js:98:3)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: { code: 'AGENT_DELIVERY_PREPARE_TIMEOUT' },
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at packages/agent-router/test/process-lifecycle/delivery-readiness.test.js:102:1
+✖ R1 readiness preserves private-session log suppression without forwarding custody payload (0.96425ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+  -   privateSession: true,
+      sessionId: 'private-session',
+      version: 1
+    }
+  
+      at TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/delivery-readiness.test.js:106:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { version: 1, sessionId: 'private-session' },
+    expected: { version: 1, sessionId: 'private-session', privateSession: true },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at packages/demo-server/test/delivery-readiness.test.js:64:1
+✖ readiness preserves private-session resolution and redacts its rejection details (0.501958ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'private-session private-workspace'
+  - 'session preparation failed'
+  
+      at Object.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/demo-server/test/delivery-readiness.test.js:74:12)
+      at expectedException (node:assert:547:17)
+      at expectsError (node:assert:672:21)
+      at strict.rejects (node:assert:738:3)
+      at async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/demo-server/test/delivery-readiness.test.js:70:3)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'private-session private-workspace',
+    expected: 'session preparation failed',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

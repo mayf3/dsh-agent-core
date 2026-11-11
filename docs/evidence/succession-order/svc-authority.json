@@ -1,0 +1,20 @@
+{
+  "observed_at": "2026-11-07 14:09:07 UTC",
+  "method": "GitHub plugin fetch_file plus git ls-remote main",
+  "repository": "mayf3/svc-workflow",
+  "main": "d4c510d94f8929f5377989bd69229d611ab49304",
+  "path": "docs/specs/SVC_WORKFLOW_EXECUTION_CONTROL_V3.md",
+  "git_blob": "7c6c5d1de1d1f6e1a580521f01fce90f1c2de2b2",
+  "status": "accepted",
+  "implementation_authority": "contracts",
+  "supersedes": [
+    "SVC_WORKFLOW_EXECUTION_CONTROL_V2",
+    "SVC_WORKFLOW_EXECUTION_CONTROL_V1"
+  ],
+  "superseded_by": null,
+  "ctr_swec_010_reason_union": [
+    "ATTEMPTS_EXHAUSTED",
+    "STALE_LOOP_EXHAUSTED"
+  ],
+  "runtime_or_database_verified": false
+}

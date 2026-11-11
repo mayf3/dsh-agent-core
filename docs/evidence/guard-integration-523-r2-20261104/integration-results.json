@@ -1,0 +1,5489 @@
+{
+  "source": "docs/evidence/guard-integration-523-20261104/agent-router.tap",
+  "sha256": "0725db8bc5de77a29d8db961342ac71fb17f55fca67386bfbcec781aa141de59",
+  "bytes": 291384,
+  "summary": {
+    "tests": 608,
+    "suites": 0,
+    "pass": 586,
+    "fail": 20,
+    "cancelled": 0,
+    "skipped": 2,
+    "todo": 0
+  },
+  "duplicateTitles": {},
+  "results": [
+    {
+      "title": "1. set/get/list round-trip",
+      "outcome": "pass",
+      "tapId": 1,
+      "line": 3,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "2. survives restart: a new instance over the same store file",
+      "outcome": "pass",
+      "tapId": 2,
+      "line": 9,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "3. document shape is atomic and versioned",
+      "outcome": "pass",
+      "tapId": 3,
+      "line": 15,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "4. missing file is a legal empty table",
+      "outcome": "pass",
+      "tapId": 4,
+      "line": 21,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "5. corrupt / unsupported store fails loud (never silently reset)",
+      "outcome": "pass",
+      "tapId": 5,
+      "line": 27,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "6. absolute-path contract: relative and ~-prefixed storeFile rejected",
+      "outcome": "pass",
+      "tapId": 6,
+      "line": 33,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "7. row validation",
+      "outcome": "pass",
+      "tapId": 7,
+      "line": 39,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "8. FIX3: persist failure rolls back RAM, keeps disk, rejects the caller",
+      "outcome": "pass",
+      "tapId": 8,
+      "line": 45,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "9. FIX3: a failed NEW binding rolls back too (no phantom row)",
+      "outcome": "pass",
+      "tapId": 9,
+      "line": 51,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "10. freshSessionFor mints on first sight, returns the same row on retry",
+      "outcome": "pass",
+      "tapId": 10,
+      "line": 57,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "11. freshSessionFor: different requestIds mint different sessions",
+      "outcome": "pass",
+      "tapId": 11,
+      "line": 63,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "12. freshSessionFor: mapping is per-agent (same requestId, two agents)",
+      "outcome": "pass",
+      "tapId": 12,
+      "line": 69,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "13. freshSessionFor hands the mint the used-id set (router collision loop input)",
+      "outcome": "pass",
+      "tapId": 13,
+      "line": 75,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "14. freshSessionFor: concurrent first deliveries converge on ONE row",
+      "outcome": "pass",
+      "tapId": 14,
+      "line": 81,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "15. freshSessions survive restart; older documents (no table) still load",
+      "outcome": "pass",
+      "tapId": 15,
+      "line": 87,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "16. freshSessionFor validation and corrupt-table fail-loud",
+      "outcome": "pass",
+      "tapId": 16,
+      "line": 93,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "17. fresh request mapping is durable and restarts keep resolving the same session",
+      "outcome": "pass",
+      "tapId": 17,
+      "line": 99,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "17b. legacy lineage-marked fresh rows load byte-stable across restart and persist",
+      "outcome": "pass",
+      "tapId": 18,
+      "line": 105,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "17c. legacy fresh row with a malformed marker fails the store load loud",
+      "outcome": "pass",
+      "tapId": 19,
+      "line": 111,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "legacy durable cut receipt loads, round-trips byte-stable, and stays queryable across normal writes",
+      "outcome": "pass",
+      "tapId": 20,
+      "line": 117,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "legacy durable cut receipt drift fails the store load loud (fail-closed compat)",
+      "outcome": "pass",
+      "tapId": 21,
+      "line": 123,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "legacy durable cut receipt referencing a missing conversation fails the load loud",
+      "outcome": "pass",
+      "tapId": 22,
+      "line": 129,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "post-rename durability failure poisons the store for later writes (sticky unknown)",
+      "outcome": "pass",
+      "tapId": 23,
+      "line": 135,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "15. workspace round-trip: string stored verbatim, null preserved",
+      "outcome": "pass",
+      "tapId": 24,
+      "line": 141,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "16. legacy rows WITHOUT workspace load as null (no forced migration, AC8)",
+      "outcome": "pass",
+      "tapId": 25,
+      "line": 147,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "17. restart keeps workspace; a workspace-typed-garbage row fails loud",
+      "outcome": "pass",
+      "tapId": 26,
+      "line": 153,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "18. set rejects a non-string non-null workspace (empty string included)",
+      "outcome": "pass",
+      "tapId": 27,
+      "line": 159,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "broker RPC: executed as the ACTUAL proc.agentId via the gateway",
+      "outcome": "fail",
+      "tapId": 28,
+      "line": 168,
+      "location": "packages/agent-router/test/broker-rpc.test.js:81:1",
+      "skipReason": null,
+      "rawFailure": "not ok 28 - broker RPC: executed as the ACTUAL proc.agentId via the gateway\n  ---\n  duration_ms: 24.269292\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/broker-rpc.test.js:81:1'\n  failureType: 'testCodeFailure'\n  error: \"EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/packages/agent-identity-capabilities' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-identity-capabilities'\"\n  code: 'EEXIST'\n  stack: |-\n    startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)\n    failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)\n    failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)\n    startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)\n    bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13)\n  ..."
+    },
+    {
+      "title": "broker RPC: passes the exact immutable active-turn context beside actual agentId",
+      "outcome": "fail",
+      "tapId": 29,
+      "line": 187,
+      "location": "packages/agent-router/test/broker-rpc.test.js:112:1",
+      "skipReason": null,
+      "rawFailure": "not ok 29 - broker RPC: passes the exact immutable active-turn context beside actual agentId\n  ---\n  duration_ms: 22.809667\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/broker-rpc.test.js:112:1'\n  failureType: 'testCodeFailure'\n  error: \"EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/packages/fixed-operation' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/fixed-operation'\"\n  code: 'EEXIST'\n  stack: |-\n    startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)\n    failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)\n    failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)\n    startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)\n    bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13)\n  ..."
+    },
+    {
+      "title": "broker RPC: stale generation, settled execution, and cleared turn never forward ingress context",
+      "outcome": "fail",
+      "tapId": 30,
+      "line": 206,
+      "location": "packages/agent-router/test/broker-rpc.test.js:146:1",
+      "skipReason": null,
+      "rawFailure": "not ok 30 - broker RPC: stale generation, settled execution, and cleared turn never forward ingress context\n  ---\n  duration_ms: 47.834875\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/broker-rpc.test.js:146:1'\n  failureType: 'testCodeFailure'\n  error: \"EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/bundle-agent-switch' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-agent-switch'\"\n  code: 'EEXIST'\n  stack: |-\n    startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)\n    failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)\n    failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)\n    startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)\n    bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13)\n  ..."
+    },
+    {
+      "title": "broker RPC: delayed turn-A carrier cannot inherit live turn-B ingress context",
+      "outcome": "fail",
+      "tapId": 31,
+      "line": 225,
+      "location": "packages/agent-router/test/broker-rpc.test.js:170:1",
+      "skipReason": null,
+      "rawFailure": "not ok 31 - broker RPC: delayed turn-A carrier cannot inherit live turn-B ingress context\n  ---\n  duration_ms: 36.785042\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/broker-rpc.test.js:170:1'\n  failureType: 'testCodeFailure'\n  error: \"EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/bundle-demo' -> '/tmp/home/agt_a/profiles/node_modules/@agent-core/bundle-demo'\"\n  code: 'EEXIST'\n  stack: |-\n    startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)\n    failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)\n    failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)\n    startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)\n    bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13)\n  ..."
+    },
+    {
+      "title": "broker RPC: forged child-supplied identity/context is IGNORED (actual Router values win)",
+      "outcome": "pass",
+      "tapId": 32,
+      "line": 246,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "broker RPC: gateway absent -> fails closed, switch RPC unaffected",
+      "outcome": "pass",
+      "tapId": 33,
+      "line": 256,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "broker RPC: unknown method still rejected",
+      "outcome": "pass",
+      "tapId": 34,
+      "line": 265,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "seam: a committed scheduler create reaches the model as the exact 11-field success (no double transport envelope)",
+      "outcome": "pass",
+      "tapId": 35,
+      "line": 271,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept)",
+      "outcome": "fail",
+      "tapId": 36,
+      "line": 277,
+      "location": "packages/agent-router/test/broker-rpc.test.js:322:1",
+      "skipReason": null,
+      "rawFailure": "not ok 36 - seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept)\n  ---\n  duration_ms: 0.498\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/broker-rpc.test.js:322:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The input did not match the regular expression /response was lost/. Input:\n    \n    'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {\"state\":\"STILL_UNKNOWN\",\"operation\":\"create\",\"reason\":\"read-back transport failed\"}'\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected:\n  actual: 'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {\"state\":\"STILL_UNKNOWN\",\"operation\":\"create\",\"reason\":\"read-back transport failed\"}'\n  operator: 'match'\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-523-integration/packages/agent-router/test/broker-rpc.test.js:330:10)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ..."
+    },
+    {
+      "title": "seam: a structured gateway failure passes through declared codes verbatim at the correct depth",
+      "outcome": "fail",
+      "tapId": 37,
+      "line": 299,
+      "location": "packages/agent-router/test/broker-rpc.test.js:334:1",
+      "skipReason": null,
+      "rawFailure": "not ok 37 - seam: a structured gateway failure passes through declared codes verbatim at the correct depth\n  ---\n  duration_ms: 0.17225\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/broker-rpc.test.js:334:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The input did not match the regular expression /outcome is unknown/. Input:\n    \n    'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {\"state\":\"STILL_UNKNOWN\",\"operation\":\"create\",\"reason\":\"read-back response unusable\"}'\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected:\n  actual: 'scheduler mutation outcome STILL_UNKNOWN after canonical read-back: {\"state\":\"STILL_UNKNOWN\",\"operation\":\"create\",\"reason\":\"read-back response unusable\"}'\n  operator: 'match'\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-523-integration/packages/agent-router/test/broker-rpc.test.js:340:10)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ..."
+    },
+    {
+      "title": "seam: agent_session_send accepted/replied/timeout survive the corrected depth; a gateway throw stays outcome_unknown with zero retry",
+      "outcome": "pass",
+      "tapId": 38,
+      "line": 321,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "broker RPC forwards the printable child invocation anchor without treating it as identity",
+      "outcome": "pass",
+      "tapId": 39,
+      "line": 331,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "T1: inherited private parent TMPDIR is overridden to the fixed child TMPDIR without touching the parent env",
+      "outcome": "pass",
+      "tapId": 40,
+      "line": 337,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "T2: no caller channel can override or drop the fixed child TMPDIR",
+      "outcome": "pass",
+      "tapId": 41,
+      "line": 343,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "T3: real plugin boot under an untraversable parent TMPDIR — plugin tree, initialize and provider registration all pass",
+      "outcome": "skip",
+      "tapId": 42,
+      "line": 349,
+      "location": null,
+      "skipReason": "deepseek-harness CLI not resolvable (DSH_HARNESS_ROOT/checkout missing) — real child boot not run",
+      "rawFailure": null
+    },
+    {
+      "title": "T4: mkdtemp under the child TMPDIR (spill-local primitive) yields a random 0700 child-owned directory",
+      "outcome": "pass",
+      "tapId": 43,
+      "line": 355,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "T5: sentinel credentials never cross the env/log boundary and no full child env dump is asserted anywhere",
+      "outcome": "pass",
+      "tapId": 44,
+      "line": 361,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "four independent deadline fields with the frozen code defaults",
+      "outcome": "pass",
+      "tapId": 45,
+      "line": 367,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "global deployment env names override the code defaults",
+      "outcome": "pass",
+      "tapId": 46,
+      "line": 373,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "legacy DSH_AGENT_TURN_TIMEOUT=900000 maps to turnTimeoutMs only (production mitigation preserved)",
+      "outcome": "pass",
+      "tapId": 47,
+      "line": 379,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "legacy DSH_AGENT_DELIVER_TIMEOUT maps to promptReceiptTimeoutMs only",
+      "outcome": "pass",
+      "tapId": 48,
+      "line": 385,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "per-Agent static override > global env > code default",
+      "outcome": "pass",
+      "tapId": 49,
+      "line": 391,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "invalid env values fail loud before any spawn",
+      "outcome": "pass",
+      "tapId": 50,
+      "line": 397,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "per-Agent override file: valid shape loads; unknown agent entries apply only to that agent",
+      "outcome": "pass",
+      "tapId": 51,
+      "line": 403,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "per-Agent override file: malformed content fails loud",
+      "outcome": "pass",
+      "tapId": 52,
+      "line": 409,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "absent override file is not an error; DSH_AGENT_PROCESS_OVERRIDES_FILE locates it",
+      "outcome": "pass",
+      "tapId": 53,
+      "line": 415,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "zero-config construction resolves the canonical Luna built-in default",
+      "outcome": "pass",
+      "tapId": 54,
+      "line": 421,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "explicit constructor route wins over env; env wins over the default",
+      "outcome": "pass",
+      "tapId": 55,
+      "line": 427,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D1 main first deliver: accepted, sessionId fixed main, one process, one prompt",
+      "outcome": "fail",
+      "tapId": 56,
+      "line": 439,
+      "location": "packages/agent-router/test/delivery.test.js:147:1",
+      "skipReason": null,
+      "rawFailure": "not ok 56 - D1 main first deliver: accepted, sessionId fixed main, one process, one prompt\n  ---\n  duration_ms: 47.630083\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/delivery.test.js:147:1'\n  failureType: 'testCodeFailure'\n  error: \"EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/packages/feishu-connector' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/feishu-connector'\"\n  code: 'EEXIST'\n  stack: |-\n    startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)\n    failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)\n    failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)\n    startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)\n    bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13)\n  ..."
+    },
+    {
+      "title": "D2 main again: same fixed session, process reused, no second mapping",
+      "outcome": "fail",
+      "tapId": 57,
+      "line": 461,
+      "location": "packages/agent-router/test/delivery.test.js:163:1",
+      "skipReason": null,
+      "rawFailure": "not ok 57 - D2 main again: same fixed session, process reused, no second mapping\n  ---\n  duration_ms: 37.59125\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/delivery.test.js:163:1'\n  failureType: 'testCodeFailure'\n  error: \"EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/packages/workspace-bootstrap' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/workspace-bootstrap'\"\n  code: 'EEXIST'\n  stack: |-\n    startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)\n    failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)\n    failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)\n    startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)\n    bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13)\n  ..."
+    },
+    {
+      "title": "D3 fresh: different requestIds -> different new sessions",
+      "outcome": "pass",
+      "tapId": 58,
+      "line": 486,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D4 fresh: same requestId retry -> same session, never a second one",
+      "outcome": "pass",
+      "tapId": 59,
+      "line": 501,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D4b fresh: concurrent first deliveries of the same requestId converge on ONE session",
+      "outcome": "pass",
+      "tapId": 60,
+      "line": 516,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D5 caller cannot specify or resume an arbitrary non-main session",
+      "outcome": "pass",
+      "tapId": 61,
+      "line": 531,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D6 restart: fresh mapping survives a fresh router over the same store; main stays main",
+      "outcome": "pass",
+      "tapId": 62,
+      "line": 555,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D6b agent process restart: dead process respawns, session target unchanged",
+      "outcome": "pass",
+      "tapId": 63,
+      "line": 577,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D7 accepted resolves immediately: no turn completion required at the router level",
+      "outcome": "pass",
+      "tapId": 64,
+      "line": 589,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D8 validation: sessionMode / agentId / requestId / message contracts",
+      "outcome": "pass",
+      "tapId": 65,
+      "line": 598,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D9 fresh mappings are namespaced per agent",
+      "outcome": "pass",
+      "tapId": 66,
+      "line": 613,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D10 disabled enforcement (AGENT_DEFINITION_DISABLED_ENFORCEMENT_FIX): a disabled agent is rejected BEFORE ensureRunning — never spawned, main and fresh alike",
+      "outcome": "pass",
+      "tapId": 67,
+      "line": 625,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "FEISHU_MAPPING: p2p/group/thread/(none) -> feishu namespace; mobile -> mobile",
+      "outcome": "pass",
+      "tapId": 68,
+      "line": 631,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "FEISHU_REPLY_OWED: every Feishu subtype owes a reply; mobile never does",
+      "outcome": "pass",
+      "tapId": 69,
+      "line": 637,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "TRUSTED_INGRESS: exact Feishu chat/conversation/message fields reach the routed turn without parsing",
+      "outcome": "fail",
+      "tapId": 70,
+      "line": 652,
+      "location": "packages/agent-router/test/feishu-regression.test.js:159:1",
+      "skipReason": null,
+      "rawFailure": "not ok 70 - TRUSTED_INGRESS: exact Feishu chat/conversation/message fields reach the routed turn without parsing\n  ---\n  duration_ms: 39.320542\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/feishu-regression.test.js:159:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    + actual - expected\n    \n    + Error: EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/packages/demo-server' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/demo-server'\n    +     at startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)\n    +     at failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)\n    +     at failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)\n    +     at startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)\n    +     at bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13) {\n    +   agentId: 'agt_a',\n    +   code: 'EEXIST',\n    +   processGeneration: 1,\n    +   routeChain: {\n    +     failureClass: 'spawn_failed_without_child',\n    +     finalOutcome: 'spawn_failed_without_child',\n    +     routeChainId: 'single-route',\n    +     totalRouteAttempts: 1\n    +   },\n    +   startupFailureStage: 'provisionHome'\n    + }\n    - undefined\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  actual:\n  error: \"EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/packages/demo-server' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/demo-server'\"\n  stack: |-\n    startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)\n    failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)\n    failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)\n    startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)\n    bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13)\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-523-integration/packages/agent-router/test/feishu-regression.test.js:175:10)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ..."
+    },
+    {
+      "title": "FEISHU_P2P_REPLY: p2p ingress replies to Feishu and binds under feishu:<conversationId>",
+      "outcome": "pass",
+      "tapId": 71,
+      "line": 707,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "FEISHU_GROUP_REPLY: group ingress replies to Feishu and binds under feishu:<conversationId>",
+      "outcome": "pass",
+      "tapId": 72,
+      "line": 722,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "FEISHU_EXISTING_BINDING_KEY_PRESERVED: pre-existing feishu:<id> binding is HIT, not orphaned",
+      "outcome": "pass",
+      "tapId": 73,
+      "line": 739,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "MOBILE_BINDING_NAMESPACE_UNCHANGED: mobile ingress -> mobile:<surfaceId>, no Feishu reply",
+      "outcome": "pass",
+      "tapId": 74,
+      "line": 753,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "DISABLED_ENFORCEMENT: an existing binding to a disabled Agent rejects the ingress and NEVER spawns",
+      "outcome": "pass",
+      "tapId": 75,
+      "line": 770,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "DISABLED_ENFORCEMENT: an unknown agent behind an existing binding also never spawns",
+      "outcome": "pass",
+      "tapId": 76,
+      "line": 787,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "UX-SEAM-1: the success call passes EXACTLY the approved UX intent — and nothing else",
+      "outcome": "pass",
+      "tapId": 77,
+      "line": 802,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "UX-SEAM-2: the success ux object carries NO identity values of any kind",
+      "outcome": "pass",
+      "tapId": 78,
+      "line": 817,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "UX-SEAM-3: the deterministic FAILURE receipt call is byte-preserved — two arguments, no UX opts",
+      "outcome": "pass",
+      "tapId": 79,
+      "line": 832,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "UX-SEAM-4: Router source keeps the frozen UX call shapes (main-stable structural check)",
+      "outcome": "pass",
+      "tapId": 80,
+      "line": 838,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V2 normal: first contact binds workspace=null + session main, turns in the Agent primary workspace",
+      "outcome": "fail",
+      "tapId": 81,
+      "line": 853,
+      "location": "packages/agent-router/test/feishu-v2-normal.test.js:129:1",
+      "skipReason": null,
+      "rawFailure": "not ok 81 - V2 normal: first contact binds workspace=null + session main, turns in the Agent primary workspace\n  ---\n  duration_ms: 47.129375\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/feishu-v2-normal.test.js:129:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    + actual - expected\n    \n    + Error: EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/packages/demo-server' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/demo-server'\n    +     at startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)\n    +     at failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)\n    +     at failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)\n    +     at startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)\n    +     at bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13) {\n    +   agentId: 'agt_stock_agent',\n    +   code: 'EEXIST',\n    +   processGeneration: 1,\n    +   routeChain: {\n    +     failureClass: 'spawn_failed_without_child',\n    +     finalOutcome: 'spawn_failed_without_child',\n    +     routeChainId: 'single-route',\n    +     totalRouteAttempts: 1\n    +   },\n    +   startupFailureStage: 'provisionHome'\n    + }\n    - undefined\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  actual:\n  error: \"EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/packages/demo-server' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/demo-server'\"\n  stack: |-\n    startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)\n    failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)\n    failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)\n    startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)\n    bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13)\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-523-integration/packages/agent-router/test/feishu-v2-normal.test.js:133:10)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ..."
+    },
+    {
+      "title": "V2 normal: the conversation-derived workspace is NEVER chosen",
+      "outcome": "fail",
+      "tapId": 82,
+      "line": 908,
+      "location": "packages/agent-router/test/feishu-v2-normal.test.js:147:1",
+      "skipReason": null,
+      "rawFailure": "not ok 82 - V2 normal: the conversation-derived workspace is NEVER chosen\n  ---\n  duration_ms: 91.918458\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/feishu-v2-normal.test.js:147:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'turns')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-523-integration/packages/agent-router/test/feishu-v2-normal.test.js:150:26)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ..."
+    },
+    {
+      "title": "V2 normal: second message RESUMES the same main (create/resume regression)",
+      "outcome": "pass",
+      "tapId": 83,
+      "line": 935,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V2 normal: p2p ingress has the same shape (no p2p special case)",
+      "outcome": "pass",
+      "tapId": 84,
+      "line": 949,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V2 normal: fresh non-main sessions in the SAME conversation share the primary cwd",
+      "outcome": "pass",
+      "tapId": 85,
+      "line": 968,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "RQ-005 Router startup consumes configured evidence before publishing its registry and reports invalid custody",
+      "outcome": "pass",
+      "tapId": 86,
+      "line": 977,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "RQ-005 fixture drives real Router apply: consume before service publication, then admit fleet",
+      "outcome": "pass",
+      "tapId": 87,
+      "line": 986,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "RQ-007 production composition stays inert without a bootstrapped launcher even if evidence custody passes",
+      "outcome": "pass",
+      "tapId": 88,
+      "line": 995,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "T1 fresh store: first runtime mints generation 1",
+      "outcome": "pass",
+      "tapId": 89,
+      "line": 1027,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "T2 same-runtime respawn: generations 1 -> 2 -> 3",
+      "outcome": "pass",
+      "tapId": 90,
+      "line": 1033,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "T3 REGRESSION runtime restart above durable history: fresh allocator mints strictly above the collision boundary (RED on the in-memory-only allocator)",
+      "outcome": "pass",
+      "tapId": 91,
+      "line": 1039,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "T4 multiple restarts: consecutive restarts never reissue a durable generation",
+      "outcome": "pass",
+      "tapId": 92,
+      "line": 1045,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "T5 per-agent isolation: agent A durable history never lifts or pollutes agent B",
+      "outcome": "pass",
+      "tapId": 93,
+      "line": 1056,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "T6 empty durable history behaves exactly like a fresh store",
+      "outcome": "pass",
+      "tapId": 94,
+      "line": 1066,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "T7 malformed durable store: fail loud, never mints from a fallback generation 1, store untouched",
+      "outcome": "pass",
+      "tapId": 95,
+      "line": 1077,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "T8 existing overlapping store: stays fail-closed, allocator never runs, store never self-heals",
+      "outcome": "pass",
+      "tapId": 96,
+      "line": 1088,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "T9 concurrent ensureRunning stays single-flight: exactly one allocation (generation 1)",
+      "outcome": "pass",
+      "tapId": 97,
+      "line": 1098,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "T10 crash before the first turn: reissue after restart is safe (nothing durable collided)",
+      "outcome": "pass",
+      "tapId": 98,
+      "line": 1112,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "T11 generation exhaustion: MAX_SAFE_INTEGER durable floor fails before STARTUP mutation or spawn",
+      "outcome": "pass",
+      "tapId": 99,
+      "line": 1121,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "T12 restart integration: durable store -> spawn -> restart -> spawn -> validator PASS with disjoint ranges",
+      "outcome": "pass",
+      "tapId": 100,
+      "line": 1135,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "E: valid canonical credential — child initializes on the openai-codex route",
+      "outcome": "fail",
+      "tapId": 101,
+      "line": 1141,
+      "location": "packages/agent-router/test/luna-credential-chain.test.js:157:1",
+      "skipReason": null,
+      "rawFailure": "not ok 101 - E: valid canonical credential — child initializes on the openai-codex route\n  ---\n  duration_ms: 1.894125\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/luna-credential-chain.test.js:157:1'\n  failureType: 'testCodeFailure'\n  error: 'dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    cliBin (file:///private/tmp/dsh-523-integration/packages/agent-provisioning/src/index.js:76:11)\n    gates (file:///private/tmp/dsh-523-integration/packages/agent-router/test/luna-credential-chain.test.js:42:46)\n    TestContext.<anonymous> (file:///private/tmp/dsh-523-integration/packages/agent-router/test/luna-credential-chain.test.js:158:8)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1397:25)\n    Test.start (node:internal/test_runner/test:1257:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)\n  ..."
+    },
+    {
+      "title": "F: missing credential fails loud on the real chain — never a silent fallback",
+      "outcome": "fail",
+      "tapId": 102,
+      "line": 1159,
+      "location": "packages/agent-router/test/luna-credential-chain.test.js:169:1",
+      "skipReason": null,
+      "rawFailure": "not ok 102 - F: missing credential fails loud on the real chain — never a silent fallback\n  ---\n  duration_ms: 0.197625\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/luna-credential-chain.test.js:169:1'\n  failureType: 'testCodeFailure'\n  error: 'dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    cliBin (file:///private/tmp/dsh-523-integration/packages/agent-provisioning/src/index.js:76:11)\n    gates (file:///private/tmp/dsh-523-integration/packages/agent-router/test/luna-credential-chain.test.js:42:46)\n    TestContext.<anonymous> (file:///private/tmp/dsh-523-integration/packages/agent-router/test/luna-credential-chain.test.js:170:8)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1397:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:969:18)\n    Test.postRun (node:internal/test_runner/test:1537:19)\n    Test.run (node:internal/test_runner/test:1462:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ..."
+    },
+    {
+      "title": "G: unsafe credential (group/world readable) fails loud on the real chain",
+      "outcome": "fail",
+      "tapId": 103,
+      "line": 1179,
+      "location": "packages/agent-router/test/luna-credential-chain.test.js:186:1",
+      "skipReason": null,
+      "rawFailure": "not ok 103 - G: unsafe credential (group/world readable) fails loud on the real chain\n  ---\n  duration_ms: 0.117667\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/luna-credential-chain.test.js:186:1'\n  failureType: 'testCodeFailure'\n  error: 'dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    cliBin (file:///private/tmp/dsh-523-integration/packages/agent-provisioning/src/index.js:76:11)\n    gates (file:///private/tmp/dsh-523-integration/packages/agent-router/test/luna-credential-chain.test.js:42:46)\n    TestContext.<anonymous> (file:///private/tmp/dsh-523-integration/packages/agent-router/test/luna-credential-chain.test.js:187:8)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1397:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:969:18)\n    Test.postRun (node:internal/test_runner/test:1537:19)\n    Test.run (node:internal/test_runner/test:1462:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ..."
+    },
+    {
+      "title": "D: imported agent — spawn hands the process the imported workspace + env mechanically",
+      "outcome": "fail",
+      "tapId": 104,
+      "line": 1208,
+      "location": "packages/agent-router/test/primary-workspace.test.js:159:1",
+      "skipReason": null,
+      "rawFailure": "not ok 104 - D: imported agent — spawn hands the process the imported workspace + env mechanically\n  ---\n  duration_ms: 120.334666\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/primary-workspace.test.js:159:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    + actual - expected\n    \n    + Error: EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/bundle-agent-switch' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-agent-switch'\n    +     at startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)\n    +     at failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)\n    +     at failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)\n    +     at startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)\n    +     at bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13) {\n    +   agentId: 'agt_stock_agent',\n    +   code: 'EEXIST',\n    +   processGeneration: 1,\n    +   routeChain: {\n    +     failureClass: 'spawn_failed_without_child',\n    +     finalOutcome: 'spawn_failed_without_child',\n    +     routeChainId: 'single-route',\n    +     totalRouteAttempts: 1\n    +   },\n    +   startupFailureStage: 'provisionHome'\n    + }\n    - undefined\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  actual:\n  error: \"EEXIST: file already exists, symlink '/private/tmp/dsh-523-integration/bundle-agent-switch' -> '/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-agent-switch'\"\n  stack: |-\n    startupFailure (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:46:17)\n    failNoChildStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry-startup.js:78:19)\n    failStartupSlotNoChild (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:187:12)\n    startProcessForSlot (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:342:13)\n    bootstrapStartup (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process-registry.js:281:13)\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-523-integration/packages/agent-router/test/primary-workspace.test.js:164:10)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ..."
+    },
+    {
+      "title": "D: deliver V0 resolves the imported workspace as the per-session cwd (AC3)",
+      "outcome": "pass",
+      "tapId": 105,
+      "line": 1260,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D: default agent (no entry) — env still set mechanically to the derived default path",
+      "outcome": "pass",
+      "tapId": 106,
+      "line": 1274,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D/AC7: the router ensure() writes NOTHING into the imported directory",
+      "outcome": "pass",
+      "tapId": 107,
+      "line": 1288,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "AC9: pre-import session frozen in the old default workspace → structured rejection, no remap",
+      "outcome": "pass",
+      "tapId": 108,
+      "line": 1307,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "I: restart over the same static config re-resolves the identical imported workspace",
+      "outcome": "pass",
+      "tapId": 109,
+      "line": 1313,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "DLV1 deliver resolves on the receipt alone — no event, no idle, no turn/end",
+      "outcome": "pass",
+      "tapId": 110,
+      "line": 1335,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "DLV2 deliver shares the production queue and cannot bypass an in-flight turn",
+      "outcome": "pass",
+      "tapId": 111,
+      "line": 1341,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "DLV3 a dead child (no receipt) rejects via the receipt deadline as outcome_unknown and cleans up",
+      "outcome": "pass",
+      "tapId": 112,
+      "line": 1347,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "DLV4 a late receipt after the deadline cannot resolve the timed-out call — but correlation continues",
+      "outcome": "pass",
+      "tapId": 113,
+      "line": 1353,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "AgentProcess prototype method descriptors preserved (B-1: enumerable false, composition complete)",
+      "outcome": "pass",
+      "tapId": 114,
+      "line": 1359,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "TurnReconciliationStore prototype method descriptors preserved (B-1: enumerable false, composition complete)",
+      "outcome": "pass",
+      "tapId": 115,
+      "line": 1365,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "declaration unblocks admission for one agent; historical fence query and other agents unchanged",
+      "outcome": "pass",
+      "tapId": 116,
+      "line": 1371,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "declaration is idempotent per declarationId and does not restamp",
+      "outcome": "pass",
+      "tapId": 117,
+      "line": 1377,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "a NEW unknown after a declaration fences the agent again; a further declaration abandons only it",
+      "outcome": "pass",
+      "tapId": 118,
+      "line": 1383,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "abandonment persists across restarts; late old results stay isolated; no-replay keeps correlation",
+      "outcome": "pass",
+      "tapId": 119,
+      "line": 1389,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "declaration validation: arguments and admission readiness fail loud",
+      "outcome": "pass",
+      "tapId": 120,
+      "line": 1395,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "durable validator rejects a malformed abandonment marker and accepts the closed shape",
+      "outcome": "pass",
+      "tapId": 121,
+      "line": 1401,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "review r4130766501 regression: retrying a COMPLETED declaration never adopts a later unknown turn",
+      "outcome": "pass",
+      "tapId": 122,
+      "line": 1407,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "scope binding survives restart: retry after reopen still cannot adopt a later unknown",
+      "outcome": "pass",
+      "tapId": 123,
+      "line": 1413,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "partial-write recovery: retry completes exactly the registered original scope",
+      "outcome": "pass",
+      "tapId": 124,
+      "line": 1419,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "a declarationId bound to another agent fails loud and never restamps",
+      "outcome": "pass",
+      "tapId": 125,
+      "line": 1425,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "marker-only reconstruction: a store with no registry file still binds retries to the marker scope",
+      "outcome": "pass",
+      "tapId": 126,
+      "line": 1431,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "empty-scope declaration registers its (empty) operation: later turns are never adopted",
+      "outcome": "pass",
+      "tapId": 127,
+      "line": 1437,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "durable validator rejects a malformed scope registry fail-closed",
+      "outcome": "pass",
+      "tapId": 128,
+      "line": 1443,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "rollback/reupgrade regression: the scope registry survives an old-binary rewrite of the recovery file",
+      "outcome": "pass",
+      "tapId": 129,
+      "line": 1449,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "entry-gate projection: stuck fences without durable exit evidence are reported; observed exits are not",
+      "outcome": "pass",
+      "tapId": 130,
+      "line": 1455,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "owner risk acceptance stamps an explicit audit decision and fabricates no exit evidence",
+      "outcome": "pass",
+      "tapId": 131,
+      "line": 1461,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "declaration scope matches the admission blocker: settled records with an active fence are abandonable",
+      "outcome": "pass",
+      "tapId": 132,
+      "line": 1467,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 parsed terminal and child exit remain uncommitted together when durable settlement fails",
+      "outcome": "pass",
+      "tapId": 133,
+      "line": 1473,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 over-cap durable record keeps startup business admission fail closed",
+      "outcome": "pass",
+      "tapId": 134,
+      "line": 1479,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 unavailable durable path keeps startup business admission fail closed",
+      "outcome": "pass",
+      "tapId": 135,
+      "line": 1485,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 restored durable fence blocks the real outer entry with closed structured diagnostics",
+      "outcome": "pass",
+      "tapId": 136,
+      "line": 1491,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 invalid durable store blocks the real outer entry before route execution",
+      "outcome": "pass",
+      "tapId": 137,
+      "line": 1497,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 old-generation cleanup cannot clear a newer generation fence",
+      "outcome": "pass",
+      "tapId": 138,
+      "line": 1503,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "RQ-009 verified startup proof survives the real durable validator without inventing child exit",
+      "outcome": "pass",
+      "tapId": 139,
+      "line": 1509,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 durable unknown reservation and fence survive a store reopen",
+      "outcome": "pass",
+      "tapId": 140,
+      "line": 1515,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 C-024 preserves the exact pre-write hard deadline when unknown is marked later",
+      "outcome": "pass",
+      "tapId": 141,
+      "line": 1521,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 restart mints a fresh runtime epoch while old durable handles remain queryable",
+      "outcome": "pass",
+      "tapId": 142,
+      "line": 1527,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 restart converts a crash-interrupted prompt write into a durable blocked fence",
+      "outcome": "pass",
+      "tapId": 143,
+      "line": 1533,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 restart settles a reservation with no prompt-write attempt as proven not admitted",
+      "outcome": "pass",
+      "tapId": 144,
+      "line": 1539,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 durable write failure rolls back the transition and closes business admission",
+      "outcome": "pass",
+      "tapId": 145,
+      "line": 1545,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 restart settles durable child exit but keeps REAP fence without registry cleanup proof",
+      "outcome": "pass",
+      "tapId": 146,
+      "line": 1551,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 restart completes a normal late-evidence fence cleanup without a new prompt",
+      "outcome": "pass",
+      "tapId": 147,
+      "line": 1557,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 restart clears a REAP fence only after durable registry cleanup proof",
+      "outcome": "pass",
+      "tapId": 148,
+      "line": 1563,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 invalid durable store keeps startup business admission fail closed",
+      "outcome": "pass",
+      "tapId": 149,
+      "line": 1569,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 durable schema drift keeps startup business admission fail closed",
+      "outcome": "pass",
+      "tapId": 150,
+      "line": 1575,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 invalid durable top-level and issuance authority fail startup closed",
+      "outcome": "pass",
+      "tapId": 151,
+      "line": 1581,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 repeated restart and mutation keeps durable runtime epochs bounded",
+      "outcome": "pass",
+      "tapId": 152,
+      "line": 1587,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 resolved record eviction atomically retires caller correlation capacity and bytes",
+      "outcome": "pass",
+      "tapId": 153,
+      "line": 1593,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 caller correlation keys are type-safe and byte-bounded before authority mutation",
+      "outcome": "pass",
+      "tapId": 154,
+      "line": 1599,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 durable record correlation must match the durable exact secondary index",
+      "outcome": "pass",
+      "tapId": 155,
+      "line": 1605,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 impossible unresolved-cleared durable state keeps startup admission fail closed",
+      "outcome": "pass",
+      "tapId": 156,
+      "line": 1611,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 durable recovery stores answer evidence without storing answer bytes",
+      "outcome": "pass",
+      "tapId": 157,
+      "line": 1617,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 trusted exact-started-then-idle settles unknown without killing resident child",
+      "outcome": "pass",
+      "tapId": 158,
+      "line": 1623,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 exact-started-then-idle negative control: missing exact receipt correlation stays fenced",
+      "outcome": "pass",
+      "tapId": 159,
+      "line": 1629,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 exact-started-then-idle negative control: idle observed before the matched start stays fenced",
+      "outcome": "pass",
+      "tapId": 160,
+      "line": 1635,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 exact-started-then-idle negative control: later turn start stays fenced",
+      "outcome": "pass",
+      "tapId": 161,
+      "line": 1641,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 exact-started-then-idle negative control: second turn start before exact receipt stays fenced",
+      "outcome": "pass",
+      "tapId": 162,
+      "line": 1647,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 exact-started-then-idle negative control: event stream gap stays fenced",
+      "outcome": "pass",
+      "tapId": 163,
+      "line": 1653,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 exact-started-then-idle negative control: one-active-turn invariant violation stays fenced",
+      "outcome": "pass",
+      "tapId": 164,
+      "line": 1659,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 hard deadline performs one exact REAP and waits for real child exit before reopening",
+      "outcome": "pass",
+      "tapId": 165,
+      "line": 1665,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 registry cleanup CAS mismatch keeps DRAINING and preserves the settled fence",
+      "outcome": "pass",
+      "tapId": 166,
+      "line": 1671,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 caller unknown before the hard deadline does not start REAP early",
+      "outcome": "pass",
+      "tapId": 167,
+      "line": 1677,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 child exit before hard deadline settles without a second shutdown",
+      "outcome": "pass",
+      "tapId": 168,
+      "line": 1683,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 failed exact ownership keeps the fence and never signals the child",
+      "outcome": "pass",
+      "tapId": 169,
+      "line": 1689,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 registry REAP CAS failure rolls durable shutdown eligibility back to blocked",
+      "outcome": "pass",
+      "tapId": 170,
+      "line": 1695,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 grace expiry sends one forced termination and still waits for real exit",
+      "outcome": "pass",
+      "tapId": 171,
+      "line": 1701,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 late evidence after claim but before shutdown commit cancels REAP with zero shutdown",
+      "outcome": "pass",
+      "tapId": 172,
+      "line": 1707,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 duplicate and concurrent recovery triggers join one logical operation",
+      "outcome": "pass",
+      "tapId": 173,
+      "line": 1713,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 coordinator restart rejoins the durable claim with one shutdown",
+      "outcome": "pass",
+      "tapId": 174,
+      "line": 1719,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 simulated-child real outer entry recovers without a new prompt, then accepts exactly one new request",
+      "outcome": "pass",
+      "tapId": 175,
+      "line": 1725,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "PROMPT_EVENT_BEFORE_RPC_RESPONSE: pre-response events are replayed on receipt binding",
+      "outcome": "pass",
+      "tapId": 176,
+      "line": 1731,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "UNRELATED_IDLE_OR_QUEUE_REMOVAL: unrelated evidence never releases the fence; exact failure settles late_failed",
+      "outcome": "pass",
+      "tapId": 177,
+      "line": 1737,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "PRIOR_TURN_LATE_EVENT_AFTER_NEXT_CALL: duplicate A events during B are excluded; B completes on its own events",
+      "outcome": "pass",
+      "tapId": 178,
+      "line": 1743,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B08 replay observes an intervening later turn/start before considering future idle",
+      "outcome": "pass",
+      "tapId": 179,
+      "line": 1749,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B08: stale idle before exact terminal cannot close the current turn",
+      "outcome": "pass",
+      "tapId": 180,
+      "line": 1755,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "ENVELOPE_COMPLETED: stable handle, store query=settled",
+      "outcome": "pass",
+      "tapId": 181,
+      "line": 1761,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "ENVELOPE_FAILED: structured provider failure with a stable handle",
+      "outcome": "pass",
+      "tapId": 182,
+      "line": 1767,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "FAILED_EVIDENCE: a failed durable settlement cannot publish terminal proof to the caller",
+      "outcome": "pass",
+      "tapId": 183,
+      "line": 1773,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B05 raw session/prompt RPC cannot bypass admission/queue/watermark/fence",
+      "outcome": "pass",
+      "tapId": 184,
+      "line": 1779,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "ENVELOPE_NOT_ADMITTED: validation fails before reservation, handle=null",
+      "outcome": "pass",
+      "tapId": 185,
+      "line": 1785,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "ENVELOPE_OUTCOME_UNKNOWN: the envelope always exposes a queryable handle (store=pending)",
+      "outcome": "pass",
+      "tapId": 186,
+      "line": 1791,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_DIRECT 0: exact terminal+idle rejects unknown, settles termination only",
+      "outcome": "pass",
+      "tapId": 187,
+      "line": 1797,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_DIRECT 1: exact terminal+idle rejects unknown, settles termination only",
+      "outcome": "pass",
+      "tapId": 188,
+      "line": 1803,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_DIRECT 2: exact terminal+idle rejects unknown, settles termination only",
+      "outcome": "pass",
+      "tapId": 189,
+      "line": 1809,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_DIRECT 3: exact terminal+idle rejects unknown, settles termination only",
+      "outcome": "pass",
+      "tapId": 190,
+      "line": 1815,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_DIRECT 4: exact terminal+idle rejects unknown, settles termination only",
+      "outcome": "pass",
+      "tapId": 191,
+      "line": 1821,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_DIRECT 5: exact terminal+idle rejects unknown, settles termination only",
+      "outcome": "pass",
+      "tapId": 192,
+      "line": 1827,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_DIRECT 6: exact terminal+idle rejects unknown, settles termination only",
+      "outcome": "pass",
+      "tapId": 193,
+      "line": 1833,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_DIRECT 7: exact terminal+idle rejects unknown, settles termination only",
+      "outcome": "pass",
+      "tapId": 194,
+      "line": 1839,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_DIRECT 8: exact terminal+idle rejects unknown, settles termination only",
+      "outcome": "pass",
+      "tapId": 195,
+      "line": 1845,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_DIRECT 9: exact terminal+idle rejects unknown, settles termination only",
+      "outcome": "pass",
+      "tapId": 196,
+      "line": 1851,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_DIRECT 10: exact terminal+idle rejects unknown, settles termination only",
+      "outcome": "pass",
+      "tapId": 197,
+      "line": 1857,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_DIRECT 11: exact terminal+idle rejects unknown, settles termination only",
+      "outcome": "pass",
+      "tapId": 198,
+      "line": 1863,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_DIRECT 12: exact terminal+idle rejects unknown, settles termination only",
+      "outcome": "pass",
+      "tapId": 199,
+      "line": 1869,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_DIRECT 13: exact terminal+idle rejects unknown, settles termination only",
+      "outcome": "pass",
+      "tapId": 200,
+      "line": 1875,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_DIRECT 14: exact terminal+idle rejects unknown, settles termination only",
+      "outcome": "pass",
+      "tapId": 201,
+      "line": 1881,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_DELIVER: acceptance remains receipt-only; aborted turn has no successful outcome",
+      "outcome": "pass",
+      "tapId": 202,
+      "line": 1887,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_REPLAY: pre-receipt abort+idle settles the original waiter without waiting for its deadline",
+      "outcome": "pass",
+      "tapId": 203,
+      "line": 1893,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "EVENT_RING_WRAP_DURING_ACTIVE_TURN: sequence matcher survives ring eviction",
+      "outcome": "pass",
+      "tapId": 204,
+      "line": 1899,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "STDERR_AND_CREATIONS_OVERFLOW: caps + exact counters",
+      "outcome": "pass",
+      "tapId": 205,
+      "line": 1905,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B12 process audit count/bytes are hard-capped with drop accounting",
+      "outcome": "pass",
+      "tapId": 206,
+      "line": 1911,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "UTF8_OUTPUT_INCREMENTAL_TAIL: multibyte output over cap keeps a valid UTF-8 tail",
+      "outcome": "pass",
+      "tapId": 207,
+      "line": 1917,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "queued turn caps: 65th queued turn is rejected pre-queue; oversized prompts never cached",
+      "outcome": "pass",
+      "tapId": 208,
+      "line": 1923,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js",
+      "outcome": "fail",
+      "tapId": 21,
+      "line": 1946,
+      "location": "packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js:1:1",
+      "skipReason": null,
+      "rawFailure": "not ok 21 - packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js\n  ---\n  duration_ms: 44.1575\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js:1:1'\n  failureType: 'testCodeFailure'\n  exitCode: 1\n  signal: ~\n  error: 'test failed'\n  code: 'ERR_TEST_FAILURE'\n  ..."
+    },
+    {
+      "title": "CTR-EPAR-005: a deleted exact id whose string matches another agent display name sends ZERO",
+      "outcome": "pass",
+      "tapId": 210,
+      "line": 1958,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-EPAR-005: a disabled id is target_disabled even when its name is referenced",
+      "outcome": "pass",
+      "tapId": 211,
+      "line": 1964,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-EPAR-005: the exact enabled id still resolves and admits once",
+      "outcome": "pass",
+      "tapId": 212,
+      "line": 1970,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "non-A2A paths keep the existing resolution semantics (name fallback unchanged)",
+      "outcome": "pass",
+      "tapId": 213,
+      "line": 1976,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "A2A same-id rename remains exact: the id always selects that id",
+      "outcome": "pass",
+      "tapId": 214,
+      "line": 1982,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "TURN_TIMEOUT_THEN_LATE_SUCCESS: settlement=late_completed, output available via handle",
+      "outcome": "pass",
+      "tapId": 215,
+      "line": 1988,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "TURN_TIMEOUT_THEN_LATE_FAILURE: settlement=late_failed, no_output",
+      "outcome": "pass",
+      "tapId": 216,
+      "line": 1994,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "TURN_TIMEOUT_THEN_CHILD_EXIT_NO_TERMINAL: pending-first order; terminated_without_outcome; fence released",
+      "outcome": "pass",
+      "tapId": 217,
+      "line": 2000,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B09 parser receipt/terminal evidence beats exit before the receipt Promise continuation",
+      "outcome": "pass",
+      "tapId": 218,
+      "line": 2006,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "PARSED_OUTCOME_PRECEDES_CHILD_EXIT: exact turn/end received pre-exit wins over child_real_exit",
+      "outcome": "pass",
+      "tapId": 219,
+      "line": 2012,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "DUPLICATE_CONFLICTING_LATE_EVIDENCE: state/output unchanged; duplicate + conflict audits",
+      "outcome": "pass",
+      "tapId": 220,
+      "line": 2018,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "HANDOFF_VISIBLE_BEFORE_RELEASE: reconciliation visible before slot release — never not_found",
+      "outcome": "pass",
+      "tapId": 221,
+      "line": 2024,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "LATE_OUTPUT_AFTER_GENERATION_EXIT: late_completed output survives graceful real exit, identical on repeat reads",
+      "outcome": "pass",
+      "tapId": 222,
+      "line": 2030,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "scheduler seam snapshot separates outcome evidence / cancel requested / termination proven",
+      "outcome": "pass",
+      "tapId": 223,
+      "line": 2036,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "late output remains readable through the reconciliation handle after the generation exited",
+      "outcome": "pass",
+      "tapId": 224,
+      "line": 2042,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_LATE {\"kind\":\"aborted\",\"reason\":{\"kind\":\"disposed\"}}: termination proof never becomes late success",
+      "outcome": "pass",
+      "tapId": 225,
+      "line": 2048,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_LATE {\"kind\":\"blocked\"}: termination proof never becomes late success",
+      "outcome": "pass",
+      "tapId": 226,
+      "line": 2054,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_LATE {\"kind\":\"max-tokens\"}: termination proof never becomes late success",
+      "outcome": "pass",
+      "tapId": 227,
+      "line": 2060,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_LATE {\"kind\":\"interrupted\"}: termination proof never becomes late success",
+      "outcome": "pass",
+      "tapId": 228,
+      "line": 2066,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_LATE {\"kind\":\"future-reason\"}: termination proof never becomes late success",
+      "outcome": "pass",
+      "tapId": 229,
+      "line": 2072,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_LATE null: termination proof never becomes late success",
+      "outcome": "pass",
+      "tapId": 230,
+      "line": 2078,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "EXIT_REASON {\"kind\":\"aborted\",\"reason\":{\"kind\":\"disposed\"}}: frozen parser evidence uses exact outcome precedence",
+      "outcome": "pass",
+      "tapId": 231,
+      "line": 2084,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "EXIT_REASON {\"kind\":\"blocked\"}: frozen parser evidence uses exact outcome precedence",
+      "outcome": "pass",
+      "tapId": 232,
+      "line": 2090,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "EXIT_REASON {\"kind\":\"max-tokens\"}: frozen parser evidence uses exact outcome precedence",
+      "outcome": "pass",
+      "tapId": 233,
+      "line": 2096,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "EXIT_REASON {\"kind\":\"interrupted\"}: frozen parser evidence uses exact outcome precedence",
+      "outcome": "pass",
+      "tapId": 234,
+      "line": 2102,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "EXIT_REASON {\"kind\":\"future-reason\"}: frozen parser evidence uses exact outcome precedence",
+      "outcome": "pass",
+      "tapId": 235,
+      "line": 2108,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "EXIT_REASON undefined: frozen parser evidence uses exact outcome precedence",
+      "outcome": "pass",
+      "tapId": 236,
+      "line": 2114,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "EXIT_REASON null: frozen parser evidence uses exact outcome precedence",
+      "outcome": "pass",
+      "tapId": 237,
+      "line": 2120,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "EXIT_REASON \"completed\": frozen parser evidence uses exact outcome precedence",
+      "outcome": "pass",
+      "tapId": 238,
+      "line": 2126,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "EXIT_REASON {\"kind\":\"completed\"}: frozen parser evidence uses exact outcome precedence",
+      "outcome": "pass",
+      "tapId": 239,
+      "line": 2132,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "EXIT_REASON {\"kind\":\"error\",\"error\":{\"code\":\"QUOTA\",\"message\":\"insufficient_quota\"}}: frozen parser evidence uses exact outcome precedence",
+      "outcome": "pass",
+      "tapId": 240,
+      "line": 2138,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NON_OUTCOME_CORRELATION: unrelated aborted events and stale idle cannot release the original fence",
+      "outcome": "pass",
+      "tapId": 241,
+      "line": 2144,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R4: deliver forwards a valid messageOrigin (frozen) into the admission opts",
+      "outcome": "pass",
+      "tapId": 242,
+      "line": 2150,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R4: legacy deliver callers keep zero messageOrigin in the admission opts",
+      "outcome": "pass",
+      "tapId": 243,
+      "line": 2156,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R4: malformed control options and origins reject fail-loud before admission",
+      "outcome": "pass",
+      "tapId": 244,
+      "line": 2162,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R4: promptWrite carries messageOrigin as session/prompt sibling metadata",
+      "outcome": "pass",
+      "tapId": 245,
+      "line": 2168,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R4: promptWrite omits messageOrigin for legacy callers",
+      "outcome": "pass",
+      "tapId": 246,
+      "line": 2174,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3: a deliver-originated source Run proves its turnExecutionId via the execution map",
+      "outcome": "pass",
+      "tapId": 247,
+      "line": 2180,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3: a settled or unknown turnExecutionId proves nothing (absent leaf)",
+      "outcome": "fail",
+      "tapId": 248,
+      "line": 2186,
+      "location": "packages/agent-router/test/process-lifecycle/message-origin.test.js:175:1",
+      "skipReason": null,
+      "rawFailure": "not ok 248 - R3: a settled or unknown turnExecutionId proves nothing (absent leaf)\n  ---\n  duration_ms: 0.11675\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/process-lifecycle/message-origin.test.js:175:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'ctx')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-523-integration/packages/agent-router/test/process-lifecycle/message-origin.test.js:180:32)\n    async Test.run (node:internal/test_runner/test:1404:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)\n  ..."
+    },
+    {
+      "title": "R3: the ordinary turn-mode path keeps its trusted ingressContext binding AND the source leaf",
+      "outcome": "pass",
+      "tapId": 249,
+      "line": 2201,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3: child-supplied identity fields stay ignored while the runtime proof is derived",
+      "outcome": "pass",
+      "tapId": 250,
+      "line": 2207,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B04: known non-writable stdin rejects before any write attempt",
+      "outcome": "pass",
+      "tapId": 251,
+      "line": 2213,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "STDIN_SYNC_THROW_ZERO_BYTE: proven zero-byte -> not_admitted; broken stream still tears down",
+      "outcome": "pass",
+      "tapId": 252,
+      "line": 2219,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V3 durable write-intent failure sends zero prompt bytes and is never classified as a stdin zero-byte rejection",
+      "outcome": "pass",
+      "tapId": 253,
+      "line": 2225,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "STDIN_ASYNC_WRITE_ERROR: admission unknown -> outcome_unknown visible pre-exit, then terminated_without_outcome",
+      "outcome": "pass",
+      "tapId": 254,
+      "line": 2231,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "STDIN_CLOSE_AFTER_PARTIAL_WRITE: pipe close with unknown admission -> unknown, no replay, teardown",
+      "outcome": "pass",
+      "tapId": 255,
+      "line": 2237,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "FATAL_PROTOCOL_FRAME_OVERFLOW: oversized stdout frame -> immediate teardown, buffers capped",
+      "outcome": "pass",
+      "tapId": 256,
+      "line": 2243,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "row 2: crash after prompt write classifies the previous epoch without replay",
+      "outcome": "pass",
+      "tapId": 257,
+      "line": 2249,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "row 4: durable real-exit observation routes termination-only (child_real_exit), never business",
+      "outcome": "pass",
+      "tapId": 258,
+      "line": 2255,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "row 5: HR restart-lost abandonment stays exceptional and honest",
+      "outcome": "pass",
+      "tapId": 259,
+      "line": 2261,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "row 6: repeated restart reclassifies idempotently (settle-once, no audit growth, no fence flap)",
+      "outcome": "pass",
+      "tapId": 260,
+      "line": 2267,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "row 8: an unrelated Agent is unaffected by another agent's unresolved fence",
+      "outcome": "pass",
+      "tapId": 261,
+      "line": 2273,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "r4 salvaged corpus adapter requires HR_R4_SALVAGE_ROOT",
+      "outcome": "skip",
+      "tapId": 262,
+      "line": 2279,
+      "location": null,
+      "skipReason": "external immutable input not supplied",
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ reviewed B1 floor time missing rejects without settlement",
+      "outcome": "pass",
+      "tapId": 263,
+      "line": 2285,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ reviewed B1 validator time string rejects without settlement",
+      "outcome": "pass",
+      "tapId": 264,
+      "line": 2291,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ reviewed B1 inhibition time missing rejects without settlement",
+      "outcome": "pass",
+      "tapId": 265,
+      "line": 2297,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ reviewed B2 inhibition after authorization rejects without settlement",
+      "outcome": "pass",
+      "tapId": 266,
+      "line": 2303,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ reviewed B2 quiescence before inhibition rejects without settlement",
+      "outcome": "pass",
+      "tapId": 267,
+      "line": 2309,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ reviewed B2 subject history after cut rejects without settlement",
+      "outcome": "pass",
+      "tapId": 268,
+      "line": 2315,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ reviewed B2 stop before deployment proof rejects without settlement",
+      "outcome": "pass",
+      "tapId": 269,
+      "line": 2321,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "ACC-RQ-007 planned stop within the prospective cut verifies without historical floor inference",
+      "outcome": "pass",
+      "tapId": 270,
+      "line": 2327,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "ACC-RQ-001 one startup bundle settles only its exact old turn, preserving unknown outcome and null exit",
+      "outcome": "pass",
+      "tapId": 271,
+      "line": 2333,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ-015 new evidence kind cannot enter through ordinary settlement constructors",
+      "outcome": "pass",
+      "tapId": 272,
+      "line": 2339,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ zero-write: subject agent differs",
+      "outcome": "pass",
+      "tapId": 273,
+      "line": 2345,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ zero-write: old tree still present",
+      "outcome": "pass",
+      "tapId": 274,
+      "line": 2351,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ zero-write: bundle preimage digest differs",
+      "outcome": "pass",
+      "tapId": 275,
+      "line": 2357,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ zero-write: floor proof is missing",
+      "outcome": "pass",
+      "tapId": 276,
+      "line": 2363,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ zero-write: launch authorization digest differs",
+      "outcome": "pass",
+      "tapId": 277,
+      "line": 2369,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ zero-write: controlled stop missing for planned restart",
+      "outcome": "pass",
+      "tapId": 278,
+      "line": 2375,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ zero-write: window descriptor is absent",
+      "outcome": "pass",
+      "tapId": 279,
+      "line": 2381,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ zero-write: host differs",
+      "outcome": "pass",
+      "tapId": 280,
+      "line": 2387,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ-007 two bundles for one handle reject both before either can settle",
+      "outcome": "pass",
+      "tapId": 281,
+      "line": 2393,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ-007 stable differing duplicate is batch zero-write",
+      "outcome": "pass",
+      "tapId": 282,
+      "line": 2399,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ-007 stable malformed duplicate is batch zero-write",
+      "outcome": "pass",
+      "tapId": 283,
+      "line": 2405,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ-007 replacement collision before subject is batch zero-write",
+      "outcome": "pass",
+      "tapId": 284,
+      "line": 2411,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ-007 replacement collision after subject is batch zero-write",
+      "outcome": "pass",
+      "tapId": 285,
+      "line": 2417,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ-007 same-subject bytes replaced during verification are zero-write",
+      "outcome": "pass",
+      "tapId": 286,
+      "line": 2423,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ-003 same-window lost during batch rejects both cached proofs",
+      "outcome": "pass",
+      "tapId": 287,
+      "line": 2429,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ-003 same-window loss followed by positive during batch rejects both cached proofs",
+      "outcome": "pass",
+      "tapId": 288,
+      "line": 2435,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ-003 same-window lost after batch before settlement rejects both cached proofs",
+      "outcome": "pass",
+      "tapId": 289,
+      "line": 2441,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "ACC-RQ-003 stable shared window settles both distinct subjects once",
+      "outcome": "pass",
+      "tapId": 290,
+      "line": 2447,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ-003 transient window-lock stat failure remains sticky after recovery",
+      "outcome": "pass",
+      "tapId": 291,
+      "line": 2453,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ-018 shared window lost between settlements leaves second record untouched",
+      "outcome": "pass",
+      "tapId": 292,
+      "line": 2459,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ-008 replay of a valid already-settled bundle is settle-once audit only",
+      "outcome": "pass",
+      "tapId": 293,
+      "line": 2465,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ-002 settled different business result fails V8 P5 with zero-write",
+      "outcome": "pass",
+      "tapId": 294,
+      "line": 2471,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "NEG-RQ-002 settled different termination evidence fails V8 P5 with zero-write",
+      "outcome": "pass",
+      "tapId": 295,
+      "line": 2477,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "ACC-RQ-007 persistence failure rolls the exact record back and leaves its fence active",
+      "outcome": "pass",
+      "tapId": 296,
+      "line": 2483,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "RQ generic bundle.json (retired fixed-name gate removed) verifies and settles exactly once",
+      "outcome": "pass",
+      "tapId": 297,
+      "line": 2489,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "RQ foreign operation id bundle is rejected fail-closed with zero store writes",
+      "outcome": "pass",
+      "tapId": 298,
+      "line": 2495,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CHILD_EXIT_WITH_MULTIPLE_PENDING_RPC: all reject with EXITED before the store hook",
+      "outcome": "pass",
+      "tapId": 299,
+      "line": 2501,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "PARENT_RPC_RESPONSE_WRITE_RESERVE: handler deadline aborts; ONE timeout response inside the reserve",
+      "outcome": "pass",
+      "tapId": 300,
+      "line": 2507,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B03: expired inherited turn budget invokes no handler and writes no response",
+      "outcome": "pass",
+      "tapId": 301,
+      "line": 2513,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "PARENT_RPC_WRITE_EXCEEDS_TOTAL_DEADLINE: one attempt, no post-deadline write, responseWrite=unknown",
+      "outcome": "pass",
+      "tapId": 302,
+      "line": 2519,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B04 known broken stdin takes precedence over pending/deadline guards and drains existing RPCs",
+      "outcome": "pass",
+      "tapId": 303,
+      "line": 2525,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "pending RPC cap: the 1025th concurrent RPC is rejected before write (no pending eviction)",
+      "outcome": "pass",
+      "tapId": 304,
+      "line": 2531,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "GRACEFUL_SHUTDOWN_SUCCESS: one graceful write, kill=0, exact settlement order",
+      "outcome": "pass",
+      "tapId": 305,
+      "line": 2537,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B14 graceful ACK waits the remaining grace and shutdown awaits real exitPromise",
+      "outcome": "pass",
+      "tapId": 306,
+      "line": 2543,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "SHUTDOWN_GRACE_EXPIRES_THEN_KILL: grace expiry escalates to exactly one SIGKILL + real exit await",
+      "outcome": "pass",
+      "tapId": 307,
+      "line": 2549,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "SHUTDOWN_OWNERSHIP_MISMATCH: token mismatch -> no graceful write, no kill, REAP retained, loud audit",
+      "outcome": "pass",
+      "tapId": 308,
+      "line": 2555,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CONCURRENT_SHUTDOWN: exact shared Promise identity; one write/kill/exit wait; EMPTY after real exit",
+      "outcome": "pass",
+      "tapId": 309,
+      "line": 2561,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "registry disposal waits real child exit and exact turn settlement despite another worker shutdown failure",
+      "outcome": "pass",
+      "tapId": 310,
+      "line": 2567,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "registry disposal attempts worker shutdown after no-child startup cleanup throws",
+      "outcome": "pass",
+      "tapId": 311,
+      "line": 2573,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "P1-1 a kill(0) === false on a REAL ChildProcess (the EPERM shape: live process, undeliverable signal) is NOT death evidence",
+      "outcome": "pass",
+      "tapId": 312,
+      "line": 2579,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "P1-1 an EPERM probe failure is never death evidence (fail closed)",
+      "outcome": "pass",
+      "tapId": 313,
+      "line": 2585,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "P1-1 a kill(0) === false on a duck-typed (non-ChildProcess) child is NOT evidence",
+      "outcome": "pass",
+      "tapId": 314,
+      "line": 2591,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "P1-1 an explicit OS not-found verdict (ESRCH) IS death evidence",
+      "outcome": "pass",
+      "tapId": 315,
+      "line": 2597,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "P1-1 any other probe throw is never death evidence; no probe surface or bad pid is never evidence",
+      "outcome": "pass",
+      "tapId": 316,
+      "line": 2603,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D1-a a REAP fence whose cleanup CAS was missed still rejects admission — no fence deletion, no parallel generation (fail closed)",
+      "outcome": "pass",
+      "tapId": 317,
+      "line": 2613,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D1-b a terminal-EXITED process in a READY slot never serves admission again",
+      "outcome": "pass",
+      "tapId": 318,
+      "line": 2625,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D1-c an OS-proven dead child (exact-pid ESRCH) in a READY slot rebuilds exactly once, then stable reuse",
+      "outcome": "pass",
+      "tapId": 319,
+      "line": 2638,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D1-negative a LIVE process keeps the exact current semantics (no premature invalidation)",
+      "outcome": "pass",
+      "tapId": 320,
+      "line": 2649,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D1-stale the dead old generation stays audit-only after rebuild (no slot mutation)",
+      "outcome": "pass",
+      "tapId": 321,
+      "line": 2662,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "INITIALIZE_REQUEST_NEVER_REPLIES: one total deadline, shared result rejects once, REAP then EMPTY",
+      "outcome": "pass",
+      "tapId": 322,
+      "line": 2668,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "INITIALIZE_PROVIDER_NEVER_READY: retries never reset the one initialize deadline",
+      "outcome": "pass",
+      "tapId": 323,
+      "line": 2674,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "trusted native policy is sent at initialize and readiness requires its exact acknowledgement",
+      "outcome": "pass",
+      "tapId": 324,
+      "line": 2680,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "trusted native policy acknowledgement mismatch fails initialize before readiness",
+      "outcome": "pass",
+      "tapId": 325,
+      "line": 2686,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "legacy initialize omits trusted native policy and accepts the existing acknowledgement",
+      "outcome": "pass",
+      "tapId": 326,
+      "line": 2692,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "state machine: only the legal SPAWNING->INITIALIZING->READY->DRAINING->EXITED graph; illegal moves fail loud",
+      "outcome": "pass",
+      "tapId": 327,
+      "line": 2698,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "PROMPT_RECEIPT_NEVER_REPLIES (turn path): receipt unknown stays fenced until hard-deadline REAP",
+      "outcome": "pass",
+      "tapId": 328,
+      "line": 2704,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "DELIVER_TIMEOUT_USES_PROMPT_RECEIPT_FIELD: the config field is the binding receipt deadline",
+      "outcome": "pass",
+      "tapId": 329,
+      "line": 2710,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "DELIVER_CANNOT_BYPASS_UNKNOWN_FENCE: a second deliver while unknown is not_admitted with write delta 0",
+      "outcome": "pass",
+      "tapId": 330,
+      "line": 2716,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B06: settling one of multiple unresolved unknowns does not release the others",
+      "outcome": "pass",
+      "tapId": 331,
+      "line": 2722,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "UNKNOWN_REJECTS_QUEUED_TURNS: B/C write delta 0; A late_completed",
+      "outcome": "pass",
+      "tapId": 332,
+      "line": 2728,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "crash-orphaned UNKNOWN stays fenced across restarts; no gate replays or settles it",
+      "outcome": "pass",
+      "tapId": 333,
+      "line": 2734,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "admin abandonment unblocks admission only; the UNKNOWN record is never settled or erased",
+      "outcome": "pass",
+      "tapId": 334,
+      "line": 2740,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "restart-quiescence evidence without an authenticated context settles nothing (fail-closed)",
+      "outcome": "pass",
+      "tapId": 335,
+      "line": 2746,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "UNKNOWN_FENCE_SELF_LOCK_REPAIRED: idle before the same-batch turn/end settles late and releases the fence without any new admission",
+      "outcome": "pass",
+      "tapId": 336,
+      "line": 2752,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "RECEIPT_CORRELATION_MISSING: terminal present but receipt never correlated — pending, no fake release",
+      "outcome": "pass",
+      "tapId": 337,
+      "line": 2758,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "LATER_TURN_STARTED: a later turn/start after the terminal never settles the old turn",
+      "outcome": "pass",
+      "tapId": 338,
+      "line": 2764,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "MULTI_UNKNOWN_ISOLATED: releasing one fence never releases another (C-016)",
+      "outcome": "pass",
+      "tapId": 339,
+      "line": 2770,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CHILD_EXIT_SETTLES_TERMINATED_WITHOUT_OUTCOME: fence released, no new admission needed",
+      "outcome": "pass",
+      "tapId": 340,
+      "line": 2776,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "RELEASE_SENDS_NOTHING_NEW: deliver-mode late settlement produces no second business prompt and no duplicate delivery",
+      "outcome": "pass",
+      "tapId": 341,
+      "line": 2782,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "classifyUnknownFence covers the six bounded, secret-free categories",
+      "outcome": "pass",
+      "tapId": 342,
+      "line": 2788,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V5 only the private authenticated callback registers exact opts identity",
+      "outcome": "pass",
+      "tapId": 343,
+      "line": 2801,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V5 Router mounts a distinct private Feishu callback; public route cannot grant provenance",
+      "outcome": "pass",
+      "tapId": 344,
+      "line": 2807,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V5 raw OpenID absence, fallback, mismatch and prototype spoof reject before route",
+      "outcome": "pass",
+      "tapId": 345,
+      "line": 2813,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V5 post-binding correlation cap failure is still pre-turn admission",
+      "outcome": "pass",
+      "tapId": 346,
+      "line": 2819,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V5 AgentProcess mint uses exact opts lookup, not caller ingressContext",
+      "outcome": "pass",
+      "tapId": 347,
+      "line": 2825,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V5 durable correlation is write-once and legacy missing field reads null",
+      "outcome": "pass",
+      "tapId": 348,
+      "line": 2831,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V5 malformed optional correlation rejects before sequence or durable mutation",
+      "outcome": "pass",
+      "tapId": 349,
+      "line": 2837,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V5 native prompt receipt remains separate from ingress message identity",
+      "outcome": "pass",
+      "tapId": 350,
+      "line": 2843,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V5 mounted private callback reaches real C-010 mint; public route and chain remain unbound",
+      "outcome": "pass",
+      "tapId": 351,
+      "line": 2865,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V5 real C-010 mint persists trusted identity before synthetic prompt byte failure",
+      "outcome": "pass",
+      "tapId": 352,
+      "line": 2883,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "V5 deliver remains unbound; duplicate private message IDs remain distinct records",
+      "outcome": "pass",
+      "tapId": 353,
+      "line": 2903,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "workflow_execution origin: valid provenance is frozen and forwarded into the admission opts",
+      "outcome": "pass",
+      "tapId": 354,
+      "line": 2909,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "workflow_execution origin: the exact-id admission gate applies (wrong-target family)",
+      "outcome": "pass",
+      "tapId": 355,
+      "line": 2915,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "workflow_execution origin: malformed provenance rejects fail-loud before admission",
+      "outcome": "pass",
+      "tapId": 356,
+      "line": 2921,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "workflow_execution origin: unknown kinds stay rejected",
+      "outcome": "pass",
+      "tapId": 357,
+      "line": 2927,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B01: STARTUP CAS precedes async bootstrap and all callers share the exact resultPromise",
+      "outcome": "pass",
+      "tapId": 358,
+      "line": 2937,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B01 frozen bootstrap rejection settles shared STARTUP and returns slot to EMPTY",
+      "outcome": "pass",
+      "tapId": 359,
+      "line": 2946,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B01 post-processRef setup failure with no child converges STARTUP to EMPTY",
+      "outcome": "pass",
+      "tapId": 360,
+      "line": 2955,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CONCURRENT_ENSURE_RUNNING: 30 calls -> one spawn, one pid, shared READY reference",
+      "outcome": "pass",
+      "tapId": 361,
+      "line": 2965,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B14 disposer fences and cancels a no-child STARTUP before spawn",
+      "outcome": "pass",
+      "tapId": 362,
+      "line": 2974,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B14 runtime disposer awaits child exit and retains REAP until then",
+      "outcome": "pass",
+      "tapId": 363,
+      "line": 2984,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "SPAWN_ERROR_BEFORE_CHILD_HANDLE: sync spawn throw -> bounded reject + slot EMPTY, no fence",
+      "outcome": "pass",
+      "tapId": 364,
+      "line": 2994,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "REGISTRY_STARTUP_FATAL_ATOMIC_REAP: REAP before real exit; racers error; no EMPTY window",
+      "outcome": "pass",
+      "tapId": 365,
+      "line": 3003,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "REGISTRY_READY_FATAL_ATOMIC_REAP: no generation g+1 before g really exited",
+      "outcome": "pass",
+      "tapId": 366,
+      "line": 3014,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "STARTUP_RESULT_REJECTS_WHILE_REAP_WAITS: bounded original reject + immediate reaping reject",
+      "outcome": "pass",
+      "tapId": 367,
+      "line": 3023,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "OLD_GENERATION_LATE_EXIT_AFTER_RESPAWN: stale exit callback on the old process leaves g+1 untouched (audit only)",
+      "outcome": "pass",
+      "tapId": 368,
+      "line": 3034,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "F1 resolveWorkspace: bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation",
+      "outcome": "pass",
+      "tapId": 369,
+      "line": 3044,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "F1 resolveDshHome: bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation",
+      "outcome": "pass",
+      "tapId": 370,
+      "line": 3054,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "F1 resolveProcessConfig: bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation",
+      "outcome": "pass",
+      "tapId": 371,
+      "line": 3064,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "F1 provisionHome: bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation",
+      "outcome": "pass",
+      "tapId": 372,
+      "line": 3074,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "F1 processFactory: bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation",
+      "outcome": "pass",
+      "tapId": 373,
+      "line": 3084,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "F1 spawn (sync throw after processRef exists): bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation",
+      "outcome": "pass",
+      "tapId": 374,
+      "line": 3094,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "F1 audit-probe regression: pre-spawn provisioning throw -> bounded reject -> EMPTY -> second ensureRunning does not hang",
+      "outcome": "pass",
+      "tapId": 375,
+      "line": 3104,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "F1 discipline is idempotent: repeated re-invocation cannot double-settle or empty a newer generation",
+      "outcome": "pass",
+      "tapId": 376,
+      "line": 3114,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "F2 UNKNOWN_AGENT_OVERRIDE = FAIL_LOUD before any process spawn, structured and secret-free",
+      "outcome": "pass",
+      "tapId": 377,
+      "line": 3120,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "F2 KNOWN_AGENT_OVERRIDE = PASS: a registered agent override applies end-to-end",
+      "outcome": "pass",
+      "tapId": 378,
+      "line": 3130,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "F2 EMPTY_OVERRIDES = PASS: no override file behaves exactly as before",
+      "outcome": "pass",
+      "tapId": 379,
+      "line": 3140,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "handle embeds epoch/discriminator/generation/monotonic seq; seq is continuous per agent",
+      "outcome": "pass",
+      "tapId": 380,
+      "line": 3146,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "QUERY_PENDING_REPEATABLE: two reads are byte-identical and non-consuming",
+      "outcome": "pass",
+      "tapId": 381,
+      "line": 3152,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "QUERY_NO_OUTPUT_REPEATABLE: settled failed record reads no_output twice, byte-identical",
+      "outcome": "pass",
+      "tapId": 382,
+      "line": 3158,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "QUERY_EVICTED_REPEATABLE: a legally issued + resolved + evicted handle reads evicted twice",
+      "outcome": "pass",
+      "tapId": 383,
+      "line": 3164,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "QUERY_RESTART_LOST_REPEATABLE: a foreign runtimeEpoch handle uniformly reads restart_lost",
+      "outcome": "pass",
+      "tapId": 384,
+      "line": 3170,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "QUERY_NEVER_EXISTED_REPEATABLE: seq beyond the high-water / unknown agent / malformed format",
+      "outcome": "pass",
+      "tapId": 385,
+      "line": 3176,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CALLER_CORRELATION_RESTORE: exact triple restores the same handle without any admission",
+      "outcome": "pass",
+      "tapId": 386,
+      "line": 3182,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B10 mint correlation conflict leaves authority/sequence/capacity unchanged",
+      "outcome": "pass",
+      "tapId": 387,
+      "line": 3188,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B11 pending output never reports terminal available/no_output",
+      "outcome": "pass",
+      "tapId": 388,
+      "line": 3194,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B10 failed oversized mint at full capacity evicts nothing",
+      "outcome": "pass",
+      "tapId": 389,
+      "line": 3200,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B12 per-record hard cap fails before committing oversized identity",
+      "outcome": "pass",
+      "tapId": 390,
+      "line": 3206,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B12 complete-record accounting rejects oversized mutable metadata without exceeding caps",
+      "outcome": "pass",
+      "tapId": 391,
+      "line": 3212,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B12 aggregate byte pressure preserves mandatory unknown headroom and truncates optional output",
+      "outcome": "pass",
+      "tapId": 392,
+      "line": 3218,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B12 cap-sized quote output is measured by retained UTF-8 bytes, not JSON escaping",
+      "outcome": "pass",
+      "tapId": 393,
+      "line": 3224,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B10 handle classification rejects aliases and unsafe integers",
+      "outcome": "pass",
+      "tapId": 394,
+      "line": 3230,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "caller correlation: same triple + same handle idempotent; different handle fails loud",
+      "outcome": "pass",
+      "tapId": 395,
+      "line": 3236,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "settle-once: first winning settlement wins; duplicate + conflicting evidence only append audit",
+      "outcome": "pass",
+      "tapId": 396,
+      "line": 3242,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B12 reconciliation audit obeys exact count and byte hard caps",
+      "outcome": "pass",
+      "tapId": 397,
+      "line": 3248,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "settleDirect rejects records that already entered the late machine and vice versa",
+      "outcome": "pass",
+      "tapId": 398,
+      "line": 3254,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "onTurnReconciled emits exactly once per winning settlement",
+      "outcome": "pass",
+      "tapId": 399,
+      "line": 3260,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "UNRESOLVED_RECONCILIATION_CAP_PRESSURE: unresolved records are not evictable; the next mint fails pre-reservation",
+      "outcome": "pass",
+      "tapId": 400,
+      "line": 3266,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "ROUTER_GLOBAL_RECONCILIATION_CAP: global record cap rejects a mint on another agent, no eviction of unresolved",
+      "outcome": "pass",
+      "tapId": 401,
+      "line": 3272,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B12 issuance metadata fails loud before forgetting sparse legal generations",
+      "outcome": "pass",
+      "tapId": 402,
+      "line": 3278,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "resolved eviction frees capacity: settled records are evictable, unresolved are not",
+      "outcome": "pass",
+      "tapId": 403,
+      "line": 3284,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3 route: one real startup-blocked request enters shared alert feed once",
+      "outcome": "pass",
+      "tapId": 404,
+      "line": 3290,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3 route: one real per-agent fence rejection enters shared alert feed once",
+      "outcome": "pass",
+      "tapId": 405,
+      "line": 3296,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3 deliver: one real startup-blocked request enters shared alert feed once",
+      "outcome": "pass",
+      "tapId": 406,
+      "line": 3302,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3 deliver: one real per-agent fence rejection enters shared alert feed once",
+      "outcome": "pass",
+      "tapId": 407,
+      "line": 3308,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3 product: one real startup-blocked request enters shared alert feed once",
+      "outcome": "pass",
+      "tapId": 408,
+      "line": 3314,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3 product: one real per-agent fence rejection enters shared alert feed once",
+      "outcome": "pass",
+      "tapId": 409,
+      "line": 3320,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3 website: one real startup-blocked request enters shared alert feed once",
+      "outcome": "pass",
+      "tapId": 410,
+      "line": 3326,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3 website: one real per-agent fence rejection enters shared alert feed once",
+      "outcome": "pass",
+      "tapId": 411,
+      "line": 3332,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3 blocked observation accepts only bounded code/reason/agent metadata",
+      "outcome": "pass",
+      "tapId": 412,
+      "line": 3338,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3 a blocked process acquisition already counted by the chain is not counted again by ingress",
+      "outcome": "pass",
+      "tapId": 413,
+      "line": 3344,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3 website: late blocked acquisition alerts once without exposing raw Agent identity",
+      "outcome": "pass",
+      "tapId": 414,
+      "line": 3350,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3 product: observing rejection preserves its existing raw-fence fallback",
+      "outcome": "pass",
+      "tapId": 415,
+      "line": 3356,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3 website: observing rejection preserves its existing raw-fence fallback",
+      "outcome": "pass",
+      "tapId": 416,
+      "line": 3362,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R3 real router initialization alerts on an invalid startup store before any delivery",
+      "outcome": "pass",
+      "tapId": 417,
+      "line": 3368,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "default off: no canaryRuntimeRoot => zero filesystem effect, normal turn",
+      "outcome": "pass",
+      "tapId": 418,
+      "line": 3374,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "absent descriptor is the ordinary fast path (no injection, no marker)",
+      "outcome": "pass",
+      "tapId": 419,
+      "line": 3380,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "quota mode: acquire/dispatch boundary crossed, fixed terminal 429, hop luna, exact counts",
+      "outcome": "pass",
+      "tapId": 420,
+      "line": 3386,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "quota mode on a length-1 chain: fixture 429 stays terminal (no next route)",
+      "outcome": "pass",
+      "tapId": 421,
+      "line": 3392,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "outcome_unknown mode: STOP before acquire — zero acquires, no generation",
+      "outcome": "pass",
+      "tapId": 422,
+      "line": 3398,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "binding mismatches: wrong agent / route / channel / sender / partial marker / no ingress",
+      "outcome": "pass",
+      "tapId": 423,
+      "line": 3404,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "other-Agent isolation: a matching descriptor never affects another agent turn",
+      "outcome": "pass",
+      "tapId": 424,
+      "line": 3410,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "expired descriptor: no injection, not consumed, ordinary turn",
+      "outcome": "pass",
+      "tapId": 425,
+      "line": 3416,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "malformed descriptors fail loud with zero attempts",
+      "outcome": "pass",
+      "tapId": 426,
+      "line": 3422,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "metadata drift (wrong mode bits) fails loud",
+      "outcome": "pass",
+      "tapId": 427,
+      "line": 3428,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "one-shot race: exactly one of two concurrent matching turns gets the injection",
+      "outcome": "pass",
+      "tapId": 428,
+      "line": 3434,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "crash after rename: used marker alone never re-consumes; ordinary turn",
+      "outcome": "pass",
+      "tapId": 429,
+      "line": 3440,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "nonce collision: new descriptor whose used marker already exists fails loud",
+      "outcome": "pass",
+      "tapId": 430,
+      "line": 3446,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "admission (deliver) entries never match the canary binding",
+      "outcome": "pass",
+      "tapId": 431,
+      "line": 3452,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "after clear (descriptor + used marker absent) the seam is inert",
+      "outcome": "pass",
+      "tapId": 432,
+      "line": 3458,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "real Router ProductSurface seam preserves dedicated binding/main and hands source metadata to original chain",
+      "outcome": "pass",
+      "tapId": 433,
+      "line": 3470,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "real AgentProcess receipt-only product surface holds trusted context until original terminal",
+      "outcome": "pass",
+      "tapId": 434,
+      "line": 3476,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "source owner retains exact native reply before publication, survives reset and restart",
+      "outcome": "pass",
+      "tapId": 435,
+      "line": 3482,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "source reserve fails before followup when durable retention is unavailable",
+      "outcome": "pass",
+      "tapId": 436,
+      "line": 3488,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B002: visible text and its native ID survive an empty completion anchor in the same exact turn",
+      "outcome": "pass",
+      "tapId": 437,
+      "line": 3494,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B002: a wholly-empty native completion records no visible reply rather than retaining an empty business answer",
+      "outcome": "pass",
+      "tapId": 438,
+      "line": 3500,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#1332 fresh spawn + suspended 59243-event resume: no prompt before application readiness",
+      "outcome": "pass",
+      "tapId": 439,
+      "line": 3506,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R1 readiness: initialize ready cannot bypass session preparation acknowledgement",
+      "outcome": "pass",
+      "tapId": 440,
+      "line": 3512,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R1 readiness: absent capability and mismatched acknowledgement fail closed",
+      "outcome": "pass",
+      "tapId": 441,
+      "line": 3518,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R1 readiness: never-ready child respects caller deadline and late ack cannot admit",
+      "outcome": "pass",
+      "tapId": 442,
+      "line": 3524,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R4 readiness: process state and newly installed UNKNOWN fence gate acknowledgement",
+      "outcome": "pass",
+      "tapId": 443,
+      "line": 3530,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R1 readiness: each call obtains a fresh ack; expired caller budget writes nothing",
+      "outcome": "pass",
+      "tapId": 444,
+      "line": 3536,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R1 readiness: an acknowledgement processed beyond the absolute budget cannot admit",
+      "outcome": "pass",
+      "tapId": 445,
+      "line": 3542,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R1 readiness preserves private-session log suppression without forwarding custody payload",
+      "outcome": "pass",
+      "tapId": 446,
+      "line": 3548,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-R2 fresh/idle transport failure respawns twice with exponential delay, one reply/dispatch",
+      "outcome": "pass",
+      "tapId": 447,
+      "line": 3554,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-R3 exhaustion durably retains original message, coordinates and explicit resend semantics",
+      "outcome": "pass",
+      "tapId": 448,
+      "line": 3560,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-R2 no replay after unsafe/unknown event {\"type\":\"assistant/message\",\"data\":{\"message\":{\"content\":[{\"type\":\"text\",\"text\":\"partial\"}]}}}",
+      "outcome": "pass",
+      "tapId": 449,
+      "line": 3566,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-R2 no replay after unsafe/unknown event {\"type\":\"assistant/message\",\"data\":{\"message\":{\"content\":[{\"type\":\"tool-call\",\"name\":\"write\"}]}}}",
+      "outcome": "pass",
+      "tapId": 450,
+      "line": 3572,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-R2 no replay after unsafe/unknown event {\"type\":\"tool/start\",\"data\":{}}",
+      "outcome": "pass",
+      "tapId": 451,
+      "line": 3578,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-R2 no replay after unsafe/unknown event {\"type\":\"unrecognized/provider-event\",\"data\":{}}",
+      "outcome": "pass",
+      "tapId": 452,
+      "line": 3584,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-R5 final unknown increments caller-bound class without replay or respawn",
+      "outcome": "pass",
+      "tapId": 453,
+      "line": 3590,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-R2/R3 async admission returns one receipt then recovers delayed failures and persists exhaustion",
+      "outcome": "pass",
+      "tapId": 454,
+      "line": 3596,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-R3 failed exact generation reap still retains message and resend notice",
+      "outcome": "pass",
+      "tapId": 455,
+      "line": 3602,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-R2 arbitrary fetch-failed text never provides replay authority",
+      "outcome": "pass",
+      "tapId": 456,
+      "line": 3608,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-R5 all four categories and threshold are recomputable from structured log events",
+      "outcome": "pass",
+      "tapId": 457,
+      "line": 3614,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-R5 real child exit after receipt counts child_exit_without_outcome and never retries",
+      "outcome": "pass",
+      "tapId": 458,
+      "line": 3620,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-R2 parent RPC observation denies replay even without assistant/tool events",
+      "outcome": "pass",
+      "tapId": 459,
+      "line": 3626,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "accepted original-source custody forbids a second prompt and retains failed original",
+      "outcome": "pass",
+      "tapId": 460,
+      "line": 3632,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-R1 never-serviceable preparation respawns twice and dead-letters without any prompt",
+      "outcome": "pass",
+      "tapId": 461,
+      "line": 3638,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-R3 real ingress failure reply keeps its prefix and explicitly says 请重发",
+      "outcome": "pass",
+      "tapId": 462,
+      "line": 3644,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "scenario 7 runs in a clean child-process environment",
+      "outcome": "pass",
+      "tapId": 463,
+      "line": 3650,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "native continuation uses a new owned queue execution after the initial turn settles",
+      "outcome": "pass",
+      "tapId": 464,
+      "line": 3656,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "duplicate native reservation cannot mint another execution or enqueue twice",
+      "outcome": "pass",
+      "tapId": 465,
+      "line": 3662,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "aborting a native request behind an occupied queue cannot write later",
+      "outcome": "pass",
+      "tapId": 466,
+      "line": 3668,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "native entry rejects other sessions, incompatible children and forged fields before admission",
+      "outcome": "pass",
+      "tapId": 467,
+      "line": 3674,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "native callback unknown is fenced rather than misclassified as definitive rejection",
+      "outcome": "pass",
+      "tapId": 468,
+      "line": 3680,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "lost native prompt receipt can reconcile exact retained message without resending",
+      "outcome": "pass",
+      "tapId": 469,
+      "line": 3686,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "a duplicate reservation remains rejected after its reconciled record is evicted",
+      "outcome": "pass",
+      "tapId": 470,
+      "line": 3692,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "transport watermark rejects invalid, duplicate and out-of-order sequences before write",
+      "outcome": "pass",
+      "tapId": 471,
+      "line": 3698,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "scripted native rounds obtain fresh parent proof after prior settlement through real child transport",
+      "outcome": "fail",
+      "tapId": 472,
+      "line": 3704,
+      "location": "packages/agent-router/test/route-chain/native-goal-composed.test.js:14:1",
+      "skipReason": null,
+      "rawFailure": "not ok 472 - scripted native rounds obtain fresh parent proof after prior settlement through real child transport\n  ---\n  duration_ms: 0.842292\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/route-chain/native-goal-composed.test.js:14:1'\n  failureType: 'testCodeFailure'\n  error: 'paired native build is required; this conformance test must not silently skip'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: true\n  operator: '=='\n  stack: |-\n    TestContext.<anonymous> (file:///private/tmp/dsh-523-integration/packages/agent-router/test/route-chain/native-goal-composed.test.js:15:10)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1397:25)\n    Test.start (node:internal/test_runner/test:1257:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)\n  ..."
+    },
+    {
+      "title": "real child timeout removes native queued admission before old owner release",
+      "outcome": "fail",
+      "tapId": 473,
+      "line": 3723,
+      "location": "packages/agent-router/test/route-chain/native-goal-composed.test.js:74:43",
+      "skipReason": null,
+      "rawFailure": "not ok 473 - real child timeout removes native queued admission before old owner release\n  ---\n  duration_ms: 69.029541\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/route-chain/native-goal-composed.test.js:74:43'\n  failureType: 'testCodeFailure'\n  error: 'agent agt_cancel-source (generation 1) RPC initialize rejected: AGENT_PROCESS_EXITED'\n  code: 'AGENT_PROCESS_EXITED'\n  stack: |-\n    AgentProcess.rejectAllPending (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process/rpc-channel.js:358:35)\n    AgentProcess.onChildExit (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process/spawn.js:143:10)\n    ChildProcess.<anonymous> (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process/spawn.js:77:47)\n    ChildProcess.wrapper (node:events:639:12)\n    ChildProcess.emit (node:events:514:20)\n    ChildProcess._handle.onexit (node:internal/child_process:294:12)\n  ..."
+    },
+    {
+      "title": "real child cancel removes native queued admission before old owner release",
+      "outcome": "fail",
+      "tapId": 474,
+      "line": 3740,
+      "location": "packages/agent-router/test/route-chain/native-goal-composed.test.js:74:43",
+      "skipReason": null,
+      "rawFailure": "not ok 474 - real child cancel removes native queued admission before old owner release\n  ---\n  duration_ms: 50.033166\n  type: 'test'\n  location: '/private/tmp/dsh-523-integration/packages/agent-router/test/route-chain/native-goal-composed.test.js:74:43'\n  failureType: 'testCodeFailure'\n  error: 'agent agt_cancel-source (generation 1) RPC initialize rejected: AGENT_PROCESS_EXITED'\n  code: 'AGENT_PROCESS_EXITED'\n  stack: |-\n    AgentProcess.rejectAllPending (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process/rpc-channel.js:358:35)\n    AgentProcess.onChildExit (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process/spawn.js:143:10)\n    ChildProcess.<anonymous> (file:///private/tmp/dsh-523-integration/packages/agent-router/src/process/spawn.js:77:47)\n    ChildProcess.wrapper (node:events:639:12)\n    ChildProcess.emit (node:events:514:20)\n    ChildProcess._handle.onexit (node:internal/child_process:294:12)\n  ..."
+    },
+    {
+      "title": "draining child of an ordinary agent loses broker and switch at the stop barrier",
+      "outcome": "pass",
+      "tapId": 475,
+      "line": 3757,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "a child whose exit the parent observed is denied even while its socket lingers",
+      "outcome": "pass",
+      "tapId": 476,
+      "line": 3763,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "live READY child keeps the ordinary broker and switch semantics",
+      "outcome": "pass",
+      "tapId": 477,
+      "line": 3769,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "real AgentProcess captures workflow origin before first prompt RPC and keeps it immutable",
+      "outcome": "pass",
+      "tapId": 478,
+      "line": 3775,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "real completed managed turn cannot erase stale RPC correlation into ordinary fallback",
+      "outcome": "pass",
+      "tapId": 479,
+      "line": 3781,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "invalid supplied turn correlation refuses while proven live unmanaged turns retain ordinary routing",
+      "outcome": "pass",
+      "tapId": 480,
+      "line": 3787,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "native tool policy digest participates in process reuse identity while legacy identity stays stable",
+      "outcome": "pass",
+      "tapId": 481,
+      "line": 3793,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "DEC-IMPL-004: identity-matching READY process is reused with zero new generations",
+      "outcome": "pass",
+      "tapId": 482,
+      "line": 3802,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "DEC-IMPL-004: mismatched IDLE process is shut down through the existing controlled path, then a new generation spawns under the wanted route",
+      "outcome": "pass",
+      "tapId": 483,
+      "line": 3812,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "credential path switch never reuses the per-home OAuth child",
+      "outcome": "pass",
+      "tapId": 484,
+      "line": 3822,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "trusted native policy is bound to exact-agent process identity and changes require a new generation",
+      "outcome": "pass",
+      "tapId": 485,
+      "line": 3832,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "legacy ensureRunning applies the trusted resolver before reuse when native policy is configured",
+      "outcome": "pass",
+      "tapId": 486,
+      "line": 3842,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "removing a trusted native policy also requires a fresh process generation",
+      "outcome": "pass",
+      "tapId": 487,
+      "line": 3852,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "trusted native policy resolver identity mismatch fails before process creation",
+      "outcome": "pass",
+      "tapId": 488,
+      "line": 3861,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "route acquisition without an identity closes policy removal instead of reusing the old generation",
+      "outcome": "pass",
+      "tapId": 489,
+      "line": 3871,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "legacy acquisition rechecks policy removal while a policy-bound route startup is pending",
+      "outcome": "pass",
+      "tapId": 490,
+      "line": 3881,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "concurrent route acquisition converges a STARTUP policy removal through the same generation gate",
+      "outcome": "pass",
+      "tapId": 491,
+      "line": 3891,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "process config cannot opt in when the trusted resolver is absent",
+      "outcome": "pass",
+      "tapId": 492,
+      "line": 3900,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "DEC-IMPL-004: mismatched BUSY process is never killed and never reused",
+      "outcome": "pass",
+      "tapId": 493,
+      "line": 3910,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "shared STARTUP: a second caller with a different route converges after the in-flight startup settles",
+      "outcome": "pass",
+      "tapId": 494,
+      "line": 3920,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "a settled-but-unconverged STARTUP slot fails loud and bounded (no spin)",
+      "outcome": "pass",
+      "tapId": 495,
+      "line": 3929,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "legacy ensureRunning still spawns via resolveProcessConfig and records the slot route identity",
+      "outcome": "pass",
+      "tapId": 496,
+      "line": 3938,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "undefined identity disables the gate (byte-equivalent legacy acquisition)",
+      "outcome": "pass",
+      "tapId": 497,
+      "line": 3947,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "registry-level startup failures reject the gate call with the structured carrier",
+      "outcome": "pass",
+      "tapId": 498,
+      "line": 3956,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "resolved provider/model are immutable initialize inputs for the process that owns create and resume",
+      "outcome": "pass",
+      "tapId": 499,
+      "line": 3962,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "target process environment explicitly omits OPENAI_API_KEY",
+      "outcome": "pass",
+      "tapId": 500,
+      "line": 3968,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "every child strips all proxy variants; only target providerEnv is injected exactly",
+      "outcome": "pass",
+      "tapId": 501,
+      "line": 3974,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "providerEnv is immutable per AgentProcess lifetime",
+      "outcome": "pass",
+      "tapId": 502,
+      "line": 3980,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "provider/account errors are classified without secret echo and never rewrite the route",
+      "outcome": "pass",
+      "tapId": 503,
+      "line": 3986,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "failure taxonomy and redaction cover frozen provider-side classes",
+      "outcome": "pass",
+      "tapId": 504,
+      "line": 3992,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "real turn/end quota error rejects the turn with provider/account attribution and no empty success",
+      "outcome": "pass",
+      "tapId": 505,
+      "line": 3998,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "all frozen runtime classes traverse the real session.event turn/end shape",
+      "outcome": "pass",
+      "tapId": 506,
+      "line": 4004,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "turn correlation ignores history/another session but fences two same-session pre-receipt starts",
+      "outcome": "pass",
+      "tapId": 507,
+      "line": 4010,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "async and sync provider errors share full token redaction and never retain raw payloads",
+      "outcome": "pass",
+      "tapId": 508,
+      "line": 4016,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "quota signal + full authoritative evidence => exact new class, hop candidate",
+      "outcome": "pass",
+      "tapId": 509,
+      "line": 4022,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "structured HTTP 429 status also qualifies as the quota signal",
+      "outcome": "pass",
+      "tapId": 510,
+      "line": 4028,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B/D matrix: every unsafe flag beats the quota signal => STOP",
+      "outcome": "pass",
+      "tapId": 511,
+      "line": 4034,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B (authoritative): captured assistant output stops even without carrier flags",
+      "outcome": "pass",
+      "tapId": 512,
+      "line": 4040,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "C: 429-shaped outcome_unknown carrier => STOP outcome_unknown",
+      "outcome": "pass",
+      "tapId": 513,
+      "line": 4046,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "429 + transport timeout evidence => STOP timeout_without_proven_termination",
+      "outcome": "pass",
+      "tapId": 514,
+      "line": 4052,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "ambiguous quota (no authoritative bundle, no controlled proofs) => STOP, never initialize/no-admission",
+      "outcome": "pass",
+      "tapId": 515,
+      "line": 4058,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "each missing authoritative predicate separately breaks the quota class",
+      "outcome": "pass",
+      "tapId": 516,
+      "line": 4064,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "text-only quota (quota words in message, non-quota structured code) => STOP post-admission",
+      "outcome": "pass",
+      "tapId": 517,
+      "line": 4070,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "session-boundary quota sync rejection (no receipt, no proof) => STOP fail-closed, never class 3",
+      "outcome": "pass",
+      "tapId": 518,
+      "line": 4076,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "explicit initialize-origin quota + never READY + no prompt attempt => existing class 2",
+      "outcome": "pass",
+      "tapId": 519,
+      "line": 4082,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "the other three no-admission classes still hop (closed V1 whitelist intact)",
+      "outcome": "pass",
+      "tapId": 520,
+      "line": 4088,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "A (real process): terminal pre-generation 429 hops glm53 -> luna -> success",
+      "outcome": "pass",
+      "tapId": 521,
+      "line": 4094,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "B (real process): 429 after partial assistant output STOPs, zero luna acquires",
+      "outcome": "pass",
+      "tapId": 522,
+      "line": 4100,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "C (real process): quota turn never terminates => outcome_unknown STOP, zero luna acquires",
+      "outcome": "pass",
+      "tapId": 523,
+      "line": 4106,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "D (controlled carrier): 429 + tool started => STOP, zero luna acquires",
+      "outcome": "pass",
+      "tapId": 524,
+      "line": 4112,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "journal redaction: quota attempts never journal raw provider bodies or prompts",
+      "outcome": "pass",
+      "tapId": 525,
+      "line": 4118,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "no next route: exact quota class on a length-1 chain stays terminal (no cycle/restart)",
+      "outcome": "pass",
+      "tapId": 526,
+      "line": 4124,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "budget exhaustion: exact quota class with no remaining deadline STOPs (no refresh)",
+      "outcome": "pass",
+      "tapId": 527,
+      "line": 4130,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R2 CLI: three evidence-backed incident-shaped turns settle individually; unrelated UNKNOWN stays exact",
+      "outcome": "pass",
+      "tapId": 528,
+      "line": 4136,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R2 CLI: missing durable exit proof is refused even with explicit owner authorization",
+      "outcome": "pass",
+      "tapId": 529,
+      "line": 4142,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R2 CLI: stale preimage refuses without changing source or emitting candidate",
+      "outcome": "pass",
+      "tapId": 530,
+      "line": 4148,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R2 CLI: wrong tuple refuses without changing source or emitting candidate",
+      "outcome": "pass",
+      "tapId": 531,
+      "line": 4154,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R2 CLI: new evidence kind refuses without changing source or emitting candidate",
+      "outcome": "pass",
+      "tapId": 532,
+      "line": 4160,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R2 CLI: owner-writable by group refuses without changing source or emitting candidate",
+      "outcome": "pass",
+      "tapId": 533,
+      "line": 4166,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R2 CLI: missing authorization refuses without changing source or emitting candidate",
+      "outcome": "pass",
+      "tapId": 534,
+      "line": 4172,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R2 deployed loader rejects incident schema mistake: missing observedAtWallMs",
+      "outcome": "pass",
+      "tapId": 535,
+      "line": 4178,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R2 deployed loader rejects incident schema mistake: state instead of queryState",
+      "outcome": "pass",
+      "tapId": 536,
+      "line": 4184,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R2 CLI: existing candidate or symlink output is never overwritten",
+      "outcome": "pass",
+      "tapId": 537,
+      "line": 4190,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R2 CLI: exact REAP registry cleanup must already be proven",
+      "outcome": "pass",
+      "tapId": 538,
+      "line": 4196,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R2 CLI: durable late success cleanup retains outcome and answer digest; repeated candidate is unchanged",
+      "outcome": "pass",
+      "tapId": 539,
+      "line": 4202,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R2 CLI: durable exact outcome evidence cannot be downgraded by exit-only recovery",
+      "outcome": "pass",
+      "tapId": 540,
+      "line": 4208,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R2 CLI: wrong deployed loader digest refuses without source mutation",
+      "outcome": "pass",
+      "tapId": 541,
+      "line": 4214,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R2 CLI: validate uses deployed loader without triggering startup restoration",
+      "outcome": "pass",
+      "tapId": 542,
+      "line": 4220,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "R2 CLI: single-handle resume preserves other Scheduler caller correlations",
+      "outcome": "pass",
+      "tapId": 543,
+      "line": 4226,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "private caller opts cross to the final turn without entering the route acquire identity",
+      "outcome": "pass",
+      "tapId": 544,
+      "line": 4232,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "classification: the four whitelisted proven-no-admission classes hop",
+      "outcome": "pass",
+      "tapId": 545,
+      "line": 4238,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "classification: everything in the CTR-005 stop set stays put",
+      "outcome": "pass",
+      "tapId": 546,
+      "line": 4244,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-002: primary success means zero fallback activity",
+      "outcome": "pass",
+      "tapId": 547,
+      "line": 4250,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-003/004: each whitelisted failure hops exactly once, in order, to the next route",
+      "outcome": "pass",
+      "tapId": 548,
+      "line": 4256,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-003: multi-hop chains traverse route[0] -> route[1] -> route[2] with no skips",
+      "outcome": "pass",
+      "tapId": 549,
+      "line": 4262,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-005: stop-set failures never hop; the original error propagates fail-loud",
+      "outcome": "pass",
+      "tapId": 550,
+      "line": 4268,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-003: exhausting the chain fails loud with the last failure class",
+      "outcome": "pass",
+      "tapId": 551,
+      "line": 4274,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "DEC-IMPL-005: explicit model strict mode = exactly one attempt, zero hops",
+      "outcome": "pass",
+      "tapId": 552,
+      "line": 4280,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "DEC-IMPL-007: a whitelisted failure with no remaining budget does NOT hop",
+      "outcome": "pass",
+      "tapId": 553,
+      "line": 4286,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "DEC-IMPL-007: busy_mismatch convergence waits consume the single budget, then stop",
+      "outcome": "pass",
+      "tapId": 554,
+      "line": 4292,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-IMPL-003: deliver variant hops on admission failures and resolves on inbox accept",
+      "outcome": "pass",
+      "tapId": 555,
+      "line": 4298,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-IMPL-005: onDispatch fires exactly once, right before the first dispatched attempt",
+      "outcome": "pass",
+      "tapId": 556,
+      "line": 4304,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTR-IMPL-006: journal records carry only structural fields — never raw errors",
+      "outcome": "pass",
+      "tapId": 557,
+      "line": 4310,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "no-override agents pass through the seam with a length-1 chain (legacy default snapshot)",
+      "outcome": "pass",
+      "tapId": 558,
+      "line": 4316,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "invalid config at snapshot time fails loud with zero attempts and a truthful final block",
+      "outcome": "pass",
+      "tapId": 559,
+      "line": 4322,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "canonicalRouteIdentity: credentialFile is part of reuse identity and is canonically resolved",
+      "outcome": "pass",
+      "tapId": 560,
+      "line": 4328,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "scenario 5 runs in a clean child-process environment",
+      "outcome": "pass",
+      "tapId": 561,
+      "line": 4334,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: feishu agent-turn cross-workspace switch rejects before any Binding/bookmark write",
+      "outcome": "pass",
+      "tapId": 562,
+      "line": 4344,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: mobile agent-turn cross-workspace switch rejects before any Binding/bookmark write",
+      "outcome": "pass",
+      "tapId": 563,
+      "line": 4354,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: custom-channel agent-turn cross-workspace switch rejects before any Binding/bookmark write",
+      "outcome": "pass",
+      "tapId": 564,
+      "line": 4364,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: same imported primary path allows different agent IDs and display-name resolution",
+      "outcome": "pass",
+      "tapId": 565,
+      "line": 4378,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: explicit current workspace is compared instead of current agent primary",
+      "outcome": "pass",
+      "tapId": 566,
+      "line": 4388,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: explicit workspace equal to target primary allows the switch",
+      "outcome": "pass",
+      "tapId": 567,
+      "line": 4400,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: targetSessionId and requested workspace cannot bypass cross-workspace admission",
+      "outcome": "pass",
+      "tapId": 568,
+      "line": 4410,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: self-switch cannot bypass the guard when current effective workspace differs",
+      "outcome": "pass",
+      "tapId": 569,
+      "line": 4420,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: operator POST /v1/switch-agent still crosses workspaces on the real Router",
+      "outcome": "pass",
+      "tapId": 570,
+      "line": 4433,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "first contact binds the conversation to the Agent Definition default",
+      "outcome": "pass",
+      "tapId": 571,
+      "line": 4443,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "switchAgent: A -> B by opaque id, persisted, returns the new Binding",
+      "outcome": "pass",
+      "tapId": 572,
+      "line": 4455,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "switchAgent accepts the display name (Router owns agent lookup policy)",
+      "outcome": "pass",
+      "tapId": 573,
+      "line": 4467,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "switchAgent rejects an unknown Agent and leaves the Binding untouched",
+      "outcome": "pass",
+      "tapId": 574,
+      "line": 4477,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "switchAgent honors an explicit targetSessionId (V1: else main)",
+      "outcome": "pass",
+      "tapId": 575,
+      "line": 4489,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "switchAgent creates the Binding when the conversation has none yet",
+      "outcome": "pass",
+      "tapId": 576,
+      "line": 4499,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "switching one conversation leaves other Bindings untouched",
+      "outcome": "pass",
+      "tapId": 577,
+      "line": 4512,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "restart: a fresh router over the same stores restores the switched Binding",
+      "outcome": "pass",
+      "tapId": 578,
+      "line": 4528,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "channelConversationIdOf accepts string and {channelConversationId}",
+      "outcome": "pass",
+      "tapId": 579,
+      "line": 4534,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "channelConversationId is the single-owner id format (surface mapping)",
+      "outcome": "pass",
+      "tapId": 580,
+      "line": 4544,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "bookmark: leaving records lastSession; entering restores it (explicit > bookmark > main)",
+      "outcome": "pass",
+      "tapId": 581,
+      "line": 4562,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "bookmark: a surface that never visited an Agent falls back to main",
+      "outcome": "pass",
+      "tapId": 582,
+      "line": 4576,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "bookmark: self-switch without explicit session is a no-op",
+      "outcome": "pass",
+      "tapId": 583,
+      "line": 4588,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "bookmark: per-surface isolation and restart persistence",
+      "outcome": "pass",
+      "tapId": 584,
+      "line": 4610,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "getBinding returns undefined for an unknown conversation",
+      "outcome": "pass",
+      "tapId": 585,
+      "line": 4619,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "generic runtime src carries no one-off HR incident knowledge",
+      "outcome": "pass",
+      "tapId": 586,
+      "line": 4625,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "launchd runtime entry carries no one-off HR incident knowledge",
+      "outcome": "pass",
+      "tapId": 587,
+      "line": 4631,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTX exact active ingress context is immutable and bound to actual process/turn identity",
+      "outcome": "pass",
+      "tapId": 588,
+      "line": 4637,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "FIX2.1 same session: turn B waits for turn A; bindingContext stays A's",
+      "outcome": "pass",
+      "tapId": 589,
+      "line": 4643,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "CTX queued conversations install only their own context after stale clear",
+      "outcome": "pass",
+      "tapId": 590,
+      "line": 4649,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "FIX2.2 switch-tool relay during turn A sees exactly A's bindingContext",
+      "outcome": "pass",
+      "tapId": 591,
+      "line": 4655,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "FIX2.3 different native sessions of one AgentProcess are serialized too",
+      "outcome": "pass",
+      "tapId": 592,
+      "line": 4661,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "FIX2.4 a failed turn does not wedge the single-flight queue",
+      "outcome": "pass",
+      "tapId": 593,
+      "line": 4667,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "FIX2.5 unresolved outcome_unknown fences the queue; re-admission after late settlement is explicit",
+      "outcome": "pass",
+      "tapId": 594,
+      "line": 4673,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "AC1: same Agent + two Feishu group bindings -> two different, stable, deterministic workspaces",
+      "outcome": "pass",
+      "tapId": 595,
+      "line": 4692,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "AC1 stability: bindings survive a control-plane restart with the same workspaceIds",
+      "outcome": "pass",
+      "tapId": 596,
+      "line": 4714,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "AC2/AC7: one group workspace, main + cron sessions -> different sessionIds, SAME cwd, shared files",
+      "outcome": "pass",
+      "tapId": 597,
+      "line": 4733,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "AC3: App switch to Investment Agent -> its DEFAULT workspace, no product logic in the Router",
+      "outcome": "pass",
+      "tapId": 598,
+      "line": 4758,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "AC4: persisted session cwd A vs resolved workspace B -> SESSION_WORKSPACE_MISMATCH, no mutation",
+      "outcome": "pass",
+      "tapId": 599,
+      "line": 4778,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "AC5: process restart -> sessions resume their persisted cwds; wrong resolution rejects",
+      "outcome": "pass",
+      "tapId": 600,
+      "line": 4811,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "AC6: two workspaces -> isolated AGENTS.md / files",
+      "outcome": "pass",
+      "tapId": 601,
+      "line": 4830,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "AC8: a legacy store row WITHOUT workspace loads as null and turns in the agent default workspace",
+      "outcome": "pass",
+      "tapId": 602,
+      "line": 4846,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "AC8 (fresh legacy path): an ingress WITHOUT any workspace field turns in the agent default workspace",
+      "outcome": "pass",
+      "tapId": 603,
+      "line": 4860,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "AC9/AC10: same Agent, two bindings with different workspaces -> ONE process, per-binding cwd only",
+      "outcome": "pass",
+      "tapId": 604,
+      "line": 4879,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "AC11: switchAgent rejects invalid workspaceIds structurally and leaves the Binding untouched",
+      "outcome": "pass",
+      "tapId": 605,
+      "line": 4896,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "AC11 (resolve surface): first contact with an invalid workspaceId is rejected before any binding row",
+      "outcome": "pass",
+      "tapId": 606,
+      "line": 4905,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "switchAgent: omitted workspace PRESERVES the binding workspace across agent switches",
+      "outcome": "pass",
+      "tapId": 607,
+      "line": 4923,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "deliver: Delivery V0 sessions run in the agent default workspace (no Binding exists)",
+      "outcome": "pass",
+      "tapId": 608,
+      "line": 4938,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    }
+  ]
+}

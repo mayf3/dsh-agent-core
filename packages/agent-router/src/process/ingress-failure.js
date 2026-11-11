@@ -22,3 +22,19 @@ export function isRecoveryFenceResult(error) {
     || error?.code === 'AGENT_PROCESS_RECOVERY_STARTUP_BLOCKED'
     || typeof error?.fencedBy === 'string'
 }
+
+export function isOutcomeUnknown(error) {
+  return error?.status === 'outcome_unknown' || error?.envelope === 'outcome_unknown'
+    || error?.code === 'AGENT_PROCESS_TURN_OUTCOME_UNKNOWN'
+}
+
+/** CTR-W3: report uncertainty on the original ingress; never replay the turn. */
+export async function notifyOutcomeUnknown({ error, feishu, ingress, target, lateReplies }) {
+  if (!isOutcomeUnknown(error)) return false
+  // W2 can consume exact success synchronously during watch(). Do not follow
+  // its answer with a stale UNKNOWN notice (including while send is in flight).
+  if (lateReplies.replyAttempted(error.reconciliationHandle)) return true
+  const replyTarget = target ?? feishu.replyTargetFor(ingress).replyTo(ingress.messageId)
+  await feishu.reply(replyTarget, '[agent-core] 该轮结果未证实，稍后随结算补投或请重发。')
+  return true
+}

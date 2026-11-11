@@ -1,0 +1,584 @@
+✔ zero-config construction resolves the canonical Luna built-in default (9.522291ms)
+✔ explicit constructor route wins over env; env wins over the default (8.057875ms)
+✔ R3 route: one real startup-blocked request enters shared alert feed once (26.432125ms)
+✔ R3 route: one real per-agent fence rejection enters shared alert feed once (65.289041ms)
+✔ R3 deliver: one real startup-blocked request enters shared alert feed once (7.950708ms)
+✔ R3 deliver: one real per-agent fence rejection enters shared alert feed once (41.343292ms)
+✔ R3 product: one real startup-blocked request enters shared alert feed once (2.8615ms)
+✔ R3 product: one real per-agent fence rejection enters shared alert feed once (35.098292ms)
+✔ R3 website: one real startup-blocked request enters shared alert feed once (1.952125ms)
+✔ R3 website: one real per-agent fence rejection enters shared alert feed once (52.653625ms)
+✔ R3 blocked observation accepts only bounded code/reason/agent metadata (0.729833ms)
+✔ R3 a blocked process acquisition already counted by the chain is not counted again by ingress (18.458833ms)
+✔ R3 website: late blocked acquisition alerts once without exposing raw Agent identity (16.11675ms)
+✔ R3 product: observing rejection preserves its existing raw-fence fallback (62.979833ms)
+✔ R3 website: observing rejection preserves its existing raw-fence fallback (70.250834ms)
+✔ R3 real router initialization alerts on an invalid startup store before any delivery (11.572375ms)
+✔ default off: no canaryRuntimeRoot => zero filesystem effect, normal turn (3.799958ms)
+✔ absent descriptor is the ordinary fast path (no injection, no marker) (33.148792ms)
+✔ quota mode: acquire/dispatch boundary crossed, fixed terminal 429, hop luna, exact counts (22.871625ms)
+✔ quota mode on a length-1 chain: fixture 429 stays terminal (no next route) (48.055167ms)
+✔ outcome_unknown mode: STOP before acquire — zero acquires, no generation (15.856792ms)
+✔ binding mismatches: wrong agent / route / channel / sender / partial marker / no ingress (37.578958ms)
+✔ other-Agent isolation: a matching descriptor never affects another agent turn (8.071042ms)
+✔ expired descriptor: no injection, not consumed, ordinary turn (7.832833ms)
+✔ malformed descriptors fail loud with zero attempts (88.954583ms)
+✔ metadata drift (wrong mode bits) fails loud (10.567875ms)
+✔ one-shot race: exactly one of two concurrent matching turns gets the injection (8.125458ms)
+✔ crash after rename: used marker alone never re-consumes; ordinary turn (1.919ms)
+✔ nonce collision: new descriptor whose used marker already exists fails loud (5.489209ms)
+✔ admission (deliver) entries never match the canary binding (7.959083ms)
+✔ after clear (descriptor + used marker absent) the seam is inert (15.986792ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/native-router-qOrMN6/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: mcp:pilot... -> agent agt_pilot + session main + workspace (agent default)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794121192569,"routeChainId":"single-route","agentId":"agt_pilot","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121192569,"routeChainId":"single-route","agentId":"agt_pilot","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+✔ real Router ProductSurface seam preserves dedicated binding/main and hands source metadata to original chain (109.736458ms)
+✔ real AgentProcess receipt-only product surface holds trusted context until original terminal (15.712ms)
+✔ source owner retains exact native reply before publication, survives reset and restart (85.995667ms)
+✔ source reserve fails before followup when durable retention is unavailable (24.695875ms)
+✔ B002: visible text and its native ID survive an empty completion anchor in the same exact turn (49.650542ms)
+✔ B002: a wholly-empty native completion records no visible reply rather than retaining an empty business answer (53.629625ms)
+✔ #1332 fresh spawn + suspended 59243-event resume: no prompt before application readiness (18.829875ms)
+✔ R1 readiness: initialize ready cannot bypass session preparation acknowledgement (18.768334ms)
+✔ R1 readiness: absent capability and mismatched acknowledgement fail closed (14.862292ms)
+✔ R1 readiness: never-ready child respects caller deadline and late ack cannot admit (49.596708ms)
+✔ R4 readiness: process state and newly installed UNKNOWN fence gate acknowledgement (8.200083ms)
+✔ R1 readiness: each call obtains a fresh ack; expired caller budget writes nothing (2.172125ms)
+✔ R1 readiness: an acknowledgement processed beyond the absolute budget cannot admit (16.294167ms)
+✔ R1 readiness preserves private-session log suppression without forwarding custody payload (10.279292ms)
+✔ CTR-R2 fresh/idle transport failure respawns twice with exponential delay, one reply/dispatch (71.273459ms)
+✔ CTR-R3 exhaustion durably retains original message, coordinates and explicit resend semantics (39.462083ms)
+✔ CTR-R2 no replay after unsafe/unknown event {"type":"assistant/message","data":{"message":{"content":[{"type":"text","text":"partial"}]}}} (2.684042ms)
+✔ CTR-R2 no replay after unsafe/unknown event {"type":"assistant/message","data":{"message":{"content":[{"type":"tool-call","name":"write"}]}}} (2.64675ms)
+✔ CTR-R2 no replay after unsafe/unknown event {"type":"tool/start","data":{}} (2.721375ms)
+✔ CTR-R2 no replay after unsafe/unknown event {"type":"unrecognized/provider-event","data":{}} (5.959042ms)
+✔ CTR-R5 final unknown increments caller-bound class without replay or respawn (903.832ms)
+✔ CTR-R2/R3 async admission returns one receipt then recovers delayed failures and persists exhaustion (22.047208ms)
+✔ CTR-R3 failed exact generation reap still retains message and resend notice (17.789042ms)
+✔ CTR-R2 arbitrary fetch-failed text never provides replay authority (3.859791ms)
+✔ CTR-R5 all four categories and threshold are recomputable from structured log events (0.59425ms)
+✔ CTR-R5 real child exit after receipt counts child_exit_without_outcome and never retries (1.3265ms)
+✔ CTR-R2 parent RPC observation denies replay even without assistant/tool events (1.252583ms)
+✔ accepted original-source custody forbids a second prompt and retains failed original (12.586625ms)
+✔ CTR-R1 never-serviceable preparation respawns twice and dead-letters without any prompt (12.249667ms)
+✔ CTR-R3 real ingress failure reply keeps its prefix and explicitly says 请重发 (19.251292ms)
+✔ scenario 7 runs in a clean child-process environment (212.491167ms)
+✔ native continuation uses a new owned queue execution after the initial turn settles (45.821625ms)
+✔ duplicate native reservation cannot mint another execution or enqueue twice (29.974667ms)
+✔ aborting a native request behind an occupied queue cannot write later (21.701042ms)
+✔ native entry rejects other sessions, incompatible children and forged fields before admission (7.280042ms)
+✔ native callback unknown is fenced rather than misclassified as definitive rejection (13.199209ms)
+✔ lost native prompt receipt can reconcile exact retained message without resending (35.537709ms)
+✔ a duplicate reservation remains rejected after its reconciled record is evicted (3.254375ms)
+✔ transport watermark rejects invalid, duplicate and out-of-order sequences before write (7.214541ms)
+✔ scripted native rounds obtain fresh parent proof after prior settlement through real child transport (692.577209ms)
+ℹ {"kind":"scripted_native_conformance","processGeneration":17,"initial":"turn:3494e344-f42e-40a4-a27c-131b757b0a24:a1:g17:s1","rounds":[{"messageId":"56b68b69-e40f-4b78-adaa-91546f338dc9","source":{"kind":"goal","goalId":"goal-76f0df1a-0318-468f-ae07-ea324d7cffca","revision":1,"round":1},"handle":"turn:3494e344-f42e-40a4-a27c-131b757b0a24:a1:g17:s2"},{"messageId":"667512d1-0a5a-4491-b9e9-00ee2007d99b","source":{"kind":"goal","goalId":"goal-76f0df1a-0318-468f-ae07-ea324d7cffca","revision":1,"round":2},"handle":"turn:3494e344-f42e-40a4-a27c-131b757b0a24:a1:g17:s3"}],"peerDeliveries":2}
+✔ real child timeout removes native queued admission before old owner release (672.962458ms)
+✔ real child cancel removes native queued admission before old owner release (610.710083ms)
+✔ draining child of an ordinary agent loses broker and switch at the stop barrier (4.650792ms)
+✔ a child whose exit the parent observed is denied even while its socket lingers (0.182792ms)
+✔ live READY child keeps the ordinary broker and switch semantics (0.451625ms)
+✔ real AgentProcess captures workflow origin before first prompt RPC and keeps it immutable (92.705084ms)
+✔ real completed managed turn cannot erase stale RPC correlation into ordinary fallback (15.214ms)
+✔ invalid supplied turn correlation refuses while proven live unmanaged turns retain ordinary routing (0.256917ms)
+✔ native tool policy digest participates in process reuse identity while legacy identity stays stable (4.218375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-nRZ9lh/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ DEC-IMPL-004: identity-matching READY process is reused with zero new generations (39.980334ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-FBCePB/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ DEC-IMPL-004: mismatched IDLE process is shut down through the existing controlled path, then a new generation spawns under the wanted route (16.60775ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-MH8g2J/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ credential path switch never reuses the per-home OAuth child (22.882208ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-51Xasa/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ trusted native policy is bound to exact-agent process identity and changes require a new generation (20.994042ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-TzRMTT/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ legacy ensureRunning applies the trusted resolver before reuse when native policy is configured (25.258292ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-65e3O9/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ removing a trusted native policy also requires a fresh process generation (19.881167ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-uNoLQl/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ trusted native policy resolver identity mismatch fails before process creation (10.261083ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-JVu9PL/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ route acquisition without an identity closes policy removal instead of reusing the old generation (21.236375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-1rJhXr/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ legacy acquisition rechecks policy removal while a policy-bound route startup is pending (19.966583ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-YDUXO9/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ concurrent route acquisition converges a STARTUP policy removal through the same generation gate (21.90775ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-IS5KYv/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ process config cannot opt in when the trusted resolver is absent (17.106083ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-5CkAwK/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ DEC-IMPL-004: mismatched BUSY process is never killed and never reused (15.785166ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-ukAm5c/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_gate-fx (generation 1): controlled shutdown before new-generation spawn
+✔ shared STARTUP: a second caller with a different route converges after the in-flight startup settles (20.680458ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-zombie-cDYFtB/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ a settled-but-unconverged STARTUP slot fails loud and bounded (no spin) (15.07475ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-lnKQbg/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ legacy ensureRunning still spawns via resolveProcessConfig and records the slot route identity (20.665ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-Ka3GXA/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ undefined identity disables the gate (byte-equivalent legacy acquisition) (27.276583ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-gate-fail-kFf72l/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ registry-level startup failures reject the gate call with the structured carrier (20.696166ms)
+✔ resolved provider/model are immutable initialize inputs for the process that owns create and resume (51.675166ms)
+✔ target process environment explicitly omits OPENAI_API_KEY (5.707375ms)
+✔ every child strips all proxy variants; only target providerEnv is injected exactly (0.973208ms)
+✔ providerEnv is immutable per AgentProcess lifetime (0.267417ms)
+✔ provider/account errors are classified without secret echo and never rewrite the route (28.401583ms)
+✔ failure taxonomy and redaction cover frozen provider-side classes (3.258625ms)
+✔ real turn/end quota error rejects the turn with provider/account attribution and no empty success (14.097708ms)
+✔ all frozen runtime classes traverse the real session.event turn/end shape (28.853125ms)
+✔ turn correlation ignores history/another session but fences two same-session pre-receipt starts (87.161125ms)
+✔ async and sync provider errors share full token redaction and never retain raw payloads (10.18225ms)
+✔ quota signal + full authoritative evidence => exact new class, hop candidate (4.850166ms)
+✔ structured HTTP 429 status also qualifies as the quota signal (0.173542ms)
+✔ B/D matrix: every unsafe flag beats the quota signal => STOP (0.144959ms)
+✔ B (authoritative): captured assistant output stops even without carrier flags (0.082833ms)
+✔ C: 429-shaped outcome_unknown carrier => STOP outcome_unknown (0.079667ms)
+✔ 429 + transport timeout evidence => STOP timeout_without_proven_termination (0.611417ms)
+✔ ambiguous quota (no authoritative bundle, no controlled proofs) => STOP, never initialize/no-admission (2.224375ms)
+✔ each missing authoritative predicate separately breaks the quota class (0.263959ms)
+✔ text-only quota (quota words in message, non-quota structured code) => STOP post-admission (0.099209ms)
+✔ session-boundary quota sync rejection (no receipt, no proof) => STOP fail-closed, never class 3 (0.125458ms)
+✔ explicit initialize-origin quota + never READY + no prompt attempt => existing class 2 (0.111542ms)
+✔ the other three no-admission classes still hop (closed V1 whitelist intact) (1.196416ms)
+✔ A (real process): terminal pre-generation 429 hops glm53 -> luna -> success (44.164459ms)
+✔ B (real process): 429 after partial assistant output STOPs, zero luna acquires (7.602167ms)
+✔ C (real process): quota turn never terminates => outcome_unknown STOP, zero luna acquires (65.89925ms)
+✔ D (controlled carrier): 429 + tool started => STOP, zero luna acquires (0.685375ms)
+✔ journal redaction: quota attempts never journal raw provider bodies or prompts (0.535583ms)
+✔ no next route: exact quota class on a length-1 chain stays terminal (no cycle/restart) (0.224458ms)
+✔ budget exhaustion: exact quota class with no remaining deadline STOPs (no refresh) (21.909417ms)
+✔ R2 atomic batch repairs three blocked+pending+cleared fixtures using their own durable evidence (767.246083ms)
+✔ R2 atomic batch refuses missing mandatory field: no source mutation or partial candidate (391.466125ms)
+✔ R2 atomic batch refuses wrong query enum: no source mutation or partial candidate (352.922417ms)
+✔ R2 atomic batch refuses wrong settlement enum: no source mutation or partial candidate (340.067375ms)
+✔ R2 atomic batch refuses wrong action enum: no source mutation or partial candidate (370.231583ms)
+✔ R2 atomic batch refuses missing action timestamp: no source mutation or partial candidate (408.512208ms)
+✔ R2 atomic batch refuses missing exact termination proof: no source mutation or partial candidate (437.999709ms)
+✔ R2 atomic batch refuses outcome evidence has precedence: no source mutation or partial candidate (469.463208ms)
+✔ R2 atomic batch refuses unproven root-quiescence assertion: no source mutation or partial candidate (485.1855ms)
+✔ R2 atomic batch refuses null exit cannot be asserted as child exit: no source mutation or partial candidate (513.488583ms)
+✔ R2 atomic batch refuses unselected malformed record stays invalid: no source mutation or partial candidate (493.609375ms)
+✔ R2 atomic batch refuses duplicate target is refused: no source mutation or partial candidate (470.489042ms)
+✔ R2 atomic batch refuses wrong target identity: no source mutation or partial candidate (375.873ms)
+✔ R2 CLI: three evidence-backed incident-shaped turns settle individually; unrelated UNKNOWN stays exact (941.44125ms)
+✔ R2 CLI: missing durable exit proof is refused even with explicit owner authorization (299.285208ms)
+✔ R2 CLI: stale preimage refuses without changing source or emitting candidate (331.084ms)
+✔ R2 CLI: wrong tuple refuses without changing source or emitting candidate (319.862041ms)
+✔ R2 CLI: new evidence kind refuses without changing source or emitting candidate (367.041708ms)
+✔ R2 CLI: owner-writable by group refuses without changing source or emitting candidate (363.758417ms)
+✔ R2 CLI: missing authorization refuses without changing source or emitting candidate (407.833333ms)
+✔ R2 deployed loader rejects incident schema mistake: missing observedAtWallMs (433.875417ms)
+✔ R2 deployed loader rejects incident schema mistake: state instead of queryState (470.308833ms)
+✔ R2 CLI: existing candidate or symlink output is never overwritten (449.090834ms)
+✔ R2 CLI: exact REAP registry cleanup must already be proven (523.165125ms)
+✔ R2 CLI: durable late success cleanup retains outcome and answer digest; repeated candidate is unchanged (681.895459ms)
+✔ R2 CLI: durable exact outcome evidence cannot be downgraded by exit-only recovery (356.568834ms)
+✔ R2 CLI: wrong deployed loader digest refuses without source mutation (307.964ms)
+✔ R2 CLI: validate uses deployed loader without triggering startup restoration (325.005709ms)
+✔ R2 CLI: single-handle resume preserves other Scheduler caller correlations (341.078833ms)
+✔ private caller opts cross to the final turn without entering the route acquire identity (4.698459ms)
+✔ classification: the four whitelisted proven-no-admission classes hop (1.110791ms)
+✔ classification: everything in the CTR-005 stop set stays put (0.145792ms)
+✔ CTR-002: primary success means zero fallback activity (0.963875ms)
+✔ CTR-003/004: each whitelisted failure hops exactly once, in order, to the next route (6.236167ms)
+✔ CTR-003: multi-hop chains traverse route[0] -> route[1] -> route[2] with no skips (8.956333ms)
+✔ CTR-005: stop-set failures never hop; the original error propagates fail-loud (7.138625ms)
+✔ CTR-003: exhausting the chain fails loud with the last failure class (1.210584ms)
+✔ DEC-IMPL-005: explicit model strict mode = exactly one attempt, zero hops (0.93675ms)
+✔ DEC-IMPL-007: a whitelisted failure with no remaining budget does NOT hop (22.967875ms)
+✔ DEC-IMPL-007: busy_mismatch convergence waits consume the single budget, then stop (217.22725ms)
+✔ CTR-IMPL-003: deliver variant hops on admission failures and resolves on inbox accept (0.692417ms)
+✔ CTR-IMPL-005: onDispatch fires exactly once, right before the first dispatched attempt (0.446333ms)
+✔ CTR-IMPL-006: journal records carry only structural fields — never raw errors (0.686709ms)
+✔ no-override agents pass through the seam with a length-1 chain (legacy default snapshot) (0.651958ms)
+✔ invalid config at snapshot time fails loud with zero attempts and a truthful final block (0.376208ms)
+✔ canonicalRouteIdentity: credentialFile is part of reuse identity and is canonically resolved (0.578ms)
+✔ scenario 5 runs in a clean child-process environment (211.366084ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-YinJM7/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: feishu:surface-523... -> agent agt_a + session session-before + workspace (agent default)
+✔ #523: feishu agent-turn cross-workspace switch rejects before any Binding/bookmark write (113.978833ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-IkZKC3/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: mobile:surface-523... -> agent agt_a + session session-before + workspace (agent default)
+✔ #523: mobile agent-turn cross-workspace switch rejects before any Binding/bookmark write (19.6035ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-wZgls6/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: custom-channel:surface-5... -> agent agt_a + session session-before + workspace (agent default)
+✔ #523: custom-channel agent-turn cross-workspace switch rejects before any Binding/bookmark write (13.769958ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-tqFlTk/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: mobile:shared... -> agent agt_a + session remember-me + workspace (agent default)
+[router] bookmark: mobile:shared... x agt_a -> session remember-me
+[router] switch: mobile:shared... -> agent agt_b + session main + workspace (agent default)
+[router] bookmark: mobile:shared... x agt_b -> session main
+[router] switch: mobile:shared... -> agent agt_a + session remember-me + workspace (agent default)
+✔ #523: same imported primary path allows different agent IDs and display-name resolution (13.063667ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-9G6yQT/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: feishu:explicit... -> agent agt_a + session main + workspace group-workspace
+✔ #523: explicit current workspace is compared instead of current agent primary (9.079958ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-XWByM3/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: custom-channel:explicit-... -> agent agt_a + session main + workspace agt_b
+[router] bookmark: custom-channel:explicit-... x agt_a -> session main
+[router] switch: custom-channel:explicit-... -> agent agt_b + session main + workspace agt_b
+✔ #523: explicit workspace equal to target primary allows the switch (9.362208ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-iG197x/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: mobile:no-bypass... -> agent agt_a + session main + workspace (agent default)
+✔ #523: targetSessionId and requested workspace cannot bypass cross-workspace admission (7.935167ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-kZiIzl/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: feishu:self... -> agent agt_a + session main + workspace another-workspace
+✔ #523: self-switch cannot bypass the guard when current effective workspace differs (6.711041ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-AU1qGw/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: mobile:operator... -> agent agt_a + session saved-session + workspace (agent default)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[router] bookmark: mobile:operator... x agt_a -> session saved-session
+[router] switch: mobile:operator... -> agent agt_b + session main + workspace (agent default)
+✔ #523: operator POST /v1/switch-agent still crosses workspaces on the real Router (71.264208ms)
+✔ canonicalDefaultGlobalRoute is the complete Luna subscription route (2.884166ms)
+✔ passthrough carries the built-in subscription; a plain globalRoute keeps the legacy shape (2.979583ms)
+✖ A-D1 zero config: every un-overridden Agent resolves to the Luna default with its subscription mount (21.150166ms)
+✖ A-D2 runtime env override wins over the default; composition config wins over env (12.115708ms)
+✖ A-D3 explicit OpenCode Go agent override wins; un-overridden Agents keep the Luna default (7.661125ms)
+✖ composition freezes the own-domain artifact and refuses drift before the next process boundary (16.454291ms)
+✔ ACC-RCG-004: rejected candidate cannot continue after global route value changes (26.763584ms)
+✔ ACC-RCG-004: rejected candidate cannot continue after explicit default absence versus presence changes (14.717083ms)
+✔ ACC-RCG-004: rejected candidate cannot continue after default source changes (16.479ms)
+✔ ACC-RCG-004: rejected candidate cannot continue after request/session explicit state changes (17.665625ms)
+✔ ACC-RCG-004: rejected candidate cannot continue after agent/profile explicit state changes (19.034834ms)
+✔ ACC-RCG-004: rejected candidate cannot continue after Harness source binding changes (22.415167ms)
+✔ ACC-RCG-004: rejected candidate cannot continue after artifact path binding changes (18.271291ms)
+✔ ACC-RCG-004: rejected candidate cannot continue after source stamp path binding changes (12.628167ms)
+✔ ACC-RCG-004: same ref with changed effective reasoning effort is a changed closure (12.234417ms)
+✔ ACC-RCG-004: raw explicit effort presence is compared even with identical effective medium (9.895417ms)
+✔ ACC-RCG-001: a valid context change activates a new complete generation (1.67275ms)
+✔ ACC-RCG-004/006: foreign credential identity and invalid effort remain whole-candidate rejection (3.954625ms)
+✔ ACC-RCG-001/002: whole valid publication changes later snapshots and preserves a turn snapshot (28.716125ms)
+✔ ACC-RCG-001: generation identity binds the complete file independently of target chainId (15.189875ms)
+✔ ACC-RCG-003: rejected candidate permits only unchanged A to consume the activated G0 (24.572334ms)
+✔ ACC-RCG-003: all unknown references are diagnosed, with each affected target refused (13.021083ms)
+✔ ACC-RCG-003/006: full rejection set cannot be classified as only unrelated unknown refs: unknown ref and repeated ref (16.220041ms)
+✔ ACC-RCG-003/006: full rejection set cannot be classified as only unrelated unknown refs: unknown ref and oversized chain (8.5475ms)
+✔ ACC-RCG-003/006: full rejection set cannot be classified as only unrelated unknown refs: unknown ref and nonstring ref (7.835875ms)
+✔ ACC-RCG-003/006: full rejection set cannot be classified as only unrelated unknown refs: unknown ref followed by unknown override key (6.479ms)
+✔ ACC-RCG-003/006: full rejection set cannot be classified as only unrelated unknown refs: unknown ref followed by unknown Agent (3.096166ms)
+✔ ACC-RCG-003/006: full rejection set cannot be classified as only unrelated unknown refs: unknown ref and invalid catalog descriptor (6.882417ms)
+✔ ACC-RCG-003/006: full rejection set cannot be classified as only unrelated unknown refs: unknown ref and canonical catalog alias (1.708ms)
+✔ ACC-RCG-003/006: full rejection set cannot be classified as only unrelated unknown refs: unknown ref and unknown envelope (1.7725ms)
+✔ ACC-RCG-004 counterexample: rejected G1 never provides changed A or revives prior intent: A explicitly selects r1 marker (2.472417ms)
+✔ ACC-RCG-004 counterexample: rejected G1 never provides changed A or revives prior intent: A override deleted (3.642875ms)
+✔ ACC-RCG-004 counterexample: rejected G1 never provides changed A or revives prior intent: A itself references missing route (2.161375ms)
+✔ ACC-RCG-004 counterexample: rejected G1 never provides changed A or revives prior intent: A itself has invalid model shape (3.860541ms)
+✔ ACC-RCG-004 counterexample: rejected G1 never provides changed A or revives prior intent: same routeRef changes descriptor model (1.148167ms)
+✔ ACC-RCG-004 counterexample: rejected G1 never provides changed A or revives prior intent: same routeRef changes credential readiness identity (2.294875ms)
+✔ ACC-RCG-004 counterexample: rejected G1 never provides changed A or revives prior intent: same routeRef changes providerEnv (8.619916ms)
+✔ ACC-RCG-004: fallback ordering is part of the complete input closure (1.704083ms)
+✔ ACC-RCG-004: A absent in both generations can continue only with identical default layers (1.976583ms)
+✔ ACC-RCG-004: a valid deletion and a provable missing file each activate a complete new absence (4.9055ms)
+✔ ACC-RCG-003/004: malformed JSON refuses all targets and never grants absence (1.768166ms)
+✔ ACC-RCG-003/004: duplicate envelope key refuses all targets and never grants absence (1.553083ms)
+✔ ACC-RCG-003/004: duplicate nested key refuses all targets and never grants absence (1.56125ms)
+✔ ACC-RCG-003/004: unknown envelope key refuses all targets and never grants absence (1.659875ms)
+✔ ACC-RCG-004: an unreadable file is refused rather than interpreted as absent (4.300041ms)
+✔ ACC-RCG-005: cold invalid candidate and restart after G0 continuation cannot restore trust (4.738042ms)
+✔ ACC-RCG-005: cold legal absence is a validated generation; close ends its qualification (0.694875ms)
+✔ ACC-RCG-003: every next candidate recomputes qualification instead of inheriting the last permit (3.52975ms)
+✔ ACC-RCG-006: diagnostic output includes identities and decisions without raw candidate values (2.423792ms)
+✔ ACC-RCG-001: validated captured bytes, not a post-validation rewrite, are atomically activated (24.89475ms)
+✔ ACC-RCG-001: activation fault cannot expose half a generation or authorize old consumption (15.307916ms)
+✔ ACC-RCG-001: an older publication cannot overwrite a confirmed reentrant newer publication (16.758084ms)
+✔ ACC-RCG-005: closing during activation ends the lifecycle and cannot reactivate it (12.07675ms)
+✔ runtime gate rejects every recognized proxy key and any non-exact Node version without values (2.16525ms)
+✔ production composition applies the runtime proxy gate before any mount or layout read (1.641792ms)
+✖ composition resolves the v3 primary to target and the global route to another Agent (14.958084ms)
+✖ target-only rollback rewrites the config file; non-target PID and route unchanged (10.440125ms)
+✖ malformed config fails target respawn loud without disturbing a running non-target (4.916459ms)
+✔ the code constant carries ONLY pins and scope — no route tuple values (F-10) (1.694667ms)
+✔ GPT6-0: the GPT-6 tuple constant carries the exact DEC-G6R-002/003 identity — dormant, separate from V3 (0.144917ms)
+✔ missing file = global passthrough; valid v3 chain resolves primary-first with identities (11.244875ms)
+✔ version discipline: older files fail loud (no auto conversion) (3.11525ms)
+✔ malformed family: bad JSON, wrong shape, extra keys, deep duplicate keys fail loud (7.718458ms)
+✔ reference integrity and dedup: unknown ref, repeated ref, canonical alias duplicates fail loud (8.898667ms)
+✔ hard bound: chain length ≤ MAX_CONFIGURED_ROUTES = 4 (never 2) (5.746875ms)
+✔ fleet activation accepts any registered Agent and rejects unregistered Agent ids (2.393833ms)
+✔ CTR-011 pin: a dsh-codex route with any other pluginVersion fails loud (not a fallback class) (3.106709ms)
+✔ shared mode rejects missing, per-home, relative, and non-canonical credentialFile values (7.699708ms)
+✔ ACC-016 routeKind family: missing/invalid routeKind and plugin keys on a builtin fail loud (5.078ms)
+✔ ACC-016/ACC-018: the frozen initial chain tuple loads; builtin processConfig has NO subscription block (1.601334ms)
+✔ ACC-019 reuse-gate identity: builtin and subscription processes never share an identity (0.616542ms)
+✔ providerEnv accepts only the frozen four-key set and safe host-list grammar (20.961666ms)
+✔ providerEnv URL, key and value failures are fail-loud without secret echo (9.811292ms)
+✔ GPT6-1: an explicit reasoningEffort on the GPT-6 tuple loads and rides the process config (3.504666ms)
+✔ GPT6-2: effective reasoningEffort joins the canonical route identity — absent GPT-6 IS medium, high is distinct (4.232209ms)
+✔ GPT6-2b: absent and explicit medium in ONE catalog is a malformed alias (same canonical identity) (0.781958ms)
+✔ GPT6-3: the legacy tuple keeps the exact pre-change schema, identity bytes and absent reasoning (1.075333ms)
+✔ GPT6-4: an invalid reasoningEffort value fails loud with the closed vocabulary in the message (16.028917ms)
+✔ GPT6-5: reasoningEffort is FORBIDDEN outside the GPT-6 tuple — builtin, non-dsh-codex, legacy tuple (3.196084ms)
+✔ GPT6-6: two routeRefs differing only in reasoningEffort do NOT collapse into one identity (1.39675ms)
+✔ GPT6-7: the built-in default global route stays the legacy V3 tuple — merge is dormant (CTR-G6R-001) (1.379917ms)
+✔ GPT6-8: the dshr1 pin is bound to exactly one tuple — wrong pluginVersion/model pairings fail loud (ACC-G6R-005) (3.7065ms)
+✔ GPT6-9: both dsh-codex pins coexist in one catalog and keep distinct identities (1.18875ms)
+ℹ tests 265
+ℹ suites 0
+ℹ pass 258
+ℹ fail 7
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7613.551292
+
+✖ failing tests:
+
+test at packages/production-runtime/test/default-model-route.test.js:157:1
+✖ A-D1 zero config: every un-overridden Agent resolves to the Luna default with its subscription mount (21.150166ms)
+  Error: agent-provisioning: cannot verify DSH version under /Users/yanfenma/workspace/project/github/deepseek-harness
+      at provisioningError (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:82:24)
+      at readHarnessIdentity (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:136:11)
+      at readContext (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:23:24)
+      ... 6 lines matching cause stack trace ...
+      at async TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/default-model-route.test.js:159:52) {
+    code: 'dsh_version_mismatch',
+    configGeneration: { activeGenerationId: null, candidateId: null, decision: 'refuse', errorAgents: [], rejectionClass: 'candidate_invalid' },
+    [cause]: Error: ENOENT: no such file or directory, open '/Users/yanfenma/workspace/project/github/deepseek-harness/package.json'
+        at readFileSync (node:fs:435:20)
+        at readHarnessIdentity (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:134:26)
+        at readContext (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:23:24)
+        at captureRoutingInputs (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/inputs.js:61:29)
+        at refresh (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/generation.js:60:19)
+        at createRoutingConfigRuntime (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/generation.js:99:3)
+        at composeRoutingConfig (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:27:19)
+        at composeProductionRuntime (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/compose.js:227:51)
+        at runtimeFixture (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/default-model-route.test.js:105:25)
+        at async TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/default-model-route.test.js:159:52) {
+      errno: -2,
+      code: 'ENOENT',
+      syscall: 'open',
+      path: '/Users/yanfenma/workspace/project/github/deepseek-harness/package.json'
+    }
+  }
+
+test at packages/production-runtime/test/default-model-route.test.js:167:1
+✖ A-D2 runtime env override wins over the default; composition config wins over env (12.115708ms)
+  Error: agent-provisioning: cannot verify DSH version under /Users/yanfenma/workspace/project/github/deepseek-harness
+      at provisioningError (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:82:24)
+      at readHarnessIdentity (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:136:11)
+      at readContext (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:23:24)
+      ... 6 lines matching cause stack trace ...
+      at async TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/default-model-route.test.js:169:18) {
+    code: 'dsh_version_mismatch',
+    configGeneration: { activeGenerationId: null, candidateId: null, decision: 'refuse', errorAgents: [], rejectionClass: 'candidate_invalid' },
+    [cause]: Error: ENOENT: no such file or directory, open '/Users/yanfenma/workspace/project/github/deepseek-harness/package.json'
+        at readFileSync (node:fs:435:20)
+        at readHarnessIdentity (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:134:26)
+        at readContext (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:23:24)
+        at captureRoutingInputs (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/inputs.js:61:29)
+        at refresh (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/generation.js:60:19)
+        at createRoutingConfigRuntime (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/generation.js:99:3)
+        at composeRoutingConfig (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:27:19)
+        at composeProductionRuntime (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/compose.js:227:51)
+        at runtimeFixture (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/default-model-route.test.js:105:25)
+        at async TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/default-model-route.test.js:169:18) {
+      errno: -2,
+      code: 'ENOENT',
+      syscall: 'open',
+      path: '/Users/yanfenma/workspace/project/github/deepseek-harness/package.json'
+    }
+  }
+
+test at packages/production-runtime/test/default-model-route.test.js:182:1
+✖ A-D3 explicit OpenCode Go agent override wins; un-overridden Agents keep the Luna default (7.661125ms)
+  Error: agent-provisioning: cannot verify DSH version under /Users/yanfenma/workspace/project/github/deepseek-harness
+      at provisioningError (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:82:24)
+      at readHarnessIdentity (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:136:11)
+      at readContext (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:23:24)
+      ... 6 lines matching cause stack trace ...
+      at async TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/default-model-route.test.js:184:45) {
+    code: 'dsh_version_mismatch',
+    configGeneration: { activeGenerationId: null, candidateId: null, decision: 'refuse', errorAgents: [], rejectionClass: 'candidate_invalid' },
+    [cause]: Error: ENOENT: no such file or directory, open '/Users/yanfenma/workspace/project/github/deepseek-harness/package.json'
+        at readFileSync (node:fs:435:20)
+        at readHarnessIdentity (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:134:26)
+        at readContext (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:23:24)
+        at captureRoutingInputs (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/inputs.js:61:29)
+        at refresh (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/generation.js:60:19)
+        at createRoutingConfigRuntime (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/generation.js:99:3)
+        at composeRoutingConfig (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:27:19)
+        at composeProductionRuntime (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/compose.js:227:51)
+        at runtimeFixture (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/default-model-route.test.js:105:25)
+        at async TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/default-model-route.test.js:184:45) {
+      errno: -2,
+      code: 'ENOENT',
+      syscall: 'open',
+      path: '/Users/yanfenma/workspace/project/github/deepseek-harness/package.json'
+    }
+  }
+
+test at packages/production-runtime/test/default-model-route.test.js:199:1
+✖ composition freezes the own-domain artifact and refuses drift before the next process boundary (16.454291ms)
+  Error: agent-provisioning: cannot verify DSH version under /Users/yanfenma/workspace/project/github/deepseek-harness
+      at provisioningError (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:82:24)
+      at readHarnessIdentity (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:136:11)
+      at readContext (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:23:24)
+      ... 6 lines matching cause stack trace ...
+      at async TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/default-model-route.test.js:205:13) {
+    code: 'dsh_version_mismatch',
+    configGeneration: { activeGenerationId: null, candidateId: null, decision: 'refuse', errorAgents: [], rejectionClass: 'candidate_invalid' },
+    [cause]: Error: ENOENT: no such file or directory, open '/Users/yanfenma/workspace/project/github/deepseek-harness/package.json'
+        at readFileSync (node:fs:435:20)
+        at readHarnessIdentity (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:134:26)
+        at readContext (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:23:24)
+        at captureRoutingInputs (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/inputs.js:61:29)
+        at refresh (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/generation.js:60:19)
+        at createRoutingConfigRuntime (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/generation.js:99:3)
+        at composeRoutingConfig (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:27:19)
+        at composeProductionRuntime (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/compose.js:227:51)
+        at runtimeFixture (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/default-model-route.test.js:105:25)
+        at async TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/default-model-route.test.js:205:13) {
+      errno: -2,
+      code: 'ENOENT',
+      syscall: 'open',
+      path: '/Users/yanfenma/workspace/project/github/deepseek-harness/package.json'
+    }
+  }
+
+test at packages/production-runtime/test/model-overrides-runtime.test.js:167:1
+✖ composition resolves the v3 primary to target and the global route to another Agent (14.958084ms)
+  Error: agent-provisioning: cannot verify DSH version under /Users/yanfenma/workspace/project/github/deepseek-harness
+      at provisioningError (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:82:24)
+      at readHarnessIdentity (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:136:11)
+      at readContext (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:23:24)
+      ... 6 lines matching cause stack trace ...
+      at async TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/model-overrides-runtime.test.js:168:45) {
+    code: 'dsh_version_mismatch',
+    configGeneration: { activeGenerationId: null, candidateId: null, decision: 'refuse', errorAgents: [], rejectionClass: 'candidate_invalid' },
+    [cause]: Error: ENOENT: no such file or directory, open '/Users/yanfenma/workspace/project/github/deepseek-harness/package.json'
+        at readFileSync (node:fs:435:20)
+        at readHarnessIdentity (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:134:26)
+        at readContext (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:23:24)
+        at captureRoutingInputs (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/inputs.js:61:29)
+        at refresh (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/generation.js:60:19)
+        at createRoutingConfigRuntime (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/generation.js:99:3)
+        at composeRoutingConfig (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:27:19)
+        at composeProductionRuntime (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/compose.js:227:51)
+        at runtimeFixture (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/model-overrides-runtime.test.js:154:25)
+        at async TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/model-overrides-runtime.test.js:168:45) {
+      errno: -2,
+      code: 'ENOENT',
+      syscall: 'open',
+      path: '/Users/yanfenma/workspace/project/github/deepseek-harness/package.json'
+    }
+  }
+
+test at packages/production-runtime/test/model-overrides-runtime.test.js:184:1
+✖ target-only rollback rewrites the config file; non-target PID and route unchanged (10.440125ms)
+  Error: agent-provisioning: cannot verify DSH version under /Users/yanfenma/workspace/project/github/deepseek-harness
+      at provisioningError (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:82:24)
+      at readHarnessIdentity (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:136:11)
+      at readContext (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:23:24)
+      ... 6 lines matching cause stack trace ...
+      at async TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/model-overrides-runtime.test.js:185:40) {
+    code: 'dsh_version_mismatch',
+    configGeneration: { activeGenerationId: null, candidateId: null, decision: 'refuse', errorAgents: [], rejectionClass: 'candidate_invalid' },
+    [cause]: Error: ENOENT: no such file or directory, open '/Users/yanfenma/workspace/project/github/deepseek-harness/package.json'
+        at readFileSync (node:fs:435:20)
+        at readHarnessIdentity (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:134:26)
+        at readContext (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:23:24)
+        at captureRoutingInputs (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/inputs.js:61:29)
+        at refresh (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/generation.js:60:19)
+        at createRoutingConfigRuntime (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/generation.js:99:3)
+        at composeRoutingConfig (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:27:19)
+        at composeProductionRuntime (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/compose.js:227:51)
+        at runtimeFixture (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/model-overrides-runtime.test.js:154:25)
+        at async TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/model-overrides-runtime.test.js:185:40) {
+      errno: -2,
+      code: 'ENOENT',
+      syscall: 'open',
+      path: '/Users/yanfenma/workspace/project/github/deepseek-harness/package.json'
+    }
+  }
+
+test at packages/production-runtime/test/model-overrides-runtime.test.js:213:1
+✖ malformed config fails target respawn loud without disturbing a running non-target (4.916459ms)
+  Error: agent-provisioning: cannot verify DSH version under /Users/yanfenma/workspace/project/github/deepseek-harness
+      at provisioningError (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:82:24)
+      at readHarnessIdentity (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:136:11)
+      at readContext (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:23:24)
+      ... 6 lines matching cause stack trace ...
+      at async TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/model-overrides-runtime.test.js:214:40) {
+    code: 'dsh_version_mismatch',
+    configGeneration: { activeGenerationId: null, candidateId: null, decision: 'refuse', errorAgents: [], rejectionClass: 'candidate_invalid' },
+    [cause]: Error: ENOENT: no such file or directory, open '/Users/yanfenma/workspace/project/github/deepseek-harness/package.json'
+        at readFileSync (node:fs:435:20)
+        at readHarnessIdentity (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/agent-provisioning/src/index.js:134:26)
+        at readContext (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:23:24)
+        at captureRoutingInputs (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/inputs.js:61:29)
+        at refresh (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/generation.js:60:19)
+        at createRoutingConfigRuntime (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/generation.js:99:3)
+        at composeRoutingConfig (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/identity/model-routing/composition.js:27:19)
+        at composeProductionRuntime (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/src/compose.js:227:51)
+        at runtimeFixture (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/model-overrides-runtime.test.js:154:25)
+        at async TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/h1370-impl/packages/production-runtime/test/model-overrides-runtime.test.js:214:40) {
+      errno: -2,
+      code: 'ENOENT',
+      syscall: 'open',
+      path: '/Users/yanfenma/workspace/project/github/deepseek-harness/package.json'
+    }
+  }

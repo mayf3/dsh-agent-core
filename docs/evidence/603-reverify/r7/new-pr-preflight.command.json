@@ -1,0 +1,29 @@
+{
+  "name": "new-pr-preflight",
+  "argv": [
+    "gh",
+    "pr",
+    "list",
+    "--repo",
+    "mayf3/dsh-agent-core",
+    "--state",
+    "all",
+    "--head",
+    "ac-ctr-s4-reverify",
+    "--json",
+    "number,title,state,headRefName,headRefOid,baseRefName,url"
+  ],
+  "cwd": "/private/tmp/h603-reverify",
+  "started_at": "2026-11-07T05:23:00.809934+00:00",
+  "head": "f1b1466b2645ec861c80bcb934db410ff544e6ca",
+  "environment": "Inherited unless argv explicitly clears keys; no Secret values recorded",
+  "ended_at": "2026-11-07T05:23:01.396599+00:00",
+  "rc": 0,
+  "encoding": "base64 is authoritative verbatim output; text is a UTF-8 display",
+  "stdout_base64": "W10K",
+  "stdout_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+  "stdout_text": "[]\n",
+  "stderr_base64": "",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_text": ""
+}

@@ -1,0 +1,100 @@
+[
+  {
+    "argv": [
+      "node",
+      "--check",
+      "scripts/fleet-window/settle_unresolved_runtime_down.mjs"
+    ],
+    "cwd": "/private/tmp/dsh-fleet-window-tools",
+    "started": "2026-11-04T13:57:52.917742+00:00",
+    "rc": 0,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "node",
+      "--check",
+      "scripts/fleet-window/precheck_zero_inflight.mjs"
+    ],
+    "cwd": "/private/tmp/dsh-fleet-window-tools",
+    "started": "2026-11-04T13:57:52.942592+00:00",
+    "rc": 0,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "/bin/bash",
+      "-n",
+      "scripts/fleet-window/window-executor-v5.sh"
+    ],
+    "cwd": "/private/tmp/dsh-fleet-window-tools",
+    "started": "2026-11-04T13:57:52.965828+00:00",
+    "rc": 0,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "cwd": "/private/tmp/dsh-fleet-window-tools",
+    "started": "2026-11-04T13:57:52.969077+00:00",
+    "rc": 0,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "python3",
+      ".agents/tools/verify_governance.py",
+      "--target",
+      ".",
+      "--require-accepted"
+    ],
+    "cwd": "/private/tmp/dsh-fleet-window-tools",
+    "started": "2026-11-04T13:57:53.003096+00:00",
+    "rc": 0,
+    "stdout_sha256": "c8671db6c5d33b2e2c051a17143acc9bb5736cf8788e72feed4728b5cb32f332",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "/bin/bash",
+      "scripts/fleet-window/window-executor-v5.sh",
+      "--selftest"
+    ],
+    "cwd": "/private/tmp/dsh-fleet-window-tools",
+    "started": "2026-11-04T13:57:53.043625+00:00",
+    "rc": 0,
+    "stdout_sha256": "c4b2aa10e931c1de4308b0b76e7f8db25b9fa4beb318fab50145116a924b33a7",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "node",
+      "--check",
+      "scripts/fleet-window/settle_unresolved_runtime_down.test.mjs"
+    ],
+    "cwd": "/private/tmp/dsh-fleet-window-tools",
+    "started": "2026-11-04T13:59:04.657407+00:00",
+    "rc": 0,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "argv": [
+      "node",
+      "--test",
+      "scripts/fleet-window/settle_unresolved_runtime_down.test.mjs"
+    ],
+    "cwd": "/private/tmp/dsh-fleet-window-tools",
+    "started": "2026-11-04T13:59:04.683084+00:00",
+    "rc": 0,
+    "stdout_sha256": "dbc7f2f8cc84a85435fc4a0f8bcc2a1c4268fb8bf55d25ed0e8367a092778776",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

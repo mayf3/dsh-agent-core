@@ -1,0 +1,16 @@
+{
+  "tests": 3156,
+  "suites": 12,
+  "pass": 3004,
+  "fail": 116,
+  "cancelled": 0,
+  "skipped": 36,
+  "todo": 0,
+  "duration_ms": 66689.130875,
+  "test_rc": 1,
+  "head_before": "3259d8cc2c6a3cb0d8e8f16edaacc0c01f0ca3bb",
+  "head_after": "3259d8cc2c6a3cb0d8e8f16edaacc0c01f0ca3bb",
+  "source_git_status_after": "?? docs/evidence/delivery-race-1332-20261031/\n",
+  "completed_at_utc": "2026-10-30T23:54:53.303461+00:00",
+  "log_sha256": "939eda58394392d8596e63fba29f038ffa82de74e6b4afbe33953cefdb38401c"
+}

@@ -1,0 +1,23 @@
+{
+  "result": "PASS_WITH_OWNER_VERBATIM_EXEMPTIONS",
+  "rc": 0,
+  "checked_index_tree": "2f6d479cc93f885005ff743785a6b5a75909c0c0",
+  "staged_files": 125,
+  "exempt_files": 5,
+  "exempt_coordinates": 56,
+  "preserved_historical_files": 103,
+  "remaining_staged_files": "all checked by git diff --cached --check",
+  "git_check_argv": [
+    "git",
+    "diff",
+    "--cached",
+    "--check",
+    "--",
+    ".",
+    ":(exclude)docs/evidence/603-reverify/r2/candidate-working.diff",
+    ":(exclude)docs/evidence/603-reverify/reviewed-product.diff",
+    ":(exclude)docs/evidence/603-reverify/stopped-working.diff",
+    ":(exclude)docs/evidence/603-reverify/r4/push-source.stderr.log",
+    ":(exclude)docs/evidence/603-reverify/r4/cached-diff-check.stdout.log"
+  ]
+}

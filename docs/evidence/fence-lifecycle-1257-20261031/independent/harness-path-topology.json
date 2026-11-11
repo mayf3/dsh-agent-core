@@ -1,0 +1,62 @@
+[
+  {
+    "repo": "/private/tmp/dsh-1257-baseline",
+    "harnessRoot": "/private/github/deepseek-harness",
+    "cli": null,
+    "error": "dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout",
+    "requestedRoot": "/tmp/dsh-1257-baseline",
+    "head": "0386b34a3d1054c71cbe51a2310fdff4d55c992b",
+    "resolverSha256": "ba397d8cb92d56f11158400256097379edbea69271a6ac5fee471b56127eb0cf",
+    "bridgePresent": true,
+    "foreignBridgeTargets": [],
+    "dependencyVersions": {
+      "@deepseek-ai/dsh-session": "0.1.0-rc.8",
+      "@deepseek-ai/dsh-session-persistence-jsonl": "0.1.0-rc.8",
+      "@deepseek-ai/schemastery": "3.18.5",
+      "@larksuiteoapi/node-sdk": "1.76.0",
+      "croner": "10.0.1",
+      "sherpa-onnx-node": "1.13.7",
+      "@deepseek-ai/dsh-tools": "0.0.0-unit-test-passthrough"
+    }
+  },
+  {
+    "repo": "/private/tmp/dsh-1257-candidate",
+    "harnessRoot": "/private/github/deepseek-harness",
+    "cli": null,
+    "error": "dsh CLI not found at /private/github/deepseek-harness/apps/cli/lib/bin.js; set DSH_HARNESS_ROOT to the deepseek-harness checkout",
+    "requestedRoot": "/tmp/dsh-1257-candidate",
+    "head": "38b705a6b2cdd62969bef18b31e69ab974bbc261",
+    "resolverSha256": "ba397d8cb92d56f11158400256097379edbea69271a6ac5fee471b56127eb0cf",
+    "bridgePresent": true,
+    "foreignBridgeTargets": [],
+    "dependencyVersions": {
+      "@deepseek-ai/dsh-session": "0.1.0-rc.8",
+      "@deepseek-ai/dsh-session-persistence-jsonl": "0.1.0-rc.8",
+      "@deepseek-ai/schemastery": "3.18.5",
+      "@larksuiteoapi/node-sdk": "1.76.0",
+      "croner": "10.0.1",
+      "sherpa-onnx-node": "1.13.7",
+      "@deepseek-ai/dsh-tools": "0.0.0-unit-test-passthrough"
+    }
+  },
+  {
+    "repo": "/Users/yanfenma/workspace/worktrees/ac-task-1257-fence-lifecycle",
+    "harnessRoot": "/Users/yanfenma/workspace/github/deepseek-harness",
+    "cli": "/Users/yanfenma/workspace/github/deepseek-harness/apps/cli/lib/bin.js",
+    "error": null,
+    "requestedRoot": "/Users/yanfenma/workspace/worktrees/ac-task-1257-fence-lifecycle",
+    "head": "38b705a6b2cdd62969bef18b31e69ab974bbc261",
+    "resolverSha256": "ba397d8cb92d56f11158400256097379edbea69271a6ac5fee471b56127eb0cf",
+    "bridgePresent": true,
+    "foreignBridgeTargets": [],
+    "dependencyVersions": {
+      "@deepseek-ai/dsh-session": "0.1.0-rc.8",
+      "@deepseek-ai/dsh-session-persistence-jsonl": "0.1.0-rc.8",
+      "@deepseek-ai/schemastery": "3.18.5",
+      "@larksuiteoapi/node-sdk": "1.76.0",
+      "croner": "10.0.1",
+      "sherpa-onnx-node": "1.13.7",
+      "@deepseek-ai/dsh-tools": "0.0.0-unit-test-passthrough"
+    }
+  }
+]

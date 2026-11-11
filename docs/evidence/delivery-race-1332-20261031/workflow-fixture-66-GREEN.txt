@@ -1,0 +1,114 @@
+✔ Router outcome_unknown preserves its reconciliation handle as active Run linkage with no replay (80.01575ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-kq7ykk/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-kq7ykk/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_target-agent ready pid=9101 (0ms)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1793404337542,"routeChainId":"single-route","agentId":"agt_target-agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1793404337542,"routeChainId":"single-route","agentId":"agt_target-agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_target-agent session main requestId wfeat-7290b7a752186e3768... (new-message) in 70ms
+✔ settled active fence preserves stale successor liveness: correlation=false, clean baseline=false (353.775459ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-6kmnZI/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-6kmnZI/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_target-agent ready pid=9101 (0ms)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1793404337780,"routeChainId":"single-route","agentId":"agt_target-agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1793404337780,"routeChainId":"single-route","agentId":"agt_target-agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_target-agent session main requestId wfeat-7290b7a752186e3768... (new-message) in 43ms
+✔ settled active fence preserves stale successor liveness: correlation=false, clean baseline=true (227.986667ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-t23rvv/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-t23rvv/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_target-agent ready pid=9101 (0ms)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1793404338115,"routeChainId":"single-route","agentId":"agt_target-agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1793404338115,"routeChainId":"single-route","agentId":"agt_target-agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_target-agent session main requestId wfeat-7290b7a752186e3768... (new-message) in 44ms
+✔ settled active fence preserves stale successor liveness: correlation=true, clean baseline=false (332.38325ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-5Xm2cs/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-5Xm2cs/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_target-agent ready pid=9101 (0ms)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1793404338359,"routeChainId":"single-route","agentId":"agt_target-agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1793404338359,"routeChainId":"single-route","agentId":"agt_target-agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_target-agent session main requestId wfeat-7290b7a752186e3768... (new-message) in 62ms
+✔ settled active fence preserves stale successor liveness: correlation=true, clean baseline=true (256.8805ms)
+✔ positive quiescence evidence: active fence, correlation=false (96.202917ms)
+✔ positive quiescence evidence: blocked recovery, correlation=false (73.584875ms)
+✔ positive quiescence evidence: both blockers, correlation=false (49.986833ms)
+✔ positive quiescence evidence: UNKNOWN, correlation=false (56.716833ms)
+✔ positive quiescence evidence: pending, correlation=false (49.226083ms)
+✔ positive quiescence evidence: recovering, correlation=false (48.495208ms)
+✔ positive quiescence evidence: failed, correlation=false (59.838042ms)
+✔ positive quiescence evidence: missing state, correlation=false (72.044375ms)
+✔ positive quiescence evidence: missing result, correlation=false (90.854625ms)
+✔ positive quiescence evidence: throwing read, correlation=false (66.896167ms)
+✔ positive quiescence evidence: unreadable snapshot, correlation=false (49.230708ms)
+✔ positive quiescence evidence: invalid snapshot null, correlation=false (50.376875ms)
+✔ positive quiescence evidence: invalid snapshot false, correlation=false (49.102416ms)
+✔ positive quiescence evidence: invalid snapshot [], correlation=false (50.842209ms)
+✔ positive quiescence evidence: invalid snapshot "settled", correlation=false (50.459458ms)
+✔ positive quiescence evidence: contradictory snapshot state, correlation=false (79.89ms)
+✔ positive quiescence evidence: unsupported fenceState "future_enum", correlation=false (95.970833ms)
+✔ positive quiescence evidence: unsupported fenceState false, correlation=false (65.541458ms)
+✔ positive quiescence evidence: unsupported fenceState {}, correlation=false (47.945708ms)
+✔ positive quiescence evidence: unsupported fenceState [], correlation=false (59.046ms)
+✔ positive quiescence evidence: unsupported recoveryState "future_enum", correlation=false (50.871041ms)
+✔ positive quiescence evidence: unsupported recoveryState false, correlation=false (48.909417ms)
+✔ positive quiescence evidence: unsupported recoveryState {}, correlation=false (51.311541ms)
+✔ positive quiescence evidence: unsupported recoveryState [], correlation=false (86.887125ms)
+✔ positive quiescence evidence: legacy state only, correlation=false (91.856209ms)
+✔ positive quiescence evidence: default fields, correlation=false (82.107792ms)
+✔ positive quiescence evidence: nullable fields, correlation=false (66.695667ms)
+✔ positive quiescence evidence: producer defaults, correlation=false (66.4845ms)
+✔ positive quiescence evidence: normal completion, correlation=false (62.046042ms)
+✔ positive quiescence evidence: active fence, correlation=true (62.739375ms)
+✔ positive quiescence evidence: blocked recovery, correlation=true (84.619ms)
+✔ positive quiescence evidence: both blockers, correlation=true (75.71125ms)
+✔ positive quiescence evidence: UNKNOWN, correlation=true (79.217917ms)
+✔ positive quiescence evidence: pending, correlation=true (51.626625ms)
+✔ positive quiescence evidence: recovering, correlation=true (52.119417ms)
+✔ positive quiescence evidence: failed, correlation=true (47.935166ms)
+✔ positive quiescence evidence: missing state, correlation=true (51.861542ms)
+✔ positive quiescence evidence: missing result, correlation=true (55.023125ms)
+✔ positive quiescence evidence: throwing read, correlation=true (73.230042ms)
+✔ positive quiescence evidence: unreadable snapshot, correlation=true (80.966416ms)
+✔ positive quiescence evidence: invalid snapshot null, correlation=true (60.858ms)
+✔ positive quiescence evidence: invalid snapshot false, correlation=true (48.756291ms)
+✔ positive quiescence evidence: invalid snapshot [], correlation=true (51.313333ms)
+✔ positive quiescence evidence: invalid snapshot "settled", correlation=true (52.917167ms)
+✔ positive quiescence evidence: contradictory snapshot state, correlation=true (49.230292ms)
+✔ positive quiescence evidence: unsupported fenceState "future_enum", correlation=true (53.799ms)
+✔ positive quiescence evidence: unsupported fenceState false, correlation=true (67.602958ms)
+✔ positive quiescence evidence: unsupported fenceState {}, correlation=true (79.25325ms)
+✔ positive quiescence evidence: unsupported fenceState [], correlation=true (89.279541ms)
+✔ positive quiescence evidence: unsupported recoveryState "future_enum", correlation=true (64.420959ms)
+✔ positive quiescence evidence: unsupported recoveryState false, correlation=true (52.885166ms)
+✔ positive quiescence evidence: unsupported recoveryState {}, correlation=true (48.860625ms)
+✔ positive quiescence evidence: unsupported recoveryState [], correlation=true (50.040916ms)
+✔ positive quiescence evidence: legacy state only, correlation=true (61.866083ms)
+✔ positive quiescence evidence: default fields, correlation=true (92.677167ms)
+✔ positive quiescence evidence: nullable fields, correlation=true (91.170834ms)
+✔ positive quiescence evidence: producer defaults, correlation=true (81.125ms)
+✔ positive quiescence evidence: normal completion, correlation=true (61.194709ms)
+✔ WORKFLOW_STALE_REENTRY_V1 r2 wiring — threshold resolution: default, env, config, fail-loud (0.76075ms)
+✔ WORKFLOW_STALE_REENTRY_V1 r2 wiring — quiescence-gated redispatch over the REAL gateway/read seams; no mutation seam exists (112.721833ms)
+✔ normal READY poll drains pages, rereads after restart, rejects malformed projections and never falls back (2841.586875ms)
+ℹ tests 66
+ℹ suites 0
+ℹ pass 66
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8023.074958

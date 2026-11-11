@@ -1,0 +1,93 @@
+import assert from 'node:assert/strict'
+import {mkdtempSync,readdirSync,readFileSync} from 'node:fs'
+import {tmpdir} from 'node:os'
+import {join} from 'node:path'
+import {createRouteChainExecutor} from '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/route-chain.js'
+import {createConversationSource} from '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/conversation/source.js'
+import {makeFx} from '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/helpers/fake-child.js'
+import {createSessionSeam} from '/private/tmp/dsh-1332-delivery-race-fix/packages/demo-server/src/session-seam.js'
+import {prepareSessionDelivery} from '/private/tmp/dsh-1332-delivery-race-fix/packages/demo-server/src/delivery-readiness.js'
+import {apply as applyRouter} from '/private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/src/index.js'
+const pause=()=>new Promise(r=>setImmediate(r))
+async function until(fn){const end=Date.now()+2000;while(!fn()){assert.ok(Date.now()<end,'probe deadline');await pause()}}
+async function probe(kind){
+ const directory=mkdtempSync(join(tmpdir(),'1332-independent-'))
+ const sourceDir=mkdtempSync(join(tmpdir(),'1332-independent-source-'))
+ const owner=createConversationSource({directory:sourceDir,agentId:'agt_fx'})
+ const session={id:'main',header:{id:'main',cwd:'/tmp/fx-ws',createdAt:1}}
+ let current,generations=0,prompts=0,result,error
+ const waits=[],logs=[]
+ const executor=createRouteChainExecutor({log:{log:x=>logs.push(x),error:x=>logs.push(x)},deadLetterDirectory:directory,
+  transportRetry:{baseDelayMs:1,sleep:async ms=>waits.push(ms)},resolveTurnDeadlineMs:()=>1200,
+  ensureRunningForRoute:async()=>{
+   if(!current||current.proc.state==='EXITED'){
+    const fx=makeFx({generation:++generations});current=fx;await fx.readyNow()
+    fx.proc.initializeEvidence.conversationSource={version:1};fx.proc.initializeEvidence.websiteAdmission={version:1}
+    if(kind==='reapfailure'&&generations===3)fx.proc.shutdown=async()=>{throw new Error('review injected reap failure')}
+    const original=fx.child.stdin.write.bind(fx.child.stdin)
+    fx.child.stdin.write=(line,cb)=>{const req=JSON.parse(line);const ret=original(line,cb);queueMicrotask(()=>{
+     if(req.method==='session/prepare')fx.emit({id:req.id,result:{version:1,ready:true,sessionId:'main'}})
+     if(req.method==='shutdown'){fx.emit({id:req.id,result:{}});fx.childExit()}
+     if(req.method==='session/prompt'){
+      prompts++;const messageId=`m-${prompts}`;let retained={}
+      if(kind==='source'){
+       try{retained=owner.reserve({requestId:req.params.conversationSource.requestId,session,message:{id:messageId}})}
+       catch(e){fx.emit({id:req.id,error:{code:e.code,message:e.message}});return}
+      }
+      fx.emit({id:req.id,result:{messageId,...retained}})
+      const finish=()=>{
+       if(kind==='childexit'){fx.childExit(1);return}
+       fx.emitEvent('main',{type:'turn/start',data:{turn:1}})
+       fx.emitEvent('main',{type:'user/message',data:{id:messageId}})
+       if(kind==='unsafe')fx.emitEvent('main',{type:'tool/start',data:{}})
+       fx.emitEvent('main',{type:'turn/end',data:{turn:1,reason:{kind:'error',error:{code:'TRANSPORT',message:'fetch failed'}}}})
+       fx.emitStatus('main','idle')
+      }
+      if(kind==='async'||kind==='childexit')setImmediate(finish);else finish()
+     }
+    });return ret}
+   }
+   return {status:'ready',proc:current.proc}
+  }})
+ const opts=kind==='source'?{productSurface:true,conversationSource:{requestId:'original-source-key'},callerCorrelation:{requestId:'original-source-key'}}:{}
+ try{result=await executor[kind==='async'?'admitWithRouteChain':'runTurnWithRouteChain']('agt_fx',{sessionId:'main',message:'original synthetic message',opts})}catch(e){error=e}
+ if(kind==='async')await until(()=>readdirSync(directory).length===1)
+ await pause();await pause()
+ const counts=executor.deliveryFailuresSnapshot().counts
+ const answer={kind,accepted:result?.accepted??false,errorCode:error?.code??null,prompts,generations,quarantined:current.proc.deliveryTransportFailed??false,
+  counts,waits,deadLetters:readdirSync(directory).length,replayForbidden:error?.deliveryFailure?.replayForbidden??false,recoveryBlocked:error?.deliveryFailure?.recoveryBlocked??false}
+ if(kind==='async'){assert.equal(result.accepted,true);assert.equal(prompts,3);assert.equal(generations,3);assert.equal(counts.transport_death,3);assert.equal(answer.deadLetters,1);assert.equal(executor.journalSnapshot().filter(r=>r.kind==='route_chain_final').length,1)}
+ if(kind==='unsafe'){assert.equal(prompts,1);assert.equal(generations,1);assert.equal(answer.quarantined,true)}
+ if(kind==='childexit'){assert.equal(error.code,'AGENT_PROCESS_CHILD_EXITED');assert.equal(counts.child_exit_without_outcome,1);assert.equal(counts.other,0);assert.equal(prompts,1)}
+ if(kind==='reapfailure'){assert.equal(prompts,3);assert.equal(answer.deadLetters,1);assert.equal(answer.recoveryBlocked,true);assert.match(error.deliveryFailure.userMessage,/请重发/u)}
+ if(kind==='source'){assert.equal(prompts,1);assert.equal(generations,1);assert.equal(answer.deadLetters,1);assert.equal(answer.replayForbidden,true);assert.equal(readdirSync(sourceDir).length,1);const row=JSON.parse(readFileSync(join(sourceDir,readdirSync(sourceDir)[0]),'utf8'));assert.equal(row.message_id,'m-1');assert.equal(row.request_id,'original-source-key')}
+ console.log(JSON.stringify(answer))
+}
+for(const kind of ['async','unsafe','childexit','reapfailure','source'])await probe(kind)
+for(const persisted of [false,true]){
+ let follows=0,creates=0,resumes=0
+ const handle={agent:{session:{id:'main',seq:0,header:{cwd:'/tmp/review-main'}},followup(){follows++}}}
+ const services={agentLoop:{},sessionPersistence:{list:async()=>persisted?[{id:'main'}]:[]},agents:{create:async()=>{creates++;return handle},resume:async()=>{resumes++;return handle}}}
+ const seam=createSessionSeam({ctx:{get:key=>services[key]},settings:{cwd:'/tmp/review-main',provider:'offline',model:'fixture'},conversationSource:{reserve:args=>({mainResolution:args.mainResolution})}})
+ await prepareSessionDelivery(seam,{version:1,sessionId:'main'});assert.equal(follows,0)
+ const first=await seam.prompt('main',[],undefined,undefined,{requestId:'first'})
+ assert.equal(first.mainResolution.disposition,persisted?'resumed':'created')
+ const second=await seam.prompt('main',[],undefined,undefined,{requestId:'second'});assert.equal(second.mainResolution.disposition,'hot_reuse')
+ console.log(JSON.stringify({kind:'provenance',persisted,creates,resumes,first:first.mainResolution.disposition,second:second.mainResolution.disposition}))
+}
+{
+ const dir=mkdtempSync(join(tmpdir(),'1332-independent-registry-')),spawned=[]
+ class FakeProc{
+  constructor(opts){Object.assign(this,opts);this.pid=6000+spawned.length;this.turnQueueEntries=[];this.turnInFlight=false;this.ownership=null;this.shutdownCalls=0;this.exit=undefined;this.exitPromise=new Promise(()=>{})}
+  spawn(){return this}async ready(){return 1}async shutdown(){this.shutdownCalls++;this.registryIntegration.casReap(this,'shutdown');this.exit={code:0,signal:null};this.exitPromise=Promise.resolve(this.exit);this.registryIntegration.casEmpty(this);return this.exit}
+ }
+ const services=new Map([['workspaceBootstrap',{resolveWorkspace:id=>join(dir,id),resolveDshHome:id=>join(dir,id),ensure:async()=>({})}],['agentDefinition',{listAgents:()=>[{id:'agt_review'}],getAgent:()=>({id:'agt_review'}),getDefaultAgent:()=>({id:'agt_review'})}]])
+ const ctx={get:key=>services.get(key),provide:(key,value)=>services.set(key,value),effect:()=>()=>{}}
+ const router=applyRouter(ctx,{bindingsStoreFile:join(dir,'bindings.json'),agentProfile:'synthetic',defaultSessionId:'main',defaultAgentId:'agt_review',provisionHome:()=>{},processFactory:opts=>{const p=new FakeProc(opts);spawned.push(p);return p}})
+ const wanted={routeIdentity:'same-route',processConfig:{provider:'offline',model:'fixture'}}
+ const first=await router.ensureRunningForRoute('agt_review',wanted);first.proc.deliveryTransportFailed=true
+ const second=await router.ensureRunningForRoute('agt_review',wanted)
+ assert.notEqual(first.proc,second.proc);assert.equal(first.proc.shutdownCalls,1);assert.equal(spawned.length,2)
+ console.log(JSON.stringify({kind:'registry_quarantine',sameRoute:true,generations:spawned.length,oldShutdowns:first.proc.shutdownCalls,reused:false}))
+}
+console.log('INDEPENDENT_PROBES PASS 8/8; offline synthetic inputs only; production I/O 0')

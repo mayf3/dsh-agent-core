@@ -1,0 +1,50 @@
+{
+  "gate": "target8",
+  "cwd": "/private/tmp/h1367-readsep",
+  "source_parent": "84b1e612aa31f4caa5a0de0ca39e3abca545bcef",
+  "integration_base": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "command": [
+    "/opt/homebrew/bin/node",
+    "--test",
+    "--test-reporter=tap",
+    "--test-name-pattern=1367 (traces:|attention:|fresh-reader family:|real mutation still repairs|non-tail corruption)",
+    "packages/workflow-execution/test/observation-cas/diagnostic-read.test.js"
+  ],
+  "environment_recipe": "env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u all_proxy -u NO_PROXY -u no_proxy -u NODE_USE_ENV_PROXY /opt/homebrew/bin/node --test --test-reporter=tap '--test-name-pattern=1367 (traces:|attention:|fresh-reader family:|real mutation still repairs|non-tail corruption)' packages/workflow-execution/test/observation-cas/diagnostic-read.test.js",
+  "unset_keys": [
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "ALL_PROXY",
+    "all_proxy",
+    "NO_PROXY",
+    "no_proxy",
+    "NODE_USE_ENV_PROXY"
+  ],
+  "environment_scope": "test child only; parent unchanged",
+  "node_runtime": {
+    "execPath": "/opt/homebrew/Cellar/node/26.7.0/bin/node",
+    "version": "v26.7.0",
+    "arch": "arm64",
+    "proxyKeysPresent": []
+  },
+  "started_at_utc": "2026-11-07T12:09:04.613136+00:00",
+  "completed_at_utc": "2026-11-07T12:09:05.176223+00:00",
+  "expected_rc": 0,
+  "actual_rc": 0,
+  "counts": {
+    "tests": 8,
+    "pass": 8,
+    "fail": 0,
+    "skipped": 0
+  },
+  "raw_sha256": "a76b3883e76382df77ffaf8608e7d63bfaf837f2eedf30427e380438f0300770",
+  "file_sha256": {
+    "packages/production-runtime/src/workflow/capability-runtime.js": "53dbddaa6cdbf140da020515c1a2b45beb7712715f3c4c4624ad65708c576ada",
+    "packages/workflow-execution/src/ledger.js": "7999048f35828027660b580763dd8b42a48b644dc01366f9fe6cfb0e903ed2a2",
+    "packages/workflow-execution/src/engine.js": "d9dfaf86dd5b52d351f4bdf44b971f68a89be8f86c5586c71fbd59dda63a7dd4",
+    "packages/workflow-execution/test/observation-cas/diagnostic-read.test.js": "4b29cb5577be6f836becb6ad016216e5d4c189051146368fd6554fbb7f216580",
+    "packages/workflow-execution/test/observation-cas/diagnostic-missing-trace.test.js": "72e23f26b5adde0a8351db9fd4c684b80d4b347a0db7105e096b4abc15f8bebb"
+  }
+}

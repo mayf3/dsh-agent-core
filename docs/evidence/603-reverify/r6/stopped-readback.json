@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "evaluated_at": "2026-11-07T05:19:16.903784+00:00",
+  "blocker": {
+    "id": "603-R6-GATE-001",
+    "class": "REQUIRED_GATE_FAILURE",
+    "source": "R6 failure-stop + R5 exact whitespace exemptions",
+    "counterexample": "r5/pr-head-edit.stderr.log lines63,66,69,72,75,78,81,84,87,90 and EOF101, rc2",
+    "impact": "Packaging/delivery only; prior source evidence retained",
+    "minimal_closure": "Regulator exact raw archive/exemption disposition and continuation",
+    "affected_readiness": [
+      "R6_DOCS_DELIVERY_PUBLISHED",
+      "NEW_PR_CREATED",
+      "PR603_SUPERSEDED_CLOSED",
+      "TASK_DONE"
+    ]
+  },
+  "head": "f1b1466b2645ec861c80bcb934db410ff544e6ca",
+  "post_failure_index_tree": "74692fd08916402abe110b193256862a46d5bed9",
+  "status": "M  BRIEF-603-REVERIFY.md\nMM RECEIPT-603-REVERIFY.md\nMM STOPPED-603-REVERIFY.md\nA  docs/evidence/603-reverify/r5/FAILED.json\nA  docs/evidence/603-reverify/r5/docs-commit-readback.json\nA  docs/evidence/603-reverify/r5/docs-commit.command.json\nA  docs/evidence/603-reverify/r5/docs-commit.stderr.log\nA  docs/evidence/603-reverify/r5/docs-commit.stdout.log\nA  docs/evidence/603-reverify/r5/final-index-check.command.json\nA  docs/evidence/603-reverify/r5/final-index-check.stderr.log\nA  docs/evidence/603-reverify/r5/final-index-check.stdout.log\nA  docs/evidence/603-reverify/r5/independent-final-head-review.md\nA  docs/evidence/603-reverify/r5/pr-final-readback.json\nA  docs/evidence/603-reverify/r5/pr-head-edit.command.json\nA  docs/evidence/603-reverify/r5/pr-head-edit.stderr.log\nA  docs/evidence/603-reverify/r5/pr-head-edit.stdout.log\nA  docs/evidence/603-reverify/r5/remote-final-readback.command.json\nA  docs/evidence/603-reverify/r5/remote-final-readback.stderr.log\nA  docs/evidence/603-reverify/r5/remote-final-readback.stdout.log\nA  docs/evidence/603-reverify/r5/stopped-readback.json\nA  docs/evidence/603-reverify/r6/capture-command.py\nA  docs/evidence/603-reverify/r6/independent-prepublication-review.md\nA  docs/evidence/603-reverify/r6/initial-state.json\nA  docs/evidence/603-reverify/r6/new-pr-body.md\nA  docs/evidence/603-reverify/r6/new-pr-preflight.command.json\nA  docs/evidence/603-reverify/r6/old-pr-preflight.command.json\nA  docs/evidence/603-reverify/r6/preflight.json\nA  docs/evidence/603-reverify/r6/prior-RECEIPT-603-REVERIFY.md\nA  docs/evidence/603-reverify/r6/prior-STOPPED-603-REVERIFY.md\nA  docs/evidence/603-reverify/r6/remote-preflight.command.json\n?? docs/evidence/603-reverify/r6/FAILED.json\n?? docs/evidence/603-reverify/r6/independent-stop-review.md\n?? docs/evidence/603-reverify/r6/new-pr-final-readonly.command.json\n?? docs/evidence/603-reverify/r6/old-pr-final-readonly.command.json\n?? docs/evidence/603-reverify/r6/prepublication-cached-check.command.json\n?? docs/evidence/603-reverify/r6/remote-final-readonly.command.json\n",
+  "new_pr": null,
+  "old_pr": {
+    "baseRefName": "main",
+    "closedAt": null,
+    "headRefName": "ac-ctr-s4-runtime-prep",
+    "headRefOid": "815ac7c94b1775eec3aa57f19ca8a3842f592217",
+    "mergedAt": null,
+    "number": 603,
+    "state": "OPEN",
+    "url": "https://github.com/mayf3/dsh-agent-core/pull/603"
+  },
+  "r6_mutations": {
+    "commit": 0,
+    "push": 0,
+    "pr_create": 0,
+    "pr_comment": 0,
+    "pr_close": 0,
+    "merge": 0,
+    "production_write": 0
+  },
+  "required_gate_rc": 2,
+  "raw_r5_stderr_sha256": "a4e28b07a297c1b81e133e4578fced34747ced89694b8606c8bafa6314533ebd",
+  "root_receipt_sha256": "60e5d59f3fcdbea3fccb4d60994dede56e51707ae26fdd9b1a9b4ee4274193bf",
+  "root_stopped_sha256": "0d808fe70f40e631d7e95de7948329d7aa09ee98e9087f901dc6fb587a8adc55",
+  "next_action": "STOP"
+}

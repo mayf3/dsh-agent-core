@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-11-07T04:34:31.409040+00:00",
+  "branch_head": "91e224bc079f26cef285cba6da0872cb640ed330",
+  "source_files_unchanged_since_gates": true,
+  "gate_log_hashes_match": true,
+  "product_diff_sha256": "0648557ec25d8be06447fff0b29ff9af61bc234ab0fcaa5170fcc3f333c0b5ad",
+  "new_gate_count": 2,
+  "gate_results": {
+    "structure": 0,
+    "changed-runtime": 1
+  },
+  "receipt_sha256": "e0c593873630079e84f824e23f3a84fceefd11446e34deb38633aeb3712805ba"
+}

@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "canonicalOpsTarget": {
+    "channel": "feishu",
+    "to": "C7_NO_DELIVERY"
+  },
+  "ownerTargets": {},
+  "jobFailureTargets": {}
+}

@@ -1,0 +1,63 @@
+[
+  {
+    "name": "diff-check",
+    "argv": [
+      "/usr/bin/git",
+      "diff",
+      "--check"
+    ],
+    "rc": 0,
+    "utc": "2026-11-04T10:46:58.764065+00:00"
+  },
+  {
+    "name": "shell-syntax",
+    "argv": [
+      "/bin/bash",
+      "-n",
+      "scripts/fleet-window/window-executor-v5.sh"
+    ],
+    "rc": 0,
+    "utc": "2026-11-04T10:46:58.768129+00:00"
+  },
+  {
+    "name": "python-syntax",
+    "argv": [
+      "/usr/bin/python3",
+      "-B",
+      "-c",
+      "from pathlib import Path\nfor p in Path(\"scripts/fleet-window\").glob(\"*.py\"):\n compile(p.read_text(),str(p),\"exec\")\nprint(\"Python syntax PASS\")\n"
+    ],
+    "rc": 0,
+    "utc": "2026-11-04T10:46:58.838493+00:00"
+  },
+  {
+    "name": "recorder-syntax",
+    "argv": [
+      "/usr/local/v5-boot-isolation/assembled-root/node-runtime/bin/node",
+      "--check",
+      "--input-type=module"
+    ],
+    "rc": 0,
+    "utc": "2026-11-04T10:46:59.031792+00:00"
+  },
+  {
+    "name": "dry-run",
+    "argv": [
+      "/bin/bash",
+      "scripts/fleet-window/window-executor-v5.sh",
+      "--dry-run"
+    ],
+    "rc": 0,
+    "utc": "2026-11-04T10:46:59.038171+00:00"
+  },
+  {
+    "name": "selftest",
+    "argv": [
+      "/bin/bash",
+      "scripts/fleet-window/window-executor-v5.sh",
+      "--selftest"
+    ],
+    "rc": 0,
+    "utc": "2026-11-04T10:47:01.709817+00:00"
+  }
+]

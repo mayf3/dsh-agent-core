@@ -86,18 +86,40 @@ SEMANTIC_REVIEW_RECORD = persistent PR conversation or docs/reports/
 EMERGENCY / INCIDENT_REFERENCE = persistent issue, PR, or report
 ```
 
+## Current Owner-obligation Workflow authority
+
+The accepted paired governing authorities are `docs/specs/SVC_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2.md` in svc-workflow and `docs/specs/AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2.md` here, accepted by Root under user-delegated authority at reviewed semantic heads Svc `39587c33c8bcf26ad5689127f5c92a6abc8b562e` and Core `ac83fe5cea3701eb9436f74d1b5f6ed0013256a9`. The accepted Core whole successors are PPR V1 (whole successor to WAE V3 and Recovery Liveness V1), Assignee Transition Capability V3, WEC V4, GCR V2, WPO V4, and Owner Workflows V2. Assignee Transition Capability V2 is superseded by V3, and Owner Workflows V1 by V2, with reciprocal lifecycle links. The paired Svc acceptance-context successor is `SVC_WORKFLOW_ACCEPTANCE_CONTEXT_BINDING_V2`. Governing Contracts authorize source implementation only after their accepted revisions are present in the implementation base; production apply remains none. WEC V4 and the reciprocal WEC V3 retirement are recorded in the R4 #655 acceptance transaction; current-main activation requires its merge after independent final-HEAD review. Until then main's WEC V3 remains controlling.
+
 ## Code structure rules
 
-Binding repository-local rule: [`.agents/local/CODE_STRUCTURE_GUARDRAILS_V1.md`](CODE_STRUCTURE_GUARDRAILS_V1.md)
-(frozen file/directory/depth limits, legacy policy, exception registry, anti-evasion
-rules). Entry point for the rule:
+Accepted whole-authority successor:
+[`.agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md`](CODE_STRUCTURE_GUARDRAILS_V3.md)
+(Owner 2026-11-07, reviewed semantic head `7f36750bf08d308cd7f648153e24c0b0e528e4c6`,
+PR #642 comment-6701500077; `rulings[id=owner-20261107-642-643-1377]`). V3 inherits
+V2 completely and absorbs TE_V1's one exact transition with all constraints.
+V2 and TE_V1 are superseded with reciprocal links in the same lifecycle commit.
+This transaction activates only on main merge after independent final-HEAD review;
+until then, main's accepted predecessor authorities remain controlling.
+The historical V1-to-V2 link and all predecessor acceptance records are retained.
+
+The separate implementation contract remains
+[`CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1`](../../docs/specs/CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md).
+The existing runner still consumes the predecessor formats and requires V2
+ACCEPTED; it is not qualified for the retired Phase2/V3 authority state.
+Owner reserves verifier adaptation and #603 revalidation for separate tasks
+following main merge. No runner adaptation or product implementation occurs here.
 
 ```text
-RULE = .agents/local/CODE_STRUCTURE_GUARDRAILS_V1.md
+RULE = .agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md
 EXCEPTION_REGISTRY = .agents/structure-registry.json
 VERIFIER = node scripts/verify-code-structure.mjs --base <ref> --head <ref> [--json]
 NPM = npm run verify:structure
+V3_VERIFIER_QUALIFICATION = PENDING_SEPARATE_TASK
 ```
+
+The explicit rc.3 distribution update is accepted under adoption V3's unchanged
+Contracts; see its §14 and `RECEIPT-642-PHASE2.md` for exact lock/source/Owner
+coordinates. Accepted update status on this branch is not main activation.
 
 Raw logs may remain outside Git, but every load-bearing Observation or Evidence relation must retain enough provenance to retrieve and interpret the source.
 
@@ -303,3 +325,11 @@ Once `DONE_WHEN` is met and no valid `EXPANSION_TRIGGER` fired, stop. Do not con
 ```
 
 Local extensions may refine the vendored governance but may not silently weaken or contradict the pinned distribution. Updating the distribution requires a separate docs-only adoption/update review.
+
+### R4 PPR dependency activation
+
+PR #657 records accepted/contracts/production-none PPR with WAE3 and Liveness1 simultaneously
+retired and reciprocal links. ASM's two-kind provenance, SRE's existing scoped-effect carrier,
+RBAH and WEC current pointers migrate without changing their historical bodies or product
+Contracts. This branch transaction activates only after #655 then #657 merge into main
+with independent final-HEAD review; main's existing predecessors control until then.

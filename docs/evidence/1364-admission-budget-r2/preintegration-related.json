@@ -1,0 +1,33 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "packages/workflow-execution/test/continuation.test.js",
+    "packages/workflow-execution/test/engine.test.js",
+    "packages/workflow-execution/test/ledger.test.js",
+    "packages/workflow-execution/test/execution-control.test.js",
+    "packages/workflow-execution/test/managed-obligation.test.js",
+    "packages/workflow-execution/test/owner-assistance-resume-engine.test.js",
+    "packages/workflow-execution/test/owner-assistance-resume.test.js",
+    "packages/workflow-execution/test/recovery.test.js",
+    "packages/workflow-execution/test/terminal-attempt-operations.test.js",
+    "packages/workflow-execution/test/shutdown-contract.test.js",
+    "packages/workflow-execution/test/runtime-ready-pagination.test.js",
+    "packages/workflow-execution/test/runtime-wiring.test.js",
+    "packages/workflow-execution/test/observation-cas/engine-races.test.js",
+    "packages/workflow-execution/test/observation-cas/ledger-identity.test.js",
+    "packages/workflow-execution/test/observation-cas/planned-reconciliation.test.js",
+    "packages/workflow-execution/test/observation-cas/process-race.test.js",
+    "packages/workflow-execution/test/observation-cas/readback-restart.test.js",
+    "packages/workflow-execution/test/observation-cas/readback.test.js",
+    "packages/workflow-execution/test/observation-cas/stale-guards.test.js",
+    "packages/workflow-execution/test/observation-cas/stale-reentry.test.js"
+  ],
+  "shell_display": "node --test packages/workflow-execution/test/continuation.test.js packages/workflow-execution/test/engine.test.js packages/workflow-execution/test/ledger.test.js packages/workflow-execution/test/execution-control.test.js packages/workflow-execution/test/managed-obligation.test.js packages/workflow-execution/test/owner-assistance-resume-engine.test.js packages/workflow-execution/test/owner-assistance-resume.test.js packages/workflow-execution/test/recovery.test.js packages/workflow-execution/test/terminal-attempt-operations.test.js packages/workflow-execution/test/shutdown-contract.test.js packages/workflow-execution/test/runtime-ready-pagination.test.js packages/workflow-execution/test/runtime-wiring.test.js packages/workflow-execution/test/observation-cas/engine-races.test.js packages/workflow-execution/test/observation-cas/ledger-identity.test.js packages/workflow-execution/test/observation-cas/planned-reconciliation.test.js packages/workflow-execution/test/observation-cas/process-race.test.js packages/workflow-execution/test/observation-cas/readback-restart.test.js packages/workflow-execution/test/observation-cas/readback.test.js packages/workflow-execution/test/observation-cas/stale-guards.test.js packages/workflow-execution/test/observation-cas/stale-reentry.test.js",
+  "started_at": "2026-11-07T08:58:36.945193+00:00",
+  "finished_at": "2026-11-07T08:59:05.733160+00:00",
+  "rc": 0,
+  "sha256": "7432d4c037fa380e22a8bab2cd6961c4f5797c946c9b9a5ad5e928b6ecbe3400",
+  "head": "3c1bcf98bc40a2c34cca24f241c87d1b12cea216",
+  "diff_sha256": "71620289721eb183e78b384e52e16bd862af0387ec616f82768581daa3483216"
+}

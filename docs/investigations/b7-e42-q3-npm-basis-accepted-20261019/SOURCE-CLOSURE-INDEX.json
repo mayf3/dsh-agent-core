@@ -1,0 +1,42 @@
+{
+  "kind": "E42_Q3_UNCHANGED_NPM_BASIS_SOURCE_CLOSURE_V2",
+  "status": "PROPOSED_NOT_ACCEPTED",
+  "exact_unit": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/PROPOSED-E42-FIXED-NPM-MATERIALIZATION-BASIS-CONTRACT.v2.1.md",
+    "bytes": 11550,
+    "sha256": "6af696a123c79f814444c63139da8dcbfe6cdeafdfe458a4418da5c1399b4d88"
+  },
+  "canonical_refs": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-Q3-ORIGINAL-NPM-ALLOWANCE-CONDITION-DISPOSITION-20261019.json",
+      "bytes": 11891,
+      "sha256": "1bba850e288239cb87256c8bc7a5b979f838c9664fe52473407163df54e6f64a"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/PROPOSED-E42-Q3-FIXED-NPM-MATERIALIZATION-BASIS-SCOPE.v1.md",
+      "bytes": 6189,
+      "sha256": "8ab6d392d4c3481eff80de0f5bd4cd2920c9168ce1d8d2b776e658985ad41246"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-Q3-NPM-ALLOWANCE-CONDITION-MATRIX-SOL-20261019.json",
+      "bytes": 10842,
+      "sha256": "77d89cf9816888c4c81d0a1321074a2c1e2c540526a04a25ff08cb3451917e3a"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-PUBLIC-PROVIDER-ENV-GUARD-ORIGINAL-TECHNICAL-DIRECTION-20261019.json",
+      "bytes": 21859,
+      "sha256": "3e6e0b238b86c3a7b355a330d195daa8453a1d8db2f606f5afef949f67fdb01f"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-copyset-capacity-facts-contract/delivery-v6/v50_e42_capacity_facts_source.py",
+      "bytes": 24138,
+      "sha256": "b86ba8b820de4b9a1f769710f9303a54bda2bf3c962614021d2b8faf7fcd7af7"
+    }
+  ],
+  "primary_source_scope": "Original dd96 finite caller spans and five npm primary pins retained by source matrix77d89; no new native/source/production reads.",
+  "source_delta": [],
+  "proposed_runtime_producers": [],
+  "held_current_condition": "UNPROVEN",
+  "new_effects_executed": 0,
+  "delta": "Only clarify original fully charged six-call conservative route; skip proof only if its credit or proof exemption is used. Original v2 preserved."
+}

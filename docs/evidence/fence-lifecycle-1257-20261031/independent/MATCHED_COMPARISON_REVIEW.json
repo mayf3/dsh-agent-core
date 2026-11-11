@@ -1,0 +1,42 @@
+{
+  "reviewed_at_utc": "2026-10-31T08:17:59.234020+00:00",
+  "source_head": "38b705a6b2cdd62969bef18b31e69ab974bbc261",
+  "result": "PASS_MATCHED_BASELINE_EQUIVALENCE_WITH_TWO_EXPLICIT_BEHAVIOR_UPDATES",
+  "baselineCounts": {
+    "tests": 3156,
+    "suites": 12,
+    "pass": 2961,
+    "fail": 157,
+    "cancelled": 0,
+    "skipped": 38,
+    "todo": 0
+  },
+  "candidateCounts": {
+    "tests": 3232,
+    "suites": 12,
+    "pass": 3037,
+    "fail": 157,
+    "cancelled": 0,
+    "skipped": 38,
+    "todo": 0
+  },
+  "failureNameMultisetsEqual": true,
+  "failureEntriesEach": 157,
+  "addedDefinitions": 78,
+  "removedDefinitions": [
+    "A4: emergency restart (acceptUndrainedRestart) proceeds ONLY with a restart-boundary receipt",
+    "legacy callers without census paths are unarmed: restart behaves exactly as before"
+  ],
+  "netAddedDefinitions": 76,
+  "allRemovedDefinitionsMapped": true,
+  "mappingReview": "Source diff preserves emergency boundary receipt assertions while requiring no bootstrap/INSTALLED receipt absent exact old-generation exit proof; legacy-unarmed test now deletes both census paths and proves zero bootout/no install receipt before proof refusal. Both changes exercise the intended required exit-proof gate rather than delete coverage.",
+  "baselineTapSha256": "8ab632d89e22f4b98cd6420d976dc915145bd3927547bd93ec2375af26ffcac7",
+  "candidateTapSha256": "8e12b67359fc78a72b35de14e1daaf15197cf8648976a05853a14ece734355f2",
+  "pgStatus": {
+    "rc": 3,
+    "stdout": "pg_ctl: no server running",
+    "pidFileExists": false
+  },
+  "fullSuiteStatus": "FAIL_WITH_SHARED_BASELINE_DEBT",
+  "productionAcceptance": "NOT_EXECUTED"
+}

@@ -1,0 +1,24 @@
+✔ 1367 traces: invalid_json is reported without event-file repair (44.841166ms)
+ℹ {"surface":"traces","kind":"invalid_json","before":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","after":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","calls":{"mutate":0,"repair":0,"load":1,"lock":1,"append":0}}
+✔ 1367 attention: invalid_json is reported without event-file repair (42.262333ms)
+ℹ {"surface":"attention","kind":"invalid_json","before":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","after":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","calls":{"mutate":0,"repair":0,"load":1,"lock":1,"append":0}}
+✔ 1367 traces: missing_newline is reported without event-file repair (41.847417ms)
+ℹ {"surface":"traces","kind":"missing_newline","before":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","after":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","calls":{"mutate":0,"repair":0,"load":1,"lock":1,"append":0}}
+✔ 1367 attention: missing_newline is reported without event-file repair (57.042625ms)
+ℹ {"surface":"attention","kind":"missing_newline","before":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","after":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","calls":{"mutate":0,"repair":0,"load":1,"lock":1,"append":0}}
+✔ 1367 fresh-reader family: no mutate/repair, current cross-instance prefix, absent file stays absent (105.832208ms)
+✔ 1367 real mutation still repairs invalid_json under the existing lock (45.01425ms)
+✔ 1367 real mutation still repairs missing_newline under the existing lock (57.085458ms)
+✔ 1367 non-tail corruption remains fail-loud and unchanged (37.190958ms)
+✔ 1367 no-work reconciliation shares four candidate scans: six total replays become three (65.611417ms)
+ℹ {"source":"2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648+R2-working-diff","calls":{"mutate":0,"repair":0,"load":3,"lock":3,"append":0},"examined":0}
+✔ 1367 candidate refresh retains same-pass ACTIVE to terminal stale processing (87.853125ms)
+✔ 1367 tail qualification belongs to the current read and healthy diagnostic shapes stay unchanged (77.978ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 726.189375

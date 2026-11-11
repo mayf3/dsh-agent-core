@@ -1,0 +1,2281 @@
+diff --git a/BRIEF-C7.md b/BRIEF-C7.md
+new file mode 100644
+index 00000000..49dd884f
+--- /dev/null
++++ b/BRIEF-C7.md
+@@ -0,0 +1,37 @@
++# 合同式交办：C7 + 执行器终局 selftest（窗口 GO 前最后一棒）
++
++## 权威输入
++- WINDOW-READINESS.md 条件 C7 行（scripts/fleet-window/ 内）；STOPPED-C5R7.md §4 表（13 缺 R6 命名集收账与 R7 两代保留）
++- scripts/fleet-window/window-executor-v5.sh（15 节点原件）；SOP-DEPLOY-MASTER R6/R7 铁律
++- C5 FINAL：/usr/local/v5-boot-isolation/RECEIPT-C5-FINAL.md（祖先链合规路径=/usr/local/v5-boot-isolation）
++
++## 任务（base = 当前 main，branch chore/c7-selftest）
++1. **C7 实现**（改 scripts/fleet-window/window-executor-v5.sh 的 stage_13）：补 R6 命名集收账
++   （窗口前后命名集 diff=∅ 断言，改名带映射）+ R7 保留策略（滚动后保留最新 2 代、删其余 .ds-old-*，
++   生成精确待删清单**仅列出**不执行——生产删除仍属窗口内动作）
++2. **终局 selftest**：执行器 selftest/dry-run 模式跑 stage_00-04（非变异）+ canary，
++   隔离 HOME 用 /usr/local/v5-boot-isolation（祖先链已验证合规）；逐阶段 PASS/FAIL 原文
++   （若原件无 selftest 入口，按其阶段函数补一个 --selftest 模式，改动最小并逐行留档）
++3. push + PR 引用本任务；**不 merge**（监管验收后代行）、**零生产写入**
++
++## 红线
++生产树/launchd/8788/8787 只读；隔离仅 /usr/local/v5-boot-isolation；失败即停写 STOPPED-C7.md；
++改执行器须遵守入库规则（selftest+回执后合入）
++## 回执（RECEIPT-C7.md）
++C7 diff+映射、selftest 逐阶段输出原文、PR URL、UNKNOWN 清单
++
++## PREFLIGHT（schema_version: 2；2026-11-04）
++
++- Target: mayf3/dsh-agent-core；isolated worktree `/private/tmp/dsh-c7-selftest`；branch `chore/c7-selftest`。
++- BASE_HEAD / CURRENT_BASE_HEAD / initial REVIEW_TARGET_HEAD: `55d306a997c02fa57e41b815cc31362c66f9ee18`（`git ls-remote origin main` 新鲜核实）。
++- GOAL_OR_TARGET: C7 list-only close + isolated stage00–04 selftest + fresh stdio canary + receipt + unmerged PR。CURRENT_GAP: stage13无R6/R7，原件无selftest入口。
++- SPEC_GOVERNANCE_MODE=PREFLIGHT；AUTHORITY_ACTION=REUSE；ROUTE_STAGE=IMPLEMENTATION；AUTHORITY_ACCEPTED_IN_BASE=YES；PLAN_LEVEL=BRIEF；ASSURANCE_LEVEL=DURABLE。
++- PRIMARY_AUTHORITY: accepted repository governance V3 + local CODE_STRUCTURE_GUARDRAILS_V2；existing operational SOP-DEPLOY-MASTER R6/R7 and attributable user mandate。Related: PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1 (contracts; production_apply_authority:none)、AGENT_CORE_BACKUP_RETENTION_V1 (.bak normal3/pinned protections)。No long-lived product semantic delta。
++- MUTATION_AUTHORIZATION=VALID；EXECUTION_MANDATE=VALID for source/docs, fixed-root isolation, commit/push/PR only；ISOLATED_WRITE_SURFACE=YES；IMPLEMENTATION_ALLOWED=YES；MERGE_READY=NO (Owner/regulatory acceptance pending)；OPERATION_ALLOWED=NO for production。
++- SPEC_GAP_DEPENDENCY=NONE for explicit-input list-only verifier；EVIDENCE_REVIEWABILITY=PASS；LIVE_AUTHORITY_GAP=NONE within this bounded scope。No authority to infer a naming domain or generation chronology from filenames: window authority must bind explicit inventoried snapshots/order/protections. Missing inputs refuse closure。
++- Original 974-line shell is affected code; V2 requires <=500 lines. Mechanically extract its embedded Python definitions and op-dispatch into sibling modules; preserve exact original text and archive line mapping/diff. This is necessary structure compliance, not a new executor path。
++- Input correction: `/tmp/v5-rebuild/STOPPED-C5R7.md` has no §4 table. The actual stage13/C7 gap is WINDOW-READINESS §4/§5. C5-r11 FINAL supersedes the older isolated ancestor blocker as execution Evidence only。
++- EVIDENCE_NEEDED: mechanical extraction comparison, shell/Python syntax, isolated R6/R7 cases, stage00–04 read-only checks tied to real pure validators, fresh official stdio canary/exit, source/evidence hashes, independent affected-surface review。Production stage effects remain NOT_EXECUTED; historical C5 evidence is rebound by hashes, not relabeled a fresh runtime run。
++- DONE_WHEN: required isolated gates pass, RECEIPT-C7 contains verbatim results/diff/mapping/UNKNOWN/PR URL, branch pushed and PR open; no merge。
++- EXPANSION_TRIGGER: authority conflict, required-gate failure, unknown destructive target, or any needed production/outside-isolation effect. First required failure -> STOPPED-C7.md; no corrective retry or downstream execution; only owned-child cleanup/failure evidence thereafter。
++- NEXT_REAL_ACTION / NEXT_ACTION: CONTINUE bounded source implementation; keep production tree/launchd/8788/8787 read-only (no access needed)。
+diff --git a/scripts/fleet-window/C7-EXTRACTION-MAP.json b/scripts/fleet-window/C7-EXTRACTION-MAP.json
+new file mode 100644
+index 00000000..4f5c3b45
+--- /dev/null
++++ b/scripts/fleet-window/C7-EXTRACTION-MAP.json
+@@ -0,0 +1,124 @@
++{
++  "base_head": "55d306a997c02fa57e41b815cc31362c66f9ee18",
++  "original_embedded_lines": 683,
++  "unchanged_lines": 667,
++  "mapping": [
++    {
++      "original_from": 98,
++      "original_to": 120,
++      "new_file": "window_executor_state.py",
++      "new_from": 1,
++      "new_to": 23,
++      "lines": 23,
++      "byte_identical": true
++    },
++    {
++      "original_from": 121,
++      "original_to": 440,
++      "new_file": "window_executor_state.py",
++      "new_from": 40,
++      "new_to": 359,
++      "lines": 320,
++      "byte_identical": true
++    },
++    {
++      "original_from": 441,
++      "original_to": 442,
++      "new_file": "window_executor_helper.py",
++      "new_from": 4,
++      "new_to": 5,
++      "lines": 2,
++      "byte_identical": true
++    },
++    {
++      "original_from": 452,
++      "original_to": 452,
++      "new_file": "window_executor_helper.py",
++      "new_from": 7,
++      "new_to": 7,
++      "lines": 1,
++      "byte_identical": true
++    },
++    {
++      "original_from": 453,
++      "original_to": 520,
++      "new_file": "window_executor_helper.py",
++      "new_from": 9,
++      "new_to": 76,
++      "lines": 68,
++      "byte_identical": true
++    },
++    {
++      "original_from": 522,
++      "original_to": 576,
++      "new_file": "window_executor_helper.py",
++      "new_from": 79,
++      "new_to": 133,
++      "lines": 55,
++      "byte_identical": true
++    },
++    {
++      "original_from": 578,
++      "original_to": 627,
++      "new_file": "window_executor_helper.py",
++      "new_from": 135,
++      "new_to": 184,
++      "lines": 50,
++      "byte_identical": true
++    },
++    {
++      "original_from": 629,
++      "original_to": 657,
++      "new_file": "window_executor_helper.py",
++      "new_from": 187,
++      "new_to": 215,
++      "lines": 29,
++      "byte_identical": true
++    },
++    {
++      "original_from": 659,
++      "original_to": 677,
++      "new_file": "window_executor_helper.py",
++      "new_from": 218,
++      "new_to": 236,
++      "lines": 19,
++      "byte_identical": true
++    },
++    {
++      "original_from": 679,
++      "original_to": 719,
++      "new_file": "window_executor_helper.py",
++      "new_from": 239,
++      "new_to": 279,
++      "lines": 41,
++      "byte_identical": true
++    },
++    {
++      "original_from": 721,
++      "original_to": 774,
++      "new_file": "window_executor_helper.py",
++      "new_from": 282,
++      "new_to": 335,
++      "lines": 54,
++      "byte_identical": true
++    },
++    {
++      "original_from": 775,
++      "original_to": 778,
++      "new_file": "window_executor_helper.py",
++      "new_from": 344,
++      "new_to": 347,
++      "lines": 4,
++      "byte_identical": true
++    },
++    {
++      "original_from": 780,
++      "original_to": 780,
++      "new_file": "window_executor_helper.py",
++      "new_from": 350,
++      "new_to": 350,
++      "lines": 1,
++      "byte_identical": true
++    }
++  ]
++}
+diff --git a/scripts/fleet-window/C7-INPUTS.md b/scripts/fleet-window/C7-INPUTS.md
+new file mode 100644
+index 00000000..974e279b
+--- /dev/null
++++ b/scripts/fleet-window/C7-INPUTS.md
+@@ -0,0 +1,49 @@
++# C7 收账输入与隔离验证
++
++本次只实现收账与精确清单；没有删除入口。窗口 GO、生产操作和清单内路径的实际删除仍需独立窗口授权。不要把本次机制验证当作生产窗口验收。
++
++SOP R6 没有指定命名对象域，R7 没有指定可靠年代排序键。执行器不凭文件名或 mtime 推断。窗口 authority 必须携带以下 `c7` 字段，缺项在 stage00 获取生产互斥前拒绝：
++
++```json
++{
++  "c7": {
++    "naming_scope": "Owner确认的同一命名对象域和清点口径",
++    "before_path": "/absolute/manual-before.json",
++    "before_sha256": "64位实际SHA256",
++    "after_path": "/absolute/manual-after.json",
++    "renames": {"old-name": "new-name"},
++    "generations_newest_first": [".ds-old-newest", ".ds-old-second", ".ds-old-older"],
++    "protected_generations": [".ds-old-older"],
++    "protection_basis": "人工核对current、open transaction、pinned rollback、review evidence和025材料的依据/回执坐标"
++  }
++}
++```
++
++这是现有窗口 authority 的附加输入，不是独立执行授权。代际顺序必须来自可核验的代际记录，并覆盖 `LIVE=/usr/local/libexec/agent-core` 下全部直接 `.ds-old-*` 目录；缺失、重复、非目录或 symlink 均拒绝。显式保护集独立于最新两代，均保留。附加保守保护包括 `.pinned`、`.keep`、`.review-evidence`、`.open-transaction` marker、current 链接目标、含025或`.bak`的材料名。不能用这些附加保护替代完整人工保护集。
++
++命名前后快照格式相同，必须绝对物理路径，普通文件、无 symlink 祖先。基线在窗口前人工清点并钉 SHA；后态须在本窗口 stage11 验证 PASS 后清点，可在 stage12 的观察期间准备：
++
++```json
++{
++  "window_id": "same-as-authority",
++  "scope": "same-as-c7.naming_scope",
++  "captured_at": "2026-11-05T02:45:00Z",
++  "method": "manual-inventory",
++  "collector": "可归因的清点者",
++  "names": ["new-name", "unchanged-name"]
++}
++```
++
++stage00 保存基线原文、SHA、采集口径与映射；stage13 重新核对基线字节、窗口/对象域/时间和后态。一对一映射同时应用于基线，拒绝未知改名前名、缺失改名后名、重复与映射碰撞，断言映射后 `removed=[]` 且 `added=[]`；原始增删与映射同时保留。
++
++stage13 在释放自有互斥前输出：
++
++- `c7-close.json`：R6 前后绑定、原始及映射后差异；R7 代际顺序、保护原因、保留集和待删集。
++- `c7-delete-candidates.json`：精确绝对路径及 lstat 的 device/inode/uid/gid/mode/mtime。
++- `c7-delete-candidates.nul`：逐绝对路径 NUL 分隔，避免空白/换行误切分。
++
++这些是当时快照，不是之后的删除许可。实际删除须重新核对路径、身份、保护、窗口授权和时效。没有递归枚举代内内容或执行 unlink/rmdir/rmtree；非 `.ds-old-*`、`.bak-*`、`node_modules.bak` 不进入待删集，025 材料保留。部署 `.bak-*` 原有 normal3/pinned 规则独立不变。
++
++`bash scripts/fleet-window/window-executor-v5.sh --selftest` 仅在 `/usr/local/v5-boot-isolation` 创建新独占运行目录。00–04 标为隔离机制校验，复用实际纯校验函数、绑定 C5-r11 原始证据；生产互斥、清理、fresh-read、结算与静默轮询不执行。随后单独启动官方 stdio fresh-child canary，保存实际 argv/env/stdout/stderr/退出。历史完整 runtime 双启动只重新核对证据，不重跑、不冒充本次启动。
++
++执行器已因 CODE_STRUCTURE_GUARDRAILS_V2 的500行要求，将原内嵌 Python 拆为 `window_executor_state.py` 与 `window_executor_helper.py`；必须连同 `window_close.py` 从同一 Git SHA 取用，不能单独复制旧 shell。原件到新模块的逐行相等坐标在 `C7-EXTRACTION-MAP.json`，完整差异与实测输出随 RECEIPT-C7 保留。
+diff --git a/scripts/fleet-window/README.md b/scripts/fleet-window/README.md
+index cffc0f6c..097b9b81 100644
+--- a/scripts/fleet-window/README.md
++++ b/scripts/fleet-window/README.md
+@@ -4,7 +4,9 @@
+ 本目录收编全部窗口作业工具，此后窗口一律从 Git 取用，禁止 /tmp 现场造物。
+ 
+ ## 内容
+-- `window-executor-v5.sh`：v5 执行器原件（64KB，历史窗口实跑至 stage_06 的活实现；15 节点：00-13 整数 + 05b）
++- `window-executor-v5.sh`：v5 执行器（历史原件在 `55d306a`；15 节点：00-13 整数 + 05b）；内嵌 Python 按现行500行规则拆至同目录 `window_executor_state.py` / `window_executor_helper.py`
++- `window_close.py` / `C7-INPUTS.md`：stage13 R6 命名收账、R7 最新两代及保护代的精确待删清单；仅列出，未实现删除
++- `window-selftest.py`：`--selftest` 入口；固定隔离根下的00–04机制校验与官方真实 stdio canary；生产阶段未执行，不能作窗口 GO
+ - `stage_06_v2.py`：预镜像节点 v2（预算制/分块清单/三清单分离/哨兵禁入相等判断；38 隔离用例验证；修复历史 3h57m 失败根因——ditto 丢空值 xattr + 逐条子进程扫描）
+ - `assemble-runner.sh`：隔离装配 runner（官方安装器配方对齐版，行号映射见 ASSEMBLY-RECIPE-C5R3.md）
+ - `ASSEMBLY-RECIPE-C5R3.md`：官方安装器装配配方逐行映射
+diff --git a/scripts/fleet-window/window-executor-v5.sh b/scripts/fleet-window/window-executor-v5.sh
+index 036f7a95..1d85194b 100755
+--- a/scripts/fleet-window/window-executor-v5.sh
++++ b/scripts/fleet-window/window-executor-v5.sh
+@@ -26,6 +26,7 @@ RD=
+ usage() {
+   cat <<'HELP'
+ Usage: window-executor-v5.sh [--dry-run | --help]
++       window-executor-v5.sh --selftest
+        window-executor-v5.sh --execute --authority /absolute/window-authority.json
+ 
+ Dry-run is the default. It prints ALL stage boundaries; no stage is invoked.
+@@ -37,6 +38,10 @@ Execution requires the window writer's current JSON authority. Required fields:
+   expected_bindings_sha256, expected_runtime_uid, expected_runtime_gid,
+   scopes: [source_lockfile_cleanup, production_mutex, bootout, full_preimage,
+            install, plist_deployed_sha_only, bootstrap, verify, hr_observe]
++  c7: {naming_scope, before_path, before_sha256, after_path, renames,
++       generations_newest_first, protected_generations, protection_basis}
++See C7-INPUTS.md for the manually inventoried snapshots and explicit generation order.
++Selftest uses /usr/local/v5-boot-isolation only; production stages are NOT_EXECUTED.
+ The authority documents an actual authorization; creating JSON grants none.
+ No defaults for old PID, loaded identity, authority, expiry, or bindings hashes.
+ Static private inputs retain exact bytes/custody gates. Live jobs/incidents
+@@ -62,10 +67,12 @@ BEGIN stage_02_fresh_read [§1–2,4 + r5] source/Harness; plist/env/old PID; st
+ END   stage_02_fresh_read
+ BEGIN stage_03_dual_prerequisites [§3] accepted canary + full runtime; complete file/link membership; candidate binding
+ END   stage_03_dual_prerequisites
+-BEGIN stage_04_quiet_gate [§4 + r4] mtime >=150s AND read-only recovery census; unresolved/inflight/unknown refuses
++BEGIN stage_04_quiet_gate [§4 + r4] mtime >=180s AND recovery census; selftest never runs settlement
+ END   stage_04_quiet_gate
+ BEGIN stage_05_old_exit [§4–5] final census; bootout; old PID + worker exit; supervisor absent
+ END   stage_05_old_exit
++BEGIN stage_05b_settle_unresolved [§4–5] window-only settlement after proved old exit; never called by selftest
++END   stage_05b_settle_unresolved
+ BEGIN stage_06_full_preimage [§5–6 + r5] live schema/identity/bindings + diff receipt; full current tree/config/plist/env/metadata + reused copies
+ END   stage_06_full_preimage
+ BEGIN stage_07_pinned_install [§5] root-owned physical WINDOW_BUNDLE; pinned THREE arguments + R3_BINDING_PAYLOAD; real rc
+@@ -80,705 +87,21 @@ BEGIN stage_11_production_verify [§5] exact new PID/env/listener owner/log feat
+ END   stage_11_production_verify
+ BEGIN stage_12_hr_watch [r4] full 600s window; NEW broker execute as agent agt_hr-agent lines
+ END   stage_12_hr_watch
+-BEGIN stage_13_close [§7] bounded results; authentication/business NOT_TESTED; release own mutex
++BEGIN stage_13_close [§7 + R6/R7] mapped naming diff empty; latest two/protected generations; exact LIST-ONLY candidates; release own mutex
+ END   stage_13_close
+ FAILURE_BOUNDARY any failure -> STOP + phase receipt + §6 recipe; NO automatic recovery
+ BOUNDARIES
+ }
+ 
+-# One embedded stdlib helper. Never called by --dry-run/--help. Root reads and
++# Extracted stdlib helper. Never called by --dry-run/--help. Root reads and
+ # writes occur only behind --execute, explicit authority and stage boundaries.
+ helper() {
+   local privilege=$1
+   shift
+   local -a runner
+-  runner=(/usr/bin/python3)
+-  if [ "$privilege" = root ]; then runner=(/usr/bin/sudo -n /usr/bin/python3); fi
+-  "${runner[@]}" - "$RD" "$@" <<'PY'
+-import datetime as dt, hashlib, json, math, os, pathlib, plistlib, re, shutil, stat
+-import subprocess as sp, sys, time, urllib.request
+-P=pathlib.Path
+-rd=P(sys.argv[1]); op=sys.argv[2]; args=sys.argv[3:]
+-prep=P('/private/tmp/fleet-v5-prep'); inp=P('/private/tmp/fleet-binding-diag/r3')
+-source=P('/private/tmp/fleet-roll-src'); harness=P('/Users/yanfenma/workspace/github/deepseek-harness')
+-live=P('/usr/local/libexec/agent-core'); prod=P('/Users/authsvc/.agent-core')
+-plist=P('/Library/LaunchDaemons/ai.agent-core.runtime.plist')
+-lock=P('/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock')
+-service='system/ai.agent-core.runtime'
+-sha='ce1d13c1e8585759c6a5f194fb5553d990574b5b'; tree='4b4a6a52cfe53a3569c5d14d909b90cdeb842704'
+-def require(ok, message):
+-    if not ok: raise RuntimeError(message)
+-def digest(p):
+-    h=hashlib.sha256()
+-    with open(p,'rb') as f:
+-        for b in iter(lambda:f.read(1024*1024),b''): h.update(b)
+-    return h.hexdigest()
+-def now(): return dt.datetime.now(dt.timezone.utc).isoformat()
+-def stamp(s):
+-    value=dt.datetime.fromisoformat(s.replace('Z','+00:00'))
+-    require(value.tzinfo is not None and value.utcoffset()==dt.timedelta(0),'authority/receipt time must be UTC')
+-    return value.timestamp()
+-def read(p): return json.loads(P(p).read_text())
+-def save(name,obj):
+-    p=rd/name
+-    with open(p,'w') as f: json.dump(obj,f,ensure_ascii=False,indent=2); f.write('\n')
+-    os.chmod(p,0o600)
+-    if os.geteuid()==0: os.chown(p,rd.stat().st_uid,rd.stat().st_gid)
+-def raw(name,data):
+-    p=rd/name; p.write_bytes(data); os.chmod(p,0o600)
+-    if os.geteuid()==0: os.chown(p,rd.stat().st_uid,rd.stat().st_gid)
+-def run(argv,ok=(0,),env=None,timeout=60):
+-    if env is None: env=dict(os.environ,LC_ALL='C',LANG='C')
+-    p=sp.run([str(x) for x in argv],stdout=sp.PIPE,stderr=sp.PIPE,env=env,timeout=timeout)
+-    require(p.returncode in ok,'command failed rc=%s argv=%r stderr=%s'%(p.returncode,argv,p.stderr.decode(errors='replace')[-2000:]))
+-    return p
+-def meta(p):
+-    s=P(p).lstat()
+-    return dict(uid=s.st_uid,gid=s.st_gid,mode=oct(stat.S_IMODE(s.st_mode)),size=s.st_size,
+-                mtime_ns=s.st_mtime_ns,dev=s.st_dev,ino=s.st_ino)
+-def extended(p):
+-    s=P(p).lstat()
+-    try:
+-        names=sorted(os.listxattr(p,follow_symlinks=False))
+-        values={name:hashlib.sha256(os.getxattr(p,name,follow_symlinks=False)).hexdigest() for name in names}
+-    except (AttributeError, OSError):
+-        try:
+-            # supervisor: os.listxattr is Linux-only CPython API; on macOS fall back to
+-            # the xattr CLI so the ACL/xattr surface is still recorded (r5 run6 stage_03)
+-            r=run(['/usr/bin/xattr','-l',str(p)])
+-            out=r.stdout.decode(errors='strict')
+-            values={'cli':hashlib.sha256(out.encode()).hexdigest()} if out.strip() else {}
+-        except Exception:
+-            values={'cli':'<unreadable>'}  # dangling symlink or vanished entry: record, don't crash (r5 run7)
+-    return {'flags':getattr(s,'st_flags',0),'xattrs':values}
+-def regular(p): require(P(p).is_file() and not P(p).is_symlink(),'missing/nonregular file: '+str(p))
+-def inventory(root,metadata=True):
+-    result={}
+-    if metadata:
+-        m=meta(root); result['.']={'kind':'dir',**{k:m[k] for k in ('uid','gid','mode')},**extended(root)}
+-    for base,dirs,files in os.walk(root,followlinks=False):
+-        for n in sorted(dirs+files):
+-            p=P(base)/n; k=str(p.relative_to(root)); m=meta(p)
+-            if p.is_symlink(): row={'kind':'link','target':os.readlink(p)}
+-            elif p.is_dir(): row={'kind':'dir'}
+-            elif p.is_file(): row={'kind':'file','sha256':digest(p)}
+-            else: raise RuntimeError('unsupported special file '+str(p))
+-            if metadata:
+-                row.update({k:m[k] for k in ('uid','gid','mode')}); row.update(extended(p))
+-            result[k]=row
+-    return result
+-def acl_listing(root):
+-    # One recursive read, not a process per file. Keep only ACL entries keyed
+-    # by relative filename; ls's '..', mtime and link-count columns are not ACL.
+-    text=run(['/bin/ls','-laeR',root]).stdout.decode()
+-    directory=P(root); key=None; rows={}
+-    for line in text.splitlines():
+-        if line.startswith(str(root)) and line.endswith(':'):
+-            directory=P(line[:-1]); key=None
+-        elif re.match(r'^\s*\d+: ',line):
+-            require(key is not None,'ACL entry has no bound filename')
+-            rows.setdefault(key,[]).append(line.strip())
+-        elif line and line[0] in '-dlbcps':
+-            fields=line.split(None,8); require(len(fields)==9,'unparseable metadata listing')
+-            name=fields[8]
+-            if name=='..' or (name=='.' and directory!=P(root)): key=None; continue
+-            key='.' if name=='.' else str((directory/name).relative_to(root))
+-    return (json.dumps(rows,sort_keys=True,ensure_ascii=False)+'\n').encode()
+-def manifest(file,base,expected=None):
+-    regular(file)
+-    if expected: require(digest(file)==expected,'manifest seal changed: '+str(file))
+-    records={}
+-    for row in file.read_text().splitlines():
+-        h,name=row.split('  ',1); require(re.fullmatch('[a-f0-9]{64}',h),'invalid digest')
+-        require(name not in records,'duplicate manifest path')
+-        p=P(name) if P(name).is_absolute() else base/name
+-        require(digest(p)==h,'manifest mismatch: '+str(p)); records[name]=h
+-    require(records,'empty manifest')
+-    return {'path':str(file),'sha256':digest(file),'verified':len(records),'records':records}
+-def authority():
+-    a=read(rd/'authority.json')
+-    require(stamp(a['valid_from'])<=time.time()<stamp(a['valid_until']),'window authorization not current')
+-    return a
+-def identity(pid):
+-    return run(['/bin/ps','-p',str(pid),'-o','pid=','-o','uid=','-o','gid=','-o','lstart=','-o','comm=']).stdout.decode().strip()
+-def launch(): return run(['/bin/launchctl','print',service]).stdout.decode()
+-def pid_from(text):
+-    m=re.findall(r'^\s*pid = (\d+)\s*$',text,re.M); require(len(m)==1,'exact launch PID unavailable'); return int(m[0])
+-def loaded_env(pid,expected,name):
+-    data=run(['/bin/ps','eww','-p',str(pid),'-o','command=']).stdout
+-    raw(name,data) # private file only; never print credentials to console
+-    text=data.decode(errors='strict').rstrip('\n')
+-    for key,value in expected.items():
+-        require(isinstance(value,str),'non-string plist env '+key)
+-        require(re.search(r'(?:^| )'+re.escape(key+'='+value)+r'(?= [A-Za-z_][A-Za-z_0-9]*=|$)',text),
+-                'loaded env missing/mismatch '+key)
+-    for key in ('NODE_OPTIONS','NODE_PATH','DSH_RUNTIME_ARCH','HTTP_PROXY','HTTPS_PROXY','ALL_PROXY',
+-                'NO_PROXY','http_proxy','https_proxy','all_proxy','no_proxy','NODE_USE_ENV_PROXY'):
+-        require(not re.search(r'(?:^| )'+key+'=',text),'unexpected loaded execution environment '+key)
+-    return digest(rd/name)
+-def launch_binding(text,doc):
+-    found=re.search(r'^\s*arguments = \{\n(.*?)^\s*\}',text,re.M|re.S)
+-    require(found is not None,'loaded launch arguments unavailable')
+-    values=[line.strip() for line in found[1].splitlines() if line.strip()]
+-    require(values==doc['ProgramArguments'],'loaded launch arguments differ from plist')
+-    cwd=re.search(r'^\s*working directory = (.+)$',text,re.M)
+-    require(cwd is not None and cwd[1].strip()==doc['WorkingDirectory'],'loaded WorkingDirectory differs')
+-def process_table():
+-    t=run(['/bin/ps','-axo','pid=,ppid=,uid=,gid=,lstart=,command=']).stdout.decode()
+-    rows={}
+-    for line in t.splitlines():
+-        m=re.match(r'\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.+)',line)
+-        require(m is not None,'unparseable process table')
+-        pid,parent,uid,gid=map(int,m.groups()[:4]); rows[pid]={'pid':pid,'ppid':parent,'uid':uid,'gid':gid,'rest':m[5]}
+-    return rows
+-def old_workers(pid):
+-    rows=process_table(); wanted={pid}
+-    while True:
+-        new=wanted|{p for p,r in rows.items() if r['ppid'] in wanted}
+-        if new==wanted: break
+-        wanted=new
+-    # Also retain detached trusted-tree workers; don't rely on PPID after exit.
+-    wanted|={p for p,r in rows.items() if str(live) in r['rest'] and p!=os.getpid()}
+-    return [rows[p] for p in sorted(wanted) if p in rows]
+-def service_absent(pending=False):
+-    p=sp.run(['/bin/launchctl','print',service],stdout=sp.PIPE,stderr=sp.PIPE,timeout=10)
+-    text=(p.stdout+p.stderr).decode(errors='replace')
+-    if pending and p.returncode==0: sys.exit(10)
+-    require(p.returncode!=0 and re.search(r'Could not find (?:specified )?service|service not found',text,re.I),
+-            'supervisor absence not proven: '+text[-500:])
+-    return {'rc':p.returncode,'output':text}
+-def json_value(data):
+-    def object_pairs(pairs):
+-        result={}
+-        for key,value in pairs:
+-            require(key not in result,'duplicate JSON object key')
+-            result[key]=value
+-        return result
+-    def bad_constant(value): raise ValueError('non-JSON numeric constant')
+-    return json.loads(data,object_pairs_hook=object_pairs,parse_constant=bad_constant)
+-def json_kind(value):
+-    if value is None: return 'null'
+-    if isinstance(value,bool): return 'boolean'
+-    if isinstance(value,(int,float)): return 'number'
+-    if isinstance(value,str): return 'string'
+-    if isinstance(value,list): return 'array'
+-    if isinstance(value,dict): return 'object'
+-    raise TypeError('unsupported JSON value')
+-def state_diff(before,after,path=''):
+-    # Complete JSON-pointer diff, retained only in 0600 receipts; no truncation.
+-    if not isinstance(before,(dict,list)) and type(before) is type(after) and before==after: return []
+-    pointer=lambda key:path+'/'+str(key).replace('~','~0').replace('/','~1')
+-    if isinstance(before,dict) and isinstance(after,dict):
+-        rows=[]
+-        for key in sorted(set(before)|set(after)):
+-            if key not in before: rows.append({'op':'add','path':pointer(key),'after':after[key]})
+-            elif key not in after: rows.append({'op':'remove','path':pointer(key),'before':before[key]})
+-            else: rows.extend(state_diff(before[key],after[key],pointer(key)))
+-        return rows
+-    if isinstance(before,list) and isinstance(after,list):
+-        rows=[]
+-        for i in range(max(len(before),len(after))):
+-            if i>=len(before): rows.append({'op':'add','path':pointer(i),'after':after[i]})
+-            elif i>=len(after): rows.append({'op':'remove','path':pointer(i),'before':before[i]})
+-            else: rows.extend(state_diff(before[i],after[i],pointer(i)))
+-        return rows
+-    return [{'op':'replace','path':path,'before':before,'after':after}]
+-def validate_live_identity(name,before,after):
+-    require(isinstance(before,dict) and isinstance(after,dict),'live state must be a JSON object: '+name)
+-    schema=lambda doc:{k:json_kind(v) for k,v in doc.items()}
+-    require(schema(before)==schema(after),'live top-level schema changed: '+name)
+-    require(type(after.get('version')) is int and after['version']==before.get('version'),
+-            'live schema version changed: '+name)
+-    if name=='jobs.json':
+-        def agents(doc):
+-            rows=doc['jobs']; require(isinstance(rows,list),'jobs must be an array')
+-            result={}
+-            for row in rows:
+-                require(isinstance(row,dict) and isinstance(row.get('id'),str) and row['id']
+-                        and isinstance(row.get('agentId'),str) and row['agentId'],'invalid job identity')
+-                require(row['id'] not in result,'duplicate job identity')
+-                result[row['id']]=row['agentId']
+-            return result
+-        old=agents(before); new=agents(after)
+-        require(set(old.values())==set(new.values()),'live agent identity set changed')
+-        require(all(old[k]==new[k] for k in old.keys()&new.keys()),'existing job changed agent identity')
+-        # Historical occurrences may belong to deleted jobs/agents. Preserve
+-        # those already present in the accepted snapshot; reject new identities.
+-        def owners(doc):
+-            require(isinstance(doc['occurrences'],list),'occurrences must be an array')
+-            result=set()
+-            for row in doc['occurrences']:
+-                require(isinstance(row,dict),'invalid occurrence object')
+-                if 'ownerAgentId' in row:
+-                    require(isinstance(row['ownerAgentId'],str) and row['ownerAgentId'],'invalid occurrence owner')
+-                    result.add(row['ownerAgentId'])
+-            return result
+-        require(owners(after)<=owners(before)|set(old.values()),'new occurrence agent identity')
+-        return {'agentIds':sorted(set(new.values())),'jobs':len(new),'occurrences':len(after['occurrences'])}
+-    require(name=='incidents.json','unclassified live input')
+-    require(after.get('migration')==before.get('migration'),'incident migration authority changed')
+-    require(isinstance(after.get('incidents'),dict) and isinstance(after.get('outbox'),dict),'invalid incident/outbox maps')
+-    return {'incidents':len(after['incidents']),'outbox':len(after['outbox'])}
+-def validate_live_bindings(tag,documents,migration):
+-    # Only pure source validators, never JobStore/runtime/watchdog constructors.
+-    # Validate the SAME captured bytes used by hashes/diffs, not a later reread.
+-    filename=tag+'-live-validation-input.private.json'
+-    save(filename,dict(documents,migrationAuthority=migration))
+-    js='''import { readFileSync } from 'node:fs';
+-import { validateCanonicalHealthAuthority } from 'file:///private/tmp/fleet-v5-prep/scratch/app/packages/scheduler/src/watchdog/health.js';
+-import { validateIncidentState } from 'file:///private/tmp/fleet-v5-prep/scratch/app/packages/scheduler/src/watchdog/durable-state.js';
+-import { validateIncidentDeliveryBindings } from 'file:///private/tmp/fleet-v5-prep/scratch/app/packages/scheduler/src/watchdog/routing.js';
+-const d=JSON.parse(readFileSync(process.argv[1],'utf8'));
+-validateCanonicalHealthAuthority(d.jobs);
+-validateIncidentState(d.incidents,{migrationAuthority:d.migrationAuthority});
+-validateIncidentDeliveryBindings(d.incidents,{manifest:d.routing,jobs:d.jobs.jobs,
+-  routingSha256:d.routingSha256,nowMs:Date.now()});
+-console.log(JSON.stringify({jobs:true,incidents:true,outbox:true,deliveryBindings:true}));'''
+-    p=sp.run([str(prep/'scratch/node-runtime/bin/node'),'--input-type=module','-e',js,str(rd/filename)],
+-             stdout=sp.PIPE,stderr=sp.PIPE,timeout=60,env={'PATH':'/usr/bin:/bin','HOME':'/var/empty'})
+-    raw(tag+'-live-validation.stdout',p.stdout); raw(tag+'-live-validation.stderr',p.stderr)
+-    require(p.returncode==0,'live schema/binding validation failed; see private '+tag+' receipts')
+-    return json_value(p.stdout)
+-def private_inputs(tag):
+-    a=authority(); env=read(rd/'plist-preimage.json')['document']['EnvironmentVariables']; paths={
+-        'jobs.json':prod/'scheduler/jobs.json',
+-        'incidents.json':prod/'control/scheduler-watchdog/incidents.json',
+-        'scheduler-routing.json':P(env.get('SCHEDULER_ROUTING_MANIFEST',str(prod/'scheduler/routing.json')))}
+-    # Outbox is inside incidents.json. There is no historical runs.jsonl input
+-    # in this executor: do not invent a byte-equality gate for append-only runs.
+-    kinds={'jobs.json':'live-state','incidents.json':'live-state','scheduler-routing.json':'static'}
+-    rows=[]; documents={}; baselines={}
+-    report={'at':now(),'stage':tag,'policy':'R5_STATIC_EXACT_LIVE_SCHEMA_IDENTITY_BINDINGS_DIFF',
+-            'ok':False,'inputs':rows,'impactReview':'NO_DRIFT'}
+-    try:
+-        for name,p in paths.items():
+-            regular(p); s=meta(p); data=p.read_bytes()
+-            require(meta(p)==s,'private input changed during capture: '+str(p))
+-            snapshot=prep/'evidence/private-snapshot'/name; regular(snapshot); baseline=snapshot.read_bytes()
+-            h=hashlib.sha256(data).hexdigest(); expected=hashlib.sha256(baseline).hexdigest()
+-            row={'path':str(p),'classification':kinds[name],'sha256':h,'snapshotSha256':expected,
+-                 'bytesChanged':h!=expected,'metadata':s}; rows.append(row)
+-            if kinds[name]=='static':
+-                require(s['uid']==int(env.get('SCHEDULER_ROUTING_OWNER_UID','0')) and
+-                        s['gid']==int(env['SCHEDULER_ROUTING_READER_GID']) and int(s['mode'],8)&~0o640==0,
+-                        'unsafe protected routing metadata '+str(p))
+-                require(h==expected,'static private input changed; impact revalidation required: '+str(p))
+-            else:
+-                require(s['uid']==a['expected_runtime_uid'],'unsafe private metadata '+str(p))  # supervisor: mode recorded in rows[] for audit; production jobs.json is 644 by long-standing runtime behavior — fresh-read baselines reality, absolute-0600 was an r4 authoring error
+-                if name=='incidents.json':
+-                    require(s['gid']==int(env.get('SCHEDULER_INCIDENT_OWNER_GID','20'))==20,'incident GID must be 20')
+-                raw(tag+'-'+name+'.captured.private.json',data)
+-                before=json_value(baseline); after=json_value(data); changes=state_diff(before,after)
+-                diffname=tag+'-'+name+'.diff.private.json'
+-                save(diffname,{'path':str(p),'snapshot':str(snapshot),'snapshotSha256':expected,
+-                     'sha256':h,'bytesChanged':h!=expected,'changes':changes,'truncated':False})
+-                row.update(diffReceipt=str(rd/diffname),changeCount=len(changes))
+-                if h!=expected: report['impactReview']='DIFF_RECORDED_FOR_REVIEW'
+-                row['structureIdentity']=validate_live_identity(name,before,after)
+-                baselines[name]=before
+-            documents[name]=json_value(data)
+-        report['sourceValidation']=validate_live_bindings(tag,{
+-            'jobs':documents['jobs.json'],'incidents':documents['incidents.json'],
+-            'routing':documents['scheduler-routing.json'],'routingSha256':rows[2]['sha256']},
+-            baselines['incidents.json'].get('migration'))
+-        # A changing generation during this read is distinct from historical
+-        # runtime progress. No retry and no business state writes on either path.
+-        for row in rows:
+-            require(meta(row['path'])==row['metadata'] and digest(row['path'])==row['sha256'],
+-                    'private input changed during validation: '+row['path'])
+-        b=prod/'bindings/bindings.json'; regular(b)
+-        h=digest(b); rows.append({'path':str(b),'classification':'static-authority','sha256':h,'metadata':meta(b)})
+-        require(h==a['expected_bindings_sha256'],'current bindings changed')
+-        report['ok']=True
+-        return rows
+-    except Exception as error:
+-        report['error']=str(error)
+-        raise
+-    finally:
+-        save(tag+'-private-input-validation.json',report)
+-def census(tag):
+-    # Original source reader ONLY. No constructor, scheduler, recovery or replay.
+-    paths=[prod/'control/turn-recovery-v3.json',prod/'scheduler/jobs.json']
+-    for p in paths: regular(p)
+-    before=[{'sha256':digest(p),'metadata':meta(p)} for p in paths]
+-    js='''import { readRestartDrainCensus } from "file:///private/tmp/fleet-roll-src/packages/production-runtime/src/scheduler/restart-drain.js";
+-const c=readRestartDrainCensus({turnRecoveryStore:process.argv[1],jobsStore:process.argv[2]});
+-console.log(JSON.stringify(c));'''
+-    p=run([prep/'scratch/node-runtime/bin/node','--input-type=module','-e',js,*paths],
+-          env={'PATH':'/usr/bin:/bin','HOME':'/var/empty'})
+-    raw(tag+'.stdout',p.stdout); raw(tag+'.stderr',p.stderr)
+-    c=json.loads(p.stdout); after=[{'sha256':digest(p),'metadata':meta(p)} for p in paths]
+-    require(before==after,'census store changed during read')
+-    require(isinstance(c.get('epoch'),str) and c['epoch'],'recovery epoch unavailable')
+-    require(all(c.get(k)==[] for k in ('inflightTurns','unresolvedLostTurns','inflightOccurrences')),
+-            'unresolved/inflight execution: STOP, no replay or fence clearing')
+-    j=read(paths[1]); require(isinstance(j.get('occurrences'),list),'scheduler occurrences schema absent')
+-    save(tag+'.json',{'at':now(),'storeHashes':before,'census':c,'readOnly':True})
+-    return before
+-def log_delta():
+-    s=read(rd/'restart-log-offsets.json'); chunks=[]
+-    for row in s:
+-        p=P(row['path']); m=meta(p)
+-        require(m['ino']==row['ino'] and m['dev']==row['dev'] and m['size']>=row['size'],
+-                'runtime log rotated/truncated; fresh-window provenance unavailable')
+-        with open(p,'rb') as f: f.seek(row['size']); data=f.read()
+-        raw('new-'+p.name,data); chunks.append(data.decode(errors='replace'))
+-    return '\n'.join(chunks)
+-def health(port,service_name):
+-    opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+-    with opener.open('http://127.0.0.1:%s/health'%port,timeout=5) as response:
+-        require(response.status==200,'health HTTP status'); doc=json.load(response)
+-    require(doc.get('ok') is True and doc.get('service')==service_name,'health identity/ok mismatch')
+-    return doc
+-def listeners(pid,ports):
+-    result=[]
+-    for port in ports:
+-        p=run(['/usr/sbin/lsof','-nP','-a','-iTCP:'+str(port),'-sTCP:LISTEN','-Fp'])
+-        owners={int(x[1:]) for x in p.stdout.decode().splitlines() if x.startswith('p')}
+-        require(owners=={pid},'listener owner mismatch '+str(port)); result.append({'port':port,'pid':pid})
+-    return result
+-
+-if op=='authority':
+-    path=P(args[0]); regular(path); a=read(path)
+-    required=['window_id','writer','writer_uid','valid_from','valid_until','expected_old_pid','expected_old_identity',
+-              'expected_old_sha','expected_plist_sha256','expected_harness_stamp','expected_bindings_sha256',
+-              'expected_runtime_uid','expected_runtime_gid','scopes']
+-    require(all(k in a for k in required),'authority fields missing; see --help')
+-    require(re.fullmatch('[A-Za-z0-9._-]{1,80}',a['window_id']) and a['writer'],'invalid writer/window id')
+-    require(a['writer_uid']==os.getuid()!=0,'execute as explicitly named non-root writer; privileged actions use sudo')
+-    require(a['expected_old_sha']=='fa4510beb6b01e5c40000a2ae36a62c526759e76','r4 legacy stop authorization is fa4510be only')
+-    require(set(['source_lockfile_cleanup','production_mutex','bootout','full_preimage','install',
+-                 'plist_deployed_sha_only','bootstrap','verify','hr_observe'])<=set(a['scopes']),'missing authorized scope')
+-    save('authority.json',a); authority()
+-    save('invocation.json',{'at':now(),'argv':args[1:],'authorityPath':str(path),'authoritySha256':digest(path),
+-                            'writerPid':int(args[1]),'productionAcceptance':'NOT_YET_EXECUTED'})
+-elif op=='mutex':
+-    a=authority(); require(lock.parent.is_dir() and not lock.parent.is_symlink(),'mutex parent absent/unsafe')
+-    lock.mkdir(mode=0o700) # EEXIST stops; never disposes another writer's lock.
+-    holder='pid=%s\nuid=%s\ncmd=window-executor-v5.sh\nwindow=%s\nstarted=%s\n'%(args[0],a['writer_uid'],a['window_id'],now())
+-    (lock/'holder').write_text(holder); os.chmod(lock/'holder',0o600)
+-    save('mutex.json',{'path':str(lock),'holder':holder,'sha256':digest(lock/'holder')})
+-elif op=='mutex-check':
+-    authority(); require(digest(lock/'holder')==read(rd/'mutex.json')['sha256'],'mutex ownership changed')
+-elif op=='integrity':
+-    specs=[(prep/'MANIFEST.sha256',prep,'b28eda4cc2eb47bbaf0834a144c40194d6b2f633542a7ef09192b84288ace3e6'),
+-           (inp/'MANIFEST.sha256',inp,'cccad3a8d13073877b895080992338aa9d0243d6da79a896ff492752b97a632c'),
+-           (inp/'SOURCE_INPUTS.sha256',inp,'bafa006e0d5f36688a2ba38f58ae7066e9216535fb994bccfb683dd4bf027644')]
+-    results=[]
+-    for f,b,h in specs:
+-        r=manifest(f,b,h); r.pop('records'); results.append(r)
+-    require(digest(prep/'WINDOW-SEQUENCE-v5.md')=='c814427d4aa1a3a73bdff634164c19936882f1101a7dfb225a9fdd78ef726cfd','blueprint changed')
+-    require(digest(inp/'window-installer/trusted-cp-deploy-install.sh')=='2a6b6819b4184254ff83829affbd9cf7458bc22d36ea7fde09d752fb5963f88a','installer changed')
+-    save('manifest-verification.json',results)
+-elif op=='clean':
+-    authority()
+-    require(source.resolve()==source and source.stat().st_uid==os.getuid(),'not authorized staging worktree owner')
+-    data=run(['/usr/bin/git','-C',source,'ls-files','--others','--exclude-standard','-z']).stdout
+-    raw('untracked-before.nul',data); records=[]
+-    backup=rd/'untracked-lockfiles'; backup.mkdir(mode=0o700)
+-    # Full enumeration and ALL verified backups before the first deletion.
+-    for b in data.split(b'\0'):
+-        if not b: continue
+-        name=os.fsdecode(b)
+-        if P(name).name!='pnpm-lock.yaml': continue
+-        p=source/name; regular(p)
+-        require(p.resolve().is_relative_to(source),'lockfile escapes authorized source')
+-        dst=backup/name; dst.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
+-        shutil.copy2(p,dst); h=digest(p); require(digest(dst)==h,'lockfile backup mismatch')
+-        records.append({'path':str(p),'backup':str(dst),'sha256':h,'metadata':meta(p)})
+-    save('lockfile-backups.json',records)
+-    for row in records:
+-        p=P(row['path']); require(digest(p)==row['sha256'] and meta(p)==row['metadata'],'lockfile drift before deletion')
+-        current=run(['/usr/bin/git','-C',source,'ls-files','--others','--exclude-standard','-z']).stdout.split(b'\0')
+-        require(os.fsencode(str(p.relative_to(source))) in current,'lockfile no longer untracked')
+-        p.unlink()
+-    status=run(['/usr/bin/git','-C',source,'status','--porcelain=v1','--untracked-files=all']).stdout
+-    raw('source-status-after.txt',status); require(not status,'other dirty/untracked content; STOP for itemized disposition')
+-elif op=='sources':
+-    a=authority(); rows=[]
+-    for path in (source,harness):
+-        head=run(['/usr/bin/git','-C',path,'rev-parse','HEAD']).stdout.decode().strip()
+-        tr=run(['/usr/bin/git','-C',path,'rev-parse','HEAD^{tree}']).stdout.decode().strip()
+-        status=run(['/usr/bin/git','-C',path,'status','--porcelain=v1','--untracked-files=all']).stdout.decode()
+-        st=run(['/bin/bash',inp/'window-installer/lib/trusted-source-git-stamp.sh',path]).stdout.decode()
+-        rows.append({'path':str(path),'head':head,'tree':tr,'status':status,'stamp':st})
+-        require(not status,'dirty source/Harness; cannot bypass source gate: '+str(path))
+-        if path==source: require(head==sha and tr==tree,'source coordinates changed')
+-        else: require(st==a['expected_harness_stamp'],'Harness stamp differs from window authorization')
+-    if (rd/'sources.json').exists(): require(read(rd/'sources.json')==rows,'source/Harness drift during window')
+-    else: save('sources.json',rows)
+-elif op=='fresh':
+-    a=authority(); regular(plist); require(digest(plist)==a['expected_plist_sha256'],'plist preimage differs')
+-    doc=plistlib.loads(plist.read_bytes()); env=doc['EnvironmentVariables']; argv=doc['ProgramArguments']
+-    require(doc['Label']=='ai.agent-core.runtime','unexpected plist Label')
+-    require(argv[:2]==[str(live/'node-runtime/bin/node'),str(live/'app/scripts/production-runtime.mjs')]
+-            and '--native-arm64' not in argv,'unexpected Node/runtime/architecture argv')
+-    require(doc.get('WorkingDirectory')==str(live/'app'),'unexpected runtime WorkingDirectory')
+-    require(env.get('AGENT_CORE_DEPLOYED_SHA')==a['expected_old_sha'],'old plist deployment mismatch')
+-    require(env.get('AGENT_DIRECTORY_AUTH_JWKS_URL'),'JWKS env missing')
+-    require('DSH_RUNTIME_ARCH' not in env,'different architecture candidate')
+-    require('--root' in argv and argv[argv.index('--root')+1]==str(prod),'runtime root mismatch')
+-    text=launch(); launch_binding(text,doc); raw('old-launchctl.txt',text.encode()); pid=pid_from(text)
+-    require(pid==a['expected_old_pid'] and identity(pid)==a['expected_old_identity'],'old process identity differs')
+-    require(int(identity(pid).split()[1])==a['expected_runtime_uid'],'old UID mismatch')
+-    raw('plist.preimage',plist.read_bytes()); save('plist-preimage.json',{'sha256':digest(plist),'metadata':meta(plist),'document':doc})
+-    save('old-process.json',{'pid':pid,'identity':identity(pid),'workers':old_workers(pid),
+-         'loadedEnvSha256':loaded_env(pid,env,'old-loaded-env.private.txt')})
+-    save('private-inputs.json',private_inputs('stage-02'))
+-    require(pid_from(launch())==pid and identity(pid)==a['expected_old_identity'],'old process changed during fresh-read')
+-elif op=='bundle':
+-    b=P(args[0]); require(b.resolve()==b and b.stat().st_uid==0,'bundle must be physical and root-owned')
+-    r=manifest(b/'WINDOW_INPUTS.sha256',b,'3d7130a34cb8775f8a35aa9d06dd635a73bd80cd14135f8b048feb6af224aaf5')
+-    expected=set(r.pop('records')); actual=set()
+-    for base,dirs,files in os.walk(b):
+-        for name in dirs+files:
+-            p=P(base)/name; m=p.lstat()
+-            require(not p.is_symlink() and m.st_uid==0 and m.st_mode&0o022==0,'unsafe bundle custody '+str(p))
+-            if p.is_file() and p.name!='WINDOW_INPUTS.sha256': actual.add(str(p.relative_to(b)))
+-    require(actual==expected,'bundle file membership differs')
+-    save('window-bundle.json',{'path':str(b),'manifest':r,'installerSha256':digest(b/'scripts/trusted-cp-deploy-install.sh')})
+-elif op=='prerequisites':
+-    a=manifest(prep/'r3/accepted-r2-inputs.sha256',prep)['records']
+-    current=inventory(prep/'scratch',False); r2=inventory(prep/'r2',False)
+-    files={'scratch/'+k for k,v in current.items() if v['kind']=='file'}|{'r2/'+k for k,v in r2.items() if v['kind']=='file'}
+-    require(files==set(a),'accepted candidate/r2 file membership changed')
+-    links=sorted([{'path':'scratch/'+k,'target':v['target']} for k,v in current.items() if v['kind']=='link']+
+-                 [{'path':'r2/'+k,'target':v['target']} for k,v in r2.items() if v['kind']=='link'],key=lambda r:r['path'])
+-    old=[r for r in read(prep/'r2/symlink-inventory.json') if r['path'].startswith(('scratch/','r2/'))]
+-    require(links==old,'accepted symlink bindings changed')
+-    c=read(prep/'r2/canary-receipt.json'); b=read(prep/'r3/attempt-02/runtime-boot-receipt.json')
+-    require(c['ok'] is True and c['wrapperRc']==0 and c['result']['ready'] is True and
+-            c['result']['pluginTreeFailed'] is False and c['result']['missingPackages']==[] and
+-            c['noFatal'] is True and c['childTerminated'] is True,'fresh-child canary not PASS')
+-    require(b['ok'] is True and b['wrapperRc']==0 and len(b['checks'])==16 and all(v is True for v in b['checks'].values())
+-            and b['close']==dict(b['close'],code=0,signal=None),'full runtime not PASS')
+-    require(c['candidate']==b['candidate']==str(prep/'scratch'),'dual candidate binding differs')
+-    for name,h in b['rawHashes'].items(): require(digest(prep/'r3/attempt-02'/name)==h,'runtime raw log mismatch')
+-    closure={k:inventory(prep/'scratch'/k) for k in ('app','harness','node-runtime')}
+-    save('accepted-closure.json',closure)
+-    save('accepted-closure-acl.json',{k:json.loads(acl_listing(prep/'scratch'/k)) for k in closure})
+-    save('dual-prerequisites.json',{'at':now(),'canarySha256':digest(prep/'r2/canary-receipt.json'),
+-         'runtimeSha256':digest(prep/'r3/attempt-02/runtime-boot-receipt.json'),'regularFiles':len(files),
+-         'links':len(links),'canaryTermination':'SIGKILL by original tool; not graceful',
+-         'fullRuntimeTermination':'SIGTERM, code=0, signal=null','isolatedOnly':True})
+-elif op=='quiet':
+-    a=authority(); old=read(rd/'old-process.json')
+-    require(identity(old['pid'])==old['identity'],'old process identity changed')
+-    log=P(read(rd/'plist-preimage.json')['document']['StandardErrorPath']); regular(log)
+-    m=meta(log); age=time.time()-m['mtime_ns']/1e9
+-    save('quiet-last.json',{'at':now(),'path':str(log),'ageSeconds':age,'metadata':m})
+-    if age<180: sys.exit(10) # only bounded polling condition, never a failed gate retry
+-    # supervisor: settle unresolved turns NOW (runtime up but mtime-quiet = no turn
+-    # events in flight, so no re-persistence race); census must then read clean.
+-    import subprocess as sp
+-    r=sp.run(['sudo','-n','/usr/local/libexec/agent-core/node-runtime/bin/node','/tmp/settle-all-pending.mjs'],capture_output=True,text=True)
+-    open('/tmp/fleet-v5-prep/settle-at-quiet.log','a').write(r.stdout+r.stderr)
+-    if r.returncode!=0: sys.exit(45)
+-    c=census('quiet-census'); require(meta(log)==m,'log changed during census')
+-    save('quiet-pass.json',{'at':now(),'ageSeconds':age,'logMetadata':m,'censusHashes':c})
+-elif op=='before-stop':
+-    authority(); old=read(rd/'old-process.json')
+-    require(identity(old['pid'])==old['identity'],'old identity changed before bootout')
+-    require(digest(plist)==read(rd/'plist-preimage.json')['sha256'],'plist changed before bootout')
+-    census('immediate-pre-bootout-census')
+-    doc=read(rd/'plist-preimage.json')['document']; log=P(doc['StandardErrorPath'])
+-    require(time.time()-log.stat().st_mtime>=180,'quiet window broken before bootout')
+-    workers={r['pid']:r for r in old['workers']}
+-    workers.update({r['pid']:r for r in old_workers(old['pid'])})
+-    save('old-workers-at-bootout.json',list(workers.values()))
+-elif op=='exit-check':
+-    absent=service_absent(pending=True); table=process_table(); old=read(rd/'old-workers-at-bootout.json')
+-    remain=[r for r in old if r['pid'] in table] # reused PID is UNKNOWN, not proof of exit
+-    remain.extend(r for r in table.values() if str(live) in r['rest'])
+-    if remain: save('old-exit-pending.json',remain); sys.exit(10)
+-    for row in old:
+-        p=sp.run(['/bin/ps','-p',str(row['pid']),'-o','pid='],stdout=sp.PIPE,stderr=sp.PIPE,timeout=10)
+-        require(p.returncode==1 and not p.stdout.strip() and not p.stderr.strip(),'exact old PID absence not proven')
+-    for port in (8788,8790):
+-        p=sp.run(['/usr/sbin/lsof','-nP','-iTCP:'+str(port),'-sTCP:LISTEN','-Fp'],stdout=sp.PIPE,stderr=sp.PIPE,timeout=10)
+-        require(p.returncode==1 and not p.stdout and not p.stderr,'old port not released or readback unavailable')
+-    census('post-bootout-census')
+-    save('old-exit.json',{'at':now(),'supervisor':absent,'oldProcesses':old,'remaining':[]})
+-elif op=='preimage':
+-    authority(); service_absent(); save('private-inputs-at-install.json',private_inputs('stage-06'))
+-    before=inventory(live); save('preimage-live-inventory.json',before)
+-    acl=acl_listing(live); raw('preimage-acl-listing.private.txt',acl)
+-    target=rd/'preimage-full'; require(not target.exists(),'preimage destination exists')
+-    run(['/usr/bin/ditto','--rsrc','--extattr','--acl',live,target],timeout=3600)
+-    require(inventory(target)==before and inventory(live)==before,'full preimage copy differs')
+-    require(acl_listing(live)==acl and acl_listing(target)==acl,'preimage ACL/listing differs')
+-    # Full copy retains node-runtime/harness/.cache even if §1b moves BAK subtrees.
+-    external={}
+-    for rel in ('control/scheduler-watchdog','control/incident-backups'):
+-        p=prod/rel; require(p.is_dir() and not p.is_symlink(),'external preimage missing '+str(p))
+-        external[str(p)]={'root':meta(p),'entries':inventory(p),'aclListingSha256':hashlib.sha256(acl_listing(p)).hexdigest()}
+-        raw('external-'+p.name+'-acl.private.txt',acl_listing(p))
+-    save('external-preimage-metadata.json',external)
+-    save('rollback-preimage.json',{'at':now(),'fullTree':str(target),'fullTreeRootMetadata':meta(live),
+-         'plist':str(rd/'plist.preimage'),'loadedEnv':str(rd/'old-loaded-env.private.txt'),
+-         'externalMetadata':str(rd/'external-preimage-metadata.json'),'businessSnapshotRestoreAllowed':False})
+-elif op=='install-start':
+-    authority(); service_absent()
+-    require(digest(plist)==read(rd/'plist-preimage.json')['sha256'],'plist drift before install')
+-    require(inventory(live)==read(rd/'preimage-live-inventory.json'),'live preimage drift before install')
+-    census('immediate-pre-install-census')
+-    r=live.parent/'agent-core-install-mutation-receipt.json'
+-    save('install-start.json',{'at':now(),'epoch':time.time(),'previousMutationReceiptSha256':digest(r) if r.is_file() else None})
+-elif op=='install-failed':
+-    r=live.parent/'agent-core-install-mutation-receipt.json'; regular(r); doc=read(r); start=read(rd/'install-start.json')
+-    require(digest(r)!=start['previousMutationReceiptSha256'],'stale mutation receipt')
+-    require(start['epoch']-1<=stamp(doc['recorded_at'])<=time.time()+1,'mutation receipt not this run')
+-    require(doc['receipt']=='AGENT_CORE_INSTALL_MUTATION_RECEIPT_V1' and doc['exit_code']==int(args[0]),'mutation receipt rc/kind mismatch')
+-    log=(rd/'install.log').read_text(); bak=doc['preimage_bak']
+-    if bak: require(('== backing up previous install -> '+bak) in log and P(bak).is_dir(),'receipt preimage not this install')
+-    require(doc['restore_r1_required']==bool(doc['reused_preimage_subtrees']),'R1 mismatch')
+-    require(doc['restore_r2_required']==('prod_root_5b' in doc['stages_completed']),'R2 mismatch')
+-    save('failed-install-mutation-receipt.json',doc)
+-elif op=='install-success':
+-    log=(rd/'install.log').read_text(); found=re.findall(r'^== backing up previous install -> (.+)$',log,re.M)
+-    require(len(found)==1,'exact successful backup coordinate unavailable')
+-    bak=P(found[0]); require(re.fullmatch(re.escape(str(live))+r'\.bak-\d{8}-\d{6}',str(bak)) and bak.is_dir() and not bak.is_symlink(),'invalid preimage')
+-    marker=bak/'.preimage-reused-subtrees'; reused=marker.read_text().splitlines() if marker.exists() else []
+-    require(len(set(reused))==len(reused) and set(reused)<={'node-runtime','harness','.cache'},'invalid reuse marker')
+-    for item in reused:
+-        require((rd/'preimage-full'/item).is_dir() and not (bak/item).exists(),'R1 subtree evidence inconsistent')
+-        require("no longer contains '%s'"%item in log,'reuse marker lacks this-run log evidence')
+-    completed=[x for x in log.splitlines() if x.startswith('  production root: /Users/authsvc/.agent-core (505-private control state 0700;')]
+-    require(len(completed)==1,'§5b completion evidence missing')
+-    save('successful-install-rollback.json',{'at':now(),'installLogSha256':digest(rd/'install.log'),
+-         'preimage_bak':str(bak),'reused_preimage_subtrees':reused,'restore_r1_required':bool(reused),
+-         'restore_r2_required':True,'section5bCompletion':completed[0],
+-         'reuseMarkerSha256':digest(marker) if marker.exists() else None,'completePreimageCopy':str(rd/'preimage-full'),
+-         'mutationReceiptUsed':False})
+-elif op=='preserve-config':
+-    # Sequence §2/§5: carry forward the CURRENT stopped config which §5 of the
+-    # pinned installer only partly copies. This is a declared install step, not
+-    # recovery after a failed gate. Never overwrite a changed/current file and
+-    # never write historical jobs/bindings/incidents/runs/fences/credentials.
+-    authority(); service_absent(); pre=rd/'preimage-full/config'; dest=live/'config'
+-    expected=inventory(pre); current=inventory(dest)
+-    require(all(k in expected and v==expected[k] for k,v in current.items()),
+-            'installer config has changed/unexpected existing entries; no overwrite allowed')
+-    for required in ('agents.json','agent-credentials.json'):
+-        require(required in current and current[required]==expected[required],'current authority/credentials not preserved by installer')
+-    carried=[]
+-    for k in sorted(expected,key=lambda k:(len(P(k).parts),k)):
+-        if k=='.' or k in current: continue
+-        src=pre/k; dst=dest/k
+-        if dst.exists() or dst.is_symlink(): continue # copied with its ancestor
+-        require(not src.is_symlink(),'omitted config symlink needs explicit review: '+k)
+-        require(not dst.exists() and not dst.is_symlink(),'config destination appeared')
+-        run(['/usr/bin/ditto','--rsrc','--extattr','--acl',src,dst],timeout=3600)
+-        carried.append(k)
+-    require(inventory(dest)==expected,'carried config does not match stopped preimage')
+-    require(acl_listing(dest)==acl_listing(pre),'carried config ACL differs')
+-    save('config-carryforward.json',{'at':now(),'from':str(pre),'to':str(dest),'copiedMissingOnly':carried,
+-         'existingFilesOverwritten':False,'historicalPrepSnapshotsUsed':False,'exactContentMetadataReadback':True})
+-elif op=='final-binding':
+-    authority(); service_absent(); accepted=read(rd/'accepted-closure.json'); actual={}; changes=[]
+-    accepted_acl=read(rd/'accepted-closure-acl.json')
+-    for part in ('app','harness','node-runtime'):
+-        actual[part]=inventory(live/part)
+-        final_acl=json.loads(acl_listing(live/part))
+-        save('final-'+part+'-acl.json',final_acl)
+-        if final_acl!=accepted_acl[part]: changes.append(part+'/<ACL>')
+-        for k in sorted(set(accepted[part])|set(actual[part])):
+-            x=accepted[part].get(k); y=actual[part].get(k)
+-            # UID/GID differ for isolated execution; production custody is checked below.
+-            strip=lambda v: {a:b for a,b in v.items() if a not in ('uid','gid')} if v else None
+-            if strip(x)!=strip(y): changes.append(part+'/'+k)
+-        a=authority()
+-        for k,v in actual[part].items():
+-            if v['kind']!='link': require(v['uid']==a['expected_runtime_uid'] and v['gid']==a['expected_runtime_gid']
+-                                        and int(v['mode'],8)&0o022==0,'unsafe final closure custody '+part+'/'+k)
+-    save('final-closure.json',actual); save('final-closure-comparison.json',{'changed':changes,'sameContentLinksModes':not changes})
+-    require(not changes,'final closure differs: supplement SAME-final-tree isolated canary + full runtime receipts before bootstrap; STOP')
+-    provenance=read(live/'app/pack-provenance.json')
+-    require(provenance['source_head_sha']==sha and provenance['source_tree_sha']==tree and provenance['source_clean']=='yes'
+-            and provenance['generation_label_sha']==sha and provenance['main_repo_realpath']==str(source),'final provenance mismatch')
+-    save('private-inputs-final.json',private_inputs('stage-09'))
+-    config=inventory(live/'config'); save('final-config-inventory.private.json',config)
+-    require(config==inventory(rd/'preimage-full/config'),'final config bytes/links/permissions differ from current window preimage; STOP')
+-    save('final-binding.json',{'at':now(),'dualReceiptBinding':'UNCHANGED_COMPLETE_CLOSURE','config':'PRODUCTION_PREIMAGE_PRESERVED',
+-         'isolatedConfigOverridesCopied':False,'productionUid':a['expected_runtime_uid'],'provenance':provenance})
+-elif op=='plist-update':
+-    authority(); service_absent(); old=read(rd/'plist-preimage.json')
+-    require(digest(plist)==old['sha256'],'plist changed before authorized SHA-only edit')
+-    doc=plistlib.loads(plist.read_bytes()); doc['EnvironmentVariables']['AGENT_CORE_DEPLOYED_SHA']=sha
+-    tmp=plist.with_name(plist.name+'.v5-'+authority()['window_id'])
+-    with open(tmp,'xb') as f: plistlib.dump(doc,f,sort_keys=False)
+-    m=old['metadata']; os.chown(tmp,m['uid'],m['gid']); os.chmod(tmp,int(m['mode'],8))
+-    run(['/usr/bin/plutil','-lint',tmp]); os.replace(tmp,plist)
+-    back=plistlib.loads(plist.read_bytes()); expected=old['document']; expected['EnvironmentVariables']['AGENT_CORE_DEPLOYED_SHA']=sha
+-    require(back==expected,'plist delta exceeds deployed SHA')
+-    save('plist-after.json',{'sha256':digest(plist),'document':back,'metadata':meta(plist)})
+-    offsets=[]
+-    for key in ('StandardOutPath','StandardErrorPath'):
+-        p=P(back[key]); regular(p); offsets.append(dict(meta(p),path=str(p)))
+-    save('restart-log-offsets.json',offsets); save('bootstrap-start.json',{'at':now(),'epoch':time.time()})
+-elif op=='verify':
+-    a=authority(); doc=read(rd/'plist-after.json')['document']; text=launch(); launch_binding(text,doc); pid=pid_from(text)
+-    require(pid!=a['expected_old_pid'],'new PID equals old PID')
+-    ident=identity(pid); require(int(ident.split()[1])==a['expected_runtime_uid'] and int(ident.split()[2])==a['expected_runtime_gid'],'new UID/GID mismatch')
+-    require(ident.endswith(str(live/'node-runtime/bin/node')),'new program mismatch')
+-    prior=read(rd/'new-process.json') if (rd/'new-process.json').exists() else None
+-    require(prior is None or prior['identity']==ident,'runtime restarted during acceptance window')
+-    env=doc['EnvironmentVariables']; loaded_env(pid,env,'new-loaded-env.private.txt')
+-    ports=[int(env.get('PRODUCT_API_PORT','8787')),int(env.get('NOTIFICATION_INGRESS_PORT','8790'))]
+-    require(ports==[8788,8790],'unexpected production ports; scratch ports must never leak')
+-    owned=listeners(pid,ports); log=log_delta()
+-    patterns=[r'50 http capabilities ready, 19 local capabilities ready',
+-              r'product-api.*listening.*(?:127\.0\.0\.1:)?8788',
+-              r'notification-ingress.*8790.*deliverReady=true.*storeReady=true',
+-              r'production runtime ready \(pid '+str(pid)+r'\); scheduler loop online']
+-    for pattern in patterns: require(re.search(pattern,log),'missing production readiness marker '+pattern)
+-    require(not re.search(r'\bFATAL\b|ERR_MODULE_NOT_FOUND|ERR_PACKAGE_PATH_NOT_EXPORTED|plugin-tree.*fail',log,re.I),'runtime fatal/closure failure')
+-    product=health(ports[0],'agent-core-product-api'); ingress=health(ports[1],'agent-core-notification-ingress')
+-    require(ingress.get('deliverReady') is True and ingress.get('storeReady') is True,'ingress not ready')
+-    # /scheduler/health requires scoped bearer credentials. The public /health
+-    # is not canonical census evidence. Isolated canonical PASS is bound in §3;
+-    # live authenticated checks require a separately specified request/result.
+-    require(pid_from(launch())==pid and identity(pid)==ident,'new instance changed during verification')
+-    save('new-process.json',{'at':now(),'pid':pid,'identity':ident,'listeners':owned})
+-    save('production-health.json',{'at':now(),'product':product,'ingress':ingress,'authentication':'NOT_TESTED',
+-                                  'liveAuthenticatedCanonicalHealth':'UNKNOWN'})
+-    raw('new-launchctl.txt',text.encode())
+-elif op=='hr-check':
+-    authority(); p=read(rd/'new-process.json'); require(identity(p['pid'])==p['identity'],'new runtime changed during HR watch')
+-    require(pid_from(launch())==p['pid'],'supervised PID changed during HR watch')
+-    log=log_delta(); require(not re.search(r'\bFATAL\b|ERR_MODULE_NOT_FOUND',log),'fatal during HR watch')
+-    lines=[x for x in log.splitlines() if re.search(r'\[router\] \[broker\] execute as agent agt_hr-agent \(capability [^)]+\)',x)]
+-    watch=read(rd/'hr-watch.json'); observed=time.monotonic()
+-    previous=read(rd/'hr-observation.json') if (rd/'hr-observation.json').exists() else {}
+-    within=bool(lines) and observed<=watch['deadlineMonotonic']
+-    recovered=previous.get('brokerExecuteRecovered') is True or within
+-    save('hr-observation.json',{'at':now(),'pid':p['pid'],'matchingLines':lines,
+-                               'brokerExecuteRecovered':recovered,'within600Seconds':recovered,
+-                               'businessSuccess':'UNKNOWN','criterion':'fa4510be broker execute feature; not log mtime'})
+-    if args and args[0]=='final': require(recovered,'no HR broker execute observed within 10 minute window')
+-elif op=='hr-start':
+-    start=time.monotonic()
+-    save('hr-watch.json',{'at':now(),'startedMonotonic':start,'deadlineMonotonic':start+600})
+-elif op=='hr-remaining':
+-    print(max(0,math.ceil(read(rd/'hr-watch.json')['deadlineMonotonic']-time.monotonic())))
+-elif op=='rollback-summary':
+-    for name in ('successful-install-rollback.json','failed-install-mutation-receipt.json','rollback-preimage.json'):
+-        if (rd/name).is_file():
+-            doc=read(rd/name)
+-            print(name+': '+json.dumps({k:v for k,v in doc.items() if k in (
+-                'preimage_bak','reused_preimage_subtrees','restore_r1_required','restore_r2_required',
+-                'mutation_truth','completePreimageCopy','fullTree','plist','externalMetadata')},ensure_ascii=False))
+-elif op=='phase':
+-    event={'at':now(),'stage':args[0],'status':args[1],'detail':args[2:]}
+-    save(args[0]+'.json',event)
+-    with open(rd/'phase-events.jsonl','a') as f: f.write(json.dumps(event)+'\n')
+-elif op=='release':
+-    require(digest(lock/'holder')==read(rd/'mutex.json')['sha256'],'cannot release changed mutex')
+-    (lock/'holder').unlink(); lock.rmdir()
+-    save('completion.json',{'at':now(),'window':'PASS_CONFIGURED_CHECKS','productionExecution':'EXECUTED',
+-                           'authentication':'NOT_TESTED','businessSuccess':'UNKNOWN','hrCriterion':'broker execute observed'})
+-else: raise RuntimeError('unknown helper operation '+op)
+-PY
++  runner=(/usr/bin/python3 -B)
++  if [ "$privilege" = root ]; then runner=(/usr/bin/sudo -n /usr/bin/python3 -B); fi
++  "${runner[@]}" "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/window_executor_helper.py" "$RD" "$@"
+ }
+ 
+ rollback_recipe() {
+@@ -850,7 +173,7 @@ stage_04_quiet_gate() {
+     if [ "$rc" -eq 0 ]; then return 0; fi
+     # supervisor: live fleet census is transiently dirty between HR rounds — retry rc=1 (census) like rc=10 (mtime); budget-bounded
+     [ "$rc" -eq 10 ] || [ "$rc" -eq 1 ] || return "$rc"
+-    printf 'Waiting for 150s mtime quiet + clean census; poll=%s/80\n' "$((i+1))"
++    printf 'Waiting for 180s mtime quiet + clean census; poll=%s/80\n' "$((i+1))"
+     sleep 30
+   done
+   return 42
+@@ -935,12 +258,17 @@ stage_12_hr_watch() {
+   helper root hr-check final
+   helper root verify
+ }
+-stage_13_close() { helper root release; }
++stage_13_close() { helper root close; helper root release; }
+ 
+ main() {
+   case "${1:---dry-run}" in
+     --dry-run) [ "$#" -le 1 ] || { usage >&2; return 64; }; boundaries; return 0 ;;
+     --help|-h) usage; return 0 ;;
++    --selftest)
++      [ "$#" -eq 1 ] || { usage >&2; return 64; }
++      /usr/bin/python3 -B "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/window-selftest.py" \
++        "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/window-executor-v5.sh"
++      return $? ;;
+     --execute) [ "$#" -eq 3 ] && [ "$2" = --authority ] && [[ "$3" = /* ]] || { usage >&2; return 64; }; AUTHORITY=$3 ;;
+     *) usage >&2; return 64 ;;
+   esac
+diff --git a/scripts/fleet-window/window-selftest.py b/scripts/fleet-window/window-selftest.py
+new file mode 100644
+index 00000000..802e9a77
+--- /dev/null
++++ b/scripts/fleet-window/window-selftest.py
+@@ -0,0 +1,383 @@
++#!/usr/bin/env python3
++"""C7 isolated mechanism checks and one real stdio canary; never a window GO."""
++import ast
++import datetime as dt
++import hashlib
++import importlib.util
++import json
++import math
++import os
++from pathlib import Path
++import re
++import stat
++import subprocess
++import sys
++import tempfile
++import time
++
++ROOT = Path('/usr/local/v5-boot-isolation')
++ASSEMBLED = ROOT / 'assembled-root'
++MATERIALS_SEAL = 'c3595d20ac56cfe21fbcb011a75252879b7780411d4d30f6656d41e4989ed4ea'
++HELPER = Path('/tmp/fleet-v5-candidate/scripts/lib/trusted-cp-fresh-child-boot-canary.mjs')
++HELPER_SEAL = 'b737d6b42460383f305a741fb9d5f12babe9b1e292f933d3735d68a907447802'
++NODE = ASSEMBLED / 'node-runtime/bin/node'
++LAST_OUT = None
++
++
++def require(ok, message):
++    if not ok:
++        raise RuntimeError(message)
++
++
++def sha(path):
++    h = hashlib.sha256()
++    with Path(path).open('rb') as stream:
++        for block in iter(lambda: stream.read(1024 * 1024), b''):
++            h.update(block)
++    return h.hexdigest()
++
++
++def read(path):
++    return json.loads(Path(path).read_text())
++
++
++def save(path, value):
++    Path(path).write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n')
++
++
++def rejected(fn, label):
++    try:
++        fn()
++    except (RuntimeError, ValueError, TypeError, KeyError):
++        return label
++    raise RuntimeError('expected rejection did not occur: ' + label)
++
++
++def pure_functions(executor):
++    path = executor.with_name('window_executor_state.py')
++    names = {'require', 'digest', 'regular', 'manifest', 'stamp', 'validate_authority', 'quiet_ready'}
++    tree = ast.parse(path.read_text(), filename=str(path))
++    selected = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in names]
++    require({node.name for node in selected} == names, 'executor pure validators unavailable')
++    namespace = dict(dt=dt, hashlib=hashlib, json=json, math=math, os=os,
++                     P=Path, re=re, stat=stat, sys=sys, time=time)
++    module = ast.Module(body=selected, type_ignores=[])
++    exec(compile(module, str(path), 'exec'), namespace)
++    return namespace, {'path': str(path), 'sha256': sha(path), 'functions': [
++        {'name': node.name, 'line': node.lineno, 'end_line': node.end_lineno} for node in selected]}
++
++
++def ancestors(path):
++    rows = []
++    for item in [path, *path.parents]:
++        s = item.lstat()
++        require(stat.S_ISDIR(s.st_mode) and not stat.S_ISLNK(s.st_mode), 'unsafe ancestor ' + str(item))
++        require(s.st_mode & 0o022 == 0, 'writable ancestor ' + str(item))
++        rows.append({'path': str(item), 'mode': oct(stat.S_IMODE(s.st_mode)), 'uid': s.st_uid, 'gid': s.st_gid})
++    return rows
++
++
++CANARY_RECORDER = r'''import { spawn, execFileSync } from 'node:child_process'
++import { writeFileSync } from 'node:fs'
++import { join } from 'node:path'
++import { pathToFileURL } from 'node:url'
++const [out, root, helper] = process.argv.slice(2)
++const save = (name, value) => writeFileSync(join(out, name), JSON.stringify(value, null, 2)+'\n')
++const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
++const known = new Map(), samples = [], stdout = [], stderr = [], events = []
++let child, exit, close, optionsUsed, stopped = false, sampler, samplingError, teardownError
++const table = () => execFileSync('/bin/ps', ['-axo', 'pid=,ppid=,pgid=,lstart=,comm='],
++  {encoding:'utf8', env:{PATH:'/usr/bin:/bin:/usr/sbin:/sbin',LC_ALL:'C'}}).split('\n').filter(Boolean).map(line => {
++    const m=line.match(/^\s*(\d+)\s+(\d+)\s+(\d+)\s+([A-Za-z]{3}\s+[A-Za-z]{3}\s+\d+\s+\d\d:\d\d:\d\d\s+\d{4})\s+(.*)$/)
++    if(!m) throw Error('unparseable process row')
++    return {pid:+m[1],ppid:+m[2],pgid:+m[3],start:m[4].replace(/\s+/g,' '),comm:m[5]}
++  })
++const key = row => `${row.pid}:${row.start}`
++function sample() {
++  const rows=table(), selected=new Set(rows.filter(r=>r.pgid===child.pid||known.has(key(r))).map(r=>r.pid))
++  let changed=true
++  while(changed){changed=false;for(const r of rows)if(selected.has(r.ppid)&&!selected.has(r.pid)){selected.add(r.pid);changed=true}}
++  const scoped=rows.filter(r=>selected.has(r.pid));for(const r of scoped)known.set(key(r),r)
++  samples.push({utc:new Date().toISOString(),processes:scoped});return scoped
++}
++const spawnImpl = (exe, argv, options) => {
++  if(child) throw Error('multiple canary children refused')
++  optionsUsed={...options,detached:true};save('canary-spawn.json',{executable:exe,argv,options:optionsUsed,
++    instrumentationDelta:'detached:true creates recorder-owned process group; official argv/env/stdio unchanged'})
++  child=spawn(exe,argv,optionsUsed)
++  child.stdout.on('data',data=>stdout.push(Buffer.from(data)))
++  child.stderr.on('data',data=>stderr.push(Buffer.from(data)))
++  child.on('exit',(code,signal)=>{exit={code,signal,utc:new Date().toISOString()}})
++  child.on('close',(code,signal)=>{close={code,signal,utc:new Date().toISOString()}})
++  const kill=child.kill.bind(child)
++  child.kill=signal=>{const returned=kill(signal);events.push({signal,returned,pid:child.pid});return returned}
++  sampler=(async()=>{while(!stopped){try{sample()}catch(error){samplingError=String(error)}if(!stopped)await sleep(100)}})()
++  return child
++}
++let result, failure
++try {
++  const { runCanary }=await import(pathToFileURL(helper).href)
++  result=await runCanary({trustedRoot:root,profile:'agent-core-production',setupProfile:'agent-core-production',
++    readyRegex:'\\[demo-server\\] ready pid=',timeoutMs:90000,allowMissing:['dsh-codex'],keepHome:true},
++    {spawnImpl,homeFactory:()=>join(out,'canary-home')})
++} catch(error){failure=String(error.stack??error)}
++finally {
++  stopped=true;if(sampler)await sampler
++  let remaining=null
++  try {
++    remaining=[]
++    if(child?.pid){
++      remaining=sample()
++      if(remaining.length){
++        const group=remaining.filter(r=>r.pgid===child.pid)
++        if(group.length&&group.every(r=>known.has(key(r)))){
++          process.kill(-child.pid,'SIGKILL');events.push({actor:'recorder_cleanup',pgid:child.pid,signal:'SIGKILL'})
++        }
++        for(let i=0;i<20&&remaining.length;i++){
++          await sleep(100);remaining=sample()
++        }
++      }
++    }
++  } catch(error){teardownError=String(error.stack??error);remaining=null}
++  writeFileSync(join(out,'canary-child.stdout.log'),Buffer.concat(stdout))
++  writeFileSync(join(out,'canary-child.stderr.log'),Buffer.concat(stderr))
++  const teardown={directChildExitObserved:!!exit,directChildCloseObserved:!!close,
++    remainingObservedOrGroup:remaining,exitVerification:remaining===null?'UNKNOWN':'OBSERVED',observedIdentities:[...known.values()],
++    limitation:'Unsampled descendants that escaped the group remain UNKNOWN.'}
++  save('canary-result.json',{result,exit,close,teardown,events,samples,samplingError,teardownError,failure,
++    requestedPorts:[],fullRuntime:'NOT_RUN',modelAuthBusiness:'NOT_RUN'})
++  if(failure||samplingError||teardownError||!result?.ok||!result?.ready||result.pluginTreeFailed||result.missingPackages.length
++    ||!exit||!close||remaining===null||remaining.length)process.exitCode=2
++}
++'''
++
++
++def main(executor):
++    global LAST_OUT
++    os.umask(0o077)
++    require(ROOT.resolve() == ROOT, 'isolation root must be physical')
++    ancestor_rows = ancestors(ROOT)
++    out = Path(tempfile.mkdtemp(prefix='c7-selftest-', dir=ROOT))
++    LAST_OUT = out
++    for name in ('home', 'tmp', 'canary-home'):
++        (out / name).mkdir(mode=0o700)
++    env = {'PATH': str(NODE.parent) + ':/usr/bin:/bin:/usr/sbin:/sbin', 'HOME': str(out / 'home'),
++           'TMPDIR': str(out / 'tmp'), 'NODE_DISABLE_COMPILE_CACHE': '1', 'PYTHONDONTWRITEBYTECODE': '1'}
++    log = []
++    def emit(line):
++        print(line, flush=True)
++        log.append(line)
++        (out / 'selftest.stdout.log').write_text('\n'.join(log) + '\n')
++    def run(name, argv):
++        start = dt.datetime.now(dt.timezone.utc).isoformat()
++        with (out / (name + '.stdout.log')).open('wb') as stdout, (out / (name + '.stderr.log')).open('wb') as stderr:
++            p = subprocess.Popen([str(v) for v in argv], cwd=out, env=env, stdout=stdout, stderr=stderr)
++            code = p.wait()
++        save(out / (name + '.command.json'), {'argv': [str(v) for v in argv], 'env': env, 'cwd': str(out),
++             'pid': p.pid, 'exit_code': code, 'direct_child_reaped': True, 'started': start,
++             'stdout_sha256': sha(out / (name + '.stdout.log')), 'stderr_sha256': sha(out / (name + '.stderr.log'))})
++        require(code == 0, name + ' rc=' + str(code))
++    stage = 'entry'
++    completed = []
++    try:
++        emit('SELFTEST_ISOLATED_CHECKS productionStageExecution=NOT_EXECUTED receipts=' + str(out))
++        f, extracted = pure_functions(executor)
++        save(out / 'function-bindings.json', extracted)
++        save(out / 'invocation.json', {'executor': str(executor), 'executor_sha256': sha(executor),
++             'selftest_sha256': sha(__file__), 'env': env, 'ancestry': ancestor_rows,
++             'code_bindings': {name: sha(executor.with_name(name)) for name in (
++                 'window_executor_state.py', 'window_executor_helper.py', 'window_close.py')}})
++        stages = []
++        def stage00():
++            a = dict(window_id='C7_SYNTHETIC_NOT_AUTHORIZATION', writer='isolated-selftest', writer_uid=os.getuid(),
++                     valid_from='2026-11-04T00:00:00Z', valid_until='2026-11-05T00:00:00Z',
++                     expected_old_pid=1, expected_old_identity='SYNTHETIC_NOT_PROCESS',
++                     expected_old_sha='fa4510beb6b01e5c40000a2ae36a62c526759e76',
++                     expected_plist_sha256='0'*64, expected_harness_stamp='SYNTHETIC',
++                     expected_bindings_sha256='0'*64, expected_runtime_uid=os.getuid(), expected_runtime_gid=os.getgid(),
++                     scopes=['source_lockfile_cleanup','production_mutex','bootout','full_preimage','install',
++                             'plist_deployed_sha_only','bootstrap','verify','hr_observe'])
++            moment = f['stamp']('2026-11-04T12:00:00Z')
++            check = lambda item: f['validate_authority'](item, writer_uid=os.getuid(), now_epoch=moment)
++            check(a)
++            bad = dict(a); bad.pop('writer')
++            cases = [rejected(lambda: check(bad), 'missing-field'),
++                     rejected(lambda: check(dict(a, writer_uid=0)), 'root-writer'),
++                     rejected(lambda: check(dict(a, valid_until='2026-11-04T00:00:00Z')), 'expired'),
++                     rejected(lambda: check(dict(a, scopes=[])), 'missing-scope')]
++            save(out / 'stage_00.json', {'scope': 'pure authority validator only', 'synthetic': a, 'negative_cases': cases,
++                 'productionMutex': 'NOT_EXECUTED', 'productionAuthority': 'UNKNOWN_NOT_SUPPLIED'})
++        stages.append(('stage_00_authority_mutex', stage00))
++        def stage01():
++            fixture = out / 'integrity-fixture'; fixture.mkdir()
++            file = fixture / 'pnpm-lock.yaml'; file.write_text('C7 isolated fixture\n')
++            seal = fixture / 'MANIFEST.sha256'; seal.write_text(sha(file) + '  pnpm-lock.yaml\n')
++            before = sha(file)
++            result = f['manifest'](seal, fixture, sha(seal))
++            duplicate = fixture / 'duplicate.sha256'; duplicate.write_text(seal.read_text() * 2)
++            negative = rejected(lambda: f['manifest'](duplicate, fixture), 'duplicate-path')
++            require(file.exists() and sha(file) == before, 'clean-plan check deleted lockfile')
++            run('extracted-helper-phase', ['/usr/bin/python3', '-B', executor.with_name('window_executor_helper.py'),
++                                         out, 'phase', 'c7_extraction_smoke', 'PASS', 'ISOLATED_ONLY'])
++            require(read(out / 'c7_extraction_smoke.json')['status'] == 'PASS', 'extracted helper dispatch failed')
++            save(out / 'stage_01.json', {'scope': 'real manifest validator on isolated fixture', 'result': result,
++                 'negative_case': negative, 'lockfilePlan': [str(file)], 'deletion': 'NOT_EXECUTED',
++                 'extractedHelperDispatch': 'ISOLATED_PHASE_RECEIPT_ONLY', 'productionIntegrityClean': 'NOT_EXECUTED'})
++        stages.append(('stage_01_integrity_clean', stage01))
++        def stage02():
++            require(sha(ROOT / 'SELFTEST-MATERIALS-C5R11.json') == MATERIALS_SEAL, 'C5 material index changed')
++            index = {row['path']: row for row in read(ROOT / 'SELFTEST-MATERIALS-C5R11.json')['materials']}
++            binding = ROOT / 'c5r11-receipt/critical-key-and-harness9-bindings.json'
++            require(sha(binding) == index[str(binding)]['sha256'], 'C5 critical binding changed')
++            rows = read(ROOT / 'c5r11-receipt/critical-key-and-harness9-bindings.json')
++            for row in rows:
++                require(row['equal'] and sha(ASSEMBLED / row['relative_path']) == row['sha256'], 'C5 key changed')
++            for relative, expected in {
++                'harness/apps/cli/lib/bin.js': 'c0226687bb20f45c603ec6fe50f3de16d1c3510c3a803304ec575ef9bc366c62',
++                'app/packages/scheduler/src/watchdog/routing.js': '91ec8516dedb2ac4f001434cbe5baa32fd8c0f3508e3256fa6d5c91d02334547',
++            }.items():
++                require(sha(ASSEMBLED / relative) == expected, 'C5 CLI/routing bytes changed: ' + relative)
++            routing = out / 'routing.json'
++            save(routing, {'version': 1, 'canonicalOpsTarget': {'channel': 'feishu', 'to': 'C7_NO_DELIVERY'},
++                           'ownerTargets': {}, 'jobFailureTargets': {}})
++            probe = out / 'routing-probe.mjs'
++            probe.write_text("import {readProtectedRoutingManifest} from " + json.dumps(
++                (ASSEMBLED / 'app/packages/scheduler/src/watchdog/routing.js').as_uri()) + ";\n" +
++                "const result=readProtectedRoutingManifest(process.argv[2],{expectedUid:" + str(os.getuid()) +
++                ",allowedGids:[" + str(os.getgid()) + "],maxMode:0o640,parentBoundary:'/'});\n" +
++                "console.log(JSON.stringify({ok:true,result}));\n")
++            run('protected-routing', [NODE, probe, routing])
++            save(out / 'stage_02.json', {'scope': 'fresh isolated metadata and critical static hashes', 'keys': rows,
++                 'freshAncestors': ancestors(out), 'productionFreshRead': 'NOT_EXECUTED'})
++        stages.append(('stage_02_fresh_read', stage02))
++        def stage03():
++            material_file = ROOT / 'SELFTEST-MATERIALS-C5R11.json'
++            require(sha(material_file) == MATERIALS_SEAL, 'C5 material index changed')
++            materials = read(material_file)
++            require(materials['material_count'] == len(materials['materials']) == 192, 'C5 material count differs')
++            for row in materials['materials']:
++                path = Path(row['path'])
++                require(path.stat().st_size == row['bytes'] and sha(path) == row['sha256'], 'C5 material changed: ' + str(path))
++            for i in (1, 2):
++                c = read(ROOT / ('c5r11-receipt/canary-boot-%02d.json' % i))
++                b = read(ROOT / ('c5r11-receipt/runtime-boot-%d.json' % i))
++                r = c['official_result']; t = c['teardown']
++                require(c['status'] == 'PASS_FRESH_CHILD_OBSERVED_EXIT' and r['ok'] is True and r['ready'] is True
++                        and r['pluginTreeFailed'] is False and r['missingPackages'] == [], 'C5 canary not PASS')
++                require(t['direct_child_exit_observed'] is True and t['direct_child_close_observed'] is True
++                        and t['remaining_observed_identities'] == [] and t['remaining_spawned_group'] == [], 'C5 canary teardown gap')
++                require(b['status'] == 'FULL_RUNTIME_READY_EXIT_PASS' and b['ready']['kind'] == 'ready'
++                        and len(b['health']) == 2 and all(v['status'] == 200 and v['body']['ok'] is True for v in b['health']),
++                        'C5 full-runtime readiness gap')
++                require(b['closeEvent']['code'] == 0 and b['closeEvent']['signal'] is None
++                        and b['processTreeExit']['survivors'] == [] and b['processTreeExit']['pgidAbsent'] is True,
++                        'C5 full-runtime exit gap')
++                require(c['args']['trustedRoot'] == str(ASSEMBLED) and b['executable'] == str(NODE), 'C5 root binding gap')
++            for name in ('closure-final-reconciliation.json', 'dual-boot-idempotence-and-loaded-equality.json'):
++                require(read(ROOT / 'c5r11-receipt' / name)['status'] == 'PASS', 'C5 closure/idempotence gap')
++            save(out / 'stage_03.json', {'scope': 'C5-r11 evidence adapter; old r2/r3 schemas remain unchanged',
++                 'material_count_verified': 192, 'historicalRuntimeBootsVerified': 2, 'newFullRuntime': 'NOT_EXECUTED',
++                 'closureCoverage': '192 evidence hashes plus stage02 critical current files; full current tree NOT_REHASHED'})
++        stages.append(('stage_03_dual_prerequisites', stage03))
++        def stage04():
++            q = f['quiet_ready']
++            cases = [(179.999, True, True, False), (180, True, True, True), (180.001, True, True, True),
++                     (180, False, True, False), (180, None, True, False), (180, True, False, False)]
++            for age, clean, unchanged, expected in cases:
++                require(q(age, clean, unchanged) is expected, 'quiet predicate boundary mismatch')
++            save(out / 'stage_04.json', {'scope': 'real pure 180s predicate only', 'cases': cases,
++                 'productionQuiet': 'NOT_EXECUTED', 'settlement': 'NOT_EXECUTED', 'liveCensus': 'UNKNOWN'})
++        stages.append(('stage_04_quiet_gate', stage04))
++        def close_checks():
++            spec = importlib.util.spec_from_file_location('c7_close_checks', executor.with_name('window_close.py'))
++            module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
++            names_result = module.reconcile_names(['old', 'kept'], ['new', 'kept'], {'old': 'new'})
++            require(names_result['mapped_diff_empty'] is True, 'C7 mapped diff not empty')
++            cases = [rejected(lambda: module.reconcile_names(['a'], [], {}), 'missing-name'),
++                     rejected(lambda: module.reconcile_names(['a'], ['a', 'b'], {}), 'added-name'),
++                     rejected(lambda: module.reconcile_names(['a', 'b'], ['b'], {'a': 'b'}), 'rename-collision')]
++            root = out / 'retention-fixture'; root.mkdir()
++            order = ['.ds-old-newest', '.ds-old-second', '.ds-old-pinned', '.ds-old-025', '.ds-old-oldest']
++            for name in order + ['agent-core.bak-preserved', 'node_modules.bak']:
++                (root / name).mkdir()
++            before = sorted(p.name for p in root.iterdir())
++            plan = module.retention_plan(root, order, ['.ds-old-pinned'])
++            require(plan['list_only'] is True and plan['deletion_executed'] is False, 'C7 deletion enabled')
++            require([row['name'] for row in plan['delete_candidates']] == ['.ds-old-oldest'], 'C7 retention set differs')
++            require(sorted(p.name for p in root.iterdir()) == before, 'C7 retention plan mutated fixture')
++            cases.append(rejected(lambda: module.retention_plan(root, order[:-1], []), 'incomplete-generation-order'))
++            moment = dt.datetime.now(dt.timezone.utc)
++            before_path, after_path = out / 'names-before.json', out / 'names-after.json'
++            snapshot = {'window_id': 'C7_FIXTURE', 'scope': 'synthetic-names', 'method': 'manual-inventory',
++                        'collector': 'C7 selftest synthetic fixture', 'captured_at': moment.isoformat(),
++                        'names': ['old', 'kept']}
++            save(before_path, snapshot)
++            authority = {'window_id': 'C7_FIXTURE', 'valid_from': (moment-dt.timedelta(days=1)).isoformat(),
++                         'valid_until': (moment+dt.timedelta(days=1)).isoformat(),
++                         'c7': {'before_path': str(before_path), 'before_sha256': sha(before_path),
++                                'after_path': str(after_path), 'naming_scope': 'synthetic-names', 'renames': {'old': 'new'},
++                                'generations_newest_first': order, 'protected_generations': ['.ds-old-pinned'],
++                                'protection_basis': 'Synthetic fixture; all protected subjects accounted for'}}
++            captured = module.capture_before(authority)
++            save(after_path, dict(snapshot, names=['new', 'kept'], captured_at=dt.datetime.now(dt.timezone.utc).isoformat()))
++            closed = module.close_window(authority, captured, root, moment.isoformat())
++            changed = dict(authority, c7=dict(authority['c7'], protected_generations=[]))
++            cases.append(rejected(lambda: module.close_window(changed, captured, root, moment.isoformat()), 'authority-protection-drift'))
++            require(closed['names']['mapped_diff_empty'] is True and sorted(p.name for p in root.iterdir()) == before,
++                    'full C7 accounting mutated fixture or naming diff differs')
++            save(out / 'c7-focused.json', {'rename_result': names_result, 'negative_cases': cases, 'retention_plan': plan,
++                 'full_close_fixture': closed, 'all_fixture_paths_preserved': True,
++                 'scope': 'isolated R6/R7 pure mechanisms; production close NOT_EXECUTED'})
++        stages.append(('c7_R6_R7_close_checks', close_checks))
++        for stage, fn in stages:
++            emit('BEGIN ' + stage + ' SELFTEST_ISOLATED_CHECKS')
++            fn(); completed.append(stage)
++            emit('END ' + stage + ' PASS SELFTEST_ISOLATED_CHECKS productionStageExecution=NOT_EXECUTED')
++        stage = 'canary'
++        emit('BEGIN canary REAL_OFFICIAL_STDIO_FRESH_HOME')
++        require(sha(HELPER) == HELPER_SEAL, 'official canary helper changed')
++        recorder = out / 'canary-recorder.mjs'; recorder.write_text(CANARY_RECORDER)
++        run('canary-recorder', [NODE, recorder, out, ASSEMBLED, HELPER])
++        completed.append(stage)
++        emit('END canary PASS REAL_OFFICIAL_STDIO_FRESH_HOME fullRuntime=NOT_EXECUTED')
++        # Preserve every C5 material and the validators used by this run after the real canary.
++        stage = 'postflight_preservation'
++        emit('BEGIN postflight_preservation C5_MATERIALS_AND_VALIDATORS')
++        require(sha(ROOT / 'SELFTEST-MATERIALS-C5R11.json') == MATERIALS_SEAL, 'C5 material index changed during selftest')
++        for row in read(ROOT / 'SELFTEST-MATERIALS-C5R11.json')['materials']:
++            require(sha(row['path']) == row['sha256'], 'C5 material changed during selftest: ' + row['path'])
++        require(sha(executor.with_name('window_executor_state.py')) == extracted['sha256'], 'validator changed during selftest')
++        invocation = read(out / 'invocation.json')
++        require(sha(executor) == invocation['executor_sha256'] and sha(__file__) == invocation['selftest_sha256'],
++                'executor/selftest changed during selftest')
++        for name, digest in invocation['code_bindings'].items():
++            require(sha(executor.with_name(name)) == digest, 'executor module changed during selftest: ' + name)
++        emit('END postflight_preservation PASS C5_MATERIALS_AND_VALIDATORS')
++        save(out / 'summary.json', {'status': 'PASS_ISOLATED_CHECKS_AND_STDIO_CANARY', 'completed': completed,
++             'productionStageExecution': 'NOT_EXECUTED', 'productionWrite': False, 'windowGO': False,
++             'unknown': ['production authority/PID/plist/mutex/live census', 'full current closure rehash',
++                         'new complete runtime dual startup', 'unsampled escaped descendants', 'model/auth/business acceptance']})
++        emit('SELFTEST PASS_ISOLATED_CHECKS_AND_STDIO_CANARY windowGO=false')
++        return 0
++    except Exception as error:
++        emit('END ' + stage + ' FAIL ' + str(error))
++        (out / 'STOPPED-C7.md').write_text('# STOPPED-C7\n\nStage: ' + stage + '\n\n' + str(error) + '\n\nNo retry; downstream not executed.\n')
++        save(out / 'summary.json', {'status': 'FAIL_STOPPED', 'failed_stage': stage, 'error': str(error), 'completed': completed})
++        return 1
++
++
++if __name__ == '__main__':
++    require(len(sys.argv) == 2 and Path(sys.argv[1]).is_absolute(), 'usage: window-selftest.py /absolute/window-executor-v5.sh')
++    sys.dont_write_bytecode = True
++    try:
++        result = main(Path(sys.argv[1]))
++    except Exception as error:
++        print('END entry FAIL ' + str(error), flush=True)
++        result = 1
++    if result:
++        # Safe workspace fallback even if the isolation ancestor gate refused writes.
++        stop = Path(__file__).resolve().parents[2] / 'STOPPED-C7.md'
++        stop.write_text('# STOPPED-C7\n\nSelftest failed; no retry or downstream execution.\n\n'
++                        'Isolated evidence directory: ' + str(LAST_OUT or 'NOT_CREATED') + '\n'
++                        'See verbatim failure output and isolated STOPPED-C7/summary when created.\n')
++    sys.exit(result)
+diff --git a/scripts/fleet-window/window_close.py b/scripts/fleet-window/window_close.py
+new file mode 100644
+index 00000000..2b3d612b
+--- /dev/null
++++ b/scripts/fleet-window/window_close.py
+@@ -0,0 +1,146 @@
++"""C7 accounting only. No deletion, rename, traversal, or command execution."""
++import datetime as dt
++import hashlib
++import json
++import os
++from pathlib import Path
++import re
++import stat
++
++
++def require(ok, message):
++    if not ok:
++        raise RuntimeError(message)
++
++
++def names(value):
++    require(isinstance(value, list), 'names must be an explicit list')
++    require(all(isinstance(n, str) and n and '\0' not in n for n in value), 'invalid name')
++    require(len(value) == len(set(value)), 'duplicate name')
++    return set(value)
++
++
++def reconcile_names(before, after, renames):
++    old, new = names(before), names(after)
++    require(isinstance(renames, dict), 'renames must be an explicit object')
++    require(set(renames) <= old, 'rename source absent from baseline')
++    require(all(isinstance(v, str) and v in new for v in renames.values()), 'rename target absent from after')
++    require(len(set(renames.values())) == len(renames), 'rename targets not one-to-one')
++    mapped = [renames.get(n, n) for n in before]
++    require(len(set(mapped)) == len(mapped), 'rename collides with an unchanged name')
++    result = {'before': sorted(old), 'after': sorted(new), 'renames': renames,
++              'raw_removed': sorted(old-new), 'raw_added': sorted(new-old),
++              'removed': sorted(set(mapped)-new), 'added': sorted(new-set(mapped))}
++    require(not result['removed'] and not result['added'], 'R6 naming diff is not empty: '+json.dumps(result))
++    return dict(result, mapped_diff_empty=True)
++
++
++def retention_plan(root, newest_first, protected):
++    root = Path(root)
++    require(root.is_absolute() and root.resolve() == root and root.is_dir(), 'unsafe retention root')
++    order, pins = names(newest_first), names(protected)
++    require(all(re.fullmatch(r'\.ds-old-[^/]+', n) and n not in ('.', '..') for n in order), 'non-generation name')
++    observed = {}
++    # Direct children only, lstat never follows a generation or enumerates its contents.
++    for p in root.iterdir():
++        if p.name.startswith('.ds-old-'):
++            s = p.lstat()
++            require(stat.S_ISDIR(s.st_mode), 'generation is symlink/non-directory: '+str(p))
++            observed[p.name] = {'path': str(p), 'name': p.name, 'device': s.st_dev,
++                                'inode': s.st_ino, 'mode': oct(stat.S_IMODE(s.st_mode)),
++                                'uid': s.st_uid, 'gid': s.st_gid, 'mtime_ns': s.st_mtime_ns}
++    require(order == set(observed), 'generation order must cover the exact observed .ds-old-* set')
++    require(pins <= order, 'protected generation absent from inventory')
++    retained = set(newest_first[:2]) | pins
++    reasons = {n: ['latest-two'] if n in newest_first[:2] else [] for n in newest_first}
++    for n in pins:
++        reasons[n].append('authority-protected')
++    for n in newest_first:
++        # Defense in depth: explicit protected metadata and the fixed 025 boundary.
++        p = root/n
++        for marker in ('.pinned', '.keep', '.review-evidence', '.open-transaction'):
++            if os.path.lexists(p/marker):
++                retained.add(n)
++                reasons[n].append(marker)
++        if '025' in n or '.bak' in n or 'node_modules.bak' in n:
++            retained.add(n)
++            reasons[n].append('protected-material-name')
++    current = root/'current'
++    if current.is_symlink():
++        target = current.resolve(strict=True)
++        for n in newest_first:
++            if target == root/n or root/n in target.parents:
++                retained.add(n)
++                reasons[n].append('current-link')
++    return {'root': str(root), 'ordering': 'AUTHORITY_EXPLICIT_NEWEST_FIRST',
++            'newest_first': newest_first, 'protected': protected, 'list_only': True,
++            'deletion_executed': False, 'retained': [dict(observed[n], reasons=reasons[n])
++                                                   for n in newest_first if n in retained],
++            'delete_candidates': [observed[n] for n in newest_first if n not in retained],
++            'excluded': ['agent-core.bak-*', 'node_modules.bak', '025 materials', 'non-.ds-old-*']}
++
++
++def regular_json(path, expected_sha256=None):
++    p = Path(path)
++    require(p.is_absolute() and not p.is_symlink() and p.is_file(), 'missing/nonregular snapshot: '+str(p))
++    require(p.resolve() == p, 'snapshot has a symlink ancestor: '+str(p))
++    data = p.read_bytes()
++    digest = hashlib.sha256(data).hexdigest()
++    if expected_sha256 is not None:
++        require(digest == expected_sha256, 'snapshot seal changed: '+str(p))
++    return json.loads(data), {'path': str(p), 'sha256': digest}
++
++
++def timestamp(value):
++    t = dt.datetime.fromisoformat(value.replace('Z', '+00:00'))
++    require(t.tzinfo is not None and t.utcoffset() == dt.timedelta(0), 'snapshot time must be UTC')
++    return t
++
++
++def snapshot(doc, authority, scope):
++    require(doc['window_id'] == authority['window_id'] and doc['scope'] == scope and scope, 'snapshot scope/window mismatch')
++    require(doc['method'] == 'manual-inventory' and doc['collector'], 'manual attributed inventory required; gh snapshot alone refused')
++    names(doc['names'])
++    return timestamp(doc['captured_at'])
++
++
++def capture_before(authority):
++    c7 = authority['c7']
++    before, binding = regular_json(c7['before_path'], c7['before_sha256'])
++    at = snapshot(before, authority, c7['naming_scope'])
++    current = dt.datetime.now(dt.timezone.utc)
++    require(at <= current, 'baseline captured in the future')
++    # Validate explicit inputs before taking the production mutex.
++    require(Path(c7['after_path']).is_absolute() and c7['after_path'] != c7['before_path'], 'distinct after path required')
++    require(isinstance(c7['renames'], dict), 'explicit rename map required')
++    require(set(c7['renames']) <= names(before['names']), 'rename source absent from baseline')
++    targets = list(c7['renames'].values())
++    names(targets)
++    mapped = [c7['renames'].get(n, n) for n in before['names']]
++    names(mapped)
++    order = names(c7['generations_newest_first'])
++    require(all(re.fullmatch(r'\.ds-old-[^/]+', n) for n in order), 'non-generation name')
++    require(names(c7['protected_generations']) <= order, 'protected generation absent from declared order')
++    require(isinstance(c7['protection_basis'], str) and c7['protection_basis'].strip(),
++            'current/open transaction/pinned/review/025 protection inventory required')
++    return {'at': current.isoformat(), 'snapshot': before, 'binding': binding,
++            'c7': json.loads(json.dumps(c7))}
++
++
++def close_window(authority, captured, root, verified_at):
++    c7 = authority['c7']
++    require(captured['c7'] == c7, 'C7 inputs drifted')
++    before, binding = regular_json(c7['before_path'], c7['before_sha256'])
++    require(before == captured['snapshot'] and binding == captured['binding'], 'baseline changed during window')
++    after, after_binding = regular_json(c7['after_path'])
++    before_at = snapshot(before, authority, c7['naming_scope'])
++    after_at = snapshot(after, authority, c7['naming_scope'])
++    require(before_at <= timestamp(captured['at']) <= after_at <= dt.datetime.now(dt.timezone.utc), 'after snapshot is stale/future')
++    require(timestamp(verified_at) <= after_at, 'after snapshot predates production verification')
++    require(timestamp(authority['valid_from']) <= after_at < timestamp(authority['valid_until']), 'after outside window')
++    accounting = reconcile_names(before['names'], after['names'], c7['renames'])
++    plan = retention_plan(root, c7['generations_newest_first'], c7['protected_generations'])
++    return {'window_id': authority['window_id'], 'naming_scope': c7['naming_scope'],
++            'before_binding': binding, 'after_binding': after_binding, 'names': accounting,
++            'protection_basis': c7['protection_basis'], 'retention': plan,
++            'production_delete_authority': 'NONE_LIST_ONLY_REQUIRES_SEPARATE_EXACT_WINDOW_AUTHORIZATION'}
+diff --git a/scripts/fleet-window/window_executor_helper.py b/scripts/fleet-window/window_executor_helper.py
+new file mode 100644
+index 00000000..751e402e
+--- /dev/null
++++ b/scripts/fleet-window/window_executor_helper.py
+@@ -0,0 +1,350 @@
++from window_executor_state import *
++from window_close import capture_before, close_window
++
++if op=='authority':
++    path=P(args[0]); regular(path); a=read(path)
++    validate_authority(a)
++    save('authority.json',a); authority()
++    save('c7-names-before.json',capture_before(a))
++    save('invocation.json',{'at':now(),'argv':args[1:],'authorityPath':str(path),'authoritySha256':digest(path),
++                            'writerPid':int(args[1]),'productionAcceptance':'NOT_YET_EXECUTED'})
++elif op=='mutex':
++    a=authority(); require(lock.parent.is_dir() and not lock.parent.is_symlink(),'mutex parent absent/unsafe')
++    lock.mkdir(mode=0o700) # EEXIST stops; never disposes another writer's lock.
++    holder='pid=%s\nuid=%s\ncmd=window-executor-v5.sh\nwindow=%s\nstarted=%s\n'%(args[0],a['writer_uid'],a['window_id'],now())
++    (lock/'holder').write_text(holder); os.chmod(lock/'holder',0o600)
++    save('mutex.json',{'path':str(lock),'holder':holder,'sha256':digest(lock/'holder')})
++elif op=='mutex-check':
++    authority(); require(digest(lock/'holder')==read(rd/'mutex.json')['sha256'],'mutex ownership changed')
++elif op=='integrity':
++    specs=[(prep/'MANIFEST.sha256',prep,'b28eda4cc2eb47bbaf0834a144c40194d6b2f633542a7ef09192b84288ace3e6'),
++           (inp/'MANIFEST.sha256',inp,'cccad3a8d13073877b895080992338aa9d0243d6da79a896ff492752b97a632c'),
++           (inp/'SOURCE_INPUTS.sha256',inp,'bafa006e0d5f36688a2ba38f58ae7066e9216535fb994bccfb683dd4bf027644')]
++    results=[]
++    for f,b,h in specs:
++        r=manifest(f,b,h); r.pop('records'); results.append(r)
++    require(digest(prep/'WINDOW-SEQUENCE-v5.md')=='c814427d4aa1a3a73bdff634164c19936882f1101a7dfb225a9fdd78ef726cfd','blueprint changed')
++    require(digest(inp/'window-installer/trusted-cp-deploy-install.sh')=='2a6b6819b4184254ff83829affbd9cf7458bc22d36ea7fde09d752fb5963f88a','installer changed')
++    save('manifest-verification.json',results)
++elif op=='clean':
++    authority()
++    require(source.resolve()==source and source.stat().st_uid==os.getuid(),'not authorized staging worktree owner')
++    data=run(['/usr/bin/git','-C',source,'ls-files','--others','--exclude-standard','-z']).stdout
++    raw('untracked-before.nul',data); records=[]
++    backup=rd/'untracked-lockfiles'; backup.mkdir(mode=0o700)
++    # Full enumeration and ALL verified backups before the first deletion.
++    for b in data.split(b'\0'):
++        if not b: continue
++        name=os.fsdecode(b)
++        if P(name).name!='pnpm-lock.yaml': continue
++        p=source/name; regular(p)
++        require(p.resolve().is_relative_to(source),'lockfile escapes authorized source')
++        dst=backup/name; dst.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
++        shutil.copy2(p,dst); h=digest(p); require(digest(dst)==h,'lockfile backup mismatch')
++        records.append({'path':str(p),'backup':str(dst),'sha256':h,'metadata':meta(p)})
++    save('lockfile-backups.json',records)
++    for row in records:
++        p=P(row['path']); require(digest(p)==row['sha256'] and meta(p)==row['metadata'],'lockfile drift before deletion')
++        current=run(['/usr/bin/git','-C',source,'ls-files','--others','--exclude-standard','-z']).stdout.split(b'\0')
++        require(os.fsencode(str(p.relative_to(source))) in current,'lockfile no longer untracked')
++        p.unlink()
++    status=run(['/usr/bin/git','-C',source,'status','--porcelain=v1','--untracked-files=all']).stdout
++    raw('source-status-after.txt',status); require(not status,'other dirty/untracked content; STOP for itemized disposition')
++elif op=='sources':
++    a=authority(); rows=[]
++    for path in (source,harness):
++        head=run(['/usr/bin/git','-C',path,'rev-parse','HEAD']).stdout.decode().strip()
++        tr=run(['/usr/bin/git','-C',path,'rev-parse','HEAD^{tree}']).stdout.decode().strip()
++        status=run(['/usr/bin/git','-C',path,'status','--porcelain=v1','--untracked-files=all']).stdout.decode()
++        st=run(['/bin/bash',inp/'window-installer/lib/trusted-source-git-stamp.sh',path]).stdout.decode()
++        rows.append({'path':str(path),'head':head,'tree':tr,'status':status,'stamp':st})
++        require(not status,'dirty source/Harness; cannot bypass source gate: '+str(path))
++        if path==source: require(head==sha and tr==tree,'source coordinates changed')
++        else: require(st==a['expected_harness_stamp'],'Harness stamp differs from window authorization')
++    if (rd/'sources.json').exists(): require(read(rd/'sources.json')==rows,'source/Harness drift during window')
++    else: save('sources.json',rows)
++elif op=='fresh':
++    a=authority(); regular(plist); require(digest(plist)==a['expected_plist_sha256'],'plist preimage differs')
++    doc=plistlib.loads(plist.read_bytes()); env=doc['EnvironmentVariables']; argv=doc['ProgramArguments']
++    require(doc['Label']=='ai.agent-core.runtime','unexpected plist Label')
++    require(argv[:2]==[str(live/'node-runtime/bin/node'),str(live/'app/scripts/production-runtime.mjs')]
++            and '--native-arm64' not in argv,'unexpected Node/runtime/architecture argv')
++    require(doc.get('WorkingDirectory')==str(live/'app'),'unexpected runtime WorkingDirectory')
++    require(env.get('AGENT_CORE_DEPLOYED_SHA')==a['expected_old_sha'],'old plist deployment mismatch')
++    require(env.get('AGENT_DIRECTORY_AUTH_JWKS_URL'),'JWKS env missing')
++    require('DSH_RUNTIME_ARCH' not in env,'different architecture candidate')
++    require('--root' in argv and argv[argv.index('--root')+1]==str(prod),'runtime root mismatch')
++    text=launch(); launch_binding(text,doc)
++    raw('old-launchctl.txt',text.encode()); pid=pid_from(text)
++    require(pid==a['expected_old_pid'] and identity(pid)==a['expected_old_identity'],'old process identity differs')
++    require(int(identity(pid).split()[1])==a['expected_runtime_uid'],'old UID mismatch')
++    raw('plist.preimage',plist.read_bytes()); save('plist-preimage.json',{'sha256':digest(plist),'metadata':meta(plist),'document':doc})
++    save('old-process.json',{'pid':pid,'identity':identity(pid),'workers':old_workers(pid),
++         'loadedEnvSha256':loaded_env(pid,env,'old-loaded-env.private.txt')})
++    save('private-inputs.json',private_inputs('stage-02'))
++    require(pid_from(launch())==pid and identity(pid)==a['expected_old_identity'],'old process changed during fresh-read')
++elif op=='bundle':
++    b=P(args[0]); require(b.resolve()==b and b.stat().st_uid==0,'bundle must be physical and root-owned')
++    r=manifest(b/'WINDOW_INPUTS.sha256',b,'3d7130a34cb8775f8a35aa9d06dd635a73bd80cd14135f8b048feb6af224aaf5')
++    expected=set(r.pop('records')); actual=set()
++    for base,dirs,files in os.walk(b):
++        for name in dirs+files:
++            p=P(base)/name; m=p.lstat()
++            require(not p.is_symlink() and m.st_uid==0 and m.st_mode&0o022==0,'unsafe bundle custody '+str(p))
++            if p.is_file() and p.name!='WINDOW_INPUTS.sha256': actual.add(str(p.relative_to(b)))
++    require(actual==expected,'bundle file membership differs')
++    save('window-bundle.json',{'path':str(b),'manifest':r,'installerSha256':digest(b/'scripts/trusted-cp-deploy-install.sh')})
++elif op=='prerequisites':
++    a=manifest(prep/'r3/accepted-r2-inputs.sha256',prep)['records']
++    current=inventory(prep/'scratch',False); r2=inventory(prep/'r2',False)
++    files={'scratch/'+k for k,v in current.items() if v['kind']=='file'}|{'r2/'+k for k,v in r2.items() if v['kind']=='file'}
++    require(files==set(a),'accepted candidate/r2 file membership changed')
++    links=sorted([{'path':'scratch/'+k,'target':v['target']} for k,v in current.items() if v['kind']=='link']+
++                 [{'path':'r2/'+k,'target':v['target']} for k,v in r2.items() if v['kind']=='link'],key=lambda r:r['path'])
++    old=[r for r in read(prep/'r2/symlink-inventory.json') if r['path'].startswith(('scratch/','r2/'))]
++    require(links==old,'accepted symlink bindings changed')
++    c=read(prep/'r2/canary-receipt.json'); b=read(prep/'r3/attempt-02/runtime-boot-receipt.json')
++    require(c['ok'] is True and c['wrapperRc']==0 and c['result']['ready'] is True and
++            c['result']['pluginTreeFailed'] is False and c['result']['missingPackages']==[] and
++            c['noFatal'] is True and c['childTerminated'] is True,'fresh-child canary not PASS')
++    require(b['ok'] is True and b['wrapperRc']==0 and len(b['checks'])==16 and all(v is True for v in b['checks'].values())
++            and b['close']==dict(b['close'],code=0,signal=None),'full runtime not PASS')
++    require(c['candidate']==b['candidate']==str(prep/'scratch'),'dual candidate binding differs')
++    for name,h in b['rawHashes'].items(): require(digest(prep/'r3/attempt-02'/name)==h,'runtime raw log mismatch')
++    closure={k:inventory(prep/'scratch'/k) for k in ('app','harness','node-runtime')}
++    save('accepted-closure.json',closure)
++    save('accepted-closure-acl.json',{k:json.loads(acl_listing(prep/'scratch'/k)) for k in closure})
++    save('dual-prerequisites.json',{'at':now(),'canarySha256':digest(prep/'r2/canary-receipt.json'),
++         'runtimeSha256':digest(prep/'r3/attempt-02/runtime-boot-receipt.json'),'regularFiles':len(files),
++         'links':len(links),'canaryTermination':'SIGKILL by original tool; not graceful',
++         'fullRuntimeTermination':'SIGTERM, code=0, signal=null','isolatedOnly':True})
++elif op=='quiet':
++    a=authority(); old=read(rd/'old-process.json')
++    require(identity(old['pid'])==old['identity'],'old process identity changed')
++    log=P(read(rd/'plist-preimage.json')['document']['StandardErrorPath']); regular(log)
++    m=meta(log); age=time.time()-m['mtime_ns']/1e9
++    save('quiet-last.json',{'at':now(),'path':str(log),'ageSeconds':age,'metadata':m})
++    if age<180: sys.exit(10) # only bounded polling condition, never a failed gate retry
++    # supervisor: settle unresolved turns NOW (runtime up but mtime-quiet = no turn
++    # events in flight, so no re-persistence race); census must then read clean.
++    import subprocess as sp
++    r=sp.run(['sudo','-n','/usr/local/libexec/agent-core/node-runtime/bin/node','/tmp/settle-all-pending.mjs'],capture_output=True,text=True)
++    open('/tmp/fleet-v5-prep/settle-at-quiet.log','a').write(r.stdout+r.stderr)
++    if r.returncode!=0: sys.exit(45)
++    c=census('quiet-census'); require(quiet_ready(age,True,meta(log)==m),'log changed during census')
++    save('quiet-pass.json',{'at':now(),'ageSeconds':age,'logMetadata':m,'censusHashes':c})
++elif op=='before-stop':
++    authority(); old=read(rd/'old-process.json')
++    require(identity(old['pid'])==old['identity'],'old identity changed before bootout')
++    require(digest(plist)==read(rd/'plist-preimage.json')['sha256'],'plist changed before bootout')
++    census('immediate-pre-bootout-census')
++    doc=read(rd/'plist-preimage.json')['document']; log=P(doc['StandardErrorPath'])
++    require(time.time()-log.stat().st_mtime>=180,'quiet window broken before bootout')
++    workers={r['pid']:r for r in old['workers']}
++    workers.update({r['pid']:r for r in old_workers(old['pid'])})
++    save('old-workers-at-bootout.json',list(workers.values()))
++elif op=='exit-check':
++    absent=service_absent(pending=True); table=process_table(); old=read(rd/'old-workers-at-bootout.json')
++    remain=[r for r in old if r['pid'] in table] # reused PID is UNKNOWN, not proof of exit
++    remain.extend(r for r in table.values() if str(live) in r['rest'])
++    if remain: save('old-exit-pending.json',remain); sys.exit(10)
++    for row in old:
++        p=sp.run(['/bin/ps','-p',str(row['pid']),'-o','pid='],stdout=sp.PIPE,stderr=sp.PIPE,timeout=10)
++        require(p.returncode==1 and not p.stdout.strip() and not p.stderr.strip(),'exact old PID absence not proven')
++    for port in (8788,8790):
++        p=sp.run(['/usr/sbin/lsof','-nP','-iTCP:'+str(port),'-sTCP:LISTEN','-Fp'],stdout=sp.PIPE,stderr=sp.PIPE,timeout=10)
++        require(p.returncode==1 and not p.stdout and not p.stderr,'old port not released or readback unavailable')
++    census('post-bootout-census')
++    save('old-exit.json',{'at':now(),'supervisor':absent,'oldProcesses':old,'remaining':[]})
++elif op=='preimage':
++    authority(); service_absent(); save('private-inputs-at-install.json',private_inputs('stage-06'))
++    before=inventory(live); save('preimage-live-inventory.json',before)
++    acl=acl_listing(live); raw('preimage-acl-listing.private.txt',acl)
++    target=rd/'preimage-full'; require(not target.exists(),'preimage destination exists')
++    run(['/usr/bin/ditto','--rsrc','--extattr','--acl',live,target],timeout=3600)
++    require(inventory(target)==before and inventory(live)==before,'full preimage copy differs')
++    require(acl_listing(live)==acl and acl_listing(target)==acl,'preimage ACL/listing differs')
++    # Full copy retains node-runtime/harness/.cache even if §1b moves BAK subtrees.
++    external={}
++    for rel in ('control/scheduler-watchdog','control/incident-backups'):
++        p=prod/rel; require(p.is_dir() and not p.is_symlink(),'external preimage missing '+str(p))
++        external[str(p)]={'root':meta(p),'entries':inventory(p),'aclListingSha256':hashlib.sha256(acl_listing(p)).hexdigest()}
++        raw('external-'+p.name+'-acl.private.txt',acl_listing(p))
++    save('external-preimage-metadata.json',external)
++    save('rollback-preimage.json',{'at':now(),'fullTree':str(target),'fullTreeRootMetadata':meta(live),
++         'plist':str(rd/'plist.preimage'),'loadedEnv':str(rd/'old-loaded-env.private.txt'),
++         'externalMetadata':str(rd/'external-preimage-metadata.json'),'businessSnapshotRestoreAllowed':False})
++elif op=='install-start':
++    authority(); service_absent()
++    require(digest(plist)==read(rd/'plist-preimage.json')['sha256'],'plist drift before install')
++    require(inventory(live)==read(rd/'preimage-live-inventory.json'),'live preimage drift before install')
++    census('immediate-pre-install-census')
++    r=live.parent/'agent-core-install-mutation-receipt.json'
++    save('install-start.json',{'at':now(),'epoch':time.time(),'previousMutationReceiptSha256':digest(r) if r.is_file() else None})
++elif op=='install-failed':
++    r=live.parent/'agent-core-install-mutation-receipt.json'; regular(r)
++    doc=read(r); start=read(rd/'install-start.json')
++    require(digest(r)!=start['previousMutationReceiptSha256'],'stale mutation receipt')
++    require(start['epoch']-1<=stamp(doc['recorded_at'])<=time.time()+1,'mutation receipt not this run')
++    require(doc['receipt']=='AGENT_CORE_INSTALL_MUTATION_RECEIPT_V1' and doc['exit_code']==int(args[0]),'mutation receipt rc/kind mismatch')
++    log=(rd/'install.log').read_text(); bak=doc['preimage_bak']
++    if bak: require(('== backing up previous install -> '+bak) in log and P(bak).is_dir(),'receipt preimage not this install')
++    require(doc['restore_r1_required']==bool(doc['reused_preimage_subtrees']),'R1 mismatch')
++    require(doc['restore_r2_required']==('prod_root_5b' in doc['stages_completed']),'R2 mismatch')
++    save('failed-install-mutation-receipt.json',doc)
++elif op=='install-success':
++    log=(rd/'install.log').read_text(); found=re.findall(r'^== backing up previous install -> (.+)$',log,re.M)
++    require(len(found)==1,'exact successful backup coordinate unavailable')
++    bak=P(found[0]); require(re.fullmatch(re.escape(str(live))+r'\.bak-\d{8}-\d{6}',str(bak)) and bak.is_dir() and not bak.is_symlink(),'invalid preimage')
++    marker=bak/'.preimage-reused-subtrees'; reused=marker.read_text().splitlines() if marker.exists() else []
++    require(len(set(reused))==len(reused) and set(reused)<={'node-runtime','harness','.cache'},'invalid reuse marker')
++    for item in reused:
++        require((rd/'preimage-full'/item).is_dir() and not (bak/item).exists(),'R1 subtree evidence inconsistent')
++        require("no longer contains '%s'"%item in log,'reuse marker lacks this-run log evidence')
++    completed=[x for x in log.splitlines() if x.startswith('  production root: /Users/authsvc/.agent-core (505-private control state 0700;')]
++    require(len(completed)==1,'§5b completion evidence missing')
++    save('successful-install-rollback.json',{'at':now(),'installLogSha256':digest(rd/'install.log'),
++         'preimage_bak':str(bak),'reused_preimage_subtrees':reused,'restore_r1_required':bool(reused),
++         'restore_r2_required':True,'section5bCompletion':completed[0],
++         'reuseMarkerSha256':digest(marker) if marker.exists() else None,'completePreimageCopy':str(rd/'preimage-full'),
++         'mutationReceiptUsed':False})
++elif op=='preserve-config':
++    # Sequence §2/§5: carry forward the CURRENT stopped config which §5 of the
++    # pinned installer only partly copies. This is a declared install step, not
++    # recovery after a failed gate. Never overwrite a changed/current file and
++    # never write historical jobs/bindings/incidents/runs/fences/credentials.
++    authority(); service_absent()
++    pre=rd/'preimage-full/config'; dest=live/'config'
++    expected=inventory(pre); current=inventory(dest)
++    require(all(k in expected and v==expected[k] for k,v in current.items()),
++            'installer config has changed/unexpected existing entries; no overwrite allowed')
++    for required in ('agents.json','agent-credentials.json'):
++        require(required in current and current[required]==expected[required],'current authority/credentials not preserved by installer')
++    carried=[]
++    for k in sorted(expected,key=lambda k:(len(P(k).parts),k)):
++        if k=='.' or k in current: continue
++        src=pre/k; dst=dest/k
++        if dst.exists() or dst.is_symlink(): continue # copied with its ancestor
++        require(not src.is_symlink(),'omitted config symlink needs explicit review: '+k)
++        require(not dst.exists() and not dst.is_symlink(),'config destination appeared')
++        run(['/usr/bin/ditto','--rsrc','--extattr','--acl',src,dst],timeout=3600)
++        carried.append(k)
++    require(inventory(dest)==expected,'carried config does not match stopped preimage')
++    require(acl_listing(dest)==acl_listing(pre),'carried config ACL differs')
++    save('config-carryforward.json',{'at':now(),'from':str(pre),'to':str(dest),'copiedMissingOnly':carried,
++         'existingFilesOverwritten':False,'historicalPrepSnapshotsUsed':False,'exactContentMetadataReadback':True})
++elif op=='final-binding':
++    authority(); service_absent(); accepted=read(rd/'accepted-closure.json')
++    actual={}; changes=[]
++    accepted_acl=read(rd/'accepted-closure-acl.json')
++    for part in ('app','harness','node-runtime'):
++        actual[part]=inventory(live/part)
++        final_acl=json.loads(acl_listing(live/part))
++        save('final-'+part+'-acl.json',final_acl)
++        if final_acl!=accepted_acl[part]: changes.append(part+'/<ACL>')
++        for k in sorted(set(accepted[part])|set(actual[part])):
++            x=accepted[part].get(k); y=actual[part].get(k)
++            # UID/GID differ for isolated execution; production custody is checked below.
++            strip=lambda v: {a:b for a,b in v.items() if a not in ('uid','gid')} if v else None
++            if strip(x)!=strip(y): changes.append(part+'/'+k)
++        a=authority()
++        for k,v in actual[part].items():
++            if v['kind']!='link': require(v['uid']==a['expected_runtime_uid'] and v['gid']==a['expected_runtime_gid']
++                                        and int(v['mode'],8)&0o022==0,'unsafe final closure custody '+part+'/'+k)
++    save('final-closure.json',actual); save('final-closure-comparison.json',{'changed':changes,'sameContentLinksModes':not changes})
++    require(not changes,'final closure differs: supplement SAME-final-tree isolated canary + full runtime receipts before bootstrap; STOP')
++    provenance=read(live/'app/pack-provenance.json')
++    require(provenance['source_head_sha']==sha and provenance['source_tree_sha']==tree and provenance['source_clean']=='yes'
++            and provenance['generation_label_sha']==sha and provenance['main_repo_realpath']==str(source),'final provenance mismatch')
++    save('private-inputs-final.json',private_inputs('stage-09'))
++    config=inventory(live/'config'); save('final-config-inventory.private.json',config)
++    require(config==inventory(rd/'preimage-full/config'),'final config bytes/links/permissions differ from current window preimage; STOP')
++    save('final-binding.json',{'at':now(),'dualReceiptBinding':'UNCHANGED_COMPLETE_CLOSURE','config':'PRODUCTION_PREIMAGE_PRESERVED',
++         'isolatedConfigOverridesCopied':False,'productionUid':a['expected_runtime_uid'],'provenance':provenance})
++elif op=='plist-update':
++    authority(); service_absent(); old=read(rd/'plist-preimage.json')
++    require(digest(plist)==old['sha256'],'plist changed before authorized SHA-only edit')
++    doc=plistlib.loads(plist.read_bytes()); doc['EnvironmentVariables']['AGENT_CORE_DEPLOYED_SHA']=sha
++    tmp=plist.with_name(plist.name+'.v5-'+authority()['window_id'])
++    with open(tmp,'xb') as f: plistlib.dump(doc,f,sort_keys=False)
++    m=old['metadata']; os.chown(tmp,m['uid'],m['gid']); os.chmod(tmp,int(m['mode'],8))
++    run(['/usr/bin/plutil','-lint',tmp]); os.replace(tmp,plist)
++    back=plistlib.loads(plist.read_bytes()); expected=old['document']; expected['EnvironmentVariables']['AGENT_CORE_DEPLOYED_SHA']=sha
++    require(back==expected,'plist delta exceeds deployed SHA')
++    save('plist-after.json',{'sha256':digest(plist),'document':back,'metadata':meta(plist)})
++    offsets=[]
++    for key in ('StandardOutPath','StandardErrorPath'):
++        p=P(back[key]); regular(p); offsets.append(dict(meta(p),path=str(p)))
++    save('restart-log-offsets.json',offsets); save('bootstrap-start.json',{'at':now(),'epoch':time.time()})
++elif op=='verify':
++    a=authority(); doc=read(rd/'plist-after.json')['document']; text=launch()
++    launch_binding(text,doc); pid=pid_from(text)
++    require(pid!=a['expected_old_pid'],'new PID equals old PID')
++    ident=identity(pid); require(int(ident.split()[1])==a['expected_runtime_uid'] and int(ident.split()[2])==a['expected_runtime_gid'],'new UID/GID mismatch')
++    require(ident.endswith(str(live/'node-runtime/bin/node')),'new program mismatch')
++    prior=read(rd/'new-process.json') if (rd/'new-process.json').exists() else None
++    require(prior is None or prior['identity']==ident,'runtime restarted during acceptance window')
++    env=doc['EnvironmentVariables']; loaded_env(pid,env,'new-loaded-env.private.txt')
++    ports=[int(env.get('PRODUCT_API_PORT','8787')),int(env.get('NOTIFICATION_INGRESS_PORT','8790'))]
++    require(ports==[8788,8790],'unexpected production ports; scratch ports must never leak')
++    owned=listeners(pid,ports); log=log_delta()
++    patterns=[r'50 http capabilities ready, 19 local capabilities ready',
++              r'product-api.*listening.*(?:127\.0\.0\.1:)?8788',
++              r'notification-ingress.*8790.*deliverReady=true.*storeReady=true',
++              r'production runtime ready \(pid '+str(pid)+r'\); scheduler loop online']
++    for pattern in patterns: require(re.search(pattern,log),'missing production readiness marker '+pattern)
++    require(not re.search(r'\bFATAL\b|ERR_MODULE_NOT_FOUND|ERR_PACKAGE_PATH_NOT_EXPORTED|plugin-tree.*fail',log,re.I),'runtime fatal/closure failure')
++    product=health(ports[0],'agent-core-product-api'); ingress=health(ports[1],'agent-core-notification-ingress')
++    require(ingress.get('deliverReady') is True and ingress.get('storeReady') is True,'ingress not ready')
++    # /scheduler/health requires scoped bearer credentials. The public /health
++    # is not canonical census evidence. Isolated canonical PASS is bound in §3;
++    # live authenticated checks require a separately specified request/result.
++    require(pid_from(launch())==pid and identity(pid)==ident,'new instance changed during verification')
++    save('new-process.json',{'at':now(),'pid':pid,'identity':ident,'listeners':owned})
++    save('production-health.json',{'at':now(),'product':product,'ingress':ingress,'authentication':'NOT_TESTED',
++                                  'liveAuthenticatedCanonicalHealth':'UNKNOWN'})
++    raw('new-launchctl.txt',text.encode())
++elif op=='hr-check':
++    authority(); p=read(rd/'new-process.json'); require(identity(p['pid'])==p['identity'],'new runtime changed during HR watch')
++    require(pid_from(launch())==p['pid'],'supervised PID changed during HR watch')
++    log=log_delta(); require(not re.search(r'\bFATAL\b|ERR_MODULE_NOT_FOUND',log),'fatal during HR watch')
++    lines=[x for x in log.splitlines() if re.search(r'\[router\] \[broker\] execute as agent agt_hr-agent \(capability [^)]+\)',x)]
++    watch=read(rd/'hr-watch.json'); observed=time.monotonic()
++    previous=read(rd/'hr-observation.json') if (rd/'hr-observation.json').exists() else {}
++    within=bool(lines) and observed<=watch['deadlineMonotonic']
++    recovered=previous.get('brokerExecuteRecovered') is True or within
++    save('hr-observation.json',{'at':now(),'pid':p['pid'],'matchingLines':lines,
++                               'brokerExecuteRecovered':recovered,'within600Seconds':recovered,
++                               'businessSuccess':'UNKNOWN','criterion':'fa4510be broker execute feature; not log mtime'})
++    if args and args[0]=='final': require(recovered,'no HR broker execute observed within 10 minute window')
++elif op=='hr-start':
++    start=time.monotonic()
++    save('hr-watch.json',{'at':now(),'startedMonotonic':start,'deadlineMonotonic':start+600})
++elif op=='hr-remaining':
++    print(max(0,math.ceil(read(rd/'hr-watch.json')['deadlineMonotonic']-time.monotonic())))
++elif op=='rollback-summary':
++    for name in ('successful-install-rollback.json','failed-install-mutation-receipt.json','rollback-preimage.json'):
++        if (rd/name).is_file():
++            doc=read(rd/name)
++            print(name+': '+json.dumps({k:v for k,v in doc.items() if k in (
++                'preimage_bak','reused_preimage_subtrees','restore_r1_required','restore_r2_required',
++                'mutation_truth','completePreimageCopy','fullTree','plist','externalMetadata')},ensure_ascii=False))
++elif op=='phase':
++    event={'at':now(),'stage':args[0],'status':args[1],'detail':args[2:]}
++    save(args[0]+'.json',event)
++    with open(rd/'phase-events.jsonl','a') as f: f.write(json.dumps(event)+'\n')
++elif op=='close':
++    a=authority()
++    verified=read(rd/'stage_11_production_verify.json')
++    require(verified['status']=='PASS','production verification did not PASS; no close plan')
++    result=close_window(a,read(rd/'c7-names-before.json'),live,verified['at'])
++    save('c7-close.json',result)
++    raw('c7-delete-candidates.nul',b''.join(os.fsencode(r['path'])+b'\0' for r in result['retention']['delete_candidates']))
++    save('c7-delete-candidates.json',result['retention']['delete_candidates'])
++elif op=='release':
++    require(digest(lock/'holder')==read(rd/'mutex.json')['sha256'],'cannot release changed mutex')
++    (lock/'holder').unlink(); lock.rmdir()
++    save('completion.json',{'at':now(),'window':'PASS_CONFIGURED_CHECKS','productionExecution':'EXECUTED',
++                           'authentication':'NOT_TESTED','businessSuccess':'UNKNOWN','hrCriterion':'broker execute observed',
++                           'c7ReceiptSha256':digest(rd/'c7-close.json'),'retentionDeletion':'NOT_EXECUTED_LIST_ONLY'})
++else: raise RuntimeError('unknown helper operation '+op)
+diff --git a/scripts/fleet-window/window_executor_state.py b/scripts/fleet-window/window_executor_state.py
+new file mode 100644
+index 00000000..39a84600
+--- /dev/null
++++ b/scripts/fleet-window/window_executor_state.py
+@@ -0,0 +1,359 @@
++import datetime as dt, hashlib, json, math, os, pathlib, plistlib, re, shutil, stat
++import subprocess as sp, sys, time, urllib.request
++P=pathlib.Path
++rd=P(sys.argv[1]); op=sys.argv[2]; args=sys.argv[3:]
++prep=P('/private/tmp/fleet-v5-prep'); inp=P('/private/tmp/fleet-binding-diag/r3')
++source=P('/private/tmp/fleet-roll-src'); harness=P('/Users/yanfenma/workspace/github/deepseek-harness')
++live=P('/usr/local/libexec/agent-core'); prod=P('/Users/authsvc/.agent-core')
++plist=P('/Library/LaunchDaemons/ai.agent-core.runtime.plist')
++lock=P('/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock')
++service='system/ai.agent-core.runtime'
++sha='ce1d13c1e8585759c6a5f194fb5553d990574b5b'; tree='4b4a6a52cfe53a3569c5d14d909b90cdeb842704'
++def require(ok, message):
++    if not ok: raise RuntimeError(message)
++def digest(p):
++    h=hashlib.sha256()
++    with open(p,'rb') as f:
++        for b in iter(lambda:f.read(1024*1024),b''): h.update(b)
++    return h.hexdigest()
++def now(): return dt.datetime.now(dt.timezone.utc).isoformat()
++def stamp(s):
++    value=dt.datetime.fromisoformat(s.replace('Z','+00:00'))
++    require(value.tzinfo is not None and value.utcoffset()==dt.timedelta(0),'authority/receipt time must be UTC')
++    return value.timestamp()
++def validate_authority(a, writer_uid=None, now_epoch=None):
++    required=['window_id','writer','writer_uid','valid_from','valid_until','expected_old_pid','expected_old_identity',
++              'expected_old_sha','expected_plist_sha256','expected_harness_stamp','expected_bindings_sha256',
++              'expected_runtime_uid','expected_runtime_gid','scopes']
++    require(all(k in a for k in required),'authority fields missing; see --help')
++    require(re.fullmatch('[A-Za-z0-9._-]{1,80}',a['window_id']) and a['writer'],'invalid writer/window id')
++    uid=os.getuid() if writer_uid is None else writer_uid
++    require(a['writer_uid']==uid!=0,'execute as explicitly named non-root writer; privileged actions use sudo')
++    require(a['expected_old_sha']=='fa4510beb6b01e5c40000a2ae36a62c526759e76','r4 legacy stop authorization is fa4510be only')
++    require(set(['source_lockfile_cleanup','production_mutex','bootout','full_preimage','install',
++                 'plist_deployed_sha_only','bootstrap','verify','hr_observe'])<=set(a['scopes']),'missing authorized scope')
++    current=time.time() if now_epoch is None else now_epoch
++    require(stamp(a['valid_from'])<=current<stamp(a['valid_until']),'window authorization not current')
++    return a
++def quiet_ready(age_seconds, census_clean, log_unchanged):
++    return math.isfinite(age_seconds) and age_seconds>=180 and census_clean is True and log_unchanged is True
++def read(p): return json.loads(P(p).read_text())
++def save(name,obj):
++    p=rd/name
++    with open(p,'w') as f: json.dump(obj,f,ensure_ascii=False,indent=2); f.write('\n')
++    os.chmod(p,0o600)
++    if os.geteuid()==0: os.chown(p,rd.stat().st_uid,rd.stat().st_gid)
++def raw(name,data):
++    p=rd/name; p.write_bytes(data); os.chmod(p,0o600)
++    if os.geteuid()==0: os.chown(p,rd.stat().st_uid,rd.stat().st_gid)
++def run(argv,ok=(0,),env=None,timeout=60):
++    if env is None: env=dict(os.environ,LC_ALL='C',LANG='C')
++    p=sp.run([str(x) for x in argv],stdout=sp.PIPE,stderr=sp.PIPE,env=env,timeout=timeout)
++    require(p.returncode in ok,'command failed rc=%s argv=%r stderr=%s'%(p.returncode,argv,p.stderr.decode(errors='replace')[-2000:]))
++    return p
++def meta(p):
++    s=P(p).lstat()
++    return dict(uid=s.st_uid,gid=s.st_gid,mode=oct(stat.S_IMODE(s.st_mode)),size=s.st_size,
++                mtime_ns=s.st_mtime_ns,dev=s.st_dev,ino=s.st_ino)
++def extended(p):
++    s=P(p).lstat()
++    try:
++        names=sorted(os.listxattr(p,follow_symlinks=False))
++        values={name:hashlib.sha256(os.getxattr(p,name,follow_symlinks=False)).hexdigest() for name in names}
++    except (AttributeError, OSError):
++        try:
++            # supervisor: os.listxattr is Linux-only CPython API; on macOS fall back to
++            # the xattr CLI so the ACL/xattr surface is still recorded (r5 run6 stage_03)
++            r=run(['/usr/bin/xattr','-l',str(p)])
++            out=r.stdout.decode(errors='strict')
++            values={'cli':hashlib.sha256(out.encode()).hexdigest()} if out.strip() else {}
++        except Exception:
++            values={'cli':'<unreadable>'}  # dangling symlink or vanished entry: record, don't crash (r5 run7)
++    return {'flags':getattr(s,'st_flags',0),'xattrs':values}
++def regular(p): require(P(p).is_file() and not P(p).is_symlink(),'missing/nonregular file: '+str(p))
++def inventory(root,metadata=True):
++    result={}
++    if metadata:
++        m=meta(root); result['.']={'kind':'dir',**{k:m[k] for k in ('uid','gid','mode')},**extended(root)}
++    for base,dirs,files in os.walk(root,followlinks=False):
++        for n in sorted(dirs+files):
++            p=P(base)/n; k=str(p.relative_to(root)); m=meta(p)
++            if p.is_symlink(): row={'kind':'link','target':os.readlink(p)}
++            elif p.is_dir(): row={'kind':'dir'}
++            elif p.is_file(): row={'kind':'file','sha256':digest(p)}
++            else: raise RuntimeError('unsupported special file '+str(p))
++            if metadata:
++                row.update({k:m[k] for k in ('uid','gid','mode')}); row.update(extended(p))
++            result[k]=row
++    return result
++def acl_listing(root):
++    # One recursive read, not a process per file. Keep only ACL entries keyed
++    # by relative filename; ls's '..', mtime and link-count columns are not ACL.
++    text=run(['/bin/ls','-laeR',root]).stdout.decode()
++    directory=P(root); key=None; rows={}
++    for line in text.splitlines():
++        if line.startswith(str(root)) and line.endswith(':'):
++            directory=P(line[:-1]); key=None
++        elif re.match(r'^\s*\d+: ',line):
++            require(key is not None,'ACL entry has no bound filename')
++            rows.setdefault(key,[]).append(line.strip())
++        elif line and line[0] in '-dlbcps':
++            fields=line.split(None,8); require(len(fields)==9,'unparseable metadata listing')
++            name=fields[8]
++            if name=='..' or (name=='.' and directory!=P(root)): key=None; continue
++            key='.' if name=='.' else str((directory/name).relative_to(root))
++    return (json.dumps(rows,sort_keys=True,ensure_ascii=False)+'\n').encode()
++def manifest(file,base,expected=None):
++    regular(file)
++    if expected: require(digest(file)==expected,'manifest seal changed: '+str(file))
++    records={}
++    for row in file.read_text().splitlines():
++        h,name=row.split('  ',1); require(re.fullmatch('[a-f0-9]{64}',h),'invalid digest')
++        require(name not in records,'duplicate manifest path')
++        p=P(name) if P(name).is_absolute() else base/name
++        require(digest(p)==h,'manifest mismatch: '+str(p)); records[name]=h
++    require(records,'empty manifest')
++    return {'path':str(file),'sha256':digest(file),'verified':len(records),'records':records}
++def authority():
++    a=read(rd/'authority.json')
++    require(stamp(a['valid_from'])<=time.time()<stamp(a['valid_until']),'window authorization not current')
++    return a
++def identity(pid):
++    return run(['/bin/ps','-p',str(pid),'-o','pid=','-o','uid=','-o','gid=','-o','lstart=','-o','comm=']).stdout.decode().strip()
++def launch(): return run(['/bin/launchctl','print',service]).stdout.decode()
++def pid_from(text):
++    m=re.findall(r'^\s*pid = (\d+)\s*$',text,re.M); require(len(m)==1,'exact launch PID unavailable'); return int(m[0])
++def loaded_env(pid,expected,name):
++    data=run(['/bin/ps','eww','-p',str(pid),'-o','command=']).stdout
++    raw(name,data) # private file only; never print credentials to console
++    text=data.decode(errors='strict').rstrip('\n')
++    for key,value in expected.items():
++        require(isinstance(value,str),'non-string plist env '+key)
++        require(re.search(r'(?:^| )'+re.escape(key+'='+value)+r'(?= [A-Za-z_][A-Za-z_0-9]*=|$)',text),
++                'loaded env missing/mismatch '+key)
++    for key in ('NODE_OPTIONS','NODE_PATH','DSH_RUNTIME_ARCH','HTTP_PROXY','HTTPS_PROXY','ALL_PROXY',
++                'NO_PROXY','http_proxy','https_proxy','all_proxy','no_proxy','NODE_USE_ENV_PROXY'):
++        require(not re.search(r'(?:^| )'+key+'=',text),'unexpected loaded execution environment '+key)
++    return digest(rd/name)
++def launch_binding(text,doc):
++    found=re.search(r'^\s*arguments = \{\n(.*?)^\s*\}',text,re.M|re.S)
++    require(found is not None,'loaded launch arguments unavailable')
++    values=[line.strip() for line in found[1].splitlines() if line.strip()]
++    require(values==doc['ProgramArguments'],'loaded launch arguments differ from plist')
++    cwd=re.search(r'^\s*working directory = (.+)$',text,re.M)
++    require(cwd is not None and cwd[1].strip()==doc['WorkingDirectory'],'loaded WorkingDirectory differs')
++def process_table():
++    t=run(['/bin/ps','-axo','pid=,ppid=,uid=,gid=,lstart=,command=']).stdout.decode()
++    rows={}
++    for line in t.splitlines():
++        m=re.match(r'\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.+)',line)
++        require(m is not None,'unparseable process table')
++        pid,parent,uid,gid=map(int,m.groups()[:4]); rows[pid]={'pid':pid,'ppid':parent,'uid':uid,'gid':gid,'rest':m[5]}
++    return rows
++def old_workers(pid):
++    rows=process_table(); wanted={pid}
++    while True:
++        new=wanted|{p for p,r in rows.items() if r['ppid'] in wanted}
++        if new==wanted: break
++        wanted=new
++    # Also retain detached trusted-tree workers; don't rely on PPID after exit.
++    wanted|={p for p,r in rows.items() if str(live) in r['rest'] and p!=os.getpid()}
++    return [rows[p] for p in sorted(wanted) if p in rows]
++def service_absent(pending=False):
++    p=sp.run(['/bin/launchctl','print',service],stdout=sp.PIPE,stderr=sp.PIPE,timeout=10)
++    text=(p.stdout+p.stderr).decode(errors='replace')
++    if pending and p.returncode==0: sys.exit(10)
++    require(p.returncode!=0 and re.search(r'Could not find (?:specified )?service|service not found',text,re.I),
++            'supervisor absence not proven: '+text[-500:])
++    return {'rc':p.returncode,'output':text}
++def json_value(data):
++    def object_pairs(pairs):
++        result={}
++        for key,value in pairs:
++            require(key not in result,'duplicate JSON object key')
++            result[key]=value
++        return result
++    def bad_constant(value): raise ValueError('non-JSON numeric constant')
++    return json.loads(data,object_pairs_hook=object_pairs,parse_constant=bad_constant)
++def json_kind(value):
++    if value is None: return 'null'
++    if isinstance(value,bool): return 'boolean'
++    if isinstance(value,(int,float)): return 'number'
++    if isinstance(value,str): return 'string'
++    if isinstance(value,list): return 'array'
++    if isinstance(value,dict): return 'object'
++    raise TypeError('unsupported JSON value')
++def state_diff(before,after,path=''):
++    # Complete JSON-pointer diff, retained only in 0600 receipts; no truncation.
++    if not isinstance(before,(dict,list)) and type(before) is type(after) and before==after: return []
++    pointer=lambda key:path+'/'+str(key).replace('~','~0').replace('/','~1')
++    if isinstance(before,dict) and isinstance(after,dict):
++        rows=[]
++        for key in sorted(set(before)|set(after)):
++            if key not in before: rows.append({'op':'add','path':pointer(key),'after':after[key]})
++            elif key not in after: rows.append({'op':'remove','path':pointer(key),'before':before[key]})
++            else: rows.extend(state_diff(before[key],after[key],pointer(key)))
++        return rows
++    if isinstance(before,list) and isinstance(after,list):
++        rows=[]
++        for i in range(max(len(before),len(after))):
++            if i>=len(before): rows.append({'op':'add','path':pointer(i),'after':after[i]})
++            elif i>=len(after): rows.append({'op':'remove','path':pointer(i),'before':before[i]})
++            else: rows.extend(state_diff(before[i],after[i],pointer(i)))
++        return rows
++    return [{'op':'replace','path':path,'before':before,'after':after}]
++def validate_live_identity(name,before,after):
++    require(isinstance(before,dict) and isinstance(after,dict),'live state must be a JSON object: '+name)
++    schema=lambda doc:{k:json_kind(v) for k,v in doc.items()}
++    require(schema(before)==schema(after),'live top-level schema changed: '+name)
++    require(type(after.get('version')) is int and after['version']==before.get('version'),
++            'live schema version changed: '+name)
++    if name=='jobs.json':
++        def agents(doc):
++            rows=doc['jobs']; require(isinstance(rows,list),'jobs must be an array')
++            result={}
++            for row in rows:
++                require(isinstance(row,dict) and isinstance(row.get('id'),str) and row['id']
++                        and isinstance(row.get('agentId'),str) and row['agentId'],'invalid job identity')
++                require(row['id'] not in result,'duplicate job identity')
++                result[row['id']]=row['agentId']
++            return result
++        old=agents(before); new=agents(after)
++        require(set(old.values())==set(new.values()),'live agent identity set changed')
++        require(all(old[k]==new[k] for k in old.keys()&new.keys()),'existing job changed agent identity')
++        # Historical occurrences may belong to deleted jobs/agents. Preserve
++        # those already present in the accepted snapshot; reject new identities.
++        def owners(doc):
++            require(isinstance(doc['occurrences'],list),'occurrences must be an array')
++            result=set()
++            for row in doc['occurrences']:
++                require(isinstance(row,dict),'invalid occurrence object')
++                if 'ownerAgentId' in row:
++                    require(isinstance(row['ownerAgentId'],str) and row['ownerAgentId'],'invalid occurrence owner')
++                    result.add(row['ownerAgentId'])
++            return result
++        require(owners(after)<=owners(before)|set(old.values()),'new occurrence agent identity')
++        return {'agentIds':sorted(set(new.values())),'jobs':len(new),'occurrences':len(after['occurrences'])}
++    require(name=='incidents.json','unclassified live input')
++    require(after.get('migration')==before.get('migration'),'incident migration authority changed')
++    require(isinstance(after.get('incidents'),dict) and isinstance(after.get('outbox'),dict),'invalid incident/outbox maps')
++    return {'incidents':len(after['incidents']),'outbox':len(after['outbox'])}
++def validate_live_bindings(tag,documents,migration):
++    # Only pure source validators, never JobStore/runtime/watchdog constructors.
++    # Validate the SAME captured bytes used by hashes/diffs, not a later reread.
++    filename=tag+'-live-validation-input.private.json'
++    save(filename,dict(documents,migrationAuthority=migration))
++    js='''import { readFileSync } from 'node:fs';
++import { validateCanonicalHealthAuthority } from 'file:///private/tmp/fleet-v5-prep/scratch/app/packages/scheduler/src/watchdog/health.js';
++import { validateIncidentState } from 'file:///private/tmp/fleet-v5-prep/scratch/app/packages/scheduler/src/watchdog/durable-state.js';
++import { validateIncidentDeliveryBindings } from 'file:///private/tmp/fleet-v5-prep/scratch/app/packages/scheduler/src/watchdog/routing.js';
++const d=JSON.parse(readFileSync(process.argv[1],'utf8'));
++validateCanonicalHealthAuthority(d.jobs);
++validateIncidentState(d.incidents,{migrationAuthority:d.migrationAuthority});
++validateIncidentDeliveryBindings(d.incidents,{manifest:d.routing,jobs:d.jobs.jobs,
++  routingSha256:d.routingSha256,nowMs:Date.now()});
++console.log(JSON.stringify({jobs:true,incidents:true,outbox:true,deliveryBindings:true}));'''
++    p=sp.run([str(prep/'scratch/node-runtime/bin/node'),'--input-type=module','-e',js,str(rd/filename)],
++             stdout=sp.PIPE,stderr=sp.PIPE,timeout=60,env={'PATH':'/usr/bin:/bin','HOME':'/var/empty'})
++    raw(tag+'-live-validation.stdout',p.stdout); raw(tag+'-live-validation.stderr',p.stderr)
++    require(p.returncode==0,'live schema/binding validation failed; see private '+tag+' receipts')
++    return json_value(p.stdout)
++def private_inputs(tag):
++    a=authority(); env=read(rd/'plist-preimage.json')['document']['EnvironmentVariables']; paths={
++        'jobs.json':prod/'scheduler/jobs.json',
++        'incidents.json':prod/'control/scheduler-watchdog/incidents.json',
++        'scheduler-routing.json':P(env.get('SCHEDULER_ROUTING_MANIFEST',str(prod/'scheduler/routing.json')))}
++    # Outbox is inside incidents.json. There is no historical runs.jsonl input
++    # in this executor: do not invent a byte-equality gate for append-only runs.
++    kinds={'jobs.json':'live-state','incidents.json':'live-state','scheduler-routing.json':'static'}
++    rows=[]; documents={}; baselines={}
++    report={'at':now(),'stage':tag,'policy':'R5_STATIC_EXACT_LIVE_SCHEMA_IDENTITY_BINDINGS_DIFF',
++            'ok':False,'inputs':rows,'impactReview':'NO_DRIFT'}
++    try:
++        for name,p in paths.items():
++            regular(p); s=meta(p); data=p.read_bytes()
++            require(meta(p)==s,'private input changed during capture: '+str(p))
++            snapshot=prep/'evidence/private-snapshot'/name; regular(snapshot); baseline=snapshot.read_bytes()
++            h=hashlib.sha256(data).hexdigest(); expected=hashlib.sha256(baseline).hexdigest()
++            row={'path':str(p),'classification':kinds[name],'sha256':h,'snapshotSha256':expected,
++                 'bytesChanged':h!=expected,'metadata':s}; rows.append(row)
++            if kinds[name]=='static':
++                require(s['uid']==int(env.get('SCHEDULER_ROUTING_OWNER_UID','0')) and
++                        s['gid']==int(env['SCHEDULER_ROUTING_READER_GID']) and int(s['mode'],8)&~0o640==0,
++                        'unsafe protected routing metadata '+str(p))
++                require(h==expected,'static private input changed; impact revalidation required: '+str(p))
++            else:
++                require(s['uid']==a['expected_runtime_uid'],'unsafe private metadata '+str(p))  # supervisor: mode recorded in rows[] for audit; production jobs.json is 644 by long-standing runtime behavior — fresh-read baselines reality, absolute-0600 was an r4 authoring error
++                if name=='incidents.json':
++                    require(s['gid']==int(env.get('SCHEDULER_INCIDENT_OWNER_GID','20'))==20,'incident GID must be 20')
++                raw(tag+'-'+name+'.captured.private.json',data)
++                before=json_value(baseline); after=json_value(data); changes=state_diff(before,after)
++                diffname=tag+'-'+name+'.diff.private.json'
++                save(diffname,{'path':str(p),'snapshot':str(snapshot),'snapshotSha256':expected,
++                     'sha256':h,'bytesChanged':h!=expected,'changes':changes,'truncated':False})
++                row.update(diffReceipt=str(rd/diffname),changeCount=len(changes))
++                if h!=expected: report['impactReview']='DIFF_RECORDED_FOR_REVIEW'
++                row['structureIdentity']=validate_live_identity(name,before,after)
++                baselines[name]=before
++            documents[name]=json_value(data)
++        report['sourceValidation']=validate_live_bindings(tag,{
++            'jobs':documents['jobs.json'],'incidents':documents['incidents.json'],
++            'routing':documents['scheduler-routing.json'],'routingSha256':rows[2]['sha256']},
++            baselines['incidents.json'].get('migration'))
++        # A changing generation during this read is distinct from historical
++        # runtime progress. No retry and no business state writes on either path.
++        for row in rows:
++            require(meta(row['path'])==row['metadata'] and digest(row['path'])==row['sha256'],
++                    'private input changed during validation: '+row['path'])
++        b=prod/'bindings/bindings.json'; regular(b)
++        h=digest(b); rows.append({'path':str(b),'classification':'static-authority','sha256':h,'metadata':meta(b)})
++        require(h==a['expected_bindings_sha256'],'current bindings changed')
++        report['ok']=True
++        return rows
++    except Exception as error:
++        report['error']=str(error)
++        raise
++    finally:
++        save(tag+'-private-input-validation.json',report)
++def census(tag):
++    # Original source reader ONLY. No constructor, scheduler, recovery or replay.
++    paths=[prod/'control/turn-recovery-v3.json',prod/'scheduler/jobs.json']
++    for p in paths: regular(p)
++    before=[{'sha256':digest(p),'metadata':meta(p)} for p in paths]
++    js='''import { readRestartDrainCensus } from "file:///private/tmp/fleet-roll-src/packages/production-runtime/src/scheduler/restart-drain.js";
++const c=readRestartDrainCensus({turnRecoveryStore:process.argv[1],jobsStore:process.argv[2]});
++console.log(JSON.stringify(c));'''
++    p=run([prep/'scratch/node-runtime/bin/node','--input-type=module','-e',js,*paths],
++          env={'PATH':'/usr/bin:/bin','HOME':'/var/empty'})
++    raw(tag+'.stdout',p.stdout); raw(tag+'.stderr',p.stderr)
++    c=json.loads(p.stdout); after=[{'sha256':digest(p),'metadata':meta(p)} for p in paths]
++    require(before==after,'census store changed during read')
++    require(isinstance(c.get('epoch'),str) and c['epoch'],'recovery epoch unavailable')
++    require(all(c.get(k)==[] for k in ('inflightTurns','unresolvedLostTurns','inflightOccurrences')),
++            'unresolved/inflight execution: STOP, no replay or fence clearing')
++    j=read(paths[1]); require(isinstance(j.get('occurrences'),list),'scheduler occurrences schema absent')
++    save(tag+'.json',{'at':now(),'storeHashes':before,'census':c,'readOnly':True})
++    return before
++def log_delta():
++    s=read(rd/'restart-log-offsets.json'); chunks=[]
++    for row in s:
++        p=P(row['path']); m=meta(p)
++        require(m['ino']==row['ino'] and m['dev']==row['dev'] and m['size']>=row['size'],
++                'runtime log rotated/truncated; fresh-window provenance unavailable')
++        with open(p,'rb') as f: f.seek(row['size']); data=f.read()
++        raw('new-'+p.name,data); chunks.append(data.decode(errors='replace'))
++    return '\n'.join(chunks)
++def health(port,service_name):
++    opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
++    with opener.open('http://127.0.0.1:%s/health'%port,timeout=5) as response:
++        require(response.status==200,'health HTTP status'); doc=json.load(response)
++    require(doc.get('ok') is True and doc.get('service')==service_name,'health identity/ok mismatch')
++    return doc
++def listeners(pid,ports):
++    result=[]
++    for port in ports:
++        p=run(['/usr/sbin/lsof','-nP','-a','-iTCP:'+str(port),'-sTCP:LISTEN','-Fp'])
++        owners={int(x[1:]) for x in p.stdout.decode().splitlines() if x.startswith('p')}
++        require(owners=={pid},'listener owner mismatch '+str(port)); result.append({'port':port,'pid':pid})
++    return result
++

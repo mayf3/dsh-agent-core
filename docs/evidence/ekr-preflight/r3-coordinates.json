@@ -1,0 +1,174 @@
+{
+  "evaluatedAt": "2026-11-04T16:03:36.198392+00:00",
+  "worktree": "/private/tmp/dsh-ekr-preflight",
+  "branch": "ac-ekr-preflight",
+  "productMain": "eb8fd18934d827cec98faacaef987869c5cb92e7",
+  "deployedSource": "fa4510beb6b01e5c40000a2ae36a62c526759e76",
+  "matrixOriginalBytes": 29999,
+  "matrixOriginalSha256": "94826f2b25bb60905cd04289c73f12abad2d1d097c62a109b2b449141563973d",
+  "originalPrefixPreserved": true,
+  "node": "v26.7.0",
+  "python": "Python 3.14.7",
+  "MArchive": {
+    "bytes": 33228800,
+    "sha256": "b53ae4ea81addccab7568677a2a74b810de943450c9076a24e42c39eeac1f98e"
+  },
+  "DArchive": {
+    "bytes": 19681280,
+    "sha256": "dab4b1a2d7a23ff60ad932fca3a53d7edc167214886d566fb49872b76b81d8f7"
+  },
+  "freshRemoteMain": "eb8fd18934d827cec98faacaef987869c5cb92e7",
+  "sourceAuthorityManifest": [
+    {
+      "version": "M",
+      "commit": "eb8fd18934d827cec98faacaef987869c5cb92e7",
+      "path": "docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md",
+      "bytes": 15685,
+      "sha256": "c8d2627086cb202dcf0e70d9e0d0a9aeb174ea1d74b0b9cfd54339d28c33fe9b",
+      "gitBlob": "f260b482564a561cf97f1b94676b048f67bd2f90"
+    },
+    {
+      "version": "M",
+      "commit": "eb8fd18934d827cec98faacaef987869c5cb92e7",
+      "path": "docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V3.md",
+      "bytes": 49063,
+      "sha256": "1c37687e473df7ce977e5cc571f74d9a6dc0470f3aca95a599d4c9066e52321f",
+      "gitBlob": "fd4ee0df516fd1cda800e586dd05cab8bfc355eb"
+    },
+    {
+      "version": "M",
+      "commit": "eb8fd18934d827cec98faacaef987869c5cb92e7",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3.md",
+      "bytes": 49590,
+      "sha256": "c5d39e390026807b9e471a6875f5e0e9d15432f21a3d177733bf422fc751a1e6",
+      "gitBlob": "ffa4defa97973b8c25240c2a4e7191dc6fee4167"
+    },
+    {
+      "version": "M",
+      "commit": "eb8fd18934d827cec98faacaef987869c5cb92e7",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2.md",
+      "bytes": 51466,
+      "sha256": "759534d9685e87f9149b307c004a01a8c39f2498f89e6f100aa89ad660e2ecbd",
+      "gitBlob": "7cb46c84893aa60136457786b52cf7e36414853e"
+    },
+    {
+      "version": "M",
+      "commit": "eb8fd18934d827cec98faacaef987869c5cb92e7",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3.md",
+      "bytes": 23363,
+      "sha256": "03469e9f53ccf53f23de3a552270a4bb82f1922b6979108fe01083488c3335d4",
+      "gitBlob": "f7623521fd031f661ecc74fe61cf9ec52e69ba13"
+    },
+    {
+      "version": "M",
+      "commit": "eb8fd18934d827cec98faacaef987869c5cb92e7",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_STALE_REENTRY_V2.md",
+      "bytes": 20111,
+      "sha256": "509836b6c6105c7b553e5e28c297c9762ca24b8c6e2aa0f05029ba0efc88728d",
+      "gitBlob": "8c09fc75700944670214092c89746a0cfcb17929"
+    },
+    {
+      "version": "M",
+      "commit": "eb8fd18934d827cec98faacaef987869c5cb92e7",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2.md",
+      "bytes": 41937,
+      "sha256": "f8e8b0d48f8e2a682897c98f5003a1ffbd608ed722fb653a01bde81417767e7b",
+      "gitBlob": "46ae89e6e944d2148907bee2417ad7706a40d1ff"
+    },
+    {
+      "version": "M",
+      "commit": "eb8fd18934d827cec98faacaef987869c5cb92e7",
+      "path": "packages/workflow-execution/src/judgment.js",
+      "bytes": 20860,
+      "sha256": "adfaae0f9efab7d9ba6bf67d352eaa42286004e943ae82020b02c67dc76adb6c",
+      "gitBlob": "e89dee93749ddc3734c9e99d7aa7c10a703afc4f"
+    },
+    {
+      "version": "D",
+      "commit": "fa4510beb6b01e5c40000a2ae36a62c526759e76",
+      "path": "docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md",
+      "bytes": 15685,
+      "sha256": "c8d2627086cb202dcf0e70d9e0d0a9aeb174ea1d74b0b9cfd54339d28c33fe9b",
+      "gitBlob": "f260b482564a561cf97f1b94676b048f67bd2f90"
+    },
+    {
+      "version": "D",
+      "commit": "fa4510beb6b01e5c40000a2ae36a62c526759e76",
+      "path": "docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V3.md",
+      "bytes": 49063,
+      "sha256": "1c37687e473df7ce977e5cc571f74d9a6dc0470f3aca95a599d4c9066e52321f",
+      "gitBlob": "fd4ee0df516fd1cda800e586dd05cab8bfc355eb"
+    },
+    {
+      "version": "D",
+      "commit": "fa4510beb6b01e5c40000a2ae36a62c526759e76",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3.md",
+      "presence": "ABSENT_AT_REVISION"
+    },
+    {
+      "version": "D",
+      "commit": "fa4510beb6b01e5c40000a2ae36a62c526759e76",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2.md",
+      "bytes": 51155,
+      "sha256": "39819798d91c0ce25982887e8be5ed02fc12e37256eed6aae06b3942d5b88b24",
+      "gitBlob": "fc17d43b233ed52ff94fb19cfe7b2f1bfed40cec"
+    },
+    {
+      "version": "D",
+      "commit": "fa4510beb6b01e5c40000a2ae36a62c526759e76",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3.md",
+      "presence": "ABSENT_AT_REVISION"
+    },
+    {
+      "version": "D",
+      "commit": "fa4510beb6b01e5c40000a2ae36a62c526759e76",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_STALE_REENTRY_V2.md",
+      "presence": "ABSENT_AT_REVISION"
+    },
+    {
+      "version": "D",
+      "commit": "fa4510beb6b01e5c40000a2ae36a62c526759e76",
+      "path": "docs/specs/AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2.md",
+      "presence": "ABSENT_AT_REVISION"
+    },
+    {
+      "version": "D",
+      "commit": "fa4510beb6b01e5c40000a2ae36a62c526759e76",
+      "path": "packages/workflow-execution/src/judgment.js",
+      "bytes": 11025,
+      "sha256": "29128eb76e48d6fa7ff14532ff2c6e59fd55c8a662e0a5016d01270a3a13401a",
+      "gitBlob": "d06c9946dee479bf0e366c7db3e7cc17891a11fd"
+    }
+  ],
+  "governanceIntegrity": {
+    "command": "python3 .agents/tools/verify_governance.py --target .",
+    "exitCode": 0,
+    "stdout": "vendored governance bytes match governance.lock.json"
+  },
+  "rootExplorationNoise": [
+    {
+      "action": "wc wrong guessed WORKFLOW_AGENT_EXECUTION_V3.md path",
+      "rc": 1,
+      "classification": "path discovery; actual AGENT_CORE_ path found; continued"
+    },
+    {
+      "action": "rg /private/tmp inventory",
+      "observation": "permission errors suppressed from this listing; no absence claim based on inaccessible paths",
+      "classification": "path discovery only; exact original harness restored from prior execution log"
+    },
+    {
+      "action": "first functions.exec log extraction attempt",
+      "observation": "aborted before dispatch",
+      "classification": "tool dispatch noise; same read retried successfully"
+    },
+    {
+      "action": "rg scripts/lib/code-structure* glob",
+      "rc": 1,
+      "observation": "zsh: no matches found",
+      "classification": "path discovery; verifier source already read; continued"
+    }
+  ],
+  "groupArtifactsCompletedAt": "2026-11-04T16:15:26.798097+00:00",
+  "issue1374UpdatedAtRead": "2026-11-04T15:49:34Z",
+  "sourceAuditFinalStatus": "COMPLETE_FOR_SOURCE_MEMORY_PREFLIGHT"
+}

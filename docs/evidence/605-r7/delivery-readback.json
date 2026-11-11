@@ -1,0 +1,14 @@
+{
+  "observedAt": "2026-11-07T04:35:46.970Z",
+  "source": "GitHub connector get_pr_info",
+  "url": "https://github.com/mayf3/dsh-agent-core/pull/646",
+  "number": 646,
+  "state": "open",
+  "merged": false,
+  "base": "main",
+  "base_sha": "1ff1e81cbd74a51761dab46a5fcee532c41fe4ed",
+  "head": "fix/compat-reader-writer-guard",
+  "head_sha": "42487e65b36f049811b0e83f90178510a3da28b7",
+  "mergeable": true,
+  "commits": 1
+}

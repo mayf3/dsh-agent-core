@@ -1,0 +1,874 @@
+$ git rev-parse HEAD
+3c1bcf98bc40a2c34cca24f241c87d1b12cea216
+
+RC=0
+
+$ git rev-parse origin/main
+55f442c74414dc723306a6d8e0cdba73d78eb8da
+
+RC=0
+
+$ git merge-base --is-ancestor 3c1bcf98bc40a2c34cca24f241c87d1b12cea216 55f442c74414dc723306a6d8e0cdba73d78eb8da
+
+RC=0
+
+$ git stash push --include-untracked -m h1364-r2-reviewed-fixture-preintegration
+Saved working directory and index state On fix/admission-budget-fairness: h1364-r2-reviewed-fixture-preintegration
+
+RC=0
+
+$ git rev-parse refs/stash
+3b5a47fcdc1b1fd3b2a7a316aeb92fb9a353a542
+
+RC=0
+
+$ git merge --ff-only 55f442c74414dc723306a6d8e0cdba73d78eb8da
+Updating 3c1bcf98..55f442c7
+Fast-forward
+ .agents/README.md                                  |    2 +-
+ .agents/governance.lock.json                       |   22 +-
+ .agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md      |    3 +-
+ .agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md      |  473 ++++
+ .agents/local/README.md                            |   28 +-
+ .agents/tools/validate_spec_transition.py          |   73 +-
+ ASSESSMENT-603-REVERIFY.md                         |  100 +
+ BRIEF-1377-B2.md                                   |  198 ++
+ BRIEF-603-REVERIFY.md                              |   59 +
+ BRIEF-605-R2.md                                    |  203 ++
+ BRIEF-642-PHASE2.md                                |   67 +
+ BRIEF-C-GATE-R2.md                                 |   74 +
+ BRIEF-C-GATE.md                                    |   75 +
+ BRIEF-RC3-READOPT-TEV1-V3.md                       |  110 +
+ BRIEF-SRA-FORMALIZE.md                             |   12 +
+ RECEIPT-1377-B2.md                                 |  117 +
+ RECEIPT-603-REVERIFY.md                            |  112 +
+ RECEIPT-605-R2.md                                  |  967 ++++++++
+ RECEIPT-642-PHASE2.md                              |  139 ++
+ RECEIPT-SRA-V1.md                                  |  126 ++
+ RECEIPT-VERIFIER-ADAPT.md                          |  549 +++++
+ STANDING-RELEASE-AUTHORIZATION-V1-DRAFT.md         |  184 ++
+ STOPPED-1377-B2.md                                 |  223 ++
+ STOPPED-603-REVERIFY.md                            |   13 +
+ STOPPED-605-R2.md                                  | 1052 +++++++++
+ STOPPED-SRA-V1.md                                  |   55 +
+ docs/evidence/1377-b2-r3/RECEIPT-1377-B2-R3.md     |   99 +
+ docs/evidence/1377-b2-r3/REVIEW-1377-B2-R3.md      |   54 +
+ docs/evidence/1377-b2-r3/SHA256SUMS.txt            |   11 +
+ docs/evidence/1377-b2-r3/affected-regressions.txt  |  189 ++
+ docs/evidence/1377-b2-r3/blocked-targeted.txt      |   49 +
+ .../1377-b2-r3/broker-owner-obligation-31.txt      |   48 +
+ docs/evidence/1377-b2-r3/checkpoint.json           |   62 +
+ docs/evidence/1377-b2-r3/observation-cas-47.txt    |   77 +
+ docs/evidence/1377-b2-r3/structure.json.txt        | 2291 +++++++++++++++++++
+ docs/evidence/1377-b2-r3/syntax.txt                |   38 +
+ docs/evidence/1377-b2-r4/SHA256SUMS.txt            |   14 +
+ docs/evidence/1377-b2-r4/blocked-targeted.txt      |  108 +
+ docs/evidence/1377-b2-r4/candidate.json            |   16 +
+ docs/evidence/1377-b2-r4/checkpoint.json           |   58 +
+ docs/evidence/1377-b2-r4/diff-check.txt            |    4 +
+ docs/evidence/1377-b2-r4/gate-summary.txt          |    7 +
+ docs/evidence/1377-b2-r4/inherited-files.json      |   49 +
+ docs/evidence/1377-b2-r4/source-delta.patch        |  646 ++++++
+ docs/evidence/1377-b2-r4/syntax-1.txt              |    4 +
+ docs/evidence/1377-b2-r4/syntax-2.txt              |    4 +
+ docs/evidence/1377-b2-r4/syntax-3.txt              |    4 +
+ docs/evidence/1377-b2-r4/syntax-4.txt              |    4 +
+ docs/evidence/1377-b2-r4/syntax-5.txt              |    4 +
+ docs/evidence/1377-b2-r4/syntax-6.txt              |    4 +
+ docs/evidence/1377-b2-r4/syntax-7.txt              |    4 +
+ docs/evidence/1377-b2-r5/RECEIPT-1377-B2-R4.md     |   93 +
+ docs/evidence/1377-b2-r5/REVIEW-1377-B2-R5.md      |   83 +
+ docs/evidence/1377-b2-r5/SHA256SUMS.txt            |   28 +
+ .../1377-b2-r5/affected-regressions-135.txt        |  190 ++
+ docs/evidence/1377-b2-r5/blocked-targeted.txt      |   64 +
+ .../1377-b2-r5/broker-owner-obligation-31.txt      |   49 +
+ docs/evidence/1377-b2-r5/candidate.json            |   22 +
+ docs/evidence/1377-b2-r5/checkpoint.json           |  123 ++
+ docs/evidence/1377-b2-r5/diff-check.txt            |    4 +
+ docs/evidence/1377-b2-r5/gate-results.json         |  184 ++
+ .../1377-b2-r5/handwritten-docs-diff-check.txt     |    3 +
+ docs/evidence/1377-b2-r5/implementation.json       |    6 +
+ docs/evidence/1377-b2-r5/inherited-files.json      |   30 +
+ .../1377-b2-r5/ledger-terminal-regression.txt      |   24 +
+ docs/evidence/1377-b2-r5/observation-cas-full.txt  |  130 ++
+ docs/evidence/1377-b2-r5/packaging-diagnostic.txt  |   39 +
+ docs/evidence/1377-b2-r5/source-commit.txt         |    6 +
+ docs/evidence/1377-b2-r5/source-delta.patch        |  108 +
+ docs/evidence/1377-b2-r5/structure.json.txt        | 2292 +++++++++++++++++++
+ docs/evidence/1377-b2-r5/syntax-1.txt              |    4 +
+ docs/evidence/1377-b2-r5/syntax-2.txt              |    4 +
+ docs/evidence/1377-b2-r5/syntax-3.txt              |    4 +
+ docs/evidence/1377-b2-r5/syntax-4.txt              |    4 +
+ docs/evidence/1377-b2-r5/syntax-5.txt              |    4 +
+ docs/evidence/1377-b2-r5/syntax-6.txt              |    4 +
+ docs/evidence/1377-b2-r5/syntax-7.txt              |    4 +
+ docs/evidence/1377-b2-r5/syntax-8.txt              |    4 +
+ docs/evidence/1377-b2-r5/syntax-9.txt              |    4 +
+ docs/evidence/1377-b2-r5/verification.json         |   56 +
+ docs/evidence/603-reverify/independent-review.md   |   32 +
+ .../603-reverify/r2/candidate-coordinates.json     |   50 +
+ .../603-reverify/r2/candidate-working.diff         |  601 +++++
+ .../603-reverify/r2/changed-runtime.command.json   |   26 +
+ .../603-reverify/r2/changed-runtime.stderr.log     |    0
+ .../603-reverify/r2/changed-runtime.stdout.log     |  209 ++
+ .../603-reverify/r2/independent-gate-review.md     |   24 +
+ .../603-reverify/r2/independent-source-review.md   |   38 +
+ docs/evidence/603-reverify/r2/main-readback.json   |    9 +
+ .../603-reverify/r2/prior-RECEIPT-603-REVERIFY.md  |  113 +
+ .../603-reverify/r2/prior-STOPPED-603-REVERIFY.md  |   39 +
+ .../evidence/603-reverify/r2/stopped-readback.json |   13 +
+ .../603-reverify/r2/structure.command.json         |   28 +
+ docs/evidence/603-reverify/r2/structure.stderr.log |    0
+ docs/evidence/603-reverify/r2/structure.stdout.log | 2304 +++++++++++++++++++
+ .../603-reverify/r3/changed-runtime.command.json   |   52 +
+ .../603-reverify/r3/changed-runtime.stderr.log     |    0
+ .../603-reverify/r3/changed-runtime.stdout.log     |  209 ++
+ .../603-reverify/r3/environment-preflight.json     |   55 +
+ .../603-reverify/r3/independent-d009-review.md     |   43 +
+ .../603-reverify/r3/independent-gate-review.md     |   33 +
+ docs/evidence/603-reverify/r3/main-readback.json   |    7 +
+ docs/evidence/603-reverify/r3/pr-readback.json     |   12 +
+ .../603-reverify/r3/prior-RECEIPT-603-REVERIFY.md  |  130 ++
+ .../603-reverify/r3/prior-STOPPED-603-REVERIFY.md  |   48 +
+ .../evidence/603-reverify/r3/stopped-readback.json |   39 +
+ docs/evidence/603-reverify/r4/FAILED.json          |   59 +
+ docs/evidence/603-reverify/r4/artifact-hashes.json |  103 +
+ .../603-reverify/r4/cached-diff-check.command.json |   59 +
+ .../603-reverify/r4/cached-diff-check.stderr.log   |    0
+ .../603-reverify/r4/cached-diff-check.stdout.log   |   56 +
+ .../603-reverify/r4/changed-runtime.command.json   |   60 +
+ .../603-reverify/r4/changed-runtime.stderr.log     |    0
+ .../603-reverify/r4/changed-runtime.stdout.log     |  137 ++
+ docs/evidence/603-reverify/r4/delivery-runner.py   |   28 +
+ .../603-reverify/r4/ekr-broker.command.json        |   59 +
+ .../evidence/603-reverify/r4/ekr-broker.stderr.log |    0
+ .../evidence/603-reverify/r4/ekr-broker.stdout.log |   45 +
+ .../r4/ekr-observation-cas.command.json            |   68 +
+ .../603-reverify/r4/ekr-observation-cas.stderr.log |    0
+ .../603-reverify/r4/ekr-observation-cas.stdout.log |  126 ++
+ .../603-reverify/r4/ekr-runtime.command.json       |   59 +
+ .../603-reverify/r4/ekr-runtime.stderr.log         |    0
+ .../603-reverify/r4/ekr-runtime.stdout.log         |   21 +
+ .../603-reverify/r4/ekr-workflow.command.json      |   64 +
+ .../603-reverify/r4/ekr-workflow.stderr.log        |    0
+ .../603-reverify/r4/ekr-workflow.stdout.log        |  198 ++
+ .../603-reverify/r4/environment-preflight.json     |   80 +
+ .../r4/final-source-binding.command.json           |   66 +
+ .../r4/final-source-binding.stderr.log             |    0
+ .../r4/final-source-binding.stdout.log             |    0
+ docs/evidence/603-reverify/r4/gate-runner.py       |   47 +
+ .../603-reverify/r4/governance.command.json        |   60 +
+ .../evidence/603-reverify/r4/governance.stderr.log |    0
+ .../evidence/603-reverify/r4/governance.stdout.log |    1 +
+ .../603-reverify/r4/independent-d009-review.md     |   45 +
+ .../603-reverify/r4/independent-gate-review.md     |   35 +
+ .../r4/independent-source-final-head-review.md     |   32 +
+ .../603-reverify/r4/independent-stop-review.md     |   28 +
+ .../603-reverify/r4/installer-binding.command.json |   58 +
+ .../603-reverify/r4/installer-binding.stderr.log   |    0
+ .../603-reverify/r4/installer-binding.stdout.log   |    1 +
+ .../603-reverify/r4/installer-syntax.command.json  |   58 +
+ .../603-reverify/r4/installer-syntax.stderr.log    |    0
+ .../603-reverify/r4/installer-syntax.stdout.log    |    0
+ .../603-reverify/r4/javascript-syntax.command.json |   58 +
+ .../603-reverify/r4/javascript-syntax.stderr.log   |    0
+ .../603-reverify/r4/javascript-syntax.stdout.log   |    5 +
+ .../r4/main-impact-merge-tree.command.json         |   60 +
+ .../r4/main-impact-merge-tree.stderr.log           |    0
+ .../r4/main-impact-merge-tree.stdout.log           |    1 +
+ .../evidence/603-reverify/r4/main-impact-review.md |   26 +
+ docs/evidence/603-reverify/r4/pr-body-before.md    |   26 +
+ .../evidence/603-reverify/r4/pr-source-update.json |   12 +
+ .../603-reverify/r4/prior-RECEIPT-603-REVERIFY.md  |  140 ++
+ .../603-reverify/r4/prior-STOPPED-603-REVERIFY.md  |   35 +
+ .../603-reverify/r4/push-source.command.json       |   23 +
+ .../603-reverify/r4/push-source.stderr.log         |    4 +
+ .../603-reverify/r4/push-source.stdout.log         |    4 +
+ .../evidence/603-reverify/r4/remote-preflight.json |   16 +
+ .../r4/remote-source-readback.command.json         |   22 +
+ .../r4/remote-source-readback.stderr.log           |    0
+ .../r4/remote-source-readback.stdout.log           |    1 +
+ .../603-reverify/r4/scheduler-router.command.json  |   58 +
+ .../603-reverify/r4/scheduler-router.stderr.log    |    0
+ .../603-reverify/r4/scheduler-router.stdout.log    |  115 +
+ .../603-reverify/r4/scheduler.command.json         |   58 +
+ docs/evidence/603-reverify/r4/scheduler.stderr.log |    0
+ docs/evidence/603-reverify/r4/scheduler.stdout.log |  499 +++++
+ .../603-reverify/r4/source-binding.command.json    |   62 +
+ .../603-reverify/r4/source-binding.stderr.log      |    0
+ .../603-reverify/r4/source-binding.stdout.log      |    0
+ .../603-reverify/r4/source-commit-coordinates.json |   50 +
+ .../r4/structure-final-source.command.json         |   62 +
+ .../r4/structure-final-source.stderr.log           |    0
+ .../r4/structure-final-source.stdout.log           | 2304 +++++++++++++++++++
+ .../r4/working-diff-check.command.json             |   58 +
+ .../603-reverify/r4/working-diff-check.stderr.log  |    0
+ .../603-reverify/r4/working-diff-check.stdout.log  |    0
+ docs/evidence/603-reverify/r5/FAILED.json          |   23 +
+ .../r5/cached-diff-check-final.command.json        |   38 +
+ .../r5/cached-diff-check-final.stderr.log          |    0
+ .../r5/cached-diff-check-final.stdout.log          |   23 +
+ .../603-reverify/r5/cached-diff-check.command.json |   38 +
+ .../603-reverify/r5/cached-diff-check.stderr.log   |    0
+ .../603-reverify/r5/cached-diff-check.stdout.log   |   23 +
+ docs/evidence/603-reverify/r5/capture-command.py   |   46 +
+ .../603-reverify/r5/check-cached-whitespace.py     |   86 +
+ .../603-reverify/r5/docs-commit-readback.json      |   10 +
+ .../603-reverify/r5/docs-commit.command.json       |   21 +
+ .../603-reverify/r5/docs-commit.stderr.log         |    0
+ .../603-reverify/r5/docs-commit.stdout.log         |  126 ++
+ .../603-reverify/r5/final-index-check.command.json |   38 +
+ .../603-reverify/r5/final-index-check.stderr.log   |    0
+ .../603-reverify/r5/final-index-check.stdout.log   |   23 +
+ .../r5/independent-final-head-review.md            |   34 +
+ .../r5/independent-packaging-review.md             |   24 +
+ docs/evidence/603-reverify/r5/initial-index.json   |  112 +
+ .../603-reverify/r5/pr-capability-review.md        |   11 +
+ .../603-reverify/r5/pr-final-readback.json         |   41 +
+ .../603-reverify/r5/pr-head-edit.command.json      |   23 +
+ .../603-reverify/r5/pr-head-edit.stderr.log        |  101 +
+ .../603-reverify/r5/pr-head-edit.stdout.log        |    0
+ docs/evidence/603-reverify/r5/pr-preflight.json    |   41 +
+ .../603-reverify/r5/preserved-evidence.json        |  111 +
+ .../603-reverify/r5/prior-RECEIPT-603-REVERIFY.md  |  240 ++
+ .../603-reverify/r5/prior-STOPPED-603-REVERIFY.md  |   24 +
+ .../r5/remote-final-readback.command.json          |   20 +
+ .../r5/remote-final-readback.stderr.log            |    0
+ .../r5/remote-final-readback.stdout.log            |    3 +
+ .../603-reverify/r5/remote-preflight.command.json  |   23 +
+ .../603-reverify/r5/remote-preflight.stderr.log    |    0
+ .../603-reverify/r5/remote-preflight.stdout.log    |    3 +
+ .../evidence/603-reverify/r5/stopped-readback.json |   89 +
+ .../603-reverify/r5/whitespace-exemptions.json     |   97 +
+ docs/evidence/603-reverify/r6/FAILED.json          |   39 +
+ docs/evidence/603-reverify/r6/capture-command.py   |   44 +
+ .../r6/independent-prepublication-review.md        |    8 +
+ .../603-reverify/r6/independent-stop-review.md     |    5 +
+ docs/evidence/603-reverify/r6/initial-state.json   |  151 ++
+ docs/evidence/603-reverify/r6/new-pr-body.md       |   34 +
+ .../r6/new-pr-final-readonly.command.json          |   27 +
+ .../603-reverify/r6/new-pr-preflight.command.json  |   29 +
+ .../r6/old-pr-final-readonly.command.json          |   24 +
+ .../603-reverify/r6/old-pr-preflight.command.json  |   26 +
+ docs/evidence/603-reverify/r6/preflight.json       |   29 +
+ .../r6/prepublication-cached-check.command.json    |   39 +
+ .../603-reverify/r6/prior-RECEIPT-603-REVERIFY.md  |  274 +++
+ .../603-reverify/r6/prior-STOPPED-603-REVERIFY.md  |   34 +
+ .../r6/remote-final-readonly.command.json          |   22 +
+ .../603-reverify/r6/remote-preflight.command.json  |   24 +
+ .../evidence/603-reverify/r6/stopped-readback.json |   46 +
+ docs/evidence/603-reverify/r7/FAILED.json          |   26 +
+ docs/evidence/603-reverify/r7/capture-command.py   |   41 +
+ .../603-reverify/r7/docs-commit-readback.json      |    7 +
+ .../603-reverify/r7/docs-commit.command.json       |   23 +
+ .../603-reverify/r7/environment-recipe.json        |   35 +
+ .../603-reverify/r7/final-index-check.command.json |   48 +
+ .../r7/independent-docs-head-review.md             |    7 +
+ .../603-reverify/r7/independent-evidence-review.md |    5 +
+ .../r7/independent-prepublication-review.md        |    7 +
+ .../603-reverify/r7/independent-stop-review.md     |    9 +
+ docs/evidence/603-reverify/r7/initial-state.json   |  168 ++
+ docs/evidence/603-reverify/r7/lock-readonly.json   |    6 +
+ docs/evidence/603-reverify/r7/new-pr-body.md       |   36 +
+ .../603-reverify/r7/new-pr-coordinate.json         |    7 +
+ .../603-reverify/r7/new-pr-create.command.json     |   32 +
+ .../r7/new-pr-created-readback.command.json        |   27 +
+ .../603-reverify/r7/new-pr-preflight.command.json  |   29 +
+ docs/evidence/603-reverify/r7/new-pr-readback.json |    9 +
+ .../r7/old-pr-close-event.command.json             |   24 +
+ .../603-reverify/r7/old-pr-close.command.json      |   25 +
+ .../603-reverify/r7/old-pr-comment-coordinate.json |    6 +
+ .../r7/old-pr-comment-readback.command.json        |   22 +
+ .../603-reverify/r7/old-pr-comment.command.json    |   27 +
+ .../603-reverify/r7/old-pr-preflight.command.json  |   26 +
+ .../603-reverify/r7/old-pr-superseded-comment.md   |    9 +
+ .../r7/postfailure-new-pr-readonly.command.json    |   24 +
+ .../r7/postfailure-old-pr-readonly.command.json    |   24 +
+ .../r7/postfailure-remote-readonly.command.json    |   22 +
+ docs/evidence/603-reverify/r7/preflight.json       |   29 +
+ .../r7/prepublication-cached-check.command.json    |   47 +
+ .../r7/prepublication-check-binding.json           |    8 +
+ .../603-reverify/r7/prior-RECEIPT-603-REVERIFY.md  |   92 +
+ .../603-reverify/r7/prior-STOPPED-603-REVERIFY.md  |   14 +
+ .../603-reverify/r7/push-docs.command.json         |   23 +
+ .../r7/remote-docs-readback.command.json           |   25 +
+ .../603-reverify/r7/remote-preflight.command.json  |   24 +
+ .../r7/stage-prepublication.command.json           |   28 +
+ .../evidence/603-reverify/r7/stopped-readback.json |  248 +++
+ .../r7/terminal-supplement-location.json           |    5 +
+ docs/evidence/603-reverify/reviewed-product.diff   |  160 ++
+ docs/evidence/603-reverify/source-commits.txt      |   18 +
+ .../evidence/603-reverify/stopped-coordinates.json |   70 +
+ docs/evidence/603-reverify/stopped-working.diff    |  519 +++++
+ docs/evidence/605-r5/router-open-diff.json         | 1643 ++++++++++++++
+ docs/evidence/605-r6/facts-readback.json           |  126 ++
+ docs/evidence/605-r6/full-router.log               | 1756 +++++++++++++++
+ docs/evidence/605-r6/gates.json                    |  214 ++
+ docs/evidence/605-r6/helper-bounds.log             |   12 +
+ docs/evidence/605-r6/independent-review.txt        |   26 +
+ docs/evidence/605-r6/initial-files.json            |   87 +
+ docs/evidence/605-r6/manifest.json                 |   77 +
+ docs/evidence/605-r6/matrix-cold-start.log         |   10 +
+ docs/evidence/605-r6/matrix-isolation.log          |   10 +
+ .../605-r6/matrix-negative-persistence.log         |   10 +
+ docs/evidence/605-r6/matrix-no-replay.log          |   10 +
+ docs/evidence/605-r6/matrix-restart.log            |   10 +
+ docs/evidence/605-r6/matrix-rollback.log           |   10 +
+ docs/evidence/605-r6/r5-matrix-decode.log          |   13 +
+ docs/evidence/605-r6/r5-targeted.log               |   59 +
+ docs/evidence/605-r6/run-gate.py                   |   27 +
+ docs/evidence/605-r7/F01-base.log                  |   28 +
+ docs/evidence/605-r7/F02-base.log                  |   28 +
+ docs/evidence/605-r7/F03-base.log                  |   22 +
+ docs/evidence/605-r7/F04-base.log                  |   22 +
+ docs/evidence/605-r7/F05-base.log                  |   22 +
+ docs/evidence/605-r7/F06-base.log                  |   34 +
+ docs/evidence/605-r7/F07-base.log                  |   18 +
+ docs/evidence/605-r7/F08-base.log                  |   27 +
+ docs/evidence/605-r7/F09-base.log                  |   27 +
+ docs/evidence/605-r7/F10-base.log                  |   27 +
+ docs/evidence/605-r7/attribution.json              |  271 +++
+ docs/evidence/605-r7/attribution.md                |  522 +++++
+ docs/evidence/605-r7/baseline.json                 |  230 ++
+ docs/evidence/605-r7/cases.json                    |   82 +
+ .../605-r7/data-preservation-readback.json         |   31 +
+ docs/evidence/605-r7/delivery-readback.json        |   14 +
+ docs/evidence/605-r7/final-gates.py                |   15 +
+ docs/evidence/605-r7/final-head-source-review.txt  |   12 +
+ docs/evidence/605-r7/full-router.log               | 1597 ++++++++++++++
+ .../605-r7/full-scheduler-consolidated.log         |  500 +++++
+ docs/evidence/605-r7/full-scheduler-router.log     |  111 +
+ docs/evidence/605-r7/full-scheduler.log            |  500 +++++
+ docs/evidence/605-r7/gates.json                    |  261 +++
+ .../605-r7/historical-markdown-originals.json      |   10 +
+ docs/evidence/605-r7/independent-review.txt        |   16 +
+ docs/evidence/605-r7/manifest.json                 |   39 +
+ docs/evidence/605-r7/packaging-delta.json          |   16 +
+ docs/evidence/605-r7/pre-stash-files.json          |   25 +
+ docs/evidence/605-r7/restore-verification.json     |   30 +
+ docs/evidence/605-r7/review-snapshot.json          |   21 +
+ docs/evidence/605-r7/run-suites.py                 |   26 +
+ docs/evidence/605-r7/source-hashes.json            |   15 +
+ docs/evidence/605-r7/stash.json                    |    7 +
+ docs/evidence/605-r7/structure.log                 | 2307 ++++++++++++++++++++
+ docs/evidence/605-r7/suite-plan.json               |  281 +++
+ .../642-phase2-20261107/C-proposal.command.json    |   13 +
+ docs/reports/642-phase2-20261107/C-proposal.stderr |    0
+ docs/reports/642-phase2-20261107/C-proposal.stdout |  522 +++++
+ .../R2-evidence-diff-check.command.json            |   50 +
+ .../R2-evidence-diff-check.stderr                  |    0
+ .../R2-evidence-diff-check.stdout                  |    0
+ .../reports/642-phase2-20261107/R2-resumption.json |   95 +
+ .../reports/642-phase2-20261107/adoption-base.json |  134 ++
+ .../642-phase2-20261107/adoption-candidate.json    |  134 ++
+ .../adoption-export-provenance.json                |   12 +
+ .../adoption-transition.command.json               |   13 +
+ .../642-phase2-20261107/adoption-transition.stderr |    0
+ .../642-phase2-20261107/adoption-transition.stdout |    1 +
+ .../642-phase2-20261107/atomic-lifecycle.diff      |  270 +++
+ docs/reports/642-phase2-20261107/coordinates.json  |  301 +++
+ .../642-phase2-20261107/diff-check.command.json    |   11 +
+ docs/reports/642-phase2-20261107/diff-check.stderr |    0
+ docs/reports/642-phase2-20261107/diff-check.stdout |    0
+ .../642-phase2-20261107/distribution-manifest.json |  133 ++
+ .../governance-accepted.command.json               |   12 +
+ .../642-phase2-20261107/governance-accepted.stderr |    0
+ .../642-phase2-20261107/governance-accepted.stdout |    1 +
+ .../642-phase2-20261107/manifest-parity.json       |  137 ++
+ .../owner-comment-6701500077.json                  |    1 +
+ .../642-phase2-20261107/phase2-native.command.json |   13 +
+ .../642-phase2-20261107/phase2-native.stderr       |    0
+ .../642-phase2-20261107/phase2-native.stdout       |  264 +++
+ docs/reports/642-phase2-20261107/preservation.json |   39 +
+ .../structure-tool-increment.command.json          |   14 +
+ .../structure-tool-increment.stderr                |    0
+ .../structure-tool-increment.stdout                | 2260 +++++++++++++++++++
+ docs/reports/rc3-chain-20261107/A-receipt.json     |   39 +
+ .../rc3-chain-20261107/A-verify-governance.txt     |    1 +
+ docs/reports/rc3-chain-20261107/B-base.json        |   33 +
+ docs/reports/rc3-chain-20261107/B-candidate.json   |   26 +
+ docs/reports/rc3-chain-20261107/B-receipt.json     |   64 +
+ docs/reports/rc3-chain-20261107/B-transition.txt   |    2 +
+ .../rc3-chain-20261107/C-R2-native-exit-code.txt   |    1 +
+ .../rc3-chain-20261107/C-R2-native-result.json     |  522 +++++
+ .../rc3-chain-20261107/C-R2-native-stderr.txt      |    0
+ .../rc3-chain-20261107/C-R2-prior-gate-source.txt  |  361 +++
+ docs/reports/rc3-chain-20261107/C-R2-receipt.json  |  115 +
+ .../BRIEF-SRA-V1-DRAFT.source.md                   |   16 +
+ .../EXECUTION-MANDATE-W7-DRAFT.source.md           |  198 ++
+ .../sra-v1-draft-20261107/checks-initial.json      |   37 +
+ .../sra-v1-draft-20261107/independent-review.md    |   52 +
+ .../owner-selected-records.json                    |   56 +
+ .../sra-v1-draft-20261107/remote-read-r2.json      |   31 +
+ .../sra-v1-draft-20261107/source-provenance.json   |   98 +
+ .../acceptance-transaction.md                      |   46 +
+ .../conversion-checks.json                         |   61 +
+ .../conversion-receipt.md                          |   42 +
+ .../independent-review.md                          |  120 +
+ .../owner-formalization-ruling.json                |   10 +
+ .../remote-preflight.json                          |   29 +
+ ...AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1.md |  319 +++
+ .../AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md    |   41 +
+ ...UCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md |   40 +-
+ docs/specs/README.md                               |   28 +-
+ .../verify-code-structure-retirement.test.mjs      |  165 ++
+ .../verify-code-structure-test-support.mjs         |    4 +-
+ .../verify-code-structure-transition.test.mjs      |    7 +-
+ .../src/reconciliation/admin-abandonment.js        |   13 +-
+ .../src/reconciliation/durable-file.js             |   15 +-
+ packages/agent-router/src/reconciliation/query.js  |    4 +-
+ .../src/reconciliation/state-machine.js            |   21 +
+ .../test/process-lifecycle/timeout.test.js         |    9 +
+ .../process-lifecycle/unknown-fence-repair.test.js |    8 +
+ .../test/runtime-hygiene/recovery-compat.test.js   |  136 ++
+ packages/production-runtime/src/compose.js         |    4 +-
+ .../src/scheduler/auto-reconcile-runtime.js        |   87 +-
+ .../src/scheduler/composition-runtime.js           |    4 +-
+ .../src/workflow-execution-runtime.js              |    5 +-
+ .../scheduler/scheduler-invoker-canary.test.js     |  331 ++-
+ .../test/workflow-execution-shutdown.test.js       |   57 +
+ packages/scheduler/src/occurrence-model.js         |   56 +-
+ packages/scheduler/src/store.js                    |   14 +-
+ packages/scheduler/test/occurrence-model.test.js   |  106 +-
+ packages/workflow-execution/src/engine.js          |    8 +-
+ packages/workflow-execution/src/ledger-events.js   |   16 +-
+ packages/workflow-execution/src/ledger-records.js  |    9 +-
+ packages/workflow-execution/src/ledger.js          |   14 +-
+ .../src/owner-assistance-resume-engine.js          |    2 +-
+ .../src/recovery/automatic-ledger.js               |   71 +
+ .../workflow-execution/src/recovery/automatic.js   |   67 +
+ .../workflow-execution/src/recovery/operation.js   |  341 ++-
+ .../workflow-execution/src/recovery/refusal.js     |   87 +
+ .../observation-cas/blocked-recovery-process.js    |  137 ++
+ .../blocked-recovery-restart.test.js               |  374 ++++
+ .../test/observation-cas/blocked-recovery.test.js  |  435 ++++
+ .../test/observation-cas/blocked-refusal.test.js   |  245 +++
+ .../test/observation-cas/ledger-identity.test.js   |    4 +
+ .../compat-reader-matrix.test.mjs                  |  268 +++
+ .../availability-recovery/compat-store-facts.mjs   |   66 +
+ .../compat-store-facts.test.mjs                    |   65 +
+ scripts/governance/code-structure-authority.mjs    |  115 +
+ scripts/governance/validate_v3_phase2.py           |  181 ++
+ scripts/governance/validate_v3_succession.py       |  374 ++++
+ scripts/trusted-cp-deploy-install.sh               |    2 +-
+ scripts/verify-code-structure.mjs                  |   31 +-
+ 427 files changed, 48036 insertions(+), 342 deletions(-)
+ create mode 100644 .agents/local/CODE_STRUCTURE_GUARDRAILS_V3.md
+ create mode 100644 ASSESSMENT-603-REVERIFY.md
+ create mode 100644 BRIEF-1377-B2.md
+ create mode 100644 BRIEF-603-REVERIFY.md
+ create mode 100644 BRIEF-605-R2.md
+ create mode 100644 BRIEF-642-PHASE2.md
+ create mode 100644 BRIEF-C-GATE-R2.md
+ create mode 100644 BRIEF-C-GATE.md
+ create mode 100644 BRIEF-RC3-READOPT-TEV1-V3.md
+ create mode 100644 BRIEF-SRA-FORMALIZE.md
+ create mode 100644 RECEIPT-1377-B2.md
+ create mode 100644 RECEIPT-603-REVERIFY.md
+ create mode 100644 RECEIPT-605-R2.md
+ create mode 100644 RECEIPT-642-PHASE2.md
+ create mode 100644 RECEIPT-SRA-V1.md
+ create mode 100644 RECEIPT-VERIFIER-ADAPT.md
+ create mode 100644 STANDING-RELEASE-AUTHORIZATION-V1-DRAFT.md
+ create mode 100644 STOPPED-1377-B2.md
+ create mode 100644 STOPPED-603-REVERIFY.md
+ create mode 100644 STOPPED-605-R2.md
+ create mode 100644 STOPPED-SRA-V1.md
+ create mode 100644 docs/evidence/1377-b2-r3/RECEIPT-1377-B2-R3.md
+ create mode 100644 docs/evidence/1377-b2-r3/REVIEW-1377-B2-R3.md
+ create mode 100644 docs/evidence/1377-b2-r3/SHA256SUMS.txt
+ create mode 100644 docs/evidence/1377-b2-r3/affected-regressions.txt
+ create mode 100644 docs/evidence/1377-b2-r3/blocked-targeted.txt
+ create mode 100644 docs/evidence/1377-b2-r3/broker-owner-obligation-31.txt
+ create mode 100644 docs/evidence/1377-b2-r3/checkpoint.json
+ create mode 100644 docs/evidence/1377-b2-r3/observation-cas-47.txt
+ create mode 100644 docs/evidence/1377-b2-r3/structure.json.txt
+ create mode 100644 docs/evidence/1377-b2-r3/syntax.txt
+ create mode 100644 docs/evidence/1377-b2-r4/SHA256SUMS.txt
+ create mode 100644 docs/evidence/1377-b2-r4/blocked-targeted.txt
+ create mode 100644 docs/evidence/1377-b2-r4/candidate.json
+ create mode 100644 docs/evidence/1377-b2-r4/checkpoint.json
+ create mode 100644 docs/evidence/1377-b2-r4/diff-check.txt
+ create mode 100644 docs/evidence/1377-b2-r4/gate-summary.txt
+ create mode 100644 docs/evidence/1377-b2-r4/inherited-files.json
+ create mode 100644 docs/evidence/1377-b2-r4/source-delta.patch
+ create mode 100644 docs/evidence/1377-b2-r4/syntax-1.txt
+ create mode 100644 docs/evidence/1377-b2-r4/syntax-2.txt
+ create mode 100644 docs/evidence/1377-b2-r4/syntax-3.txt
+ create mode 100644 docs/evidence/1377-b2-r4/syntax-4.txt
+ create mode 100644 docs/evidence/1377-b2-r4/syntax-5.txt
+ create mode 100644 docs/evidence/1377-b2-r4/syntax-6.txt
+ create mode 100644 docs/evidence/1377-b2-r4/syntax-7.txt
+ create mode 100644 docs/evidence/1377-b2-r5/RECEIPT-1377-B2-R4.md
+ create mode 100644 docs/evidence/1377-b2-r5/REVIEW-1377-B2-R5.md
+ create mode 100644 docs/evidence/1377-b2-r5/SHA256SUMS.txt
+ create mode 100644 docs/evidence/1377-b2-r5/affected-regressions-135.txt
+ create mode 100644 docs/evidence/1377-b2-r5/blocked-targeted.txt
+ create mode 100644 docs/evidence/1377-b2-r5/broker-owner-obligation-31.txt
+ create mode 100644 docs/evidence/1377-b2-r5/candidate.json
+ create mode 100644 docs/evidence/1377-b2-r5/checkpoint.json
+ create mode 100644 docs/evidence/1377-b2-r5/diff-check.txt
+ create mode 100644 docs/evidence/1377-b2-r5/gate-results.json
+ create mode 100644 docs/evidence/1377-b2-r5/handwritten-docs-diff-check.txt
+ create mode 100644 docs/evidence/1377-b2-r5/implementation.json
+ create mode 100644 docs/evidence/1377-b2-r5/inherited-files.json
+ create mode 100644 docs/evidence/1377-b2-r5/ledger-terminal-regression.txt
+ create mode 100644 docs/evidence/1377-b2-r5/observation-cas-full.txt
+ create mode 100644 docs/evidence/1377-b2-r5/packaging-diagnostic.txt
+ create mode 100644 docs/evidence/1377-b2-r5/source-commit.txt
+ create mode 100644 docs/evidence/1377-b2-r5/source-delta.patch
+ create mode 100644 docs/evidence/1377-b2-r5/structure.json.txt
+ create mode 100644 docs/evidence/1377-b2-r5/syntax-1.txt
+ create mode 100644 docs/evidence/1377-b2-r5/syntax-2.txt
+ create mode 100644 docs/evidence/1377-b2-r5/syntax-3.txt
+ create mode 100644 docs/evidence/1377-b2-r5/syntax-4.txt
+ create mode 100644 docs/evidence/1377-b2-r5/syntax-5.txt
+ create mode 100644 docs/evidence/1377-b2-r5/syntax-6.txt
+ create mode 100644 docs/evidence/1377-b2-r5/syntax-7.txt
+ create mode 100644 docs/evidence/1377-b2-r5/syntax-8.txt
+ create mode 100644 docs/evidence/1377-b2-r5/syntax-9.txt
+ create mode 100644 docs/evidence/1377-b2-r5/verification.json
+ create mode 100644 docs/evidence/603-reverify/independent-review.md
+ create mode 100644 docs/evidence/603-reverify/r2/candidate-coordinates.json
+ create mode 100644 docs/evidence/603-reverify/r2/candidate-working.diff
+ create mode 100644 docs/evidence/603-reverify/r2/changed-runtime.command.json
+ create mode 100644 docs/evidence/603-reverify/r2/changed-runtime.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r2/changed-runtime.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r2/independent-gate-review.md
+ create mode 100644 docs/evidence/603-reverify/r2/independent-source-review.md
+ create mode 100644 docs/evidence/603-reverify/r2/main-readback.json
+ create mode 100644 docs/evidence/603-reverify/r2/prior-RECEIPT-603-REVERIFY.md
+ create mode 100644 docs/evidence/603-reverify/r2/prior-STOPPED-603-REVERIFY.md
+ create mode 100644 docs/evidence/603-reverify/r2/stopped-readback.json
+ create mode 100644 docs/evidence/603-reverify/r2/structure.command.json
+ create mode 100644 docs/evidence/603-reverify/r2/structure.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r2/structure.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r3/changed-runtime.command.json
+ create mode 100644 docs/evidence/603-reverify/r3/changed-runtime.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r3/changed-runtime.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r3/environment-preflight.json
+ create mode 100644 docs/evidence/603-reverify/r3/independent-d009-review.md
+ create mode 100644 docs/evidence/603-reverify/r3/independent-gate-review.md
+ create mode 100644 docs/evidence/603-reverify/r3/main-readback.json
+ create mode 100644 docs/evidence/603-reverify/r3/pr-readback.json
+ create mode 100644 docs/evidence/603-reverify/r3/prior-RECEIPT-603-REVERIFY.md
+ create mode 100644 docs/evidence/603-reverify/r3/prior-STOPPED-603-REVERIFY.md
+ create mode 100644 docs/evidence/603-reverify/r3/stopped-readback.json
+ create mode 100644 docs/evidence/603-reverify/r4/FAILED.json
+ create mode 100644 docs/evidence/603-reverify/r4/artifact-hashes.json
+ create mode 100644 docs/evidence/603-reverify/r4/cached-diff-check.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/cached-diff-check.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/cached-diff-check.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/changed-runtime.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/changed-runtime.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/changed-runtime.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/delivery-runner.py
+ create mode 100644 docs/evidence/603-reverify/r4/ekr-broker.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/ekr-broker.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/ekr-broker.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/ekr-observation-cas.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/ekr-observation-cas.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/ekr-observation-cas.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/ekr-runtime.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/ekr-runtime.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/ekr-runtime.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/ekr-workflow.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/ekr-workflow.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/ekr-workflow.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/environment-preflight.json
+ create mode 100644 docs/evidence/603-reverify/r4/final-source-binding.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/final-source-binding.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/final-source-binding.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/gate-runner.py
+ create mode 100644 docs/evidence/603-reverify/r4/governance.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/governance.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/governance.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/independent-d009-review.md
+ create mode 100644 docs/evidence/603-reverify/r4/independent-gate-review.md
+ create mode 100644 docs/evidence/603-reverify/r4/independent-source-final-head-review.md
+ create mode 100644 docs/evidence/603-reverify/r4/independent-stop-review.md
+ create mode 100644 docs/evidence/603-reverify/r4/installer-binding.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/installer-binding.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/installer-binding.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/installer-syntax.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/installer-syntax.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/installer-syntax.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/javascript-syntax.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/javascript-syntax.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/javascript-syntax.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/main-impact-merge-tree.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/main-impact-merge-tree.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/main-impact-merge-tree.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/main-impact-review.md
+ create mode 100644 docs/evidence/603-reverify/r4/pr-body-before.md
+ create mode 100644 docs/evidence/603-reverify/r4/pr-source-update.json
+ create mode 100644 docs/evidence/603-reverify/r4/prior-RECEIPT-603-REVERIFY.md
+ create mode 100644 docs/evidence/603-reverify/r4/prior-STOPPED-603-REVERIFY.md
+ create mode 100644 docs/evidence/603-reverify/r4/push-source.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/push-source.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/push-source.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/remote-preflight.json
+ create mode 100644 docs/evidence/603-reverify/r4/remote-source-readback.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/remote-source-readback.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/remote-source-readback.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/scheduler-router.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/scheduler-router.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/scheduler-router.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/scheduler.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/scheduler.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/scheduler.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/source-binding.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/source-binding.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/source-binding.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/source-commit-coordinates.json
+ create mode 100644 docs/evidence/603-reverify/r4/structure-final-source.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/structure-final-source.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/structure-final-source.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r4/working-diff-check.command.json
+ create mode 100644 docs/evidence/603-reverify/r4/working-diff-check.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r4/working-diff-check.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r5/FAILED.json
+ create mode 100644 docs/evidence/603-reverify/r5/cached-diff-check-final.command.json
+ create mode 100644 docs/evidence/603-reverify/r5/cached-diff-check-final.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r5/cached-diff-check-final.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r5/cached-diff-check.command.json
+ create mode 100644 docs/evidence/603-reverify/r5/cached-diff-check.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r5/cached-diff-check.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r5/capture-command.py
+ create mode 100644 docs/evidence/603-reverify/r5/check-cached-whitespace.py
+ create mode 100644 docs/evidence/603-reverify/r5/docs-commit-readback.json
+ create mode 100644 docs/evidence/603-reverify/r5/docs-commit.command.json
+ create mode 100644 docs/evidence/603-reverify/r5/docs-commit.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r5/docs-commit.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r5/final-index-check.command.json
+ create mode 100644 docs/evidence/603-reverify/r5/final-index-check.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r5/final-index-check.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r5/independent-final-head-review.md
+ create mode 100644 docs/evidence/603-reverify/r5/independent-packaging-review.md
+ create mode 100644 docs/evidence/603-reverify/r5/initial-index.json
+ create mode 100644 docs/evidence/603-reverify/r5/pr-capability-review.md
+ create mode 100644 docs/evidence/603-reverify/r5/pr-final-readback.json
+ create mode 100644 docs/evidence/603-reverify/r5/pr-head-edit.command.json
+ create mode 100644 docs/evidence/603-reverify/r5/pr-head-edit.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r5/pr-head-edit.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r5/pr-preflight.json
+ create mode 100644 docs/evidence/603-reverify/r5/preserved-evidence.json
+ create mode 100644 docs/evidence/603-reverify/r5/prior-RECEIPT-603-REVERIFY.md
+ create mode 100644 docs/evidence/603-reverify/r5/prior-STOPPED-603-REVERIFY.md
+ create mode 100644 docs/evidence/603-reverify/r5/remote-final-readback.command.json
+ create mode 100644 docs/evidence/603-reverify/r5/remote-final-readback.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r5/remote-final-readback.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r5/remote-preflight.command.json
+ create mode 100644 docs/evidence/603-reverify/r5/remote-preflight.stderr.log
+ create mode 100644 docs/evidence/603-reverify/r5/remote-preflight.stdout.log
+ create mode 100644 docs/evidence/603-reverify/r5/stopped-readback.json
+ create mode 100644 docs/evidence/603-reverify/r5/whitespace-exemptions.json
+ create mode 100644 docs/evidence/603-reverify/r6/FAILED.json
+ create mode 100644 docs/evidence/603-reverify/r6/capture-command.py
+ create mode 100644 docs/evidence/603-reverify/r6/independent-prepublication-review.md
+ create mode 100644 docs/evidence/603-reverify/r6/independent-stop-review.md
+ create mode 100644 docs/evidence/603-reverify/r6/initial-state.json
+ create mode 100644 docs/evidence/603-reverify/r6/new-pr-body.md
+ create mode 100644 docs/evidence/603-reverify/r6/new-pr-final-readonly.command.json
+ create mode 100644 docs/evidence/603-reverify/r6/new-pr-preflight.command.json
+ create mode 100644 docs/evidence/603-reverify/r6/old-pr-final-readonly.command.json
+ create mode 100644 docs/evidence/603-reverify/r6/old-pr-preflight.command.json
+ create mode 100644 docs/evidence/603-reverify/r6/preflight.json
+ create mode 100644 docs/evidence/603-reverify/r6/prepublication-cached-check.command.json
+ create mode 100644 docs/evidence/603-reverify/r6/prior-RECEIPT-603-REVERIFY.md
+ create mode 100644 docs/evidence/603-reverify/r6/prior-STOPPED-603-REVERIFY.md
+ create mode 100644 docs/evidence/603-reverify/r6/remote-final-readonly.command.json
+ create mode 100644 docs/evidence/603-reverify/r6/remote-preflight.command.json
+ create mode 100644 docs/evidence/603-reverify/r6/stopped-readback.json
+ create mode 100644 docs/evidence/603-reverify/r7/FAILED.json
+ create mode 100644 docs/evidence/603-reverify/r7/capture-command.py
+ create mode 100644 docs/evidence/603-reverify/r7/docs-commit-readback.json
+ create mode 100644 docs/evidence/603-reverify/r7/docs-commit.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/environment-recipe.json
+ create mode 100644 docs/evidence/603-reverify/r7/final-index-check.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/independent-docs-head-review.md
+ create mode 100644 docs/evidence/603-reverify/r7/independent-evidence-review.md
+ create mode 100644 docs/evidence/603-reverify/r7/independent-prepublication-review.md
+ create mode 100644 docs/evidence/603-reverify/r7/independent-stop-review.md
+ create mode 100644 docs/evidence/603-reverify/r7/initial-state.json
+ create mode 100644 docs/evidence/603-reverify/r7/lock-readonly.json
+ create mode 100644 docs/evidence/603-reverify/r7/new-pr-body.md
+ create mode 100644 docs/evidence/603-reverify/r7/new-pr-coordinate.json
+ create mode 100644 docs/evidence/603-reverify/r7/new-pr-create.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/new-pr-created-readback.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/new-pr-preflight.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/new-pr-readback.json
+ create mode 100644 docs/evidence/603-reverify/r7/old-pr-close-event.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/old-pr-close.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/old-pr-comment-coordinate.json
+ create mode 100644 docs/evidence/603-reverify/r7/old-pr-comment-readback.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/old-pr-comment.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/old-pr-preflight.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/old-pr-superseded-comment.md
+ create mode 100644 docs/evidence/603-reverify/r7/postfailure-new-pr-readonly.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/postfailure-old-pr-readonly.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/postfailure-remote-readonly.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/preflight.json
+ create mode 100644 docs/evidence/603-reverify/r7/prepublication-cached-check.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/prepublication-check-binding.json
+ create mode 100644 docs/evidence/603-reverify/r7/prior-RECEIPT-603-REVERIFY.md
+ create mode 100644 docs/evidence/603-reverify/r7/prior-STOPPED-603-REVERIFY.md
+ create mode 100644 docs/evidence/603-reverify/r7/push-docs.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/remote-docs-readback.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/remote-preflight.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/stage-prepublication.command.json
+ create mode 100644 docs/evidence/603-reverify/r7/stopped-readback.json
+ create mode 100644 docs/evidence/603-reverify/r7/terminal-supplement-location.json
+ create mode 100644 docs/evidence/603-reverify/reviewed-product.diff
+ create mode 100644 docs/evidence/603-reverify/source-commits.txt
+ create mode 100644 docs/evidence/603-reverify/stopped-coordinates.json
+ create mode 100644 docs/evidence/603-reverify/stopped-working.diff
+ create mode 100644 docs/evidence/605-r5/router-open-diff.json
+ create mode 100644 docs/evidence/605-r6/facts-readback.json
+ create mode 100644 docs/evidence/605-r6/full-router.log
+ create mode 100644 docs/evidence/605-r6/gates.json
+ create mode 100644 docs/evidence/605-r6/helper-bounds.log
+ create mode 100644 docs/evidence/605-r6/independent-review.txt
+ create mode 100644 docs/evidence/605-r6/initial-files.json
+ create mode 100644 docs/evidence/605-r6/manifest.json
+ create mode 100644 docs/evidence/605-r6/matrix-cold-start.log
+ create mode 100644 docs/evidence/605-r6/matrix-isolation.log
+ create mode 100644 docs/evidence/605-r6/matrix-negative-persistence.log
+ create mode 100644 docs/evidence/605-r6/matrix-no-replay.log
+ create mode 100644 docs/evidence/605-r6/matrix-restart.log
+ create mode 100644 docs/evidence/605-r6/matrix-rollback.log
+ create mode 100644 docs/evidence/605-r6/r5-matrix-decode.log
+ create mode 100644 docs/evidence/605-r6/r5-targeted.log
+ create mode 100644 docs/evidence/605-r6/run-gate.py
+ create mode 100644 docs/evidence/605-r7/F01-base.log
+ create mode 100644 docs/evidence/605-r7/F02-base.log
+ create mode 100644 docs/evidence/605-r7/F03-base.log
+ create mode 100644 docs/evidence/605-r7/F04-base.log
+ create mode 100644 docs/evidence/605-r7/F05-base.log
+ create mode 100644 docs/evidence/605-r7/F06-base.log
+ create mode 100644 docs/evidence/605-r7/F07-base.log
+ create mode 100644 docs/evidence/605-r7/F08-base.log
+ create mode 100644 docs/evidence/605-r7/F09-base.log
+ create mode 100644 docs/evidence/605-r7/F10-base.log
+ create mode 100644 docs/evidence/605-r7/attribution.json
+ create mode 100644 docs/evidence/605-r7/attribution.md
+ create mode 100644 docs/evidence/605-r7/baseline.json
+ create mode 100644 docs/evidence/605-r7/cases.json
+ create mode 100644 docs/evidence/605-r7/data-preservation-readback.json
+ create mode 100644 docs/evidence/605-r7/delivery-readback.json
+ create mode 100644 docs/evidence/605-r7/final-gates.py
+ create mode 100644 docs/evidence/605-r7/final-head-source-review.txt
+ create mode 100644 docs/evidence/605-r7/full-router.log
+ create mode 100644 docs/evidence/605-r7/full-scheduler-consolidated.log
+ create mode 100644 docs/evidence/605-r7/full-scheduler-router.log
+ create mode 100644 docs/evidence/605-r7/full-scheduler.log
+ create mode 100644 docs/evidence/605-r7/gates.json
+ create mode 100644 docs/evidence/605-r7/historical-markdown-originals.json
+ create mode 100644 docs/evidence/605-r7/independent-review.txt
+ create mode 100644 docs/evidence/605-r7/manifest.json
+ create mode 100644 docs/evidence/605-r7/packaging-delta.json
+ create mode 100644 docs/evidence/605-r7/pre-stash-files.json
+ create mode 100644 docs/evidence/605-r7/restore-verification.json
+ create mode 100644 docs/evidence/605-r7/review-snapshot.json
+ create mode 100644 docs/evidence/605-r7/run-suites.py
+ create mode 100644 docs/evidence/605-r7/source-hashes.json
+ create mode 100644 docs/evidence/605-r7/stash.json
+ create mode 100644 docs/evidence/605-r7/structure.log
+ create mode 100644 docs/evidence/605-r7/suite-plan.json
+ create mode 100644 docs/reports/642-phase2-20261107/C-proposal.command.json
+ create mode 100644 docs/reports/642-phase2-20261107/C-proposal.stderr
+ create mode 100644 docs/reports/642-phase2-20261107/C-proposal.stdout
+ create mode 100644 docs/reports/642-phase2-20261107/R2-evidence-diff-check.command.json
+ create mode 100644 docs/reports/642-phase2-20261107/R2-evidence-diff-check.stderr
+ create mode 100644 docs/reports/642-phase2-20261107/R2-evidence-diff-check.stdout
+ create mode 100644 docs/reports/642-phase2-20261107/R2-resumption.json
+ create mode 100644 docs/reports/642-phase2-20261107/adoption-base.json
+ create mode 100644 docs/reports/642-phase2-20261107/adoption-candidate.json
+ create mode 100644 docs/reports/642-phase2-20261107/adoption-export-provenance.json
+ create mode 100644 docs/reports/642-phase2-20261107/adoption-transition.command.json
+ create mode 100644 docs/reports/642-phase2-20261107/adoption-transition.stderr
+ create mode 100644 docs/reports/642-phase2-20261107/adoption-transition.stdout
+ create mode 100644 docs/reports/642-phase2-20261107/atomic-lifecycle.diff
+ create mode 100644 docs/reports/642-phase2-20261107/coordinates.json
+ create mode 100644 docs/reports/642-phase2-20261107/diff-check.command.json
+ create mode 100644 docs/reports/642-phase2-20261107/diff-check.stderr
+ create mode 100644 docs/reports/642-phase2-20261107/diff-check.stdout
+ create mode 100644 docs/reports/642-phase2-20261107/distribution-manifest.json
+ create mode 100644 docs/reports/642-phase2-20261107/governance-accepted.command.json
+ create mode 100644 docs/reports/642-phase2-20261107/governance-accepted.stderr
+ create mode 100644 docs/reports/642-phase2-20261107/governance-accepted.stdout
+ create mode 100644 docs/reports/642-phase2-20261107/manifest-parity.json
+ create mode 100644 docs/reports/642-phase2-20261107/owner-comment-6701500077.json
+ create mode 100644 docs/reports/642-phase2-20261107/phase2-native.command.json
+ create mode 100644 docs/reports/642-phase2-20261107/phase2-native.stderr
+ create mode 100644 docs/reports/642-phase2-20261107/phase2-native.stdout
+ create mode 100644 docs/reports/642-phase2-20261107/preservation.json
+ create mode 100644 docs/reports/642-phase2-20261107/structure-tool-increment.command.json
+ create mode 100644 docs/reports/642-phase2-20261107/structure-tool-increment.stderr
+ create mode 100644 docs/reports/642-phase2-20261107/structure-tool-increment.stdout
+ create mode 100644 docs/reports/rc3-chain-20261107/A-receipt.json
+ create mode 100644 docs/reports/rc3-chain-20261107/A-verify-governance.txt
+ create mode 100644 docs/reports/rc3-chain-20261107/B-base.json
+ create mode 100644 docs/reports/rc3-chain-20261107/B-candidate.json
+ create mode 100644 docs/reports/rc3-chain-20261107/B-receipt.json
+ create mode 100644 docs/reports/rc3-chain-20261107/B-transition.txt
+ create mode 100644 docs/reports/rc3-chain-20261107/C-R2-native-exit-code.txt
+ create mode 100644 docs/reports/rc3-chain-20261107/C-R2-native-result.json
+ create mode 100644 docs/reports/rc3-chain-20261107/C-R2-native-stderr.txt
+ create mode 100644 docs/reports/rc3-chain-20261107/C-R2-prior-gate-source.txt
+ create mode 100644 docs/reports/rc3-chain-20261107/C-R2-receipt.json
+ create mode 100644 docs/reports/sra-v1-draft-20261107/BRIEF-SRA-V1-DRAFT.source.md
+ create mode 100644 docs/reports/sra-v1-draft-20261107/EXECUTION-MANDATE-W7-DRAFT.source.md
+ create mode 100644 docs/reports/sra-v1-draft-20261107/checks-initial.json
+ create mode 100644 docs/reports/sra-v1-draft-20261107/independent-review.md
+ create mode 100644 docs/reports/sra-v1-draft-20261107/owner-selected-records.json
+ create mode 100644 docs/reports/sra-v1-draft-20261107/remote-read-r2.json
+ create mode 100644 docs/reports/sra-v1-draft-20261107/source-provenance.json
+ create mode 100644 docs/reports/sra-v1-formalization-20261107/acceptance-transaction.md
+ create mode 100644 docs/reports/sra-v1-formalization-20261107/conversion-checks.json
+ create mode 100644 docs/reports/sra-v1-formalization-20261107/conversion-receipt.md
+ create mode 100644 docs/reports/sra-v1-formalization-20261107/independent-review.md
+ create mode 100644 docs/reports/sra-v1-formalization-20261107/owner-formalization-ruling.json
+ create mode 100644 docs/reports/sra-v1-formalization-20261107/remote-preflight.json
+ create mode 100644 docs/specs/AGENT_CORE_STANDING_RELEASE_AUTHORIZATION_V1.md
+ create mode 100644 examples/code-structure/verify-code-structure-retirement.test.mjs
+ create mode 100644 packages/agent-router/test/runtime-hygiene/recovery-compat.test.js
+ create mode 100644 packages/workflow-execution/src/recovery/automatic-ledger.js
+ create mode 100644 packages/workflow-execution/src/recovery/automatic.js
+ create mode 100644 packages/workflow-execution/src/recovery/refusal.js
+ create mode 100644 packages/workflow-execution/test/observation-cas/blocked-recovery-process.js
+ create mode 100644 packages/workflow-execution/test/observation-cas/blocked-recovery-restart.test.js
+ create mode 100644 packages/workflow-execution/test/observation-cas/blocked-recovery.test.js
+ create mode 100644 packages/workflow-execution/test/observation-cas/blocked-refusal.test.js
+ create mode 100644 scripts/availability-recovery/compat-reader-matrix.test.mjs
+ create mode 100644 scripts/availability-recovery/compat-store-facts.mjs
+ create mode 100644 scripts/availability-recovery/compat-store-facts.test.mjs
+ create mode 100644 scripts/governance/code-structure-authority.mjs
+ create mode 100644 scripts/governance/validate_v3_phase2.py
+ create mode 100644 scripts/governance/validate_v3_succession.py
+
+RC=0
+
+$ git stash apply 3b5a47fcdc1b1fd3b2a7a316aeb92fb9a353a542
+Auto-merging packages/workflow-execution/src/engine.js
+On branch fix/admission-budget-fairness
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   packages/workflow-execution/src/engine.js
+	modified:   packages/workflow-execution/src/ledger-admission.js
+	modified:   packages/workflow-execution/test/continuation.test.js
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	BRIEF-1364-ADMISSION-BUDGET.md
+	RECEIPT-1364-BUDGET.md
+	STOPPED-1364-BUDGET.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+RC=0
+
+$ git diff --check
+
+RC=0

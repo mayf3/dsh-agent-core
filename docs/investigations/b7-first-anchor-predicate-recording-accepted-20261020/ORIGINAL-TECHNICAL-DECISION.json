@@ -1,0 +1,317 @@
+{
+  "accepted": true,
+  "actor": {
+    "actor_thread": "01a1378d-e052-7021-9992-f0760eb9f9e7",
+    "backend_execution_model": "NOT_EXPOSED",
+    "exclusive_coordinator": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "nonauthor_material_reader": "/root/sol_e40_independent_reader",
+    "requested_model": "gpt-6-astra",
+    "role": "Original B7 delegated technical source/result-contract adjudication; not a GH/OS/network/access issuer",
+    "sol": {
+      "agent": "/root/capacity_a_sol",
+      "backend_execution_model": "UNKNOWN",
+      "requested_model": "Original lane requested gpt-6.1-sol/ultra",
+      "role": "Mechanical new closure/index pin and field extraction only; not an additional reviewer"
+    },
+    "source_runtime_sole_writer": "01a1437b-f9f3-7a33-a253-8f7fce9459f3",
+    "stored_config": {
+      "at": "2026-10-19T20:49:24Z",
+      "attribution": "Current coordinator-supplied stored configuration; not queried/resumed by this adjudication",
+      "model": "gpt-6-astra",
+      "provider": "openai"
+    }
+  },
+  "actualImplementationPass": false,
+  "actualImplementationState": "NOT_IMPLEMENTED_BY_THIS_DECISION",
+  "actualReadAttribution": {
+    "APIOrGitCalls": 0,
+    "directOldPrimaryOrRuntimeReads": 0,
+    "identityCredentialReads": 0,
+    "implementationEdits": 0,
+    "materialPASS": "376c is reused as material evidence, not acceptance or implementation validation. This decision performs the acceptance.",
+    "newExports": 0,
+    "originalActor": "Complete fixed new v1.1 unit, READY and same-reader receipt read; exact bytes/SHA verified, plus new author cleanup. No old v1/diff/source/review/raw/failure/archive/gate reads.",
+    "originalSol": "Complete new closure/index read and pin/field extraction; referenced old pins were not opened.",
+    "productionEffects": 0,
+    "testsOrFixtures": 0
+  },
+  "at_utc": "2026-10-19T20:52:30.139609+00:00",
+  "cleanup": {
+    "deletedBytes": 0,
+    "deletedFiles": 0,
+    "protected": "All active originals/source/failure/partial/published carrier/production/daemon/thread records",
+    "scope": "Only known own unique new decision/index/callback artifacts; no scan",
+    "temporaryScriptsCreated": 0
+  },
+  "conditional": false,
+  "costMethod": {
+    "accepted": true,
+    "actualFutureTopologyFit": "NOT_PROVED",
+    "conservativeSimultaneousCopies": 5,
+    "derivation": "Bounded diagnostic plus fixed framing/version/error overhead must fit <=4096 added bytes per carrier; five explicitly bounded carriers imply <=5*4096. Two temps conservatively cover retained failure overlap. Maximal synthetic serialization and actual layout must substantiate implementation of these bounds.",
+    "diagnosticIncrementPerFullRecordRoundedBytesMax": 4096,
+    "diagnosticOnlyRoundedIncrementBytesMax": 20480,
+    "grossModelCeilingBytes": 20971520,
+    "laterAccounting": "Charge all actual changed rounded bytes and applicable overlaps separately in the original independent20MiB gross model. Summaries pin the one stdout/records; no added full diagnostic copies. Return exact expanded copyset/cost if implementation exceeds this ceiling.",
+    "meaning": "Accepted finite prospective cost method only; not APFS guarantee, actual J, remaining, cost-zero claim or new-effect allowance.",
+    "newCapacityPolicy": false,
+    "noDeletionCloneCredit": true,
+    "notIncluded": [
+      "Helper/validator/recorder source growth",
+      "Temporary source copies",
+      "Tests/logs",
+      "Seal/AUTH/pin/capsule growth",
+      "Directory allocation",
+      "Other phase-overlap or retained-record costs"
+    ],
+    "numericAdmission": false,
+    "old16023552FitInherited": false,
+    "permittedFullRecordDiskCarriers": [
+      "RESULT.json",
+      "FAILURE.json",
+      "Retained private RESULT temp",
+      "Retained private FAILURE temp",
+      "One outer closed stdout capture"
+    ],
+    "sourceAcceptanceRequiresFutureMeasuredFit": false
+  },
+  "disposition": "ACCEPT_FINITE_SOURCE_RESULT_CONTRACT_ONLY_NO_NEW_EFFECT",
+  "effectsAndCounts": {
+    "acceptedNewRuntimeEffects": [],
+    "capacityCollector": {
+      "issued": 2,
+      "noThird": true,
+      "remaining": 0
+    },
+    "countsUnchanged": true,
+    "effectAcceptancePendingHere": false,
+    "export": {
+      "issued": 1,
+      "max": 1,
+      "noSecond": true,
+      "remaining": 0
+    },
+    "futureEffect": "Only a separately concrete future necessity/mechanism/purpose/authority/custody/readset/principal/phase/revocation/count/full-cost unit may be considered. It must receive an explicit compatible decision and cannot infer a no-denied-retry waiver from this source contract.",
+    "newEGranted": 0,
+    "newERequested": false,
+    "newReadGetterExportOrNetworkAuthorized": false,
+    "noDeniedRetryOverride": false,
+    "noQuotaFrom": "Source/result acceptance, implementation PASS, new schema/request label, path/PID/window/fit or coordinator ACK",
+    "packaging": {
+      "issued": 3,
+      "noFourth": true,
+      "remaining": 0
+    },
+    "requestedRuntimeEffects": []
+  },
+  "exactInputs": {
+    "authorCleanup": {
+      "bytes": 681,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract/OWN-CLEANUP-MATERIAL.v1.json",
+      "sha256": "2d0bfd1f20e23312b56793ea7e9879fa37cc4c9400eff7495446ede150559a0f"
+    },
+    "closure": {
+      "bytes": 7827,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract/SOURCE-CLOSURE.v1.1.json",
+      "sha256": "6a875effdaed86b5a16fce5f2d8a5b6f75cbdd32801913eb0302dcb4b3110fa0"
+    },
+    "index": {
+      "bytes": 3427,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract/MATERIAL-INDEX.v1.1.json",
+      "sha256": "a37f5a9cfa815c62360d7421631d02a69762623d84a72c6a20c0b05050350a67"
+    },
+    "materialReview": {
+      "bytes": 8814,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract/independent-sol-readback/FIRST-ANCHOR-PREDICATE-RECORDING-MATERIAL-RECEIPT.v1.json",
+      "sha256": "376c816c3c909f4d71c1640ff8769851909f7e49e1d026898a20f3bfa5679dc9"
+    },
+    "ready": {
+      "bytes": 4947,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract/READY.v1.json",
+      "sha256": "64bf1f061eb7ad28d5c96e568aa00d50167b639c4058a3a7e6c61e99e2e2cd68"
+    },
+    "unit": {
+      "bytes": 15193,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract/PROPOSED-FIXED-FIRST-ANCHOR-BLOB-SHAPE-PREDICATE-RECORDING-CONTRACT.v1.1.md",
+      "sha256": "20a1c8ef74415e4dc6dd7d4611f7859443189ff7ed9b0e7b7cdb33dd1ca6ddbe"
+    }
+  },
+  "finiteAcceptedCeiling": {
+    "accepted": true,
+    "broaderDeltaRule": "Return only a genuinely necessary broader semantic/source/copyset change before implementing that change; no blanket re-review or ordinary Owner gate.",
+    "contractSections": [
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "helper": "Same <=500-line zero-argument helper in the original owned isolated workblock",
+    "noNewCompanionOrAccessor": true,
+    "parent_helper_sha256": "96a1e16f7ea97aab0013f02781f00cd977780421699240158344a734605b5c38",
+    "permitted": [
+      "Fixed first-anchor Engine.blob ordered evaluation recording plus a pure closed diagnostic constructor",
+      "Blank/main closed V2 failure/result serialization and existing bounded publication joins",
+      "Narrowly necessary existing result validator/recorder kind/key recognition and exact pin joins"
+    ],
+    "unchanged": [
+      "Original acceptance conjunction, truth/order and both anchor values/order",
+      "Requested-object derivation and all subsequent length/decode/content/Git-object/tree/inventory/P6/publication checks",
+      "Live.get/reserve, anonymous transport/principal/host/port/path/readset/commit/330-GET bound",
+      "Deadlines/timer/signal, custody, existing publication root/EXCL/fsync/readback and no-resend",
+      "Product/runtime source, business subject/operation/TX/fence and strong-validation requirements"
+    ]
+  },
+  "fixedSubject": {
+    "bridgeAnchor": {
+      "bytes": 4770,
+      "sha256": "b85c7f574cec3e2564ba092426c4501ac09caf057b9c975669a1072ed3228f4b"
+    },
+    "commit": "72a097bd65f05adf26d7929dbb4d32384e124d37",
+    "firstAnchor": {
+      "bytes": 21325,
+      "sha256": "e1c3dc586f0cede58a9c1f8fce4d2ff025c49600816af9e7d2f75beb5284df01"
+    },
+    "member": "packages/agent-provisioning/src/index.js",
+    "otherSubjectsAuthorized": false,
+    "repository": "mayf3/dsh-agent-core",
+    "requestedOid": "b6fad4a5b070fd482117607a7069cd1dd5ddbd92",
+    "requestedOidMeaning": "Fixed requested tree-entry identity only, never an observed response OID or qualified body"
+  },
+  "implementation_spec_ready": true,
+  "kind": "ORIGINAL_FIXED_FIRST_ANCHOR_BLOB_SHAPE_PREDICATE_RECORDING_TECHNICAL_DECISION_V1",
+  "next": [
+    {
+      "action": "Land the exact accepted v1.1 contract and this attributable decision via original docs-only accepted Spec/base/final reviewed HEAD/main lifecycle. Preserve frozen v1/v1.1/READY and original review/route history; record acceptance/actual relay as overlay.",
+      "owner": "Original1437"
+    },
+    {
+      "action": "Emit this delta DEVELOPMENT_PREFLIGHT against the accepted base, then only the finite same-helper isolated implementation and owned synthetic evidence described in section6.",
+      "owner": "Original1437"
+    },
+    {
+      "action": "Close only affected ordered-predicate/provenance/V2/publication/privacy/bounds/layout/inverse evidence. Reuse unchanged accepted source/review/gates; no new reviewer, actual API/Git/identity/input or old failure replay.",
+      "owner": "Original1437 and original same-chain nonauthor reader"
+    },
+    {
+      "action": "Report the resulting source-only closure and actual source/cost pins. No effect follows automatically; exhaustedE remains stopped. This optional work does not block independent lawful business work or become a generic prerequisite to a different future effect unit.",
+      "owner": "Original1437/new14c"
+    }
+  ],
+  "optionalityAndState": {
+    "APP_P6_import_API": "UNPROVEN",
+    "G": null,
+    "Lshared": null,
+    "P0": "UNPROVEN",
+    "attempt": 0,
+    "business": "0/2",
+    "e42": "UNREGISTERED",
+    "finalJ": null,
+    "floorBytes": 53687091200,
+    "futureEffectMustFirstImplementOptionalDiagnostic": false,
+    "independentBusinessAuthorityPreserved": true,
+    "missingBusinessPrimarySubstituted": false,
+    "newBusinessAdmissionGate": false,
+    "oldActualCause": "NOT_CAPTURED/UNKNOWN; irrecoverable from the approved saved set; synthetic or future observations cannot rewrite it",
+    "oldSource96a1ReviewAb3b": "Retained source-only PASS at original scope",
+    "optionalDiagnostic": true,
+    "remaining": null,
+    "soleWriterOriginalTXFenceGoalObjectiveBudget": "UNCHANGED",
+    "strongValidationSubstituted": false
+  },
+  "priorHeldBasis": {
+    "direction": {
+      "bytes": 22404,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/actual-export-launch-v1/ORIGINAL-ACTUAL-BLOB-SHAPE-EXHAUSTED-E-TECHNICAL-DECISION.v1.json",
+      "sha256": "c932e3bd663d6a83af0f2e4152699072725ca65e746f5d20ba7528c00ed3c8c4"
+    },
+    "originalSourceReview": {
+      "bytes": 20246,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/independent-sol-readback/FIXED-APP-GIT-EXPORT-AFFECTED-SOURCE-RECEIPT.v1.json",
+      "sha256": "ab3b0ae3e55cf606317fe2cfec7c7fb051f4075cf4357e6516aa9aad1b215fd0"
+    },
+    "reuse": "Already held direction, parent context and review remain at original scope; no old source/review/raw/failure/intent/archive/gate/diff reread or re-stat.",
+    "roleBasis": "The original user delegation and B7 finite technical role recorded in5e8b, andc932.minimalNextMaterial.acceptance_points, cover this precise source/result decision. c932 authorized preparation only; this artifact now expressly accepts the fixed15193B unit. Material PASS and transport ACK are not substituted for acceptance.",
+    "source": {
+      "bytes": 18689,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/tools/fixed_selected_e1c_app_export.py",
+      "sha256": "96a1e16f7ea97aab0013f02781f00cd977780421699240158344a734605b5c38"
+    },
+    "transportAndQuota": {
+      "bytes": 20902,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/ORIGINAL-FIXED-BOUNDED-PUBLIC-GIT-TRANSPORT-AMENDMENT-TECHNICAL-DECISION.v1.json",
+      "sha256": "5e8b07450772b58bea4d17b95c09ddd00e468be7e1e961f09211152fe3c63c05"
+    }
+  },
+  "provenanceFinding": {
+    "F1": "CLOSED_IN_EXACT_V1_1",
+    "basis": "Sections4 helperSha256 and RECORDED qualification explicitly allow truthful null/unqualified early failure and prohibit additional reads or fabricated provenance.",
+    "historicalV1AndDiff": "Retained, not reopened; original same-reader resolution reused.",
+    "noRemainingMaterialFinding": true
+  },
+  "route": {
+    "ACKMeaning": "Coordination delivery only; not source/runtime/business PASS or a new effect",
+    "actualInbound": "Current exclusive new14c route to original1378",
+    "callbackMaxAttempts": 1,
+    "callbackTarget": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "old1486Written": false,
+    "sourceFrozenNOT_SENT": "Preserved as documentary historical state; no rewritten READY"
+  },
+  "sourceImplementationAccepted": true,
+  "sourceImplementationLifecycle": "Only original1437 after accepted docs/base/finalHEAD-main and this delta PREFLIGHT; isolated source and owned synthetic evidence through original same-chain affected review",
+  "sourceImplementationSpecReady": true,
+  "typedResultSemantics": {
+    "accepted": true,
+    "closedABI": "All original V1 top-level members/semantics plus only blobShapeDiagnostic with exactly section4 keys. Validators enforce closed keys, exact subject/types/state dependencies/caps and publication binding.",
+    "consequence": "A recorded predicate vector is diagnostic evidence only, not anchor/body/export/APP/business qualification.",
+    "diagnosticMaxUTF8BytesIncludingLF": 2048,
+    "diagnosticSchema": "E42_FIRST_ANCHOR_BLOB_SHAPE_PREDICATES_V1",
+    "diagnosticStatuses": [
+      "NOT_REACHED",
+      "RECORDED",
+      "PARTIAL_UNKNOWN"
+    ],
+    "lateFailure": "Older RESULT followed by FAILURE is an overall failed/UNKNOWN terminal join, not selectable success. Crash/partial/invalid/unbound JSON cannot be reconstructed into a qualified vector.",
+    "oldV1": "Historical bytes and cause stay unchanged; never upgrade or reserialize old actual failure as V2.",
+    "orderedPredicates": [
+      {
+        "name": "SHA_EQUALS_REQUESTED_OID",
+        "requires": "First-anchor response evaluation reached",
+        "rule": "x.get('sha') == o"
+      },
+      {
+        "name": "ENCODING_IS_BASE64",
+        "requires": "Predicate1 PASS",
+        "rule": "x.get('encoding') == 'base64'"
+      },
+      {
+        "name": "SIZE_INTEGER_NOT_BOOLEAN",
+        "requires": "Predicates1-2 PASS",
+        "rule": "type(x.get('size')) is int"
+      },
+      {
+        "name": "SIZE_IN_ANCHOR_RANGE",
+        "requires": "Predicates1-3 PASS",
+        "rule": "0 <= x['size'] <= 21325"
+      }
+    ],
+    "ordinalMeaning": "Only after actual recorded evaluation; original local durable reservation, not independent server receipt.",
+    "overflow": "Finite DIAGNOSTIC_SERIALIZATION_BOUND/UNKNOWN with all-NOT_EVALUATED PARTIAL_UNKNOWN and no ordinal; retain only already safely durable prefix. No truncation-as-qualified, raw fallback or extra request.",
+    "privacy": "No response OID/encoding strings/body/base64/raw JSON/headers/cookies/credentials/env/exception or arbitrary values.",
+    "publication": "Same canonical V2 object in existing stdout and RESULT/FAILURE flow, exact stdout-to-durable binding; no new side channel.",
+    "recordedRequirement": "Actual final helper hash already obtained/bound by original sealed admission AND actual existing local durable reservation ordinal1..330, plus a legal four-PASS or PASS-prefix/one-FAIL/unevaluated-suffix vector.",
+    "resultKind": "E42_FIXED_SELECTED_APP_EXPORT_V2",
+    "shortCircuit": "Stop on the first FAIL; never inspect later fields for additional diagnostics. firstFailed and failedPredicateSet derive solely from actually recorded evaluation. Empty/all NOT_EVALUATED is not all FAIL.",
+    "sizeValue": "Emit only an actually available integer0..21325 after predicates3 AND4 PASS. Otherwise null; no expected bound, negative/oversized/ill-typed/unexamined value substituted or exposed.",
+    "states": [
+      "PASS",
+      "FAIL",
+      "NOT_EVALUATED"
+    ],
+    "truthPreserved": "No new sha/encoding type guard, conversion or changed equality semantics. Ill-typed size never reaches range. Shape FAIL keeps BOUND/PROOF:BLOB_SHAPE and no later body work; shape PASS still requires every original later check.",
+    "unavailableProvenance": "helperSha256 and/or ordinal null when unavailable; appropriate NOT_REACHED/PARTIAL_UNKNOWN only. No new source/seal read or expected-hash substitution to fill the gap.",
+    "wholeClosedResultMaxBytes": 65536
+  },
+  "unaccepted_deltas": []
+}

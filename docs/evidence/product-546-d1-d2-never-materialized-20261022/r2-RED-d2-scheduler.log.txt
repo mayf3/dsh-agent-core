@@ -1,0 +1,56 @@
+✖ D2 guard (C-040): the exact incident shape — start evidence + elapsed deadline + never_existed readback — stays termination_not_proven, zero-write, fenced (140.447291ms)
+✖ D2 guard: the engine readback consult never settles never_existed (settle-once, zero-write) (173.786834ms)
+✔ D2 guard: retention-ambiguity dispositions (pending/evicted/restart_lost) stay UNKNOWN + fenced before and after the deadline (466.204375ms)
+✔ D2 guard regression: the ACCEPTED router-reported termination evidence (child_real_exit) still settles termination-only (187.041166ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 2
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1016.788958
+
+✖ failing tests:
+
+test at packages/scheduler/test/self-service/never-materialized-fail-closed.test.js:137:1
+✖ D2 guard (C-040): the exact incident shape — start evidence + elapsed deadline + never_existed readback — stays termination_not_proven, zero-write, fenced (140.447291ms)
+  AssertionError [ERR_ASSERTION]: never_existed is NOT reconcile-eligible
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-547-review-fix/packages/scheduler/test/self-service/never-materialized-fail-closed.test.js:149:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/scheduler/test/self-service/never-materialized-fail-closed.test.js:169:1
+✖ D2 guard: the engine readback consult never settles never_existed (settle-once, zero-write) (173.786834ms)
+  AssertionError [ERR_ASSERTION]: the engine consult is zero-write for never_existed
+  + actual - expected
+  
+  + [
+  +   {
+  +     classification: 'TERMINATION_ONLY_SETTLED',
+  +     jobId: '745a17a7-9cfa-4421-b6ab-89debdd097e5',
+  +     occurrenceId: 'occ:048f0c1f1494c9ff'
+  +   }
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-547-review-fix/packages/scheduler/test/self-service/never-materialized-fail-closed.test.js:176:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ { occurrenceId: 'occ:048f0c1f1494c9ff', jobId: '745a17a7-9cfa-4421-b6ab-89debdd097e5', classification: 'TERMINATION_ONLY_SETTLED' } ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

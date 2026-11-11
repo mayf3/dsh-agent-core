@@ -1,0 +1,961 @@
+{
+  "deploymentRoot": "/Users/authsvc/.agent-core",
+  "health": {
+    "contractSource": "installed DS HEALTH_URL read-only contract; never probed by this author",
+    "host": "127.0.0.1",
+    "path": "/health",
+    "port": 8790
+  },
+  "kind": "B7_NATIVE_CHECKPOINT_INPUTS_R3",
+  "liveDeltas": [
+    {
+      "bytes": 92734,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/index.js",
+      "sha256": "023eedbc4949224970bbc39aa520ee7a07bfb9dc69fd13df97027c09fba21d02",
+      "uid": 505
+    },
+    {
+      "bytes": 92734,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/index.js",
+      "sha256": "023eedbc4949224970bbc39aa520ee7a07bfb9dc69fd13df97027c09fba21d02",
+      "uid": 0
+    },
+    {
+      "bytes": 889,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/invariant.js",
+      "sha256": "b38a2e8add12257d9fc76c2c13751b3c8f30f8e1c150ba7d373ba2f84814f7b3",
+      "uid": 505
+    },
+    {
+      "bytes": 889,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/invariant.js",
+      "sha256": "b38a2e8add12257d9fc76c2c13751b3c8f30f8e1c150ba7d373ba2f84814f7b3",
+      "uid": 0
+    },
+    {
+      "bytes": 318837,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/tsconfig.tsbuildinfo",
+      "sha256": "ca8ce44f919b5b1708afb239d537cad30e36ce05aa81681048030dccb5e24472",
+      "uid": 505
+    },
+    {
+      "bytes": 318837,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/tsconfig.tsbuildinfo",
+      "sha256": "ca8ce44f919b5b1708afb239d537cad30e36ce05aa81681048030dccb5e24472",
+      "uid": 0
+    },
+    {
+      "bytes": 4206,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/adapter.d.ts",
+      "sha256": "235cd6a2c3d4a7be22e7e6debcbfd37120abf45b5252074448305d764e89cf8b",
+      "uid": 505
+    },
+    {
+      "bytes": 4206,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/adapter.d.ts",
+      "sha256": "235cd6a2c3d4a7be22e7e6debcbfd37120abf45b5252074448305d764e89cf8b",
+      "uid": 0
+    },
+    {
+      "bytes": 1368,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/adapter.d.ts.map",
+      "sha256": "60390de1f7065171b0d4b1540c2df4016221d543c6407ce244dfb28d26442909",
+      "uid": 505
+    },
+    {
+      "bytes": 1368,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/adapter.d.ts.map",
+      "sha256": "60390de1f7065171b0d4b1540c2df4016221d543c6407ce244dfb28d26442909",
+      "uid": 0
+    },
+    {
+      "bytes": 17366,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/adapter.js",
+      "sha256": "2053c352c43a331b6e5142179ad806016ff53a0965c519ab1105eca484927269",
+      "uid": 505
+    },
+    {
+      "bytes": 17366,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/adapter.js",
+      "sha256": "2053c352c43a331b6e5142179ad806016ff53a0965c519ab1105eca484927269",
+      "uid": 0
+    },
+    {
+      "bytes": 9254,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/adapter.js.map",
+      "sha256": "5a5ee76a001692f1b44b774d0e6e973c7fc261a917676af51dc151e23a5a23d0",
+      "uid": 505
+    },
+    {
+      "bytes": 9254,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/adapter.js.map",
+      "sha256": "5a5ee76a001692f1b44b774d0e6e973c7fc261a917676af51dc151e23a5a23d0",
+      "uid": 0
+    },
+    {
+      "bytes": 18809,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/catalog.d.ts",
+      "sha256": "d4fc0b1f3f3bc2865d1e00dbe2e3247a0cc9671e586d14402568d06dc70d3590",
+      "uid": 505
+    },
+    {
+      "bytes": 18809,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/catalog.d.ts",
+      "sha256": "d4fc0b1f3f3bc2865d1e00dbe2e3247a0cc9671e586d14402568d06dc70d3590",
+      "uid": 0
+    },
+    {
+      "bytes": 5003,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/catalog.d.ts.map",
+      "sha256": "2641d2a9a3844e4c8e46573805959346609a8c93f1464c68e640e87ff29e4ec5",
+      "uid": 505
+    },
+    {
+      "bytes": 5003,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/catalog.d.ts.map",
+      "sha256": "2641d2a9a3844e4c8e46573805959346609a8c93f1464c68e640e87ff29e4ec5",
+      "uid": 0
+    },
+    {
+      "bytes": 29315,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/catalog.js",
+      "sha256": "abc2c28fb00d67dfbe9e017898d88a889d2a505e9a0777c3a7521f58ab7a0654",
+      "uid": 505
+    },
+    {
+      "bytes": 29315,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/catalog.js",
+      "sha256": "abc2c28fb00d67dfbe9e017898d88a889d2a505e9a0777c3a7521f58ab7a0654",
+      "uid": 0
+    },
+    {
+      "bytes": 13772,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/catalog.js.map",
+      "sha256": "54579a33f5a89c5ec9445b6ba139d9043a02794364eed3d71d2df79645a6f184",
+      "uid": 505
+    },
+    {
+      "bytes": 13772,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/catalog.js.map",
+      "sha256": "54579a33f5a89c5ec9445b6ba139d9043a02794364eed3d71d2df79645a6f184",
+      "uid": 0
+    },
+    {
+      "bytes": 10712,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/config.d.ts",
+      "sha256": "ec7a937dc6df2e9ea772a7c2d983c7f10bcfe74f10cef7ab77474c8c2d89652e",
+      "uid": 505
+    },
+    {
+      "bytes": 10712,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/config.d.ts",
+      "sha256": "ec7a937dc6df2e9ea772a7c2d983c7f10bcfe74f10cef7ab77474c8c2d89652e",
+      "uid": 0
+    },
+    {
+      "bytes": 2680,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/config.d.ts.map",
+      "sha256": "594fe366b58fcca4a8b66a7bf604693de711c3eb77136bed214c4e07596a0c8a",
+      "uid": 505
+    },
+    {
+      "bytes": 2680,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/config.d.ts.map",
+      "sha256": "594fe366b58fcca4a8b66a7bf604693de711c3eb77136bed214c4e07596a0c8a",
+      "uid": 0
+    },
+    {
+      "bytes": 13398,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/config.js",
+      "sha256": "8b286089ed53578d51d150a54fe54d4a719c225d5b4ffb14abd19559855a1d34",
+      "uid": 505
+    },
+    {
+      "bytes": 13398,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/config.js",
+      "sha256": "8b286089ed53578d51d150a54fe54d4a719c225d5b4ffb14abd19559855a1d34",
+      "uid": 0
+    },
+    {
+      "bytes": 8221,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/config.js.map",
+      "sha256": "cac19dd01849eaca519cf3455bea210848127b0d067ee6319119a5bfb34f713e",
+      "uid": 505
+    },
+    {
+      "bytes": 8221,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/config.js.map",
+      "sha256": "cac19dd01849eaca519cf3455bea210848127b0d067ee6319119a5bfb34f713e",
+      "uid": 0
+    },
+    {
+      "bytes": 1996,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/context.d.ts",
+      "sha256": "24b5d89b283f2608426cd36d9515b048b02c4c80b56ed22204afaebc402501a3",
+      "uid": 505
+    },
+    {
+      "bytes": 1996,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/context.d.ts",
+      "sha256": "24b5d89b283f2608426cd36d9515b048b02c4c80b56ed22204afaebc402501a3",
+      "uid": 0
+    },
+    {
+      "bytes": 616,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/context.d.ts.map",
+      "sha256": "cef58847ec44f0399b806ac3cfcebf9cfb232c6291384aa283760e8885df8325",
+      "uid": 505
+    },
+    {
+      "bytes": 616,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/context.d.ts.map",
+      "sha256": "cef58847ec44f0399b806ac3cfcebf9cfb232c6291384aa283760e8885df8325",
+      "uid": 0
+    },
+    {
+      "bytes": 7384,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/context.js",
+      "sha256": "5e0d92d6556e75da00538bf6cf77fa6b6b5f3d61900ae2abea6b75149a944cf3",
+      "uid": 505
+    },
+    {
+      "bytes": 7384,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/context.js",
+      "sha256": "5e0d92d6556e75da00538bf6cf77fa6b6b5f3d61900ae2abea6b75149a944cf3",
+      "uid": 0
+    },
+    {
+      "bytes": 6559,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/context.js.map",
+      "sha256": "4f7d04146bf9f2cf002f6100b20a1377cab3a904b026b21e1b700595b57bf3db",
+      "uid": 505
+    },
+    {
+      "bytes": 6559,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/context.js.map",
+      "sha256": "4f7d04146bf9f2cf002f6100b20a1377cab3a904b026b21e1b700595b57bf3db",
+      "uid": 0
+    },
+    {
+      "bytes": 2189,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/discovery.d.ts",
+      "sha256": "a758e5ac6423d6322b76840eb29ebf590ac708f834f272cfe80635491a794de6",
+      "uid": 505
+    },
+    {
+      "bytes": 2189,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/discovery.d.ts",
+      "sha256": "a758e5ac6423d6322b76840eb29ebf590ac708f834f272cfe80635491a794de6",
+      "uid": 0
+    },
+    {
+      "bytes": 370,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/discovery.d.ts.map",
+      "sha256": "aeff36ff4c6d085ebb8fb6501da17f59db85eac6d53518dec682877fa04fd0a4",
+      "uid": 505
+    },
+    {
+      "bytes": 370,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/discovery.d.ts.map",
+      "sha256": "aeff36ff4c6d085ebb8fb6501da17f59db85eac6d53518dec682877fa04fd0a4",
+      "uid": 0
+    },
+    {
+      "bytes": 11811,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/discovery.js",
+      "sha256": "c1464e9c82e8018403003bf98cee972f57d3a982d12543d9e0df4ed05d9a27d2",
+      "uid": 505
+    },
+    {
+      "bytes": 11811,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/discovery.js",
+      "sha256": "c1464e9c82e8018403003bf98cee972f57d3a982d12543d9e0df4ed05d9a27d2",
+      "uid": 0
+    },
+    {
+      "bytes": 6331,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/discovery.js.map",
+      "sha256": "8d9079c75f3cd5f9fe66247540d6d3ee4dbb3adb022880773468c244588a729c",
+      "uid": 505
+    },
+    {
+      "bytes": 6331,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/discovery.js.map",
+      "sha256": "8d9079c75f3cd5f9fe66247540d6d3ee4dbb3adb022880773468c244588a729c",
+      "uid": 0
+    },
+    {
+      "bytes": 2863,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/index.d.ts",
+      "sha256": "f2d6f1e1f4ec9db206b00c5d48d89e767af0240663d9a46281572850f29767ed",
+      "uid": 505
+    },
+    {
+      "bytes": 2863,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/index.d.ts",
+      "sha256": "f2d6f1e1f4ec9db206b00c5d48d89e767af0240663d9a46281572850f29767ed",
+      "uid": 0
+    },
+    {
+      "bytes": 712,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/index.d.ts.map",
+      "sha256": "8a418fe036a4a20fdbe939b951fbf0eba0655f62924c205cf8d770e79fdfd362",
+      "uid": 505
+    },
+    {
+      "bytes": 712,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/index.d.ts.map",
+      "sha256": "8a418fe036a4a20fdbe939b951fbf0eba0655f62924c205cf8d770e79fdfd362",
+      "uid": 0
+    },
+    {
+      "bytes": 14233,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/index.js",
+      "sha256": "f834f9eabe6d75c2b753d5ce2c4c63b980183c5a3e60ecbee11277aedca278ff",
+      "uid": 505
+    },
+    {
+      "bytes": 14233,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/index.js",
+      "sha256": "f834f9eabe6d75c2b753d5ce2c4c63b980183c5a3e60ecbee11277aedca278ff",
+      "uid": 0
+    },
+    {
+      "bytes": 6018,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/index.js.map",
+      "sha256": "1a8fa7fbcf43bef110d78b8ba39ebbad64a2b6486fdafbd59c138ec821cd77be",
+      "uid": 505
+    },
+    {
+      "bytes": 6018,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/index.js.map",
+      "sha256": "1a8fa7fbcf43bef110d78b8ba39ebbad64a2b6486fdafbd59c138ec821cd77be",
+      "uid": 0
+    },
+    {
+      "bytes": 679,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/invariant.d.ts",
+      "sha256": "f8b0dcb52b2822c992fa0d40d00b681d1fe7e8c4274b5839fd5c6456fb2503bc",
+      "uid": 505
+    },
+    {
+      "bytes": 679,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/invariant.d.ts",
+      "sha256": "f8b0dcb52b2822c992fa0d40d00b681d1fe7e8c4274b5839fd5c6456fb2503bc",
+      "uid": 0
+    },
+    {
+      "bytes": 348,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/invariant.d.ts.map",
+      "sha256": "7097e7d7da144bd7255f76e8a8c57026c94ac16da5128f20ce8c00ddd0068729",
+      "uid": 505
+    },
+    {
+      "bytes": 348,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/invariant.d.ts.map",
+      "sha256": "7097e7d7da144bd7255f76e8a8c57026c94ac16da5128f20ce8c00ddd0068729",
+      "uid": 0
+    },
+    {
+      "bytes": 903,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/invariant.js",
+      "sha256": "a30f05b519d6c649e853f9c4b016426cd722e4d6a2f6d8a242d0cd4aa24971c2",
+      "uid": 505
+    },
+    {
+      "bytes": 903,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/invariant.js",
+      "sha256": "a30f05b519d6c649e853f9c4b016426cd722e4d6a2f6d8a242d0cd4aa24971c2",
+      "uid": 0
+    },
+    {
+      "bytes": 499,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/invariant.js.map",
+      "sha256": "7446b15ecee69c9143a0e2191176c214e7aa196d43d3d200ec2cdee6576a59c0",
+      "uid": 505
+    },
+    {
+      "bytes": 499,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/invariant.js.map",
+      "sha256": "7446b15ecee69c9143a0e2191176c214e7aa196d43d3d200ec2cdee6576a59c0",
+      "uid": 0
+    },
+    {
+      "bytes": 2922,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/provider.d.ts",
+      "sha256": "b0909f05766b177eceacbb36a30cd12d59d6d02a2adc39bf1ab928f3ae962357",
+      "uid": 505
+    },
+    {
+      "bytes": 2922,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/provider.d.ts",
+      "sha256": "b0909f05766b177eceacbb36a30cd12d59d6d02a2adc39bf1ab928f3ae962357",
+      "uid": 0
+    },
+    {
+      "bytes": 651,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/provider.d.ts.map",
+      "sha256": "72730e994533ffab8acff8170bdebbd65f3ae4d8e2e54ec8a3b597f2613c43b0",
+      "uid": 505
+    },
+    {
+      "bytes": 651,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/provider.d.ts.map",
+      "sha256": "72730e994533ffab8acff8170bdebbd65f3ae4d8e2e54ec8a3b597f2613c43b0",
+      "uid": 0
+    },
+    {
+      "bytes": 8367,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/provider.js",
+      "sha256": "860770a7cca109631a6d131b68ee4da8aa43ca726c3847ad7b420909b30947f8",
+      "uid": 505
+    },
+    {
+      "bytes": 8367,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/provider.js",
+      "sha256": "860770a7cca109631a6d131b68ee4da8aa43ca726c3847ad7b420909b30947f8",
+      "uid": 0
+    },
+    {
+      "bytes": 2806,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/provider.js.map",
+      "sha256": "f296c3e1c9334921281266821a5eca27bb0d1522fb411e0db0582521466b58ed",
+      "uid": 505
+    },
+    {
+      "bytes": 2806,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/provider.js.map",
+      "sha256": "f296c3e1c9334921281266821a5eca27bb0d1522fb411e0db0582521466b58ed",
+      "uid": 0
+    },
+    {
+      "bytes": 2443,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/replay.d.ts",
+      "sha256": "1849c73bbd1fb69dfeaf7a5e67b7c77f394a070f4df33e9082acb47734492590",
+      "uid": 505
+    },
+    {
+      "bytes": 2443,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/replay.d.ts",
+      "sha256": "1849c73bbd1fb69dfeaf7a5e67b7c77f394a070f4df33e9082acb47734492590",
+      "uid": 0
+    },
+    {
+      "bytes": 988,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/replay.d.ts.map",
+      "sha256": "e1708e0eb9870bdfb4de46fa3cf005a3cede2d50a7b6f97dd58367ad74559c99",
+      "uid": 505
+    },
+    {
+      "bytes": 988,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/replay.d.ts.map",
+      "sha256": "e1708e0eb9870bdfb4de46fa3cf005a3cede2d50a7b6f97dd58367ad74559c99",
+      "uid": 0
+    },
+    {
+      "bytes": 10933,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/replay.js",
+      "sha256": "e0226d7c9d5dbb9d2d33a549ed24a50ddc4391b97b5bcd3739dabf35480a1517",
+      "uid": 505
+    },
+    {
+      "bytes": 10933,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/replay.js",
+      "sha256": "e0226d7c9d5dbb9d2d33a549ed24a50ddc4391b97b5bcd3739dabf35480a1517",
+      "uid": 0
+    },
+    {
+      "bytes": 8280,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/replay.js.map",
+      "sha256": "27889bb3bedfaa940092291b7171d77c5bc51b7a3d4de20313b75708cdb42b47",
+      "uid": 505
+    },
+    {
+      "bytes": 8280,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/replay.js.map",
+      "sha256": "27889bb3bedfaa940092291b7171d77c5bc51b7a3d4de20313b75708cdb42b47",
+      "uid": 0
+    },
+    {
+      "bytes": 2140,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/stream.d.ts",
+      "sha256": "402a1eaaea1548212d117a7cc7b6b06fd8489fd32935ddc898cc159b5aff8462",
+      "uid": 505
+    },
+    {
+      "bytes": 2140,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/stream.d.ts",
+      "sha256": "402a1eaaea1548212d117a7cc7b6b06fd8489fd32935ddc898cc159b5aff8462",
+      "uid": 0
+    },
+    {
+      "bytes": 571,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/stream.d.ts.map",
+      "sha256": "40c4013a919a6960ce9b44c013d7b28f1a91d6004e67decfe57122cccc0ec605",
+      "uid": 505
+    },
+    {
+      "bytes": 571,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/stream.d.ts.map",
+      "sha256": "40c4013a919a6960ce9b44c013d7b28f1a91d6004e67decfe57122cccc0ec605",
+      "uid": 0
+    },
+    {
+      "bytes": 13849,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/stream.js",
+      "sha256": "41dddaa6c9017be0c59f27b0706c456fb6b53a3650d5b00614092b2169cbb3b0",
+      "uid": 505
+    },
+    {
+      "bytes": 13849,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/stream.js",
+      "sha256": "41dddaa6c9017be0c59f27b0706c456fb6b53a3650d5b00614092b2169cbb3b0",
+      "uid": 0
+    },
+    {
+      "bytes": 7683,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/types/stream.js.map",
+      "sha256": "a948c77ebc5c363abb0b5d52e59ce4756c8f5ef9eae19e33daa060e1abd02e5d",
+      "uid": 505
+    },
+    {
+      "bytes": 7683,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/abcea89414687ddb24077fa95517b830/lib/types/stream.js.map",
+      "sha256": "a948c77ebc5c363abb0b5d52e59ce4756c8f5ef9eae19e33daa060e1abd02e5d",
+      "uid": 0
+    },
+    {
+      "bytes": 60920,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/node_modules/.pnpm/@earendil-works+pi-ai@0.82.1_@modelcontextprotocol+sdk@1.29.0_zod@4.4.3__ws@8.21.0_zod@4.4.3/node_modules/@earendil-works/pi-ai/dist/api/openai-completions.d.ts.map",
+      "sha256": "44b166fe60b434d5075c1a4c0c5ea5084598072e2588daa71c7e1d3ab85dad29",
+      "uid": 505
+    },
+    {
+      "bytes": 60920,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/e45d7e39a15efbf9e2a64f449cb0e8bd/dist/api/openai-completions.d.ts.map",
+      "sha256": "44b166fe60b434d5075c1a4c0c5ea5084598072e2588daa71c7e1d3ab85dad29",
+      "uid": 0
+    },
+    {
+      "bytes": 57297,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/node_modules/.pnpm/@earendil-works+pi-ai@0.82.1_@modelcontextprotocol+sdk@1.29.0_zod@4.4.3__ws@8.21.0_zod@4.4.3/node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js",
+      "sha256": "64574442e6aeba782b224bf643d230c83a7f4e7980e4fc166cf936d30d9be50a",
+      "uid": 505
+    },
+    {
+      "bytes": 57297,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/e45d7e39a15efbf9e2a64f449cb0e8bd/dist/api/openai-completions.js",
+      "sha256": "64574442e6aeba782b224bf643d230c83a7f4e7980e4fc166cf936d30d9be50a",
+      "uid": 0
+    },
+    {
+      "bytes": 103972,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/node_modules/.pnpm/@earendil-works+pi-ai@0.82.1_@modelcontextprotocol+sdk@1.29.0_zod@4.4.3__ws@8.21.0_zod@4.4.3/node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js.map",
+      "sha256": "fc631f1cbec27e7d68878c423a913a3463cb235fa0ac3f24f71812798cf71f9b",
+      "uid": 505
+    },
+    {
+      "bytes": 103972,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/e45d7e39a15efbf9e2a64f449cb0e8bd/dist/api/openai-completions.js.map",
+      "sha256": "fc631f1cbec27e7d68878c423a913a3463cb235fa0ac3f24f71812798cf71f9b",
+      "uid": 0
+    },
+    {
+      "bytes": 32086,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/node_modules/.pnpm/@earendil-works+pi-ai@0.82.1_@modelcontextprotocol+sdk@1.29.0_zod@4.4.3__ws@8.21.0_zod@4.4.3/node_modules/@earendil-works/pi-ai/dist/api/openai-responses-shared.d.ts.map",
+      "sha256": "292884a3cc59ebea846b64ee6b1d33d56c4ead5fcb3c63317f05e344439f0f6b",
+      "uid": 505
+    },
+    {
+      "bytes": 32086,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/e45d7e39a15efbf9e2a64f449cb0e8bd/dist/api/openai-responses-shared.d.ts.map",
+      "sha256": "292884a3cc59ebea846b64ee6b1d33d56c4ead5fcb3c63317f05e344439f0f6b",
+      "uid": 0
+    },
+    {
+      "bytes": 28596,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/node_modules/.pnpm/@earendil-works+pi-ai@0.82.1_@modelcontextprotocol+sdk@1.29.0_zod@4.4.3__ws@8.21.0_zod@4.4.3/node_modules/@earendil-works/pi-ai/dist/api/openai-responses-shared.js",
+      "sha256": "5ec637db5d115bb5a2da5e144bc83a526ad79dc5940d710824e49fefbbac0e05",
+      "uid": 505
+    },
+    {
+      "bytes": 28596,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/e45d7e39a15efbf9e2a64f449cb0e8bd/dist/api/openai-responses-shared.js",
+      "sha256": "5ec637db5d115bb5a2da5e144bc83a526ad79dc5940d710824e49fefbbac0e05",
+      "uid": 0
+    },
+    {
+      "bytes": 54656,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/node_modules/.pnpm/@earendil-works+pi-ai@0.82.1_@modelcontextprotocol+sdk@1.29.0_zod@4.4.3__ws@8.21.0_zod@4.4.3/node_modules/@earendil-works/pi-ai/dist/api/openai-responses-shared.js.map",
+      "sha256": "145dcc52e16ffacd47b162656c5d2bbc621319e24edaf78ac9a92247b5b296cf",
+      "uid": 505
+    },
+    {
+      "bytes": 54656,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/e45d7e39a15efbf9e2a64f449cb0e8bd/dist/api/openai-responses-shared.js.map",
+      "sha256": "145dcc52e16ffacd47b162656c5d2bbc621319e24edaf78ac9a92247b5b296cf",
+      "uid": 0
+    },
+    {
+      "bytes": 31970,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/node_modules/.pnpm/@earendil-works+pi-ai@0.82.1_@modelcontextprotocol+sdk@1.29.0_zod@4.4.3__ws@8.21.0_zod@4.4.3/node_modules/@earendil-works/pi-ai/dist/types.d.ts",
+      "sha256": "c90d91182ebe6beac3606c1b998067a830064930f78cf3ee5e62b9fb2cb548e4",
+      "uid": 505
+    },
+    {
+      "bytes": 31970,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/e45d7e39a15efbf9e2a64f449cb0e8bd/dist/types.d.ts",
+      "sha256": "c90d91182ebe6beac3606c1b998067a830064930f78cf3ee5e62b9fb2cb548e4",
+      "uid": 0
+    },
+    {
+      "bytes": 48962,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/node_modules/.pnpm/@earendil-works+pi-ai@0.82.1_@modelcontextprotocol+sdk@1.29.0_zod@4.4.3__ws@8.21.0_zod@4.4.3/node_modules/@earendil-works/pi-ai/dist/types.d.ts.map",
+      "sha256": "c0dbe81bf66f0f776a7896d25ed52a2e82fc1c5521a8da80c5ac0e0982b15107",
+      "uid": 505
+    },
+    {
+      "bytes": 48962,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/e45d7e39a15efbf9e2a64f449cb0e8bd/dist/types.d.ts.map",
+      "sha256": "c0dbe81bf66f0f776a7896d25ed52a2e82fc1c5521a8da80c5ac0e0982b15107",
+      "uid": 0
+    },
+    {
+      "bytes": 44,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/node_modules/.pnpm/@earendil-works+pi-ai@0.82.1_@modelcontextprotocol+sdk@1.29.0_zod@4.4.3__ws@8.21.0_zod@4.4.3/node_modules/@earendil-works/pi-ai/dist/types.js",
+      "sha256": "01ae2a5b120382f9a648ced7ee8507493a134f216d100fc61600c6c9738235d2",
+      "uid": 505
+    },
+    {
+      "bytes": 44,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/e45d7e39a15efbf9e2a64f449cb0e8bd/dist/types.js",
+      "sha256": "01ae2a5b120382f9a648ced7ee8507493a134f216d100fc61600c6c9738235d2",
+      "uid": 0
+    },
+    {
+      "bytes": 33989,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/node_modules/.pnpm/@earendil-works+pi-ai@0.82.1_@modelcontextprotocol+sdk@1.29.0_zod@4.4.3__ws@8.21.0_zod@4.4.3/node_modules/@earendil-works/pi-ai/dist/types.js.map",
+      "sha256": "97e2a4a4ea1497818db8f46978d10c7ffc061c63c893f41443af98b9af9b7bd6",
+      "uid": 505
+    },
+    {
+      "bytes": 33989,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/e45d7e39a15efbf9e2a64f449cb0e8bd/dist/types.js.map",
+      "sha256": "97e2a4a4ea1497818db8f46978d10c7ffc061c63c893f41443af98b9af9b7bd6",
+      "uid": 0
+    },
+    {
+      "bytes": 20965,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/index.js",
+      "sha256": "8916dec1ecf7f8ab42b050f8267036be5a15f76fc2cb35f7ae84ffcf59a2c563",
+      "uid": 505
+    },
+    {
+      "bytes": 18539,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/authoring-file-entry.js",
+      "sha256": "2db5aeea525f138aa2a4441831f377c2dbf6c17271a412c320331c4241d0e26a",
+      "uid": 505
+    },
+    {
+      "bytes": 7533,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/capabilities/workflow-definition-read.js",
+      "sha256": "049358d75a3e2b8082afe172cb77c338da8506e79327e06479645a82b49fc478",
+      "uid": 505
+    },
+    {
+      "bytes": 16088,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/attachment/attachment-local/lib/index.js",
+      "sha256": "af12c4406845ad7739ca176c07d776ec21243e6575217b75960aacfb3c6357bb",
+      "uid": 505
+    },
+    {
+      "bytes": 13768,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/packages/attachment/attachment-local/lib/types/store.js",
+      "sha256": "f89f8d260f0029ed24008e1f01b7364fb208aef263d8b9326b7eba8ff0487335",
+      "uid": 505
+    },
+    {
+      "bytes": 2643,
+      "gid": 601,
+      "mode": 420,
+      "path": "/usr/local/libexec/agent-core/harness/node_modules/.pnpm/@earendil-works+pi-ai@0.82.1_@modelcontextprotocol+sdk@1.29.0_zod@4.4.3__ws@8.21.0_zod@4.4.3/node_modules/@earendil-works/pi-ai/package.json",
+      "sha256": "955aa1caab4c875fc7755abe7cacbf9002d9875c471e8d5af245e495ae1d4596",
+      "uid": 505
+    }
+  ],
+  "oldCleanAbsent": [
+    "/var/db/agent-core/authsvc-codex-migration/activation-code-input",
+    "/var/db/agent-core/authsvc-codex-migration/b7-preparation-input.json",
+    "/var/db/agent-core/authsvc-codex-migration/b7-six-target-batch.json",
+    "/var/db/agent-core/authsvc-codex-migration/b7-six-target-batch.json.new",
+    "/var/db/agent-core/authsvc-codex-migration/migration-transaction.json",
+    "/var/db/agent-core/authsvc-codex-migration/migration-fence.json",
+    "/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock",
+    "/usr/local/share/agent-core/artifacts"
+  ],
+  "oldProducer": {
+    "authorization": "B7_SIX_FIXED_SCOPE_USER_AUTHORIZED_20261007",
+    "homeFiles": [
+      "settings.yaml",
+      "profiles/agent-core-production/package.json",
+      "profiles/agent-core-production/cordis.patch.yml"
+    ],
+    "journal": "/var/db/agent-core/authsvc-codex-migration/.b7-six-journal.jsonl",
+    "preimageCompatibility": {
+      "byteBindingPath": "/private/var/db/agent-deploy-system-execution/b7-native-execution-r27-new-candidate-uninstallable/b7-wired-stage/preimage-byte-bindings.json",
+      "byteBindingSha256": "2ab340c78a5996f59d7a9e7249bb411366cef1fec979eea534e70e60940f4d12",
+      "journalSha256": "ff9f2122af69f557ba731958d47654525a138cb9587989f6664948abe828d8a4",
+      "kind": "B7_THREE_PREIMAGE_COMPATIBILITY_V1",
+      "metadataReceiptSha256": "05afac224c0cb4cf736205c469eb5598e858ecbffbd567d6367324bee4cc99fb",
+      "currentJournal": {
+        "origin": "AUTHORIZED_OPERATOR_READ_SURFACE_V1",
+        "authority": "mother Spec PR452 copy 7911a67e section 3 L103 (authorized operator read surface)",
+        "reader": "executor agent via authorized sudo -n read-only channel (NOT the human Owner)",
+        "utc": "2026-10-15T15:36:00Z",
+        "journalSha256": "ff9f2122af69f557ba731958d47654525a138cb9587989f6664948abe828d8a4"
+      }
+    },
+    "preimageStore": "/var/db/agent-core/authsvc-codex-migration/.b7-six-preimage-store"
+  },
+  "recoveryRoot": "/var/db/agent-core/authsvc-codex-migration",
+  "sixLiveReconciliation": {
+    "kind": "B7_SIX_LIVE_RECONCILIATION_V1",
+    "pluginLibSha256": "e1b22e294a46853fc58aa21b15d5e72fd910d6e2c0cf64ce16ed0f531d7e251e"
+  },
+  "sources": {
+    "oldDisposal": {
+      "path": "/private/var/db/agent-deploy-system-execution/b7-native-execution-r27-new-candidate-uninstallable/b7-wired-stage/old-stage-lease-disposal-once.py",
+      "sha256": "519441cd6b51ba3039340027746eb493c36d9ffc41bfc60c7c256e79b4f81e53"
+    },
+    "option": {
+      "path": "/private/var/db/agent-deploy-system-execution/b7-native-execution-r27-new-candidate-uninstallable/b7-wired-stage/option-b-quarantine-remove.py",
+      "sha256": "e25593a703b74620e741dd40ce870d57d502a4b658f9b8564006e84b142bdc03"
+    }
+  },
+  "userDisposalReceipt": {
+    "noncePrefix": "aa0d61e64c72b44c",
+    "stdoutFile": "USER-RECEIPTS.json"
+  }
+}

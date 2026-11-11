@@ -1,0 +1,23 @@
+{
+  "validated_at_utc": "2026-11-08T07:03:05.762195+00:00",
+  "method": "Local preserved bytes and receipt recheck only; no production reads or source imports",
+  "capture_receipt_sha256": "d89a432bb34eab261ef1b02763a5481629713af466869d66e2477fac6ec80e5f",
+  "capture_script_sha256": "07ff8ae986286da30b37f308382badee6c6c0ce220ef5146842d04b163cd410a",
+  "validation_script_sha256": "5d4aa551cfb6676e777341a268aa4c0c34c8773e982234dc78c9c590f20a6aa5",
+  "collector_machine_status": "PASS",
+  "content_consistency": "THREE_PASS_STABLE",
+  "local_copies_verified": 12,
+  "local_source_files_verified": 18,
+  "command_count": 97,
+  "sudo_readonly_command_count": 95,
+  "capture_scope": "FAIL",
+  "extra_files": [
+    "turn-recovery-v3.pre-fleet-unblock-20261002-111745.json"
+  ],
+  "missing_required_files": [],
+  "overall": "STOPPED",
+  "offline_same_predicate_reproduction": "NOT_RUN",
+  "actual_failed_predicate": "UNKNOWN",
+  "root_cause": "UNKNOWN",
+  "done_when": "NOT_MET"
+}

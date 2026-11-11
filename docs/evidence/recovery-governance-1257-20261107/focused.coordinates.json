@@ -1,0 +1,16 @@
+{
+  "gate": "focused",
+  "cwd": "/private/tmp/h1257",
+  "head": "28608313cb88e37fee95385f30cbcb9d915bcdd5",
+  "command": [
+    "node",
+    "--test",
+    "scripts/availability-recovery/drain-then-restart.test.mjs",
+    "scripts/availability-recovery/recovery-monitor.test.mjs",
+    "packages/agent-router/test/route-chain/reconcile-cli.test.js",
+    "packages/agent-router/test/route-chain/reconcile-batch.test.js"
+  ],
+  "startedAt": "2026-11-06T23:03:47.631153+00:00",
+  "finishedAt": "2026-11-06T23:03:52.705560+00:00",
+  "exitCode": 0
+}

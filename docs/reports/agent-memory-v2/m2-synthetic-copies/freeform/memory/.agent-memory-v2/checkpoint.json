@@ -1,0 +1,7 @@
+{
+  "schema": "AGENT_MEMORY_V2_CHECKPOINT",
+  "state": "UNKNOWN",
+  "generation": null,
+  "eventCursor": null,
+  "eventIds": []
+}

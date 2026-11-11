@@ -1,0 +1,35 @@
+{
+  "ruling_id": "603-R7-RAW-CLASS-001",
+  "issuer": "User regulator R7, 2026-11-07",
+  "scope": "all subsequent deliveries in mayf3/dsh-agent-core",
+  "coordinate": "BRIEF-603-REVERIFY.md#r7-通用监管裁定与续行授权2026-11-07",
+  "raw_condition": "verbatim machine capture; preserve original bytes and SHA256",
+  "whitespace_argv": [
+    "git",
+    "diff",
+    "--cached",
+    "--check",
+    "--",
+    ".",
+    ":(exclude)docs/evidence/**/*.diff",
+    ":(exclude)docs/evidence/**/*.stderr",
+    ":(exclude)docs/evidence/**/*.stdout",
+    ":(exclude)docs/evidence/**/*.log"
+  ],
+  "compiled_artifacts": "full check; receipts/md/json/mjs/scripts are not exempt",
+  "unset_keys": [
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "ALL_PROXY",
+    "all_proxy",
+    "NO_PROXY",
+    "no_proxy",
+    "NODE_USE_ENV_PROXY"
+  ],
+  "gate_environment": "clear all nine keys only in gate subprocess; network commands inherit; no Secret values logged",
+  "node_for_reused_r4": "/usr/local/bin/node v25.6.1",
+  "historical_results": "R4/R5/R6 failures preserved; no raw trim, no gitattributes, no per-file waiver",
+  "product_tests_authority_changed": false
+}

@@ -1,0 +1,40 @@
+spec_id: AGENT_CORE_READBACK_AGING_HANDOFF_V1
+status: accepted
+accepted_by: mayf3
+accepted_date: 2026-11-07
+accepted_at: 2026-11-07T12:58:48.337170Z
+accepted_reviewed_head: 7b5d79c3961625aaade6f3b383b18b2968e82f6c
+acceptance_authority: Owner mayf3 ruling owner-20261107-five-decisions items[2]
+acceptance_authority_source: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json
+acceptance_authority_selector: $.rulings[id=owner-20261107-five-decisions]
+acceptance_authority_item_selector: $.rulings[id=owner-20261107-five-decisions].items[2]
+acceptance_authority_canonical_sha256: 95290062529cf24c31d3c7f6c748a22e5e369d14458cf623f562eee5c90cedc8
+acceptance_authority_item_canonical_sha256: ffeea11b8bd8b57815eb8fc8c9d0ec32e3528386b04d506d71fd8313e067bba1
+acceptance_authority_snapshot: docs/reports/readback-aging-acceptance-20261107/owner-ruling.json
+acceptance_transcript_comment: https://github.com/mayf3/dsh-agent-core/pull/643#issuecomment-6707205612
+acceptance_transcript_comment_id: 6707205612
+acceptance_scope: 仅限提案语义
+acceptance_restriction: WEC/Svc配套权威正式接受前不得实施新reason或用于生产
+acceptance_transaction_executor: /root (transaction executor only; Owner mayf3 is the acceptance authority)
+acceptance_final_head_review: PENDING_REGULATOR
+activation_boundary: main merge after regulator independent final-HEAD review
+spec_kind: implementation
+authority_level: governing_spec
+implementation_authority: none
+production_apply_authority: none
+authority_action: AMEND
+date: 2026-11-07
+repository: mayf3/dsh-agent-core
+authoring_base: 3c1bcf98bc40a2c34cca24f241c87d1b12cea216
+scope:
+  - proposed bounded B1/B4 readback-aging branch of existing system Assistance
+governed_by:
+  - AGENT_CORE_PRODUCT_ARCHITECTURE_V1
+  - SCHEDULER_OCCURRENCE_OUTCOME_V3
+  - AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1
+  - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3
+  - AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3
+external_authorities: []
+supersedes: []
+superseded_by: null
+owners: [mayf3]

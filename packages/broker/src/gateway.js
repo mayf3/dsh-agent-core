@@ -28,12 +28,17 @@
  * (and logged) by the caller.
  */
 
+import { COMPLETE_BODY_ID, completeFailure } from './capabilities/workflow-definition-read/complete-contract.js'
+import { readCompleteBody } from './capabilities/workflow-definition-read/complete-reader.js'
 import { createHttpTransport, createHttpHandlers, requestAccessToken } from './transport.js'
+import { validateHttpReadProjectionSource } from './transport/body-projection.js'
 import { buildTargetMap } from './targets.js'
 import { invoke, validateInvocation } from './mapping.js'
+import { sanitizeDispatchStatusError } from './agent-session-status-result.js'
 import { loadCredentialFor } from './credential-store.js'
 import { validateSchedulerTrustedContext } from './scheduler-validation.js'
-import { prepareWorkflowDraft } from './capabilities/workflow-linear-authoring.js'
+import { prepareWorkflowDraft } from './capabilities/workflow/linear-authoring.js'
+import { routeOwnerObligation } from './capabilities/workflow/owner-obligation-guard.js'
 
 /**
  * Create the in-process broker gateway.
@@ -79,6 +84,7 @@ export function createBrokerGateway({
   localHandlers,
   localHandlerResolver,
   auditDenial,
+  resolveWorkflowProvenance,
   log = () => {},
 }) {
   const targetMap = buildTargetMap(targets)
@@ -87,6 +93,12 @@ export function createBrokerGateway({
     const hasHttp = Array.isArray(manifest.operations) && manifest.operations.some((o) => o && o.http)
     const isLocal = manifest?.local !== undefined
     if (hasHttp || isLocal) byCapability.set(manifest.id, manifest)
+  }
+  for (const manifest of byCapability.values()) {
+    for (const operation of manifest.operations || []) {
+      const issue = validateHttpReadProjectionSource(operation.http || {}, operation.arguments?.properties || {}, byCapability)
+      if (issue) throw new Error(`invalid read projection in ${manifest.id}.${operation.name}: ${issue}`)
+    }
   }
 
   /**
@@ -222,7 +234,7 @@ export function createBrokerGateway({
    * @returns {Promise<{ok:boolean, result?:unknown,
    *   error?:{code:string, status?:number, detail?:string}}>}
    */
-  async function execute(call, context = {}) {
+  async function executeCore(call, context = {}) {
     const agentId = context?.agentId
     // ── reserved read-only discovery op (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1
     //    §5.3.1): answers BEFORE any credential gate so a not-ready runtime can
@@ -384,12 +396,33 @@ export function createBrokerGateway({
 
     // ── HTTP-bound capability: the existing generic authorized transport. ─
     const transport = transportFor(agentId)
-    const handlers = createHttpHandlers(manifest, transport)
+    const managed = await routeOwnerObligation({ call: { capabilityId: manifest.id, operation, args: localArgs }, manifest,
+      context: trustedContext, resolveWorkflowProvenance, transport,
+      executeRead: (readCall) => executeCore(readCall, trustedContext) })
+    if (managed !== undefined) return managed
+    const handlers = createHttpHandlers(manifest, transport, {
+      executeRead: (readCall) => executeCore(readCall, trustedContext),
+    })
     return invoke(manifest, handlers, { operation, args: localArgs }, {
       // The parent decides the caller; the local identity stub is unused by
       // the HTTP pipeline (identity travels in the credential, not here).
       resolvePrincipal: () => undefined,
     })
+  }
+
+  async function execute(call, context = {}) {
+    if (call?.capabilityId === COMPLETE_BODY_ID) {
+      const manifest = byCapability.get(COMPLETE_BODY_ID)
+      if (!manifest) return completeFailure({ code: 'unsupported_operation' }, { errors: [{ code: 'unsupported_operation' }] })
+      return readCompleteBody({ call, manifest, context, transport: transportFor(context?.agentId) })
+    }
+    if (call?.capabilityId !== 'agent_session_dispatch_status') return executeCore(call, context)
+    try {
+      const result = await executeCore(call, context)
+      return result?.ok === false ? { ok: false, error: sanitizeDispatchStatusError(result.error) } : result
+    } catch {
+      return { ok: false, error: sanitizeDispatchStatusError({ code: 'internal_error' }) }
+    }
   }
 
   return { execute }

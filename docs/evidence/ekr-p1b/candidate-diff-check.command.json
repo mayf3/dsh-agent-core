@@ -1,0 +1,14 @@
+{
+  "command": [
+    "git",
+    "diff",
+    "--check",
+    "f6a1f77a8b7b878bcb9821a68836925755ca7076",
+    "171ecf8482ddf9df61233880f3cf24cbaa0f3816"
+  ],
+  "startedAt": "2026-11-05T19:34:24.211576+00:00",
+  "finishedAt": "2026-11-05T19:34:24.222215+00:00",
+  "rc": 0,
+  "raw": "docs/evidence/ekr-p1b/candidate-diff-check.raw.txt",
+  "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

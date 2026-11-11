@@ -1,0 +1,127 @@
+{
+  "evaluatedAt": "2026-11-04T04:53:38.662711+00:00",
+  "localHead": "492d579d185a524a9b56dd91ce8c3728fe6818a2",
+  "remoteMain": {
+    "command": [
+      "gh",
+      "api",
+      "repos/mayf3/dsh-agent-core/git/ref/heads/main"
+    ],
+    "rc": 0,
+    "stdout": "{\"ref\":\"refs/heads/main\",\"node_id\":\"REF_kwDOT4gz1q9yZWZzL2hlYWRzL21haW4\",\"url\":\"https://api.github.com/repos/mayf3/dsh-agent-core/git/refs/heads/main\",\"object\":{\"sha\":\"f767e8d6608cdb0917aad2d471ba0454d0966a0f\",\"type\":\"commit\",\"url\":\"https://api.github.com/repos/mayf3/dsh-agent-core/git/commits/f767e8d6608cdb0917aad2d471ba0454d0966a0f\"}}",
+    "stderr": ""
+  },
+  "expectedMainPreimage": "f767e8d6608cdb0917aad2d471ba0454d0966a0f",
+  "mainAfterIntegration": "NOT_CREATED_NO_MERGE_AUTHORIZED",
+  "branchReadback": {
+    "command": [
+      "git",
+      "ls-remote",
+      "origin",
+      "refs/heads/ac-523-guard-integration"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "prReadback": {
+    "command": [
+      "gh",
+      "pr",
+      "list",
+      "--repo",
+      "mayf3/dsh-agent-core",
+      "--head",
+      "ac-523-guard-integration",
+      "--state",
+      "all",
+      "--json",
+      "number,url,state,headRefOid"
+    ],
+    "rc": 0,
+    "stdout": "[]\n",
+    "stderr": ""
+  },
+  "issueReadback": {
+    "command": [
+      "gh",
+      "issue",
+      "view",
+      "523",
+      "--repo",
+      "mayf3/dsh-agent-core",
+      "--json",
+      "state,url"
+    ],
+    "rc": 0,
+    "stdout": "{\"state\":\"OPEN\",\"url\":\"https://github.com/mayf3/dsh-agent-core/issues/523\"}\n",
+    "stderr": ""
+  },
+  "files": [
+    {
+      "path": "packages/agent-router/src/binding-resolution.js",
+      "reviewedBlob": "172859f387a44828c892cd090dcc15e8b081bc66",
+      "candidateBlob": "172859f387a44828c892cd090dcc15e8b081bc66",
+      "worktreeBlob": "172859f387a44828c892cd090dcc15e8b081bc66",
+      "remoteMainEntry": {
+        "path": "packages/agent-router/src/binding-resolution.js",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "0f687f5d0b0f59f9566b2cf9b9368108f5d69c01",
+        "size": 14092,
+        "url": "https://api.github.com/repos/mayf3/dsh-agent-core/git/blobs/0f687f5d0b0f59f9566b2cf9b9368108f5d69c01"
+      },
+      "equalToReviewed": true
+    },
+    {
+      "path": "packages/agent-router/src/index.js",
+      "reviewedBlob": "d0a8ca89965ab01718c34f3db93660d5bb2e1fd3",
+      "candidateBlob": "d0a8ca89965ab01718c34f3db93660d5bb2e1fd3",
+      "worktreeBlob": "d0a8ca89965ab01718c34f3db93660d5bb2e1fd3",
+      "remoteMainEntry": {
+        "path": "packages/agent-router/src/index.js",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "f8682f3b5ac5ab57cf98c5a86cd622cb3fa94921",
+        "size": 23430,
+        "url": "https://api.github.com/repos/mayf3/dsh-agent-core/git/blobs/f8682f3b5ac5ab57cf98c5a86cd622cb3fa94921"
+      },
+      "equalToReviewed": true
+    },
+    {
+      "path": "packages/agent-router/test/route-chain/switch-workspace-guard.test.js",
+      "reviewedBlob": "edc2fe101b63c14c27a7efaf60d83b22e5b9904e",
+      "candidateBlob": "edc2fe101b63c14c27a7efaf60d83b22e5b9904e",
+      "worktreeBlob": "edc2fe101b63c14c27a7efaf60d83b22e5b9904e",
+      "remoteMainEntry": null,
+      "equalToReviewed": true
+    },
+    {
+      "path": "docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md",
+      "reviewedBlob": "0c3f6f6005794edec2faf666e4fb035a9c87b009",
+      "candidateBlob": "0c3f6f6005794edec2faf666e4fb035a9c87b009",
+      "worktreeBlob": "0c3f6f6005794edec2faf666e4fb035a9c87b009",
+      "remoteMainEntry": {
+        "path": "docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "0c3f6f6005794edec2faf666e4fb035a9c87b009",
+        "size": 40805,
+        "url": "https://api.github.com/repos/mayf3/dsh-agent-core/git/blobs/0c3f6f6005794edec2faf666e4fb035a9c87b009"
+      },
+      "equalToReviewed": true
+    }
+  ],
+  "mainTreeQuery": {
+    "command": [
+      "gh",
+      "api",
+      "repos/mayf3/dsh-agent-core/git/trees/f767e8d6608cdb0917aad2d471ba0454d0966a0f?recursive=1"
+    ],
+    "rc": 0,
+    "stderr": "",
+    "stdoutSha256": "2d9bd54daf77845b363b3605563d9c30ece40c075eabcd603abf848718bafdfa",
+    "treeSha": "f767e8d6608cdb0917aad2d471ba0454d0966a0f",
+    "truncated": false
+  }
+}

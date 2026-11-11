@@ -1,0 +1,604 @@
+TAP version 13
+# Subtest: ledger: exactly-one-terminal; replay rebuilds state; corrupt line fails loud
+ok 1 - ledger: exactly-one-terminal; replay rebuilds state; corrupt line fails loud
+  ---
+  duration_ms: 47.816083
+  type: 'test'
+  ...
+# Subtest: A: success yields SUCCEEDED with candidateSha + changedFiles from git
+ok 2 - A: success yields SUCCEEDED with candidateSha + changedFiles from git
+  ---
+  duration_ms: 977.849875
+  type: 'test'
+  ...
+# Subtest: A2: exit-0 with no commit => SUCCEEDED with empty change set (no fabricated commit)
+ok 3 - A2: exit-0 with no commit => SUCCEEDED with empty change set (no fabricated commit)
+  ---
+  duration_ms: 520.253708
+  type: 'test'
+  ...
+# Subtest: B: evidenced failure => FAILED + structured failure detail
+ok 4 - B: evidenced failure => FAILED + structured failure detail
+  ---
+  duration_ms: 376.228875
+  type: 'test'
+  ...
+# Subtest: C: timeout => terminal FAILED with failureClass timeout (never success)
+ok 5 - C: timeout => terminal FAILED with failureClass timeout (never success)
+  ---
+  duration_ms: 641.487125
+  type: 'test'
+  ...
+# Subtest: D: backend crash (signal) => OUTCOME_UNKNOWN, never fabricated
+ok 6 - D: backend crash (signal) => OUTCOME_UNKNOWN, never fabricated
+  ---
+  duration_ms: 450.806917
+  type: 'test'
+  ...
+# Subtest: D2: spawn error => OUTCOME_UNKNOWN
+ok 7 - D2: spawn error => OUTCOME_UNKNOWN
+  ---
+  duration_ms: 422.343375
+  type: 'test'
+  ...
+# Subtest: E: cancel => exactly one CANCELLED; idempotent second cancel; late exit cannot overwrite
+ok 8 - E: cancel => exactly one CANCELLED; idempotent second cancel; late exit cannot overwrite
+  ---
+  duration_ms: 393.445916
+  type: 'test'
+  ...
+# Subtest: B1: worktree capacity — active executions per repo are capped (capacity_exhausted)
+ok 9 - B1: worktree capacity — active executions per repo are capped (capacity_exhausted)
+  ---
+  duration_ms: 1046.774291
+  type: 'test'
+  ...
+# Subtest: G: duplicate start with same (caller, dedupeKey) => SAME execution; different key => new
+ok 10 - G: duplicate start with same (caller, dedupeKey) => SAME execution; different key => new
+  ---
+  duration_ms: 834.24775
+  type: 'test'
+  ...
+# Subtest: F: restart — terminal history re-readable; orphan RUNNING => OUTCOME_UNKNOWN; live pid preserved
+ok 11 - F: restart — terminal history re-readable; orphan RUNNING => OUTCOME_UNKNOWN; live pid preserved
+  ---
+  duration_ms: 1224.064458
+  type: 'test'
+  ...
+# Subtest: K1: midrun continue is durably persisted and DELIVERED via resume when the run exits (no silent advisory drop)
+ok 12 - K1: midrun continue is durably persisted and DELIVERED via resume when the run exits (no silent advisory drop)
+  ---
+  duration_ms: 614.113667
+  type: 'test'
+  ...
+# Subtest: K2: run exits without a captured session => queued continue marked undelivered, backend never called (honest)
+ok 13 - K2: run exits without a captured session => queued continue marked undelivered, backend never called (honest)
+  ---
+  duration_ms: 704.864125
+  type: 'test'
+  ...
+# Subtest: K3: cancel with queued midrun continues => CANCELLED; queued instruction never delivered afterwards
+ok 14 - K3: cancel with queued midrun continues => CANCELLED; queued instruction never delivered afterwards
+  ---
+  duration_ms: 633.027
+  type: 'test'
+  ...
+# Subtest: K4: queued continue survives restart — replay exposes it; dead-pid recovery marks it undelivered
+ok 15 - K4: queued continue survives restart — replay exposes it; dead-pid recovery marks it undelivered
+  ---
+  duration_ms: 489.169416
+  type: 'test'
+  ...
+# Subtest: K5: delivery (resume) run pid is persisted — cancel stops the real resume process; ledger carries it
+ok 16 - K5: delivery (resume) run pid is persisted — cancel stops the real resume process; ledger carries it
+  ---
+  duration_ms: 530.844333
+  type: 'test'
+  ...
+# [broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+# [broker-gateway] agent agent-b: no credential bound (fails closed)
+# Subtest: K6: repeated midrun continues deliver FIFO across sequential resume runs, then terminal
+ok 17 - K6: repeated midrun continues deliver FIFO across sequential resume runs, then terminal
+  ---
+  duration_ms: 494.933875
+  type: 'test'
+  ...
+# Subtest: authority: unconfigured / unauthorized repo / unknown baseSha / bad branch / bad backend all refuse
+ok 18 - authority: unconfigured / unauthorized repo / unknown baseSha / bad branch / bad backend all refuse
+  ---
+  duration_ms: 287.857042
+  type: 'test'
+  ...
+# Subtest: authority: worktree HEAD pinned to exact baseSha before backend starts
+ok 19 - authority: worktree HEAD pinned to exact baseSha before backend starts
+  ---
+  duration_ms: 754.268
+  type: 'test'
+  ...
+# Subtest: manifest: development_execute is a closed local multi-op tool; no backend/exec leak; scopes pinned
+ok 20 - manifest: development_execute is a closed local multi-op tool; no backend/exec leak; scopes pinned
+  ---
+  duration_ms: 1.193292
+  type: 'test'
+  ...
+# Subtest: zero-persona sweep: new packages contain no agent/persona literals
+ok 21 - zero-persona sweep: new packages contain no agent/persona literals
+  ---
+  duration_ms: 10.604666
+  type: 'test'
+  ...
+# Subtest: gateway: development_execute without a grant fails CLOSED; with stub auth the start lands in the engine
+ok 22 - gateway: development_execute without a grant fails CLOSED; with stub auth the start lands in the engine
+  ---
+  duration_ms: 736.784583
+  type: 'test'
+  ...
+# Subtest: 1365 Workflow starts and polls with missing backend and history; retired writes refuse, history stays read-only
+ok 23 - 1365 Workflow starts and polls with missing backend and history; retired writes refuse, history stays read-only
+  ---
+  duration_ms: 306.009625
+  type: 'test'
+  ...
+# Subtest: 1365 Workflow starts and polls with corrupt backend with intact history; retired writes refuse, history stays read-only
+ok 24 - 1365 Workflow starts and polls with corrupt backend with intact history; retired writes refuse, history stays read-only
+  ---
+  duration_ms: 362.516542
+  type: 'test'
+  ...
+# Subtest: 1365 Workflow starts and polls with corrupt history; retired writes refuse, history stays read-only
+ok 25 - 1365 Workflow starts and polls with corrupt history; retired writes refuse, history stays read-only
+  ---
+  duration_ms: 274.905125
+  type: 'test'
+  ...
+# Subtest: 1365 Workflow starts and polls with corrupt backend and history; retired writes refuse, history stays read-only
+ok 26 - 1365 Workflow starts and polls with corrupt backend and history; retired writes refuse, history stays read-only
+  ---
+  duration_ms: 260.393459
+  type: 'test'
+  ...
+# Subtest: 1365 default Engine also defers damaged history and ignores damaged backend
+ok 27 - 1365 default Engine also defers damaged history and ignores damaged backend
+  ---
+  duration_ms: 3.923917
+  type: 'test'
+  ...
+# Subtest: DEC-1 start refuses writer_authority_retired by default, with zero side effects
+ok 28 - DEC-1 start refuses writer_authority_retired by default, with zero side effects
+  ---
+  duration_ms: 2.27775
+  type: 'test'
+  ...
+# Subtest: DEC-1 continue refuses writer_authority_retired even on a continuable-looking history
+ok 29 - DEC-1 continue refuses writer_authority_retired even on a continuable-looking history
+  ---
+  duration_ms: 1.49125
+  type: 'test'
+  ...
+# Subtest: DEC-1 cancel refuses writer_authority_retired and never declares terminal state
+ok 30 - DEC-1 cancel refuses writer_authority_retired and never declares terminal state
+  ---
+  duration_ms: 1.160042
+  type: 'test'
+  ...
+# Subtest: DEC-1 restart replay of a non-terminal legacy execution performs ZERO ledger writes
+ok 31 - DEC-1 restart replay of a non-terminal legacy execution performs ZERO ledger writes
+  ---
+  duration_ms: 1.329583
+  type: 'test'
+  ...
+# Subtest: DEC-2 historical terminal receipt stays byte-stable and readable after restart
+ok 32 - DEC-2 historical terminal receipt stays byte-stable and readable after restart
+  ---
+  duration_ms: 1.921666
+  type: 'test'
+  ...
+# Subtest: DEC-2 broker manifest documents the retired writer and keeps reads
+ok 33 - DEC-2 broker manifest documents the retired writer and keeps reads
+  ---
+  duration_ms: 0.252834
+  type: 'test'
+  ...
+# Subtest: explicit opt-out keeps the legacy hermetic machinery testable (never used by production wiring)
+ok 34 - explicit opt-out keeps the legacy hermetic machinery testable (never used by production wiring)
+  ---
+  duration_ms: 763.042584
+  type: 'test'
+  ...
+# Subtest: composition pins the credentialFile to the runtime deployment root (own root accepted)
+not ok 35 - composition pins the credentialFile to the runtime deployment root (own root accepted)
+  ---
+  duration_ms: 40.324041
+  type: 'test'
+  location: '/private/tmp/h1365-retire/packages/production-runtime/test/compose-deployment-root.test.js:79:1'
+  failureType: 'testCodeFailure'
+  error: 'production-runtime: invalid agent model overrides: NODE_RUNTIME_VERSION: runtime_version_mismatch'
+  code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  stack: |-
+    invalidProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:87:5)
+    assertTargetProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:97:11)
+    composeProductionRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:144:3)
+    composeWith (file:///private/tmp/h1365-retire/packages/production-runtime/test/compose-deployment-root.test.js:66:25)
+    async TestContext.<anonymous> (file:///private/tmp/h1365-retire/packages/production-runtime/test/compose-deployment-root.test.js:84:36)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: composition refuses a foreign surface lineage in the deployment-owned catalog (fail closed)
+ok 36 - composition refuses a foreign surface lineage in the deployment-owned catalog (fail closed)
+  ---
+  duration_ms: 32.842666
+  type: 'test'
+  ...
+# Subtest: notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox
+not ok 37 - notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox
+  ---
+  duration_ms: 43.549584
+  type: 'test'
+  location: '/private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:47:1'
+  failureType: 'testCodeFailure'
+  error: 'production-runtime: invalid agent model overrides: NODE_RUNTIME_VERSION: runtime_version_mismatch'
+  code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  stack: |-
+    invalidProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:87:5)
+    assertTargetProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:97:11)
+    composeProductionRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:144:3)
+    TestContext.<anonymous> (file:///private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:51:25)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: scheduler engine consumes a job from the production store through the router seam
+not ok 38 - scheduler engine consumes a job from the production store through the router seam
+  ---
+  duration_ms: 22.992667
+  type: 'test'
+  location: '/private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:109:1'
+  failureType: 'testCodeFailure'
+  error: 'production-runtime: invalid agent model overrides: NODE_RUNTIME_VERSION: runtime_version_mismatch'
+  code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  stack: |-
+    invalidProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:87:5)
+    assertTargetProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:97:11)
+    composeProductionRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:144:3)
+    TestContext.<anonymous> (file:///private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:112:25)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+  ...
+# Subtest: B15 production evidence preserves scheduled outcome_unknown reconciliation data
+not ok 39 - B15 production evidence preserves scheduled outcome_unknown reconciliation data
+  ---
+  duration_ms: 35.116167
+  type: 'test'
+  location: '/private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:153:1'
+  failureType: 'testCodeFailure'
+  error: 'production-runtime: invalid agent model overrides: NODE_RUNTIME_VERSION: runtime_version_mismatch'
+  code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  stack: |-
+    invalidProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:87:5)
+    assertTargetProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:97:11)
+    composeProductionRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:144:3)
+    TestContext.<anonymous> (file:///private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:155:25)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+  ...
+# Subtest: graceful stop closes the HTTP surfaces and writes stopped-able state
+not ok 40 - graceful stop closes the HTTP surfaces and writes stopped-able state
+  ---
+  duration_ms: 30.667917
+  type: 'test'
+  location: '/private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:196:1'
+  failureType: 'testCodeFailure'
+  error: 'production-runtime: invalid agent model overrides: NODE_RUNTIME_VERSION: runtime_version_mismatch'
+  code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  stack: |-
+    invalidProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:87:5)
+    assertTargetProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:97:11)
+    composeProductionRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:144:3)
+    TestContext.<anonymous> (file:///private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:198:25)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+  ...
+# Subtest: runtime state carries no demo artifacts anywhere
+not ok 41 - runtime state carries no demo artifacts anywhere
+  ---
+  duration_ms: 39.572708
+  type: 'test'
+  location: '/private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:214:1'
+  failureType: 'testCodeFailure'
+  error: 'production-runtime: invalid agent model overrides: NODE_RUNTIME_VERSION: runtime_version_mismatch'
+  code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  stack: |-
+    invalidProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:87:5)
+    assertTargetProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:97:11)
+    composeProductionRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:144:3)
+    TestContext.<anonymous> (file:///private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:216:25)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+  ...
+# Subtest: C-WIRE paths: the production layout owns the notification-ingress persistent surface
+ok 42 - C-WIRE paths: the production layout owns the notification-ingress persistent surface
+  ---
+  duration_ms: 23.532833
+  type: 'test'
+  ...
+# Subtest: C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths — no credentials, no secret env
+not ok 43 - C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths — no credentials, no secret env
+  ---
+  duration_ms: 30.633708
+  type: 'test'
+  location: '/private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:245:1'
+  failureType: 'testCodeFailure'
+  error: 'production-runtime: invalid agent model overrides: NODE_RUNTIME_VERSION: runtime_version_mismatch'
+  code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  stack: |-
+    invalidProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:87:5)
+    assertTargetProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:97:11)
+    composeProductionRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:144:3)
+    TestContext.<anonymous> (file:///private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:248:25)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+  ...
+# Subtest: C-HIST compose wires the HistoryStore over layout.historyDir into the scheduler and provides the /scheduler/* services
+not ok 44 - C-HIST compose wires the HistoryStore over layout.historyDir into the scheduler and provides the /scheduler/* services
+  ---
+  duration_ms: 24.190167
+  type: 'test'
+  location: '/private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:299:1'
+  failureType: 'testCodeFailure'
+  error: 'production-runtime: invalid agent model overrides: NODE_RUNTIME_VERSION: runtime_version_mismatch'
+  code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  stack: |-
+    invalidProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:87:5)
+    assertTargetProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:97:11)
+    composeProductionRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:144:3)
+    TestContext.<anonymous> (file:///private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:313:25)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+  ...
+# Subtest: C-HIST schedulerAuth opts provide a JWKS verifier; unconfigured stays null
+not ok 45 - C-HIST schedulerAuth opts provide a JWKS verifier; unconfigured stays null
+  ---
+  duration_ms: 22.777958
+  type: 'test'
+  location: '/private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:359:1'
+  failureType: 'testCodeFailure'
+  error: 'production-runtime: invalid agent model overrides: NODE_RUNTIME_VERSION: runtime_version_mismatch'
+  code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  stack: |-
+    invalidProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:87:5)
+    assertTargetProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:97:11)
+    composeProductionRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:144:3)
+    TestContext.<anonymous> (file:///private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:361:25)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+  ...
+# Subtest: C-HIST R4 ingestion: valid / UNPARSEABLE / OVERSIZE / INVALID_SCHEMA / absent blocks
+ok 46 - C-HIST R4 ingestion: valid / UNPARSEABLE / OVERSIZE / INVALID_SCHEMA / absent blocks
+  ---
+  duration_ms: 2.754375
+  type: 'test'
+  ...
+# Subtest: MOBILE_SESSION_HISTORY_V1: productApi.history crosses the composition contract (default OFF unchanged; explicit enable reaches the module and fails closed)
+not ok 47 - MOBILE_SESSION_HISTORY_V1: productApi.history crosses the composition contract (default OFF unchanged; explicit enable reaches the module and fails closed)
+  ---
+  duration_ms: 19.918292
+  type: 'test'
+  location: '/private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:419:1'
+  failureType: 'testCodeFailure'
+  error: 'production-runtime: invalid agent model overrides: NODE_RUNTIME_VERSION: runtime_version_mismatch'
+  code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  stack: |-
+    invalidProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:87:5)
+    assertTargetProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:97:11)
+    composeProductionRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:144:3)
+    TestContext.<anonymous> (file:///private/tmp/h1365-retire/packages/production-runtime/test/compose.test.js:444:23)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+  ...
+# Subtest: composition drains auto-reconcile before workflow, scheduler and owned Router disposal
+not ok 48 - composition drains auto-reconcile before workflow, scheduler and owned Router disposal
+  ---
+  duration_ms: 31.680792
+  type: 'test'
+  location: '/private/tmp/h1365-retire/packages/production-runtime/test/workflow-execution-shutdown.test.js:30:1'
+  failureType: 'testCodeFailure'
+  error: 'production-runtime: invalid agent model overrides: NODE_RUNTIME_VERSION: runtime_version_mismatch'
+  code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  stack: |-
+    invalidProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:87:5)
+    assertTargetProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:97:11)
+    composeProductionRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:144:3)
+    TestContext.<anonymous> (file:///private/tmp/h1365-retire/packages/production-runtime/test/workflow-execution-shutdown.test.js:44:25)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: runtime stop(): the engine drain stays pending while a poll is in flight, and the runtime is quiescent once it resolves
+ok 49 - runtime stop(): the engine drain stays pending while a poll is in flight, and the runtime is quiescent once it resolves
+  ---
+  duration_ms: 1221.411833
+  type: 'test'
+  ...
+# Subtest: runtime stop drains the owned worker after workflowExecution stop rejects
+not ok 50 - runtime stop drains the owned worker after workflowExecution stop rejects
+  ---
+  duration_ms: 10.171167
+  type: 'test'
+  location: '/private/tmp/h1365-retire/packages/production-runtime/test/workflow-execution-shutdown.test.js:166:3'
+  failureType: 'testCodeFailure'
+  error: 'production-runtime: invalid agent model overrides: NODE_RUNTIME_VERSION: runtime_version_mismatch'
+  code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  stack: |-
+    invalidProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:87:5)
+    assertTargetProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:97:11)
+    composeProductionRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:144:3)
+    TestContext.<anonymous> (file:///private/tmp/h1365-retire/packages/production-runtime/test/workflow-execution-shutdown.test.js:168:27)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+  ...
+# Subtest: runtime stop drains the owned worker after scheduler stop rejects
+not ok 51 - runtime stop drains the owned worker after scheduler stop rejects
+  ---
+  duration_ms: 11.245584
+  type: 'test'
+  location: '/private/tmp/h1365-retire/packages/production-runtime/test/workflow-execution-shutdown.test.js:166:3'
+  failureType: 'testCodeFailure'
+  error: 'production-runtime: invalid agent model overrides: NODE_RUNTIME_VERSION: runtime_version_mismatch'
+  code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  stack: |-
+    invalidProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:87:5)
+    assertTargetProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:97:11)
+    composeProductionRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:144:3)
+    TestContext.<anonymous> (file:///private/tmp/h1365-retire/packages/production-runtime/test/workflow-execution-shutdown.test.js:168:27)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+  ...
+# Subtest: plugin disposal waits every cleanup and propagates all failures
+ok 52 - plugin disposal waits every cleanup and propagates all failures
+  ---
+  duration_ms: 2.426459
+  type: 'test'
+  ...
+# Subtest: concurrent plugin disposal callers wait the same owned cleanup
+ok 53 - concurrent plugin disposal callers wait the same owned cleanup
+  ---
+  duration_ms: 1.241125
+  type: 'test'
+  ...
+# Subtest: runtime stop never reports clean success after an owned worker shutdown rejects
+not ok 54 - runtime stop never reports clean success after an owned worker shutdown rejects
+  ---
+  duration_ms: 6.257833
+  type: 'test'
+  location: '/private/tmp/h1365-retire/packages/production-runtime/test/workflow-execution-shutdown.test.js:257:1'
+  failureType: 'testCodeFailure'
+  error: 'production-runtime: invalid agent model overrides: NODE_RUNTIME_VERSION: runtime_version_mismatch'
+  code: 'AGENT_MODEL_OVERRIDE_INVALID'
+  stack: |-
+    invalidProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:87:5)
+    assertTargetProxyRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:97:11)
+    composeProductionRuntime (file:///private/tmp/h1365-retire/packages/production-runtime/src/compose.js:144:3)
+    TestContext.<anonymous> (file:///private/tmp/h1365-retire/packages/production-runtime/test/workflow-execution-shutdown.test.js:259:25)
+    async Test.run (node:internal/test_runner/test:1404:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+  ...
+# Subtest: 1367 mounted missing trace retains 404: healthy/unknown_instance
+ok 55 - 1367 mounted missing trace retains 404: healthy/unknown_instance
+  ---
+  duration_ms: 155.483375
+  type: 'test'
+  ...
+# {"tail":"healthy","selector":"unknown_instance","before":"8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c","after":"8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 mounted missing trace retains 404: healthy/unknown_visit
+ok 56 - 1367 mounted missing trace retains 404: healthy/unknown_visit
+  ---
+  duration_ms: 136.454291
+  type: 'test'
+  ...
+# {"tail":"healthy","selector":"unknown_visit","before":"8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c","after":"8f1911794d4af2e2a5cad9b8b60f5b46ee05999f5661dafb8a61b4abdef8fe5c","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 mounted missing trace retains 404: invalid_json/unknown_instance
+ok 57 - 1367 mounted missing trace retains 404: invalid_json/unknown_instance
+  ---
+  duration_ms: 173.556042
+  type: 'test'
+  ...
+# {"tail":"invalid_json","selector":"unknown_instance","before":"492e170d3405c5c76dfc178af65af11afda3412e9633c485583b457995201fd2","after":"492e170d3405c5c76dfc178af65af11afda3412e9633c485583b457995201fd2","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 mounted missing trace retains 404: invalid_json/unknown_visit
+ok 58 - 1367 mounted missing trace retains 404: invalid_json/unknown_visit
+  ---
+  duration_ms: 127.394042
+  type: 'test'
+  ...
+# {"tail":"invalid_json","selector":"unknown_visit","before":"492e170d3405c5c76dfc178af65af11afda3412e9633c485583b457995201fd2","after":"492e170d3405c5c76dfc178af65af11afda3412e9633c485583b457995201fd2","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 mounted missing trace retains 404: missing_newline/unknown_instance
+ok 59 - 1367 mounted missing trace retains 404: missing_newline/unknown_instance
+  ---
+  duration_ms: 151.19225
+  type: 'test'
+  ...
+# {"tail":"missing_newline","selector":"unknown_instance","before":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","after":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 mounted missing trace retains 404: missing_newline/unknown_visit
+ok 60 - 1367 mounted missing trace retains 404: missing_newline/unknown_visit
+  ---
+  duration_ms: 135.977667
+  type: 'test'
+  ...
+# {"tail":"missing_newline","selector":"unknown_visit","before":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","after":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","response":{"status":404,"body":{"error":{"code":"not_found","message":"no execution attempts recorded for this workflow instance on this runtime"}}}}
+# Subtest: 1367 traces: invalid_json is reported without event-file repair
+ok 61 - 1367 traces: invalid_json is reported without event-file repair
+  ---
+  duration_ms: 159.942541
+  type: 'test'
+  ...
+# {"surface":"traces","kind":"invalid_json","before":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","after":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","calls":{"mutate":0,"repair":0,"load":1,"lock":1,"append":0}}
+# Subtest: 1367 attention: invalid_json is reported without event-file repair
+ok 62 - 1367 attention: invalid_json is reported without event-file repair
+  ---
+  duration_ms: 147.677167
+  type: 'test'
+  ...
+# {"surface":"attention","kind":"invalid_json","before":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","after":"a2ec5d61ca1047c22d783430623cb014cd76371c4d274986a3d06fdcf27b770b","calls":{"mutate":0,"repair":0,"load":1,"lock":1,"append":0}}
+# Subtest: 1367 traces: missing_newline is reported without event-file repair
+ok 63 - 1367 traces: missing_newline is reported without event-file repair
+  ---
+  duration_ms: 154.323834
+  type: 'test'
+  ...
+# {"surface":"traces","kind":"missing_newline","before":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","after":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","calls":{"mutate":0,"repair":0,"load":1,"lock":1,"append":0}}
+# Subtest: 1367 attention: missing_newline is reported without event-file repair
+ok 64 - 1367 attention: missing_newline is reported without event-file repair
+  ---
+  duration_ms: 138.919583
+  type: 'test'
+  ...
+# {"surface":"attention","kind":"missing_newline","before":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","after":"57cb40eb08666ea4e5efc5b45a6b427e0374d65e487d4e0e2d47be2b7c45ad1e","calls":{"mutate":0,"repair":0,"load":1,"lock":1,"append":0}}
+# Subtest: 1367 fresh-reader family: no mutate/repair, current cross-instance prefix, absent file stays absent
+ok 65 - 1367 fresh-reader family: no mutate/repair, current cross-instance prefix, absent file stays absent
+  ---
+  duration_ms: 326.908292
+  type: 'test'
+  ...
+# Subtest: 1367 real mutation still repairs invalid_json under the existing lock
+ok 66 - 1367 real mutation still repairs invalid_json under the existing lock
+  ---
+  duration_ms: 105.133
+  type: 'test'
+  ...
+# Subtest: 1367 real mutation still repairs missing_newline under the existing lock
+ok 67 - 1367 real mutation still repairs missing_newline under the existing lock
+  ---
+  duration_ms: 119.241958
+  type: 'test'
+  ...
+# Subtest: 1367 non-tail corruption remains fail-loud and unchanged
+ok 68 - 1367 non-tail corruption remains fail-loud and unchanged
+  ---
+  duration_ms: 83.564125
+  type: 'test'
+  ...
+# Subtest: 1367 no-work reconciliation shares four candidate scans: six total replays become three
+ok 69 - 1367 no-work reconciliation shares four candidate scans: six total replays become three
+  ---
+  duration_ms: 129.494875
+  type: 'test'
+  ...
+# {"calls":{"mutate":0,"repair":0,"load":3,"lock":3,"append":0},"examined":0}
+# Subtest: 1367 candidate refresh retains same-pass ACTIVE to terminal stale processing
+ok 70 - 1367 candidate refresh retains same-pass ACTIVE to terminal stale processing
+  ---
+  duration_ms: 126.371125
+  type: 'test'
+  ...
+# Subtest: 1367 tail qualification belongs to the current read and healthy diagnostic shapes stay unchanged
+ok 71 - 1367 tail qualification belongs to the current read and healthy diagnostic shapes stay unchanged
+  ---
+  duration_ms: 135.8925
+  type: 'test'
+  ...
+1..71
+# tests 71
+# suites 0
+# pass 57
+# fail 14
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 12452.10375

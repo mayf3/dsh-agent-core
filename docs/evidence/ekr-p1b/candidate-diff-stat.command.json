@@ -1,0 +1,14 @@
+{
+  "command": [
+    "git",
+    "diff",
+    "--stat",
+    "f6a1f77a8b7b878bcb9821a68836925755ca7076",
+    "171ecf8482ddf9df61233880f3cf24cbaa0f3816"
+  ],
+  "startedAt": "2026-11-05T19:34:24.200182+00:00",
+  "finishedAt": "2026-11-05T19:34:24.211429+00:00",
+  "rc": 0,
+  "raw": "docs/evidence/ekr-p1b/candidate-diff-stat.raw.txt",
+  "sha256": "f1fed344313443575c176125edb38042b1e0890c8f0e08988d7bd822436ea7e6"
+}

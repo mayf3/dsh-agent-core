@@ -277,6 +277,30 @@ export function createBindingResolution({ agentDefinition, workspaceBootstrap, s
     return row === undefined ? undefined : { ...row }
   }
 
+  /**
+   * #523 / D-008 §20: agent-turn SWITCH admission only. The operator-facing
+   * domain operation stays unguarded. Resolve both paths through the existing
+   * workspace authority, including imported primaries and explicit Bindings.
+   * Keep this synchronous, before switchAgent can write even a bookmark.
+   */
+  function switchAgentFromTurn(bindingContext, targetAgentId, opts = {}) {
+    const ccId = channelConversationIdOf(bindingContext)
+    const current = store.get(ccId)
+    if (current !== undefined) {
+      const target = resolveAgentRef(targetAgentId)
+      const currentPath = resolveEffectiveWorkspace(current).workspacePath
+      const targetPath = workspaceBootstrap.resolveWorkspace(target.id)
+      if (targetPath !== currentPath) {
+        const code = 'SWITCH_WORKSPACE_MISMATCH'
+        log.log(`switch-rejected: ccId=${ccId} from=${current.activeAgentId} to=${target.id} code=${code} current_workspace=${currentPath} target_primary=${targetPath}`)
+        // process.js's RPC failure envelope carries only the message string.
+        throw Object.assign(new Error(`agent-router: ${code}: target Agent ${target.id} primary workspace (${targetPath}) differs from current workspace (${currentPath})`), { code })
+      }
+    }
+    // No existing Binding is the domain's legal first-contact case (D-004).
+    return switchAgent(bindingContext, targetAgentId, opts)
+  }
+
   return {
     resolveAgentRef,
     resolveDefaultAgent,
@@ -285,6 +309,7 @@ export function createBindingResolution({ agentDefinition, workspaceBootstrap, s
     persistBinding,
     resolveChannelConversation,
     switchAgent,
+    switchAgentFromTurn,
     getBinding,
   }
 }

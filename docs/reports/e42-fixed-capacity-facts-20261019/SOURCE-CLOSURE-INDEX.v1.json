@@ -1,0 +1,92 @@
+{
+  "kind": "E42_FIXED_COPYSET_CAPACITY_FACTS_ONLY_SOURCE_ABI_PROPOSAL_CLOSURE",
+  "status": "PROPOSED_NOT_IMPLEMENTATION_OR_CALL_PERMISSION",
+  "contract": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-copyset-capacity-facts-contract/PROPOSED-E42-FIXED-COPYSET-CAPACITY-FACTS-CONTRACT.v1.md",
+    "bytes": 17039,
+    "sha256": "efe4c25079a36801837f337a39d4c7456f85df017ad001d1a83132d5e31510f3"
+  },
+  "selected_offline_callplan": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-copyset-capacity-facts-contract/SELECTED-STOP-ONLY-CALLPLAN.v1.json",
+    "bytes": 3727,
+    "sha256": "294746d9ed266a1b77480b060064f39129266839b54c46841b626e4fe5ee7c15"
+  },
+  "direction": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-Q1-Q3-PRODUCER-AUTHORITY-ROUTING-DECISION-20261019.json",
+    "bytes": 17075,
+    "sha256": "42a39af5ad6cdc74e7d57bc4f8f7f91e2184aa8607126476a6bfd7afbb5c0872",
+    "read": "full once/hash verified"
+  },
+  "bounded_original_routing": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-Q1-Q3-ORIGINAL-PRODUCER-ROUTING-SOL-20261019.json",
+    "bytes": 20504,
+    "sha256": "51860487a558a244e69999d23f3ab1cf6e2a672df4ae68d31f5e70fa6d5a93f5",
+    "read": "full in memory, selected fields output; original source observations attributed to original author"
+  },
+  "source_facts": [
+    {
+      "producer": "b7-preparation.mjs",
+      "sha256": "00811809c5b1fb4a2d64b909f6410051733c8c0fafb97aa576fda97d605bd3b3",
+      "finite_span": "151 inputs/public selectors;235-248 enabled IDs &migrationkeys;285-288 actualshadow",
+      "basis": "held source finite newselector extraction; not executed"
+    },
+    {
+      "producer": "transaction-recovery.mjs",
+      "sha256": "db45db7230ec25015321081f8c9c1357355c61df517d8f6392924fd7ce06f55f",
+      "finite_span": "58-68 exactconfig path;149-157,265-293 copyoccupancy",
+      "basis": "held source exactpath/copy topology only"
+    },
+    {
+      "producer": "six-target-provision.mjs",
+      "sha256": "dd96d67eca9d27afb1d4b656f870b2a13f45e80d7ab51c444ed549ed0c5f3bb9",
+      "finite_span": "39-40 sixIDs;113-118,486-489 fixedinstall",
+      "basis": "held source exactsixnames/flags; no install"
+    },
+    {
+      "producer": "capture-boundaries.mjs",
+      "sha256": "7fe28dcd295aef0211244f89b5fe52f26fb944b3057814efad2ce8904107f228",
+      "finite_span": "original validated publicConfig/readRegistryAlias/consumerbound168",
+      "basis": "original routing518 source read; no new fullsource/read"
+    },
+    {
+      "producer": "canary-producer.mjs",
+      "sha256": "2a8420e177a559f30855aabed6c94bf76409452008482d0345c7f77962276be4",
+      "finite_span": "25-33 group<=consumer",
+      "basis": "original routing518 read; no context"
+    }
+  ],
+  "existing_reviewed_method": {
+    "PR": 531,
+    "main_commit": "88fe4a16a4a38c066d507d82c7020d52301c7aaa",
+    "accepted_method_body_sha256": "398303ca62e6104e8ec3a98300b69936cdb31e6b3b579cd76cbfd61b0bafff0d",
+    "numeric_not_accepted": true
+  },
+  "original_allowance_refs": [
+    {
+      "path": "codex-r33-storage-reservation-readonly/NPM-OPERATIONAL-SOURCE-PINS.json",
+      "sha256": "90b2236a5d0474d258a4bf7d9f9a579d5a8d00394606e415aa2b3de80975711f"
+    },
+    {
+      "path": "codex-r33-storage-reservation-readonly/NPM-OPERATIONAL-ALLOWANCE.json",
+      "sha256": "9680a975a70400e03233535c0cb2675193242a06de27ec6ad1af19e057860145"
+    }
+  ],
+  "selected_entry": "PROPOSED original /usr/local/libexec/b7-release-executor e42-capacity-facts zeroargs before/no prepare_driven; not existing/called",
+  "source_ceiling": [
+    "new v50_e42_capacity_facts_source.py fixedembeddedtemplate",
+    "b7-release-executor.sh exactonezeroargcase/embeddedbody",
+    "new fixed e42_capacity_facts_publish.py privatewriter",
+    "only necessary mechanical original AUTH/PIN/capsule/verifierjoins; real logicdelta sameaffectedreview"
+  ],
+  "proposed_standalone_operational_reserve": 4194304,
+  "numeric_remaining": null,
+  "sampling_calls": 0,
+  "author": "/root/sol_execution_continuation",
+  "requested_model": "gpt-6.1-sol",
+  "requested_reasoning": "ultra",
+  "native_effective_model": "UNKNOWN",
+  "dispatch": "NOT_SENT",
+  "route_count": 0,
+  "dispatch_owner": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+  "technical_recipient": "01a1378d-e052-7021-9992-f0760eb9f9e7"
+}

@@ -22,6 +22,7 @@
 export function createPluginContext() {
   const services = new Map()
   const disposers = []
+  let disposalPromise
   return {
     get: (name) => services.get(name),
     provide: (name, value) => { services.set(name, value) },
@@ -29,10 +30,15 @@ export function createPluginContext() {
       const dispose = fn()
       if (typeof dispose === 'function') disposers.push(dispose)
     },
-    async disposeAll() {
-      for (const dispose of disposers.splice(0)) {
-        try { await dispose() } catch { /* best effort; shutdown continues */ }
-      }
+    disposeAll() {
+      disposalPromise ??= (async () => {
+        const errors = []
+        for (const dispose of disposers.splice(0)) {
+          try { await dispose() } catch (error) { errors.push(error) }
+        }
+        if (errors.length > 0) throw new AggregateError(errors, 'runtime plugin disposal failed')
+      })()
+      return disposalPromise
     },
     servicesProvided: () => [...services.keys()],
   }

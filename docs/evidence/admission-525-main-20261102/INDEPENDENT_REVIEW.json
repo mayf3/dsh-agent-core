@@ -1,0 +1,89 @@
+{
+  "schema_version": 2,
+  "mode": "REVIEW",
+  "review_kind": "AFFECTED_CONTRACT_AND_FINAL_HEAD",
+  "repository": "mayf3/dsh-agent-core",
+  "review_target_head": "d0aedb647056d9457bc185320bc0de873eae2961",
+  "base_head": "26178b4f459cdc2737724f6614b5e2bc9bdc77b0",
+  "reviewer": "/root/authority_review",
+  "author": "/root",
+  "independence": "Non-author Agent; Root records result. Not independent human GitHub approval or Owner acceptance.",
+  "authority_action": "AMEND",
+  "assurance_level": "DURABLE",
+  "full_diff_reviewed_at": "893d6f37269eeec11c3a2cf6da8960c941c63d2f",
+  "subsequent_scope": "Mechanical test extraction, docs precision, EOF normalization; product source/scripts unchanged.",
+  "source_semantic_review": "PASS",
+  "semantic_blockers": 0,
+  "amendment_recommendation": "Accept proposed additive IAD-007/008 subject to explicit acceptance and task gates; old IAD text unchanged.",
+  "compose_result": "Main WebsiteInquiry + scheduler/identity/workflow extraction preserved. Enabled-only configuration gate runs after Definition load and before resources. Option/env precedence unchanged.",
+  "wire_and_identity": "IAD-001..006 unchanged; frozen error bodies and 1s deadline retained. ready is successful verifier observation, not enabled/full-chain proof. No new privilege.",
+  "svc_118_result": "PASS: svc-workflow WPE local transaction fresh principals.enabled remains distinct from CIR cross-service Core AgentDefinition observation; no Svc code edits or rerun of historical PG evidence.",
+  "executed_independent_probes": {
+    "node": "/usr/local/bin/node v25.6.1",
+    "review_head": "893d6f37269eeec11c3a2cf6da8960c941c63d2f",
+    "rc": 0,
+    "observation_source": "non-author reviewer tool chunk54a0fa",
+    "cases": [
+      "Real signed RS256 outage + throwing log sink:401 UNAUTHORIZED/zero definition reads/auth_unavailable; repeated outage warning count stays1",
+      "Successful recovery + throwing sink:200 exact exists:true enabled:false/read1/ready/warnings2",
+      "Health+warnings contain no token, principal UUID, caller/target IDs, client_id or exception sentinels",
+      "Six explicit option/env combinations confirm enabled precedence and missing-JWKS rejection",
+      "Configured construction zero network calls/unproven"
+    ]
+  },
+  "mechanical_observations": [
+    "Independent git-object comparison: two moved test bodies equal originals ignoring only outer whitespace; all original IAD text before/after inserted section equal",
+    "git diff --check base..d0aedb64 rc0",
+    "Fresh exact-head structure gate CANDIDATE_DELTA_PASS_WITH_BASELINE_DEBT:0 candidate violations/31 inherited/1 resolved"
+  ],
+  "test_observations": {
+    "focused": "84/84 rc0 skip0",
+    "base_full": {
+      "tests": 618,
+      "pass": 603,
+      "fail": 10,
+      "skipped": 5,
+      "rc": 1
+    },
+    "candidate_full": {
+      "tests": 628,
+      "pass": 613,
+      "fail": 10,
+      "skipped": 5,
+      "rc": 1
+    },
+    "independent_readback": "Final suite hashes match summaries; failure-name Counters equal; no existing executed test names lost; exactly10 added PR tests. Native voice abort limits unexecuted coverage."
+  },
+  "frozen_blocker_union": [
+    {
+      "id": "B-STRUCT-01",
+      "class": "REQUIRED_GATE_FAILURE",
+      "status": "CLOSED",
+      "source": "active CODE_STRUCTURE_GUARDRAILS_V2",
+      "counterexample": "compose.test.js519->528",
+      "impact": "candidate structure gate failed",
+      "minimal_closure": "Two existing tests mechanically extracted, compose468; candidate violations0",
+      "affected_readiness": [
+        "MERGE_READY"
+      ]
+    }
+  ],
+  "final_open_blockers": [
+    {
+      "id": "B-TEST-01",
+      "class": "REQUIRED_GATE_FAILURE",
+      "status": "OPEN",
+      "source": "User task step3 full affected package all-green requirement",
+      "counterexample": "Candidate628 tests/613pass/10fail/5skip rc1; same10 base failures; voice native Napi abort leaves unexecuted coverage",
+      "impact": "Full validation requirement not met; named diff empty does not mean green",
+      "minimal_closure": "Close all required complete-package execution gates in legal isolated environment, or explicit Owner/regulator disposition followed by readiness reassessment",
+      "affected_readiness": [
+        "MERGE_READY"
+      ]
+    }
+  ],
+  "merge_ready": "NO",
+  "operation_allowed": "NO",
+  "pending_acceptance": "Proposed additive IAD-007/008 needs explicit acceptance before merge",
+  "production_evidence": "NONE; isolated mechanism evidence only"
+}

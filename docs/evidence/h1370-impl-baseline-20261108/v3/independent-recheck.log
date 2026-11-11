@@ -1,0 +1,146 @@
+✔ canonicalDefaultGlobalRoute is the complete Luna subscription route (1.952334ms)
+✔ passthrough carries the built-in subscription; a plain globalRoute keeps the legacy shape (2.653209ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/default-route-N11LgH/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ A-D1 zero config: every un-overridden Agent resolves to the Luna default with its subscription mount (190.485709ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/default-route-r60Wbp/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/default-route-cUhEpG/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ A-D2 runtime env override wins over the default; composition config wins over env (319.374125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/default-route-IPPdzH/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ A-D3 explicit OpenCode Go agent override wins; un-overridden Agents keep the Luna default (202.466791ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/default-route-Wcwz9r/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ composition freezes the own-domain artifact and refuses drift before the next process boundary (165.264958ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-yc0bvx/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121308721,"agentId":"agt_a","routeChainId":"invalid","primaryRoute":"NONE","finalRoute":"NONE","finalOutcome":"stop:unknown_failure_class","totalRouteAttempts":0,"fallbackActivated":false,"fallbackRoute":null,"configInvalid":true,"configGeneration":{"candidateId":"routing-d1637f2d16bc8e957abd6e16e1b9952d2585bd465f2d99b5c882dc417c06cc7a","activeGenerationId":"routing-077c6f35ee0c0031298c5fc070b54bfc155392078459889cee050f9f1a01dcb2","decision":"refuse","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":false}}
+✔ ACC-RCG-002/004: real composition rejects A r1 plus bad B before spawn or turn (240.438166ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-tBzRFe/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794121308943,"routeChainId":"chain-agt_a-47bf4892550c4031","agentId":"agt_a","attemptIndex":0,"route":"r0","primaryRoute":"r0","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success","configGeneration":{"candidateId":"routing-f07b4a45af4e9fac9a9e7653360fb96c0186f2298ef310ccc04a54688b35e854","activeGenerationId":"routing-f7885e2d7b3005f312e1db4c49821efb4a925dc86c52e76cb1f9185402b484b5","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121308943,"routeChainId":"chain-agt_a-47bf4892550c4031","agentId":"agt_a","primaryRoute":"r0","finalRoute":"r0","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null,"configGeneration":{"candidateId":"routing-f07b4a45af4e9fac9a9e7653360fb96c0186f2298ef310ccc04a54688b35e854","activeGenerationId":"routing-f7885e2d7b3005f312e1db4c49821efb4a925dc86c52e76cb1f9185402b484b5","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794121308984,"routeChainId":"chain-agt_a-47bf4892550c4031","agentId":"agt_a","attemptIndex":0,"route":"r0","primaryRoute":"r0","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success","configGeneration":{"candidateId":"routing-f07b4a45af4e9fac9a9e7653360fb96c0186f2298ef310ccc04a54688b35e854","activeGenerationId":"routing-f7885e2d7b3005f312e1db4c49821efb4a925dc86c52e76cb1f9185402b484b5","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121308984,"routeChainId":"chain-agt_a-47bf4892550c4031","agentId":"agt_a","primaryRoute":"r0","finalRoute":"r0","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null,"configGeneration":{"candidateId":"routing-f07b4a45af4e9fac9a9e7653360fb96c0186f2298ef310ccc04a54688b35e854","activeGenerationId":"routing-f7885e2d7b3005f312e1db4c49821efb4a925dc86c52e76cb1f9185402b484b5","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121309027,"agentId":"agt_b","routeChainId":"invalid","primaryRoute":"NONE","finalRoute":"NONE","finalOutcome":"stop:unknown_failure_class","totalRouteAttempts":0,"fallbackActivated":false,"fallbackRoute":null,"configInvalid":true,"configGeneration":{"candidateId":"routing-f07b4a45af4e9fac9a9e7653360fb96c0186f2298ef310ccc04a54688b35e854","activeGenerationId":"routing-f7885e2d7b3005f312e1db4c49821efb4a925dc86c52e76cb1f9185402b484b5","decision":"refuse","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_b","closureUnchanged":false}}
+✔ ACC-RCG-003/005: real child start and running-child reuse consume qualified G0; B has zero attempts (303.473583ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-hsD4KX/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794121309187,"routeChainId":"chain-agt_a-47bf4892550c4031","agentId":"agt_a","attemptIndex":0,"route":"r0","primaryRoute":"r0","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success","configGeneration":{"candidateId":"routing-768f8bd993b98230f236654f491465d9f2d2c94c4988fa27018c971530f89853","activeGenerationId":"routing-768f8bd993b98230f236654f491465d9f2d2c94c4988fa27018c971530f89853","decision":"active","agentId":"agt_a","closureUnchanged":false}}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121309187,"routeChainId":"chain-agt_a-47bf4892550c4031","agentId":"agt_a","primaryRoute":"r0","finalRoute":"r0","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null,"configGeneration":{"candidateId":"routing-768f8bd993b98230f236654f491465d9f2d2c94c4988fa27018c971530f89853","activeGenerationId":"routing-768f8bd993b98230f236654f491465d9f2d2c94c4988fa27018c971530f89853","decision":"active","agentId":"agt_a","closureUnchanged":false}}
+[router] route mismatch for agt_a (generation 1): controlled shutdown before new-generation spawn
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794121309268,"routeChainId":"chain-agt_a-d2ebd570a87c3e5f","agentId":"agt_a","attemptIndex":0,"route":"r1","primaryRoute":"r1","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success","configGeneration":{"candidateId":"routing-6265f28e9077c76501672356b10ef1e3d2169cf3b4d47296fd01c5dec49226a6","activeGenerationId":"routing-6265f28e9077c76501672356b10ef1e3d2169cf3b4d47296fd01c5dec49226a6","decision":"active","agentId":"agt_a","closureUnchanged":false}}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121309268,"routeChainId":"chain-agt_a-d2ebd570a87c3e5f","agentId":"agt_a","primaryRoute":"r1","finalRoute":"r1","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null,"configGeneration":{"candidateId":"routing-6265f28e9077c76501672356b10ef1e3d2169cf3b4d47296fd01c5dec49226a6","activeGenerationId":"routing-6265f28e9077c76501672356b10ef1e3d2169cf3b4d47296fd01c5dec49226a6","decision":"active","agentId":"agt_a","closureUnchanged":false}}
+✔ ACC-RCG-001/005: valid whole publication switches real composition to a new child and full generation (365.086541ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-caRLXm/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794121309547,"routeChainId":"chain-agt_a-47bf4892550c4031","agentId":"agt_a","attemptIndex":0,"route":"r0","primaryRoute":"r0","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success","configGeneration":{"candidateId":"routing-ae7d4ba3bd6eb903204c3e50a7cd29eccea4d4712746c5127ec9b9575eff02cc","activeGenerationId":"routing-3bdd06da873f503630cd092f43d0b74b58fd4bfe35dbae67769d62311c40ab0c","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121309547,"routeChainId":"chain-agt_a-47bf4892550c4031","agentId":"agt_a","primaryRoute":"r0","finalRoute":"r0","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null,"configGeneration":{"candidateId":"routing-ae7d4ba3bd6eb903204c3e50a7cd29eccea4d4712746c5127ec9b9575eff02cc","activeGenerationId":"routing-3bdd06da873f503630cd092f43d0b74b58fd4bfe35dbae67769d62311c40ab0c","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+✔ ACC-RCG-005: restart after a rejected candidate cannot resurrect the prior runtime trust (197.161166ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-ATTPyk/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794121309752,"routeChainId":"chain-agt_a-47bf4892550c4031","agentId":"agt_a","attemptIndex":0,"route":"r0","primaryRoute":"r0","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success","configGeneration":{"candidateId":"routing-475f53cc7882c1ebb6bd659d82979ea2c61bb23eb8bfa065197e9fdf20154c3b","activeGenerationId":"routing-ad785b69ff78797cd848106d43aae328f42b0944acb99d8cf878b6cbbdb4d88c","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121309752,"routeChainId":"chain-agt_a-47bf4892550c4031","agentId":"agt_a","primaryRoute":"r0","finalRoute":"r0","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null,"configGeneration":{"candidateId":"routing-475f53cc7882c1ebb6bd659d82979ea2c61bb23eb8bfa065197e9fdf20154c3b","activeGenerationId":"routing-ad785b69ff78797cd848106d43aae328f42b0944acb99d8cf878b6cbbdb4d88c","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121309795,"agentId":"agt_a","routeChainId":"invalid","primaryRoute":"NONE","finalRoute":"NONE","finalOutcome":"stop:unknown_failure_class","totalRouteAttempts":0,"fallbackActivated":false,"fallbackRoute":null,"configInvalid":true,"configGeneration":{"candidateId":"routing-207123795edddb34ceeecdddcf3101a75ad3d670ae08d8f3494020a1655ba436","activeGenerationId":"routing-ad785b69ff78797cd848106d43aae328f42b0944acb99d8cf878b6cbbdb4d88c","decision":"refuse","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":false}}
+✔ ACC-RCG-004/005: real same-path Harness identity changed_commit cancels G0 continuation (206.827875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-LdVSyN/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794121309952,"routeChainId":"chain-agt_a-47bf4892550c4031","agentId":"agt_a","attemptIndex":0,"route":"r0","primaryRoute":"r0","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success","configGeneration":{"candidateId":"routing-8a0dbde09db1db736a8c198ef3d9debf70afff24f75e35621a961c6474245c6e","activeGenerationId":"routing-8ca9138fc96c756cfc3501bdafbafaa376de8605a220bd42520b2950ea8a2683","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121309952,"routeChainId":"chain-agt_a-47bf4892550c4031","agentId":"agt_a","primaryRoute":"r0","finalRoute":"r0","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null,"configGeneration":{"candidateId":"routing-8a0dbde09db1db736a8c198ef3d9debf70afff24f75e35621a961c6474245c6e","activeGenerationId":"routing-8ca9138fc96c756cfc3501bdafbafaa376de8605a220bd42520b2950ea8a2683","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121309992,"agentId":"agt_a","routeChainId":"invalid","primaryRoute":"NONE","finalRoute":"NONE","finalOutcome":"stop:unknown_failure_class","totalRouteAttempts":0,"fallbackActivated":false,"fallbackRoute":null,"configInvalid":true,"configGeneration":{"candidateId":null,"activeGenerationId":"routing-8ca9138fc96c756cfc3501bdafbafaa376de8605a220bd42520b2950ea8a2683","decision":"refuse","rejectionClass":"candidate_invalid","errorAgents":[],"agentId":"agt_a","closureUnchanged":false}}
+✔ ACC-RCG-004/005: real same-path Harness identity missing_stamp cancels G0 continuation (195.482375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-djma4Q/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1794121310194,"sequence":1,"category":"other","agentId":"agt_a","routeRef":"r0","transportAttempt":1,"processGeneration":1,"categoryCount":1,"windowCount":1}
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794121310195,"routeChainId":"chain-agt_a-6d101895908d8cc9","agentId":"agt_a","attemptIndex":0,"route":"r0","primaryRoute":"r0","failureClass":"NONE","admissionProven":"unproven","attemptOutcome":"stop:outcome_unknown","configGeneration":{"candidateId":"routing-738491321546c7bbaf3714ab19d6dff91b83540a17beb778f73e050f4499cff0","activeGenerationId":"routing-b2c3d3f71ef3a127a8fd5901064c7ec40fa50e2d9870fbf51d6edba798d2fa93","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121310195,"routeChainId":"chain-agt_a-6d101895908d8cc9","agentId":"agt_a","primaryRoute":"r0","finalRoute":"NONE","finalOutcome":"stop:outcome_unknown","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null,"configGeneration":{"candidateId":"routing-738491321546c7bbaf3714ab19d6dff91b83540a17beb778f73e050f4499cff0","activeGenerationId":"routing-b2c3d3f71ef3a127a8fd5901064c7ec40fa50e2d9870fbf51d6edba798d2fa93","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+✔ ACC-RCG-006: qualified G0 preserves STOP_CHAIN after outcome_unknown (202.587375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-gKNTtm/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1794121310400,"sequence":1,"category":"other","agentId":"agt_a","routeRef":"r0","transportAttempt":1,"processGeneration":1,"categoryCount":1,"windowCount":1}
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794121310401,"routeChainId":"chain-agt_a-6d101895908d8cc9","agentId":"agt_a","attemptIndex":0,"route":"r0","primaryRoute":"r0","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"stop:post_admission_failure","configGeneration":{"candidateId":"routing-71f2421156b66df45c10583ae2599b2b17e388e19400887bfc27881f6bde26e0","activeGenerationId":"routing-1b7d99a0e04f0ec341410cc1d66a9d8a241b0b626444b923fcc9cd64bdf0be04","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121310401,"routeChainId":"chain-agt_a-6d101895908d8cc9","agentId":"agt_a","primaryRoute":"r0","finalRoute":"NONE","finalOutcome":"stop:post_admission_failure","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null,"configGeneration":{"candidateId":"routing-71f2421156b66df45c10583ae2599b2b17e388e19400887bfc27881f6bde26e0","activeGenerationId":"routing-1b7d99a0e04f0ec341410cc1d66a9d8a241b0b626444b923fcc9cd64bdf0be04","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+✔ ACC-RCG-006: qualified G0 preserves STOP_CHAIN after output started (204.845791ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-bTbdk0/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1794121310597,"sequence":1,"category":"other","agentId":"agt_a","routeRef":"r0","transportAttempt":1,"processGeneration":1,"categoryCount":1,"windowCount":1}
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794121310597,"routeChainId":"chain-agt_a-6d101895908d8cc9","agentId":"agt_a","attemptIndex":0,"route":"r0","primaryRoute":"r0","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"stop:post_admission_failure","configGeneration":{"candidateId":"routing-df42d960ee1ef040e4a3d50a86e6a8d543521965e08b507c8384648475a8ba59","activeGenerationId":"routing-39482311510338c0af39aef17a2ca4d9a8da1a1050dc0ce33d53be840e99f364","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121310597,"routeChainId":"chain-agt_a-6d101895908d8cc9","agentId":"agt_a","primaryRoute":"r0","finalRoute":"NONE","finalOutcome":"stop:post_admission_failure","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null,"configGeneration":{"candidateId":"routing-df42d960ee1ef040e4a3d50a86e6a8d543521965e08b507c8384648475a8ba59","activeGenerationId":"routing-39482311510338c0af39aef17a2ca4d9a8da1a1050dc0ce33d53be840e99f364","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+✔ ACC-RCG-006: qualified G0 preserves STOP_CHAIN after tool started (196.480833ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-ZxhDpi/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1794121310829,"sequence":1,"category":"other","agentId":"agt_a","routeRef":"r0","transportAttempt":1,"processGeneration":null,"code":"AGENT_PROCESS_TURN_FENCED","reason":"unresolved_turn_fence","categoryCount":1,"windowCount":1}
+[router] ERROR delivery-failure-alert {"kind":"delivery_failure_alert","tsWallMs":1794121310829,"category":"other","windowCount":1,"threshold":1,"windowMs":300000,"agentId":"agt_a","code":"AGENT_PROCESS_TURN_FENCED","reason":"unresolved_turn_fence"}
+[router] route-chain {"kind":"route_attempt","tsWallMs":1794121310829,"routeChainId":"chain-agt_a-47bf4892550c4031","agentId":"agt_a","attemptIndex":0,"route":"r0","primaryRoute":"r0","failureClass":"turnqueue_not_admitted","admissionProven":"proven_no_admission","attemptOutcome":"turnqueue_not_admitted","configGeneration":{"candidateId":"routing-5506518a78cd45b9dd72a6bc86856de2a96012418ac73e98ba77e474a11277dc","activeGenerationId":"routing-914a61afb87a8587b77d7367b5030942870b873136588bed5b568a3a462e1f83","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1794121310829,"routeChainId":"chain-agt_a-47bf4892550c4031","agentId":"agt_a","primaryRoute":"r0","finalRoute":"NONE","finalOutcome":"turnqueue_not_admitted","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null,"configGeneration":{"candidateId":"routing-5506518a78cd45b9dd72a6bc86856de2a96012418ac73e98ba77e474a11277dc","activeGenerationId":"routing-914a61afb87a8587b77d7367b5030942870b873136588bed5b568a3a462e1f83","decision":"continue","rejectionClass":"unknown_route_refs","errorAgents":["agt_b"],"agentId":"agt_a","closureUnchanged":true}}
+✔ ACC-RCG-006: configuration publication never settles, replays, or removes an existing UNKNOWN fence (232.413625ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2795.356875
