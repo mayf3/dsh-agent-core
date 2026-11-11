@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { continuePlannedOwnerResume, mutateWithRecord, recordProgressCheckpoint, recordReconciled, recordStaleSuperseded, recordEscalationRequested, recordDeliveryFailed, recordRecoveryRefused } from './ledger-records.js'
 import { beginAttemptIfAbsent } from './ledger-admission.js'
 import { recordRecoveryCheck } from './recovery/automatic-ledger.js'
@@ -83,10 +84,13 @@ export class ExecutionLedger {
    *   CTR-WEC1-004 admission policy: the fence refuses generation N+1 when
    *   N >= maxAttemptsPerVisit (default 3, min 1).
    */
-  constructor({ dir, clock = () => Date.now(), log = {}, io = {}, maxAttemptsPerVisit = DEFAULT_MAX_ATTEMPTS_PER_VISIT, resolveManagedAttempt }) {
+  constructor({ dir, clock = () => Date.now(), log = {}, io = {}, maxAttemptsPerVisit = DEFAULT_MAX_ATTEMPTS_PER_VISIT, maxNeedsReviewRechecks = 1, resolveManagedAttempt }) {
     if (typeof dir !== 'string' || dir === '') throw new TypeError('workflow-execution: ledger dir is required')
     if (!Number.isInteger(maxAttemptsPerVisit) || maxAttemptsPerVisit < 1) {
       throw new TypeError(`workflow-execution: ledger maxAttemptsPerVisit must be a positive integer (got ${JSON.stringify(maxAttemptsPerVisit)})`)
+    }
+    if (!Number.isInteger(maxNeedsReviewRechecks) || maxNeedsReviewRechecks < 0) {
+      throw new TypeError(`workflow-execution: ledger maxNeedsReviewRechecks must be a non-negative integer (got ${JSON.stringify(maxNeedsReviewRechecks)})`)
     }
     if (!Number.isInteger(maxNeedsReviewRechecks) || maxNeedsReviewRechecks < 0) {
       throw new TypeError(`workflow-execution: ledger maxNeedsReviewRechecks must be a non-negative integer (got ${JSON.stringify(maxNeedsReviewRechecks)})`)
@@ -102,6 +106,7 @@ export class ExecutionLedger {
     this.clock = clock
     this.log = log
     this.maxAttemptsPerVisit = maxAttemptsPerVisit
+    this.maxNeedsReviewRechecks = maxNeedsReviewRechecks
     this.resolveManagedAttempt = resolveManagedAttempt
     this.appendFileSync = io.appendFileSync ?? appendFileSync
     this.syncDirectorySync = io.syncDirectorySync ?? ((path) => {
