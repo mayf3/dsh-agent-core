@@ -492,43 +492,6 @@ export async function composeProductionRuntime(options = {}) {
   // FIXED_OPERATION_V1: fixture-only fixed-operation LOCAL surface.
   mountFixedOperationRuntime({ ctx, log })
 
-  const workflowExecution = mountWorkflowExecutionRuntime({
-    ctx,
-    layout,
-    router,
-    log,
-    ...(opts.workflowExecution === undefined ? {} : { config: opts.workflowExecution }),
-  })
-
-  // WORKFLOW_EXECUTION_CONTROL_V1 (CTR-WEC1-003/006): the product-api
-  // /workflow-execution/* routes resolve this service at request time (the
-  // same late-binding discipline as schedulerHistory/schedulerTokenVerifier).
-  // traces = cross-process-fresh read model; kick = one coalesced poll
-  // trigger (latency only; the poll loop stays the correctness path).
-  mountWorkflowProgressRuntime({ ctx, ledger: workflowExecution.ledger, log })
-
-  ctx.provide('workflowExecutionAccess', {
-    traces: async ({ workflowInstanceId, nodeVisitId } = {}) => {
-      const attempts = await workflowExecution.ledger.snapshotFresh()
-      return projectExecutionTrace(attempts, { workflowInstanceId, nodeVisitId })
-    },
-    // Fleet-level attention summary: the same cross-process-fresh snapshot,
-    // selected down to the attention-worthy executionStates. Read-only.
-    attention: async () => {
-      const attempts = await workflowExecution.ledger.snapshotFresh()
-      return projectExecutionAttention(attempts)
-    },
-    kick: (payload) => {
-      if (!workflowExecution.enabled) return { ok: false, code: 'poller_unconfigured' }
-      void payload // the kick carries no semantics; the poll re-reads svc truth
-      return workflowExecution.engine.kick()
-    },
-    ownerAssistanceWake: (payload) => workflowExecution.wakeOwnerAssistance(payload),
-    // Supported itops Scheduler-occurrence control; no Agent/Broker tool exposure.
-    pauseAdmission: (reason) => workflowExecution.pauseAdmission(reason),
-    resumeAdmission: () => workflowExecution.resumeAdmission(),
-    admissionStatus: () => workflowExecution.admissionStatus(),
-  })
 
 
   const scheduler = new Scheduler({
