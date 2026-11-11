@@ -42,6 +42,7 @@ import { apply as applyDefinition } from '../../agent-definition/src/index.js'
 import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/index.js'
 import { mountBrokerGateway } from './broker-composition.js'
 import { prepareSchedulerRuntime } from './scheduler/composition-runtime.js'
+import { createResultVerifyRuntime } from './scheduler/result-verify-runtime.js'
 import { mountIdentityCapabilityRuntime } from './identity/capability-runtime.js'
 import { mountWorkflowCapabilityRuntime } from './workflow/capability-runtime.js'
 import { mountConversationRuntime } from '../../product-api/src/conversation/runtime.js'
@@ -370,6 +371,12 @@ export async function composeProductionRuntime(options = {}) {
   })
 
   const { invoker, deliver, store, history, schedulerHealth, schedulerAutoReconcile } = await prepareSchedulerRuntime({ ctx, opts, layout, router, definition, feishu, writeEvidence, log })
+
+  // #1379 E4→E5: programmatic business-result verification consumer — re-delivers
+  // the job's own verify instruction to the responsible agent for successful runs
+  // whose result_status is still null; the verdict lands via the existing ingest.
+  const resultVerifyRuntime = createResultVerifyRuntime({ layout, deliver, store, log, stateDir: layout.controlDir })
+  resultVerifyRuntime.tick().catch((e) => log.error?.(`[result-verify] tick failed: ${String(e?.message ?? e).slice(0, 120)}`))
 
   // Shared trusted Broker configuration is also consumed by principal
   // resolution below; neither value is ever accepted from model arguments.
