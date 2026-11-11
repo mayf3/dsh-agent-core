@@ -474,18 +474,31 @@ export class ExecutionLedger {
   }
 
   /** Record the terminal reconcile verdict for an ACTIVE attempt. */
-  async recordReconciled({ nodeVisitId, expectedPhase, verdict, judgment, reason, expectedIdentity = undefined }) {
+  async recordReconciled({ nodeVisitId, expectedPhase, verdict, judgment, reason, expectedIdentity = undefined, expectedAttemptId = undefined, expectedGeneration = undefined }) {
     if (verdict !== 'SETTLED' && verdict !== 'NEEDS_REVIEW') {
       throw new TypeError(`workflow-execution: reconciled verdict must be SETTLED | NEEDS_REVIEW (got ${JSON.stringify(verdict)})`)
     }
     if (typeof expectedPhase !== 'string' || expectedPhase === '') throw new TypeError('workflow-execution: reconciled expectedPhase is required')
     if (typeof judgment !== 'string' || judgment === '') throw new TypeError('workflow-execution: reconciled judgment is required')
     if (typeof reason !== 'string' || reason === '') throw new TypeError('workflow-execution: reconciled reason is required')
-    if (this.requireReconciledIdentity && (expectedIdentity === undefined || typeof expectedIdentity !== 'object' || expectedIdentity === null
+    // R#699 minimal port (from origin/main): attempts planned before the
+    // workflowStateVersionAtDispatch/generation fields existed carry only the
+    // ledger-minted attemptId — the identity-bag form can never be VALID for
+    // them, which spun reconcile forever on one live nodeVisit. The
+    // attemptId form verifies identity against THIS ledger's own record with
+    // the same strictness; stale callers get a graceful refusal, not a throw.
+    const identityForm = expectedAttemptId !== undefined ? 'attemptId'
+      : expectedIdentity !== undefined ? 'bag'
+      : 'none'
+    if (identityForm === 'attemptId') {
+      if (!/^wfeat-[0-9a-f]{24}$/.test(expectedAttemptId) || !Number.isInteger(expectedGeneration) || expectedGeneration < 1) {
+        throw new TypeError('workflow-execution: reconciled expectedAttemptId must be a ledger-minted wfeat-* id and expectedGeneration a positive integer')
+      }
+    } else if (this.requireReconciledIdentity && (expectedIdentity === undefined || typeof expectedIdentity !== 'object' || expectedIdentity === null
       || expectedIdentity.status !== 'VALID'
       || typeof expectedIdentity.workflowInstanceId !== 'string'
-      || typeof expectedIdentity.nodeVisitId !== 'string'
-      || typeof expectedIdentity.dispatchIntentId !== 'string'
+      || expectedIdentity.nodeVisitId !== 'string'
+      || expectedIdentity.dispatchIntentId !== 'string'
       || !Number.isInteger(expectedIdentity.generation)
       || !Number.isInteger(expectedIdentity.workflowStateVersionAtDispatch))) {
       throw new TypeError('workflow-execution: reconciled expectedIdentity must be complete and VALID')
@@ -494,6 +507,14 @@ export class ExecutionLedger {
       const current = this.#attempt(nodeVisitId)
       if (current === undefined) {
         throw new Error(`workflow-execution: no attempt exists for nodeVisit ${nodeVisitId.toLowerCase()} — beginAttemptIfAbsent first`)
+      }
+      if (identityForm === 'attemptId') {
+        // stale-observation semantics (origin/main): a caller proving the
+        // wrong attempt id or generation is refused gracefully — the live
+        // record is authoritative, never overwritten by a stale reconciler.
+        if (current.attemptId !== expectedAttemptId || (current.generation ?? 1) !== expectedGeneration) {
+          return { committed: false, attempt: { ...current }, cause: 'stale_observation' }
+        }
       }
       if (current.state !== 'ACTIVE') this.#terminalGuard(current, { kind: 'reconciled', nodeVisitId })
       if (current.phase !== expectedPhase) {
