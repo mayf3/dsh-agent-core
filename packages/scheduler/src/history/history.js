@@ -10,6 +10,8 @@ import { OwnerLock } from '../store/lock.js'
 import {
   HISTORY_OUTCOMES,
   HISTORY_STORE_VERSION,
+  RESULT_ERROR_CODES,
+  RESULT_STATUSES,
   applyRunFilters,
   buildJobSnapshot,
   buildRunRecord,
@@ -271,6 +273,41 @@ export class HistoryStore {
       await this._appendEvent({
         ts, type: 'delivery_outcome', delivery_status: deliveryStatus,
         occurrence_id: record.occurrenceId, run_id: record.runId, job_id: record.jobId,
+      })
+    }))
+  }
+
+  /**
+   * result_recorded — late business-result binding (#1379 E5). The
+   * result-verify runtime records the responsible agent's re-verify verdict
+   * onto the ORIGINAL run through the SAME event kind the runTerminal
+   * boundary already uses (result_recorded) — no second ledger, no new
+   * scheduler. Additive fields: the full `result` object (the projection
+   * merge branch carries it into the run record) and the verify-turn
+   * provenance. Throws without an ingested result — no invented verdicts.
+   */
+  async runResultRecorded({ record, outcome, verify }) {
+    if (!record?.occurrenceId || !record?.runId) throw new TypeError('HistoryStore.runResultRecorded: record identity is required')
+    if (outcome?.result === undefined && outcome?.result_error_code === undefined) {
+      throw new TypeError('HistoryStore.runResultRecorded: an ingested result or result_error_code is required (never invent a verdict)')
+    }
+    return this._enqueue(() => this._withLock(async () => {
+      const ts = this.nowMs()
+      const recorded = outcome.result !== undefined
+      await this._appendEvent({
+        ts, type: 'result_recorded',
+        occurrence_id: record.occurrenceId, run_id: record.runId, job_id: record.jobId,
+        result_recorded: recorded,
+        result_status: recorded && RESULT_STATUSES.has(outcome.result?.final_status) ? outcome.result.final_status : null,
+        result_error_code: RESULT_ERROR_CODES.has(outcome.result_error_code) ? outcome.result_error_code : null,
+        ...(recorded ? { result: clone(outcome.result) } : {}),
+        verify: {
+          source: 'result-verify-runtime',
+          request_id: verify?.requestId ?? null,
+          session_id: verify?.sessionId ?? null,
+          attempt: verify?.attempt ?? null,
+          turn_status: verify?.turnStatus ?? null,
+        },
       })
     }))
   }

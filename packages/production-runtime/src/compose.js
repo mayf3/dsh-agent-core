@@ -373,9 +373,10 @@ export async function composeProductionRuntime(options = {}) {
   const { invoker, deliver, store, history, schedulerHealth, schedulerAutoReconcile } = await prepareSchedulerRuntime({ ctx, opts, layout, router, definition, feishu, writeEvidence, log })
 
   // #1379 E4→E5 result-verify consumer (per-engine-tick): after the engine's
-  // own tick, re-deliver verify instructions for succeeded runs whose business
-  // result is still unverified; the verdict lands via the existing ingest.
-  const resultVerifyRuntime = createResultVerifyRuntime({ layout, store, deliver, log })
+  // own tick, start REAL verify agent turns (invoker seam, not the Feishu
+  // outbound) for succeeded runs whose business result is still unverified;
+  // the verdict binds to the original run via HistoryStore.runResultRecorded.
+  const resultVerifyRuntime = createResultVerifyRuntime({ layout, store, history, invoker, log })
   let resultVerifyTickHandle = null
 
   // Shared trusted Broker configuration is also consumed by principal
