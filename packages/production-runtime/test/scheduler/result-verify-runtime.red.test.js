@@ -14,7 +14,7 @@
 // modified module fails this whole suite before any test runs.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, rmSync, readdirSync, readFileSync } from 'node:fs'
+import { mkdtempSync, rmSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -137,7 +137,10 @@ test('G3 (#1379 三): verify instruction starts a REAL agent turn via the invoke
       return { status: 'ok', started: true, sessionId: req.sessionId,
         // In production the observed invoker's attachSchedulerResult ingests
         // this block off the turn reply; mirrored here on the seam contract.
-        result: { final_status: 'PASS', counters: { items: 3 } } }
+        // B2/M1: the PASS carries a server-resolvable anchor — the consumer
+        // mechanically re-reads the run's own projection and only then binds.
+        result: { final_status: 'PASS', counters: { items: 3 },
+          evidence: [{ kind: 'history_run', run_id: run.run_id }] } }
     },
     nowMs: () => rtNow.value,
     stateDir: dir,
@@ -251,12 +254,260 @@ test('G5 (#1379): a rejected scheduler-result block is bound as result_error_cod
   assert.equal(runs[0].result_error_code, 'INVALID_SCHEMA', 'rejection durably bound to the original run')
   assert.equal(rt.scanUnverifiedRuns().length, 1, 'run stays in the scan set')
 
-  // A later honest PASS replaces the error face.
+  // A later honest PARTIAL (with a server-resolvable anchor) replaces the error face.
   rtNow.value += 2_000
-  rt = mk({ status: 'ok', started: true, summary: 'ok', result: { final_status: 'PARTIAL', counters: { done: 2 } } })
+  rt = mk({ status: 'ok', started: true, summary: 'ok', result: { final_status: 'PARTIAL', counters: { done: 2 }, evidence: [{ kind: 'history_run', run_id: run.run_id }] } })
   await rt.tick()
   await assembly.history.ensureLoaded()
   const after = assembly.history.queryRuns({ jobId: 'rv-job' }).runs[0]
   assert.equal(after.result_status, 'PARTIAL')
   assert.equal(rt.scanUnverifiedRuns().length, 0)
+})
+
+// ── B1/B2 hardening: the two release blockers (Owner ruling 2026-11-12) ────
+
+test('H1 (B2/M1): a legal PASS block WITHOUT a resolving server-side anchor is never bound as business completion', async (t) => {
+  const dir = newDir()
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const assembly = await realAssembly(dir, createFakeInvoker({ outcome: { status: 'ok', summary: 'done', sessionId: 's1', started: true } }))
+  const run = await seedUnverifiedRun(dir, assembly)
+
+  const rtNow = { value: T0 + 5_000 }
+  const rt = createResultVerifyRuntime({
+    layout: { historyDir: assembly.historyDir, controlDir: dir },
+    store: assembly.store,
+    history: assembly.history,
+    // The worker's own word: a schema-legal PASS with no evidence anchors.
+    invoker: async () => ({ status: 'ok', started: true, sessionId: 's1', result: { final_status: 'PASS', counters: { items: 3 } } }),
+    nowMs: () => rtNow.value,
+    stateDir: dir,
+    verifyRetryBaseMs: 1_000,
+    verifyRetryCapMs: 60_000,
+  })
+  const ticked = await rt.tick()
+  assert.equal(ticked.delivered, 1, 'the verify turn WAS dispatched and answered')
+
+  await assembly.history.ensureLoaded()
+  const { runs } = assembly.history.queryRuns({ jobId: 'rv-job' })
+  assert.equal(runs[0].result_status, null, 'self-reported PASS is NOT a business verdict')
+  const lines = readFileSync(join(assembly.historyDir, 'events.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l))
+  assert.equal(lines.some((e) => e.type === 'result_recorded'), false, 'no result_recorded binding without a resolving anchor')
+  assert.equal(rt.scanUnverifiedRuns().length, 1, 'the run STAYS in the scan set — responsibility kept (UNKNOWN/待证)')
+
+  // Within the backoff window the report does not trigger a duplicate turn.
+  await rt.tick()
+  assert.equal(rt.scanUnverifiedRuns().length, 1)
+})
+
+test('H2 (B2/M1): only an anchor bound to the EXACT run resolves — a different run_id proves nothing, the matching one binds', async (t) => {
+  const dir = newDir()
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const assembly = await realAssembly(dir, createFakeInvoker({ outcome: { status: 'ok', summary: 'done', sessionId: 's1', started: true } }))
+  const run = await seedUnverifiedRun(dir, assembly)
+
+  const rtNow = { value: T0 + 5_000 }
+  const mk = (evidence) => createResultVerifyRuntime({
+    layout: { historyDir: assembly.historyDir, controlDir: dir },
+    store: assembly.store,
+    history: assembly.history,
+    invoker: async () => ({ status: 'ok', started: true, sessionId: 's1', result: { final_status: 'FAIL', counters: {}, evidence } }),
+    nowMs: () => rtNow.value,
+    stateDir: dir,
+    verifyRetryBaseMs: 1_000,
+    verifyRetryCapMs: 60_000,
+  })
+
+  // An anchor for a DIFFERENT run must not resolve.
+  let rt = mk([{ kind: 'history_run', run_id: 'rv-some-other-run' }])
+  await rt.tick()
+  await assembly.history.ensureLoaded()
+  assert.equal(assembly.history.queryRuns({ jobId: 'rv-job' }).runs[0].result_status, null, 'mismatched identity: no binding')
+
+  // Even the unknown-kind anchor family fails closed.
+  rtNow.value += 2_000
+  rt = mk([{ kind: 'artifact', path: '/tmp/worker-written-thing' }])
+  await rt.tick()
+  await assembly.history.ensureLoaded()
+  assert.equal(assembly.history.queryRuns({ jobId: 'rv-job' }).runs[0].result_status, null, 'worker-writable anchor kinds never resolve')
+
+  // The EXACT run identity, re-read server-side from the real projection, binds.
+  rtNow.value += 2_000
+  rt = mk([{ kind: 'history_run', run_id: run.run_id }])
+  await rt.tick()
+  await assembly.history.ensureLoaded()
+  assert.equal(assembly.history.queryRuns({ jobId: 'rv-job' }).runs[0].result_status, 'FAIL', 'exact-run anchor: the FAIL verdict binds to the original run')
+  assert.equal(rt.scanUnverifiedRuns().length, 0)
+})
+
+test('H3 (B1): concurrent ticks cannot produce two verify writers for the same run — the per-run OwnerLock claim skips the busy run', async (t) => {
+  const dir = newDir()
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const assembly = await realAssembly(dir, createFakeInvoker({ outcome: { status: 'ok', summary: 'done', sessionId: 's1', started: true } }))
+  await seedUnverifiedRun(dir, assembly)
+
+  const verifyCalls = []
+  let releaseInFlight
+  const inFlight = new Promise((resolve) => { releaseInFlight = resolve })
+  const mk = (opts = {}) => createResultVerifyRuntime({
+    layout: { historyDir: assembly.historyDir, controlDir: dir },
+    store: assembly.store,
+    history: assembly.history,
+    invoker: async (req) => {
+      verifyCalls.push(req)
+      await inFlight // hold the claim open while a second writer shows up
+      return { status: 'ok', started: true, sessionId: req.sessionId, result: { final_status: 'PASS', counters: {}, evidence: [{ kind: 'history_run', run_id: req.runId }] } }
+    },
+    nowMs: () => T0 + 5_000,
+    stateDir: dir,
+    claimTimeoutMs: 400,
+    ...opts,
+  })
+
+  const rtA = mk()
+  // B disables the pacing backoff (verifyRetryBaseMs 0) so the ONLY guard
+  // under test is the per-run claim itself — B's skip must be attributed to
+  // the live claim holder, proving the claim (not pacing) blocked it.
+  const rtB = mk({ verifyRetryBaseMs: 0 })
+  const tickA = rtA.tick() // A acquires the claim and enters the in-flight turn
+  await new Promise((r) => setTimeout(r, 120)) // let A hold the claim
+  const tickB = await rtB.tick() // B must NOT dispatch a second writer
+  assert.equal(tickB.delivered, 0, 'the busy run is skipped, not double-dispatched')
+  assert.equal(tickB.skippedBusy, 1, 'the skip is attributed to the live claim holder')
+  assert.equal(rtB.scanUnverifiedRuns().length, 1, 'the run stays in the scan set under B')
+
+  releaseInFlight()
+  const resA = await tickA
+  assert.equal(resA.delivered, 1)
+  assert.equal(verifyCalls.length, 1, 'EXACTLY ONE verify writer existed for the run')
+
+  await assembly.history.ensureLoaded()
+  assert.equal(assembly.history.queryRuns({ jobId: 'rv-job' }).runs[0].result_status, 'PASS')
+})
+
+test('H4 (B1): a crash mid-turn consumes its attempt durably — a fresh runtime resumes with a distinct identity, never a duplicate writer', async (t) => {
+  const dir = newDir()
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const assembly = await realAssembly(dir, createFakeInvoker({ outcome: { status: 'ok', summary: 'done', sessionId: 's1', started: true } }))
+  const run = await seedUnverifiedRun(dir, assembly)
+
+  const verifyCalls = []
+  const rtNow = { value: T0 + 5_000 }
+  const mk = (behavior) => createResultVerifyRuntime({
+    layout: { historyDir: assembly.historyDir, controlDir: dir },
+    store: assembly.store,
+    history: assembly.history,
+    invoker: async (req) => { verifyCalls.push(req); return behavior(req) },
+    nowMs: () => rtNow.value,
+    stateDir: dir,
+    verifyRetryBaseMs: 1_000,
+    verifyRetryCapMs: 60_000,
+  })
+
+  // First runtime "crashes" right after dispatching attempt 1 (the throw
+  // happens inside the turn; the attempt was already persisted in_flight).
+  const crashed = mk(async () => { throw new Error('SIGKILL mid-turn') })
+  await crashed.tick()
+  assert.equal(verifyCalls.length, 1)
+  assert.equal(verifyCalls[0].requestId, `rv:${run.run_id}:1`)
+
+  // Fresh runtime instance (real restart): resumes at attempt 2 with a
+  // distinct identity after backoff — never a second attempt-1 writer.
+  rtNow.value += 1_500
+  const restarted = mk(() => ({ status: 'ok', started: true, sessionId: 's2', result: { final_status: 'PASS', counters: {}, evidence: [{ kind: 'history_run', run_id: run.run_id }] } }))
+  const res = await restarted.tick()
+  assert.equal(res.delivered, 1)
+  assert.equal(verifyCalls[1].requestId, `rv:${run.run_id}:2`, 'monotonic durable attempt identity across the process death')
+  await assembly.history.ensureLoaded()
+  assert.equal(assembly.history.queryRuns({ jobId: 'rv-job' }).runs[0].result_status, 'PASS')
+})
+
+test('H5 (B1): a claim artifact left by a SIGKILL-dead owner is mechanically reaped — the next tick proceeds, exactly once', async (t) => {
+  const dir = newDir()
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const assembly = await realAssembly(dir, createFakeInvoker({ outcome: { status: 'ok', summary: 'done', sessionId: 's1', started: true } }))
+  const run = await seedUnverifiedRun(dir, assembly)
+
+  // Simulate the crashed writer: a full-identity claim artifact whose owner
+  // (a real, now-exited child pid) is mechanically provable dead.
+  const { spawnSync } = await import('node:child_process')
+  const dead = spawnSync('true')
+  const deadPid = dead.pid
+  const { mkdirSync, writeFileSync } = await import('node:fs')
+  const rt = createResultVerifyRuntime({
+    layout: { historyDir: assembly.historyDir, controlDir: dir },
+    store: assembly.store,
+    history: assembly.history,
+    invoker: async () => ({ status: 'ok', started: true, sessionId: 's1', result: { final_status: 'PASS', counters: {}, evidence: [{ kind: 'history_run', run_id: run.run_id }] } }),
+    nowMs: () => T0 + 5_000,
+    stateDir: dir,
+  })
+  // The runtime derives its claim path from the runKey; replicate it.
+  const { createHash } = await import('node:crypto')
+  const runKey = run.run_id
+  const safe = String(runKey).replace(/[^A-Za-z0-9._-]/g, '_').slice(0, 80) || 'run'
+  const key = `${safe}.${createHash('sha256').update(String(runKey)).digest('hex').slice(0, 12)}`
+  mkdirSync(join(dir, 'result-verify', 'claims'), { recursive: true })
+  writeFileSync(join(dir, 'result-verify', 'claims', `${key}.lock`), `${JSON.stringify({ pid: deadPid, token: 'dead-token', createdAtMs: T0 })}\n`)
+
+  const res = await rt.tick()
+  assert.equal(res.delivered, 1, 'the dead owner was reaped and the verify proceeded')
+  await assembly.history.ensureLoaded()
+  assert.equal(assembly.history.queryRuns({ jobId: 'rv-job' }).runs[0].result_status, 'PASS')
+})
+
+test('H6 (fail-closed): a month projection that cannot be parsed aborts the tick with zero dispatches — never verify against a half-read history', async (t) => {
+  const dir = newDir()
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const assembly = await realAssembly(dir, createFakeInvoker({ outcome: { status: 'ok', summary: 'done', sessionId: 's1', started: true } }))
+  await seedUnverifiedRun(dir, assembly)
+
+  const projection = join(assembly.historyDir, 'runs-202611.json')
+  const original = readFileSync(projection, 'utf8')
+  writeFileSync(projection, '{"records": [ TRUNCATED')
+
+  let invokerCalls = 0
+  const rtNow = { value: T0 + 5_000 }
+  const rt = createResultVerifyRuntime({
+    layout: { historyDir: assembly.historyDir, controlDir: dir },
+    store: assembly.store,
+    history: assembly.history,
+    invoker: async () => { invokerCalls += 1; return { status: 'ok', started: true, sessionId: 's1', result: { final_status: 'PASS', counters: {}, evidence: [{ kind: 'history_run', run_id: 'x' }] } } },
+    nowMs: () => rtNow.value,
+    stateDir: dir,
+  })
+  const ticked = await rt.tick()
+  assert.equal(ticked.failClosed, true)
+  assert.equal(ticked.delivered, 0)
+  assert.equal(invokerCalls, 0, 'no verify turns on an incomplete scan')
+  assert.ok(Array.isArray(ticked.readErrors) && ticked.readErrors.length >= 1)
+
+  // Restoring the projection re-opens the tick (the failure was honest, not sticky).
+  writeFileSync(projection, original)
+  const after = await rt.tick()
+  assert.equal(after.failClosed, undefined)
+  assert.equal(after.delivered, 1)
+})
+
+test('H7 (scope): pre-activation history is classified, never mass-dispatched', async (t) => {
+  const dir = newDir()
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const assembly = await realAssembly(dir, createFakeInvoker({ outcome: { status: 'ok', summary: 'done', sessionId: 's1', started: true } }))
+  const run = await seedUnverifiedRun(dir, assembly)
+
+  let invokerCalls = 0
+  const rtNow = { value: T0 + 5_000 }
+  const rt = createResultVerifyRuntime({
+    layout: { historyDir: assembly.historyDir, controlDir: dir },
+    store: assembly.store,
+    history: assembly.history,
+    invoker: async () => { invokerCalls += 1; return { status: 'ok', started: true, sessionId: 's1' } },
+    nowMs: () => rtNow.value,
+    stateDir: dir,
+    verifyNotBeforeMs: T0 + 10_000, // activation watermark AFTER the seeded run
+  })
+  const ticked = await rt.tick()
+  assert.equal(ticked.delivered, 0, 'the historical run is not blindly re-driven')
+  assert.equal(ticked.scopeExcluded, 1, 'it is counted, not silently dropped')
+  assert.equal(rt.scanUnverifiedRuns().length, 1, 'it stays in the scan set for explicit classification')
+  assert.equal(invokerCalls, 0)
 })
