@@ -164,7 +164,12 @@ test('CLI store guard: wrong-$HOME resolution fails loud when AGENTCORE_EXPECTED
   ], {
     cwd: root,
     encoding: 'utf8',
-    env: { ...process.env, AGENTCORE_EXPECTED_STORE: '/Users/authsvc/.agent-core/scheduler/jobs.json' },
+    // Pin HOME to the fixture dir: the scenario under test is a WRONG-$HOME
+    // default resolution. Leaving HOME ambient makes the case uid-dependent —
+    // a child whose real homedir IS the frozen canonical path resolves equal,
+    // skips the guard, and attempts the real mutation (QA turn EACCES at
+    // :170). The guard contract itself (TEST-10) is uid-independent.
+    env: { ...process.env, HOME: dir, AGENTCORE_EXPECTED_STORE: '/Users/authsvc/.agent-core/scheduler/jobs.json' },
   })
   assert.equal(result.status, 1)
   assert.match(result.stderr, /non-canonical scheduler store/)
