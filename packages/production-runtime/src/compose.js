@@ -372,11 +372,11 @@ export async function composeProductionRuntime(options = {}) {
 
   const { invoker, deliver, store, history, schedulerHealth, schedulerAutoReconcile } = await prepareSchedulerRuntime({ ctx, opts, layout, router, definition, feishu, writeEvidence, log })
 
-  // #1379 E4→E5: programmatic business-result verification consumer — re-delivers
-  // the job's own verify instruction to the responsible agent for successful runs
-  // whose result_status is still null; the verdict lands via the existing ingest.
-  const resultVerifyRuntime = createResultVerifyRuntime({ layout, deliver, store, log, stateDir: layout.controlDir })
-  resultVerifyRuntime.tick().catch((e) => log.error?.(`[result-verify] tick failed: ${String(e?.message ?? e).slice(0, 120)}`))
+  // #1379 E4→E5 result-verify consumer (per-engine-tick): after the engine's
+  // own tick, re-deliver verify instructions for succeeded runs whose business
+  // result is still unverified; the verdict lands via the existing ingest.
+  const resultVerifyRuntime = createResultVerifyRuntime({ layout, store, deliver, log })
+  let resultVerifyTickHandle = null
 
   // Shared trusted Broker configuration is also consumed by principal
   // resolution below; neither value is ever accepted from model arguments.
@@ -548,8 +548,19 @@ export async function composeProductionRuntime(options = {}) {
     schedulerHealth,
     workflowExecution,
     writeEvidence,
-    start: createSchedulerRuntimeStarter({ schedulerHealth, scheduler, workflowExecution, catchup, readinessRequired: opts.schedulerReadinessRequired }),
+    start: (async () => {
+      const starter = createSchedulerRuntimeStarter({ schedulerHealth, scheduler, workflowExecution, catchup, readinessRequired: opts.schedulerReadinessRequired })
+      await starter()
+      // hook AFTER scheduler start: schedule result-verify as a recurring
+      // consumer on the scheduler tick cadence (500ms default) via the
+      // scheduler's own interval (see scheduler.js L219) — piggyback by
+      // wrapping engine tick isn't available, so run on a fixed cadence.
+      resultVerifyTickHandle = setInterval(() => {
+        resultVerifyRuntime.tick().catch((e) => log.error?.(`[result-verify] tick failed: ${String(e?.message ?? e).slice(0, 120)}`))
+      }, opts.tickMs ?? 500)
+    }),
     stop: async (signal) => {
+      if (resultVerifyTickHandle) clearInterval(resultVerifyTickHandle)
       routingConfig.close()
       // C11-R3 (Product #426 A4): while this (old-epoch) process is still
       // observable, persist the exact restart-boundary receipt — quiesce_begin
