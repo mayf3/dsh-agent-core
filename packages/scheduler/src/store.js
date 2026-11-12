@@ -454,7 +454,14 @@ export class JobStore {
     }
   }
 
-  async readRunEvents({ limit = 100 } = {}) {
+  /** Read-only job snapshot for background consumers (#1379 result-verify).
+   *  Never mutates; returns the raw jobs array from the current document. */
+  async readJobs() {
+    const doc = await this._readDocRaw({ decodeHistory: false })
+    return Array.isArray(doc?.jobs) ? doc.jobs : (Array.isArray(doc?.raw) ? doc.raw : [])
+  }
+
+  async readRunEvents({ limit = 100 } = {}) {  async readRunEvents({ limit = 100 } = {}) {
     try {
       const lines = (await fs.readFile(this.runLogPath, 'utf8')).split('\n').filter(Boolean)
       const parsed = lines.flatMap((line) => {

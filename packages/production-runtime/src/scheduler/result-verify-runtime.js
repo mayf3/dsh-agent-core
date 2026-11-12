@@ -44,7 +44,7 @@ export function createResultVerifyRuntime({ layout, deliver, store, log = consol
     // events log. Scan the current month's projection for succeeded runs with
     // a null business result.
     const now = new Date(nowMs())
-    const proj = historyMonth(now.getTime())
+    const proj = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`
     let doc
     try { doc = JSON.parse(readFileSync(join(layout.historyDir, `runs-${proj}.json`), 'utf8')) } catch { return [] }
     const recs = doc.records ?? []
@@ -60,8 +60,9 @@ export function createResultVerifyRuntime({ layout, deliver, store, log = consol
     for (const rec of unverified) {
       if (delivered >= MAX_VERIFY_DELIVERIES_PER_TICK) break
       const jobId = rec.job_id
-      if (markers.verifiedDelivered[jobId]) continue // one pending re-verify per job
-      const jobs = store.readAll?.() ?? store.readDoc?.()?.jobs ?? []
+      const runKey = rec.run_id ?? rec.occurrence_id ?? jobId
+      if (markers.verifiedDelivered[runKey]) continue // one pending re-verify per RUN
+      const jobs = await store.readJobs()
       const job = (Array.isArray(jobs) ? jobs : []).find(j => j.id === jobId)
       if (!job || job.enabled === false) continue
       const agentId = rec.agent_id ?? job.agent_id
@@ -73,8 +74,8 @@ export function createResultVerifyRuntime({ layout, deliver, store, log = consol
         '无结果块、空回复或无证据的 PASS 不会被记录为业务完成。',
       ].join('\n')
       try {
-        await deliver({ job: { ...job, agent_id: agentId }, payload: { text } })
-        markers.verifiedDelivered[jobId] = { atMs: nowMs(), runId: rec.run_id ?? null }
+        await deliver({ job: { ...job, agent_id: agentId }, text })
+        markers.verifiedDelivered[runKey] = { atMs: nowMs(), runId: rec.run_id ?? null }
         delivered += 1
       } catch (e) {
         log.error?.(`[result-verify] deliver failed for job ${jobId}: ${String(e?.message ?? e).slice(0, 120)}`)

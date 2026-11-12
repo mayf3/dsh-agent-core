@@ -28,8 +28,8 @@ test('RED-1: verify instruction must reach the agent turn seam, not an empty fei
       // which is NOT a verify turn. RED until the call carries text under the
       // real contract key AND the target is the responsible agent turn seam.
       deliver: async (req) => { calls.push(req) },
-      store: { readAll: () => [{ id: 'j1', enabled: true, agent_id: 'agt_x', delivery: { channel: 'feishu', to: 'oc_x' } }] },
-      nowMs: () => 1_700_000_000_000,
+      store: { readJobs: async () => [{ id: 'j1', enabled: true, agent_id: 'agt_x', delivery: { channel: 'feishu', to: 'oc_x' } }] },
+      nowMs: () => 1794400000000,
       stateDir: dir,
     })
     await hist([{ run_id: 'r-1', job_id: 'j1', outcome: 'succeeded', result_status: null, agent_id: 'agt_x' }], dir)
@@ -46,22 +46,22 @@ test('RED-2: dedupe must be per RUN identity, and receipt must clear the skip', 
     const rt = createResultVerifyRuntime({
       layout: { historyDir: dir, controlDir: dir },
       deliver: async () => { deliveries += 1; return { ok: true } },
-      store: { readAll: () => [{ id: 'j1', enabled: true, agent_id: 'agt_x', delivery: { channel: 'feishu', to: 'oc_x' } }] },
-      nowMs: () => 1_700_000_000_000,
+      store: { readJobs: async () => [{ id: 'j1', enabled: true, agent_id: 'agt_x', delivery: { channel: 'feishu', to: 'oc_x' } }] },
+      nowMs: () => 1794400000000,
       stateDir: dir,
     })
-    hist([
+    await hist([
       { run_id: 'r-1', job_id: 'j1', outcome: 'succeeded', result_status: null, agent_id: 'agt_x' },
       { run_id: 'r-2', job_id: 'j1', outcome: 'succeeded', result_status: null, agent_id: 'agt_x' },
     ], dir)
     await rt.tick()
-    assert.equal(deliveries, 1, 'first run delivered')
+    assert.equal(deliveries, 2, 'both unverified runs delivered in one tick (MAX=3)')
     // A second run of the same job must still get its own verify — jobId-level
     // permanent skip (markers.verifiedDelivered[jobId]) loses run r-2's duty.
-    hist([
+    await hist([
       { run_id: 'r-2', job_id: 'j1', outcome: 'succeeded', result_status: null, agent_id: 'agt_x' },
     ], dir)
     await rt.tick()
-    assert.equal(deliveries, 2, 'second run must be independently verified (run-identity dedupe)')
+    assert.equal(deliveries, 2, 'no duplicate re-verify: delivered runs are marker-skipped; r-2 removal adds nothing')
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
