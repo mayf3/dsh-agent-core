@@ -44,7 +44,7 @@ export function createResultVerifyRuntime({ layout, deliver, store, log = consol
     // events log. Scan the current month's projection for succeeded runs with
     // a null business result.
     const now = new Date(nowMs())
-    const proj = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`
+    const proj = historyMonth(now.getTime())
     let doc
     try { doc = JSON.parse(readFileSync(join(layout.historyDir, `runs-${proj}.json`), 'utf8')) } catch { return [] }
     const recs = doc.records ?? []
