@@ -155,16 +155,17 @@ test('CLI_MUTATION_SEMANTICS_MATCH_BROKER: CLI add replays converge to already-a
   assert.equal(after.jobs.length, 1, 'conflict writes nothing')
 })
 
-test('CLI store guard: wrong-$HOME resolution fails loud when AGENTCORE_EXPECTED_STORE is frozen (TEST-10/CLI_STORE_TARGET)', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'scheduler-cli-guard-'))
-  const file = join(dir, 'jobs.json')
+test('CLI store guard: wrong-$HOME resolution fails loud against an isolated canonical store (TEST-10/CLI_STORE_TARGET)', async () => {
+  const canonicalDir = mkdtempSync(join(tmpdir(), 'scheduler-cli-guard-canonical-'))
+  const homeDir = mkdtempSync(join(tmpdir(), 'scheduler-cli-guard-home-'))
+  const file = join(canonicalDir, 'jobs.json')
   const result = spawnSync(process.execPath, [
     cli, 'add', '--agent', 'agent-a', '--name', 'guarded', '--logical-key', 'cli-test:guarded',
     '--every-ms', '1000', '--message', 'tick', '--no-deliver',
   ], {
     cwd: root,
     encoding: 'utf8',
-    env: { ...process.env, AGENTCORE_EXPECTED_STORE: '/Users/authsvc/.agent-core/scheduler/jobs.json' },
+    env: { ...process.env, HOME: homeDir, AGENTCORE_EXPECTED_STORE: file },
   })
   assert.equal(result.status, 1)
   assert.match(result.stderr, /non-canonical scheduler store/)
