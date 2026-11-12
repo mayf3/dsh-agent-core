@@ -455,13 +455,18 @@ export class JobStore {
   }
 
   /** Read-only job snapshot for background consumers (#1379 result-verify).
-   *  Never mutates; returns the raw jobs array from the current document. */
+   *  Never mutates; returns the raw jobs array from the current document.
+   *  v3 documents only expose the collections under `.doc` (the v3 return
+   *  shape is {status:'v3', raw, doc}) — the mock-store GREEN that shipped
+   *  in 67e77fa9 never caught this; the real-store regression G2 does. */
   async readJobs() {
     const doc = await this._readDocRaw({ decodeHistory: false })
-    return Array.isArray(doc?.jobs) ? doc.jobs : (Array.isArray(doc?.raw) ? doc.raw : [])
+    if (Array.isArray(doc?.jobs)) return doc.jobs // v1/v2 shape
+    const d = doc?.doc ?? doc?.raw
+    return Array.isArray(d?.jobs) ? d.jobs : []
   }
 
-  async readRunEvents({ limit = 100 } = {}) {  async readRunEvents({ limit = 100 } = {}) {
+  async readRunEvents({ limit = 100 } = {}) {
     try {
       const lines = (await fs.readFile(this.runLogPath, 'utf8')).split('\n').filter(Boolean)
       const parsed = lines.flatMap((line) => {

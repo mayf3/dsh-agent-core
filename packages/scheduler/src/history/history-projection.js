@@ -95,6 +95,24 @@ export function applyHistoryEvent(store, event) {
       return
     }
   }
+  if (event.type === 'result_recorded' && (event.result !== undefined || event.result_error_code !== undefined)) {
+    // Late business-result binding (#1379 E5): a verify turn's ingested
+    // ```scheduler-result (or its ingestion rejection) lands on the ORIGINAL
+    // run, not on a second ledger. A valid result supersedes an earlier
+    // rejection face; a bare rejection carries the error face. Events
+    // without either field (all pre-existing ones) replay exactly as before
+    // — the branch is additive and versionless.
+    const previous = store._runs.get(view.runId)
+    if (previous !== undefined) {
+      if (event.result !== undefined) {
+        previous.result = event.result
+        previous.result_error_code = null
+      } else if (event.result_error_code !== undefined && event.result_error_code !== null) {
+        previous.result_error_code = event.result_error_code
+      }
+      previous.result_recorded = event.result_recorded ?? true
+    }
+  }
   materializeHistoryRun(store, view)
 }
 

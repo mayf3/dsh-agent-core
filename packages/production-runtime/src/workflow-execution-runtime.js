@@ -90,7 +90,14 @@ export function resolveStaleNoProgressThresholdMs({ configValue, envValue } = {}
  *   DSH_WORKFLOW_STALE_NO_PROGRESS_MS, then 1h.
  */
 export async function wakeDomainOwnerAssistance(payload) {
-  const { router, principalAccess, pollerAgentId, workflowInstanceId, nodeVisitId, assistanceCaseId, ownerPrincipalId, reason, phase } = payload
+  const { router, principalAccess, pollerAgentId, workflowInstanceId, nodeVisitId, assistanceCaseId, ownerPrincipalId, reason, phase, log } = payload
+  // Structured, retryable refusal: every pre-delivery and delivery failure
+  // returns { ok:false, code, detail? } — never a thrown ReferenceError past
+  // the caller — and is explicitly logged for the durable outbox retry.
+  const fail = (code, detail) => {
+    log?.warn?.(`owner assistance wake failed code=${code}${detail === undefined ? '' : ` detail=${detail}`}`)
+    return detail === undefined ? { ok: false, code } : { ok: false, code, detail }
+  }
   if (phase === 'GOVERNANCE_CHILD_REVIEW') return wakeDomainOwnerAssistanceReview(payload)
   if (phase !== undefined) return { ok: false, code: 'invalid_owner_wake_phase' }
   if (typeof assistanceCaseId !== 'string' || assistanceCaseId === '') {
