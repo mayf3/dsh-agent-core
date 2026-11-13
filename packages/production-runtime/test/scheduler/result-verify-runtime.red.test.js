@@ -14,7 +14,7 @@
 // modified module fails this whole suite before any test runs.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, rmSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, rmSync, readdirSync, readFileSync, writeFileSync, mkdirSync, chmodSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -510,4 +510,120 @@ test('H7 (scope): pre-activation history is classified, never mass-dispatched', 
   assert.equal(ticked.scopeExcluded, 1, 'it is counted, not silently dropped')
   assert.equal(rt.scanUnverifiedRuns().length, 1, 'it stays in the scan set for explicit classification')
   assert.equal(invokerCalls, 0)
+})
+
+// ── Owner blocker counter-examples (2026-11-13 directive) ──────────────────
+
+test('H8 (counter-example ①): PASS with a resolving anchor but a MISSING claimed business artifact is never bound as verified', async (t) => {
+  const dir = newDir()
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const assembly = await realAssembly(dir, createFakeInvoker({ outcome: { status: 'ok', summary: 'done', sessionId: 's1', started: true } }))
+  const run = await seedUnverifiedRun(dir, assembly)
+
+  const rtNow = { value: T0 + 5_000 }
+  const rt = createResultVerifyRuntime({
+    layout: { historyDir: assembly.historyDir, controlDir: dir },
+    store: assembly.store,
+    history: assembly.history,
+    invoker: async () => ({
+      status: 'ok', started: true, sessionId: 's1',
+      result: {
+        final_status: 'PASS', counters: { items: 3 },
+        evidence: [{ kind: 'history_run', run_id: run.run_id }], // correct, server-resolvable anchor
+        artifacts: [{ path: join(dir, 'claimed-business-product-that-is-missing.json') }], // claimed product ABSENT
+      },
+    }),
+    nowMs: () => rtNow.value,
+    stateDir: dir,
+    verifyRetryBaseMs: 1_000,
+    verifyRetryCapMs: 60_000,
+  })
+  const ticked = await rt.tick()
+  assert.equal(ticked.delivered, 1, 'the turn was dispatched and answered')
+
+  await assembly.history.ensureLoaded()
+  assert.equal(assembly.history.queryRuns({ jobId: 'rv-job' }).runs[0].result_status, null,
+    'a claimed-but-missing business product blocks the PASS binding')
+  const lines = readFileSync(join(assembly.historyDir, 'events.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l))
+  assert.equal(lines.some((e) => e.type === 'result_recorded'), false, 'no result_recorded binding')
+  assert.equal(rt.scanUnverifiedRuns().length, 1, 'run stays in the scan set')
+
+  // The same report with the artifact actually present binds.
+  writeFileSync(join(dir, 'claimed-business-product.json'), '{}')
+  rtNow.value += 2_000
+  const rt2 = createResultVerifyRuntime({
+    layout: { historyDir: assembly.historyDir, controlDir: dir },
+    store: assembly.store,
+    history: assembly.history,
+    invoker: async () => ({
+      status: 'ok', started: true, sessionId: 's2',
+      result: {
+        final_status: 'PASS', counters: { items: 3 },
+        evidence: [{ kind: 'history_run', run_id: run.run_id }],
+        artifacts: [{ path: join(dir, 'claimed-business-product.json') }],
+      },
+    }),
+    nowMs: () => rtNow.value,
+    stateDir: dir,
+    verifyRetryBaseMs: 1_000,
+    verifyRetryCapMs: 60_000,
+  })
+  await rt2.tick()
+  await assembly.history.ensureLoaded()
+  assert.equal(assembly.history.queryRuns({ jobId: 'rv-job' }).runs[0].result_status, 'PASS',
+    'with the claimed artifact present, the anchor-backed PASS binds')
+})
+
+test('H9 (counter-example ②): persist failure blocks dispatch; corrupt state is never treated as a fresh attempt', async (t) => {
+  const dir = newDir()
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const assembly = await realAssembly(dir, createFakeInvoker({ outcome: { status: 'ok', summary: 'done', sessionId: 's1', started: true } }))
+  const run = await seedUnverifiedRun(dir, assembly)
+
+  let invokerCalls = 0
+  const rtNow = { value: T0 + 5_000 }
+  const mk = () => createResultVerifyRuntime({
+    layout: { historyDir: assembly.historyDir, controlDir: dir },
+    store: assembly.store,
+    history: assembly.history,
+    invoker: async () => { invokerCalls += 1; return { status: 'ok', started: true, sessionId: 's1', result: { final_status: 'PASS', counters: {}, evidence: [{ kind: 'history_run', run_id: run.run_id }] } } },
+    nowMs: () => rtNow.value,
+    stateDir: dir,
+  })
+
+  // (a) persistence failure: make the runs dir read-only → no durable attempt
+  // identity → NO dispatch (fail closed), run stays in the scan set.
+  mkdirSync(join(dir, 'result-verify', 'runs'), { recursive: true })
+  chmodSync(join(dir, 'result-verify', 'runs'), 0o500)
+  const rtA = mk()
+  const tickedA = await rtA.tick()
+  assert.equal(tickedA.persistBlocked, 1, 'the blocked dispatch is attributed to the persist failure')
+  assert.equal(tickedA.delivered, 0, 'no verify turn without a durable attempt identity')
+  assert.equal(invokerCalls, 0)
+  assert.equal(rtA.scanUnverifiedRuns().length, 1, 'responsibility retained')
+  chmodSync(join(dir, 'result-verify', 'runs'), 0o755)
+
+  // (b) corrupt state: a schema-broken state file is NOT reset to a fresh
+  // attempt — skip loud, no dispatch, file left untouched for repair.
+  const { createHash } = await import('node:crypto')
+  const safe = String(run.run_id).replace(/[^A-Za-z0-9._-]/g, '_').slice(0, 80) || 'run'
+  const key = `${safe}.${createHash('sha256').update(String(run.run_id)).digest('hex').slice(0, 12)}`
+  const stateFile = join(dir, 'result-verify', 'runs', `${key}.json`)
+  writeFileSync(stateFile, '{"attempts": 3, TRUNCATED')
+  const rtB = mk()
+  const tickedB = await rtB.tick()
+  assert.equal(tickedB.stateCorrupt, 1, 'the corrupt state is attributed, not silently reset')
+  assert.equal(tickedB.delivered, 0, 'no dispatch on corrupt state')
+  assert.equal(invokerCalls, 0)
+  assert.equal(rtB.scanUnverifiedRuns().length, 1, 'responsibility retained')
+  assert.match(readFileSync(stateFile, 'utf8'), /TRUNCATED/, 'the corrupt file is left untouched for explicit repair')
+
+  // (c) repair path: a valid state file restores dispatch (fresh attempt = 1,
+  // distinct identity), then the anchored PASS binds.
+  writeFileSync(stateFile, JSON.stringify({ attempts: 0 }))
+  const res = await mk().tick()
+  assert.equal(res.delivered, 1)
+  assert.equal(invokerCalls, 1)
+  await assembly.history.ensureLoaded()
+  assert.equal(assembly.history.queryRuns({ jobId: 'rv-job' }).runs[0].result_status, 'PASS')
 })
