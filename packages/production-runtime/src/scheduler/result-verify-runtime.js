@@ -75,7 +75,7 @@
  *    fence/auto-reconcile authority, not to business verification).
  */
 
-import { readFileSync, writeFileSync, mkdirSync, renameSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, renameSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { createHash } from 'node:crypto'
 import { OwnerLock } from '../../../scheduler/src/store/lock.js'
@@ -110,14 +110,37 @@ export function createResultVerifyRuntime({
   const statePath = (runKey) => join(runsDir, `${fileKey(runKey)}.json`)
   const claimPath = (runKey) => join(claimsDir, `${fileKey(runKey)}.lock`)
 
+  /**
+   * Per-run attempt state, tri-state (Owner blocker counter-example ②): a
+   * MISSING file is legitimately fresh; an UNREADABLE or SCHEMA-CORRUPT file
+   * is NEVER reset to a fresh attempt — the run is skipped loud for this
+   * tick and the corruption is surfaced for explicit repair.
+   */
   function loadState(runKey) {
+    let raw
     try {
-      const s = JSON.parse(readFileSync(statePath(runKey), 'utf8'))
-      return (s !== null && typeof s === 'object' && Number.isSafeInteger(s.attempts)) ? s : null
-    } catch { return null }
+      raw = readFileSync(statePath(runKey), 'utf8')
+    } catch (e) {
+      if (e?.code === 'ENOENT') return { state: 'fresh', data: { attempts: 0 } }
+      return { state: 'unreadable', error: String(e?.message ?? e).slice(0, 120) }
+    }
+    try {
+      const s = JSON.parse(raw)
+      if (s !== null && typeof s === 'object' && Number.isSafeInteger(s.attempts) && s.attempts >= 0) {
+        return { state: 'ok', data: s }
+      }
+      return { state: 'corrupt', error: 'schema: attempts not a non-negative integer' }
+    } catch {
+      return { state: 'corrupt', error: 'parse' }
+    }
   }
 
-  /** Atomic per-run state write (tmp + rename): no torn state survives a crash. */
+  /**
+   * Atomic per-run state write (tmp + rename). Returns TRUE only when the
+   * state is durably on disk — the caller MUST NOT dispatch a verify turn
+   * on a failed pre-dispatch persist (Owner blocker counter-example ②: the
+   * attempt identity is consumed durably BEFORE dispatch, or not at all).
+   */
   function persistState(runKey, state) {
     try {
       mkdirSync(runsDir, { recursive: true })
@@ -125,10 +148,10 @@ export function createResultVerifyRuntime({
       const tmp = `${p}.${process.pid}.tmp`
       writeFileSync(tmp, JSON.stringify(state))
       renameSync(tmp, p)
+      return true
     } catch (e) {
-      // Evidence-only failure: the durable verdict lives in history; a lost
-      // state file only costs pacing precision, never responsibility.
       log.error?.(`[result-verify] state persist failed for ${runKey}: ${String(e?.message ?? e).slice(0, 120)}`)
+      return false
     }
   }
 
@@ -170,15 +193,36 @@ export function createResultVerifyRuntime({
   }
 
   /**
-   * M1 server-side evidence gate. Only the run's own server-written record
-   * resolves an anchor: identity must be the exact run under verification,
-   * matched against a FRESH month-partition re-read (not the scan snapshot),
-   * with outcome 'succeeded'. Everything else is unproven (fail-closed).
+   * M1 server-side evidence gate. Two independent fail-closed conditions
+   * (Owner blocker counter-examples):
+   *  ① CLAIMED PRODUCTS must exist: a report that references business
+   *     artifacts (`result.artifacts`) is checked server-side — any claimed
+   *     artifact that is missing makes the report unbindable, no matter how
+   *     correct the identity anchor or legal the PASS JSON (existence of the
+     *     anchor proves the RUN succeeded, not that its product survived).
+   *  ② IDENTITY ANCHOR must resolve: only the run's own server-written
+   *     record resolves — identity must be the exact run under verification,
+   *     matched against a FRESH month-partition re-read (not the scan
+   *     snapshot), with outcome 'succeeded'. Everything else is unproven.
    */
   function evaluateVerdict(outcome, rec) {
     const result = outcome?.result
     if (result === undefined) return { bindable: false, reason: 'no_block' }
     if (typeof result?.final_status !== 'string') return { bindable: false, reason: 'no_final_status' }
+    // ① claimed products: every reference must exist server-side (fail closed
+    // on missing, malformed or unverifiable references — a report the server
+    // cannot fully cross-check never binds).
+    const artifacts = Array.isArray(result.artifacts) ? result.artifacts : []
+    for (const a of artifacts) {
+      const p = typeof a === 'string' ? a : (a !== null && typeof a === 'object' && typeof a.path === 'string' && a.path !== '' ? a.path : null)
+      if (p === null) {
+        return { bindable: false, reason: 'invalid_artifact_reference', reported: { finalStatus: result.final_status } }
+      }
+      if (!existsSync(p)) {
+        return { bindable: false, reason: 'claimed_artifact_missing', reported: { finalStatus: result.final_status, missingArtifact: p } }
+      }
+    }
+    // ② identity anchor
     const anchors = Array.isArray(result.evidence) ? result.evidence : []
     let resolved = 0
     for (const a of anchors) {
@@ -231,6 +275,8 @@ export function createResultVerifyRuntime({
     let delivered = 0
     let scopeExcluded = 0
     let skippedBusy = 0
+    let stateCorrupt = 0
+    let persistBlocked = 0
     for (const rec of unverified) {
       if (delivered >= MAX_VERIFY_TURNS_PER_TICK) break
       const jobId = rec.job_id
@@ -244,10 +290,19 @@ export function createResultVerifyRuntime({
         continue
       }
       // Pacing pre-check outside the claim (cheap); re-checked under the claim.
-      const pre = loadState(runKey) ?? { attempts: 0 }
-      if (pre.verdict !== undefined) continue
-      const preDelay = Math.min(verifyRetryBaseMs * 2 ** ((pre.attempts || 1) - 1), verifyRetryCapMs)
-      if (pre.attempts > 0 && nowMs() - pre.atMs < preDelay) continue
+      // Counter-example ②: an UNREADABLE or CORRUPT state file is never reset
+      // to a fresh attempt — the run is skipped loud (stays in the scan set)
+      // until the corruption is explicitly repaired.
+      const pre = loadState(runKey)
+      if (pre.state === 'corrupt' || pre.state === 'unreadable') {
+        stateCorrupt += 1
+        log.error?.(`[result-verify] run ${runKey} attempt state ${pre.state} — skip loud, no dispatch, no reset: ${pre.error ?? ''}`)
+        continue
+      }
+      const preData = pre.data
+      if (preData.verdict !== undefined) continue
+      const preDelay = Math.min(verifyRetryBaseMs * 2 ** ((preData.attempts || 1) - 1), verifyRetryCapMs)
+      if (preData.attempts > 0 && nowMs() - preData.atMs < preDelay) continue
       const job = (Array.isArray(jobs) ? jobs : []).find(j => j.id === jobId)
       if (job?.enabled === false) continue // live definition disabled: the gate holds
       // The definition may already be gone (one-shot deleteAfterRun removes
@@ -271,19 +326,30 @@ export function createResultVerifyRuntime({
         continue
       }
       try {
-        // Re-check under the claim: another writer may have settled or paced
-        // this run between the scan snapshot and the claim acquisition.
-        const fresh = loadState(runKey) ?? { attempts: 0 }
-        if (fresh.verdict !== undefined) continue
-        const delay = Math.min(verifyRetryBaseMs * 2 ** ((fresh.attempts || 1) - 1), verifyRetryCapMs)
-        if (fresh.attempts > 0 && nowMs() - fresh.atMs < delay) continue
-        const attempt = fresh.attempts + 1
+        // Re-check under the claim: another writer may have settled, paced or
+        // corrupted state between the scan snapshot and the claim acquisition.
+        const fresh = loadState(runKey)
+        if (fresh.state === 'corrupt' || fresh.state === 'unreadable') {
+          stateCorrupt += 1
+          log.error?.(`[result-verify] run ${runKey} attempt state ${fresh.state} under claim — skip loud, no dispatch, no reset: ${fresh.error ?? ''}`)
+          continue
+        }
+        const freshData = fresh.data
+        if (freshData.verdict !== undefined) continue
+        const delay = Math.min(verifyRetryBaseMs * 2 ** ((freshData.attempts || 1) - 1), verifyRetryCapMs)
+        if (freshData.attempts > 0 && nowMs() - freshData.atMs < delay) continue
+        const attempt = freshData.attempts + 1
         const requestId = `rv:${runKey}:${attempt}`
         const sessionId = deriveNativeSessionId(requestId)
         // Consume the attempt durably BEFORE dispatching: a crash mid-turn
         // leaves a resumable state and a monotonic identity — never a
-        // duplicate (runKey, attempt) writer pair.
-        persistState(runKey, { attempts: attempt, atMs: nowMs(), requestId, sessionId, status: 'in_flight', runId: rec.run_id ?? null })
+        // duplicate (runKey, attempt) writer pair. Counter-example ②: a
+        // FAILED pre-dispatch persist must NOT dispatch — no durable attempt
+        // identity, no verify turn (the run stays in the scan set).
+        if (!persistState(runKey, { attempts: attempt, atMs: nowMs(), requestId, sessionId, status: 'in_flight', runId: rec.run_id ?? null })) {
+          persistBlocked += 1
+          continue
+        }
         const text = [
           `【结果核验】任务 "${job?.name ?? jobId}" (run ${rec.run_id ?? rec.occurrence_id ?? '?'}) 的业务结果尚未核验。`,
           '请回复该任务的最终结果，并在回复末尾附 ```scheduler-result 结果块',
@@ -345,7 +411,7 @@ export function createResultVerifyRuntime({
         await lock.release(token)
       }
     }
-    const result = { scanned: unverified.length, delivered, scopeExcluded, skippedBusy }
+    const result = { scanned: unverified.length, delivered, scopeExcluded, skippedBusy, stateCorrupt, persistBlocked }
     log.log?.(`[result-verify] ${JSON.stringify(result)}`)
     return result
   }
