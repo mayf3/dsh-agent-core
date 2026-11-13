@@ -1,0 +1,23 @@
+[
+  {
+    "path": "packages/agent-router/src/process/event-correlation.js",
+    "beforeSHA256": "47693d4d79af4e0643078e4f178bd341457b8418c07892d1a65d846f07af58bc",
+    "afterSHA256": "1e6340b363df6555bd157ec2a8ceaa6d3e08c7fbb045872cedc2e37994e596fa",
+    "sourceCommit": "656367cdfa2d8a8c72e63ab16d1932c895396b2b",
+    "sourceBlob": "68970de38245b0d595a1d581eaacf41d81f9563e"
+  },
+  {
+    "path": "packages/agent-router/src/process/state-machine.js",
+    "beforeSHA256": "6e079adcc807c772e2a360db9c4e4efcd06070397ef196f53f9173ab9b643342",
+    "afterSHA256": "53f02f66ce09da9957373e97148a7a498bb07c8ddef50bc1161f5ea9f7e30ad4",
+    "sourceCommit": "656367cdfa2d8a8c72e63ab16d1932c895396b2b",
+    "sourceBlob": "9310579a21bac2d783edab1b61d18752712d60e7"
+  },
+  {
+    "path": "packages/agent-router/src/process/spawn.js",
+    "beforeSHA256": "add4e95e3318b98f8157c8c2dc3d5e29db219839a2b50484a2f5f3a7a8fc0063",
+    "afterSHA256": "ca97f2c4aa9112e920c21fbff5b60136e9d54de8bbe08d636213428c4fbaa9e9",
+    "sourceCommit": "656367cdfa2d8a8c72e63ab16d1932c895396b2b",
+    "sourceBlob": "3e9fa7c43885db973e653818fa103ad3aca903ae"
+  }
+]

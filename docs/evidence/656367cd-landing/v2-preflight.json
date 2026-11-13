@@ -1,0 +1,16 @@
+{
+  "observedAt": "2026-11-08T23:58:59.775398+00:00",
+  "authorization": "Owner v2 continuation + BRIEF v2",
+  "head": "6ad69d1fa6fa8c7dcfb3b5b61207c7d21a80ecef",
+  "nodeModulesLstat": {
+    "isSymlink": true,
+    "target": "/private/tmp/dsh-ekr-p1-new/node_modules",
+    "targetExists": false,
+    "device": 16777234,
+    "inode": 361742351
+  },
+  "scratch": "/Users/yanfenma/workspace/project/worktrees/ops-656-landing/.build-scratch/656367cd-landing",
+  "productionWrites": 0,
+  "action": "unlinked dangling symlink only; target absent; no target deletion",
+  "nodeModulesLexistsAfter": false
+}

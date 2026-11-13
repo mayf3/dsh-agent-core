@@ -1,0 +1,27 @@
+--- .build-scratch/656367cd-landing/installed/app/packages/agent-router/src/process/spawn.js	2026-11-06 08:12:22
++++ docs/evidence/656367cd-landing/candidate/app/packages/agent-router/src/process/spawn.js	2026-11-09 12:27:36
+@@ -16,7 +16,7 @@
+ 
+ import { cliBin } from '../../../agent-provisioning/src/index.js'
+ import { agentEnv, childSpawnConfig } from './env.js'
+-import { envelopeCarrier } from './state-machine.js'
++import { envelopeCarrier, exactTurnOutcome } from './state-machine.js'
+ import { redactSensitiveText } from './provider-errors.js'
+ 
+ export const spawnMethods = {
+@@ -161,11 +161,11 @@
+       }
+       // 5. C-017 precedence: parsed exact outcome (received before the exit
+       //    callback) wins over child_real_exit.
+-      if (execution.terminalEvent !== null) {
+-        const failed = execution.terminalReason?.kind === 'error'
++      const outcome = execution.terminalEvent === null ? null : exactTurnOutcome(execution.terminalReason)
++      if (outcome !== null) {
+         this.store.settleLate(execution.handle, {
+-          lateOutcome: failed ? 'late_failed' : 'late_completed',
+-          outcomeEvidence: failed ? 'exact_turn_end_failure' : 'exact_turn_end_success',
++          lateOutcome: outcome === 'failed' ? 'late_failed' : 'late_completed',
++          outcomeEvidence: outcome === 'failed' ? 'exact_turn_end_failure' : 'exact_turn_end_success',
+           terminationEvidence: 'child_real_exit',
+           finalAssistantOutput: execution.hasOutput() ? execution.outputSnapshot() : undefined,
+           exitObserved: true,

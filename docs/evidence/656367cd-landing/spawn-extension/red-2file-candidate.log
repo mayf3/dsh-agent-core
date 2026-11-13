@@ -1,0 +1,236 @@
+✔ PROMPT_EVENT_BEFORE_RPC_RESPONSE: pre-response events are replayed on receipt binding (24.645916ms)
+✔ UNRELATED_IDLE_OR_QUEUE_REMOVAL: unrelated evidence never releases the fence; exact failure settles late_failed (75.56675ms)
+✔ PRIOR_TURN_LATE_EVENT_AFTER_NEXT_CALL: duplicate A events during B are excluded; B completes on its own events (8.169292ms)
+✔ B08 replay observes an intervening later turn/start before considering future idle (305.512208ms)
+✔ B08: stale idle before exact terminal cannot close the current turn (9.309584ms)
+✔ ENVELOPE_COMPLETED: stable handle, store query=settled (6.456791ms)
+✔ ENVELOPE_FAILED: structured provider failure with a stable handle (8.1575ms)
+✔ FAILED_EVIDENCE: a failed durable settlement cannot publish terminal proof to the caller (6.49875ms)
+✔ B05 raw session/prompt RPC cannot bypass admission/queue/watermark/fence (1.5155ms)
+✔ ENVELOPE_NOT_ADMITTED: validation fails before reservation, handle=null (5.629667ms)
+✔ ENVELOPE_OUTCOME_UNKNOWN: the envelope always exposes a queryable handle (store=pending) (124.802958ms)
+✔ NON_OUTCOME_DIRECT 0: exact terminal+idle rejects unknown, settles termination only (9.070834ms)
+✔ NON_OUTCOME_DIRECT 1: exact terminal+idle rejects unknown, settles termination only (5.267833ms)
+✔ NON_OUTCOME_DIRECT 2: exact terminal+idle rejects unknown, settles termination only (4.960416ms)
+✔ NON_OUTCOME_DIRECT 3: exact terminal+idle rejects unknown, settles termination only (2.316291ms)
+✔ NON_OUTCOME_DIRECT 4: exact terminal+idle rejects unknown, settles termination only (2.058958ms)
+✔ NON_OUTCOME_DIRECT 5: exact terminal+idle rejects unknown, settles termination only (1.904792ms)
+✔ NON_OUTCOME_DIRECT 6: exact terminal+idle rejects unknown, settles termination only (5.40525ms)
+✔ NON_OUTCOME_DIRECT 7: exact terminal+idle rejects unknown, settles termination only (3.891459ms)
+✔ NON_OUTCOME_DIRECT 8: exact terminal+idle rejects unknown, settles termination only (2.055125ms)
+✔ NON_OUTCOME_DIRECT 9: exact terminal+idle rejects unknown, settles termination only (2.354ms)
+✔ NON_OUTCOME_DIRECT 10: exact terminal+idle rejects unknown, settles termination only (1.242292ms)
+✔ NON_OUTCOME_DIRECT 11: exact terminal+idle rejects unknown, settles termination only (1.483333ms)
+✔ NON_OUTCOME_DIRECT 12: exact terminal+idle rejects unknown, settles termination only (4.482333ms)
+✔ NON_OUTCOME_DIRECT 13: exact terminal+idle rejects unknown, settles termination only (1.353958ms)
+✔ NON_OUTCOME_DIRECT 14: exact terminal+idle rejects unknown, settles termination only (1.040792ms)
+✔ NON_OUTCOME_DELIVER: acceptance remains receipt-only; aborted turn has no successful outcome (1.877459ms)
+✔ NON_OUTCOME_REPLAY: pre-receipt abort+idle settles the original waiter without waiting for its deadline (1.771458ms)
+✔ TURN_TIMEOUT_THEN_LATE_SUCCESS: settlement=late_completed, output available via handle (102.135917ms)
+✔ TURN_TIMEOUT_THEN_LATE_FAILURE: settlement=late_failed, no_output (84.997208ms)
+✔ TURN_TIMEOUT_THEN_CHILD_EXIT_NO_TERMINAL: pending-first order; terminated_without_outcome; fence released (129.103541ms)
+✔ B09 parser receipt/terminal evidence beats exit before the receipt Promise continuation (8.478042ms)
+✔ PARSED_OUTCOME_PRECEDES_CHILD_EXIT: exact turn/end received pre-exit wins over child_real_exit (126.364167ms)
+✔ DUPLICATE_CONFLICTING_LATE_EVIDENCE: state/output unchanged; duplicate + conflict audits (126.653167ms)
+✔ HANDOFF_VISIBLE_BEFORE_RELEASE: reconciliation visible before slot release — never not_found (123.012166ms)
+✔ LATE_OUTPUT_AFTER_GENERATION_EXIT: late_completed output survives graceful real exit, identical on repeat reads (74.047334ms)
+✔ scheduler seam snapshot separates outcome evidence / cancel requested / termination proven (86.602625ms)
+✔ late output remains readable through the reconciliation handle after the generation exited (86.870125ms)
+✔ NON_OUTCOME_LATE {"kind":"aborted","reason":{"kind":"disposed"}}: termination proof never becomes late success (35.91575ms)
+✔ NON_OUTCOME_LATE {"kind":"blocked"}: termination proof never becomes late success (34.33925ms)
+✔ NON_OUTCOME_LATE {"kind":"max-tokens"}: termination proof never becomes late success (34.678167ms)
+✔ NON_OUTCOME_LATE {"kind":"interrupted"}: termination proof never becomes late success (32.520708ms)
+✔ NON_OUTCOME_LATE {"kind":"future-reason"}: termination proof never becomes late success (33.303958ms)
+✔ NON_OUTCOME_LATE null: termination proof never becomes late success (33.1605ms)
+✖ EXIT_REASON {"kind":"aborted","reason":{"kind":"disposed"}}: frozen parser evidence uses exact outcome precedence (2.916292ms)
+✖ EXIT_REASON {"kind":"blocked"}: frozen parser evidence uses exact outcome precedence (6.758709ms)
+✖ EXIT_REASON {"kind":"max-tokens"}: frozen parser evidence uses exact outcome precedence (2.946875ms)
+✖ EXIT_REASON {"kind":"interrupted"}: frozen parser evidence uses exact outcome precedence (1.517083ms)
+✖ EXIT_REASON {"kind":"future-reason"}: frozen parser evidence uses exact outcome precedence (1.939292ms)
+✖ EXIT_REASON undefined: frozen parser evidence uses exact outcome precedence (0.681541ms)
+✖ EXIT_REASON null: frozen parser evidence uses exact outcome precedence (2.502667ms)
+✖ EXIT_REASON "completed": frozen parser evidence uses exact outcome precedence (4.349625ms)
+✔ EXIT_REASON {"kind":"completed"}: frozen parser evidence uses exact outcome precedence (1.713ms)
+✔ EXIT_REASON {"kind":"error","error":{"code":"QUOTA","message":"insufficient_quota"}}: frozen parser evidence uses exact outcome precedence (0.852916ms)
+✖ NON_OUTCOME_CORRELATION: unrelated aborted events and stale idle cannot release the original fence (34.7195ms)
+ℹ tests 55
+ℹ suites 0
+ℹ pass 46
+ℹ fail 9
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1434.566584
+
+✖ failing tests:
+
+test at packages/agent-router/test/process-lifecycle/late-settlement.test.js:309:3
+✖ EXIT_REASON {"kind":"aborted","reason":{"kind":"disposed"}}: frozen parser evidence uses exact outcome precedence (2.916292ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'late_completed'
+  - 'terminated_without_outcome'
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/ops-656-landing/packages/agent-router/test/process-lifecycle/late-settlement.test.js:330:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'late_completed',
+    expected: 'terminated_without_outcome',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/agent-router/test/process-lifecycle/late-settlement.test.js:309:3
+✖ EXIT_REASON {"kind":"blocked"}: frozen parser evidence uses exact outcome precedence (6.758709ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'late_completed'
+  - 'terminated_without_outcome'
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/ops-656-landing/packages/agent-router/test/process-lifecycle/late-settlement.test.js:330:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'late_completed',
+    expected: 'terminated_without_outcome',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/agent-router/test/process-lifecycle/late-settlement.test.js:309:3
+✖ EXIT_REASON {"kind":"max-tokens"}: frozen parser evidence uses exact outcome precedence (2.946875ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'late_completed'
+  - 'terminated_without_outcome'
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/ops-656-landing/packages/agent-router/test/process-lifecycle/late-settlement.test.js:330:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'late_completed',
+    expected: 'terminated_without_outcome',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/agent-router/test/process-lifecycle/late-settlement.test.js:309:3
+✖ EXIT_REASON {"kind":"interrupted"}: frozen parser evidence uses exact outcome precedence (1.517083ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'late_completed'
+  - 'terminated_without_outcome'
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/ops-656-landing/packages/agent-router/test/process-lifecycle/late-settlement.test.js:330:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'late_completed',
+    expected: 'terminated_without_outcome',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/agent-router/test/process-lifecycle/late-settlement.test.js:309:3
+✖ EXIT_REASON {"kind":"future-reason"}: frozen parser evidence uses exact outcome precedence (1.939292ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'late_completed'
+  - 'terminated_without_outcome'
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/ops-656-landing/packages/agent-router/test/process-lifecycle/late-settlement.test.js:330:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'late_completed',
+    expected: 'terminated_without_outcome',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/agent-router/test/process-lifecycle/late-settlement.test.js:309:3
+✖ EXIT_REASON undefined: frozen parser evidence uses exact outcome precedence (0.681541ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'late_completed'
+  - 'terminated_without_outcome'
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/ops-656-landing/packages/agent-router/test/process-lifecycle/late-settlement.test.js:330:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'late_completed',
+    expected: 'terminated_without_outcome',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/agent-router/test/process-lifecycle/late-settlement.test.js:309:3
+✖ EXIT_REASON null: frozen parser evidence uses exact outcome precedence (2.502667ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'late_completed'
+  - 'terminated_without_outcome'
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/ops-656-landing/packages/agent-router/test/process-lifecycle/late-settlement.test.js:330:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'late_completed',
+    expected: 'terminated_without_outcome',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/agent-router/test/process-lifecycle/late-settlement.test.js:309:3
+✖ EXIT_REASON "completed": frozen parser evidence uses exact outcome precedence (4.349625ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'late_completed'
+  - 'terminated_without_outcome'
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/ops-656-landing/packages/agent-router/test/process-lifecycle/late-settlement.test.js:330:12)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'late_completed',
+    expected: 'terminated_without_outcome',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/agent-router/test/process-lifecycle/late-settlement.test.js:338:1
+✖ NON_OUTCOME_CORRELATION: unrelated aborted events and stale idle cannot release the original fence (34.7195ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'late_completed'
+  - 'terminated_without_outcome'
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/worktrees/ops-656-landing/packages/agent-router/test/process-lifecycle/late-settlement.test.js:367:10)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'late_completed',
+    expected: 'terminated_without_outcome',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
