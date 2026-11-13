@@ -27,21 +27,28 @@
  *  (runKey, attempt) identity. The requestId/sessionId identity is derived
  *  from the durable attempt number — restart-stable, monotonic.
  *
- *  B2 — RESULT AUTHENTICITY (#1379 M1: completion verdicts pass a
- *  deterministic server-side gate; the model's reply alone never projects to
- *  business completion). An ingested ```scheduler-result block with a legal
- *  final_status binds as the run's business verdict ONLY when its `evidence`
- *  array carries at least one anchor the SERVER can mechanically resolve:
- *  `{kind:'history_run', run_id|occurrence_id}` — matched against a FRESH
- *  server-side re-read of the run's own monthly projection (the run record
- *  is server-written; the worker cannot fabricate it), identity must be the
- *  exact run under verification, and the record must show outcome
- *  'succeeded'. Any other anchor kind, a mismatched identity, or no anchors
- *  at all → the report is recorded as REPORTED-ONLY in the per-run state and
- *  the run STAYS in the scan set (UNKNOWN/待证 per M1 — the successor is
- *  kept; the next attempt re-asks with the anchor contract). Server-side
+ *  B2 — RESULT AUTHENTICITY, ACCEPTANCE-CONTRACT DRIVEN (#1379 M1: the
+ *  model cannot lower the original acceptance by choosing its own evidence;
+ *  Owner ruling 2026-11-13). A self-reported ```scheduler-result verdict
+ *  binds as the run's business completion ONLY when ALL of:
+ *  (1) the JOB DEFINITION carries a SUPPORTED verification contract —
+ *      authored by the job's owner at definition time, pinned to durable
+ *      business products by exact path + SHA-256 content; a job without
+ *      such a contract has NO supported verification method and its
+ *      self-reported verdicts are recorded REPORTED-ONLY (omitted/emptied
+ *      artifacts, irrelevant ready-made files, content-nonconforming files
+ *      and anchor-only PASS JSONs are all equally unverified);
+ *  (2) every contract artifact EXISTS and HASH-MATCHES its pinned SHA-256
+ *      server-side (missing, replaced or content-nonconforming products
+ *      fail the verdict);
+ *  (3) the report carries a `history_run` identity anchor resolved against
+ *      a FRESH month-partition re-read of the exact run (server-written;
+ *      outcome 'succeeded').
+ *  The report's own evidence/artifact choices are recorded as report
+ *  metadata only. Unbound reports stay in the scan set (UNKNOWN/待证 per
+ *  M1 — the successor is kept; the next attempt re-asks). Server-side
  *  ingestion rejections (result_error_code, closed set) are still bound
- *  durably as error facts — they are the seam's judgment, not the worker's
+ *  durably as error facts — the seam's judgment, not the worker's
  *  self-report. Scope is separated from subject capability (M1: "Scope与主体
  *  能力分开"): the verify turn keeps the agent's own enforced trusted
  *  nativeToolPolicy (per-agent, route-bound, mechanically enforced on every
@@ -193,36 +200,45 @@ export function createResultVerifyRuntime({
   }
 
   /**
-   * M1 server-side evidence gate. Two independent fail-closed conditions
-   * (Owner blocker counter-examples):
-   *  ① CLAIMED PRODUCTS must exist: a report that references business
-   *     artifacts (`result.artifacts`) is checked server-side — any claimed
-   *     artifact that is missing makes the report unbindable, no matter how
-   *     correct the identity anchor or legal the PASS JSON (existence of the
-     *     anchor proves the RUN succeeded, not that its product survived).
-   *  ② IDENTITY ANCHOR must resolve: only the run's own server-written
-   *     record resolves — identity must be the exact run under verification,
-   *     matched against a FRESH month-partition re-read (not the scan
-   *     snapshot), with outcome 'succeeded'. Everything else is unproven.
+   * M1 server-side evidence gate — ACCEPTANCE-CONTRACT DRIVEN (Owner
+   * 2026-11-13 ruling: the model cannot lower the original acceptance by
+   * choosing its own evidence). Binding requires, in order:
+   *  ① A SUPPORTED VERIFICATION CONTRACT: the job definition's authored
+   *     `verification` contract (durable business products pinned by exact
+   *     path + SHA-256 content). A job WITHOUT such a contract has NO
+   *     supported verification method → its self-reported verdicts are
+   *     REPORTED-ONLY (never bound) — omitted/emptied artifacts, irrelevant
+   *     ready-made files, content-nonconforming files and anchor-only PASS
+   *     JSONs are all equally unverified.
+   *  ② CONTRACT PRODUCTS verified server-side: every contract artifact must
+   *     exist AND hash-match its pinned SHA-256 (missing, replaced or
+   *     content-nonconforming products fail the verdict).
+   *  ③ IDENTITY ANCHOR resolved: the run's own server-written record —
+   *     exact run identity, FRESH month-partition re-read, outcome
+   *     'succeeded'.
+   * The report's own `result.artifacts`/`evidence` choices are recorded as
+   * report metadata only — they never raise or lower the acceptance.
    */
-  function evaluateVerdict(outcome, rec) {
+  function evaluateVerdict(outcome, rec, job) {
     const result = outcome?.result
     if (result === undefined) return { bindable: false, reason: 'no_block' }
     if (typeof result?.final_status !== 'string') return { bindable: false, reason: 'no_final_status' }
-    // ① claimed products: every reference must exist server-side (fail closed
-    // on missing, malformed or unverifiable references — a report the server
-    // cannot fully cross-check never binds).
-    const artifacts = Array.isArray(result.artifacts) ? result.artifacts : []
-    for (const a of artifacts) {
-      const p = typeof a === 'string' ? a : (a !== null && typeof a === 'object' && typeof a.path === 'string' && a.path !== '' ? a.path : null)
-      if (p === null) {
-        return { bindable: false, reason: 'invalid_artifact_reference', reported: { finalStatus: result.final_status } }
+    // ① supported verification contract
+    const contract = job?.verification
+    if (!contract || !Array.isArray(contract.artifacts) || contract.artifacts.length === 0) {
+      return { bindable: false, reason: 'no_supported_verifier', reported: { finalStatus: result.final_status } }
+    }
+    // ② contract products: server-side existence + content check
+    for (const a of contract.artifacts) {
+      if (!existsSync(a.path)) {
+        return { bindable: false, reason: 'contract_artifact_missing', reported: { finalStatus: result.final_status, contractArtifact: a.path } }
       }
-      if (!existsSync(p)) {
-        return { bindable: false, reason: 'claimed_artifact_missing', reported: { finalStatus: result.final_status, missingArtifact: p } }
+      const actual = createHash('sha256').update(readFileSync(a.path)).digest('hex')
+      if (actual !== a.sha256) {
+        return { bindable: false, reason: 'contract_artifact_content_mismatch', reported: { finalStatus: result.final_status, contractArtifact: a.path } }
       }
     }
-    // ② identity anchor
+    // ③ identity anchor
     const anchors = Array.isArray(result.evidence) ? result.evidence : []
     let resolved = 0
     for (const a of anchors) {
@@ -304,12 +320,18 @@ export function createResultVerifyRuntime({
       const preDelay = Math.min(verifyRetryBaseMs * 2 ** ((preData.attempts || 1) - 1), verifyRetryCapMs)
       if (preData.attempts > 0 && nowMs() - preData.atMs < preDelay) continue
       const job = (Array.isArray(jobs) ? jobs : []).find(j => j.id === jobId)
-      if (job?.enabled === false) continue // live definition disabled: the gate holds
+      // A live DISABLED definition holds the gate (an operator disabled it —
+      // do not verify). EXCEPTION: a job with an authored `verification`
+      // contract is exempt — the engine auto-disables one-shot ('at')
+      // schedules after their own successful run (applyJobCompletion), and
+      // the authored contract is exactly the explicit mandate that the
+      // result MUST be verified; the auto-disable must never strand it.
+      if (job?.enabled === false && !job?.verification) continue // live definition disabled: the gate holds
       // The definition may already be gone (one-shot deleteAfterRun removes
       // it post-run) — the responsibility lives on the RUN record, and
       // rec.agent_id carries the responsible agent.
       const agentId = rec.agent_id ?? job?.agent_id
-      if (!agentId) continue
+      if (!agentId) { log.log?.('[dbg] no agent skip'); continue }
 
       // B1: the per-run OwnerLock is the cross-process/cross-tick claim —
       // one valid verify writer per original run, SIGKILL-safe (mechanical
@@ -378,7 +400,7 @@ export function createResultVerifyRuntime({
           delivered += 1
           continue
         }
-        const gate = evaluateVerdict(outcome, rec)
+        const gate = evaluateVerdict(outcome, rec, job)
         const verify = { requestId, sessionId, attempt, turnStatus: outcome?.status ?? null }
         if (gate.bindable) {
           // B2: the verdict passed the deterministic server-side gate — bind

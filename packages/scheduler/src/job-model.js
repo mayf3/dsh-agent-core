@@ -192,6 +192,27 @@ export function normalizeJob(input, { nowMs = Date.now(), id, createdAtMs = nowM
   if (input.state && typeof input.state === 'object') {
     job.state = normalizeState(input.state)
   }
+  // Optional per-job business acceptance contract (#1379 E5 M1: the verdict
+  // gate reuses the JOB'S OWN authored contract — never model-selected
+  // evidence). One supported verification shape: durable business products
+  // pinned by exact path + SHA-256 content. Absence of this field means the
+  // job has NO supported verification method → its self-reported verdicts
+  // are recorded reported-only (never bound as business completion).
+  if (input.verification !== undefined) {
+    const v = input.verification
+    if (!v || typeof v !== 'object' || Array.isArray(v)) {
+      throw new TypeError('job.verification must be an object')
+    }
+    const artifacts = Array.isArray(v.artifacts) ? v.artifacts : []
+    const normalized = artifacts.map((a) => {
+      if (!a || typeof a !== 'object' || typeof a.path !== 'string' || a.path.trim() === ''
+          || typeof a.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(a.sha256)) {
+        throw new TypeError('job.verification.artifacts entries must be {path:string, sha256:64-hex}')
+      }
+      return { path: a.path, sha256: a.sha256 }
+    })
+    job.verification = { artifacts: normalized }
+  }
   // Legacy session selection fields (sessionTarget/sessionKey) are migration
   // INPUT only — stripped here, never persisted, never read by admission
   // (C-031 / D-007 §3.2).
