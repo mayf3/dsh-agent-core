@@ -1,0 +1,145 @@
+{
+  "at": "2026-11-08T17:32:12.034984+00:00",
+  "external_files": [
+    {
+      "path": "/usr/local/libexec/agent-core/harness/packages/core/agent/lib/types/inbox.js",
+      "sha256": "2d2d01808c45075f4f1a6dfec9fdae75a37699fac86a52d90c7ff692982b2d37",
+      "bytes": 8386,
+      "mode": "0o644",
+      "mtime_ns": 1794137722738619392,
+      "ctime_ns": 1794137722809229783,
+      "stable_during_read": true
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/harness/packages/core/agent/lib/index.js",
+      "sha256": "6faef8d4b5378b68ce54ab139850fd45f41d6d3364ce43010806c5ea2d1fcb80",
+      "bytes": 31932,
+      "mode": "0o644",
+      "mtime_ns": 1794137722773610193,
+      "ctime_ns": 1794137722809309866,
+      "stable_during_read": true
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/harness/packages/core/agent/package.json",
+      "sha256": "5a1d2dee6565165316ac527a06b5e80bae3faa9d3d4f3281705899aa51460d00",
+      "bytes": 1764,
+      "mode": "0o644",
+      "mtime_ns": 1788082030000000000,
+      "ctime_ns": 1793609827215517950,
+      "stable_during_read": true
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+      "sha256": "c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b",
+      "bytes": 52160,
+      "mode": "0o755",
+      "mtime_ns": 1793819178905457392,
+      "ctime_ns": 1793819334851037081,
+      "stable_during_read": true
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core.runtime.plist",
+      "sha256": "0e2908a0672bff8afe1436e439141228a9a53096a95fbd46076df3970fe0a3c9",
+      "bytes": 3890,
+      "mode": "0o644",
+      "mtime_ns": 1793924167798538668,
+      "ctime_ns": 1793924167798538668,
+      "stable_during_read": true
+    }
+  ],
+  "harness_link": {
+    "path": "/usr/local/libexec/agent-core/app/node_modules/@deepseek-ai/dsh-agent",
+    "literal": "../../../../packages/core/agent",
+    "resolved": "/usr/local/libexec/agent-core/harness/packages/core/agent"
+  },
+  "protected": {
+    "argv": [
+      "/usr/bin/sudo",
+      "-n",
+      "-u",
+      "authsvc",
+      "/usr/bin/python3",
+      "-B",
+      "-c",
+      "\nimport datetime as dt,hashlib,json\nfrom pathlib import Path\npaths=['/Users/authsvc/.agent-core/control/turn-recovery-v3.json','/Users/authsvc/.agent-core/control/turn-recovery-v3.json.faults.json','/Users/authsvc/.agent-core/control/turn-recovery-v3.json.abandonment-declarations.json']\nout=[]\nfor v in paths:\n p=Path(v);a=p.lstat();raw=p.read_bytes();b=p.lstat();d=json.loads(raw)\n e={'path':v,'sha256':hashlib.sha256(raw).hexdigest(),'stable_during_read':(a.st_ino,a.st_mtime_ns,a.st_ctime_ns,a.st_size)==(b.st_ino,b.st_mtime_ns,b.st_ctime_ns,b.st_size)}\n if p.name=='turn-recovery-v3.json':\n  targets={'turn:a7e296e6-22cd-4205-a366-2e915fb7f22e:a32:g9:s16','turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a11:g23:s76','turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a54:g23:s43','turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a40:g84:s397','turn:60129522-4196-44bb-a644-52a255dde15d:a2:g70:s3581'}\n  e['targets']=[{'handle':r.get('handle'),'adminAbandonment_present':r.get('adminAbandonment') is not None,'ownerRiskAcceptanceAudit_present':any(x.get('kind')=='owner_risk_acceptance_unproven_termination' for x in r.get('audit',[])),'epoch_is_member':r.get('runtimeEpoch') in d.get('runtimeEpochs',[])} for r in d.get('records',[]) if r.get('handle') in targets]\n  e['all_record_epochs_members']=all(r.get('runtimeEpoch') in d.get('runtimeEpochs',[]) for r in d.get('records',[]))\n elif p.name.endswith('.faults.json'):\n  e.update(top_level_keys=sorted(d.keys()),version=d.get('version'),generation_key_count=len(d.get('generationFaults',d.get('faults',{}))))\n else:\n  e.update(version=d.get('version'),declaration_count=len(d.get('declarations',[])))\n out.append(e)\nprint(json.dumps({'at':dt.datetime.now(dt.timezone.utc).isoformat(),'files':out}))\n"
+    ],
+    "rc": 0,
+    "stderr": "",
+    "summary": {
+      "at": "2026-11-08T17:32:12.026783+00:00",
+      "files": [
+        {
+          "path": "/Users/authsvc/.agent-core/control/turn-recovery-v3.json",
+          "sha256": "82ed245c5cce9ed60479d9576ae20a1feabd7031e0002b271f1e01f8000be317",
+          "stable_during_read": true,
+          "targets": [
+            {
+              "handle": "turn:a7e296e6-22cd-4205-a366-2e915fb7f22e:a32:g9:s16",
+              "adminAbandonment_present": false,
+              "ownerRiskAcceptanceAudit_present": false,
+              "epoch_is_member": true
+            },
+            {
+              "handle": "turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a11:g23:s76",
+              "adminAbandonment_present": true,
+              "ownerRiskAcceptanceAudit_present": false,
+              "epoch_is_member": true
+            },
+            {
+              "handle": "turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a54:g23:s43",
+              "adminAbandonment_present": true,
+              "ownerRiskAcceptanceAudit_present": false,
+              "epoch_is_member": true
+            },
+            {
+              "handle": "turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a40:g84:s397",
+              "adminAbandonment_present": true,
+              "ownerRiskAcceptanceAudit_present": false,
+              "epoch_is_member": true
+            },
+            {
+              "handle": "turn:60129522-4196-44bb-a644-52a255dde15d:a2:g70:s3581",
+              "adminAbandonment_present": true,
+              "ownerRiskAcceptanceAudit_present": true,
+              "epoch_is_member": true
+            }
+          ],
+          "all_record_epochs_members": true
+        },
+        {
+          "path": "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.faults.json",
+          "sha256": "ed2090b5bb460708992d2caa2bec4ee8ef6300f8c9eab69d5f3df5ca8ccb5c03",
+          "stable_during_read": true,
+          "top_level_keys": [
+            "agt_agent-dev-engineer:84",
+            "agt_lobster-agent:23",
+            "agt_needs-radar-agent:23",
+            "agt_stock_agent:9"
+          ],
+          "version": null,
+          "generation_key_count": 0
+        },
+        {
+          "path": "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.abandonment-declarations.json",
+          "sha256": "f18bca66e5ddf19897e6e1299ae42614daf30e218347e298021ccae67b5926e4",
+          "stable_during_read": true,
+          "version": 3,
+          "declaration_count": 18
+        }
+      ]
+    }
+  },
+  "process": {
+    "argv": [
+      "/bin/ps",
+      "-p",
+      "22118",
+      "-o",
+      "pid=,ppid=,user=,lstart=,args="
+    ],
+    "rc": 0,
+    "stdout": "22118     1 authsvc Sun Nov  8 16:13:26 2026     /usr/local/libexec/agent-core/node-runtime/bin/node /usr/local/libexec/agent-core/app/scripts/production-runtime.mjs --root /Users/authsvc/.agent-core --catchup 0\n",
+    "stderr": ""
+  },
+  "limits": "Each file independently stat-stable; no cross-file atomic snapshot, no constructor or current admission invocation. Plist only digest, no secret environment retained."
+}
