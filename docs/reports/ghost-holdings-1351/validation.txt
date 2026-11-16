@@ -1,0 +1,20 @@
+Attempt 1: one-off document-check harness, rc=1.
+frontmatter JSON Schema + proposed/none/production-none + no supersession: PASS rc=0
+required 13 sections, 5 unique Contracts, 7 Acceptance rows, nonempty six columns, bidirectional coverage 5/5: PASS rc=0
+Then json.dumps([fm]) raised TypeError: Object of type date is not JSON serializable; field date parsed by yaml.safe_load.
+Lifecycle/provenance/link/integrity checks were NOT_EXECUTED in attempt 1.
+Disposition: check harness serialization error, not a missing required source or failed Spec predicate; YAML date serialized with default=str in attempt 2. No product/Spec meaning changed.
+
+Attempt 2: remaining checks (one-off Python harness).
+validate_spec_transition.py (affected authority only, empty base -> new proposed Spec):
+Spec transition is a valid whole-authority lifecycle state
+rc=0
+original Brief/STOPPED bytes preserved; snapshot/issue/source-authority hashes: PASS rc=0
+new authored Markdown local links: PASS rc=0
+python3 .agents/tools/verify_governance.py --target . --require-accepted:
+vendored governance bytes match governance.lock.json and adoption is accepted
+rc=0
+Product acceptance / runtime / production / source implementation: NOT_EXECUTED; production writes=0
+git diff --cached --check: PASS rc=0
+Staged scope: seven new docs files only; no product/governance source delta (git diff --cached --quiet -- .agents packages scripts config migrations rc=0).
+Generated Python import cache removed; original three untracked root inputs retained.
