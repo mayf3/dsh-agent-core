@@ -17,3 +17,9 @@ not activate that permission or authorize product implementation.
 Do not treat code, tests, runtime state, chat history, the newest-looking document, or an unmerged accepted-looking branch as higher authority than the repository's accepted local authorities.
 
 When authority conflicts or drift are found, stop the dependent work and report the concrete conflict; unrelated authorized work may continue. Do not silently choose a side or rewrite accepted meaning under the same stable ID.
+
+For the Owner-requested Definition-first / unattended-system task, consult
+[the bounded Core adoption plan](docs/reports/DEFINITION_FIRST_ZERO_OPS_ADOPTION_PLAN_20261107.md).
+It is design/implementation guidance, not an accepted Spec or production grant.
+Keep reusable role principles here or in the appropriate workspace guidance;
+put business-node procedures and acceptance in the owning Definition.
