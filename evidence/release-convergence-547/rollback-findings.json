@@ -1,0 +1,618 @@
+{
+  "schema_version": 2,
+  "at": "2026-11-08T17:32:21.329716+00:00",
+  "scope": "Read-only installed bytes and bounded backup-family inventory; no constructors, app imports, production writes or rollback executed",
+  "execution_route": {
+    "authority_action": "REUSE",
+    "plan_level": "BRIEF",
+    "assurance_level": "DURABLE",
+    "operation_allowed": "READ_ONLY_ONLY"
+  },
+  "governing_authority": {
+    "spec": "docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V4.md",
+    "contracts": [
+      "C-018",
+      "C-019",
+      "CLAUSE-PROC-BOUNDED",
+      "12.2"
+    ],
+    "rollback_rule": "Every durable unresolved operation settled OR rollback reader can read and enforce V3 fences; code ignoring unresolved fences forbidden"
+  },
+  "fresh_persistence_binding": {
+    "source": "evidence/release-convergence-547/protected-summary.json",
+    "source_sha256": "806235345d6c90bc4357673f945d0b0e1c7ec377632a5eddda99893203d77688",
+    "capture_at": "2026-11-08T17:30:42.934650+00:00",
+    "active_file_sha256": "82ed245c5cce9ed60479d9576ae20a1feabd7031e0002b271f1e01f8000be317",
+    "version": 3,
+    "runtimeEpoch": "91832879-e22d-4700-89ad-55291839ded7",
+    "runtimeEpoch_count": 256,
+    "runtimeEpochs_unique": true,
+    "current_epoch_retained": true,
+    "target_epochs_retained": true,
+    "record_count": 5339,
+    "blocked_count": 6,
+    "target_count": 5,
+    "legacy_target_count": 4,
+    "ordinary_target_count": 1,
+    "cross_file_atomic_snapshot": false,
+    "single_file_stat_stable": true,
+    "supplement_source": "evidence/release-convergence-547/supplement.json",
+    "supplement_source_sha256": "5db75899669664f4e9520a31992dd510b00a147b2d3808ea722c7c0334f7ae35",
+    "supplement_at": "2026-11-08T17:32:12.026783+00:00",
+    "supplement_same_turn_store_hash": true,
+    "all_record_epochs_are_members": true
+  },
+  "current_target_identity": [
+    {
+      "handle": "turn:a7e296e6-22cd-4205-a366-2e915fb7f22e:a32:g9:s16",
+      "agentId": "agt_stock_agent",
+      "processGeneration": 9,
+      "runtimeEpoch": "a7e296e6-22cd-4205-a366-2e915fb7f22e",
+      "state": "blocked",
+      "queryState": "pending",
+      "initialOutcome": "outcome_unknown",
+      "fenceState": "active",
+      "failureReason": "runtime_restart_ownership_unavailable",
+      "exitObservedAt": null,
+      "terminationEvidence": null,
+      "settlementResult": null,
+      "callerCorrelation_present": true,
+      "adminAbandonment_present": false,
+      "ownerRiskAcceptanceAudit_present": false,
+      "epoch_is_member": true
+    },
+    {
+      "handle": "turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a11:g23:s76",
+      "agentId": "agt_needs-radar-agent",
+      "processGeneration": 23,
+      "runtimeEpoch": "74a5adf3-2701-435e-8927-7a56a9530d2f",
+      "state": "blocked",
+      "queryState": "pending",
+      "initialOutcome": "outcome_unknown",
+      "fenceState": "cleared",
+      "failureReason": "runtime_restart_ownership_unavailable",
+      "exitObservedAt": null,
+      "terminationEvidence": null,
+      "settlementResult": null,
+      "callerCorrelation_present": true,
+      "adminAbandonment_present": true,
+      "ownerRiskAcceptanceAudit_present": false,
+      "epoch_is_member": true
+    },
+    {
+      "handle": "turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a54:g23:s43",
+      "agentId": "agt_lobster-agent",
+      "processGeneration": 23,
+      "runtimeEpoch": "74a5adf3-2701-435e-8927-7a56a9530d2f",
+      "state": "blocked",
+      "queryState": "pending",
+      "initialOutcome": "outcome_unknown",
+      "fenceState": "cleared",
+      "failureReason": "runtime_restart_ownership_unavailable",
+      "exitObservedAt": null,
+      "terminationEvidence": null,
+      "settlementResult": null,
+      "callerCorrelation_present": true,
+      "adminAbandonment_present": true,
+      "ownerRiskAcceptanceAudit_present": false,
+      "epoch_is_member": true
+    },
+    {
+      "handle": "turn:74a5adf3-2701-435e-8927-7a56a9530d2f:a40:g84:s397",
+      "agentId": "agt_agent-dev-engineer",
+      "processGeneration": 84,
+      "runtimeEpoch": "74a5adf3-2701-435e-8927-7a56a9530d2f",
+      "state": "blocked",
+      "queryState": "pending",
+      "initialOutcome": "outcome_unknown",
+      "fenceState": "cleared",
+      "failureReason": "runtime_restart_ownership_unavailable",
+      "exitObservedAt": null,
+      "terminationEvidence": null,
+      "settlementResult": null,
+      "callerCorrelation_present": false,
+      "adminAbandonment_present": true,
+      "ownerRiskAcceptanceAudit_present": false,
+      "epoch_is_member": true
+    },
+    {
+      "handle": "turn:60129522-4196-44bb-a644-52a255dde15d:a2:g70:s3581",
+      "agentId": "agt_hr-agent",
+      "processGeneration": 70,
+      "runtimeEpoch": "60129522-4196-44bb-a644-52a255dde15d",
+      "state": "blocked",
+      "queryState": "pending",
+      "initialOutcome": "outcome_unknown",
+      "fenceState": "cleared",
+      "failureReason": "runtime_restart_ownership_unavailable",
+      "exitObservedAt": null,
+      "terminationEvidence": null,
+      "settlementResult": null,
+      "callerCorrelation_present": true,
+      "adminAbandonment_present": true,
+      "ownerRiskAcceptanceAudit_present": true,
+      "epoch_is_member": true
+    }
+  ],
+  "narrow_tolerance_basis": {
+    "report": "D-STORE-QA-547.md",
+    "reader_commit": "95a8e1cb512fc99dc018209d837250dd51b4d08f",
+    "snapshot_sha256": "ce231b88d6a5cca631ad074523aa493e328846cdc66587075733d35d22a0a243",
+    "assertions": 141,
+    "assertions_pass": 141,
+    "legacy_accepted_and_blocked": 4,
+    "ordinary_accepted_and_blocked": 1,
+    "malformed_neighbor_rejections": 28,
+    "available_correlation_no_replay": 4,
+    "missing_correlation_agent": "agt_agent-dev-engineer",
+    "runtime_epoch_behavior": "Native scratch constructor used a new UUID, retained all referenced epochs and compacted one unreferenced historical epoch; count remained256",
+    "executed_evidence": [
+      "docs/evidence/h547-store-diag/qa-v5.stdout.json",
+      "docs/evidence/h547-store-diag/qa-run-v5-receipt.json",
+      "docs/evidence/h547-store-diag/postrun-v5.json",
+      "docs/evidence/h547-store-diag/independent-review-v5.md"
+    ],
+    "limitation": "Prior fixed95 snapshot-only mechanism QA; not current full-store constructor/runtime proof; current GapB admission projection differs"
+  },
+  "old_reader_rejection": {
+    "source_path": "packages/agent-router/src/reconciliation/durable-file.js",
+    "source_sha256": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+    "source_lines": [
+      210,
+      211,
+      213,
+      217,
+      224
+    ],
+    "reason": "Each of four current legacy tuples has queryState=pending/state=blocked/fenceState=cleared: old invariant rejects pending+cleared, cleared+not-settled, and blocked+not-active. Stock active ordinary blocker does not require this exception. Version3 and epoch-cap256 compatibility cannot override record rejection.",
+    "support": "Fresh exact target metadata + installed backup hashes + exact393 source; source-level unavoidable rejection; no new constructor execution",
+    "prior_exact393_execution": {
+      "receipt": "/Users/Shared/r129d-rollback-20261108/DEPLOY-RECEIPT.md",
+      "receipt_sha256": "e24948c9c4bb1b4de24b496d92c057bace0f7bb2ef3c8d7c92b2bfd1cfdfb2c2",
+      "section": 7,
+      "old_original_result": "LOAD_FAIL: durable recovery record state invariants are invalid",
+      "old_edited_copy_result": "LOAD_OK records=5321",
+      "limitation": "Attributable historical receipt content only; original snapshot differs from current. Edited four-fence copy must not be promoted to lawful current rollback."
+    }
+  },
+  "exact393_selected_file_sha256": {
+    "durable-file.js": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+    "state-machine.js": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+    "query.js": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+    "admin-abandonment.js": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+    "capacity.js": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+    "authority-capacity.js": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+    "store.js": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+    "ingress-correlation.js": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca"
+  },
+  "exact081_selected_file_sha256": {
+    "durable-file.js": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c",
+    "state-machine.js": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f",
+    "query.js": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63",
+    "admin-abandonment.js": "62237fb500694f95d894f0f75516ee97fee05cd961971156783120bcbe059710",
+    "capacity.js": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+    "authority-capacity.js": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+    "store.js": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+    "ingress-correlation.js": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca"
+  },
+  "installed_selected_file_sha256": {
+    "durable-file.js": "db854ee6061c7f8a56d48f686905d667353c9930bfcd64c95464752075542a1c",
+    "state-machine.js": "516abc6eb5176d606b2673ad8b5d50564b7f9fc344261b370809a6d84e16fb3f",
+    "query.js": "3725875b5df2d02099b4bb766a92679aa770d946012a10f1a1c325f0a111ae63",
+    "admin-abandonment.js": "95172846f40ec0589f3a10ffcc350e3eda5d05f0e7f396d0c3d3570c14e8e19e",
+    "capacity.js": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+    "authority-capacity.js": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+    "store.js": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+    "ingress-correlation.js": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca"
+  },
+  "backup_inventory": [
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261105-062306",
+      "source_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "main_repo_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "provenance_sha256": "2102d4b2deab74caf269839a4f64c912cde1a05f2b67d2a765a22499a69bdd0b",
+      "reader_file_sha256": {
+        "durable-file.js": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+        "state-machine.js": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+        "query.js": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+        "admin-abandonment.js": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+        "capacity.js": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+        "authority-capacity.js": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+        "store.js": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+        "ingress-correlation.js": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca"
+      },
+      "eight_selected_files_equal_exact393": true,
+      "store_version": 3,
+      "max_runtime_epochs": 256,
+      "legacy_tolerance": false,
+      "current_store_compatibility": "NO_SOURCE_PROVEN_REJECTION",
+      "executed_current_store_constructor": false,
+      "full_backup_integrity": "NOT_VERIFIED"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261105-063009",
+      "source_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "main_repo_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "provenance_sha256": "2102d4b2deab74caf269839a4f64c912cde1a05f2b67d2a765a22499a69bdd0b",
+      "reader_file_sha256": {
+        "durable-file.js": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+        "state-machine.js": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+        "query.js": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+        "admin-abandonment.js": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+        "capacity.js": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+        "authority-capacity.js": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+        "store.js": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+        "ingress-correlation.js": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca"
+      },
+      "eight_selected_files_equal_exact393": true,
+      "store_version": 3,
+      "max_runtime_epochs": 256,
+      "legacy_tolerance": false,
+      "current_store_compatibility": "NO_SOURCE_PROVEN_REJECTION",
+      "executed_current_store_constructor": false,
+      "full_backup_integrity": "NOT_VERIFIED"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261105-063639",
+      "source_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "main_repo_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "provenance_sha256": "2102d4b2deab74caf269839a4f64c912cde1a05f2b67d2a765a22499a69bdd0b",
+      "reader_file_sha256": {
+        "durable-file.js": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+        "state-machine.js": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+        "query.js": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+        "admin-abandonment.js": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+        "capacity.js": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+        "authority-capacity.js": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+        "store.js": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+        "ingress-correlation.js": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca"
+      },
+      "eight_selected_files_equal_exact393": true,
+      "store_version": 3,
+      "max_runtime_epochs": 256,
+      "legacy_tolerance": false,
+      "current_store_compatibility": "NO_SOURCE_PROVEN_REJECTION",
+      "executed_current_store_constructor": false,
+      "full_backup_integrity": "NOT_VERIFIED"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261105-064520",
+      "source_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "main_repo_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "provenance_sha256": "2102d4b2deab74caf269839a4f64c912cde1a05f2b67d2a765a22499a69bdd0b",
+      "reader_file_sha256": {
+        "durable-file.js": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+        "state-machine.js": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+        "query.js": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+        "admin-abandonment.js": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+        "capacity.js": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+        "authority-capacity.js": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+        "store.js": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+        "ingress-correlation.js": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca"
+      },
+      "eight_selected_files_equal_exact393": true,
+      "store_version": 3,
+      "max_runtime_epochs": 256,
+      "legacy_tolerance": false,
+      "current_store_compatibility": "NO_SOURCE_PROVEN_REJECTION",
+      "executed_current_store_constructor": false,
+      "full_backup_integrity": "NOT_VERIFIED"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261105-065323",
+      "source_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "main_repo_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "provenance_sha256": "2102d4b2deab74caf269839a4f64c912cde1a05f2b67d2a765a22499a69bdd0b",
+      "reader_file_sha256": {
+        "durable-file.js": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+        "state-machine.js": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+        "query.js": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+        "admin-abandonment.js": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+        "capacity.js": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+        "authority-capacity.js": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+        "store.js": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+        "ingress-correlation.js": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca"
+      },
+      "eight_selected_files_equal_exact393": true,
+      "store_version": 3,
+      "max_runtime_epochs": 256,
+      "legacy_tolerance": false,
+      "current_store_compatibility": "NO_SOURCE_PROVEN_REJECTION",
+      "executed_current_store_constructor": false,
+      "full_backup_integrity": "NOT_VERIFIED"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261105-065951",
+      "source_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "main_repo_head_sha": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+      "provenance_sha256": "2102d4b2deab74caf269839a4f64c912cde1a05f2b67d2a765a22499a69bdd0b",
+      "reader_file_sha256": {
+        "durable-file.js": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+        "state-machine.js": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+        "query.js": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+        "admin-abandonment.js": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+        "capacity.js": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+        "authority-capacity.js": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+        "store.js": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+        "ingress-correlation.js": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca"
+      },
+      "eight_selected_files_equal_exact393": true,
+      "store_version": 3,
+      "max_runtime_epochs": 256,
+      "legacy_tolerance": false,
+      "current_store_compatibility": "NO_SOURCE_PROVEN_REJECTION",
+      "executed_current_store_constructor": false,
+      "full_backup_integrity": "NOT_VERIFIED"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261105-073646",
+      "source_head_sha": "f917aeba0a676992b64bec3b0a902627524d7f09",
+      "main_repo_head_sha": "f917aeba0a676992b64bec3b0a902627524d7f09",
+      "provenance_sha256": "71c0cacc328093ac71bd3243eaaeb7b6ac043f8e7b3d8d04a7312368b1f64dc3",
+      "reader_file_sha256": {
+        "durable-file.js": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+        "state-machine.js": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+        "query.js": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+        "admin-abandonment.js": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+        "capacity.js": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+        "authority-capacity.js": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+        "store.js": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+        "ingress-correlation.js": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca"
+      },
+      "eight_selected_files_equal_exact393": true,
+      "store_version": 3,
+      "max_runtime_epochs": 256,
+      "legacy_tolerance": false,
+      "current_store_compatibility": "NO_SOURCE_PROVEN_REJECTION",
+      "executed_current_store_constructor": false,
+      "full_backup_integrity": "NOT_VERIFIED"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261105-075119",
+      "source_head_sha": "f917aeba0a676992b64bec3b0a902627524d7f09",
+      "main_repo_head_sha": "f917aeba0a676992b64bec3b0a902627524d7f09",
+      "provenance_sha256": "71c0cacc328093ac71bd3243eaaeb7b6ac043f8e7b3d8d04a7312368b1f64dc3",
+      "reader_file_sha256": {
+        "durable-file.js": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+        "state-machine.js": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+        "query.js": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+        "admin-abandonment.js": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+        "capacity.js": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+        "authority-capacity.js": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+        "store.js": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+        "ingress-correlation.js": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca"
+      },
+      "eight_selected_files_equal_exact393": true,
+      "store_version": 3,
+      "max_runtime_epochs": 256,
+      "legacy_tolerance": false,
+      "current_store_compatibility": "NO_SOURCE_PROVEN_REJECTION",
+      "executed_current_store_constructor": false,
+      "full_backup_integrity": "NOT_VERIFIED"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261106-075814",
+      "source_head_sha": "23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9",
+      "main_repo_head_sha": "23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9",
+      "provenance_sha256": "d243ad8b26d7e3cc8f76bd8b017bb6bf94e5930b6f2480d233a95982e493d5f6",
+      "reader_file_sha256": {
+        "durable-file.js": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+        "state-machine.js": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+        "query.js": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+        "admin-abandonment.js": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+        "capacity.js": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+        "authority-capacity.js": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+        "store.js": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+        "ingress-correlation.js": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca"
+      },
+      "eight_selected_files_equal_exact393": true,
+      "store_version": 3,
+      "max_runtime_epochs": 256,
+      "legacy_tolerance": false,
+      "current_store_compatibility": "NO_SOURCE_PROVEN_REJECTION",
+      "executed_current_store_constructor": false,
+      "full_backup_integrity": "NOT_VERIFIED"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261106-080439",
+      "source_head_sha": "23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9",
+      "main_repo_head_sha": "23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9",
+      "provenance_sha256": "d243ad8b26d7e3cc8f76bd8b017bb6bf94e5930b6f2480d233a95982e493d5f6",
+      "reader_file_sha256": {
+        "durable-file.js": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+        "state-machine.js": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+        "query.js": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+        "admin-abandonment.js": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+        "capacity.js": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+        "authority-capacity.js": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+        "store.js": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+        "ingress-correlation.js": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca"
+      },
+      "eight_selected_files_equal_exact393": true,
+      "store_version": 3,
+      "max_runtime_epochs": 256,
+      "legacy_tolerance": false,
+      "current_store_compatibility": "NO_SOURCE_PROVEN_REJECTION",
+      "executed_current_store_constructor": false,
+      "full_backup_integrity": "NOT_VERIFIED"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core.bak-20261106-081212",
+      "source_head_sha": "23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9",
+      "main_repo_head_sha": "23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9",
+      "provenance_sha256": "d243ad8b26d7e3cc8f76bd8b017bb6bf94e5930b6f2480d233a95982e493d5f6",
+      "reader_file_sha256": {
+        "durable-file.js": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+        "state-machine.js": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+        "query.js": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+        "admin-abandonment.js": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+        "capacity.js": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+        "authority-capacity.js": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+        "store.js": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+        "ingress-correlation.js": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca"
+      },
+      "eight_selected_files_equal_exact393": true,
+      "store_version": 3,
+      "max_runtime_epochs": 256,
+      "legacy_tolerance": false,
+      "current_store_compatibility": "NO_SOURCE_PROVEN_REJECTION",
+      "executed_current_store_constructor": false,
+      "full_backup_integrity": "NOT_VERIFIED"
+    }
+  ],
+  "candidate_matrix": [
+    {
+      "combination": "393a0afc pure / six-file rollback",
+      "materials": "/Users/Shared/r129d-rollback-20261108/",
+      "current_turn_store": "NO_SOURCE_PROVEN_REJECTION",
+      "epoch_schema": "V3/256-cap understands shape; four legacy records reject",
+      "availability_rollback": "UNAVAILABLE",
+      "full_closure": "NOT_AUTHENTICATED"
+    },
+    {
+      "combination": "ce1d13c1 pure backups x6",
+      "current_turn_store": "NO_SOURCE_PROVEN_REJECTION",
+      "epoch_schema": "V3/256-cap, identical eight selected393 reader files",
+      "availability_rollback": "UNAVAILABLE",
+      "full_closure": "NOT_AUTHENTICATED"
+    },
+    {
+      "combination": "f917aeba pure backups x2",
+      "current_turn_store": "NO_SOURCE_PROVEN_REJECTION",
+      "epoch_schema": "V3/256-cap, identical eight selected393 reader files",
+      "availability_rollback": "UNAVAILABLE",
+      "full_closure": "NOT_AUTHENTICATED"
+    },
+    {
+      "combination": "23fb91a6 pure backups x3",
+      "current_turn_store": "NO_SOURCE_PROVEN_REJECTION",
+      "epoch_schema": "V3/256-cap, identical eight selected393 reader files",
+      "availability_rollback": "UNAVAILABLE",
+      "full_closure": "NOT_AUTHENTICATED"
+    },
+    {
+      "combination": "393 reconstructed + four95 D Router files",
+      "artifact_sha256": "302804005fe9bd7090c8dd027c34b1712ab7912ef52f3245da69ba75d414afa0",
+      "artifact_evidence": "evidence/547-d-release-prep/v2/candidate-pin.json",
+      "current_turn_store": "NARROW_LEGACY_DECODE_SOURCE_COMPATIBLE_FULL_LOAD_UNKNOWN",
+      "epoch_schema": "Current durable/state/query hashes match tolerance reader; full current constructor NOT_RUN",
+      "availability_rollback": "NOT_READY",
+      "limitations": [
+        "Would revert current two Scheduler fixes per D-RELEASE-PACKAGE-547",
+        "Would remove Gap B admin semantics",
+        "Full historical393 closure not authenticated",
+        "Candidate not installation-admitted"
+      ]
+    },
+    {
+      "combination": "081 six-file overlay without #1386 and/or GapB",
+      "current_turn_store": "NARROW_LEGACY_DECODE_SOURCE_COMPATIBLE_FULL_LOAD_UNKNOWN",
+      "availability_rollback": "NOT_READY",
+      "limitations": [
+        "GapB removal re-quarantines current HR legacy record despite its marker+acceptance audit (source predicate counterexample); no whole-Agent behavior execution claimed",
+        "Scheduler semantics and current jobs compatibility require exact combination validation",
+        "No qualified full rollback archive/readback"
+      ]
+    },
+    {
+      "combination": "Installed393 base +081 six files +GapB +app#1374 +external Harness#1386",
+      "current_turn_store": "NARROW_LEGACY_DECODE_SOURCE_COMPATIBLE_FULL_LOAD_UNKNOWN",
+      "epoch_schema": "V3 max256, narrow tuple accepted by retained durable/state reader source",
+      "availability_rollback": "RUNNING_COMPOSITION_NOT_A_ROLLBACK_RECEIPT",
+      "limitations": [
+        "Not executed through current full-store scratch constructor in this task",
+        "No qualified immutable reinstall artifact plus full dependency closure",
+        "Actual runtime loaded-byte binding belongs to root process/time audit",
+        "External Harness#1386 and app#1374 overlays is part of current runtime closure; its file/semantic and rollback consequences belong to root overlay evidence, not covered by this Router-only reader audit"
+      ]
+    },
+    {
+      "combination": "Fixed95 whole source reader",
+      "current_turn_store": "PRIOR_SNAPSHOT_EXECUTED_PASS_CURRENT_FULL_LOAD_UNKNOWN",
+      "availability_rollback": "NOT_READY",
+      "limitations": [
+        "Source/archive QA is not production-installable pack admission",
+        "Fixed95 store omits faults sidecar consumed by actual081 store",
+        "Current snapshot/sidecars differ from prior v5"
+      ]
+    }
+  ],
+  "sidecar_constraints": {
+    "registry": {
+      "path": "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.abandonment-declarations.json",
+      "bytes": 3459,
+      "sha256": "f18bca66e5ddf19897e6e1299ae42614daf30e218347e298021ccae67b5926e4",
+      "top_level_type": "dict",
+      "version": 3,
+      "declaration_count": 18
+    },
+    "faults": {
+      "path": "/Users/authsvc/.agent-core/control/turn-recovery-v3.json.faults.json",
+      "bytes": 617,
+      "sha256": "ae23d8877938f20ca60d66f751ad5730d74856e0f1508d2e7ac3d69b8114e6bf",
+      "top_level_type": "dict"
+    },
+    "installed_store_sha256": "1c38068b26142d454c99cf1d670bfd3693dda2e32a084f68942109385defd0e3",
+    "fixed95_qa_store_sha256": "9c5fa22a8fb62f1064a4362918f217fd9fa4ad83acd35d1d3a137e60c27ac410",
+    "difference": "Actual081 constructor reads/parses faults sidecar and can set fault_store_unavailable; fixed95 QA constructor did not consume faults. Parsed dict existence is not complete sidecar/registry semantic compatibility proof.",
+    "faults_supplement": {
+      "sha256": "ed2090b5bb460708992d2caa2bec4ee8ef6300f8c9eab69d5f3df5ca8ccb5c03",
+      "top_level_keys": [
+        "agt_agent-dev-engineer:84",
+        "agt_lobster-agent:23",
+        "agt_needs-radar-agent:23",
+        "agt_stock_agent:9"
+      ],
+      "generation_key_count": 4,
+      "version": null,
+      "raw_nested_field_counter": 0,
+      "counter_correction": "Original supplemental script incorrectly looked for nested generationFaults/faults fields, returning0. File is raw top-level map; correct derived count4 from preserved top_level_keys, no reread. Original preserved in supplement-original.json."
+    },
+    "cross_observation_drift": "Faults SHA changed ae23d887... to ed2090b5... between stat-stable reads. Runtime was live. No assertion of cross-file consistency, no operator write inferred."
+  },
+  "epoch_constraints": {
+    "max_runtime_epochs": 256,
+    "required_epoch_logic": "authority-capacity.js compactRuntimeEpochs retains new current epoch plus every record-referenced epoch, then fills historical epochs to max256; >256 required fails",
+    "source_sha256": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+    "current_all_referenced_epoch_count": "UNKNOWN_NOT_CAPTURED",
+    "forbidden": "Do not manually delete epochs/strip fields/overwrite old state to make old readers load",
+    "current_all_records_epoch_membership": true
+  },
+  "unavailable_rollback_list": [
+    "All11 pure historical backup packs ce1d/f917/23fb (exact rejecting393 reader)",
+    "Pure393 six-file/provenance restoration",
+    "Any pre-V3 or older reader ignoring unresolved durable fences (no concrete inventory found; forbidden class)",
+    "Old393 plus edited-four-fence durable-restore or stale business snapshot (state mutation outside mandate and snapshot differs)"
+  ],
+  "overall": "NO_AUTHENTICATED_AVAILABLE_ROLLBACK_COMBINATION",
+  "remaining_gaps": [
+    "Complete immutable app/Node/Harness rollback closure and artifact admission",
+    "Full current store+registry+faults and latest jobs shape compatibility with exact chosen composite",
+    "Exact runtime restart/readback/fence enforcement and no replay (not authorized to execute)"
+  ],
+  "production_mutations": 0,
+  "constructor_executions": 0,
+  "process_start_stop_signal": 0,
+  "new_business_requests_or_replays": 0,
+  "discovery_notes": [
+    "393/081 objects are not in this worktree object database; read exact objects from declared production-dsh-agent-core repository. An exploratory missing Git object is not task failure.",
+    "Inventory bounded to /usr/local/libexec/agent-core.bak-* and known r129d six-file rollback; not proof of global absence.",
+    "No claim of full pack integrity from provenance or selected reader hashes."
+  ],
+  "current_gapB_projection": {
+    "support": "Source predicate evaluation against sanitized same-hash target metadata; not live method invocation",
+    "targets_blocking_own_record": [
+      "agt_stock_agent",
+      "agt_needs-radar-agent",
+      "agt_lobster-agent",
+      "agt_agent-dev-engineer"
+    ],
+    "targets_not_blocking_own_record": [
+      "agt_hr-agent"
+    ],
+    "blocking_count_among_5": 4,
+    "hr_reason": "Legacy cleared UNKNOWN has both adminAbandonment marker and owner_risk_acceptance_unproven_termination audit, so installed GapB skips this own-record admission contribution. Raw UNKNOWN/termination/fence facts remain unchanged.",
+    "scope_limitation": "Does not prove whole-Agent admission is open: there are six blocked records globally and other same-Agent blockers may exist. Does not prove production business recovery.",
+    "rollback_without_gapB": "Base081 admin always returns the legacy HR record as admission blocker even with marker/audit; source-proven re-quarantine of this contribution."
+  }
+}
