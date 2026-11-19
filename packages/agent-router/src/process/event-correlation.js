@@ -251,6 +251,9 @@ export const eventCorrelationMethods = {
   },
 
   finishExecution(execution) {
+    // AGENT_PROCESS_RECYCLE_V1: one settled execution = one unit of child
+    // lifetime work (the optional field keeps duck-typed test fakes safe).
+    if (this.recycleState !== undefined) this.recycleState.settledTurns += 1
     if (execution.deadlineTimer !== undefined) {
       clearTimeout(execution.deadlineTimer)
       execution.deadlineTimer = undefined

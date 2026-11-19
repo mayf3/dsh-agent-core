@@ -23,7 +23,8 @@
 import { randomUUID } from 'node:crypto'
 
 import { redactSensitiveText } from './process/index.js'
-import { fencedRejection } from './process/state-machine.js'
+import { fencedRejection, monotonicNowMs } from './process/state-machine.js'
+import { recycleEligibility } from './process/recycle.js'
 import { createParentRpcHandler } from './parent-rpc-relay.js'
 import { canonicalRouteIdentity } from './route-chain.js'
 import { createNativePolicyRegistryBinding } from './process-registry-native-policy.js'
@@ -251,6 +252,13 @@ export function createProcessRegistry({
         if (result.status === 'ready') return result.proc
         throw Object.assign(new Error('transport generation is retiring'), { code: 'AGENT_PROCESS_REAPING' })
       })
+      if (initial.processRef?.retireRequested === true) {
+        // AGENT_PROCESS_RECYCLE_V1: a retire-requested generation is not
+        // reusable — transparently wait (bounded) for its shutdown to
+        // settle, then re-read the lifecycle: EMPTY → fresh spawn, REAP →
+        // the standard structured rejection. Never a parallel generation.
+        return waitRecycleThenEnsure(initial.processRef, agentId)
+      }
       if (!hasExactDeathEvidence(initial.processRef)) {
         log.log(`reuse process for ${agentId} (pid ${initial.processRef?.pid})`)
         return Promise.resolve(initial.processRef)
@@ -477,6 +485,60 @@ export function createProcessRegistry({
     return staleSlotAudits.map(entry => ({ ...entry }))
   }
 
+  // AGENT_PROCESS_RECYCLE_V1 (#703): reuse-gate bound while a retire-requested
+  // generation finishes its graceful shutdown (see waitRecycleThenEnsure).
+  const RECYCLE_WAIT_BUDGET_MS = 10 * 1000
+
+  /**
+   * Bounded wait for a retiring generation's shutdown, then re-enter the
+   * lifecycle read. An idle READY child shuts down in ~1 RPC + exit; the
+   * budget only guards pathological shutdown paths, which surface as the
+   * standard structured AGENT_PROCESS_REAPING rejection.
+   */
+  function waitRecycleThenEnsure(proc, agentId, deadlineMono = monotonicNowMs() + RECYCLE_WAIT_BUDGET_MS) {
+    const settled = Promise.resolve(proc.shutdownPromise).catch(() => {})
+    return settled.then(() => {
+      if (monotonicNowMs() >= deadlineMono) {
+        return Promise.reject(Object.assign(
+          new Error(`agent-router: agent ${agentId} generation is retiring (recycle wait budget exhausted)`),
+          { code: 'AGENT_PROCESS_REAPING' }))
+      }
+      return ensureRunning(agentId)
+    })
+  }
+
+  /**
+   * AGENT_PROCESS_RECYCLE_V1 sweep (#703): retire every idle READY generation
+   * past its turn/age threshold via the EXISTING graceful shutdown path
+   * (performShutdown → C-020 settlement → REAP → EMPTY; the next demand
+   * spawns a fresh generation). No new lifecycle state; the sweep is the
+   * ONLY writer of retireRequested. Mount-owned timer calls this; tests may
+   * call it directly.
+   */
+  function recycleSweep(config = {}) {
+    const nowMs = config.nowMs ?? Date.now()
+    const retired = []
+    for (const [agentId, slot] of lifecycleSlots) {
+      if (slot.state !== 'READY') continue
+      const proc = slot.processRef
+      if (proc === null || proc === undefined || proc.retireRequested === true) continue
+      const verdict = recycleEligibility(proc, config, nowMs)
+      if (!verdict.eligible) continue
+      proc.retireRequested = true
+      log.log?.(`[router] recycle: retiring agent ${agentId} generation ${proc.processGeneration} (pid ${proc.pid}) — ${verdict.reason}`)
+      try {
+        const shuttingDown = proc.shutdown()
+        shuttingDown?.catch?.((error) => {
+          log.error?.(`[router] recycle: shutdown rejected for ${agentId}: ${redactSensitiveText(String(error?.message ?? error)).slice(0, 200)}`)
+        })
+      } catch (error) {
+        log.error?.(`[router] recycle: shutdown failed for ${agentId}: ${redactSensitiveText(String(error?.message ?? error)).slice(0, 200)}`)
+      }
+      retired.push({ agentId, pid: proc.pid, generation: proc.processGeneration, reason: verdict.reason })
+    }
+    return retired
+  }
+
   /** Plugin teardown: await every owned process's real-exit shutdown. */
   async function dispose() {
     disposing = true
@@ -495,6 +557,7 @@ export function createProcessRegistry({
     registrySnapshot,
     lifecycleSlotSnapshot,
     staleSlotAuditsSnapshot,
+    recycleSweep,
     dispose,
   }
 }

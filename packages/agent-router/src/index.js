@@ -79,6 +79,7 @@ import { createBindingResolution } from './binding-resolution.js'
 import { createProductSurfaceConversation } from './conversation/surface.js'
 import { createIngressDelivery } from './ingress-delivery.js'
 import { createWebsiteInquiryAdmission } from './process/website-inquiry-admission.js'
+import { parseRecycleConfig } from './process/recycle.js'
 import { channelConversationId } from './channel-conversation.js'
 import { SWITCH_RPC_METHOD, BROKER_RPC_METHOD } from './parent-rpc-relay.js'
 import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
@@ -269,6 +270,22 @@ export function apply(ctx, config) {
     switchAgent: bindingResolution.switchAgentFromTurn,
     getBrokerGateway: () => ctx.get('brokerGateway'),
   })
+  // AGENT_PROCESS_RECYCLE_V1 (#703): periodic idle-generation recycle — a
+  // long-lived child accumulates append-only session history in RAM, so the
+  // sweep retires READY generations past their turn/age threshold through
+  // the existing graceful shutdown path. `DSH_AGENT_RECYCLE=off` disables;
+  // the timer is unref'd so it never holds the process open.
+  const recycleConfig = parseRecycleConfig(process.env)
+  if (recycleConfig.enabled) {
+    const recycleTimer = setInterval(() => {
+      try {
+        registry.recycleSweep(recycleConfig)
+      } catch (error) {
+        log.error?.(`[router] recycle sweep failed: ${error?.message ?? error}`)
+      }
+    }, recycleConfig.sweepIntervalMs)
+    recycleTimer.unref?.()
+  }
   /**
    * The unified ordered route-attempt chain executor
    * (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2 CTR-I2-005): the ONE seam

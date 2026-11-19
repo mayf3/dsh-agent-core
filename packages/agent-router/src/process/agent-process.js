@@ -113,6 +113,15 @@ export class AgentProcess {
     this.fatalCause = null
     this.inputFrozen = false
     this.killSignalSent = false
+
+    // --- #703 recycle bookkeeping (AGENT_PROCESS_RECYCLE_V1) --------------
+    // Per-generation counters read by the registry recycle sweep. settledTurns
+    // increments at finishExecution; spawnedAtWallMs anchors the age
+    // threshold. retireRequested is set ONLY by the sweep; the reuse gate
+    // treats a retire-requested READY generation as non-reusable (bounded
+    // wait, then the standard REAPING rejection).
+    this.retireRequested = false
+    this.recycleState = { settledTurns: 0, spawnedAtWallMs: Date.now() }
     this.shutdownPromise = undefined
     this.initializeEvidence = undefined
     this.initializeElapsedMs = undefined
