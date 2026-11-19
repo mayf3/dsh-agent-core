@@ -54,6 +54,47 @@ export function createSessionSeam({ ctx, settings, websiteAdmission, conversatio
   const handles = new Map() // sessionId -> AgentHandle
   const pendingCreations = new Map() // sessionId -> Promise<AgentHandle>
 
+  // --- SESSION_HANDLE_EVICTION_V1 (#705) --------------------------------
+  // Lazy idle eviction of NON-main session handles. The `handles` Map is the
+  // only strong reference to a session's full in-RAM log; cron fleets mint
+  // one fresh session per occurrence and never drop them, so a long-lived
+  // child accumulates every session it ever resumed (measured fleet peaks
+  // 3.7–5.4GB — dsh-agent-core#701/#703). Eviction DROPS THE REFERENCE
+  // ONLY — it never calls dispose(): any in-flight work still references
+  // the handle, so GC liveness keeps it alive until settled, and disk state
+  // is untouched (the next prompt for an evicted session transparently
+  // re-resumes via agents.resume, R2). `main` is exempt (interactive
+  // continuity). Fail-loud env: DSH_SEAM_SESSION_TTL_MS (0 = off),
+  // DSH_SEAM_MAX_HANDLES (≥ the cap, the idle floor drops to 0 so any
+  // non-main handle becomes evictable — bounded-memory guarantee).
+  const handleLastUse = new Map() // sessionId -> Date.now() at last seam use
+  const envInt = (raw, fallback, label) => {
+    if (raw === undefined || raw === '') return fallback
+    const value = Number.parseInt(raw, 10)
+    if (!Number.isSafeInteger(value) || value < 0) {
+      throw new TypeError(`demo-server: ${label} must be a non-negative safe integer, got ${raw}`)
+    }
+    return value
+  }
+  const evictionTtlMs = envInt(process.env.DSH_SEAM_SESSION_TTL_MS, 3600000, 'DSH_SEAM_SESSION_TTL_MS')
+  const maxHandles = envInt(process.env.DSH_SEAM_MAX_HANDLES, 256, 'DSH_SEAM_MAX_HANDLES')
+
+  function evictIdleHandles(now = Date.now()) {
+    if (evictionTtlMs <= 0 || handles.size === 0) return
+    const idleFloorMs = handles.size >= maxHandles ? 0 : evictionTtlMs
+    for (const [sessionId, handle] of handles) {
+      if (sessionId === 'main') continue
+      if (pendingCreations.has(sessionId)) continue
+      const last = handleLastUse.get(sessionId)
+      if (last !== undefined && now - last < idleFloorMs) continue
+      handles.delete(sessionId)
+      handleLastUse.delete(sessionId)
+      process.stderr.write(
+        `[demo-server] session ${sessionId} handle evicted (idle ${last === undefined ? 'n/a' : now - last}ms, handles=${handles.size})\n`,
+      )
+    }
+  }
+
   /**
    * R2/R3 check: a persisted/live session's frozen header.cwd must equal the
    * resolved effective workspace, else the turn is structurally rejected —
@@ -82,8 +123,10 @@ export function createSessionSeam({ ctx, settings, websiteAdmission, conversatio
    */
   async function getOrCreateSession(sessionId, resolvedCwd, websitePrivate = false) {
     const effectiveCwd = resolvedCwd ?? settings.cwd
+    evictIdleHandles()
     const existing = handles.get(sessionId)
     if (existing !== undefined) {
+      handleLastUse.set(sessionId, Date.now())
       // Hot path: the live handle already froze this session's cwd at
       // creation/resume — a different resolved workspace is an R3 mismatch.
       assertSessionCwd(sessionId, existing, effectiveCwd)
@@ -92,6 +135,7 @@ export function createSessionSeam({ ctx, settings, websiteAdmission, conversatio
     const inFlight = pendingCreations.get(sessionId)
     if (inFlight !== undefined) {
       const handle = await inFlight
+      handleLastUse.set(sessionId, Date.now())
       assertSessionCwd(sessionId, handle, effectiveCwd)
       return handle
     }
@@ -153,6 +197,7 @@ export function createSessionSeam({ ctx, settings, websiteAdmission, conversatio
       sessionOrigins.set(handle,{disposition:resumed?'resumed':'created',reason:resumed?'persisted_main_resumed':'main_artifact_absent',
         provenance:'native_session_resolution',generation_change_reason:null,generation_change_reason_availability:'unknown_no_native_reset_cause'})
       handles.set(sessionId, handle)
+      handleLastUse.set(sessionId, Date.now())
       if (!websitePrivate) process.stderr.write(
         `[demo-server] session ${sessionId} ${resumed ? 'resumed' : 'created'} (${eventCount} events) cwd=${effectiveCwd}\n`,
       )
