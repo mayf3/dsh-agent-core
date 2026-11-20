@@ -54,6 +54,59 @@ export function createSessionSeam({ ctx, settings, websiteAdmission, conversatio
   const handles = new Map() // sessionId -> AgentHandle
   const pendingCreations = new Map() // sessionId -> Promise<AgentHandle>
 
+  // --- SESSION_HANDLE_EVICTION_V1 (r2, post-review) ---------------------
+  // Lazy idle eviction of NON-main session handles. The `handles` Map is the
+  // only strong reference to a session's full in-RAM log; cron fleets mint
+  // one fresh session per occurrence and never drop them, so a long-lived
+  // child accumulates every session it ever resumed (measured fleet peaks
+  // 3.7–5.4GB — dsh-agent-core#701/#703). Eviction DROPS THE REFERENCE
+  // ONLY — it never calls dispose(): disk state is untouched (append-only
+  // JSONL) and the next prompt for an evicted session transparently
+  // re-resumes via agents.resume, R2.
+  //
+  // Mid-turn eviction is unreachable BY CONSTRUCTION, not by GC luck: the
+  // idle marker is set at seam ENTRY, so it measures time-since-last-admission.
+  // A session whose turn is still executing has been admitted < turn-deadline
+  // ago (production default 900000ms, deadline-config); the default TTL
+  // (3600000ms) is 4× that deadline. r1's DSH_SEAM_MAX_HANDLES floor-0 cap
+  // path was REMOVED on independent review (#705 blocker 2): with floor 0 the
+  // cap path evicted mid-turn handles routinely, and the re-resume of a
+  // possibly-still-live prior agent has no qualified safety evidence.
+  // `main` is exempt (interactive continuity).
+  //
+  // Fail-loud env: DSH_SEAM_SESSION_TTL_MS (0 = off). Strict integer syntax:
+  // only /^[0-9]+$/ is accepted — r1's Number.parseInt prefix-accepted
+  // encodings like '1e6'/'1.5'/'0x10'/'3600abc' silently (#705 blocker 1).
+  const handleLastUse = new Map() // sessionId -> Date.now() at last seam use
+  const envInt = (raw, fallback, label) => {
+    if (raw === undefined || raw === '') return fallback
+    if (!/^[0-9]+$/.test(raw)) {
+      throw new TypeError(`demo-server: ${label} must be a non-negative decimal integer, got ${raw}`)
+    }
+    const value = Number.parseInt(raw, 10)
+    if (!Number.isSafeInteger(value)) {
+      throw new TypeError(`demo-server: ${label} must be a non-negative safe integer, got ${raw}`)
+    }
+    return value
+  }
+  const evictionTtlMs = envInt(process.env.DSH_SEAM_SESSION_TTL_MS, 3600000, 'DSH_SEAM_SESSION_TTL_MS')
+
+  function evictIdleHandles(now = Date.now()) {
+    if (evictionTtlMs <= 0 || handles.size === 0) return
+    for (const [sessionId, handle] of handles) {
+      if (sessionId === 'main') continue
+      if (pendingCreations.has(sessionId)) continue
+      const last = handleLastUse.get(sessionId)
+      if (last === undefined) continue // never evict an unmarked handle (defensive)
+      if (now - last < evictionTtlMs) continue
+      handles.delete(sessionId)
+      handleLastUse.delete(sessionId)
+      process.stderr.write(
+        `[demo-server] session ${sessionId} handle evicted (idle ${now - last}ms, handles=${handles.size})\n`,
+      )
+    }
+  }
+
   /**
    * R2/R3 check: a persisted/live session's frozen header.cwd must equal the
    * resolved effective workspace, else the turn is structurally rejected —
@@ -82,8 +135,10 @@ export function createSessionSeam({ ctx, settings, websiteAdmission, conversatio
    */
   async function getOrCreateSession(sessionId, resolvedCwd, websitePrivate = false) {
     const effectiveCwd = resolvedCwd ?? settings.cwd
+    evictIdleHandles()
     const existing = handles.get(sessionId)
     if (existing !== undefined) {
+      handleLastUse.set(sessionId, Date.now())
       // Hot path: the live handle already froze this session's cwd at
       // creation/resume — a different resolved workspace is an R3 mismatch.
       assertSessionCwd(sessionId, existing, effectiveCwd)
@@ -92,6 +147,7 @@ export function createSessionSeam({ ctx, settings, websiteAdmission, conversatio
     const inFlight = pendingCreations.get(sessionId)
     if (inFlight !== undefined) {
       const handle = await inFlight
+      handleLastUse.set(sessionId, Date.now())
       assertSessionCwd(sessionId, handle, effectiveCwd)
       return handle
     }
@@ -153,6 +209,7 @@ export function createSessionSeam({ ctx, settings, websiteAdmission, conversatio
       sessionOrigins.set(handle,{disposition:resumed?'resumed':'created',reason:resumed?'persisted_main_resumed':'main_artifact_absent',
         provenance:'native_session_resolution',generation_change_reason:null,generation_change_reason_availability:'unknown_no_native_reset_cause'})
       handles.set(sessionId, handle)
+      handleLastUse.set(sessionId, Date.now())
       if (!websitePrivate) process.stderr.write(
         `[demo-server] session ${sessionId} ${resumed ? 'resumed' : 'created'} (${eventCount} events) cwd=${effectiveCwd}\n`,
       )
