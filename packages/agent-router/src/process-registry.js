@@ -24,7 +24,7 @@ import { randomUUID } from 'node:crypto'
 
 import { redactSensitiveText } from './process/index.js'
 import { fencedRejection, monotonicNowMs } from './process/state-machine.js'
-import { recycleEligibility } from './process/recycle.js'
+import { DEFAULT_RECYCLE_CONFIG, recycleEligibility } from './process/recycle.js'
 import { createParentRpcHandler } from './parent-rpc-relay.js'
 import { canonicalRouteIdentity } from './route-chain.js'
 import { createNativePolicyRegistryBinding } from './process-registry-native-policy.js'
@@ -66,6 +66,7 @@ function restoreRecoveryFences(store) {
 export function createProcessRegistry({
   log, cfg, workspaceBootstrap, agentDefinition, deadlineConfig, reconciliationStore,
   processFactory, resolveProcessConfig, resolveNativeToolPolicy, provisionHome, switchAgent, getBrokerGateway,
+  recycleWaitBudgetMs = DEFAULT_RECYCLE_CONFIG.waitBudgetMs,
 }) {
   /** agentId -> lifecycle slot (one live owner per agent). */
   const lifecycleSlots = new Map()
@@ -231,7 +232,7 @@ export function createProcessRegistry({
    * EMPTY wins exactly one CAS(EMPTY -> STARTUP) before any async work.
    * Only READY processes are ever returned (registry exposes READY only).
    */
-  function ensureRunning(agentId) {
+  function ensureRunning(agentId, recycleDeadlineMono) {
     if (disposing) return Promise.reject(Object.assign(new Error('agent-router: process registry is disposing'), { code: 'AGENT_PROCESS_DRAINING' }))
     const policyStartup = resolveNativeToolPolicy === undefined ? undefined
       : nativePolicyBinding.ensureIfBound(agentId, lifecycleSlots.get(agentId)?.processRef, routeGate)
@@ -257,7 +258,9 @@ export function createProcessRegistry({
         // reusable — transparently wait (bounded) for its shutdown to
         // settle, then re-read the lifecycle: EMPTY → fresh spawn, REAP →
         // the standard structured rejection. Never a parallel generation.
-        return waitRecycleThenEnsure(initial.processRef, agentId)
+        // The deadline threads through every re-entry (one budget for the
+        // whole wait, not per cycle — independent-review FOLLOW_UP 2).
+        return waitRecycleThenEnsure(initial.processRef, agentId, recycleDeadlineMono)
       }
       if (!hasExactDeathEvidence(initial.processRef)) {
         log.log(`reuse process for ${agentId} (pid ${initial.processRef?.pid})`)
@@ -487,7 +490,9 @@ export function createProcessRegistry({
 
   // AGENT_PROCESS_RECYCLE_V1 (#703): reuse-gate bound while a retire-requested
   // generation finishes its graceful shutdown (see waitRecycleThenEnsure).
-  const RECYCLE_WAIT_BUDGET_MS = 10 * 1000
+  // Default: DEFAULT_RECYCLE_CONFIG.waitBudgetMs (10000); override via the
+  // mount's recycleWaitBudgetMs option (wired from DSH_AGENT_RECYCLE_WAIT_BUDGET_MS).
+  const RECYCLE_WAIT_BUDGET_MS = recycleWaitBudgetMs
 
   /**
    * Bounded wait for a retiring generation's shutdown, then re-enter the
@@ -495,7 +500,7 @@ export function createProcessRegistry({
    * budget only guards pathological shutdown paths, which surface as the
    * standard structured AGENT_PROCESS_REAPING rejection.
    */
-  function waitRecycleThenEnsure(proc, agentId, deadlineMono = monotonicNowMs() + RECYCLE_WAIT_BUDGET_MS) {
+  function waitRecycleThenEnsure(proc, agentId, deadlineMono = monotonicNowMs() + recycleWaitBudgetMs) {
     const settled = Promise.resolve(proc.shutdownPromise).catch(() => {})
     return settled.then(() => {
       if (monotonicNowMs() >= deadlineMono) {
@@ -503,7 +508,10 @@ export function createProcessRegistry({
           new Error(`agent-router: agent ${agentId} generation is retiring (recycle wait budget exhausted)`),
           { code: 'AGENT_PROCESS_REAPING' }))
       }
-      return ensureRunning(agentId)
+      // One budget for the whole wait: the deadline threads through re-entry
+      // (independent-review FOLLOW_UP 2 — a per-cycle reset could wait
+      // forever on a stuck READY+retiring slot).
+      return ensureRunning(agentId, deadlineMono)
     })
   }
 

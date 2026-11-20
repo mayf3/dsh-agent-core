@@ -256,6 +256,12 @@ export function apply(ctx, config) {
   }
 
   const bindingResolution = createBindingResolution({ agentDefinition, workspaceBootstrap, store, cfg, log })
+  // AGENT_PROCESS_RECYCLE_V1 (#703): periodic idle-generation recycle — a
+  // long-lived child accumulates append-only session history in RAM, so the
+  // sweep retires READY generations past their turn/age threshold through
+  // the existing graceful shutdown path. `DSH_AGENT_RECYCLE=off` disables;
+  // the timer is unref'd so it never holds the process open.
+  const recycleConfig = parseRecycleConfig(process.env)
   const registry = createProcessRegistry({
     log,
     cfg,
@@ -269,13 +275,8 @@ export function apply(ctx, config) {
     provisionHome,
     switchAgent: bindingResolution.switchAgentFromTurn,
     getBrokerGateway: () => ctx.get('brokerGateway'),
+    recycleWaitBudgetMs: recycleConfig.waitBudgetMs,
   })
-  // AGENT_PROCESS_RECYCLE_V1 (#703): periodic idle-generation recycle — a
-  // long-lived child accumulates append-only session history in RAM, so the
-  // sweep retires READY generations past their turn/age threshold through
-  // the existing graceful shutdown path. `DSH_AGENT_RECYCLE=off` disables;
-  // the timer is unref'd so it never holds the process open.
-  const recycleConfig = parseRecycleConfig(process.env)
   if (recycleConfig.enabled) {
     const recycleTimer = setInterval(() => {
       try {

@@ -95,11 +95,13 @@ function fakeRegistryDeps(store, { procs } = {}) {
   }
 }
 
-async function freshRegistry(t, { procs } = {}) {
+async function freshRegistry(t, { procs, recycleWaitBudgetMs } = {}) {
   const dir = await mkdtemp(join(tmpdir(), 'acr-recycle-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
   const store = new TurnReconciliationStore({ persistenceFile: join(dir, 'recovery.json'), runtimeEpoch: 'epoch-recycle' })
-  return createProcessRegistry(fakeRegistryDeps(store, { procs }))
+  const deps = fakeRegistryDeps(store, { procs })
+  if (recycleWaitBudgetMs !== undefined) deps.recycleWaitBudgetMs = recycleWaitBudgetMs
+  return createProcessRegistry(deps)
 }
 
 // ------------------------------------------------------------- pure policy
@@ -220,4 +222,54 @@ test('real AgentProcess: finishExecution drives recycleState.settledTurns', () =
   proc.finishExecution({ handle: 'h1' })
   proc.finishExecution({ handle: 'h2' })
   assert.equal(proc.recycleState.settledTurns, 2)
+})
+
+test('config overrides: every field of parseRecycleConfig is honored (FOLLOW_UP 3)', () => {
+  const cfg = parseRecycleConfig({
+    DSH_AGENT_RECYCLE_MAX_TURNS: '7',
+    DSH_AGENT_RECYCLE_MAX_AGE_MS: '12345678',
+    DSH_AGENT_RECYCLE_SWEEP_MS: '250',
+    DSH_AGENT_RECYCLE_WAIT_BUDGET_MS: '400',
+  })
+  assert.equal(cfg.maxTurns, 7)
+  assert.equal(cfg.maxAgeMs, 12345678)
+  assert.equal(cfg.sweepIntervalMs, 250)
+  assert.equal(cfg.waitBudgetMs, 400)
+  const fallback = parseRecycleConfig({})
+  assert.deepEqual(
+    { ...fallback, enabled: undefined },
+    { ...DEFAULT_RECYCLE_CONFIG, enabled: undefined },
+  )
+})
+
+test('FOLLOW_UP 1+2: waitRecycleThenEnsure is exercised — a stuck READY+retiring slot surfaces AGENT_PROCESS_REAPING within ONE threaded budget', async (t) => {
+  const procs = []
+  const registry = await freshRegistry(t, { procs, recycleWaitBudgetMs: 300 })
+  const gen1 = await registry.ensureRunning('agt_stuck')
+  assert.equal(registry.lifecycleSlotSnapshot('agt_stuck').state, 'READY')
+
+  // Stuck-shutdown fake: retire-marked, shutdown resolves, but the slot is
+  // never reaped (no casReap/casEmpty) — the pathological READY+retiring
+  // state the threaded budget exists for.
+  gen1.shutdown = function () {
+    this.shutdownInvocations += 1
+    this.shutdownPromise = Promise.resolve({ code: 0, signal: null })
+    return this.shutdownPromise
+  }
+  gen1.recycleState.settledTurns = DEFAULT_RECYCLE_CONFIG.maxTurns
+
+  const retired = registry.recycleSweep({ ...DEFAULT_RECYCLE_CONFIG })
+  assert.equal(retired.length, 1)
+  assert.equal(gen1.retireRequested, true)
+
+  const started = Date.now()
+  await assert.rejects(
+    registry.ensureRunning('agt_stuck'),
+    error => error.code === 'AGENT_PROCESS_REAPING',
+  )
+  const elapsed = Date.now() - started
+  // The budget is threaded: ONE 300ms budget from the first demand, not a
+  // fresh 300ms per re-entry cycle (which would wait forever).
+  assert.ok(elapsed >= 250, `budget honored (elapsed ${elapsed}ms)`)
+  assert.ok(elapsed < 2000, `no unbounded wait (elapsed ${elapsed}ms)`)
 })
