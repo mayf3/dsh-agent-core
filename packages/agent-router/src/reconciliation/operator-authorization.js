@@ -6,7 +6,14 @@ const IDENTITY = ['handle', 'runtimeEpoch', 'agentId', 'processGeneration', 'evi
 const COMMON = ['version', 'operationId', 'ownerUid', 'sourceSha256', 'loaderSha256']
 const exactKeys = (value, keys) => value && typeof value === 'object' && !Array.isArray(value)
   && Object.keys(value).sort().join(',') === [...keys].sort().join(',')
-export const DURABLE_IDLE_PROOFS = ['exact_started_then_idle', 'exact_queued_removal']
+export const DURABLE_IDLE_PROOFS = ['exact_terminal_then_idle', 'exact_started_then_idle', 'exact_queued_removal']
+// r2 (#707): exact_terminal_then_idle (C-015 first-class trusted termination
+// evidence, attached at event-correlation on the exact-terminal-then-idle
+// resolution leg) aligned into the operator batch vocabulary — the #1257
+// adapter's proof set predated this C-015 member. The per-target auth still
+// pins the record's OWN terminationEvidence (resumeOne refuses mismatches),
+// so the alignment only lets already-proven records through the offline
+// candidate; it invents no evidence.
 
 function validTarget(target, batch) {
   return exactKeys(target, batch ? [...IDENTITY, 'restoreBlockedFence'] : IDENTITY)
