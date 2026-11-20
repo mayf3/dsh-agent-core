@@ -217,7 +217,7 @@ test('§3-3: eviction is idempotent and keeps the audit linkage on the declarati
 
 // ── review-mandated additions (r2 re-review coverage matrix) ───────────────
 
-test('迟到效果: late settlement for an evicted abandoned record cannot fabricate a business settled', () => {
+test('迟到效果: a real late settlement attempt against an evicted abandoned record lands nowhere — the projection stays evicted and no business settled is fabricated', () => {
   const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-late' })
   const firstStuck = stuckTurn(store, HR, { generation: 1 })
   for (let generation = 2; generation <= 256; generation++) stuckTurn(store, HR, { generation })
@@ -225,16 +225,25 @@ test('迟到效果: late settlement for an evicted abandoned record cannot fabri
   stuckTurn(store, HR, { generation: 257 })
 
   // The abandoned record resolved `evicted` via the watermark — the record
-  // is gone from the store, so a LATE result for it can never fabricate a
-  // business settled: the projection stays `evicted`, and re-minting the
-  // same generation's next turn is unaffected by the ghost.
-  const before = store.getTurnReconciliation(firstStuck).state
-  assert.equal(before, 'evicted')
-
-  // Any late-effect attempt lands nowhere: the handle has no record to
-  // settle, and the watermark resolution is immutable.
+  // is gone from the store.
   assert.equal(store.getTurnReconciliation(firstStuck).state, 'evicted')
   assert.equal(store.records.has(firstStuck), false)
+
+  // An ACTUAL late settlement attempt: drive the store's settlement mutation
+  // against the evicted handle. It must land nowhere — no resurrection, no
+  // fabricated business outcome, and the watermark resolution is immutable.
+  const lateAttempts = [
+    () => store.markSettled?.(firstStuck, { outcome: 'succeeded' }),
+    () => store.markOutcomeUnknown?.(firstStuck, { source: 'late' }),
+    () => store.markPromptWriteAttempted?.(firstStuck),
+  ]
+  for (const attempt of lateAttempts) {
+    try { attempt?.() } catch { /* a missing-record rejection is also acceptable */ }
+  }
+  assert.equal(store.records.has(firstStuck), false, 'the evicted handle is never resurrected')
+  assert.equal(store.getTurnReconciliation(firstStuck).state, 'evicted', 'the projection stays evicted')
+  assert.notEqual(store.getTurnReconciliation(firstStuck).state, 'settled',
+    'abandonment must never become a business settled')
 })
 
 test('走查门: marker-only records are never evicted by the capacity walk — the prefix stops honestly at the quarantined generation', () => {

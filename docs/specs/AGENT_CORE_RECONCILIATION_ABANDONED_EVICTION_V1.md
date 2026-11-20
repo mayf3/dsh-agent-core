@@ -64,6 +64,18 @@ authoring_base: 710fa3a9 (production line head; includes accepted #703/#705)
   marker-only quarantined records keep blocking admission until their
   declarationId is legally completed (R131 same-key re-invocation with
   ownerRiskAcceptance).
+- **Epoch-retention semantics (r2 re-review blocker fix)**: correlation
+  no-replay tombstones are PERMANENT, so the epochs their handles reference
+  are REQUIRED epochs — `compactRuntimeEpochs` never drops a tombstone's
+  epoch (dropping one would turn the tombstone into an orphan at the next
+  restore: a startup brick the round-4 review probe proved reachable via
+  the r2 epoch-membership gate × bounded epoch compaction). Tombstone
+  epochs are bounded by the live tombstones themselves; the pathological
+  multi-thousand-distinct-epoch case stays fail-loud via the cap check,
+  never a silent brick. §3 wording synced with §0r2 (the two
+  admin-abandonment tests were rewritten to the heal-at-reopen semantics,
+  not "passing unchanged"); §4 now includes durable-file.js (the registry
+  gate stays fail-closed for malformed flag shapes).
 
 ## 0r2. Second-review amendments (QA re-review FAIL at the r1 head; both blockers + coverage matrix addressed)
 
@@ -103,9 +115,7 @@ authoring_base: 710fa3a9 (production line head; includes accepted #703/#705)
   the r2 epoch-membership gate × bounded epoch compaction). Tombstone
   epochs are bounded by the live tombstones themselves; the pathological
   multi-thousand-distinct-epoch case stays fail-loud via the cap check,
-  never a silent brick. §3 wording synced with §0r2 (the two
-  admin-abandonment tests were rewritten to the heal-at-reopen semantics,
-  not "passing unchanged"); §4 now includes durable-file.js (the registry
+  never a silent brick. §4 now includes durable-file.js (the registry
   validator/writer carrying the 6-key surface).
 
 > 状态：**proposed / docs+code atomic candidate（V3-adoption bounded route）**。
@@ -163,8 +173,14 @@ agt_hr-agent at the exact 256 cap, ~130-170 admission failures/day since
 - an evicted abandoned record resolves `state === 'evicted'` and never as a
   business settled;
 - eviction is idempotent; the declaration registry audit linkage survives;
-- the existing admin-abandonment suite passes unchanged (marker-only
-  quarantine, D6 acceptance stamping, no-replay, restart persistence).
+- the admin-abandonment suite passes at the accepted head — its two
+  crash-window tests are rewritten to the heal-at-reopen semantics per
+  §0r2 (the r1 rewrite initially shipped without them; see §0r2), and the
+  epoch-saturation regression (§2.4 tombstone-epoch protection) is frozen
+  in the suite;
+- 迟到效果: a late settlement attempt against an evicted abandoned record
+  lands nowhere — the projection stays `evicted`, the store never
+  fabricates a business settled.
 
 ## 4. Exact implementation paths
 
