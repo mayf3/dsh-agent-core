@@ -103,7 +103,7 @@ export function stampCandidate(candidate, { declarationId, declaredAt, withAccep
  * legally accept and the record stays quarantined forever. Idempotency keys
  * on the ACCEPTANCE AUDIT (never restamped), not on the marker alone.
  */
-function hasAcceptanceAudit(candidate) {
+export function hasAcceptanceAudit(candidate) {
   return (candidate.audit ?? []).some(entry => entry?.kind === 'owner_risk_acceptance_unproven_termination')
 }
 

@@ -4,7 +4,7 @@ status: proposed
 spec_kind: implementation
 authority_level: governing_spec_amendment
 implementation_authority: none
-revision: r0
+revision: r1
 revision_date: 2026-11-20
 amendment_of: AGENT_PROCESS_LIFECYCLE_HARDENING_V4
 amendment_kind: NEW
@@ -41,6 +41,29 @@ authoring_base: 710fa3a9 (production line head; includes accepted #703/#705)
 ---
 
 # AGENT_CORE_RECONCILIATION_ABANDONED_EVICTION_V1 — abandoned-generation capacity recovery (bounded amendment)
+
+## 0r1. Post-review amendments (independent QA returned BLOCKED with 3 reproduced safety counterexamples; all addressed)
+
+- **Blocker 1 (restore-apply crossing the risk-acceptance boundary)**: r1
+  stamped the D6 acceptance audit unconditionally at restore. r2: the durable
+  registry entries MAY carry the explicit `ownerRiskAcceptance: true` +
+  `decisionRef`; restore-apply stamps the acceptance audit ONLY for entries
+  carrying the flag; flag-less (legacy/pre-seeded) entries restore
+  MARKER-ONLY — the quarantine boundary is not auto-upgraded. Invalid flag
+  shapes fail the store closed at startup.
+- **Blocker 2 (UNKNOWN eviction destroying caller-correlation no-replay)**:
+  r1 evicted correlated records via plain evictRecord, deleting the
+  correlation index entry (the same correlation could re-mint — reproduced).
+  r2: correlated records evict through a correlation-preserving arm — the
+  index entry stays as the durable no-replay tombstone; re-mints of the same
+  correlation reject with RECONCILIATION_CORRELATION_CONFLICT across
+  restarts; recountCapacity tolerates watermark-resolvable tombstones.
+- **Blocker 3 (marker-only records treated as releasable capacity)**: r1
+  evicted any marked record. r2: non-settled records are releasable ONLY
+  with BOTH the marker AND the D6 acceptance audit (hasAcceptanceAudit);
+  marker-only quarantined records keep blocking admission until their
+  declarationId is legally completed (R131 same-key re-invocation with
+  ownerRiskAcceptance).
 
 > 状态：**proposed / docs+code atomic candidate（V3-adoption bounded route）**。
 > 独立验收（exact-head semantic review PASS, BLOCKERS=NONE，验收人 ≠ 作者）通过前

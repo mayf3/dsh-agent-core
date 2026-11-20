@@ -103,14 +103,25 @@ export class TurnReconciliationStore {
           // clears). The pre-seed act under the owner's directive IS the risk
           // acceptance, so the acceptance audit is stamped here.
           let restoredAbandonmentApplications = 0
+          let restoredMarkerOnlyApplications = 0
           for (const declaration of this.adminAbandonmentDeclarations ?? []) {
+            // RECONCILIATION_ABANDONED_EVICTION_V1 r2 (#707 review blocker 1):
+            // the acceptance audit is stamped ONLY for entries carrying the
+            // explicit durable `ownerRiskAcceptance` flag. Legacy/pre-seeded
+            // entries without the flag stamp MARKER-ONLY — the admission
+            // quarantine stays (the D6 boundary is not auto-upgraded).
+            const withAcceptance = declaration.ownerRiskAcceptance === true
             for (const handle of declaration.handles) {
               const record = this.records.get(handle)
               if (record === undefined || (record.adminAbandonment ?? null) !== null) continue
               if (record.initialOutcome !== 'outcome_unknown') continue
-              stampCandidate(record, { declarationId: declaration.declarationId, declaredAt: declaration.declaredAt, withAcceptance: true })
-              restoredAbandonmentApplications += 1
+              stampCandidate(record, { declarationId: declaration.declarationId, declaredAt: declaration.declaredAt, withAcceptance })
+              if (withAcceptance) restoredAbandonmentApplications += 1
+              else restoredMarkerOnlyApplications += 1
             }
+          }
+          if (restoredAbandonmentApplications > 0 || restoredMarkerOnlyApplications > 0) {
+            this.startupAbandonmentRestore = { accepted: restoredAbandonmentApplications, markerOnly: restoredMarkerOnlyApplications }
           }
           this.recountCapacity()
           this.restoreCrashInterruptedRecords()
@@ -165,7 +176,13 @@ export class TurnReconciliationStore {
       }
     }
     for (const [key, handle] of this.correlationIndex) {
-      if (!this.records.has(handle)) throw new ReconciliationCapacityError('reconciliation: orphan caller correlation')
+      // RECONCILIATION_ABANDONED_EVICTION_V1 r2 (#707 review blocker 2): a
+      // correlation entry pointing at an evicted (watermark-resolvable)
+      // handle is the durable no-replay tombstone — legal, and it must keep
+      // rejecting re-mints of that correlation across restarts.
+      if (!this.records.has(handle) && !this.handleResolvesEvicted(handle)) {
+        throw new ReconciliationCapacityError('reconciliation: orphan caller correlation')
+      }
       this.correlationBytes += correlationEntryByteSize(key, handle)
     }
     this.globalBytes += this.correlationBytes

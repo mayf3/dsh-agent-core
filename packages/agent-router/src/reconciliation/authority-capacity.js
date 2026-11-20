@@ -2,6 +2,7 @@
 import {
   correlationEntryByteSize, RECONCILIATION_CAPS, ReconciliationCapacityError, recordByteSize,
 } from './capacity.js'
+import { hasAcceptanceAudit } from './admin-abandonment.js'
 
 export const authorityCapacityMethods = {
   snapshotAuthority() {
@@ -89,6 +90,23 @@ export const authorityCapacityMethods = {
    * lockout, #707). Iterates the contiguous prefix (progress-guarded) so one
    * call frees every releasable generation, not just the first.
    */
+  /**
+   * r2 (#707 review blocker 2): whether an absent record's handle resolves as
+   * legally evicted via the issuance watermarks (contiguous watermark or the
+   * bounded sparse set). Used by recountCapacity to keep correlation
+   * tombstones legal across restarts.
+   */
+  handleResolvesEvicted(handle) {
+    const match = typeof handle === 'string' ? handle.match(/^turn:([^:]+):a(\d+):g(\d+):s(\d+)$/) : null
+    if (match === null) return false
+    const seq = Number.parseInt(match[4], 10)
+    if (!Number.isSafeInteger(seq)) return false
+    for (const issuance of this.issuance.values()) {
+      if (seq <= issuance.evictedThroughTurnSeq || issuance.evictedSparseSeqs.has(seq)) return true
+    }
+    return false
+  },
+
   evictSettledGenerationForCapacity(agentId, issuance) {
     for (;;) {
       const candidate = [...issuance.generations.entries()]
@@ -100,13 +118,72 @@ export const authorityCapacityMethods = {
       const before = issuance.generations.size
       for (const record of [...this.records.values()]) {
         if (record.agentId !== agentId || record.processGeneration !== generation) continue
-        if (record.state === 'settled' || (record.adminAbandonment ?? null) !== null) {
+        if (record.state === 'settled') {
+          this.evictRecord(record)
+          continue
+        }
+        // RECONCILIATION_ABANDONED_EVICTION_V1 r2 (#707 review blockers 2+3):
+        // only records carrying BOTH the abandonment marker AND the D6
+        // owner-risk acceptance audit are releasable. Marker-only records
+        // (auto fence-repair stamps / pre-D6 declarations) stay quarantined —
+        // they keep blocking admission and pin the generation until their
+        // declarationId is re-invoked with the explicit owner risk acceptance.
+        const releasable = (record.adminAbandonment ?? null) !== null
+          && hasAcceptanceAudit(record)
+        if (!releasable) continue
+        // Correlated records: evict WITHOUT deleting the caller-correlation
+        // index entry — it stays as the durable no-replay tombstone (the same
+        // correlation can never mint a second authority again), resolving as
+        // `evicted` through the watermarks below.
+        if (record.callerCorrelation !== null && record.callerCorrelation !== undefined) {
+          this.evictAbandonedRecordPreserveCorrelation(record)
+        } else {
           this.evictRecord(record)
         }
       }
-      // Progress guard: a generation whose surviving records are neither
-      // settled nor abandoned must not spin the loop.
+      // Progress guard: a generation holding marker-only/quarantined records
+      // must not spin the loop — stop honestly (capacity stays blocked until
+      // the quarantine is legally completed).
       if (issuance.generations.size === before) return
+    }
+  },
+
+  /**
+   * r2 (#707 review blocker 2): abandoned-record eviction that PRESERVES the
+   * caller-correlation index entry as a durable no-replay tombstone. Mirrors
+   * evictRecord's bookkeeping except the correlation cleanup: the entry keeps
+   * resolving (RECONCILIATION_CORRELATION_CONFLICT on any re-mint) while the
+   * record itself resolves as `evicted` through the watermarks.
+   */
+  evictAbandonedRecordPreserveCorrelation(record) {
+    this.records.delete(record.handle)
+    this.globalBytes -= record.bytes
+    this.agentCounts.set(record.agentId, (this.agentCounts.get(record.agentId) ?? 1) - 1)
+    this.agentBytes.set(record.agentId, (this.agentBytes.get(record.agentId) ?? record.bytes) - record.bytes)
+    const issuance = this.issuance.get(record.agentId)
+    if (issuance !== undefined) {
+      if (record.turnSeq === issuance.evictedThroughTurnSeq + 1) {
+        issuance.evictedThroughTurnSeq = record.turnSeq
+      } else {
+        issuance.evictedSparseSeqs.add(record.turnSeq)
+        if (issuance.evictedSparseSeqs.size > RECONCILIATION_CAPS.MAX_EVICTED_SPARSE_SEQS_PER_AGENT) {
+          const oldest = issuance.evictedSparseSeqs.values().next().value
+          issuance.evictedSparseSeqs.delete(oldest)
+        }
+      }
+      const generationEntry = issuance.generations.get(record.processGeneration)
+      if (generationEntry !== undefined) {
+        generationEntry.liveRecords -= 1
+        if (generationEntry.liveRecords <= 0) {
+          const generation = record.processGeneration
+          issuance.generations.delete(generation)
+          if (generation === issuance.evictedThroughGeneration + 1) {
+            issuance.evictedThroughGeneration = generation
+          } else {
+            issuance.evictedGenerations.set(generation, generationEntry.maxSeq)
+          }
+        }
+      }
     }
   },
 

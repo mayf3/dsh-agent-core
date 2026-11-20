@@ -80,8 +80,17 @@ function assertDurableAbandonmentDeclarations(entries) {
   }
   const ids = new Set()
   for (const entry of entries) {
+    // RECONCILIATION_ABANDONED_EVICTION_V1 r2 (#707): entries MAY carry an
+    // explicit durable risk acceptance (`ownerRiskAcceptance: true` + a
+    // `decisionRef` naming the authorizing decision). Restore-apply stamps
+    // the acceptance audit ONLY for entries carrying the explicit flag;
+    // legacy 4-key entries stay marker-only (quarantine preserved).
+    const keys = Object.keys(entry).sort().join(',')
+    const baseKeys = ['declarationId', 'agentId', 'handles', 'declaredAt'].sort().join(',')
+    const extendedKeys = ['declarationId', 'agentId', 'handles', 'declaredAt', 'decisionRef', 'ownerRiskAcceptance'].sort().join(',')
+    const extended = keys === extendedKeys
     if (entry === null || typeof entry !== 'object' || Array.isArray(entry)
-        || Object.keys(entry).sort().join(',') !== ['declarationId', 'agentId', 'handles', 'declaredAt'].sort().join(',')
+        || (keys !== baseKeys && !extended)
         || typeof entry.declarationId !== 'string' || entry.declarationId === '' || entry.declarationId.length > 128
         || typeof entry.agentId !== 'string' || entry.agentId === '' || entry.agentId.length > 256
         || !Number.isSafeInteger(entry.declaredAt) || entry.declaredAt < 0
@@ -89,6 +98,10 @@ function assertDurableAbandonmentDeclarations(entries) {
         || entry.handles.some(handle => typeof handle !== 'string' || handle === '' || handle.length > 512)
         || new Set(entry.handles).size !== entry.handles.length
         || ids.has(entry.declarationId)) {
+      throw new TypeError('durable abandonment declaration entry is invalid')
+    }
+    if (extended && (entry.ownerRiskAcceptance !== true || typeof entry.decisionRef !== 'string'
+        || entry.decisionRef === '' || entry.decisionRef.length > 256)) {
       throw new TypeError('durable abandonment declaration entry is invalid')
     }
     ids.add(entry.declarationId)
