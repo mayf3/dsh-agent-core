@@ -125,9 +125,31 @@ export const authorityCapacityMethods = {
 
   evictSettledGenerationForCapacity(agentId, issuance) {
     for (;;) {
+      // RECONCILIATION_ABANDONED_EVICTION_V1 r6 (#707 root cause, code-level
+      // verified): `evictResolvedForByteCapacity` deletes individual settled
+      // records and their generation entries WITHOUT advancing the
+      // evictedThroughGeneration watermark (the non-contiguous deletion
+      // path). This creates PERMANENT WATERMARK GAPS: generations removed
+      // from the map but the contiguity filter
+      // (`generation === evictedThroughGeneration + 1`) can never reach past
+      // the gap — every subsequent mint throws capacity forever.
+      //
+      // HR measured proof: evictedThroughGeneration=34, live generations
+      // 70-301, evicted 38-91, generations 35-37 ABSENT (byte-capacity
+      // deleted their entries without advancing the watermark) → the
+      // filter can never match → permanent 256-cap deadlock.
+      //
+      // Fix: the candidate is the OLDEST generation with
+      // `unresolvedCount === 0` — no contiguity requirement. The eviction
+      // goes through `evictRecord`'s own bookkeeping (the watermark advances
+      // contiguously where possible; non-contiguous deletions land in
+      // `evictedGenerations` per Rule 11), and every evicted handle still
+      // resolves as `evicted` through the watermarks.
+      //
+      // The tombstone-epoch protection (compactRuntimeEpochs REQUIRED set,
+      // r4) and the correlation-preserving arm (r2) are retained unchanged.
       const candidate = [...issuance.generations.entries()]
-        .filter(([generation, entry]) => entry.unresolvedCount === 0
-          && generation === issuance.evictedThroughGeneration + 1)
+        .filter(([generation, entry]) => entry.unresolvedCount === 0)
         .sort((a, b) => a[0] - b[0])[0]
       if (candidate === undefined) return
       const generation = candidate[0]
