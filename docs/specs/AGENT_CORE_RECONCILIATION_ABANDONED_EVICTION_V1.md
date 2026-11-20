@@ -1,0 +1,132 @@
+---
+spec_id: AGENT_CORE_RECONCILIATION_ABANDONED_EVICTION_V1
+status: proposed
+spec_kind: implementation
+authority_level: governing_spec_amendment
+implementation_authority: none
+revision: r0
+revision_date: 2026-11-20
+amendment_of: AGENT_PROCESS_LIFECYCLE_HARDENING_V4
+amendment_kind: NEW
+amendment_route: >-
+  V3-adoption bounded route: one atomic Spec-delta-and-code PR under the
+  Owner's task authorization (dsh-agent-core#707 structural slice, Owner
+  directive 2026-11-20 "继续 #707 P1 原责任" — §三 代次容量修复受控方案).
+  The delta must be independently accepted before merge. It does not
+  authorize production effects.
+scope:
+  - reconciliation issuance-generation capacity recovery for
+    declaration-abandoned generations (contiguous-prefix eviction of
+    settled + declaration-abandoned records)
+  - declaration-time unresolvedCount decrement
+  - restore-time recount exclusion for declaration-abandoned records
+  - registry restore-apply (durable registry re-applied to restored records)
+non_goals:
+  - any record deletion outside the store's own evictRecord watermark
+    machinery (no bare durable-JSON edits)
+  - any business-settled semantics for abandoned records (outcome stays
+    UNKNOWN; resolution is `evicted` via the watermarks)
+  - the admission-fence gate semantics (unchanged: declaration-marked
+    records stop blocking NEW-request admission; historical fence query
+    stays unchanged)
+governed_by:
+  - AGENT_CORE_HARDENING_PROGRAM_V1
+parent_spec_references:
+  - docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V4.md
+owners:
+  - mayf3
+date: 2026-11-20
+repository: mayf3/dsh-agent-core
+authoring_base: 710fa3a9 (production line head; includes accepted #703/#705)
+---
+
+# AGENT_CORE_RECONCILIATION_ABANDONED_EVICTION_V1 — abandoned-generation capacity recovery (bounded amendment)
+
+> 状态：**proposed / docs+code atomic candidate（V3-adoption bounded route）**。
+> 独立验收（exact-head semantic review PASS, BLOCKERS=NONE，验收人 ≠ 作者）通过前
+> 不 merge。本 delta 不授权任何生产效应。
+
+## 1. Goal (measured deadlock)
+
+`MAX_ISSUANCE_GENERATIONS_PER_AGENT = 256` deadlocks an agent whose child
+restarts often: every kill leaves an outcome_unknown record pinning its
+generation entry, and `evictSettledGenerationForCapacity` only evicted
+`state === 'settled'` records — declaration-abandoned records (owner risk
+accepted, outcome stays UNKNOWN forever) had NO eviction path. Measured:
+agt_hr-agent at the exact 256 cap, ~130-170 admission failures/day since
+11-17 (dsh-agent-core#707).
+
+## 2. Exact semantics (controlled recovery, per Owner §三 constraints)
+
+1. **Declaration-time decrement.** Stamping a record with the abandonment
+   marker decrements its generation's `unresolvedCount` (owner risk
+   acceptance = resolved-for-capacity; the outcome itself stays UNKNOWN).
+   Crash-safety: the decrement is runtime state; `recountCapacity` (§2.3)
+   re-excludes marked records, so any crash gap self-heals at restart.
+2. **Restore-time recount exclusion.** `recountCapacity` no longer counts
+   declaration-marked records as unresolved — a declaration survives every
+   restart.
+3. **Registry restore-apply.** The durable declaration registry is
+   re-applied to the restored records (stamp marker + owner-risk-acceptance
+   audit for records not yet marked): the registry file IS the
+   owner-authorized operation record; pre-seeding it under the Owner's
+   directive is the risk acceptance, so the acceptance audit is stamped at
+   restore-apply and the audit lives on the record + registry (idempotent —
+   already-marked records are skipped).
+4. **Contiguous-prefix eviction, progress-guarded.**
+   `evictSettledGenerationForCapacity` walks `generation ===
+   evictedThroughGeneration + 1` while `unresolvedCount === 0`, evicting
+   settled AND declaration-abandoned records through the store's own
+   `evictRecord` machinery (watermark resolution; no bare durable-JSON
+   edits), with a progress guard (no candidate-free spin).
+5. **What is preserved.** The abandoned record's outcome stays UNKNOWN;
+   resolution is `evicted` via the watermarks; replay protection (no-replay
+   correlation) and audit linkage are unchanged; admission-fence semantics
+   unchanged (marked records stop blocking; the historical fence query stays
+   unchanged).
+
+## 3. Invariants frozen by tests
+
+`packages/agent-router/test/process-lifecycle/reconciliation-abandoned-eviction.test.js`:
+
+- r0 deadlock frozen: at the 256 cap with every record declaration-abandoned,
+  the pre-fix mint throws; post-fix the next NEW-generation mint succeeds;
+- an evicted abandoned record resolves `state === 'evicted'` and never as a
+  business settled;
+- eviction is idempotent; the declaration registry audit linkage survives;
+- the existing admin-abandonment suite passes unchanged (marker-only
+  quarantine, D6 acceptance stamping, no-replay, restart persistence).
+
+## 4. Exact implementation paths
+
+- `packages/agent-router/src/reconciliation/authority-capacity.js`
+  (prefix walk: settled + declaration-abandoned records, progress guard)
+- `packages/agent-router/src/reconciliation/admin-abandonment.js`
+  (unresolvedCount decrement at declaration application; export
+  stampCandidate)
+- `packages/agent-router/src/reconciliation/store.js`
+  (restore-apply of the registry; recount exclusion)
+- `packages/agent-router/test/process-lifecycle/reconciliation-abandoned-eviction.test.js` (NEW)
+
+## 5. Alternatives and disposition
+
+- Marking abandoned records as business `settled`: rejected — that fabricates
+  a business outcome (Owner §三: "不得把 abandonment 偷换成业务 settled").
+- Deleting records outside `evictRecord` (direct durable-JSON edits):
+  rejected — the red line; eviction via the watermark machinery keeps every
+  evicted handle resolvable.
+- Raising `MAX_ISSUANCE_GENERATIONS_PER_AGENT`: rejected — delays, not
+  removes, the deadlock; the contiguity/abandoned-eviction gap is the defect.
+
+## 6. Production-recovery interlock (deployment note, NOT authorized here)
+
+With this fix deployed, HR's unlock becomes: declare (or retry)
+`hr-unlock-707pathA-20261120` through the admin entry → unresolvedCount
+zero → the next mint walks the contiguous prefix → capacity frees → HR
+admission recovers. The identity/authorization constraints of that admin
+entry (OBS-WA-008 CTO recovery principal) are unchanged.
+
+## 7. Acceptance gate
+
+Independent exact-head semantic review (reviewer ≠ author) must return PASS
+with BLOCKERS=NONE on this file + the atomic code commit before merge.

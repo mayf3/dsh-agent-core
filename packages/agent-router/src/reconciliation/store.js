@@ -42,7 +42,7 @@ import { settlementMethods } from './state-machine.js'
 import { queryMethods } from './query.js'
 import { authorityCapacityMethods } from './authority-capacity.js'
 import { startupRecoveryMethods } from './startup-recovery.js'
-import { adminAbandonmentMethods, reconstructAdminAbandonmentDeclarations } from './admin-abandonment.js'
+import { adminAbandonmentMethods, reconstructAdminAbandonmentDeclarations, stampCandidate } from './admin-abandonment.js'
 import { readDurableRecoveryStore, writeDurableRecoveryStore,
   abandonmentDeclarationRegistryPathFor,
   readAbandonmentDeclarationRegistry, writeAbandonmentDeclarationRegistry } from './durable-file.js'
@@ -96,6 +96,22 @@ export class TurnReconciliationStore {
           this.discriminatorSeq = durable.discriminatorSeq
           this.adminAbandonmentDeclarations = registry
             ?? reconstructAdminAbandonmentDeclarations(this.records)
+          // RESTORE-APPLY (#707 RECONCILIATION_ABANDONED_EVICTION_V1): the
+          // durable registry is the owner-authorized operation record — it is
+          // re-applied to the restored records so a declaration survives every
+          // restart (the registry file itself does not replay per-record
+          // clears). The pre-seed act under the owner's directive IS the risk
+          // acceptance, so the acceptance audit is stamped here.
+          let restoredAbandonmentApplications = 0
+          for (const declaration of this.adminAbandonmentDeclarations ?? []) {
+            for (const handle of declaration.handles) {
+              const record = this.records.get(handle)
+              if (record === undefined || (record.adminAbandonment ?? null) !== null) continue
+              if (record.initialOutcome !== 'outcome_unknown') continue
+              stampCandidate(record, { declarationId: declaration.declarationId, declaredAt: declaration.declaredAt, withAcceptance: true })
+              restoredAbandonmentApplications += 1
+            }
+          }
           this.recountCapacity()
           this.restoreCrashInterruptedRecords()
         } else {
@@ -142,7 +158,10 @@ export class TurnReconciliationStore {
       const generation = this.issuance.get(record.agentId)?.generations.get(record.processGeneration)
       if (generation !== undefined) {
         generation.liveRecords += 1
-        if (record.state !== 'settled') generation.unresolvedCount += 1
+        // RECONCILIATION_ABANDONED_EVICTION_V1 (#707): declaration-abandoned
+        // records are owner-resolved for capacity purposes — the outcome stays
+        // UNKNOWN but they must not re-pin their generation after a restart.
+        if (record.state !== 'settled' && (record.adminAbandonment ?? null) === null) generation.unresolvedCount += 1
       }
     }
     for (const [key, handle] of this.correlationIndex) {

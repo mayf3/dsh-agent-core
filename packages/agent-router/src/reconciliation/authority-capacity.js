@@ -77,17 +77,36 @@ export const authorityCapacityMethods = {
     }
   },
 
+  /**
+   * #707 (RECONCILIATION_ABANDONED_EVICTION_V1): walk the contiguous settled
+   * prefix, evicting each fully-resolved generation — settled records AND
+   * declaration-abandoned records (adminAbandonment marker = the owner's
+   * audited decision that the turn never settles: the outcome stays UNKNOWN
+   * and resolves as `evicted` through the watermarks below, never as a
+   * business settled). Without the abandoned arm, one never-settling record
+   * permanently pins its generation entry and the agent deadlocks at
+   * MAX_ISSUANCE_GENERATIONS_PER_AGENT (measured: agt_hr-agent 256-cap
+   * lockout, #707). Iterates the contiguous prefix (progress-guarded) so one
+   * call frees every releasable generation, not just the first.
+   */
   evictSettledGenerationForCapacity(agentId, issuance) {
-    const candidate = [...issuance.generations.entries()]
-      .filter(([generation, entry]) => entry.unresolvedCount === 0
-        && generation === issuance.evictedThroughGeneration + 1)
-      .sort((a, b) => a[0] - b[0])[0]
-    if (candidate === undefined) return
-    const generation = candidate[0]
-    for (const record of [...this.records.values()]) {
-      if (record.agentId === agentId && record.processGeneration === generation && record.state === 'settled') {
-        this.evictRecord(record)
+    for (;;) {
+      const candidate = [...issuance.generations.entries()]
+        .filter(([generation, entry]) => entry.unresolvedCount === 0
+          && generation === issuance.evictedThroughGeneration + 1)
+        .sort((a, b) => a[0] - b[0])[0]
+      if (candidate === undefined) return
+      const generation = candidate[0]
+      const before = issuance.generations.size
+      for (const record of [...this.records.values()]) {
+        if (record.agentId !== agentId || record.processGeneration !== generation) continue
+        if (record.state === 'settled' || (record.adminAbandonment ?? null) !== null) {
+          this.evictRecord(record)
+        }
       }
+      // Progress guard: a generation whose surviving records are neither
+      // settled nor abandoned must not spin the loop.
+      if (issuance.generations.size === before) return
     }
   },
 

@@ -84,7 +84,7 @@ function stuckAdmissionHandles(store, agentId) {
  * records and fresh scopes exclude them). The audit bounding replicates
  * appendAudit's caps exactly (MAX entries / MAX bytes, auditDroppedCount).
  */
-function stampCandidate(candidate, { declarationId, declaredAt, withAcceptance }) {
+export function stampCandidate(candidate, { declarationId, declaredAt, withAcceptance }) {
   candidate.adminAbandonment = { declarationId, declaredAt }
   if (withAcceptance !== true) return
   candidate.audit.push({ kind: 'owner_risk_acceptance_unproven_termination', evidenceType: null, observedAtWallMs: Date.now() })
@@ -256,6 +256,15 @@ export const adminAbandonmentMethods = {
       this.mutateRecord(record, (candidate) => {
         stampCandidate(candidate, { declarationId, declaredAt, withAcceptance: ownerRiskAcceptance })
       })
+      // RECONCILIATION_ABANDONED_EVICTION_V1 (#707): an abandoned turn never
+      // resolves — capacity-wise the owner's risk acceptance makes it
+      // resolved-for-eviction, so the generation's unresolved count drops
+      // and the contiguous-prefix eviction can free the generation entry.
+      // (Restart-safe: recountCapacity re-excludes marked records.)
+      const generationEntry = this.issuance.get(agentId)?.generations.get(record.processGeneration)
+      if (generationEntry !== undefined) {
+        generationEntry.unresolvedCount = Math.max(0, generationEntry.unresolvedCount - 1)
+      }
     }
     return { agentId, declarationId, abandonedHandles: [...scopeHandles], completedHandles: [], scopeHandles }
   },
