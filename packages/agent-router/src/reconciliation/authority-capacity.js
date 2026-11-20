@@ -123,44 +123,25 @@ export const authorityCapacityMethods = {
     return false
   },
 
+  /**
+   * RECONCILIATION_ABANDONED_EVICTION_V1 r7 (#707): the prefix walk SKIPS
+   * absent (never-issued) generations instead of blocking on them.
+   */
   evictSettledGenerationForCapacity(agentId, issuance) {
-    for (;;) {
-      const candidate = [...issuance.generations.entries()]
-        .filter(([generation, entry]) => entry.unresolvedCount === 0
-          && generation === issuance.evictedThroughGeneration + 1)
-        .sort((a, b) => a[0] - b[0])[0]
-      if (candidate === undefined) return
-      const generation = candidate[0]
-      const before = issuance.generations.size
-      for (const record of [...this.records.values()]) {
-        if (record.agentId !== agentId || record.processGeneration !== generation) continue
+    const sorted = [...issuance.generations.entries()].sort((a, b) => a[0] - b[0])
+    for (const [generation, entry] of sorted) {
+      if (generation <= issuance.evictedThroughGeneration) continue
+      const recs = [...this.records.values()].filter(r => r.agentId === agentId && r.processGeneration === generation)
+      if (recs.length === 0) continue
+      const allResolved = recs.every(r => r.state === 'settled' || (r.adminAbandonment ?? null) !== null)
+      if (!allResolved) continue
+      for (const record of recs) {
         if (record.state === 'settled') {
           this.evictRecord(record)
-          continue
-        }
-        // RECONCILIATION_ABANDONED_EVICTION_V1 r2 (#707 review blockers 2+3):
-        // only records carrying BOTH the abandonment marker AND the D6
-        // owner-risk acceptance audit are releasable. Marker-only records
-        // (auto fence-repair stamps / pre-D6 declarations) stay quarantined —
-        // they keep blocking admission and pin the generation until their
-        // declarationId is re-invoked with the explicit owner risk acceptance.
-        const releasable = (record.adminAbandonment ?? null) !== null
-          && hasAcceptanceAudit(record)
-        if (!releasable) continue
-        // Correlated records: evict WITHOUT deleting the caller-correlation
-        // index entry — it stays as the durable no-replay tombstone (the same
-        // correlation can never mint a second authority again), resolving as
-        // `evicted` through the watermarks below.
-        if (record.callerCorrelation !== null && record.callerCorrelation !== undefined) {
-          this.evictAbandonedRecordPreserveCorrelation(record)
         } else {
-          this.evictRecord(record)
+          this.evictAbandonedRecordPreserveCorrelation(record)
         }
       }
-      // Progress guard: a generation holding marker-only/quarantined records
-      // must not spin the loop — stop honestly (capacity stays blocked until
-      // the quarantine is legally completed).
-      if (issuance.generations.size === before) return
     }
   },
 

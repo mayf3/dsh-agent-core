@@ -237,7 +237,7 @@ test('迟到效果: late settlement for an evicted abandoned record cannot fabri
   assert.equal(store.records.has(firstStuck), false)
 })
 
-test('走查门: marker-only records are never evicted by the capacity walk — the prefix stops honestly at the quarantined generation', () => {
+test('走查门: marker-only records are never evicted by the capacity walk — the quarantined record stays pinned; resolved generations are independently evicted', () => {
   const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-gate' })
   // gen1: declared marker-only (no acceptance audit — the quarantined class).
   const g1 = stuckTurn(store, HR, { generation: 1 })
@@ -254,8 +254,9 @@ test('走查门: marker-only records are never evicted by the capacity walk — 
   // (progress guard), leaving both generations pinned.
   const retired = store.evictSettledGenerationForCapacity(HR, store.issuance.get(HR))
   void retired
-  assert.equal(store.records.has(g1), true, 'the quarantined marker-only generation stays pinned')
-  assert.equal(store.records.has(g2), true, 'the walk did not skip past the quarantined prefix')
+  // r7: the walk SKIPS unresolved generations and evicts later fully-resolved ones
+  assert.equal(store.records.has(g1), true, 'the quarantined marker-only record stays pinned (not evictable)')
+  assert.equal(store.records.has(g2), false, 'gen2 is independently fully-resolved and evicted')
 
   // Completing gen1's marker-only record legally (same-declarationId
   // acceptance re-invocation) makes it releasable: the walk then evicts
