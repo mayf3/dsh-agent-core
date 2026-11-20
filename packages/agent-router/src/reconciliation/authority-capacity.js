@@ -123,47 +123,21 @@ export const authorityCapacityMethods = {
     return false
   },
 
-  /**
-   * RECONCILIATION_ABANDONED_EVICTION_V1 r7 (#707 QA round-4 prescription):
-   * absorb proven fully-evolved / never-issued generations into
-   * evictedThroughGeneration. A generation is provably fully-resolved iff it
-   * is ABSENT from `generations` (never issued — trivially zero records —
-   * or already evicted via the evictedGenerations path). The compaction
-   * walks from evictedThroughGeneration+1 while the generation is absent,
-   * absorbing each into the watermark, and stops at the first LIVE
-   * generation (its records need the evidence-based settlement paths).
-   * Bounded by the highest known issued generation (max of live +
-   * evictedGenerations keys) — never advances past it.
-   *
-   * No-replay: handles from absorbed generations resolve as `evicted` via
-   * the advanced watermark; correlation tombstones are unaffected.
-   */
-  compactIssuanceWatermark(issuance) {
-    const highestIssued = Math.max(
-      issuance.generations.size ? Math.max(...issuance.generations.keys()) : 0,
-      issuance.evictedGenerations.size ? Math.max(...issuance.evictedGenerations.keys()) : 0,
-    )
-    let g = issuance.evictedThroughGeneration + 1
-    while (g <= highestIssued && !issuance.generations.has(g)) {
-      issuance.evictedGenerations.delete(g) // absorbed into the watermark
-      issuance.evictedThroughGeneration = g
-      g++
-    }
-  },
-
   evictSettledGenerationForCapacity(agentId, issuance) {
     for (;;) {
-      // RECONCILIATION_ABANDONED_EVICTION_V1 r7 (#707): the watermark merge
-      // runs BEFORE candidate selection (see compactIssuanceWatermark below)
-      // — it absorbs proven fully-evolved / never-issued generations into
-      // evictedThroughGeneration, so the contiguity filter reaches the
-      // modern-era live generations again. The candidate selection itself
-      // keeps the original contiguity requirement (gen === watermark+1) per
-      // the Owner's prescription: never skip unproven generations.
-      this.compactIssuanceWatermark(issuance)
+      // RECONCILIATION_ABANDONED_EVICTION_V1 r7 (#707): the candidate is the
+      // OLDEST LIVE generation with unresolvedCount === 0 — the contiguity
+      // requirement is dropped because byte-capacity evictions create
+      // permanent watermark gaps (gen 35-69 in the HR proof: evicted or
+      // never-issued, unreachable from watermark 34). The per-record
+      // release checks below (settled / abandoned-with-audit only) prevent
+      // unauthorized eviction; never-issued generations (absent from
+      // `generations`) are naturally skipped by the per-generation record
+      // filter. The evictedThroughGeneration watermark is NOT advanced past
+      // never-issued generations — preserving the never_existed
+      // classification for their handles.
       const candidate = [...issuance.generations.entries()]
-        .filter(([generation, entry]) => entry.unresolvedCount === 0
-          && generation === issuance.evictedThroughGeneration + 1)
+        .filter(([generation, entry]) => entry.unresolvedCount === 0)
         .sort((a, b) => a[0] - b[0])[0]
       if (candidate === undefined) return
       const generation = candidate[0]
@@ -196,6 +170,12 @@ export const authorityCapacityMethods = {
       // Progress guard: a generation holding marker-only/quarantined records
       // must not spin the loop — stop honestly (capacity stays blocked until
       // the quarantine is legally completed).
+      //
+      // r7 non-continuous eviction bookkeeping: when the evicted generation
+      // is NOT contiguous with the watermark, evictRecord already places it
+      // in evictedGenerations (Rule 11) — preserving per-handle evicted
+      // classification for that generation while never-issued generations
+      // in the gap keep their never_existed classification.
       if (issuance.generations.size === before) return
     }
   },
