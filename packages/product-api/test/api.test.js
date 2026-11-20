@@ -216,6 +216,54 @@ test('validation and error envelope (400/404/500 shapes)', async (t) => {
   assert.equal(wrongMethod.body.error.code, 'METHOD_NOT_ALLOWED')
 })
 
+test('exact-generation-recovery requires authenticated exact singleton input and forwards principal', async (t) => {
+  const router = stubRouter()
+  const calls = []
+  router.operatorExactGenerationRecovery = async (request) => {
+    calls.push(request)
+    return { agentId: request.agentId, generation: request.generation, cleared: true, audit: { principal: request.principal } }
+  }
+  const { base } = await startServer(t, { router, config: { managementToken: 'secret', managementPrincipal: 'cto' } })
+
+  const missing = await call(base, 'POST', '/agent-process/exact-generation-recovery', { agentId: 'agt_a', generation: 4 })
+  assert.equal(missing.status, 401)
+  assert.equal(missing.body.error.code, 'MANAGEMENT_UNAUTHORIZED')
+
+  const valid = await fetch(`${base}/agent-process/exact-generation-recovery`, {
+    method: 'POST', headers: { authorization: 'Bearer secret', 'content-type': 'application/json' },
+    body: JSON.stringify({ agentId: 'agt_a', generation: 4 }),
+  })
+  assert.equal(valid.status, 200)
+  assert.deepEqual(calls, [{ agentId: 'agt_a', generation: 4, principal: 'cto' }])
+
+  for (const body of [
+    { agentId: 'all', generation: 4 },
+    { agentId: 'agt_', generation: 4, prefix: true },
+    { agentId: 'agt_a', generation: 4, all: true },
+    { agentId: 'agt_a', generation: 4, generationPrefix: '4' },
+  ]) {
+    const response = await fetch(`${base}/agent-process/exact-generation-recovery`, {
+      method: 'POST', headers: { authorization: 'Bearer secret', 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    assert.equal(response.status, 400)
+  }
+})
+
+test('exact-generation-recovery maps CAS fence mismatch to deterministic 409', async (t) => {
+  const router = stubRouter()
+  router.operatorExactGenerationRecovery = () => {
+    throw Object.assign(new Error('fence mismatch'), { code: 'EXACT_GENERATION_FENCE_MISMATCH' })
+  }
+  const { base } = await startServer(t, { router, config: { managementToken: 'secret', managementPrincipal: 'admin' } })
+  const result = await fetch(`${base}/agent-process/exact-generation-recovery`, {
+    method: 'POST', headers: { authorization: 'Bearer secret', 'content-type': 'application/json' },
+    body: JSON.stringify({ agentId: 'agt_a', generation: 1 }),
+  })
+  assert.equal(result.status, 409)
+  assert.equal((await result.json()).error.code, 'EXACT_GENERATION_FENCE_MISMATCH')
+})
+
 test('AGENT_NOT_FOUND from the Router maps to 404', async (t) => {
   const router = stubRouter()
   const original = router.switchAgent
