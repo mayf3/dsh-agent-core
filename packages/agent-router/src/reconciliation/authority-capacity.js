@@ -47,6 +47,18 @@ export const authorityCapacityMethods = {
 
   compactRuntimeEpochs() {
     const required = new Set([this.runtimeEpoch, ...[...this.records.values()].map(record => record.runtimeEpoch)])
+    // RECONCILIATION_ABANDONED_EVICTION_V1 r3 (#707 review blocker): epochs
+    // referenced by correlation no-replay tombstones are REQUIRED — dropping
+    // one would turn its tombstone into an orphan at the next restore
+    // (startup brick, the exact failure the round-4 review probe proved).
+    // Tombstone epochs are bounded by the live tombstones themselves (each
+    // boot's tombstones share one epoch); the pathological multi-thousand-
+    // epoch case stays fail-loud via the cap check below, never a silent
+    // brick.
+    for (const handle of this.correlationIndex.values()) {
+      const epochMatch = /^turn:([^:]+):/.exec(handle)
+      if (epochMatch !== null) required.add(epochMatch[1])
+    }
     if (required.size > RECONCILIATION_CAPS.MAX_RUNTIME_EPOCHS) {
       throw new ReconciliationCapacityError('reconciliation: live runtime epoch capacity exhausted')
     }

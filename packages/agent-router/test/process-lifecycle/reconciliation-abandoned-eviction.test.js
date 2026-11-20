@@ -266,3 +266,41 @@ test('走查门: marker-only records are never evicted by the capacity walk — 
   assert.equal(store.records.has(g1), false)
   assert.equal(store.records.has(g2), false)
 })
+
+test('epoch saturation regression (QA round-4 recipe): accepted-correlated eviction → tombstone → ≥257 boot/compaction cycles → restart stays admission-ready AND the same correlation still CONFLICTs', async (t) => {
+  const dir = await tempDir(t, 'acr-epoch-')
+  const pf = join(dir, 'recovery.json')
+  const store = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'boot-0' })
+
+  const correlated = stuckTurn(store, HR, { generation: 1, requestId: 'req-correlated' })
+  const correlationKey = [...store.correlationIndex.entries()].find(([, h]) => h === correlated)?.[0]
+  store.declareAdminAbandonment({ agentId: HR, declarationId: 'epoch-decl', ownerRiskAcceptance: true })
+  store.evictSettledGenerationForCapacity(HR, store.issuance.get(HR))
+  store.persistDurable()
+  assert.equal(store.records.has(correlated), false)
+  assert.equal(store.correlationIndex.get(correlationKey), correlated,
+    'the tombstone survives in-memory')
+
+  // Simulate ≥257 boot/compaction cycles: each cycle adds a fresh boot epoch
+  // and compacts — the tombstone's epoch must stay REQUIRED (never dropped).
+  for (let boot = 1; boot <= 260; boot++) {
+    store.runtimeEpochs.add('boot-' + boot)
+    store.compactRuntimeEpochs()
+  }
+  assert.equal(store.runtimeEpochs.has('boot-0'), true,
+    'the tombstone epoch survives compaction saturation')
+
+  // The restart: a fresh store from the same durable file is admission-ready
+  // (no orphan throw, startup not blocked) AND the same correlation still
+  // rejects with the no-replay CONFLICT.
+  const reopened = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'boot-300' })
+  assert.equal(reopened.startupBlockedReason ?? null, null, 'restart admission-ready')
+  assert.equal(reopened.correlationIndex.get(correlationKey), correlated,
+    'the tombstone survives the restart')
+  assert.throws(
+    () => reopened.mintTurnExecution({ agentId: HR, processGeneration: 99, sessionId: 'main',
+      callerCorrelation: { requestId: 'req-correlated' } }),
+    error => error.code === 'RECONCILIATION_CORRELATION_CONFLICT',
+    'no-replay intact across saturation + restart',
+  )
+})

@@ -95,6 +95,18 @@ authoring_base: 710fa3a9 (production line head; includes accepted #703/#705)
   (marker-only never evicted; honest progress-guard stop), and the
   production-style round-trip (accept → persist → reopen heals → mint
   proceeds → tombstone survives).
+- **Epoch-retention semantics (r2 re-review blocker fix)**: correlation
+  no-replay tombstones are PERMANENT, so the epochs their handles reference
+  are REQUIRED epochs — `compactRuntimeEpochs` never drops a tombstone's
+  epoch (dropping one would turn the tombstone into an orphan at the next
+  restore: a startup brick the round-4 review probe proved reachable via
+  the r2 epoch-membership gate × bounded epoch compaction). Tombstone
+  epochs are bounded by the live tombstones themselves; the pathological
+  multi-thousand-distinct-epoch case stays fail-loud via the cap check,
+  never a silent brick. §3 wording synced with §0r2 (the two
+  admin-abandonment tests were rewritten to the heal-at-reopen semantics,
+  not "passing unchanged"); §4 now includes durable-file.js (the registry
+  validator/writer carrying the 6-key surface).
 
 > 状态：**proposed / docs+code atomic candidate（V3-adoption bounded route）**。
 > 独立验收（exact-head semantic review PASS, BLOCKERS=NONE，验收人 ≠ 作者）通过前
@@ -163,6 +175,10 @@ agt_hr-agent at the exact 256 cap, ~130-170 admission failures/day since
   stampCandidate)
 - `packages/agent-router/src/reconciliation/store.js`
   (restore-apply of the registry; recount exclusion)
+- `packages/agent-router/src/reconciliation/durable-file.js`
+  (registry entry validator/writer: the 6-key accepted shape)
+- `packages/agent-router/src/reconciliation/authority-capacity.js`
+  (compactRuntimeEpochs tombstone-epoch protection)
 - `packages/agent-router/test/process-lifecycle/reconciliation-abandoned-eviction.test.js` (NEW)
 
 ## 5. Alternatives and disposition
