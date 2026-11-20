@@ -198,11 +198,19 @@ test('partial-write recovery: retry completes exactly the registered original sc
     store.adminAbandonmentDeclarationsDirty = true
     store.persistDurable()
     const reopened = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-partial-b' })
-    assert.equal(rawRecord(reopened, turnA).adminAbandonment ?? null, null, 'stamp missing before the crash')
+    // HEAL-AT-REOPEN (RECONCILIATION_ABANDONED_EVICTION_V1 r3, #707 review
+    // blocker 1): the durable registry re-applies the declaration at boot —
+    // the crash-window record is stamped from the registered scope, keeping
+    // the ORIGINAL declaredAt.
+    assert.equal(rawRecord(reopened, turnA).adminAbandonment?.declarationId, 'partial-1',
+      'the registry heals the crash-window stamp at reopen')
+    assert.equal(rawRecord(reopened, turnA).adminAbandonment?.declaredAt, declaredAt,
+      'the heal keeps the ORIGINAL declaredAt')
     const retry = reopened.declareAdminAbandonment({ agentId: HR, declarationId: 'partial-1' })
     assert.deepEqual(retry.abandonedHandles, [])
-    assert.deepEqual(retry.completedHandles, [turnA], 'retry completes the original scope only')
-    assert.deepEqual(rawRecord(reopened, turnA).adminAbandonment, { declarationId: 'partial-1', declaredAt }, 'completion restamps with the ORIGINAL declaredAt')
+    assert.deepEqual(retry.completedHandles, [], 'the heal completed the scope at boot — no unstamped remainder')
+    assert.deepEqual(rawRecord(reopened, turnA).adminAbandonment, { declarationId: 'partial-1', declaredAt },
+      'completion keeps the ORIGINAL declaredAt')
     assert.equal(reopened.admissionBlockerForAgent(HR), null)
   } finally {
     rmSync(root, { recursive: true, force: true })
@@ -304,10 +312,15 @@ test('rollback/reupgrade regression: the scope registry survives an old-binary r
     // binary (it never carries the registry); the sibling registry survives.
     const reopened = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-rollback-b' })
     assert.equal(rawRecord(reopened, turnA).adminAbandonment?.declarationId, 'rollback-1')
-    assert.equal(rawRecord(reopened, turnB).adminAbandonment ?? null, null, 'crash window left turnB unstamped')
+    // HEAL-AT-REOPEN (RECONCILIATION_ABANDONED_EVICTION_V1 r3, #707 review
+    // blocker 1): the sibling registry re-applies the FULL original scope at
+    // boot — the crash-window turnB stamp heals from the registry instead of
+    // staying unstamped.
+    assert.equal(rawRecord(reopened, turnB).adminAbandonment?.declarationId, 'rollback-1',
+      'the crash-window stamp heals at reopen')
     const retry = reopened.declareAdminAbandonment({ agentId: HR, declarationId: 'rollback-1' })
     assert.deepEqual(retry.scopeHandles, [turnA, turnB], 'the registry still knows the FULL original scope')
-    assert.deepEqual(retry.completedHandles, [turnB], 'the retry completes exactly the unstamped remainder')
+    assert.deepEqual(retry.completedHandles, [], 'the heal at boot completed the scope — no unstamped remainder')
     assert.equal(reopened.admissionBlockerForAgent(HR), null, 'no silent partial reset')
   } finally {
     rmSync(root, { recursive: true, force: true })

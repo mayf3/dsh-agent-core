@@ -4,7 +4,7 @@ status: proposed
 spec_kind: implementation
 authority_level: governing_spec_amendment
 implementation_authority: none
-revision: r1
+revision: r2
 revision_date: 2026-11-20
 amendment_of: AGENT_PROCESS_LIFECYCLE_HARDENING_V4
 amendment_kind: NEW
@@ -65,6 +65,37 @@ authoring_base: 710fa3a9 (production line head; includes accepted #703/#705)
   declarationId is legally completed (R131 same-key re-invocation with
   ownerRiskAcceptance).
 
+## 0r2. Second-review amendments (QA re-review FAIL at the r1 head; both blockers + coverage matrix addressed)
+
+- **Restore-apply risk-acceptance boundary (QA round-2 blocker 1)**: r1's
+  restore-apply stamped the D6 acceptance audit UNCONDITIONALLY for registry
+  entries — auto-upgrading legacy/pre-seeded declarations into authorization
+  decisions they never carried. r2: the durable registry entry shape admits
+  the explicit `ownerRiskAcceptance: true` + `decisionRef` fields
+  (validator: exactly the legacy 4-key or the new 6-key shape; invalid flag
+  forms fail the store CLOSED at startup — startupBlockedReason =
+  durable_store_invalid); restore-apply stamps the acceptance audit ONLY
+  for entries with the explicit flag; flag-less entries restore
+  MARKER-ONLY. The registry restore-APPLIES to the restored records (the
+  heal-at-reopen flow): a declared scope heals its crash-window stamps at
+  boot and the retry completes only the unstamped remainder.
+- **Correlated-eviction no-replay preservation (QA round-2 blocker 2)**:
+  capacity eviction of a CORRELATED abandoned record preserves the caller
+  correlation index entry as a durable no-replay tombstone (the index entry
+  survives the eviction AND the durable round-trip; the same correlation
+  rejects re-mints with RECONCILIATION_CORRELATION_CONFLICT across
+  restarts). recountCapacity tolerates watermark-resolvable tombstones; a
+  foreign-epoch handle never resolves via this store's watermarks.
+- **Coverage corrections**: the two admin-abandonment failures at the r1
+  head were NOT pre-existing flake — they were introduced by r1's
+  restore-apply superseding the pinned crash-window states. Both rewritten
+  to pin the heal-at-reopen flow; the three §3 invariant tests restored;
+  new tests: 迟到效果 (late settlement cannot fabricate a business settled
+  for an evicted abandoned record), the walk releasable gate
+  (marker-only never evicted; honest progress-guard stop), and the
+  production-style round-trip (accept → persist → reopen heals → mint
+  proceeds → tombstone survives).
+
 > 状态：**proposed / docs+code atomic candidate（V3-adoption bounded route）**。
 > 独立验收（exact-head semantic review PASS, BLOCKERS=NONE，验收人 ≠ 作者）通过前
 > 不 merge。本 delta 不授权任何生产效应。
@@ -89,18 +120,21 @@ agt_hr-agent at the exact 256 cap, ~130-170 admission failures/day since
 2. **Restore-time recount exclusion.** `recountCapacity` no longer counts
    declaration-marked records as unresolved — a declaration survives every
    restart.
-3. **Registry restore-apply.** The durable declaration registry is
-   re-applied to the restored records (stamp marker + owner-risk-acceptance
-   audit for records not yet marked): the registry file IS the
-   owner-authorized operation record; pre-seeding it under the Owner's
-   directive is the risk acceptance, so the acceptance audit is stamped at
-   restore-apply and the audit lives on the record + registry (idempotent —
-   already-marked records are skipped).
+3. **Registry restore-apply (r2 boundary).** The durable declaration
+   registry is re-applied to the restored records at boot. Entries carrying
+   the explicit `ownerRiskAcceptance: true` (+`decisionRef`) stamp the
+   marker AND the D6 acceptance audit; entries WITHOUT the flag stamp
+   MARKER-ONLY — the admission quarantine semantics are never auto-upgraded
+   by a pre-seed (the round-2 review blocker 1 boundary). The registry file
+   IS the owner-authorized operation record; pre-seeding it under the
+   Owner's directive with the explicit flag is the documented risk
+   acceptance.
 4. **Contiguous-prefix eviction, progress-guarded.**
    `evictSettledGenerationForCapacity` walks `generation ===
    evictedThroughGeneration + 1` while `unresolvedCount === 0`, evicting
-   settled AND declaration-abandoned records through the store's own
-   `evictRecord` machinery (watermark resolution; no bare durable-JSON
+   settled records via `evictRecord` and declaration-abandoned records
+   via the correlation-preserving arm (settled AND declaration-abandoned
+   records through the store's own watermark machinery; no bare durable-JSON
    edits), with a progress guard (no candidate-free spin).
 5. **What is preserved.** The abandoned record's outcome stays UNKNOWN;
    resolution is `evicted` via the watermarks; replay protection (no-replay
@@ -142,6 +176,12 @@ agt_hr-agent at the exact 256 cap, ~130-170 admission failures/day since
   removes, the deadlock; the contiguity/abandoned-eviction gap is the defect.
 
 ## 6. Production-recovery interlock (deployment note, NOT authorized here)
+
+Ops awareness (r2): correlation tombstones of accepted declarations are
+permanent and exempt from correlation-index reclaim — correct for no-replay,
+but they occupy index slots until the
+MAX_CORRELATION_INDEX_ENTRIES_GLOBAL cap, after which new-correlation mints
+fail loud (replay protection is never traded for capacity).
 
 With this fix deployed, HR's unlock becomes: declare (or retry)
 `hr-unlock-707pathA-20261120` through the admin entry → unresolvedCount

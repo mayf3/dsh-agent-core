@@ -99,6 +99,10 @@ export const authorityCapacityMethods = {
   handleResolvesEvicted(handle) {
     const match = typeof handle === 'string' ? handle.match(/^turn:([^:]+):a(\d+):g(\d+):s(\d+)$/) : null
     if (match === null) return false
+    // r2 tightening (review non-blocking 2): the handle's epoch must belong
+    // to this store's known runtime epochs — a foreign-epoch handle never
+    // resolves via this store's watermarks.
+    if (!this.runtimeEpochs.has(match[1])) return false
     const seq = Number.parseInt(match[4], 10)
     if (!Number.isSafeInteger(seq)) return false
     for (const issuance of this.issuance.values()) {
