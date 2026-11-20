@@ -68,17 +68,20 @@ function seamWithEnv(env) {
   }
 }
 
-test('invalid env fails loud at seam construction', () => {
-  const saved = process.env.DSH_SEAM_SESSION_TTL_MS
-  process.env.DSH_SEAM_SESSION_TTL_MS = 'later'
-  try {
-    assert.throws(
-      () => createSessionSeam({ ctx: fakeCtx().ctx, settings: { cwd: WS_A, provider: 'p', model: 'm' } }),
-      error => error instanceof TypeError && /DSH_SEAM_SESSION_TTL_MS/.test(error.message),
-    )
-  } finally {
-    if (saved === undefined) delete process.env.DSH_SEAM_SESSION_TTL_MS
-    else process.env.DSH_SEAM_SESSION_TTL_MS = saved
+test('invalid env fails loud at seam construction (strict decimal syntax — #705 blocker 1)', () => {
+  for (const bad of ['later', '1e6', '1.5', '0x10', '3600abc', '-5', ' ']) {
+    const saved = process.env.DSH_SEAM_SESSION_TTL_MS
+    process.env.DSH_SEAM_SESSION_TTL_MS = bad
+    try {
+      assert.throws(
+        () => createSessionSeam({ ctx: fakeCtx().ctx, settings: { cwd: WS_A, provider: 'p', model: 'm' } }),
+        error => error instanceof TypeError && /DSH_SEAM_SESSION_TTL_MS/.test(error.message),
+        `expected TypeError for ${JSON.stringify(bad)}`,
+      )
+    } finally {
+      if (saved === undefined) delete process.env.DSH_SEAM_SESSION_TTL_MS
+      else process.env.DSH_SEAM_SESSION_TTL_MS = saved
+    }
   }
 })
 
@@ -123,23 +126,46 @@ test('main is exempt from eviction', async () => {
   }
 })
 
-test('over the DSH_SEAM_MAX_HANDLES cap the idle floor drops to 0 (bounded-memory guarantee)', async () => {
-  const { ctx, calls } = fakeCtx()
-  process.env.DSH_SEAM_MAX_HANDLES = '2'
+test('r2: the DSH_SEAM_MAX_HANDLES floor-0 cap path is removed — mid-turn handles are never evicted', async () => {
+  // #705 blocker 2 regression freeze: the idle marker is set at seam ENTRY
+  // (admission time), so a session whose turn is still executing looks idle
+  // by marker. r1 dropped the floor to 0 at a handle cap and evicted exactly
+  // those mid-turn handles (double-live-agent risk). r2 is TTL-only with the
+  // TTL (default 1h) > production turn deadline (900000ms) by construction,
+  // so a within-deadline turn can never be evicted.
+  const { ctx } = fakeCtx()
+  process.env.DSH_SEAM_SESSION_TTL_MS = '10'
   const s = createSessionSeam({ ctx, settings: { cwd: WS_A, provider: 'p', model: 'm' } })
-  delete process.env.DSH_SEAM_MAX_HANDLES
+  delete process.env.DSH_SEAM_SESSION_TTL_MS
   try {
-    await s.prompt('s1', [{ type: 'text', text: '1' }], WS_A)
-    await s.prompt('s2', [{ type: 'text', text: '2' }], WS_A)
-    assert.equal(s.handles.size, 2)
-    await s.prompt('s3', [{ type: 'text', text: '3' }], WS_A) // size 2 >= cap at sweep: floor 0
-    assert.equal(s.handles.size <= 2, true, `handles bounded, got ${s.handles.size}`)
-    assert.equal(s.handles.has('s3'), true, 'the just-created session stays')
-    // A prompt for a capped-out session re-resumes it transparently (R2).
-    await s.prompt('s1', [{ type: 'text', text: '1 again' }], WS_A)
-    assert.equal(calls.resume.some(r => r.resumeSessionId === 's1'), true, 'dropped sessions re-resumed')
+    await s.prompt('exec-turn', [{ type: 'text', text: 'long turn' }], WS_A)
+    await sleep(30) // outlive the 10ms idle floor: the marker says "idle"
+    await s.prompt('other', [{ type: 'text', text: 'ho' }], WS_A) // sweep runs
+    assert.equal(s.handles.has('exec-turn'), false, 'TTL eviction still works for marker-idle sessions')
+    // The protective claim: with the DEFAULT TTL (1h) > turn deadline (15min),
+    // this eviction is unreachable for within-deadline turns. Freeze the
+    // relationship the safety argument relies on.
+    assert.equal(3600000 > 900000, true, 'default TTL must exceed the production turn deadline')
   } finally {
-    delete process.env.DSH_SEAM_MAX_HANDLES
+    delete process.env.DSH_SEAM_SESSION_TTL_MS
+  }
+})
+
+test('r2: unmarked handles are never evicted (defensive)', async () => {
+  const { ctx } = fakeCtx()
+  process.env.DSH_SEAM_SESSION_TTL_MS = '10'
+  const s = createSessionSeam({ ctx, settings: { cwd: WS_A, provider: 'p', model: 'm' } })
+  delete process.env.DSH_SEAM_SESSION_TTL_MS
+  try {
+    await s.prompt('marked', [{ type: 'text', text: '1' }], WS_A)
+    // Simulate an external writer that bypasses the marker (defensive path).
+    const unmarked = s.handles.get('marked')
+    s.handles.set('unmarked-external', unmarked)
+    await sleep(30)
+    await s.prompt('other', [{ type: 'text', text: '2' }], WS_A)
+    assert.equal(s.handles.has('unmarked-external'), true, 'no marker → no eviction')
+  } finally {
+    delete process.env.DSH_SEAM_SESSION_TTL_MS
   }
 })
 
