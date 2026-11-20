@@ -47,7 +47,23 @@ export const WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV = 'WORKFLOW_EXECUTION_POLLER
 export const WORKFLOW_STALE_NO_PROGRESS_MS_ENV = 'DSH_WORKFLOW_STALE_NO_PROGRESS_MS'
 export const WORKFLOW_MAX_ATTEMPTS_PER_VISIT_ENV = 'DSH_WORKFLOW_MAX_ATTEMPTS_PER_VISIT'
 export const WORKFLOW_RETRY_DELAY_MS_ENV = 'DSH_WORKFLOW_RETRY_DELAY_MS'
-const DUE_FEED_LIMIT = 100 // svc-workflow hard cap (1..100)
+export const WORKFLOW_EXECUTION_DUE_FEED_LIMIT_ENV = 'WORKFLOW_EXECUTION_DUE_FEED_LIMIT'
+// svc-workflow hard cap (1..100). Deployment guidance (#707 due-feed flood
+// model): keep the effective value at or below the per-child turn-queue cap
+// (64, PROCESS_EVIDENCE_CAPS.MAX_QUEUED_TURNS_PER_PROCESS) minus headroom —
+// a single sweep must not overflow the child's serialized turn queue, whose
+// deterministic AGENT_PROCESS_QUEUE_CAP rejections otherwise re-enter the
+// due feed and sustain a permanent rejection steady-state.
+const DUE_FEED_LIMIT_FALLBACK = 100
+/** Pure resolution (exported for tests): strict positive integer, fail-loud. */
+export function resolveDueFeedLimit(envValue) {
+  return resolvePositiveInt({
+    envValue,
+    fallback: DUE_FEED_LIMIT_FALLBACK,
+    name: WORKFLOW_EXECUTION_DUE_FEED_LIMIT_ENV,
+  })
+}
+export const DUE_FEED_LIMIT = resolveDueFeedLimit(process.env[WORKFLOW_EXECUTION_DUE_FEED_LIMIT_ENV])
 
 /** Positive-integer env resolution; undefined/'' → fallback, garbage → fail loud. */
 function resolvePositiveInt({ configValue, envValue, fallback, name }) {
