@@ -200,7 +200,7 @@ export const adminAbandonmentMethods = {
    * terminationEvidence stay untouched, the record stays fenced +
    * outcome_unknown, and only admission is unblocked.
    */
-  declareAdminAbandonment({ agentId, declarationId, ownerRiskAcceptance }) {
+  declareAdminAbandonment({ agentId, declarationId, ownerRiskAcceptance, decisionRef }) {
     this.assertBusinessAdmissionReady()
     if (typeof agentId !== 'string' || agentId === '') {
       throw new TypeError('declareAdminAbandonment: agentId must be a non-empty string')
@@ -211,6 +211,9 @@ export const adminAbandonmentMethods = {
     if (ownerRiskAcceptance !== undefined && ownerRiskAcceptance !== true) {
       throw new TypeError('declareAdminAbandonment: ownerRiskAcceptance must be exactly true when present')
     }
+    if (decisionRef !== undefined && (typeof decisionRef !== 'string' || decisionRef === '' || decisionRef.length > 256)) {
+      throw new TypeError('declareAdminAbandonment: decisionRef must be a non-empty string of at most 256 chars when present')
+    }
     const known = (this.adminAbandonmentDeclarations ?? [])
       .find(declaration => declaration.declarationId === declarationId)
     if (known !== undefined) {
@@ -218,6 +221,18 @@ export const adminAbandonmentMethods = {
         throw Object.assign(new Error(`declareAdminAbandonment: declarationId ${declarationId} is already bound to agent ${known.agentId}`), {
           code: 'RECONCILIATION_DECLARATION_CONFLICT',
         })
+      }
+      // RECONCILIATION_ABANDONED_EVICTION_V1 r3 (#707 review blocker 1
+      // follow-up): a crash-window declaration whose acceptance stamps were
+      // lost restores MARKER-ONLY (fail-closed). When the owner decision
+      // re-arrives with the SAME declarationId, the durable entry is
+      // upgraded to the 6-key accepted shape so the heal-at-reopen flow
+      // persists the acceptance across every later restart too.
+      if (ownerRiskAcceptance === true && (known.ownerRiskAcceptance !== true)) {
+        known.ownerRiskAcceptance = true
+        known.decisionRef = decisionRef ?? declarationId
+        this.adminAbandonmentDeclarationsDirty = true
+        this.persistDurable()
       }
       const completedHandles = []
       for (const handle of known.handles) {
@@ -248,6 +263,11 @@ export const adminAbandonmentMethods = {
     // before the first stamp, so any later retry completes THIS scope only.
     this.adminAbandonmentDeclarations = [...(this.adminAbandonmentDeclarations ?? []), {
       declarationId, agentId, handles: scopeHandles, declaredAt,
+      // decisionRef defaults to the declarationId: the durable registry's
+      // extended shape requires a decision reference on every accepted
+      // entry (the validator rejects a flag without one — a mismatch here
+      // would brick the store at the next restore).
+      ...(ownerRiskAcceptance === true ? { ownerRiskAcceptance: true, decisionRef: decisionRef ?? declarationId } : {}),
     }]
     this.adminAbandonmentDeclarationsDirty = true
     this.persistDurable()

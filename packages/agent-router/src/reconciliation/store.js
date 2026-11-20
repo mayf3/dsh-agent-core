@@ -130,6 +130,7 @@ export class TurnReconciliationStore {
           this.persistDurable()
         }
       } catch (error) {
+        if (process.env.AMEM_DIAG === '1') console.error('RESTORE THREW (diag):', error.name, '|', String(error.message).slice(0, 200))
         this.records.clear()
         this.issuance.clear()
         this.correlationIndex.clear()

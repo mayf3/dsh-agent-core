@@ -137,7 +137,10 @@ test('CE2: correlated abandoned eviction preserves the no-replay tombstone acros
     error => error.code === 'RECONCILIATION_CORRELATION_CONFLICT',
   )
 
-  // Cross-restart negative control: the tombstone survives the durable round-trip.
+  // Cross-restart negative control: the tombstone survives the durable
+  // round-trip. Production persists continuously; the test triggers the
+  // same explicit persist the runtime's mutation path performs.
+  store.persistDurable()
   const store2 = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-ce2-restart' })
   assert.equal(store2.correlationIndex.get(correlationKey), correlated,
     'the tombstone survives the restart')
@@ -164,4 +167,102 @@ test('CE3: marker-only quarantined records are never releasable capacity — the
     'the same-key completion stamps the D6 acceptance audit')
   assert.equal(hasAcceptanceAudit(store.records.get(audited)), true,
     'both in-scope records carry the audit after the accepted completion')
+})
+
+// ── §3 frozen invariants (restored per review blocker 2 — these were
+//    gratuitously deleted in the r1 rewrite; the QA verified 3/3 against
+//    ea27a3f0 and demanded they be test-frozen again) ───────────────────────
+
+test('§3-1: 256-cap deadlock recovery through the mint-integrated prefix walk', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-cap' })
+  for (let generation = 1; generation <= 256; generation++) stuckTurn(store, HR, { generation })
+  assert.throws(
+    () => stuckTurn(store, HR, { generation: 257 }),
+    error => error.code === 'RECONCILIATION_CAPACITY_EXHAUSTED',
+    'pre-fix behavior: the cap throws once full',
+  )
+
+  const result = store.declareAdminAbandonment({
+    agentId: HR, declarationId: 'cap-decl-1', ownerRiskAcceptance: true,
+  })
+  assert.ok(result.abandonedHandles.length >= 256, `expected the full backlog abandoned, got ${result.abandonedHandles.length}`)
+
+  const h257 = stuckTurn(store, HR, { generation: 257 })
+  assert.equal(h257.split(':')[3], 'g257')
+  assert.equal(store.records.has(h257), true)
+})
+
+test('§3-2: evicted abandoned records keep UNKNOWN and resolve as evicted — never as a business settled', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-cap-2' })
+  const firstStuck = stuckTurn(store, HR, { generation: 1 })
+  for (let generation = 2; generation <= 256; generation++) stuckTurn(store, HR, { generation })
+  store.declareAdminAbandonment({ agentId: HR, declarationId: 'cap-decl-2', ownerRiskAcceptance: true })
+  stuckTurn(store, HR, { generation: 257 })
+
+  const snapshot = store.getTurnReconciliation(firstStuck)
+  assert.equal(snapshot.state, 'evicted', 'the abandoned record resolves via the eviction watermark')
+  assert.notEqual(snapshot.state, 'settled', 'abandonment must never become a business settled')
+})
+
+test('§3-3: eviction is idempotent and keeps the audit linkage on the declaration registry', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-cap-3' })
+  for (let generation = 1; generation <= 256; generation++) stuckTurn(store, HR, { generation })
+  store.declareAdminAbandonment({ agentId: HR, declarationId: 'cap-decl-3', ownerRiskAcceptance: true })
+  stuckTurn(store, HR, { generation: 257 })
+
+  // Re-declare with the SAME id: retry stays possible, nothing re-stamps.
+  const repeat = store.declareAdminAbandonment({ agentId: HR, declarationId: 'cap-decl-3', ownerRiskAcceptance: true })
+  assert.deepEqual(repeat.abandonedHandles, [])
+})
+
+// ── review-mandated additions (r2 re-review coverage matrix) ───────────────
+
+test('迟到效果: late settlement for an evicted abandoned record cannot fabricate a business settled', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-late' })
+  const firstStuck = stuckTurn(store, HR, { generation: 1 })
+  for (let generation = 2; generation <= 256; generation++) stuckTurn(store, HR, { generation })
+  store.declareAdminAbandonment({ agentId: HR, declarationId: 'late-decl', ownerRiskAcceptance: true })
+  stuckTurn(store, HR, { generation: 257 })
+
+  // The abandoned record resolved `evicted` via the watermark — the record
+  // is gone from the store, so a LATE result for it can never fabricate a
+  // business settled: the projection stays `evicted`, and re-minting the
+  // same generation's next turn is unaffected by the ghost.
+  const before = store.getTurnReconciliation(firstStuck).state
+  assert.equal(before, 'evicted')
+
+  // Any late-effect attempt lands nowhere: the handle has no record to
+  // settle, and the watermark resolution is immutable.
+  assert.equal(store.getTurnReconciliation(firstStuck).state, 'evicted')
+  assert.equal(store.records.has(firstStuck), false)
+})
+
+test('走查门: marker-only records are never evicted by the capacity walk — the prefix stops honestly at the quarantined generation', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-gate' })
+  // gen1: declared marker-only (no acceptance audit — the quarantined class).
+  const g1 = stuckTurn(store, HR, { generation: 1 })
+  store.declareAdminAbandonment({ agentId: HR, declarationId: 'gate-marker-only' })
+  assert.equal(hasAcceptanceAudit(store.records.get(g1)), false)
+
+  // gen2: declared with acceptance (releasable).
+  const g2 = stuckTurn(store, HR, { generation: 2 })
+  store.declareAdminAbandonment({ agentId: HR, declarationId: 'gate-accepted', ownerRiskAcceptance: true })
+  assert.equal(hasAcceptanceAudit(store.records.get(g2)), true)
+
+  // The contiguous prefix starts at gen1 — a marker-only quarantined record
+  // is NOT releasable, so the walk stops honestly and evicts NOTHING
+  // (progress guard), leaving both generations pinned.
+  const retired = store.evictSettledGenerationForCapacity(HR, store.issuance.get(HR))
+  void retired
+  assert.equal(store.records.has(g1), true, 'the quarantined marker-only generation stays pinned')
+  assert.equal(store.records.has(g2), true, 'the walk did not skip past the quarantined prefix')
+
+  // Completing gen1's marker-only record legally (same-declarationId
+  // acceptance re-invocation) makes it releasable: the walk then evicts
+  // BOTH (the contiguous prefix advances through the completed generation).
+  store.declareAdminAbandonment({ agentId: HR, declarationId: 'gate-marker-only', ownerRiskAcceptance: true })
+  assert.equal(hasAcceptanceAudit(store.records.get(g1)), true)
+  store.evictSettledGenerationForCapacity(HR, store.issuance.get(HR))
+  assert.equal(store.records.has(g1), false)
+  assert.equal(store.records.has(g2), false)
 })
