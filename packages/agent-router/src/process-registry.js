@@ -467,6 +467,53 @@ export function createProcessRegistry({
     }
   }
 
+  /**
+   * Authenticated operator recovery for one exact lifecycle generation.
+   * Only a matching REAP fence is eligible; STARTUP/READY is never touched.
+   */
+  function operatorExactGenerationRecovery({ agentId, generation, principal }) {
+    if (typeof agentId !== 'string' || agentId.length === 0) {
+      throw Object.assign(new TypeError('operatorExactGenerationRecovery: agentId must be non-empty'), { code: 'VALIDATION_ERROR' })
+    }
+    if (!Number.isSafeInteger(generation) || generation < 1) {
+      throw Object.assign(new TypeError('operatorExactGenerationRecovery: generation must be a positive safe integer'), { code: 'VALIDATION_ERROR' })
+    }
+    const observedAtWallMs = Date.now()
+    const slot = lifecycleSlots.get(agentId)
+    const audit = {
+      kind: 'operator_exact_generation_recovery',
+      principal: principal ?? null,
+      agentId,
+      generation,
+      previousState: slot?.state ?? 'EMPTY',
+      observedAtWallMs,
+      outcome: 'rejected',
+    }
+    if (slot?.state !== 'REAP' || slot.generation !== generation) {
+      staleSlotAudits.push(audit)
+      if (staleSlotAudits.length > 64) staleSlotAudits.shift()
+      throw Object.assign(new Error('exact lifecycle generation fence does not match'), {
+        code: 'EXACT_GENERATION_FENCE_MISMATCH', audit,
+      })
+    }
+    // Identity CAS: compare and clear without an await or intervening lookup.
+    if (lifecycleSlots.get(agentId) !== slot || slot.state !== 'REAP'
+        || slot.generation !== generation) {
+      audit.outcome = 'cas_conflict'
+      staleSlotAudits.push(audit)
+      if (staleSlotAudits.length > 64) staleSlotAudits.shift()
+      throw Object.assign(new Error('exact lifecycle generation fence changed'), {
+        code: 'EXACT_GENERATION_CAS_CONFLICT', audit,
+      })
+    }
+    lifecycleSlots.delete(agentId)
+    slot.resolveReap?.()
+    audit.outcome = 'cleared'
+    staleSlotAudits.push(audit)
+    if (staleSlotAudits.length > 64) staleSlotAudits.shift()
+    return { agentId, generation, cleared: true, audit: { ...audit } }
+  }
+
   /** Test/ops: bounded lifecycle-slot stale-callback audit. */
   function staleSlotAuditsSnapshot() {
     return staleSlotAudits.map(entry => ({ ...entry }))
@@ -490,6 +537,7 @@ export function createProcessRegistry({
     registrySnapshot,
     lifecycleSlotSnapshot,
     staleSlotAuditsSnapshot,
+    operatorExactGenerationRecovery,
     dispose,
   }
 }

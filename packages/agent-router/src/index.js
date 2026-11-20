@@ -350,6 +350,8 @@ export function apply(ctx, config) {
     staleSlotAuditsSnapshot: () => registry.staleSlotAuditsSnapshot(),
     /** Test/ops surface: one Agent's lifecycle slot view (EMPTY|STARTUP|READY|REAP). */
     lifecycleSlotSnapshot: (agentId) => registry.lifecycleSlotSnapshot(agentId),
+    /** Authenticated management seam: clear one exact REAP generation fence. */
+    operatorExactGenerationRecovery: registry.operatorExactGenerationRecovery,
   }
 
   // Publish the router as an in-process service ('agentRouter') so the Feishu
