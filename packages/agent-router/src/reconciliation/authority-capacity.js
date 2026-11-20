@@ -133,8 +133,13 @@ export const authorityCapacityMethods = {
       if (generation <= issuance.evictedThroughGeneration) continue
       const recs = [...this.records.values()].filter(r => r.agentId === agentId && r.processGeneration === generation)
       if (recs.length === 0) continue
-      const allResolved = recs.every(r => r.state === 'settled' || (r.adminAbandonment ?? null) !== null)
-      if (!allResolved) continue
+      // P0 security gate (#707 QA round-6): every record must be either
+      // settled OR (marker + D6 acceptance audit) for the generation to be
+      // releasable. Marker-only records keep the generation pinned.
+      const allReleasable = recs.every(r =>
+        r.state === 'settled' ||
+        ((r.adminAbandonment ?? null) !== null && hasAcceptanceAudit(r)))
+      if (!allReleasable) continue
       for (const record of recs) {
         if (record.state === 'settled') {
           this.evictRecord(record)
