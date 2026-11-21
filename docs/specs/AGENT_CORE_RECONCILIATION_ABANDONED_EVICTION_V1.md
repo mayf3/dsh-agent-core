@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_RECONCILIATION_ABANDONED_EVICTION_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec_amendment
 implementation_authority: none
@@ -353,9 +353,10 @@ authoring_base: 710fa3a9 (production line head; includes accepted #703/#705)
   invalid tuples; now a fail-loud TypeError).
 
 
-> 状态：**proposed / docs+code atomic candidate（V3-adoption bounded route）**。
-> 独立验收（exact-head semantic review PASS, BLOCKERS=NONE，验收人 ≠ 作者）通过前
-> 不 merge。本 delta 不授权任何生产效应。
+> 状态：**accepted（Owner 采纳 2026-11-21）/ docs+code atomic candidate（V3-adoption bounded route）**。
+> 独立验收（exact-head semantic review PASS, BLOCKERS=NONE，验收人 ≠ 作者）已通过（r12 终审 @ `ef76165b`，含 B1/B2 回归负控 7 形态 FAIL→PASS）。
+> 采纳回执：Owner 四项决定（2026-11-21）第 1 项——采纳 spec r7 @ `ef76165b`，登记进入正式发布授权链；
+> **采纳 ≠ 生产换装批准**：换装仍走既有授权链排窗；归档轮转修正案独立提交，默认不授权。
 
 ## 0r7. Seventh-review amendments (Owner regression negatives B1/B2 at the 35c44e1c head; both reproduced, both FAIL→PASS at the r12 head)
 
