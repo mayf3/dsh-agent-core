@@ -4,7 +4,7 @@ status: proposed
 spec_kind: implementation
 authority_level: governing_spec_amendment
 implementation_authority: none
-revision: r5
+revision: r6
 revision_date: 2026-11-21
 amendment_of: AGENT_PROCESS_LIFECYCLE_HARDENING_V4
 amendment_kind: NEW
@@ -288,10 +288,71 @@ authoring_base: 710fa3a9 (production line head; includes accepted #703/#705)
   lawful release-authorization chain; no unapproved CTO risk acceptance and
   no direct durable edits.
 
+## 0r6. Sixth-review amendments (Owner P0-A/P0-B/P0-C + P1 at the r10 head; all reproduced, all FAIL→PASS at the r11 head)
+
+- **P0-A (interleaved same-generation issuance)**: the incarnation span
+  `[minSeq, maxSeq]` is NOT dense — mints allocate turn-seqs globally, so
+  `g10:s1, g11:s2, g10:s3` left g10's interval `[1,3]` claiming the
+  never-minted `g10:s2` as `evicted` (reproduced at r10). r11: every
+  generation entry carries its EXACT `issuedIntervals` (each mint merges its
+  own `[seq, seq]`), eviction copies the entry's intervals into the slot
+  (union across incarnations), the query fall-through consults the intervals
+  instead of the span, and the cross-generation poison rule upgrades from
+  span overlap to INTERVAL-SET disjointness — the interleaved state is now
+  loadable AND exact instead of rejected at restart (the Owner ruled a
+  restart failure is not a safety answer; the T8 fixture flips to the exact
+  semantics).
+- **P0-B (archive broke the r10 self-reload)**: encode expanded hot+archive
+  into the legacy pairs while decode's consistency gate covered only hot
+  ranges → any archive pass made the binary reject its own persist
+  (reproduced). r11: the dual-write expansion is HOT-ONLY (bounded by the
+  hot budget; archived generations intentionally carry no legacy pair —
+  old-binary drift documented, safer direction) and the gate is a SUBSET
+  check (pairs ⊆ hot map with equal maxima; contradictions fail CLOSED,
+  missing pairs are the documented partial legacy field). Capacity
+  alignment: the decode's new-form cap now matches the mint (LIVE
+  generations only); archives carry their own budget.
+- **P0-C (archive + re-issuance lost old identity)**: the covering lookup
+  checked only the FIRST covering tuple, so a post-archive re-issuance's
+  hot tuple shadowed the archived incarnation (`g10:s1` flipped `evicted` →
+  `never_existed`; reproduced). r11: the identity fact is the UNION of
+  EVERY covering tuple (hot + archive) — verified across archive, archive +
+  re-issuance, and durable reload.
+- **P1 (bounded retention contract — the joint bounds)**:
+  `hot intervals ≤ MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT (16384)` —
+  bounded in steady state by the ARCHIVE_TRIGGER (12288) + batch (4096)
+  compaction, which now runs to completion (whole batches until hot ≤
+  trigger) and no longer blocks on pins (the r10 pin-proximity guard
+  starved the archive behind the permanent fences — removed); `ledger ≤
+  4096` (one number per proven-absent generation; production: 69);
+  `archive ≤ MAX_ARCHIVE_INTERVALS_PER_AGENT (262144)` — the fail-loud
+  operator-rotation horizon (~6 MB of retained exact facts per agent);
+  `legacy dual-write pairs ≤ hot` (bounded, archive excluded). Evidence at
+  the permanent-fence shape: 10k REAL mints (282 s, dominated by the
+  baseline per-mint whole-file durability write, not by retention) end with
+  hot exactly 10000 in one tuple, ledger 69, fences pinned, admission
+  recovered, exact probes green, file 402 KB; the 100k resolved-generation
+  retention run (19 ms, injection-driven through the same walk/compaction
+  path) holds hot in 8.5k–12.1k across all ten segments with the archive
+  absorbing 90200 intervals and every cold/late probe exact. The walk's
+  O(entries × records) scan was also fixed to a single records pass
+  (quadratic → linear at retention scale).
+- **QA blocker 3 (budget throw fabricated identities)**: the intervals-cap
+  throw fired AFTER `generations.delete`/`records.delete`, leaving a
+  trace-less genuinely-issued generation that the next compaction ledgered
+  as never-issued (a real handle durably fabricated to `never_existed`;
+  QA-reproduced end-to-end). r11: the budget gate precedes EVERY mutation —
+  the caller's transactional snapshot rolls the eviction back cleanly on
+  the untouched state.
+- **Mint hardening (QA finding 6)**: `mintTurnExecution` refuses
+  `processGeneration <= evictedThroughGeneration` (out-of-allocator-
+  contract input used to create below-watermark live entries and persist-
+  invalid tuples; now a fail-loud TypeError).
+
+
 > 状态：**proposed / docs+code atomic candidate（V3-adoption bounded route）**。
 > 独立验收（exact-head semantic review PASS, BLOCKERS=NONE，验收人 ≠ 作者）通过前
 > 不 merge。本 delta 不授权任何生产效应。
-
 
 ## 1. Goal (measured deadlock)
 

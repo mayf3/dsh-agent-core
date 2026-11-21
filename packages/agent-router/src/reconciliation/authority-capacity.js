@@ -11,7 +11,10 @@ export const authorityCapacityMethods = {
       evictedSparseSeqs: new Set(entry.evictedSparseSeqs),
       evictedRanges: entry.evictedRanges.map(range => [range[0], range[1], range[2].map(slot => slot.map(interval => [...interval]))]),
       neverIssuedGenerations: new Set(entry.neverIssuedGenerations),
-      generations: new Map([...entry.generations].map(([generation, value]) => [generation, { ...value }])),
+      generations: new Map([...entry.generations].map(([generation, value]) => [generation, {
+        ...value,
+        issuedIntervals: (value.issuedIntervals ?? [[value.minSeq, value.maxSeq]]).map(interval => [...interval]),
+      }])),
     }]))
     return {
       records: new Map(this.records), issuance, correlationIndex: new Map(this.correlationIndex),
@@ -131,10 +134,21 @@ export const authorityCapacityMethods = {
    * zero-growth long-term.
    */
   evictSettledGenerationForCapacity(agentId, issuance) {
+    // One pass over the agent's records (r11: the per-generation filter
+    // inside the generation loop made the walk O(entries x records) —
+    // quadratic at the 10k-generation scale the retention contract must
+    // survive).
+    const recordsByGeneration = new Map()
+    for (const record of this.records.values()) {
+      if (record.agentId !== agentId) continue
+      const list = recordsByGeneration.get(record.processGeneration)
+      if (list === undefined) recordsByGeneration.set(record.processGeneration, [record])
+      else list.push(record)
+    }
     const sorted = [...issuance.generations.entries()].sort((a, b) => a[0] - b[0])
     for (const [generation, entry] of sorted) {
       if (generation <= issuance.evictedThroughGeneration) continue
-      const recs = [...this.records.values()].filter(r => r.agentId === agentId && r.processGeneration === generation)
+      const recs = recordsByGeneration.get(generation) ?? []
       if (recs.length === 0) continue
       // P0 security gate (#707 QA round-6): every record must be either
       // settled OR (marker + D6 acceptance audit) for the generation to be
@@ -229,17 +243,25 @@ export const authorityCapacityMethods = {
     // dropped: the system runs indefinitely with ZERO identity loss.
     const hotIntervals = () => issuance.evictedRanges.reduce((total, tuple) => total
       + tuple[2].reduce((slotTotal, slot) => slotTotal + slot.length, 0), 0)
-    if (hotIntervals() > RECONCILIATION_CAPS.ARCHIVE_TRIGGER_INTERVALS) {
+    // Archive WHOLE BATCHES until the hot budget is back under the trigger
+    // (one batch per pass would leave hot above the trigger for many walks).
+    const archivedIntervals = () => issuance.evictedArchives.reduce((total, tuple) => total
+      + tuple[2].reduce((slotTotal, slot) => slotTotal + slot.length, 0), 0)
+    while (hotIntervals() > RECONCILIATION_CAPS.ARCHIVE_TRIGGER_INTERVALS && issuance.evictedRanges.length > 0) {
+      // r11 (QA P1): EVERY coldest tuple is archivable — pins no longer
+      // block retention (the r10 pin-proximity guard starved the archive
+      // behind the permanent fences and let hot re-accumulate to the cap).
+      // The archive is exact + queryable, so coldness is purely a budget
+      // question; the archive itself is bounded by its own fail-loud cap
+      // (the operator rotation horizon, spec §0r6).
+      if (archivedIntervals() > RECONCILIATION_CAPS.MAX_ARCHIVE_INTERVALS_PER_AGENT) {
+        throw new ReconciliationCapacityError(
+          `reconciliation: archived resolution intervals exhausted (${RECONCILIATION_CAPS.MAX_ARCHIVE_INTERVALS_PER_AGENT})`,
+        )
+      }
       let batch = 0
       while (issuance.evictedRanges.length > 0 && batch < RECONCILIATION_CAPS.ARCHIVE_BATCH_INTERVALS) {
-        const coldest = issuance.evictedRanges[0]
-        // A tuple at or above the lowest pin is still warm (a fence release
-        // would cascade there); with NO pins everything is cold.
-        if (liveGenerations.size > 0) {
-          const lowestPin = Math.min(...liveGenerations)
-          if (coldest[1] >= lowestPin) break
-        }
-        batch += coldest[2].reduce((total, slot) => total + slot.length, 0)
+        batch += issuance.evictedRanges[0][2].reduce((total, slot) => total + slot.length, 0)
         issuance.evictedArchives.push(issuance.evictedRanges.shift())
       }
     }
@@ -272,7 +294,7 @@ export const authorityCapacityMethods = {
       if (generationEntry !== undefined) {
         generationEntry.liveRecords -= 1
         if (generationEntry.liveRecords <= 0) {
-          this.markGenerationEvicted(issuance, record.processGeneration, generationEntry.minSeq, generationEntry.maxSeq)
+          this.markGenerationEvicted(issuance, record.processGeneration, generationEntry)
         }
       }
     }
@@ -309,8 +331,7 @@ export const authorityCapacityMethods = {
    * permanent pins (bounded by the live-record cap); above the highest pin
    * the forward watermark advances contiguously (zero growth).
    */
-  markGenerationEvicted(issuance, generation, minSeq, maxSeq) {
-    issuance.generations.delete(generation)
+  markGenerationEvicted(issuance, generation, generationEntry) {
     // r10: NO watermark cascade — the exact per-generation intervals are
     // ALWAYS kept (the r8/r9 lesson: any seq-blind widening fabricates
     // identities). The watermark advances only across LEDGERED proven
@@ -349,9 +370,18 @@ export const authorityCapacityMethods = {
         `reconciliation: evicted-generation resolution intervals exhausted for issuance metadata (${RECONCILIATION_CAPS.MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT})`,
       )
     }
+    // r11 (QA blocker 3): the budget gate precedes EVERY mutation — a throw
+    // after generations.delete/records.delete leaves a trace-less genuinely-
+    // issued generation that the next compaction would fabricate into the
+    // never-issued ledger. Fail loud on the UNTOUCHED state; the caller's
+    // transactional snapshot rolls the eviction back cleanly.
+    issuance.generations.delete(generation)
     // Compose the per-generation bounds array slot-by-slot: each absorbed
-    // range restores its own slots, then the singleton's interval
-    // UNION-merges into its own slot (sorted, disjoint, non-adjacent).
+    // range restores its own slots, then the singleton slot UNION-merges the
+    // generation's EXACT issued intervals (r11: copied from the generation
+    // entry — never fabricated from min/max spans; interleaved same-
+    // generation issuance keeps its interior holes) with whatever the slot
+    // already holds (re-eviction of a re-minted generation).
     const bounds = new Array(end - start + 1)
     for (const range of absorbed) {
       for (let offset = 0; offset < range[2].length; offset++) {
@@ -359,7 +389,8 @@ export const authorityCapacityMethods = {
       }
     }
     const slotIndex = generation - start
-    const merged = [[minSeq, maxSeq]]
+    const merged = (generationEntry.issuedIntervals ?? [[generationEntry.minSeq, generationEntry.maxSeq]])
+      .map(interval => [...interval])
     for (const [lo, hi] of bounds[slotIndex] ?? []) merged.push([lo, hi])
     merged.sort((a, b) => a[0] - b[0])
     const unioned = []
@@ -481,7 +512,7 @@ export const authorityCapacityMethods = {
       if (generationEntry !== undefined) {
         generationEntry.liveRecords -= 1
         if (generationEntry.liveRecords <= 0) {
-          this.markGenerationEvicted(issuance, record.processGeneration, generationEntry.minSeq, generationEntry.maxSeq)
+          this.markGenerationEvicted(issuance, record.processGeneration, generationEntry)
         }
       }
     }

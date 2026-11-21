@@ -153,13 +153,17 @@ export const queryMethods = {
     // range-wide maxSeq and the r9 upper-bound-only representations widened
     // `evicted` over never-issued (gen, seq) identities and were rejected in
     // review (g10:s3, g11:s1).
-    const coveringTuple = [...issuance.evictedRanges, ...(issuance.evictedArchives ?? [])]
-      .find(tuple => generation >= tuple[0] && generation <= tuple[1])
-    if (coveringTuple !== undefined) {
-      const slot = coveringTuple[2][generation - coveringTuple[0]]
-      if (slot !== undefined && slot.some(([lo, hi]) => seq >= lo && seq <= hi)) {
-        return { state: 'evicted', agentId }
-      }
+    // r11 (#707 QA P0-C): a generation can be covered by SEVERAL tuples —
+    // a hot tuple from a post-archive re-issuance plus its archived history
+    // — and the identity fact is the UNION of every covering tuple's
+    // intervals. Checking only the first covering tuple dropped the archived
+    // incarnation (a real evicted handle flipped to never_existed).
+    const coveringSlots = [...issuance.evictedRanges, ...(issuance.evictedArchives ?? [])]
+      .filter(tuple => generation >= tuple[0] && generation <= tuple[1])
+      .map(tuple => tuple[2][generation - tuple[0]])
+      .filter(slot => slot !== undefined)
+    if (coveringSlots.some(slot => slot.some(([lo, hi]) => seq >= lo && seq <= hi))) {
+      return { state: 'evicted', agentId }
     }
     const generationEntry = issuance.generations.get(generation)
     if (generationEntry === undefined || seq < generationEntry.minSeq || seq > generationEntry.maxSeq) {
@@ -169,7 +173,15 @@ export const queryMethods = {
       return { state: 'evicted', agentId }
     }
     const record = this.records.get(handle)
-    if (record === undefined) return { state: 'evicted', agentId }
+    if (record === undefined) {
+      // r11 (#707 QA P0-A): a seq inside the entry's EXACT issued intervals
+      // with no live record was evicted; outside them it never existed (the
+      // [minSeq,maxSeq] span is not dense under interleaved same-generation
+      // issuance). Legacy-fidelity fallback for entries without intervals.
+      const issued = generationEntry.issuedIntervals ?? [[generationEntry.minSeq, generationEntry.maxSeq]]
+      if (issued.some(([lo, hi]) => seq >= lo && seq <= hi)) return { state: 'evicted', agentId }
+      return { state: 'never_existed' }
+    }
     return { state: this.recordQueryState(record), agentId, record }
   },
 

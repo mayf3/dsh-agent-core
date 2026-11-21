@@ -292,22 +292,39 @@ test('T7 malformed durable store: fail loud, never mints from a fallback generat
   assert.equal(await readFile(storeFile, 'utf8'), poison, 'the poisoned file must not be rewritten or healed')
 })
 
-test('T8 existing overlapping store: stays fail-closed, allocator never runs, store never self-heals', async (t) => {
+test('T8 interleaved same-generation issuance: r11 exact intervals load AND classify exactly (the old span-overlap poison is gone)', async (t) => {
   const dir = await makeDir(t, 'gen-safety-t8-')
   const storeFile = join(dir, 'turn-recovery-v3.json')
-  // Reproduce the production bug through the REAL store write path: gen1
-  // mints again after gen2 exists, extending gen1's range past gen2's.
+  // The historical production bug through the REAL store write path: gen1
+  // mints again after gen2 exists. Under the old [minSeq,maxSeq] span
+  // representation this state was unwritable poison (restart failure —
+  // which QA ruled is not a safety answer); under r11 each generation
+  // carries its EXACT issued intervals (gen1 [[1,1],[42,42]], gen2
+  // [[2,41]]), so the state persists, loads, and classifies exactly.
   const writer = new TurnReconciliationStore({ persistenceFile: storeFile, runtimeEpoch: 'poison-epoch' })
   writer.mintTurnExecution({ agentId: AGT_ID, processGeneration: 1, sessionId: null })
   for (let seq = 0; seq < 40; seq += 1) writer.mintTurnExecution({ agentId: AGT_ID, processGeneration: 2, sessionId: null })
   writer.mintTurnExecution({ agentId: AGT_ID, processGeneration: 1, sessionId: null })
-  const poisoned = await readFile(storeFile, 'utf8')
-  assert.throws(() => readDurableRecoveryStore(storeFile), /overlapping durable issuance generation ranges/, 'fixture is genuinely poisoned')
+  // Loads clean: the interval sets are pairwise disjoint.
+  const reloaded = new TurnReconciliationStore({ persistenceFile: storeFile, runtimeEpoch: 'poison-epoch' })
+  assert.equal(reloaded.startupBlockedReason, null, 'the interleaved state loads exactly')
+  const base = 'turn:poison-epoch:a1'
+  // Exact identity through the reload: interior holes are never fabricated
+  // (the old span representation answered evicted for them), and every REAL
+  // handle stays a live-responsibility verdict (never downgraded to a
+  // non-live state by the reload).
+  for (const [generation, seq] of [[1, 1], [1, 42], [2, 2]]) {
+    const state = reloaded.classifyHandle(`${base}:g${generation}:s${seq}`).state
+    assert.ok(!['never_existed', 'evicted'].includes(state), `g${generation}:s${seq} stays a live responsibility (${state})`)
+  }
+  for (const [generation, seq] of [[1, 2], [1, 3], [2, 42]]) {
+    assert.equal(reloaded.classifyHandle(`${base}:g${generation}:s${seq}`).state, 'never_existed',
+      `g${generation}:s${seq} was never minted in that generation — exact, across the reload`)
+  }
+  // The allocator still floors strictly above the durable history.
   const { router, spawned } = await freshRig(t, dir, [AGT_ID], storeFile)
-  await assert.rejects(() => router.ensureRunning(AGT_ID), () => true)
-  await tick()
-  assert.equal(spawned.length, 0, 'no allocation against a poisoned store')
-  assert.equal(await readFile(storeFile, 'utf8'), poisoned, 'poisoned durable state must remain exactly as-is (operator recovery authority)')
+  const proc = await startAgent(router, spawned, AGT_ID)
+  assert.equal(proc.processGeneration, 3, 'a fresh runtime spawns strictly above generations 1..2')
 })
 
 test('T9 concurrent ensureRunning stays single-flight: exactly one allocation (generation 1)', async (t) => {

@@ -53,6 +53,14 @@ export const RECONCILIATION_CAPS = Object.freeze({
   ARCHIVE_TRIGGER_INTERVALS: 12288,
   /** r10 (#707): per-compaction archive batch (whole tuples, oldest first). */
   ARCHIVE_BATCH_INTERVALS: 4096,
+  /**
+   * r11 (#707 QA P1): the archive's own fail-loud horizon — versioned
+   * retention is BOUNDED, not infinite: at ~24 bytes per interval this
+   * horizon is roughly 6 MB of retained exact facts per agent; approaching
+   * it is an operator rotation event (export/segment the archive), never a
+   * silent drop. Documented in the retention contract (spec §0r6).
+   */
+  MAX_ARCHIVE_INTERVALS_PER_AGENT: 262144,
 })
 
 export const REQUIRED_RECORD_EVIDENCE_HEADROOM_BYTES = 1048576 + 65536

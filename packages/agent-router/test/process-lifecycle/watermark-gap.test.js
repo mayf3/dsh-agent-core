@@ -41,6 +41,7 @@
  */
 
 import assert from 'node:assert/strict'
+import { mkdirSync, rmSync } from 'node:fs'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -339,6 +340,229 @@ test('P1: the versioned retention keeps the system live indefinitely — archive
   assert.equal(store.records.has(reminted), true)
   assert.equal(store.classifyHandle(`${base}:g100:s100`).state, 'evicted')
   assert.equal(store.classifyHandle(reminted).state, 'pending')
+})
+
+
+test('r11 P0-A: interleaved same-generation issuance — the never-minted g10:s2 is never_existed (exact issued intervals)', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-r11-p0a' })
+  // Owner's counterexample, verbatim: mint g10:s1, g11:s2, g10:s3 (gen10
+  // INTERLEAVES with gen11); all legally settle and evict. g10's slot must
+  // carry the EXACT issued set [[1,1],[3,3]] — the incarnation span [1,3]
+  // is not dense because s2 belongs to g11.
+  const handles = []
+  for (const generation of [10, 11, 10]) {
+    const handle = store.mintTurnExecution({ agentId: HR, processGeneration: generation, sessionId: 'main' })
+    store.markPromptWriteAttempted(handle)
+    store.settleDirect(handle, { outcome: 'completed' })
+    handles.push(handle)
+  }
+  const issuance = store.issuance.get(HR)
+  store.evictSettledGenerationForCapacity(HR, issuance)
+  assert.deepEqual(issuance.evictedRanges, [[10, 11, [[[1, 1], [3, 3]], [[2, 2]]]]],
+    'g10\'s slot carries the EXACT issued set with its interior hole')
+
+  const base = `turn:${store.runtimeEpoch}:a${issuance.discriminator}`
+  assert.deepEqual(store.classifyHandle(`${base}:g10:s2`), { state: 'never_existed' },
+    'COUNTEREXAMPLE (r10 FAIL): the never-minted g10:s2 is never_existed')
+  assert.deepEqual(store.classifyHandle(`${base}:g10:s1`), { state: 'evicted', agentId: HR })
+  assert.deepEqual(store.classifyHandle(`${base}:g10:s3`), { state: 'evicted', agentId: HR })
+  assert.deepEqual(store.classifyHandle(`${base}:g11:s2`), { state: 'evicted', agentId: HR })
+  // The interleaved state persists + reloads exactly (the r11 poison-rule
+  // upgrade makes the T8-era restart failure unnecessary).
+  const pf = `${join(tmpdir(), `acr-wm-p0a-${Date.now()}-${Math.random().toString(16).slice(2)}`)}/recovery.json`
+  mkdirSync(join(pf, '..'), { recursive: true })
+  try {
+    const persisted = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-r11-p0a' })
+    // no further mutations; the store above was in-memory — re-drive through
+    // a persisted twin to prove the durable path
+    const twin = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-r11-p0a' })
+    for (const generation of [10, 11, 10]) {
+      const handle = twin.mintTurnExecution({ agentId: HR, processGeneration: generation, sessionId: 'main' })
+      twin.markPromptWriteAttempted(handle)
+      twin.settleDirect(handle, { outcome: 'completed' })
+    }
+    twin.evictSettledGenerationForCapacity(HR, twin.issuance.get(HR))
+    twin.persistDurable()
+    const reloaded = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-r11-p0a' })
+    assert.equal(reloaded.startupBlockedReason, null, 'the interleaved durable state loads')
+    const reloadedIssuance = reloaded.issuance.get(HR)
+    const reloadedBase = `turn:${'epoch-r11-p0a'}:a${reloadedIssuance.discriminator}`
+    assert.equal(reloaded.classifyHandle(`${reloadedBase}:g10:s2`).state, 'never_existed',
+      'the interior hole stays exact across the durable round-trip')
+    assert.equal(reloaded.classifyHandle(`${reloadedBase}:g10:s1`).state, 'evicted')
+    void persisted
+  } finally {
+    rmSync(join(pf, '..'), { recursive: true, force: true })
+  }
+})
+
+test('r11 P0-C: archive + re-issuance — the covering lookup is the UNION of hot and archived intervals', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'acr-wm-p0c-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const pf = join(dir, 'recovery.json')
+  const store = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-r11-p0c' })
+  const first = store.mintTurnExecution({ agentId: HR, processGeneration: 10, sessionId: 'main' })
+  store.markPromptWriteAttempted(first)
+  store.settleDirect(first, { outcome: 'completed' })
+  const issuance = store.issuance.get(HR)
+  const firstSeq = Number(first.match(/:s(\d+)$/)[1])
+  // Force the archive trigger with a cold injected span, then archive.
+  issuance.maxIssuedTurnSeq = 20000
+  // Cold spans are NON-ADJACENT (real tuples always merge adjacency, so a
+  // legal durable state never carries adjacent tuples).
+  const cold = []
+  for (let start = 100; start <= 12750; start += 51) {
+    cold.push([start, start + 49, Array.from({ length: 50 }, (_, offset) => [[start + offset, start + offset]])])
+  }
+  issuance.evictedRanges.push(...cold)
+  store.evictSettledGenerationForCapacity(HR, issuance)
+  assert.ok(issuance.evictedArchives.length > 0, 'g10\'s tuple is archived')
+  const base = `turn:${store.runtimeEpoch}:a${issuance.discriminator}`
+  assert.equal(store.classifyHandle(first).state, 'evicted', 'the archived incarnation stays evicted')
+
+  // COUNTEREXAMPLE (r10 FAIL): re-issue gen10, settle, evict — the old
+  // handle must STAY evicted (the r10 covering .find() saw only the new hot
+  // tuple and dropped the archived incarnation).
+  const reminted = store.mintTurnExecution({ agentId: HR, processGeneration: 10, sessionId: 'main' })
+  store.markPromptWriteAttempted(reminted)
+  store.settleDirect(reminted, { outcome: 'completed' })
+  store.evictRecord(store.records.get(reminted))
+  assert.equal(store.classifyHandle(first).state, 'evicted',
+    'the archived incarnation stays evicted after a same-generation re-issuance')
+  assert.equal(store.classifyHandle(`${base}:g10:s${firstSeq + 1}`).state, 'never_existed',
+    'the interior hole between the two incarnations stays exact')
+
+  // Cross-restart: the union survives the durable round-trip.
+  store.persistDurable()
+  const reloaded = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-r11-p0c' })
+  assert.equal(reloaded.startupBlockedReason, null)
+  assert.equal(reloaded.classifyHandle(first).state, 'evicted', 'archived identity survives the reload')
+})
+
+test('r11 P0-B: archive + hot dual-write persists AND reloads; the dual gate accepts the archive-aware expansion', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'acr-wm-p0b2-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const pf = join(dir, 'recovery.json')
+  const store = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-r11-p0b' })
+  const first = store.mintTurnExecution({ agentId: HR, processGeneration: 10, sessionId: 'main' })
+  store.markPromptWriteAttempted(first)
+  store.settleDirect(first, { outcome: 'completed' })
+  const issuance = store.issuance.get(HR)
+  store.evictSettledGenerationForCapacity(HR, issuance)
+  issuance.maxIssuedTurnSeq = 20000
+  // Cold spans are NON-ADJACENT (real tuples always merge adjacency, so a
+  // legal durable state never carries adjacent tuples).
+  const cold = []
+  for (let start = 100; start <= 12750; start += 51) {
+    cold.push([start, start + 49, Array.from({ length: 50 }, (_, offset) => [[start + offset, start + offset]])])
+  }
+  issuance.evictedRanges.push(...cold)
+  store.mintTurnExecution({ agentId: HR, processGeneration: 20, sessionId: 'main' })
+  // COUNTEREXAMPLE (r10 FAIL): g10 archived + g20 hot — the r10 persist
+  // wrote a legacy field the r10 decoder itself rejected on reload.
+  store.evictSettledGenerationForCapacity(HR, issuance)
+  store.persistDurable()
+  const raw = JSON.parse(await readFile(pf, 'utf8'))
+  for (const entry of raw.issuance) {
+    assert.ok(Array.isArray(entry.evictedGenerations), 'dual-write present')
+    const pairs = new Map(entry.evictedGenerations)
+    // r11: the expansion is HOT-only — archived generations intentionally
+    // have no legacy pair (bounded legacy field).
+    const hotGens = new Set()
+    for (const [start, end, slots] of entry.evictedRanges) {
+      for (let offset = 0; offset < slots.length; offset++) hotGens.add(start + offset)
+    }
+    for (const [generation] of entry.evictedGenerations) assert.ok(hotGens.has(generation), 'no archived generation leaks into the legacy field')
+    void pairs
+  }
+  // The r10 reload brick: loads CLEAN at r11.
+  const reloaded = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-r11-p0b' })
+  assert.equal(reloaded.startupBlockedReason, null, 'COUNTEREXAMPLE (r10 FAIL): the archive+hot file reloads')
+  // A CONTRADICTING legacy pair still fails the store closed.
+  for (const entry of raw.issuance) {
+    if (entry.evictedGenerations.length > 0) entry.evictedGenerations[0][1] += 5
+  }
+  await writeFile(pf, `${JSON.stringify(raw)}\n`)
+  const poisoned = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-r11-p0b-bad' })
+  assert.equal(poisoned.startupBlockedReason, 'durable_store_invalid')
+})
+
+test('r11 P1: joint boundedness with four permanent fences — 2k real evictions stay bounded, archive exact, file growth linear', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'acr-wm-p1-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const pf = join(dir, 'recovery.json')
+  const store = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-r11-p1' })
+  // Four PERMANENT marker-only fences (the production shape — never released).
+  for (const generation of [70, 73, 78, 86]) {
+    const handle = store.mintTurnExecution({ agentId: HR, processGeneration: generation, sessionId: 'main' })
+    store.markPromptWriteAttempted(handle)
+    store.markOutcomeUnknown(handle, { source: 'fixture' })
+    store.declareAdminAbandonment({ agentId: HR, declarationId: `fence-${generation}` })
+  }
+  const issuance = store.issuance.get(HR)
+  // 2k REAL evicted generations above the fences (suite-sized; the 10k and
+  // 100k real-mint runs are measured in the retention evidence script). Each
+  // generation contributes exactly one interval to the merged tuple. The
+  // baseline store persists the WHOLE file on every mint — irrelevant to the
+  // retention mechanics under test and quadratic at this depth, so the bulk
+  // loop stubs it and the FINAL persist below is the real measured one.
+  const realPersist = store.persistDurable.bind(store)
+  store.persistDurable = () => {}
+  for (let round = 0; round < 20; round++) {
+    for (let offset = 0; offset < 100; offset++) {
+      const generation = 1000 + round * 100 + offset
+      const handle = store.mintTurnExecution({ agentId: HR, processGeneration: generation, sessionId: 'main' })
+      store.markPromptWriteAttempted(handle)
+      store.settleDirect(handle, { outcome: 'completed' })
+    }
+    store.evictSettledGenerationForCapacity(HR, issuance)
+  }
+  const hotIntervals = () => issuance.evictedRanges.reduce((total, tuple) => total
+    + tuple[2].reduce((t, slot) => t + slot.length, 0), 0)
+  // BOUNDED under permanent fences: hot = exactly the 10k resolved intervals
+  // (one merged tuple), far under the 16384 backstop; ledger = the proven
+  // absent prefix 1..69; fences pinned throughout.
+  assert.equal(hotIntervals(), 2_000)
+  assert.equal(issuance.evictedRanges.length, 1, 'adjacent resolved generations merge into ONE tuple')
+  assert.equal(issuance.neverIssuedGenerations.size, 69, 'the proven-absent prefix 1..69 is ledgered exactly')
+  assert.equal(issuance.evictedThroughGeneration, 69, 'the watermark crossed only the proven-absent prefix')
+  for (const generation of [70, 73, 78, 86]) {
+    assert.ok(issuance.generations.get(generation) !== undefined, `fence g${generation} stays pinned`)
+  }
+  // Exactness on both tiers.
+  const base = `turn:${store.runtimeEpoch}:a${issuance.discriminator}`
+  const probeGen = 2500
+  const probeHandle = `${base}:g${probeGen}:s${probeGen - 995}`
+  assert.equal(store.classifyHandle(probeHandle).state, 'evicted', 'a cold-generation real handle stays exactly evicted')
+  assert.equal(store.classifyHandle(`${base}:g${probeGen}:s${probeGen - 994}`).state, 'never_existed',
+    'the interior hole stays exact')
+  assert.equal(store.admissionBlockerForAgent(HR), null, 'HR admission stays recovered (fences marker-only)')
+
+  // Versioned retention: cross the trigger, the archive absorbs the coldest
+  // batch, hot drops, and every archived handle stays exact.
+  issuance.maxIssuedTurnSeq = 40000
+  const cold = []
+  for (let start = 20000; start <= 32700; start += 51) {
+    cold.push([start, start + 49, Array.from({ length: 50 }, (_, offset) => [[start + offset, start + offset]])])
+  }
+  // Cold tuples join the SORTED tail (the ranges list must stay ascending —
+  // the archive then naturally takes the coldest front first).
+  issuance.evictedRanges.push(...cold)
+  store.evictSettledGenerationForCapacity(HR, issuance)
+  assert.ok(hotIntervals() <= 12288, `the compaction archived enough cold tuples (hot now ${hotIntervals()})`)
+  assert.ok(issuance.evictedArchives.length > 0, 'the archive holds the coldest resolved tuples')
+  assert.equal(store.classifyHandle(`${base}:g20025:s20025`).state, 'evicted', 'an archived cold handle stays evicted')
+  assert.equal(store.classifyHandle(`${base}:g20025:s20026`).state, 'never_existed', 'an archived hole stays exact')
+
+  // File growth: persist and measure — linear in retained facts, small.
+  store.persistDurable = realPersist
+  store.persistDurable()
+  const bytes = (await readFile(pf)).length
+  assert.ok(bytes < 6 * 1024 * 1024, `the retained exact facts stay small (~${Math.round(bytes / 1024)}KB after 2k generations + archive)`)
+  const reloaded = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-r11-p1' })
+  assert.equal(reloaded.startupBlockedReason, null, 'the archive-heavy file loads')
+  assert.equal(reloaded.classifyHandle(probeHandle).state, 'evicted', 'cold exactness survives the reload')
+  assert.equal(reloaded.classifyHandle(`${base}:g20025:s20025`).state, 'evicted', 'archived exactness survives the reload')
 })
 
 test('P1-D: marker-only fences do NOT block admission — HR recovers with NO new D6; unmarked UNKNOWN fences still block', () => {

@@ -343,6 +343,14 @@ export class TurnReconciliationStore {
     if (!Number.isSafeInteger(issuance.maxIssuedTurnSeq + 1)) {
       throw new ReconciliationCapacityError(`reconciliation: turn sequence exhausted for agent ${agentId}`)
     }
+    // r11 (QA finding 6 hardening): a generation at/below the watermark was
+    // never allocator-reachable — minting there would create a live entry
+    // UNDER the contiguous watermark (whose resolution branch answers
+    // seq-blind evicted) and a below-watermark evicted tuple whose persist
+    // the validator rejects. Fail loud on the invalid argument instead.
+    if (processGeneration <= issuance.evictedThroughGeneration) {
+      throw new TypeError(`mintTurnExecution: processGeneration ${processGeneration} is below the issuance watermark (${issuance.evictedThroughGeneration})`)
+    }
     const authorityBefore = this.snapshotAuthority()
     try {
     const correlationBytes = correlationKey === null ? 0 : correlationEntryByteSize(correlationKey, `turn:${this.runtimeEpoch}:a${issuance.discriminator}:g${processGeneration}:s${issuance.maxIssuedTurnSeq + 1}`)
@@ -428,11 +436,26 @@ export class TurnReconciliationStore {
     issuance.maxIssuedTurnSeq = turnSeq
     const generationEntry = issuance.generations.get(processGeneration)
     if (generationEntry === undefined) {
-      issuance.generations.set(processGeneration, { minSeq: turnSeq, maxSeq: turnSeq, unresolvedCount: 1, liveRecords: 1 })
+      issuance.generations.set(processGeneration, {
+        minSeq: turnSeq, maxSeq: turnSeq, unresolvedCount: 1, liveRecords: 1,
+        // r11 (#707 QA P0-A): the generation's EXACT issued set — turn-seq
+        // allocation is global, so interleaved mints across generations make
+        // [minSeq, maxSeq] non-dense; every mint merges its own [seq, seq]
+        // into this disjoint interval list, and eviction copies it into the
+        // evictedRanges slot (exact identity, no fabrication).
+        issuedIntervals: [[turnSeq, turnSeq]],
+      })
     } else {
       generationEntry.maxSeq = turnSeq
       generationEntry.unresolvedCount += 1
       generationEntry.liveRecords += 1
+      const intervals = generationEntry.issuedIntervals ?? [[generationEntry.minSeq, turnSeq - 1]]
+      const last = intervals[intervals.length - 1]
+      if (last !== undefined && turnSeq === last[1] + 1) last[1] = turnSeq
+      else if (last !== undefined && turnSeq >= last[0] && turnSeq <= last[1]) { /* already recorded */ }
+      else if (turnSeq < intervals[0][0]) intervals.unshift([turnSeq, turnSeq])
+      else intervals.push([turnSeq, turnSeq])
+      generationEntry.issuedIntervals = intervals
     }
     this.records.set(handle, record)
     this.globalBytes += record.bytes

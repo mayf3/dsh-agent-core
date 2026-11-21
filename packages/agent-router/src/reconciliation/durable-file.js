@@ -250,18 +250,22 @@ function encodeIssuance(issuance) {
     evictedRanges: entry.evictedRanges.map(range => [range[0], range[1], range[2].map(slot => slot.map(interval => [...interval]))]),
     evictedArchives: (entry.evictedArchives ?? []).map(range => [range[0], range[1], range[2].map(slot => slot.map(interval => [...interval]))]),
     neverIssuedGenerations: [...entry.neverIssuedGenerations],
-    generations: [...entry.generations],
-    // r10 dual-write (QA P2): the legacy per-generation pairs are RE-EXPANDED
-    // from the ranges (hi of each slot) so a pre-r8 binary stays able to LOAD
-    // the file — records/correlations (the live responsibilities) ride the
-    // unchanged record format, so a rollback loses no new handles. The legacy
-    // form is inherently lossier (no lower bounds, no ledger, no high
-    // watermark); the documented residual drift under an old binary is
-    // non-live and safer-direction. The expansion keeps pairs + live within
-    // the old loader's 256 metadata sum ONLY while the metadata budget lasts
-    // — the old binary's own 256-cap deadlock is structural; rollback is an
-    // emergency lane, not a steady state.
-    evictedGenerations: [...entry.evictedRanges, ...(entry.evictedArchives ?? [])].flatMap(([start, end, bounds]) =>
+    generations: [...entry.generations].map(([generation, value]) => [generation, {
+      ...value,
+      issuedIntervals: (value.issuedIntervals ?? [[value.minSeq, value.maxSeq]]).map(interval => [...interval]),
+    }]),
+    // r10/r11 dual-write (QA P2 + P1a): the legacy per-generation pairs are
+    // re-expanded from the HOT ranges ONLY — the archive is a versioned-
+    // retention section with its own budget, and re-expanding it here would
+    // make the legacy field grow O(history) (unbounded, and permanently
+    // past the old loader's 256 budget). Records/correlations ride the
+    // unchanged record format, so a rollback loses no live responsibility;
+    // archived-generation handles resolve as never_existed under an old
+    // binary (documented safer-direction drift — no fabricated output). The
+    // expansion keeps pairs + live within the old loader's 256 metadata sum
+    // only while the budget lasts — the old binary's own deadlock is
+    // structural; rollback is an emergency lane, not a steady state.
+    evictedGenerations: entry.evictedRanges.flatMap(([start, end, bounds]) =>
       bounds.map((slot, offset) => [start + offset, slot[slot.length - 1][1]])),
   }))
 }
@@ -367,13 +371,26 @@ function decodeIssuance(entries, discriminatorSeq) {
     const validGenerationTuple = tuple => Array.isArray(tuple) && tuple.length === 2
       && Number.isSafeInteger(tuple[0]) && tuple[0] > 0
       && tuple[1] !== null && typeof tuple[1] === 'object'
+    // r11 (#707 QA P0-A): a live generation's EXACT issued intervals —
+    // optional for legacy files (fallback [[minSeq, maxSeq]], legacy
+    // fidelity); when present, sorted, disjoint, non-adjacent, inside the
+    // agent's issued turn-seq bounds, and spanning [minSeq, maxSeq].
+    const validEntryIntervals = value => !Array.isArray(value.issuedIntervals) || (value.issuedIntervals.length >= 1
+      && value.issuedIntervals.every(interval => Array.isArray(interval) && interval.length === 2
+        && Number.isSafeInteger(interval[0]) && interval[0] > 0
+        && Number.isSafeInteger(interval[1]) && interval[1] >= interval[0]
+        && interval[1] <= entry.maxIssuedTurnSeq)
+      && value.issuedIntervals.every((interval, index) => index === 0 || interval[0] > value.issuedIntervals[index - 1][1] + 1)
+      && value.issuedIntervals[0][0] === value.minSeq
+      && value.issuedIntervals[value.issuedIntervals.length - 1][1] === value.maxSeq)
     if (sparse.some(seq => !Number.isSafeInteger(seq) || seq <= entry.evictedThroughTurnSeq || seq > entry.maxIssuedTurnSeq)
         || new Set(sparse).size !== sparse.length
         || generations.some(tuple => !validGenerationTuple(tuple)
           || tuple[0] <= entry.evictedThroughGeneration
           || !Number.isSafeInteger(tuple[1].minSeq) || tuple[1].minSeq <= 0
           || !Number.isSafeInteger(tuple[1].maxSeq) || tuple[1].maxSeq < tuple[1].minSeq
-          || tuple[1].maxSeq > entry.maxIssuedTurnSeq)) {
+          || tuple[1].maxSeq > entry.maxIssuedTurnSeq
+          || !validEntryIntervals(tuple[1]))) {
       throw new TypeError('durable issuance metadata is invalid')
     }
     const ledger = entry.neverIssuedGenerations
@@ -389,7 +406,10 @@ function decodeIssuance(entries, discriminatorSeq) {
     let decodedWatermark = entry.evictedThroughGeneration
     if (Array.isArray(evictedRanges)) {
       decodedRanges = evictedRanges.map(tuple => [tuple[0], tuple[1], tuple[2].map(slot => slot.map(interval => [...interval]))])
-      if (decodedRanges.length + generations.length > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
+      // r11 (QA P0-B second half): the LIVE-generation cap only — the mint
+      // caps live generations; evicted metadata (tuples/intervals) has its
+      // own budgets. The two capacity contracts must agree.
+      if (generations.length > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
         throw new TypeError('durable issuance metadata exceeds frozen caps')
       }
       if (legacyEvictedGenerations !== undefined) {
@@ -422,14 +442,27 @@ function decodeIssuance(entries, discriminatorSeq) {
       const migrated = evictedRangesFromLegacyPairs(entry.evictedThroughGeneration, legacyEvictedGenerations)
       decodedRanges = migrated.ranges
       decodedWatermark = migrated.watermark
-      if (decodedRanges.length + generations.length > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT
-          || intervalCountOf(decodedRanges) + intervalCountOf(entry.evictedArchives ?? [])
-            > RECONCILIATION_CAPS.MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT) {
+      if (generations.length > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT
+          || intervalCountOf(decodedRanges) > RECONCILIATION_CAPS.MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT
+          || intervalCountOf(entry.evictedArchives ?? []) > RECONCILIATION_CAPS.MAX_ARCHIVE_INTERVALS_PER_AGENT) {
         throw new TypeError('durable issuance metadata exceeds frozen caps')
       }
     }
-    const liveRanges = generations.map(tuple => tuple[1]).sort((a, b) => a.minSeq - b.minSeq)
-    if (liveRanges.some((range, index) => index > 0 && range.minSeq <= liveRanges[index - 1].maxSeq)) {
+    // r11 (#707 QA P0-A): the cross-generation poison rule upgrades from
+    // [minSeq,maxSeq] span overlap to INTERVAL-SET disjointness — the exact
+    // issued intervals of different generations must never share a seq.
+    // Interleaved same-generation histories (g10:s1, g11:s2, g10:s3) are now
+    // loadable AND exact instead of rejected at restart (the Owner ruled a
+    // restart failure is not a safety answer).
+    const issuedByGeneration = generations
+      .map(tuple => [tuple[0], (tuple[1].issuedIntervals ?? [[tuple[1].minSeq, tuple[1].maxSeq]])
+        .flatMap(([lo, hi]) => (Array.isArray(tuple[1].issuedIntervals) ? [[lo, hi]] : [lo, hi]))])
+    const flatIssued = []
+    for (const [generation, intervals] of issuedByGeneration) {
+      for (const interval of intervals) flatIssued.push([interval[0], interval[1], generation])
+    }
+    flatIssued.sort((a, b) => a[0] - b[0])
+    if (flatIssued.some((interval, index) => index > 0 && interval[0] <= flatIssued[index - 1][1])) {
       throw new TypeError('overlapping durable issuance generation ranges')
     }
     discriminators.add(entry.discriminator)
@@ -442,7 +475,10 @@ function decodeIssuance(entries, discriminatorSeq) {
       evictedRanges: decodedRanges,
       evictedArchives: (evictedArchives ?? []).map(tuple => [tuple[0], tuple[1], tuple[2].map(slot => slot.map(interval => [...interval]))]),
       neverIssuedGenerations: new Set(ledger ?? []),
-      generations: new Map(entry.generations ?? []),
+      generations: new Map((entry.generations ?? []).map(([generation, value]) => [generation, {
+        ...value,
+        issuedIntervals: (value.issuedIntervals ?? [[value.minSeq, value.maxSeq]]).map(interval => [...interval]),
+      }])),
     })
   }
   return issuance
