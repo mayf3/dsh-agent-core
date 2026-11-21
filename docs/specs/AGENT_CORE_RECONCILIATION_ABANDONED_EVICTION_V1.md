@@ -226,6 +226,75 @@ authoring_base: 710fa3a9 (production line head; includes accepted #703/#705)
   lawful release-authorization chain; no unapproved CTO risk acceptance and
   no direct durable edits.
 
+## 0r5. Fifth-review amendments (Owner residual-identity ruling + P0/P1/P2 at the r9 head; all reproduced and addressed)
+
+- **P0 ruling (contract question, Owner directive 2026-11-21)**: a
+  never-minted complete `(generation, turnSeq)` pair must NEVER be asserted
+  as executed — where historical evidence is insufficient, execution identity
+  is not fabricated from upper bounds. The r9 per-generation UPPER bound
+  (inherited from the legacy maxSeq predicate) reproduced both residual
+  counterexamples: `g11:s1` (s1 belongs to g10) and — after a same-
+  generation re-issuance took s4 — `g10:s3`, both classified `evicted` on
+  never-minted identities. r10 stores EXACT per-generation ISSUED INTERVALS
+  (`[minSeq, maxSeq]`, unioned across re-issuance incarnations; an
+  incarnation's interval is dense under the durable overlapping-intervals
+  poison rule, so the union is exactly the generation's issued seq set —
+  interior holes classify `never_existed`). NEW evictions are exact.
+  LEGACY-pair migration maps each generation to `[[1, maxSeq]]` — the
+  honest no-lower-bound-evidence representation: below-min phantoms on
+  MIGRATED data keep the legacy verdict (disclosed residual; the legacy
+  data cannot prove tighter), and every seq the legacy form answered
+  `evicted` still answers `evicted`. Transient in-memory interleaved
+  intervals cannot persist (the T8 poison rule) and live records are
+  classified by the record-first guard before any interval logic.
+- **P1 (long-term liveness)**: the historical gaps blocked the watermark at
+  34 forever, so r9's hot intervals grew one entry per evicted generation.
+  r10 adds (a) the PROVEN-ABSENCE LEDGER — a generation above the watermark
+  with no entry, no live record, no range coverage, and an issuance trace
+  above it was never issued (every full eviction leaves a durable trace);
+  ledgered generations classify `never_existed` forever, so the watermark
+  crosses ONLY proven absence and never widens a gap generation (the
+  rejected r7 watermark-merge lacked exactly this); the watermark stops at
+  the first real span — gaps BETWEEN ranges need no ledger (the fall-through
+  already answers `never_existed`); (b) VERSIONED RETENTION — when the hot
+  interval budget crosses `ARCHIVE_TRIGGER_INTERVALS` (12288), the coldest
+  fully-resolved tuples move (whole, oldest first, `ARCHIVE_BATCH_INTERVALS`
+  per pass) into the immutable, still-queryable `evictedArchives`: exact
+  facts retained at O(bytes) cost, NEVER dropped — indefinite operation
+  with zero identity loss; the hot cap (16384) and ledger cap (4096) stay
+  fail-loud backstops; (c) the issuance metadata cap now counts LIVE
+  generations only — resolved history no longer consumes it (the measured
+  #707 256-cap lockout is structurally removed), while genuinely
+  live-saturated agents still fail loud exactly as the accepted admission
+  discipline requires.
+- **P2 (release/rollback consistency)**: persists are DUAL-WRITTEN — the
+  legacy `evictedGenerations` pairs are re-derived from the ranges and
+  archives (each generation's slot max), so a pre-r8 binary can LOAD the
+  file; both-forms files must be CONSISTENT (per-generation equality with
+  the slot maxima) — inconsistency fails the store CLOSED. Records and
+  correlations ride the unchanged record format, so a rollback loses NO new
+  responsibility at the load boundary. The window is QUANTIFIED, not
+  unconditional: the old loader's own 256 metadata budget (pairs + live)
+  holds at deploy time (production: 43 + 213 = 256), NARROWS as recovered
+  generations mint (257 after the first), and REOPENS after a full
+  compaction walk (live drops to the fences + working set). The old binary's
+  own capacity deadlock resumes on this shape regardless — rollback is an
+  emergency lane. Documented drift under an old binary: ledgered-gap
+  phantoms answer `evicted` (it has no ledger concept) and legacy-form
+  bounds are maxima-only — non-live classes, never a silent corruption.
+- **Owner risk-decision update (2026-11-21)**: with the four marker-only
+  fences retained (never deleted — original state, successor
+  responsibility, and no-replay constraints unchanged) and ZERO new D6,
+  the real preimage admits a new HR generation (gen302:s4947). The three
+  risk acceptances are no longer an HR-recovery precondition and are
+  withdrawn from the queue.
+- **Acceptance distinction (binding on the reviewer)**: "solves HR's
+  current capacity fault" and "indefinitely preserves the original C-018
+  identity semantics" are SEPARATE verdict lines; they must not be merged
+  into one unconditional PASS. Production adoption stays with the existing
+  lawful release-authorization chain; no unapproved CTO risk acceptance and
+  no direct durable edits.
+
 ## 0r4. Fourth-review amendments (Owner counterexamples P0-A/P0-B/P1-C/P1-D at the r8 head; all reproduced and addressed)
 
 - **P0-A (range maxSeq cannot prove full handle identity)**: r8's
