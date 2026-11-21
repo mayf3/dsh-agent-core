@@ -230,9 +230,37 @@ function encodeIssuance(issuance) {
     agentId,
     ...entry,
     evictedSparseSeqs: [...entry.evictedSparseSeqs],
-    evictedGenerations: [...entry.evictedGenerations],
+    evictedRanges: [...entry.evictedRanges].map(range => ({
+      fromGen: range.fromGen, toGen: range.toGen, maxTurnSeq: range.maxTurnSeq,
+    })),
     generations: [...entry.generations],
   }))
+}
+
+/**
+ * #707 repair: merge legacy per-generation evicted entries (generation id +
+ * eviction-time turn bound) and canonical ranges into one sorted,
+ * non-overlapping range list above evictedThroughGeneration. Adjacent
+ * generations merge; the maxTurnSeq of a merged range is the maximum of its
+ * members (turn seqs are monotonic across generation ids, so the C-018
+ * `seq <= max` evicted answer is preserved exactly).
+ */
+function mergeEvictedRanges(legacyIds, ranges) {
+  const points = []
+  for (const gen of legacyIds) points.push({ fromGen: gen, toGen: gen, maxTurnSeq: 0 })
+  for (const range of ranges) points.push({ fromGen: range.fromGen, toGen: range.toGen, maxTurnSeq: range.maxTurnSeq })
+  points.sort((a, b) => a.fromGen - b.fromGen || a.toGen - b.toGen)
+  const merged = []
+  for (const point of points) {
+    const last = merged[merged.length - 1]
+    if (last !== undefined && point.fromGen <= last.toGen + 1) {
+      last.toGen = Math.max(last.toGen, point.toGen)
+      last.maxTurnSeq = Math.max(last.maxTurnSeq, point.maxTurnSeq)
+    } else {
+      merged.push({ fromGen: point.fromGen, toGen: point.toGen, maxTurnSeq: point.maxTurnSeq })
+    }
+  }
+  return merged
 }
 
 function decodeIssuance(entries, discriminatorSeq) {
@@ -243,8 +271,13 @@ function decodeIssuance(entries, discriminatorSeq) {
   const discriminators = new Set()
   for (const entry of entries ?? []) {
     const sparse = entry?.evictedSparseSeqs
-    const evictedGenerations = entry?.evictedGenerations
     const generations = entry?.generations
+    // #707 repair: evictedRanges is the canonical sparse representation (merged
+    // intervals, bounded count). Legacy evictedGenerations maps (one entry per
+    // evicted generation, the pre-#707 unbounded shape) are accepted read-only
+    // and merged into ranges in memory; the next persist writes ranges only.
+    const legacyEvicted = entry?.evictedGenerations
+    const evictedRanges = entry?.evictedRanges
     if (entry === null || typeof entry !== 'object'
         || typeof entry.agentId !== 'string' || entry.agentId === '' || entry.agentId.length > 256
         || issuance.has(entry.agentId)
@@ -255,8 +288,8 @@ function decodeIssuance(entries, discriminatorSeq) {
         || entry.evictedThroughTurnSeq > entry.maxIssuedTurnSeq
         || !Number.isSafeInteger(entry.evictedThroughGeneration) || entry.evictedThroughGeneration < 0
         || !Array.isArray(sparse) || sparse.length > RECONCILIATION_CAPS.MAX_EVICTED_SPARSE_SEQS_PER_AGENT
-        || !Array.isArray(evictedGenerations) || !Array.isArray(generations)
-        || evictedGenerations.length + generations.length > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
+        || !Array.isArray(evictedRanges) || !Array.isArray(generations)
+        || evictedRanges.length + generations.length > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
       throw new TypeError('durable issuance entry is invalid')
     }
     const validGenerationTuple = tuple => Array.isArray(tuple) && tuple.length === 2
@@ -264,10 +297,12 @@ function decodeIssuance(entries, discriminatorSeq) {
       && tuple[1] !== null && typeof tuple[1] === 'object'
     if (sparse.some(seq => !Number.isSafeInteger(seq) || seq <= entry.evictedThroughTurnSeq || seq > entry.maxIssuedTurnSeq)
         || new Set(sparse).size !== sparse.length
-        || evictedGenerations.some(tuple => !Array.isArray(tuple) || tuple.length !== 2
-          || !Number.isSafeInteger(tuple[0]) || tuple[0] <= 0
-          || tuple[0] <= entry.evictedThroughGeneration
-          || !Number.isSafeInteger(tuple[1]) || tuple[1] <= 0 || tuple[1] > entry.maxIssuedTurnSeq)
+        || evictedRanges.some(range => range === null || typeof range !== 'object'
+          || !Number.isSafeInteger(range.fromGen) || range.fromGen <= 0
+          || range.fromGen <= entry.evictedThroughGeneration
+          || !Number.isSafeInteger(range.toGen) || range.toGen < range.fromGen
+          || !Number.isSafeInteger(range.maxTurnSeq) || range.maxTurnSeq <= 0 || range.maxTurnSeq > entry.maxIssuedTurnSeq)
+        || evictedRanges.some((range, index) => index > 0 && range.fromGen <= evictedRanges[index - 1].toGen)
         || generations.some(tuple => !validGenerationTuple(tuple)
           || tuple[0] <= entry.evictedThroughGeneration
           || !Number.isSafeInteger(tuple[1].minSeq) || tuple[1].minSeq <= 0
@@ -275,7 +310,10 @@ function decodeIssuance(entries, discriminatorSeq) {
           || tuple[1].maxSeq > entry.maxIssuedTurnSeq)) {
       throw new TypeError('durable issuance metadata is invalid')
     }
-    const generationIds = [...evictedGenerations, ...generations].map(tuple => tuple[0])
+    const legacyIds = (legacyEvicted ?? []).map(tuple => Array.isArray(tuple) ? tuple[0] : null).filter(v => Number.isSafeInteger(v))
+    const rangeIds = []
+    for (const range of evictedRanges) for (let g = range.fromGen; g <= range.toGen; g++) rangeIds.push(g)
+    const generationIds = [...legacyIds, ...rangeIds, ...generations].map(tuple => Array.isArray(tuple) ? tuple[0] : tuple)
     if (new Set(generationIds).size !== generationIds.length) throw new TypeError('duplicate durable issuance generation')
     const liveRanges = generations.map(tuple => tuple[1]).sort((a, b) => a.minSeq - b.minSeq)
     if (liveRanges.some((range, index) => index > 0 && range.minSeq <= liveRanges[index - 1].maxSeq)) {
@@ -288,7 +326,7 @@ function decodeIssuance(entries, discriminatorSeq) {
       evictedThroughTurnSeq: entry.evictedThroughTurnSeq,
       evictedSparseSeqs: new Set(entry.evictedSparseSeqs ?? []),
       evictedThroughGeneration: entry.evictedThroughGeneration,
-      evictedGenerations: new Map(entry.evictedGenerations ?? []),
+      evictedRanges: mergeEvictedRanges(legacyIds, evictedRanges),
       generations: new Map(entry.generations ?? []),
     })
   }

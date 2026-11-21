@@ -198,8 +198,31 @@ export const authorityCapacityMethods = {
           issuance.generations.delete(generation)
           if (generation === issuance.evictedThroughGeneration + 1) {
             issuance.evictedThroughGeneration = generation
+            // #707: absorb any range that is now contiguous with the watermark
+            for (;;) {
+              const next = issuance.evictedRanges.find(range => range.fromGen === issuance.evictedThroughGeneration + 1)
+              if (next === undefined) break
+              issuance.evictedThroughGeneration = next.toGen
+              issuance.evictedRanges = issuance.evictedRanges.filter(range => range !== next)
+            }
           } else {
-            issuance.evictedGenerations.set(generation, generationEntry.maxSeq)
+            // #707: merge into an adjacent evicted range (or open a new one)
+            const prev = issuance.evictedRanges.find(range => range.toGen === generation - 1)
+            const next = issuance.evictedRanges.find(range => range.fromGen === generation + 1)
+            if (prev !== undefined && next !== undefined) {
+              prev.toGen = next.toGen
+              prev.maxTurnSeq = Math.max(prev.maxTurnSeq, generationEntry.maxSeq, next.maxTurnSeq)
+              issuance.evictedRanges = issuance.evictedRanges.filter(range => range !== next)
+            } else if (prev !== undefined) {
+              prev.toGen = generation
+              prev.maxTurnSeq = Math.max(prev.maxTurnSeq, generationEntry.maxSeq)
+            } else if (next !== undefined) {
+              next.fromGen = generation
+              next.maxTurnSeq = Math.max(next.maxTurnSeq, generationEntry.maxSeq)
+            } else {
+              issuance.evictedRanges.push({ fromGen: generation, toGen: generation, maxTurnSeq: generationEntry.maxSeq })
+              issuance.evictedRanges.sort((a, b) => a.fromGen - b.fromGen)
+            }
           }
         }
       }

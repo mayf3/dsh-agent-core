@@ -137,8 +137,8 @@ export const queryMethods = {
     if (seq > issuance.maxIssuedTurnSeq) return { state: 'never_existed' }
     // Rule 11: compacted (fully evicted) generations resolve as `evicted`.
     if (generation <= issuance.evictedThroughGeneration) return { state: 'evicted', agentId }
-    const evictedGenerationMax = issuance.evictedGenerations.get(generation)
-    if (evictedGenerationMax !== undefined && seq <= evictedGenerationMax) return { state: 'evicted', agentId }
+    const evictedRange = issuance.evictedRanges.find(range => generation >= range.fromGen && generation <= range.toGen)
+    if (evictedRange !== undefined && seq <= evictedRange.maxTurnSeq) return { state: 'evicted', agentId }
     const generationEntry = issuance.generations.get(generation)
     if (generationEntry === undefined || seq < generationEntry.minSeq || seq > generationEntry.maxSeq) {
       return { state: 'never_existed' }

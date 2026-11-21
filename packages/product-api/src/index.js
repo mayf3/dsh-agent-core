@@ -76,6 +76,10 @@ export const Config = z.object({
   port: z.number().default(8787),
   /** Product Surface channel tag (surfaceType). Fixed 'mobile' in Gate 1. */
   channel: z.string().default('mobile'),
+  /** Optional exact-generation management credential; never accepted from JSON. */
+  managementToken: z.string().default(''),
+  /** Principal bound to managementToken (for audit and authorization). */
+  managementPrincipal: z.string().default(''),
   /**
    * PRODUCT_API_AUTHENTICATION_V1 / MOBILE_SESSION_HISTORY_V1: the dedicated
    * history-only Tailnet listener (HISTORY_LISTENER). Default OFF; the
@@ -124,6 +128,11 @@ function httpStatusFor(error) {
   if (error?.code === 'AGENT_NOT_FOUND') return 404
   if (error?.code === 'BINDING_NOT_FOUND') return 404
   if (error?.code === 'VALIDATION_ERROR') return 400
+  if (error?.code === 'MANAGEMENT_UNAUTHORIZED') return 401
+  if (error?.code === 'MANAGEMENT_AUTH_UNAVAILABLE') return 503
+  if (error?.code === 'EXACT_GENERATION_FENCE_MISMATCH'
+      || error?.code === 'EXACT_GENERATION_CAS_CONFLICT') return 409
+  if (error?.code === 'MANAGEMENT_UNAVAILABLE') return 503
   return 500
 }
 
@@ -172,6 +181,8 @@ export function apply(ctx, config = {}) {
     host: config.host ?? '127.0.0.1',
     port: Number.isFinite(config.port) ? config.port : 8787,
     channel: config.channel ?? 'mobile',
+    managementToken: typeof config.managementToken === 'string' ? config.managementToken : null,
+    managementPrincipal: typeof config.managementPrincipal === 'string' ? config.managementPrincipal : null,
   }
   const log = {
     log: (...args) => process.stderr.write(`[product-api] ${args.join(' ')}\n`),
@@ -254,6 +265,45 @@ export function apply(ctx, config = {}) {
   // long-lived in-process ASR engine (loaded once; see voice-transcription.js).
   const voiceTranscription = createVoiceTranscriptionHandler()
   const conversation = () => createConversationHandler({service:config.conversationService ?? ctx.get('nativeConversation')})
+
+  function authenticateManagement(req) {
+    const principal = cfg.managementPrincipal
+    const token = cfg.managementToken
+    if (typeof token !== 'string' || token === '' || typeof principal !== 'string'
+        || !/^(?:cto|admin)(?:$|[-_:])/i.test(principal)) {
+      throw Object.assign(new Error('management authentication is not configured'), { code: 'MANAGEMENT_AUTH_UNAVAILABLE' })
+    }
+    const authorization = req.headers.authorization
+    if (typeof authorization !== 'string' || !authorization.startsWith('Bearer ')
+        || authorization.slice(7) !== token) {
+      throw Object.assign(new Error('management authentication required'), { code: 'MANAGEMENT_UNAUTHORIZED' })
+    }
+    return principal
+  }
+
+  async function exactGenerationRecovery(req, body) {
+    const principal = authenticateManagement(req)
+    if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+      throw Object.assign(new TypeError('management body must be an object'), { code: 'VALIDATION_ERROR' })
+    }
+    const keys = Object.keys(body)
+    if (keys.length !== 2 || !keys.includes('agentId') || !keys.includes('generation')) {
+      throw Object.assign(new TypeError('exact-generation-recovery accepts only agentId and generation; batch/all/prefix forms are forbidden'), { code: 'VALIDATION_ERROR' })
+    }
+    const agentId = body.agentId
+    const generation = body.generation
+    if (typeof agentId !== 'string' || agentId.length === 0 || agentId === 'all'
+        || agentId.endsWith('*') || agentId.includes(',')) {
+      throw Object.assign(new TypeError('agentId must identify exactly one Agent'), { code: 'VALIDATION_ERROR' })
+    }
+    if (!Number.isSafeInteger(generation) || generation < 1) {
+      throw Object.assign(new TypeError('generation must be a positive safe integer'), { code: 'VALIDATION_ERROR' })
+    }
+    if (typeof router.operatorExactGenerationRecovery !== 'function') {
+      throw Object.assign(new Error('router exact-generation recovery is unavailable'), { code: 'MANAGEMENT_UNAVAILABLE' })
+    }
+    return router.operatorExactGenerationRecovery({ agentId, generation, principal })
+  }
 
   const server = createServer(async (req, res) => {
     const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`)
@@ -379,6 +429,11 @@ export function apply(ctx, config = {}) {
         }
         return
       }
+      if (req.method === 'POST' && url.pathname === '/agent-process/exact-generation-recovery') {
+        const result = await exactGenerationRecovery(req, await readBody(req))
+        json(res, 200, result)
+        return
+      }
       if (['GET', 'POST'].includes(req.method ?? '')) {
         json(res, 404, errorBody('NOT_FOUND', `no such endpoint: ${req.method} ${url.pathname}`))
         return
@@ -390,6 +445,11 @@ export function apply(ctx, config = {}) {
         : error?.code === 'BINDING_NOT_FOUND' ? 'BINDING_NOT_FOUND'
         : error?.code === 'AGENT_NOT_FOUND' ? 'AGENT_NOT_FOUND'
         : error?.code === 'VALIDATION_ERROR' ? 'VALIDATION_ERROR'
+        : error?.code === 'MANAGEMENT_UNAUTHORIZED' ? 'MANAGEMENT_UNAUTHORIZED'
+        : error?.code === 'MANAGEMENT_AUTH_UNAVAILABLE' ? 'MANAGEMENT_AUTH_UNAVAILABLE'
+        : error?.code === 'EXACT_GENERATION_FENCE_MISMATCH' ? 'EXACT_GENERATION_FENCE_MISMATCH'
+        : error?.code === 'EXACT_GENERATION_CAS_CONFLICT' ? 'EXACT_GENERATION_CAS_CONFLICT'
+        : error?.code === 'MANAGEMENT_UNAVAILABLE' ? 'MANAGEMENT_UNAVAILABLE'
         : 'INTERNAL_ERROR', error?.message ?? String(error), error))
     }
   })
