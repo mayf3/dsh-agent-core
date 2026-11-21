@@ -43,17 +43,15 @@ export async function operatorExactGenerationRecovery(request, {
   const record = records[0]
   const processes = registrySnapshot().filter(row => row.agentId === agentId)
   const slot = lifecycleSlotSnapshot(agentId)
-  const hasLiveOwnership = processes.some(row => row.alive === true)
-    || ['READY', 'STARTUP'].includes(slot.state) && slot.generation === generation
-  // #707 cross-restart recovery: after a runtime restart the lifecycle slot is
-  // EMPTY (children are spawned lazily) — an EMPTY slot with an exact
-  // unresolved durable record IS the frozen-turn evidence, and the operator
-  // recovery is the legitimate clear channel. Only a LIVE/REAP ownership of
-  // the exact generation still refuses.
-  if (hasLiveOwnership
-      || (slot.state === 'REAP' && slot.generation === generation)
-      || (slot.state === 'READY' && slot.generation !== generation)
-      || (slot.state === 'STARTUP' && slot.generation !== generation)) {
+  // #707 cross-restart recovery: the requested generation is HISTORICAL (the
+  // frozen turn predates the restart). Only a live ownership OF THE EXACT
+  // GENERATION refuses — a live child of a NEWER generation is unaffected by
+  // clearing a historical fence, and an EMPTY slot with an exact unresolved
+  // durable record is the frozen-turn evidence itself.
+  const hasLiveOwnership = processes.some(row => row.alive === true
+      && row.generation === generation)
+    || ['READY', 'STARTUP', 'REAP'].includes(slot.state) && slot.generation === generation
+  if (hasLiveOwnership) {
     await audit({ type: 'operator.exact_generation_recovery', agentId, generation, handle: record.handle, result: 'rejected', reason: 'LIVE_GENERATION_OWNERSHIP' })
     throw Object.assign(new Error('live ownership or REAP slot remains; refusing fence cleanup'), { code: 'LIVE_GENERATION_OWNERSHIP' })
   }
