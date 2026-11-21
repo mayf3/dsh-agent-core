@@ -450,10 +450,11 @@ export class TurnReconciliationStore {
       generationEntry.unresolvedCount += 1
       generationEntry.liveRecords += 1
       const intervals = generationEntry.issuedIntervals ?? [[generationEntry.minSeq, turnSeq - 1]]
+      // turnSeq = maxIssuedTurnSeq + 1 is globally monotonic, so a mint is
+      // always the generation's largest seq: extend the last interval when
+      // adjacent, otherwise append (the unshift case is unreachable).
       const last = intervals[intervals.length - 1]
-      if (last !== undefined && turnSeq === last[1] + 1) last[1] = turnSeq
-      else if (last !== undefined && turnSeq >= last[0] && turnSeq <= last[1]) { /* already recorded */ }
-      else if (turnSeq < intervals[0][0]) intervals.unshift([turnSeq, turnSeq])
+      if (turnSeq === last[1] + 1) last[1] = turnSeq
       else intervals.push([turnSeq, turnSeq])
       generationEntry.issuedIntervals = intervals
     }

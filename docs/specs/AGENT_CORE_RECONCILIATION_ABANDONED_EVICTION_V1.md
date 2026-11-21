@@ -307,9 +307,12 @@ authoring_base: 710fa3a9 (production line head; includes accepted #703/#705)
   ranges → any archive pass made the binary reject its own persist
   (reproduced). r11: the dual-write expansion is HOT-ONLY (bounded by the
   hot budget; archived generations intentionally carry no legacy pair —
-  old-binary drift documented, safer direction) and the gate is a SUBSET
-  check (pairs ⊆ hot map with equal maxima; contradictions fail CLOSED,
-  missing pairs are the documented partial legacy field). Capacity
+  old-binary drift documented, safer direction) and the gate enforces
+  EQUALITY with the hot ranges' per-generation maxima (QA review finding:
+  the gate is stricter than this delta's original subset wording — any
+  missing OR contradicting pair fails the store CLOSED; the encode always
+  writes the full expansion, so the equality gate never rejects an honest
+  persist). Capacity
   alignment: the decode's new-form cap now matches the mint (LIVE
   generations only); archives carry their own budget.
 - **P0-C (archive + re-issuance lost old identity)**: the covering lookup
