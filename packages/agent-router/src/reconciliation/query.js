@@ -138,16 +138,28 @@ export const queryMethods = {
     if (issuance === null || agentId === null) return { state: 'never_existed' }
     if (seq > issuance.maxIssuedTurnSeq) return { state: 'never_existed' }
     // Rule 11: compacted (fully evicted) generations resolve as `evicted`.
-    if (generation <= issuance.evictedThroughGeneration) return { state: 'evicted', agentId }
-    // r9 (#707): evictedRanges carry the EXACT eviction-time per-generation
-    // turn-seq bound (identical to the legacy per-generation map predicate
-    // `seq <= maxSeq_g`) — a seq beyond ITS OWN generation's bound falls
-    // through to the (possibly re-minted) live entry or never_existed. The
-    // r8 range-wide maxSeq collapse widened `evicted` over never-issued
-    // (gen, seq) identities and was rejected in review.
-    const coveringRange = issuance.evictedRanges.find(range => generation >= range[0] && generation <= range[1])
-    if (coveringRange !== undefined && seq <= coveringRange[2][generation - coveringRange[0]]) {
+    // r10: the watermark honors the PROVEN never-issued ledger — a gap
+    // generation under the watermark classifies never_existed (its identity
+    // fact is kept, never widened into a fabricated `evicted`).
+    if (generation <= issuance.evictedThroughGeneration) {
+      if ((issuance.neverIssuedGenerations ?? new Set()).has(generation)) return { state: 'never_existed' }
       return { state: 'evicted', agentId }
+    }
+    // r10 (#707): evictedRanges (hot) and evictedArchives (versioned
+    // retention) carry EXACT per-generation ISSUED INTERVALS (unioned across
+    // re-issuance incarnations; dense per incarnation under the durable
+    // disjointness invariant) — a seq outside every interval of ITS OWN
+    // generation falls through to the live entry or never_existed. The r8
+    // range-wide maxSeq and the r9 upper-bound-only representations widened
+    // `evicted` over never-issued (gen, seq) identities and were rejected in
+    // review (g10:s3, g11:s1).
+    const coveringTuple = [...issuance.evictedRanges, ...(issuance.evictedArchives ?? [])]
+      .find(tuple => generation >= tuple[0] && generation <= tuple[1])
+    if (coveringTuple !== undefined) {
+      const slot = coveringTuple[2][generation - coveringTuple[0]]
+      if (slot !== undefined && slot.some(([lo, hi]) => seq >= lo && seq <= hi)) {
+        return { state: 'evicted', agentId }
+      }
     }
     const generationEntry = issuance.generations.get(generation)
     if (generationEntry === undefined || seq < generationEntry.minSeq || seq > generationEntry.maxSeq) {

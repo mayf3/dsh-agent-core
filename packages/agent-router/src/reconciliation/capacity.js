@@ -26,13 +26,33 @@ export const RECONCILIATION_CAPS = Object.freeze({
   /** Bounded sparse set of evicted-but-non-contiguous turn sequences. */
   MAX_EVICTED_SPARSE_SEQS_PER_AGENT: 4096,
   /**
-   * r9 (#707): bounded count of per-generation evicted turnSeq bounds across
-   * an agent's evictedRanges (the exact C-018 resolution data — one entry per
-   * historically evicted generation). Uncapped it would grow with history
-   * depth; this bound is 64x the measured production state (256) and fails
-   * LOUD at eviction/restore when exceeded — never a silent forgetting.
+   * r9/r10 (#707): bounded count of HOT per-generation evicted issued-
+   * intervals (the exact C-018 resolution data in evictedRanges). r10 adds
+   * the versioned-retention path: when the hot budget approaches this cap,
+   * the coldest resolved tuples move to the immutable archive (still
+   * queryable — zero identity loss), so this cap never forces a resolution
+   * failure in normal operation. The numeric backstop (64x the measured
+   * production state of 256) fails LOUD at eviction/restore — never a
+   * silent forgetting.
    */
   MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT: 16384,
+  /**
+   * r10 (#707): bounded ledger of PROVEN never-issued generations (no
+   * issuance entry, no live record, a trace existing above the gap). Each
+   * entry is one spawn-without-mint event or historical gap — one number
+   * each, growing only on true skips; the fail-loud backstop stays far above
+   * any realistic allocator behavior (production: 10).
+   */
+  MAX_NEVER_ISSUED_GENERATIONS_PER_AGENT: 4096,
+  /**
+   * r10 (#707): hot interval budget before the compaction moves the coldest
+   * fully-resolved tuples into the immutable, still-queryable archive — the
+   * versioned-retention answer to long-term liveness (exact facts retained
+   * at O(bytes) cost, never dropped).
+   */
+  ARCHIVE_TRIGGER_INTERVALS: 12288,
+  /** r10 (#707): per-compaction archive batch (whole tuples, oldest first). */
+  ARCHIVE_BATCH_INTERVALS: 4096,
 })
 
 export const REQUIRED_RECORD_EVIDENCE_HEADROOM_BYTES = 1048576 + 65536

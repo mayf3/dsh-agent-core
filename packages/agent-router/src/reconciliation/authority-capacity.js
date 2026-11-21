@@ -9,7 +9,8 @@ export const authorityCapacityMethods = {
     const issuance = new Map([...this.issuance].map(([agentId, entry]) => [agentId, {
       ...entry,
       evictedSparseSeqs: new Set(entry.evictedSparseSeqs),
-      evictedRanges: entry.evictedRanges.map(range => [range[0], range[1], [...range[2]]]),
+      evictedRanges: entry.evictedRanges.map(range => [range[0], range[1], range[2].map(slot => slot.map(interval => [...interval]))]),
+      neverIssuedGenerations: new Set(entry.neverIssuedGenerations),
       generations: new Map([...entry.generations].map(([generation, value]) => [generation, { ...value }])),
     }]))
     return {
@@ -124,8 +125,10 @@ export const authorityCapacityMethods = {
   },
 
   /**
-   * RECONCILIATION_ABANDONED_EVICTION_V1 r7 (#707): the prefix walk SKIPS
-   * absent (never-issued) generations instead of blocking on them.
+   * RECONCILIATION_ABANDONED_EVICTION_V1 r7 (#707): the walk SKIPS absent
+   * (never-issued) generations instead of blocking on them; r10 ends with
+   * the absence/forward compaction so capacity recovery stays exact AND
+   * zero-growth long-term.
    */
   evictSettledGenerationForCapacity(agentId, issuance) {
     const sorted = [...issuance.generations.entries()].sort((a, b) => a[0] - b[0])
@@ -146,6 +149,98 @@ export const authorityCapacityMethods = {
         } else {
           this.evictAbandonedRecordPreserveCorrelation(record)
         }
+      }
+    }
+    this.compactIssuanceWatermarks(agentId, issuance)
+  },
+
+  /**
+   * r10 (#707): honest watermark compaction across PROVEN absence.
+   *
+   * The historical gaps (production: never-issued 35-37 + 43-49) permanently
+   * blocked `evictedThroughGeneration` at 34, forcing every future eviction
+   * into non-contiguous bounds entries — unbounded growth (QA P1). The
+   * compaction instead PROVES absence from the store's own invariants: a
+   * generation above the watermark with NO issuance entry and NO live record
+   * was never issued (every full eviction leaves a durable issuance trace —
+   * entry, range, or watermark). Proven-absent generations go into the
+   * `neverIssuedGenerations` ledger and classify `never_existed` forever
+   * (the identity fact is kept, never fabricated — this is what the
+   * rejected r7 watermark-merge lacked); genuinely issued+evicted spans
+   * cascade into the watermark; permanent pins (fences) stop the LOW span.
+   *
+   * The HIGH span mirrors this ABOVE the highest pinned generation
+   * Versioned retention (the QA P1 answer): the hot interval budget never
+   * exhausts — the coldest fully-resolved tuples move to the immutable,
+   * still-queryable `evictedArchives` (exact facts retained at O(bytes)
+   * cost, never dropped), so the system runs indefinitely with ZERO identity
+   * loss. Ledger growth is one entry per proven-absent generation
+   * (spawn-without-mint events), bounded fail-loud by
+   * MAX_NEVER_ISSUED_GENERATIONS_PER_AGENT.
+   */
+  compactIssuanceWatermarks(agentId, issuance) {
+    const liveGenerations = new Set()
+    for (const record of this.records.values()) {
+      if (record.agentId === agentId) liveGenerations.add(record.processGeneration)
+    }
+    // Proven-absent prefix: a generation above the watermark with no entry,
+    // no live record, and an issuance trace ABOVE it was never issued (every
+    // full eviction leaves a durable trace). Ledger it and advance — the
+    // ledger answers `never_existed` forever, so the watermark never widens
+    // a gap generation into a fabricated `evicted` (the rejected r7
+    // watermark-merge lacked exactly this). The watermark stops at the first
+    // REAL span: from there the evictedRanges carry the EXACT per-generation
+    // intervals, and gaps BETWEEN ranges need no ledger (the fall-through
+    // already answers never_existed for uncovered generations).
+    const highestTrace = () => {
+      let highest = issuance.evictedThroughGeneration
+      for (const generation of issuance.generations.keys()) {
+        if (generation > highest) highest = generation
+      }
+      for (const range of issuance.evictedRanges) {
+        if (range[1] > highest) highest = range[1]
+      }
+      for (const archive of issuance.evictedArchives) {
+        if (archive[1] > highest) highest = archive[1]
+      }
+      return highest
+    }
+    while (true) {
+      const next = issuance.evictedThroughGeneration + 1
+      // A range-covered generation is RESOLVED-ISSUED (exact intervals live
+      // there) — the watermark stops at the first real span; only a gap with
+      // no entry, no record, no coverage, and a trace above it is provably
+      // never-issued.
+      const covered = issuance.evictedRanges.some(tuple => next >= tuple[0] && next <= tuple[1])
+        || (issuance.evictedArchives ?? []).some(tuple => next >= tuple[0] && next <= tuple[1])
+      if (issuance.generations.has(next) || liveGenerations.has(next) || covered || highestTrace() < next) break
+      if (issuance.neverIssuedGenerations.size >= RECONCILIATION_CAPS.MAX_NEVER_ISSUED_GENERATIONS_PER_AGENT) {
+        throw new ReconciliationCapacityError(
+          `reconciliation: never-issued generation ledger exhausted (${RECONCILIATION_CAPS.MAX_NEVER_ISSUED_GENERATIONS_PER_AGENT})`,
+        )
+      }
+      issuance.neverIssuedGenerations.add(next)
+      issuance.evictedThroughGeneration = next
+    }
+    // Versioned retention (QA P1): keep the HOT interval budget from ever
+    // exhausting by moving the coldest fully-resolved tuples into the
+    // immutable archive. The archive stays queryable forever (classify
+    // falls back to it) — exact facts are retained at O(bytes) cost, never
+    // dropped: the system runs indefinitely with ZERO identity loss.
+    const hotIntervals = () => issuance.evictedRanges.reduce((total, tuple) => total
+      + tuple[2].reduce((slotTotal, slot) => slotTotal + slot.length, 0), 0)
+    if (hotIntervals() > RECONCILIATION_CAPS.ARCHIVE_TRIGGER_INTERVALS) {
+      let batch = 0
+      while (issuance.evictedRanges.length > 0 && batch < RECONCILIATION_CAPS.ARCHIVE_BATCH_INTERVALS) {
+        const coldest = issuance.evictedRanges[0]
+        // A tuple at or above the lowest pin is still warm (a fence release
+        // would cascade there); with NO pins everything is cold.
+        if (liveGenerations.size > 0) {
+          const lowestPin = Math.min(...liveGenerations)
+          if (coldest[1] >= lowestPin) break
+        }
+        batch += coldest[2].reduce((total, slot) => total + slot.length, 0)
+        issuance.evictedArchives.push(issuance.evictedRanges.shift())
       }
     }
   },
@@ -177,49 +272,51 @@ export const authorityCapacityMethods = {
       if (generationEntry !== undefined) {
         generationEntry.liveRecords -= 1
         if (generationEntry.liveRecords <= 0) {
-          this.markGenerationEvicted(issuance, record.processGeneration, generationEntry.maxSeq)
+          this.markGenerationEvicted(issuance, record.processGeneration, generationEntry.minSeq, generationEntry.maxSeq)
         }
       }
     }
   },
 
   /**
-   * r9 (#707): disjoint evictedRanges metadata compression with EXACT
-   * per-generation resolution bounds. A fully-evicted generation EITHER
+   * r10 (#707): disjoint evictedRanges metadata compression carrying EXACT
+   * per-generation ISSUED INTERVALS. A fully-evicted generation EITHER
    * advances the contiguous `evictedThroughGeneration` watermark (cascading
    * across any range that now touches it) OR merges into the sorted,
    * disjoint, NON-ADJACENT `evictedRanges` list of
-   * `[startGeneration, endGeneration, perGenMaxSeqs]` tuples, where
-   * `perGenMaxSeqs[i]` is the EXACT eviction-time turn-seq bound of the
-   * generation `startGeneration + i` — the identical predicate the legacy
-   * per-generation map answered (`seq <= maxSeq_g`), so C-018 handle
-   * identity is preserved bit-for-bit: a never-issued `(gen, seq)` inside a
-   * range with `seq > perGenMaxSeqs[gen - start]` still classifies
-   * `never_existed` (the r8 range-wide maxSeq collapse was rejected in
-   * review — it widened `evicted` over phantom identities).
+   * `[startGeneration, endGeneration, perGenBounds]` tuples, where
+   * `perGenBounds[i]` is the sorted list of DISJOINT issued intervals
+   * (`[minSeq, maxSeq]`, unioned across re-issuance incarnations) of
+   * generation `startGeneration + i`. Under the durable disjointness
+   * invariant (overlapping live intervals fail the persist — the T8 rule)
+   * an incarnation's [minSeq, maxSeq] is dense, so the interval union is
+   * EXACTLY the set of turn seqs that generation ever issued: a never-minted
+   * `(gen, seq)` classifies `never_existed` — including the interior holes
+   * the r9 upper-bound-only representation widened (QA P0: g11:s1, g10:s3).
+   * Legacy-pair migration maps each generation to `[[1, maxSeq]]` — the
+   * honest no-lower-bound-evidence representation with identical legacy
+   * predicate fidelity (disclosed, not fabricated).
    *
    * Non-adjacent merging is the soundness core: a range only ever spans
    * CONSECUTIVE genuinely-evicted generations, so it never covers a
-   * never-issued generation. One tuple bounds arbitrarily many generations,
-   * so the issuance metadata cap (`generations.size + evictedRanges.length`)
-   * stops leaking with history depth — the measured #707 256-cap lockout,
-   * where per-generation map entries moved 1:1 between the live map
-   * and the evicted map, leaving the sum invariant and the deadlock intact.
-   * The exactness arrays are bounded separately
-   * (MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT) and fail LOUD — never a
-   * silent forgetting.
+   * never-issued generation — those go to the never-issued ledger and stay
+   * `never_existed` forever (compactIssuanceWatermarks). One tuple bounds
+   * arbitrarily many generations, so the issuance metadata cap
+   * (`generations.size + evictedRanges.length`) stops leaking with history
+   * depth; the interval count is bounded separately
+   * (MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT) and fails LOUD — never a
+   * silent forgetting. Long-term: intervals only accumulate BETWEEN
+   * permanent pins (bounded by the live-record cap); above the highest pin
+   * the forward watermark advances contiguously (zero growth).
    */
-  markGenerationEvicted(issuance, generation, maxSeq) {
+  markGenerationEvicted(issuance, generation, minSeq, maxSeq) {
     issuance.generations.delete(generation)
-    if (generation === issuance.evictedThroughGeneration + 1) {
-      issuance.evictedThroughGeneration = generation
-      while (issuance.evictedRanges.length > 0
-          && issuance.evictedRanges[0][0] === issuance.evictedThroughGeneration + 1) {
-        issuance.evictedThroughGeneration = issuance.evictedRanges[0][1]
-        issuance.evictedRanges.shift()
-      }
-      return
-    }
+    // r10: NO watermark cascade — the exact per-generation intervals are
+    // ALWAYS kept (the r8/r9 lesson: any seq-blind widening fabricates
+    // identities). The watermark advances only across LEDGERED proven
+    // absence (compactIssuanceWatermarks); the issuance metadata cap now
+    // counts LIVE generations only, so keeping every interval costs no
+    // capacity.
     const ranges = issuance.evictedRanges
     // Scan for every generation-adjacent (or covering — a re-eviction of a
     // re-minted generation already inside a range) range around the
@@ -238,27 +335,40 @@ export const authorityCapacityMethods = {
       }
       index += 1
     }
-    const boundsBefore = ranges.reduce((total, range) => total + range[2].length, 0)
-    const absorbedBounds = absorbed.reduce((total, range) => total + range[2].length, 0)
+    const intervalCount = ranges => ranges.reduce((total, range) => total
+      + range[2].reduce((slotTotal, slot) => slotTotal + slot.length, 0), 0)
+    const absorbedIntervals = intervalCount(absorbed)
     const covering = absorbed.some(range => range[0] <= generation && generation <= range[1])
-    // Net exactness entries: the absorbed spans collapse into ONE array and
-    // the singleton either fills a new slot or OVERWRITES its own slot
-    // (re-eviction of a re-minted generation).
-    const boundsAfter = boundsBefore - absorbedBounds + (covering ? 0 : 1)
-    if (boundsAfter > RECONCILIATION_CAPS.MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT) {
+    // Net interval count: absorbed spans collapse into ONE array and the
+    // singleton's interval either UNION-merges into its own slot
+    // (re-eviction of a re-minted generation — the slot already covers or
+    // touches it, so the count cannot grow) or fills a new slot (+1).
+    const intervalsAfter = intervalCount(ranges) - absorbedIntervals + (covering ? 0 : 1)
+    if (intervalsAfter > RECONCILIATION_CAPS.MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT) {
       throw new ReconciliationCapacityError(
-        `reconciliation: evicted-generation resolution bounds exhausted for issuance metadata (${RECONCILIATION_CAPS.MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT})`,
+        `reconciliation: evicted-generation resolution intervals exhausted for issuance metadata (${RECONCILIATION_CAPS.MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT})`,
       )
     }
-    // Compose the exact bounds array slot-by-slot: each absorbed range
-    // restores its own slots, then the singleton slot is set/overwritten.
+    // Compose the per-generation bounds array slot-by-slot: each absorbed
+    // range restores its own slots, then the singleton's interval
+    // UNION-merges into its own slot (sorted, disjoint, non-adjacent).
     const bounds = new Array(end - start + 1)
     for (const range of absorbed) {
       for (let offset = 0; offset < range[2].length; offset++) {
         bounds[range[0] - start + offset] = range[2][offset]
       }
     }
-    bounds[generation - start] = maxSeq
+    const slotIndex = generation - start
+    const merged = [[minSeq, maxSeq]]
+    for (const [lo, hi] of bounds[slotIndex] ?? []) merged.push([lo, hi])
+    merged.sort((a, b) => a[0] - b[0])
+    const unioned = []
+    for (const [lo, hi] of merged) {
+      const last = unioned[unioned.length - 1]
+      if (last !== undefined && lo <= last[1] + 1) last[1] = Math.max(last[1], hi)
+      else unioned.push([lo, hi])
+    }
+    bounds[slotIndex] = unioned
     // Remove the absorbed ranges by identity, then insert at the scan's
     // sorted position (all ranges before `index` that were not absorbed lie
     // strictly below; all from `index` lie strictly above the merged span).
@@ -270,9 +380,11 @@ export const authorityCapacityMethods = {
     const issuance = this.issuance.get(record.agentId)
     const generationEntry = issuance?.generations.get(record.processGeneration)
     if (issuance === undefined || generationEntry === undefined || generationEntry.liveRecords > 1) return true
+    const hotIntervals = issuance.evictedRanges.reduce((total, tuple) => total
+      + tuple[2].reduce((slotTotal, slot) => slotTotal + slot.length, 0), 0)
     return record.processGeneration === issuance.evictedThroughGeneration + 1
       || issuance.evictedRanges.some(range => record.processGeneration >= range[0] && record.processGeneration <= range[1])
-      || issuance.evictedRanges.length < RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT
+      || hotIntervals < RECONCILIATION_CAPS.MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT
   },
 
   evictResolvedForByteCapacity(agentId, additionalBytes, excludeHandle = null) {
@@ -369,7 +481,7 @@ export const authorityCapacityMethods = {
       if (generationEntry !== undefined) {
         generationEntry.liveRecords -= 1
         if (generationEntry.liveRecords <= 0) {
-          this.markGenerationEvicted(issuance, record.processGeneration, generationEntry.maxSeq)
+          this.markGenerationEvicted(issuance, record.processGeneration, generationEntry.minSeq, generationEntry.maxSeq)
         }
       }
     }

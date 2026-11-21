@@ -247,30 +247,64 @@ function encodeIssuance(issuance) {
     agentId,
     ...entry,
     evictedSparseSeqs: [...entry.evictedSparseSeqs],
-    evictedRanges: entry.evictedRanges.map(range => [range[0], range[1], [...range[2]]]),
+    evictedRanges: entry.evictedRanges.map(range => [range[0], range[1], range[2].map(slot => slot.map(interval => [...interval]))]),
+    evictedArchives: (entry.evictedArchives ?? []).map(range => [range[0], range[1], range[2].map(slot => slot.map(interval => [...interval]))]),
+    neverIssuedGenerations: [...entry.neverIssuedGenerations],
     generations: [...entry.generations],
+    // r10 dual-write (QA P2): the legacy per-generation pairs are RE-EXPANDED
+    // from the ranges (hi of each slot) so a pre-r8 binary stays able to LOAD
+    // the file — records/correlations (the live responsibilities) ride the
+    // unchanged record format, so a rollback loses no new handles. The legacy
+    // form is inherently lossier (no lower bounds, no ledger, no high
+    // watermark); the documented residual drift under an old binary is
+    // non-live and safer-direction. The expansion keeps pairs + live within
+    // the old loader's 256 metadata sum ONLY while the metadata budget lasts
+    // — the old binary's own 256-cap deadlock is structural; rollback is an
+    // emergency lane, not a steady state.
+    evictedGenerations: [...entry.evictedRanges, ...(entry.evictedArchives ?? [])].flatMap(([start, end, bounds]) =>
+      bounds.map((slot, offset) => [start + offset, slot[slot.length - 1][1]])),
   }))
 }
 
 /**
- * r9 (#707) legacy migration: convert the per-generation evictedGenerations
- * map pairs into disjoint evictedRanges carrying the EXACT per-generation
- * turnSeq bounds (1:1 — the identical resolution predicate, compressed only
- * in tuple count). Only GENERATION-ADJACENT pairs merge (a range never spans
- * a never-issued generation — `never_existed` verdicts are preserved
- * exactly); a run starting at watermark+1 cascades into the contiguous
- * watermark (those generations were genuinely issued + evicted, which is
- * what the map entries proved).
+ * r10 (#707) versioned-retention validation shared by the hot ranges and the
+ * immutable archive blocks: sorted intervals, disjoint + non-adjacent within
+ * a slot, all within the agent's issued turn-seq bounds.
+ */
+function validBoundsSlots(tuple, entry) {
+  return Array.isArray(tuple) && tuple.length === 3
+    && Number.isSafeInteger(tuple[0]) && tuple[0] > 0 && tuple[0] > entry.evictedThroughGeneration
+    && Number.isSafeInteger(tuple[1]) && tuple[1] >= tuple[0]
+    && Array.isArray(tuple[2]) && tuple[2].length === tuple[1] - tuple[0] + 1
+    && tuple[2].every(slot => Array.isArray(slot) && slot.length >= 1
+      && slot.every(interval => Array.isArray(interval) && interval.length === 2
+        && Number.isSafeInteger(interval[0]) && interval[0] > 0
+        && Number.isSafeInteger(interval[1]) && interval[1] >= interval[0]
+        && interval[1] <= entry.maxIssuedTurnSeq)
+      && slot.every((interval, index) => index === 0 || interval[0] > slot[index - 1][1] + 1))
+}
+
+/**
+ * r9/r10 (#707) legacy migration: convert the per-generation
+ * evictedGenerations map pairs into disjoint evictedRanges. Each generation
+ * maps to the interval `[[1, maxSeq]]` — the legacy data carries NO lower
+ * bound, so this is the honest no-evidence representation with IDENTICAL
+ * legacy predicate fidelity (every seq the legacy form answered `evicted`
+ * still answers `evicted`; nothing invented, nothing tightened without
+ * evidence — QA P0 ruling). Only GENERATION-ADJACENT pairs merge (a range
+ * never spans a never-issued generation — `never_existed` verdicts are
+ * preserved exactly); a run starting at watermark+1 cascades into the
+ * contiguous watermark (those generations were genuinely issued + evicted,
+ * which is what the map entries proved).
  *
  * CAP ORDERING (r9, QA P0-B): the legacy pairs are validated PER TUPLE and
- * converted FIRST — the r8 pre-conversion `pairs + live > 256` check
- * rejected the real production file (agt_hr-agent at exactly 43 + 213 = 256,
- * and any further non-contiguous eviction pushes it over) BEFORE compression
- * could ever run, bricking the upgrade. Caps are enforced AFTER conversion on
- * the COMPRESSED form (tuple count via the restored-cap check; exactness
- * arrays via MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT below). The live
- * generation entries stay capped 1:1 — they are live metadata, never
- * compressible.
+ * converted FIRST — a pre-conversion `pairs + live > 256` check would
+ * reject the real production file (agt_hr-agent at exactly 43 + 213 = 256,
+ * one non-contiguous eviction from 257) before compression ever ran,
+ * bricking the upgrade. Caps are enforced AFTER conversion on the COMPRESSED
+ * form (tuple count via the restored-cap check; interval count and ledger
+ * size right below). The live generation entries stay capped 1:1 — they are
+ * live metadata, never compressible.
  */
 function evictedRangesFromLegacyPairs(evictedThroughGeneration, legacyPairs) {
   const ranges = []
@@ -278,18 +312,18 @@ function evictedRangesFromLegacyPairs(evictedThroughGeneration, legacyPairs) {
     const last = ranges[ranges.length - 1]
     if (last !== undefined && last[1] + 1 === generation) {
       last[1] = generation
-      last[2].push(maxSeq)
+      last[2].push([[1, maxSeq]])
     } else {
-      ranges.push([generation, generation, [maxSeq]])
+      ranges.push([generation, generation, [[[1, maxSeq]]]])
     }
   }
-  let watermark = evictedThroughGeneration
-  while (ranges.length > 0 && ranges[0][0] === watermark + 1) {
-    watermark = ranges[0][1]
-    ranges.shift()
-  }
-  return { watermark, ranges }
+  // r10: NO cascade — a pair sitting at watermark+1 becomes an exact
+  // interval range ([[1, maxSeq]]), never a seq-blind watermark claim.
+  return { watermark: evictedThroughGeneration, ranges }
 }
+
+const intervalCountOf = ranges => ranges.reduce((total, tuple) => total
+  + tuple[2].reduce((slotTotal, slot) => slotTotal + slot.length, 0), 0)
 
 function decodeIssuance(entries, discriminatorSeq) {
   if (entries.length > RECONCILIATION_CAPS.MAX_ISSUANCE_AGENTS_GLOBAL) {
@@ -302,11 +336,6 @@ function decodeIssuance(entries, discriminatorSeq) {
     const evictedRanges = entry?.evictedRanges
     const legacyEvictedGenerations = entry?.evictedGenerations
     const generations = entry?.generations
-    // r8 (#707): exactly one evicted-metadata form — the r8 evictedRanges
-    // tuples or the legacy evictedGenerations pairs (converted at restore).
-    if ((evictedRanges === undefined) === (legacyEvictedGenerations === undefined)) {
-      throw new TypeError('durable issuance evicted metadata form is invalid')
-    }
     if (entry === null || typeof entry !== 'object'
         || typeof entry.agentId !== 'string' || entry.agentId === '' || entry.agentId.length > 256
         || issuance.has(entry.agentId)
@@ -317,21 +346,22 @@ function decodeIssuance(entries, discriminatorSeq) {
         || entry.evictedThroughTurnSeq > entry.maxIssuedTurnSeq
         || !Number.isSafeInteger(entry.evictedThroughGeneration) || entry.evictedThroughGeneration < 0
         || !Array.isArray(sparse) || sparse.length > RECONCILIATION_CAPS.MAX_EVICTED_SPARSE_SEQS_PER_AGENT
-        || !Array.isArray(generations)) {
+        || !Array.isArray(generations)
+        || (evictedRanges === undefined && legacyEvictedGenerations === undefined)) {
       throw new TypeError('durable issuance entry is invalid')
     }
-    const validRangeTuple = tuple => Array.isArray(tuple) && tuple.length === 3
-      && Number.isSafeInteger(tuple[0]) && tuple[0] > 0 && tuple[0] > entry.evictedThroughGeneration
-      && Number.isSafeInteger(tuple[1]) && tuple[1] >= tuple[0]
-      && Array.isArray(tuple[2]) && tuple[2].length === tuple[1] - tuple[0] + 1
-      && tuple[2].every(bound => Number.isSafeInteger(bound) && bound > 0 && bound <= entry.maxIssuedTurnSeq)
     if (Array.isArray(evictedRanges)) {
-      if (evictedRanges.length + generations.length > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT
-          || evictedRanges.reduce((total, tuple) => total + (Array.isArray(tuple?.[2]) ? tuple[2].length : 0), 0)
-            > RECONCILIATION_CAPS.MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT
-          || evictedRanges.some(tuple => !validRangeTuple(tuple))
+      if (evictedRanges.some(tuple => !validBoundsSlots(tuple, entry))
           || evictedRanges.some((range, index) => index > 0 && range[0] <= evictedRanges[index - 1][1] + 1)) {
         throw new TypeError('durable issuance evicted ranges are invalid')
+      }
+    }
+    const evictedArchives = entry?.evictedArchives
+    if (evictedArchives !== undefined) {
+      if (!Array.isArray(evictedArchives)
+          || evictedArchives.some(tuple => !validBoundsSlots(tuple, entry))
+          || evictedArchives.some((range, index) => index > 0 && range[0] <= evictedArchives[index - 1][1] + 1)) {
+        throw new TypeError('durable issuance evicted archives are invalid')
       }
     }
     const validGenerationTuple = tuple => Array.isArray(tuple) && tuple.length === 2
@@ -346,17 +376,38 @@ function decodeIssuance(entries, discriminatorSeq) {
           || tuple[1].maxSeq > entry.maxIssuedTurnSeq)) {
       throw new TypeError('durable issuance metadata is invalid')
     }
+    const ledger = entry.neverIssuedGenerations
+    if (ledger !== undefined
+        && (!Array.isArray(ledger)
+          || ledger.length > RECONCILIATION_CAPS.MAX_NEVER_ISSUED_GENERATIONS_PER_AGENT
+          || ledger.some(gen => !Number.isSafeInteger(gen) || gen <= 0
+            || (gen > entry.evictedThroughGeneration)
+            || generations.some(tuple => tuple[0] === gen)))) {
+      throw new TypeError('durable issuance never-issued ledger is invalid')
+    }
     let decodedRanges = null
     let decodedWatermark = entry.evictedThroughGeneration
     if (Array.isArray(evictedRanges)) {
-      decodedRanges = evictedRanges.map(tuple => [tuple[0], tuple[1], [...tuple[2]]])
+      decodedRanges = evictedRanges.map(tuple => [tuple[0], tuple[1], tuple[2].map(slot => slot.map(interval => [...interval]))])
+      if (decodedRanges.length + generations.length > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
+        throw new TypeError('durable issuance metadata exceeds frozen caps')
+      }
+      if (legacyEvictedGenerations !== undefined) {
+        // r10 dual-write (QA P2): BOTH forms present must be CONSISTENT —
+        // the legacy pairs are exactly the ranges' generations with each
+        // slot's max hi. Inconsistent → poisoned → fail closed.
+        const legacyByGen = new Map(legacyEvictedGenerations)
+        const consistent = decodedRanges.every(([start, end, bounds]) =>
+          bounds.every((slot, offset) => legacyByGen.get(start + offset) === slot[slot.length - 1][1]))
+          && legacyByGen.size === decodedRanges.reduce((total, tuple) => total + tuple[2].length, 0)
+        if (!consistent) throw new TypeError('durable issuance dual-write forms are inconsistent')
+      }
     } else {
       // r9 (QA P0-B): NO pre-conversion cap on the legacy pairs — the real
       // production file sits at/over the 256 metadata sum, and rejecting it
       // here would brick the upgrade before compression ever runs. Per-tuple
       // validity + live-generation cap stay; the compressed form is capped
-      // after conversion (tuple count at the restored-cap check; exactness
-      // arrays right below).
+      // after conversion.
       if (!Array.isArray(legacyEvictedGenerations) || generations.length > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
         throw new TypeError('durable issuance entry is invalid')
       }
@@ -372,7 +423,7 @@ function decodeIssuance(entries, discriminatorSeq) {
       decodedRanges = migrated.ranges
       decodedWatermark = migrated.watermark
       if (decodedRanges.length + generations.length > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT
-          || decodedRanges.reduce((total, tuple) => total + tuple[2].length, 0)
+          || intervalCountOf(decodedRanges) + intervalCountOf(entry.evictedArchives ?? [])
             > RECONCILIATION_CAPS.MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT) {
         throw new TypeError('durable issuance metadata exceeds frozen caps')
       }
@@ -389,6 +440,8 @@ function decodeIssuance(entries, discriminatorSeq) {
       evictedSparseSeqs: new Set(entry.evictedSparseSeqs ?? []),
       evictedThroughGeneration: decodedWatermark,
       evictedRanges: decodedRanges,
+      evictedArchives: (evictedArchives ?? []).map(tuple => [tuple[0], tuple[1], tuple[2].map(slot => slot.map(interval => [...interval]))]),
+      neverIssuedGenerations: new Set(ledger ?? []),
       generations: new Map(entry.generations ?? []),
     })
   }

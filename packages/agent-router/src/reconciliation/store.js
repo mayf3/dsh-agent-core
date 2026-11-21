@@ -197,8 +197,9 @@ export class TurnReconciliationStore {
       }
     }
     for (const [agentId, issuance] of this.issuance) {
-      if (issuance.generations.size + issuance.evictedRanges.length
-          > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
+      // r10: LIVE generations only (see the mint cap) — evicted metadata is
+      // capped by its own budgets in decodeIssuance.
+      if (issuance.generations.size > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
         throw new ReconciliationCapacityError(`reconciliation: restored issuance capacity exceeds frozen caps for ${agentId}`)
       }
     }
@@ -291,6 +292,9 @@ export class TurnReconciliationStore {
     for (const range of issuance.evictedRanges) {
       if (range[1] > highest) highest = range[1]
     }
+    for (const archive of issuance.evictedArchives ?? []) {
+      if (archive[1] > highest) highest = archive[1]
+    }
     return highest
   }
 
@@ -332,6 +336,8 @@ export class TurnReconciliationStore {
       evictedSparseSeqs: new Set(),
       evictedThroughGeneration: 0,
       evictedRanges: [],
+      evictedArchives: [],
+      neverIssuedGenerations: new Set(),
       generations: new Map(),
     }
     if (!Number.isSafeInteger(issuance.maxIssuedTurnSeq + 1)) {
@@ -340,10 +346,17 @@ export class TurnReconciliationStore {
     const authorityBefore = this.snapshotAuthority()
     try {
     const correlationBytes = correlationKey === null ? 0 : correlationEntryByteSize(correlationKey, `turn:${this.runtimeEpoch}:a${issuance.discriminator}:g${processGeneration}:s${issuance.maxIssuedTurnSeq + 1}`)
+    // r10 (#707): the issuance metadata cap counts LIVE generations only —
+    // evicted-generation resolution metadata has its own frozen budgets
+    // (MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT intervals,
+    // MAX_NEVER_ISSUED_GENERATIONS_PER_AGENT ledger) enforced fail-loud at
+    // eviction/restore, so resolved history no longer consumes the live cap
+    // (the measured #707 256-cap lockout). Unresolved records are never
+    // evictable, so a genuinely live-saturated agent still fails loud here.
     if (!issuance.generations.has(processGeneration)
-        && issuance.generations.size + issuance.evictedRanges.length >= RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
+        && issuance.generations.size >= RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
       this.evictSettledGenerationForCapacity(agentId, issuance)
-      if (issuance.generations.size + issuance.evictedRanges.length >= RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
+      if (issuance.generations.size >= RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
         throw new ReconciliationCapacityError(`reconciliation: issuance generation capacity exhausted for agent ${agentId}`)
       }
     }

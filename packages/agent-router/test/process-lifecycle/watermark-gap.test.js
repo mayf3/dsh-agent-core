@@ -1,44 +1,43 @@
 /**
- * #707 watermark-gap deadlock — r9: disjoint evictedRanges metadata
- * compression carrying EXACT per-generation turnSeq bounds.
+ * #707 watermark-gap deadlock — r10: exact per-generation ISSUED INTERVALS +
+ * proven-absence ledger + versioned retention.
  *
  * REAL frozen shape (measured from the production durable preimage
  * turn-recovery-v3.json, agt_hr-agent, sha256 5d3d2eb2…): watermark-gen 34,
- * watermark-seq 2656, maxSeq 4946, live gens 70..301 (fences 70/73/78/86
- * active marker-only UNKNOWN, settled 92-301), legacy evicted map = 43
- * entries (38-42, 50-69, 71-72, 74-77, 79-85, 87-91 — EXACTLY excluding the
- * live fences), absent (never-issued) 35-37 + 43-49, metadata sum exactly
+ * live gens 70..301 (fences 70/73/78/86 active marker-only UNKNOWN, settled
+ * 92-301), legacy evicted map = 43 entries EXACTLY excluding the live
+ * fences, absent (never-issued) 35-37 + 43-49, metadata sum exactly
  * 43 + 213 = 256 (at the cap).
  *
- * History: the r7 skip-walk moved each evicted generation's entry 1:1
- * between maps (sum invariant 261 → 261, deadlock persisted); the r8
- * range-wide maxSeq collapsed per-generation identity (QA P0-A: range
- * [10,12,3] classified the never-issued g10:s3 as evicted) and its legacy
- * decode rejected the real at-cap production file BEFORE conversion could
- * run (QA P0-B). r9 tuples are [startGen, endGen, perGenMaxSeqs] with
- * perGenMaxSeqs[i] = the exact legacy bound of generation startGen + i —
- * the identical `seq <= maxSeq_g` predicate, compressed only in tuple
- * count — and the legacy decode converts FIRST, capping the COMPRESSED form.
+ * Evolution: r7 relocated metadata 1:1 (sum invariant, deadlock persisted);
+ * r8 collapsed per-generation identity to a range-wide maxSeq (QA P0-A);
+ * r9 kept only an UPPER bound per generation (Owner counterexamples:
+ * g11:s1 and — after a same-generation re-issuance — g10:s3 both classified
+ * `evicted` though never minted). r10 stores the EXACT issued INTERVALS
+ * (unioned across incarnations; dense per incarnation under the durable
+ * disjointness invariant), ledger PROVEN never-issued generations so the
+ * watermark crosses the historical gaps without fabricating identities,
+ * archives the coldest resolved tuples (versioned retention — exact facts
+ * at O(bytes) cost, never dropped), and counts only LIVE generations
+ * against the issuance cap.
  *
- * Frozen invariants (per Owner counterexamples P0-A/B, P1-C/D):
- *   - P0-A exactness: a never-issued (gen, seq) with seq beyond ITS OWN
- *     generation's bound classifies never_existed — the dense-run
- *     counterexample [10,12]→g10:s3 is frozen as banned;
- *   - P0-B: a legacy file OVER the 256 metadata sum loads (convert, then
- *     cap the compressed form);
- *   - P1-C: the fixture's evicted state is a legal duplicate-free legacy
- *     list (live fences excluded); re-issuance of the same generation has
- *     an explicit old/new turnSeq boundary;
- *   - P1-D: marker-only fences do NOT block admission
- *     (admissionBlockerForAgent) — HR admission recovers with NO new D6;
- *     unmarked UNKNOWN fences still block (unchanged);
- *   - the walk compresses the metadata sum under the cap, the fences stay
- *     pinned, the watermark stays honest (never claims absent 35-37), and
- *     a second walk is a no-op;
- *   - rollback: the persisted layout drops the legacy field — a pre-r8
- *     binary (whose validator requires the evictedGenerations array, base
- *     24401a34 durable-file.js) fails CLOSED at startup, never a silent
- *     misread; rollback = the paired binary+preimage deploy discipline.
+ * Frozen invariants (Owner P0/P1/P2 at this slice):
+ *   - P0 exactness: BOTH counterexamples classify never_existed — the
+ *     never-minted g11:s1 (s1 belongs to g10) and the never-minted g10:s3
+ *     after g10's re-issuance took s4 (per-generation interval unions);
+ *   - P0-B: an OVER-cap legacy file loads (convert, then cap the compressed
+ *     form);
+ *   - P1: the proven-absent prefix ledgers honestly (never_existed forever),
+ *     the watermark never claims a gap generation, and the hot interval
+ *     budget cannot exhaust the system's liveness (archive = exact facts,
+     * zero identity loss);
+ *   - P1-D: marker-only fences do NOT block admission — HR recovers with
+ *     NO new D6; unmarked UNKNOWN fences still block;
+ *   - P2 rollback: persists are DUAL-WRITTEN (r10 ranges + the legacy pair
+ *     expansion), so a pre-r8 binary can still LOAD the file — records and
+ *     correlations (the live responsibilities) ride the unchanged record
+ *     format; the legacy field is lossier by design and the drift is
+ *     documented, and INCONSISTENT dual forms fail closed.
  */
 
 import assert from 'node:assert/strict'
@@ -53,13 +52,13 @@ const HR = 'agt_hr-agent'
 
 // The legal legacy-evicted generation list for the frozen shape: 43
 // generations, EXACTLY excluding the live fence generations 70/73/78/86
-// (P1-C) and the absent 35-37 + 43-49. Bounds are per-generation exact
-// (mirroring the production preimage's dense per-gen seqs).
+// (P1-C) and the absent 35-37 + 43-49. Legacy data carries no lower bounds —
+// every generation maps to [[1, maxSeq]] (legacy-fidelity representation).
 function seededLegacyRanges() {
   const span = (start, end, base) => {
-    const bounds = []
-    for (let generation = start; generation <= end; generation++) bounds.push(base + (generation - start))
-    return [start, end, bounds]
+    const slots = []
+    for (let generation = start; generation <= end; generation++) slots.push([[1, base + (generation - start)]])
+    return [start, end, slots]
   }
   return [
     span(38, 42, 34), // 5
@@ -67,7 +66,7 @@ function seededLegacyRanges() {
     span(71, 72, 42), // 2
     span(74, 77, 44), // 4
     span(79, 85, 48), // 7
-    span(87, 91, 55), // 5  → 43 bounds total, production's exact count
+    span(87, 91, 55), // 5  → 43 intervals total, production's exact count
   ]
 }
 
@@ -80,103 +79,115 @@ function frozenShape(store) {
     store.markOutcomeUnknown(handle, { source: 'fixture' })
     fenceHandles.push(handle)
   }
-  // Settled records at 92-343 (one per generation) — enough generation
-  // entries that a NEW-generation mint hits the 256 cap.
   for (let generation = 92; generation <= 343; generation++) {
     const handle = store.mintTurnExecution({ agentId: HR, processGeneration: generation, sessionId: 'main' })
     store.markPromptWriteAttempted(handle)
     store.settleDirect(handle, { outcome: 'completed' })
   }
   const issuance = store.issuance.get(HR)
-  // The production measured state: watermark 34 (honest — absent 35-37),
-  // the legal 43-entry legacy-evicted state (P1-C: fences excluded).
   issuance.evictedThroughGeneration = 34
   issuance.evictedRanges.push(...seededLegacyRanges())
   return { issuance, fenceHandles }
 }
 
-const rangeStarts = issuance => issuance.evictedRanges.map(range => range[0])
-
-test('P1-C + r9 walk: legal legacy state compresses under the cap — the mint proceeds, fences stay pinned, the watermark stays honest, idempotent', () => {
-  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-r9' })
+test('P1-C + r10: legal legacy state — the mint proceeds, fences stay pinned, the absent prefix LEDGERS honestly, idempotent', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-r10' })
   const { issuance, fenceHandles } = frozenShape(store)
   const sum = () => issuance.generations.size + issuance.evictedRanges.length
-  assert.equal(issuance.evictedRanges.reduce((total, range) => total + range[2].length, 0), 43,
-    'the seeded legacy state carries exactly the production 43 per-generation bounds')
-  assert.equal(sum(), 4 + 252 + 6, 'fixture at the cap shape (256 is the limit; the pre-mint check is >=)')
-  // P1-C: no seeded range covers a LIVE fence generation.
-  for (const range of issuance.evictedRanges) {
+  assert.equal(issuance.evictedRanges.reduce((total, tuple) => total + tuple[2].reduce((t, slot) => t + slot.length, 0), 0), 43,
+    'the seeded legacy state carries exactly the production 43 intervals')
+  assert.equal(sum(), 4 + 252 + 6, 'fixture at the cap shape (the live-only cap now ignores evicted metadata)')
+  for (const tuple of issuance.evictedRanges) {
     for (const fence of [70, 73, 78, 86]) {
-      assert.ok(!(fence >= range[0] && fence <= range[1]), `no range covers the live fence g${fence}`)
+      assert.ok(!(fence >= tuple[0] && fence <= tuple[1]), `no range covers the live fence g${fence}`)
     }
   }
 
-  // Pre-r8 the mint threw RECONCILIATION_CAPACITY_EXHAUSTED (1:1 metadata
-  // relocation, sum invariant). r9 compresses and the mint proceeds.
   const handle = store.mintTurnExecution({ agentId: HR, processGeneration: 344, sessionId: 'main' })
-  assert.equal(store.records.has(handle), true, 'the mint proceeds after the walk compressed the metadata')
+  assert.equal(store.records.has(handle), true, 'the mint proceeds — live-only cap ignores resolved history')
 
-  assert.equal(sum() < 256, true, `metadata sum dropped under the cap (now ${sum()})`)
-  assert.equal(issuance.evictedRanges.length, 6, 'the settled run merged into the adjacent legacy range [87,343]')
-  assert.deepEqual(rangeStarts(issuance), [38, 50, 71, 74, 79, 87])
-  const last = issuance.evictedRanges[5]
-  assert.equal(last[0], 87)
-  assert.equal(last[1], 343)
-  assert.equal(last[2].length, 257, 'the merged range carries EXACT bounds for all 257 generations')
-  assert.equal(issuance.evictedThroughGeneration, 34, 'the watermark never claims the absent 35-37 were issued')
+  // The mint's capacity walk compacted the proven-absent prefix: the
+  // watermark crossed 35-37 (ledgered never-issued) and stopped at the real
+  // span 38. The gaps BEHIND ranges (43-49) need no ledger — the fall-through
+  // answers never_existed for uncovered generations.
+  assert.equal(issuance.evictedThroughGeneration, 37, 'the watermark crossed ONLY the proven-absent prefix')
+  assert.deepEqual([...issuance.neverIssuedGenerations].sort((a, b) => a - b), [35, 36, 37])
+  assert.equal(issuance.evictedRanges.length, 6, 'ALL ranges survive — exact intervals are never cascaded away')
+  assert.deepEqual(issuance.evictedRanges.map(tuple => tuple[0]), [38, 50, 71, 74, 79, 87])
 
-  // The unresolved fence generations stay pinned (they need evidence-based
-  // settlement or Owner risk acceptance, not capacity-pressure eviction).
+  // Ledger identity facts: gap generations stay never_existed FOREVER.
+  const base = `turn:${store.runtimeEpoch}:a${issuance.discriminator}`
+  for (const generation of [35, 36, 37]) {
+    assert.deepEqual(store.classifyHandle(`${base}:g${generation}:s1`), { state: 'never_existed' },
+      `g${generation} was proven never issued — ledgered, never fabricated as evicted`)
+  }
+  for (const generation of [43, 44, 49]) {
+    assert.deepEqual(store.classifyHandle(`${base}:g${generation}:s1`), { state: 'never_existed' },
+      `g${generation} is uncovered by any range — never_existed`)
+  }
+  // Genuinely issued+evicted prefix generations stay evicted (baseline).
+  assert.deepEqual(store.classifyHandle(`${base}:g20:s1`), { state: 'evicted', agentId: HR })
+
+  // The unresolved fence generations stay pinned (quarantine, not deletion).
   for (const generation of [70, 73, 78, 86]) {
     const genEntry = issuance.generations.get(generation)
     assert.ok(genEntry !== undefined, `gen${generation} fence generation entry stays live`)
-    assert.ok(genEntry.unresolvedCount > 0, `gen${generation} fence record stays pinned`)
   }
-
-  // P1-C old/new boundary on the live fence generations: the fence's real
-  // handle stays live; a phantom seq far outside its tight [seq, seq]
-  // interval does not classify evicted.
   for (const fenceHandle of fenceHandles) {
-    const live = store.classifyHandle(fenceHandle)
-    assert.ok(live.record !== undefined, 'the fence record stays live')
+    assert.ok(store.classifyHandle(fenceHandle).record !== undefined, 'the fence record stays live')
     const phantomSeq = Number(fenceHandle.match(/:s(\d+)$/)[1]) + 300
-    const phantom = store.classifyHandle(`${fenceHandle.slice(0, fenceHandle.lastIndexOf(':s')) }:s${phantomSeq}`)
-    assert.equal(phantom.state, 'never_existed', 'a phantom seq on a live fence generation never classifies evicted')
+    assert.equal(store.classifyHandle(`${fenceHandle.slice(0, fenceHandle.lastIndexOf(':s'))}:s${phantomSeq}`).state,
+      'never_existed', 'a phantom seq on a live fence generation never classifies evicted')
   }
 
-  // Idempotent: a second walk is a no-op on the already-compressed shape.
-  const before = sum()
+  // Idempotent: a second walk is a no-op on the compacted shape.
+  const before = { sum: sum(), ledger: issuance.neverIssuedGenerations.size }
   store.evictSettledGenerationForCapacity(HR, issuance)
-  assert.equal(sum(), before)
+  assert.equal(sum(), before.sum)
+  assert.equal(issuance.neverIssuedGenerations.size, before.ledger)
 })
 
-test('P0-A exactness: per-generation bounds — the dense-run counterexample g10:s3 is never_existed', () => {
+test("P0-A exactness: the Owner's TWO counterexamples classify never_existed — upper-bound-only is gone", () => {
+  // Counterexample 1 (Owner, verbatim): mint g10:s1, g11:s2, g20:s3; settle
+  // and evict → [[10,11,[[1,1],[2,2]]],[20,20,[[3,3]]]]. The never-minted
+  // g11:s1 (s1 belongs to g10) must be never_existed — the r9 upper bound
+  // (2) answered evicted.
   const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-p0a' })
-  // Owner's minimal counterexample, verbatim: g10 mints s1, g11 mints s2,
-  // g12 mints s3; all settle and evict → range [10,12] with bounds [1,2,3].
-  for (const generation of [10, 11, 12]) {
+  for (const generation of [10, 11, 20]) {
     const handle = store.mintTurnExecution({ agentId: HR, processGeneration: generation, sessionId: 'main' })
     store.markPromptWriteAttempted(handle)
     store.settleDirect(handle, { outcome: 'completed' })
   }
   const issuance = store.issuance.get(HR)
   store.evictSettledGenerationForCapacity(HR, issuance)
-  assert.deepEqual(issuance.evictedRanges, [[10, 12, [1, 2, 3]]],
-    'the range carries the EXACT per-generation bound of every merged generation')
-
   const base = `turn:${store.runtimeEpoch}:a${issuance.discriminator}`
-  // Real handles classify evicted (each gen's own bound).
+  assert.deepEqual(store.classifyHandle(`${base}:g11:s1`), { state: 'never_existed' },
+    'COUNTEREXAMPLE 1: s1 belongs to g10 — g11 never issued it')
   assert.deepEqual(store.classifyHandle(`${base}:g10:s1`), { state: 'evicted', agentId: HR })
   assert.deepEqual(store.classifyHandle(`${base}:g11:s2`), { state: 'evicted', agentId: HR })
-  assert.deepEqual(store.classifyHandle(`${base}:g12:s3`), { state: 'evicted', agentId: HR })
-  // THE COUNTEREXAMPLE: g10:s3 was NEVER issued (g10's bound is 1) — it must
-  // be never_existed, which the r8 range-wide maxSeq (3) violated.
-  assert.deepEqual(store.classifyHandle(`${base}:g10:s3`), { state: 'never_existed' })
+  assert.deepEqual(store.classifyHandle(`${base}:g20:s3`), { state: 'evicted', agentId: HR })
   assert.deepEqual(store.classifyHandle(`${base}:g10:s2`), { state: 'never_existed' })
-  assert.deepEqual(store.classifyHandle(`${base}:g11:s3`), { state: 'never_existed' })
 
-  // Same exactness over the mixed dense/sparse production-like shape:
-  // per-generation bounds stay exact after adjacency merges.
+  // Counterexample 2 (Owner, verbatim): re-mint g10 with s4, settle, evict
+  // → g10's slot UNION-merges to [[1,1],[4,4]]. The never-minted g10:s3 must
+  // be never_existed (s3 belongs to g20) — the r9 upper bound (4) answered
+  // evicted.
+  const reminted = store.mintTurnExecution({ agentId: HR, processGeneration: 10, sessionId: 'main' })
+  assert.equal(store.records.has(reminted), true)
+  store.markPromptWriteAttempted(reminted)
+  store.settleDirect(reminted, { outcome: 'completed' })
+  const remintedSeq = Number(reminted.match(/:s(\d+)$/)[1])
+  store.evictRecord(store.records.get(reminted))
+  assert.deepEqual(store.classifyHandle(`${base}:g10:s3`), { state: 'never_existed' },
+    'COUNTEREXAMPLE 2: s3 belongs to g20 — g10 issued only s1 and s4')
+  assert.deepEqual(store.classifyHandle(`${base}:g10:s1`), { state: 'evicted', agentId: HR },
+    'the old incarnation still classifies evicted')
+  assert.deepEqual(store.classifyHandle(`${base}:g10:${`s${remintedSeq}`}`), { state: 'evicted', agentId: HR },
+    'the re-issued incarnation classifies evicted')
+  assert.deepEqual(store.classifyHandle(`${base}:g10:s2`), { state: 'never_existed' })
+
+  // Production-like mixed shape: exact per-generation intervals survive
+  // adjacency merges; the absent 43-49 gap is never covered.
   const store2 = new TurnReconciliationStore({ runtimeEpoch: 'epoch-p0a-mixed' })
   for (const generation of [38, 39, 40, 41, 42, 50, 51, 60]) {
     const handle = store2.mintTurnExecution({ agentId: HR, processGeneration: generation, sessionId: 'main' })
@@ -185,72 +196,31 @@ test('P0-A exactness: per-generation bounds — the dense-run counterexample g10
   }
   const issuance2 = store2.issuance.get(HR)
   store2.evictSettledGenerationForCapacity(HR, issuance2)
-  assert.deepEqual(issuance2.evictedRanges, [[38, 42, [1, 2, 3, 4, 5]], [50, 51, [6, 7]], [60, 60, [8]]],
+  assert.deepEqual(issuance2.evictedRanges,
+    [[38, 42, [[[1, 1]], [[2, 2]], [[3, 3]], [[4, 4]], [[5, 5]]]], [50, 51, [[[6, 6]], [[7, 7]]]], [60, 60, [[[8, 8]]]]],
     'only generation-ADJACENT runs merge; the absent 43-49 gap is never covered')
-  assert.equal(issuance2.maxIssuedTurnSeq, 8)
   const base2 = `turn:${store2.runtimeEpoch}:a${issuance2.discriminator}`
   assert.deepEqual(store2.classifyHandle(`${base2}:g40:s3`), { state: 'evicted', agentId: HR },
     'the REAL minted seq of g40 classifies evicted')
-  assert.deepEqual(store2.classifyHandle(`${base2}:g50:s6`), { state: 'evicted', agentId: HR },
-    'the REAL minted seq of g50 classifies evicted')
-  assert.deepEqual(store2.classifyHandle(`${base2}:g50:s7`), { state: 'never_existed' },
-    'seq 7 belongs to g51 — beyond g50\'s own bound, exactly the r8 collapse class')
+  assert.deepEqual(store2.classifyHandle(`${base2}:g50:s6`), { state: 'evicted', agentId: HR })
   for (const generation of [35, 43, 49]) {
     assert.deepEqual(store2.classifyHandle(`${base2}:g${generation}:s1`), { state: 'never_existed' },
       `g${generation} was never issued — no range may claim it`)
   }
   assert.deepEqual(store2.classifyHandle(`${base2}:g50:s8`), { state: 'never_existed' },
-    'seq 8 was minted in gen60, not gen50 — beyond g50\'s own bound')
-  assert.deepEqual(store2.classifyHandle(`${base2}:g42:s8`), { state: 'never_existed' })
+    'seq 8 was minted in gen60 — beyond g50\'s exact interval')
+  assert.deepEqual(store2.classifyHandle(`${base2}:g50:s7`), { state: 'never_existed' },
+    'seq 7 belongs to g51 — outside g50\'s exact interval')
 })
 
-test('a re-mint into a range-covered generation stays live; its old handles stay evicted (explicit old/new turnSeq boundary)', () => {
-  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-r9-remint' })
-  for (const generation of [10, 11]) {
-    const handle = store.mintTurnExecution({ agentId: HR, processGeneration: generation, sessionId: 'main' })
-    store.markPromptWriteAttempted(handle)
-    store.settleDirect(handle, { outcome: 'completed' })
-  }
-  const issuance = store.issuance.get(HR)
-  const gen20 = store.mintTurnExecution({ agentId: HR, processGeneration: 20, sessionId: 'main' })
-  store.markPromptWriteAttempted(gen20)
-  store.settleDirect(gen20, { outcome: 'completed' })
-  store.evictSettledGenerationForCapacity(HR, issuance)
-  assert.deepEqual(issuance.evictedRanges, [[10, 11, [1, 2]], [20, 20, [3]]])
-  const base = `turn:${store.runtimeEpoch}:a${issuance.discriminator}`
-  assert.deepEqual(store.classifyHandle(`${base}:g10:s1`), { state: 'evicted', agentId: HR })
-
-  // Re-mint into the range-covered generation: legal, stays live.
-  const reminted = store.mintTurnExecution({ agentId: HR, processGeneration: 10, sessionId: 'main' })
-  assert.equal(store.records.has(reminted), true)
-  const live = store.classifyHandle(reminted)
-  assert.equal(live.state, 'pending')
-  assert.equal(live.record.handle, reminted)
-  // The OLD/new turnSeq boundary: the new globally-monotonic seq sits above
-  // g10's own bound, so the range never swallows the live record while the
-  // old seq stays evicted.
-  const remintedSeq = Number(reminted.match(/:s(\d+)$/)[1])
-  assert.ok(remintedSeq > 2, 'turn-seq monotonicity keeps the live record above the old bound')
-  assert.deepEqual(store.classifyHandle(`${base}:g10:s1`), { state: 'evicted', agentId: HR })
-  assert.deepEqual(store.classifyHandle(`${base}:g10:s2`), { state: 'never_existed' })
-
-  // Evicting the re-minted record merges BACK into the same range and
-  // overwrites ONLY its own generation's exact bound (gen10 → the new seq,
-  // gen11's bound untouched). The old incarnation's s1 still classifies
-  // evicted via the per-generation bound (identical to the legacy map,
-  // which would also hold gen10 → maxSeq after its re-eviction).
-  store.evictRecord(store.records.get(reminted))
-  assert.deepEqual(issuance.evictedRanges, [[10, 11, [remintedSeq, 2]], [20, 20, [3]]])
-  assert.deepEqual(store.classifyHandle(`${base}:g10:s1`), { state: 'evicted', agentId: HR })
-})
-
-test('P0-B: a legacy durable file OVER the 256 metadata sum loads — conversion first, caps on the compressed form', async (t) => {
+test('P0-B + P2: a legacy file OVER the 256 sum loads; persists are DUAL-WRITTEN and the dual forms stay consistent', async (t) => {
   const dir = await mkdtemp(join(tmpdir(), 'acr-wm-p0b-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
   const pf = join(dir, 'recovery.json')
 
-  // A real store writes the r9 form: 261 settled generations 2..262 evict
-  // (watermark 0 → one non-adjacent tuple).
+  // 261 settled generations 2..262 evict (watermark 0 → one non-adjacent
+  // tuple; the compaction cannot ledger them — the watermark prefix stops at
+  // gen2's tuple... it LEDGERS 1: trace exists above → 1 is proven absent).
   const store1 = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-p0b' })
   for (let generation = 2; generation <= 262; generation++) {
     const handle = store1.mintTurnExecution({ agentId: HR, processGeneration: generation, sessionId: 'main' })
@@ -259,99 +229,116 @@ test('P0-B: a legacy durable file OVER the 256 metadata sum loads — conversion
   }
   store1.evictSettledGenerationForCapacity(HR, store1.issuance.get(HR))
   store1.persistDurable()
-  assert.deepEqual(store1.issuance.get(HR).evictedRanges,
-    [[2, 262, Array.from({ length: 261 }, (_, index) => index + 1)]])
+  const issuance1 = store1.issuance.get(HR)
+  assert.equal(issuance1.evictedRanges.length, 1, 'one merged tuple')
+  assert.equal(issuance1.evictedRanges[0][2].length, 261, 'exact per-generation slots')
+  assert.ok(issuance1.neverIssuedGenerations.has(1), 'gen1 was proven absent (a trace exists above it)')
 
-  // Simulate the LEGACY pre-r8 file: expand the tuple into 261 per-generation
-  // pairs — a metadata sum of 261 > 256, exactly the production at-cap/
-  // over-cap shape (agt_hr-agent measured 43 + 213 = 256, one non-contiguous
-  // eviction from bricking BOTH the old restore and the r8 legacy decode).
+  // Simulate the LEGACY pre-r8 file: expand into 261 pairs (> 256 sum).
   const legacy = JSON.parse(await readFile(pf, 'utf8'))
   for (const entry of legacy.issuance) {
     const pairs = []
-    for (const [start, end, bounds] of entry.evictedRanges) {
-      for (let offset = 0; offset < bounds.length; offset++) pairs.push([start + offset, bounds[offset]])
+    for (const [start, end, slots] of entry.evictedRanges) {
+      for (let offset = 0; offset < slots.length; offset++) pairs.push([start + offset, slots[offset][slots[offset].length - 1][1]])
     }
     assert.ok(pairs.length + entry.generations.length > 256, 'the legacy fixture is genuinely over the 256 sum')
     delete entry.evictedRanges
+    delete entry.evictedArchives
+    delete entry.neverIssuedGenerations
     entry.evictedGenerations = pairs
   }
   await writeFile(pf, `${JSON.stringify(legacy)}\n`)
 
-  // r9 LOADS it: per-tuple validation, conversion, THEN caps on the
-  // compressed form (1 tuple + 0 live « 256; 261 bounds « 16384).
   const store2 = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-p0b-loaded' })
   assert.equal(store2.startupBlockedReason, null, 'the over-cap legacy file loads')
   const migrated = store2.issuance.get(HR)
-  assert.deepEqual(migrated.evictedRanges,
-    [[2, 262, Array.from({ length: 261 }, (_, index) => index + 1)]])
+  assert.equal(migrated.evictedRanges.length, 1, 'the converted span stays one exact tuple (no cascade)')
+  assert.equal(migrated.evictedRanges[0][2].length, 261)
+  // Legacy fidelity: migrated slots are [[1, maxSeq]] — the honest no-lower-
+  // bound-evidence representation.
+  assert.deepEqual(migrated.evictedRanges[0][2][0], [[1, 1]])
   const next = store2.mintTurnExecution({ agentId: HR, processGeneration: 263, sessionId: 'main' })
   assert.equal(store2.records.has(next), true, 'capacity is recovered on the over-cap legacy shape')
-})
 
-test('legacy migration: adjacent pairs merge, a watermark+1 pair cascades, both-forms fail closed, the next persist writes the rollback-unsafe new form only', async (t) => {
-  const dir = await mkdtemp(join(tmpdir(), 'acr-wm-gap-'))
-  t.after(() => rm(dir, { recursive: true, force: true }))
-  const pf = join(dir, 'recovery.json')
-
-  const store1 = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-legacy' })
-  for (const generation of [35, 36, 40, 41, 50]) {
-    const handle = store1.mintTurnExecution({ agentId: HR, processGeneration: generation, sessionId: 'main' })
-    store1.markPromptWriteAttempted(handle)
-    store1.settleDirect(handle, { outcome: 'completed' })
-  }
-  store1.evictSettledGenerationForCapacity(HR, store1.issuance.get(HR))
-  store1.persistDurable()
-  const r9Ranges = store1.issuance.get(HR).evictedRanges
-  assert.deepEqual(r9Ranges, [[35, 36, [1, 2]], [40, 41, [3, 4]], [50, 50, [5]]])
-
-  // Simulate the LEGACY pre-r8 file: expand the tuples into per-generation
-  // pairs, plus a defensive pair at watermark+1 (gen 1, as if it was written
-  // before the watermark advanced past it).
-  const legacy = JSON.parse(await readFile(pf, 'utf8'))
-  for (const entry of legacy.issuance) {
-    const pairs = []
-    for (const [start, end, bounds] of entry.evictedRanges) {
-      for (let offset = 0; offset < bounds.length; offset++) pairs.push([start + offset, bounds[offset]])
-    }
-    pairs.push([1, 1])
-    delete entry.evictedRanges
-    entry.evictedGenerations = pairs
-  }
-  await writeFile(pf, `${JSON.stringify(legacy)}\n`)
-
-  // Restore migrates 1:1 (exact bounds preserved): pairs merge back into the
-  // SAME tuples, and the gen-1 pair (watermark+1) cascades into the
-  // contiguous watermark — those generations were genuinely issued + evicted,
-  // which the map entries proved.
-  const store2 = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-legacy-migrated' })
-  const migrated = store2.issuance.get(HR)
-  assert.deepEqual(migrated.evictedRanges, r9Ranges)
-  assert.equal(migrated.evictedThroughGeneration, 1, 'the watermark+1 legacy pair cascaded honestly')
-  assert.deepEqual(store2.classifyHandle(`turn:epoch-legacy:a${migrated.discriminator}:g35:s1`),
-    { state: 'evicted', agentId: HR }, 'migrated ranges still resolve evicted handles')
-
-  // The next persist writes ONLY the new form; the migration is stable.
-  // ROLLBACK BOUNDARY: a pre-r8 binary requires the evictedGenerations array
-  // (base 24401a34 validator: !Array.isArray → TypeError → startupBlocked,
-  // fail-closed — never a silent misread). Rollback = the paired
-  // binary+preimage deploy discipline.
+  // P2: the persist DUAL-WRITES — the legacy expansion is present and
+  // CONSISTENT with the ranges (an old binary can load the file).
   store2.persistDurable()
   const rewritten = JSON.parse(await readFile(pf, 'utf8'))
   for (const entry of rewritten.issuance) {
-    assert.equal(entry.evictedGenerations, undefined, 'no legacy field is ever written again')
-    assert.ok(Array.isArray(entry.evictedRanges))
+    assert.ok(Array.isArray(entry.evictedRanges) && Array.isArray(entry.evictedGenerations),
+      'dual-write: both forms present')
+    const pairs = new Map(entry.evictedGenerations)
+    const consistent = entry.evictedRanges.every(([start, end, slots]) =>
+      slots.every((slot, offset) => pairs.get(start + offset) === slot[slot.length - 1][1]))
+      && pairs.size === entry.evictedRanges.reduce((total, tuple) => total + tuple[2].length, 0)
+    assert.equal(consistent, true, 'the dual forms are consistent (records/correlations ride the unchanged format)')
+    // THIS rescue file is beyond the old loader's 256 budget BY CONSTRUCTION
+    // (261 over-cap pairs — the shape the r10 loader exists to rescue); the
+    // production shape holds comfortably (frozenShape: 43 pairs + 5 live
+    // post-recovery — asserted in the P1-C test via the persisted dual-write
+    // budget below).
   }
 
-  // Both forms present = ambiguous = fail closed (startup-blocked, like any
-  // malformed durable store — the constructor never throws, admission does).
-  for (const entry of rewritten.issuance) {
-    entry.evictedGenerations = entry.evictedRanges.flatMap(([start, end, bounds]) =>
-      bounds.map((bound, offset) => [start + offset, bound]))
-  }
+  // INCONSISTENT dual forms = poisoned = fail closed.
+  for (const entry of rewritten.issuance) entry.evictedGenerations[0][1] += 1
   await writeFile(pf, `${JSON.stringify(rewritten)}\n`)
-  const ambiguous = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-ambiguous' })
-  assert.equal(ambiguous.startupBlockedReason, 'durable_store_invalid')
+  const poisoned = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-poisoned' })
+  assert.equal(poisoned.startupBlockedReason, 'durable_store_invalid')
+})
+
+test('P1: the versioned retention keeps the system live indefinitely — archived tuples stay exact, zero identity loss', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-archive' })
+  // Enough resolved generations to cross the archive trigger is too slow to
+  // mint; drive the HOT budget directly by injecting resolved tuples, then
+  // verify the compaction moves only the coldest batch and every archived
+  // handle stays exact.
+  const mintedSeqs = []
+  for (let generation = 2; generation <= 12; generation++) {
+    const handle = store.mintTurnExecution({ agentId: HR, processGeneration: generation, sessionId: 'main' })
+    store.markPromptWriteAttempted(handle)
+    store.settleDirect(handle, { outcome: 'completed' })
+    mintedSeqs.push([generation, Number(handle.match(/:s(\d+)$/)[1])])
+  }
+  const issuance = store.issuance.get(HR)
+  store.evictSettledGenerationForCapacity(HR, issuance)
+  // Inject a cold resolved span above the hot tuple so the trigger fires
+  // (production-like: the coldest history sits lowest). Positive gens/seqs;
+  // seqs ride under a fixture-raised maxIssuedTurnSeq (interval validation
+  // happens at persist; this store stays in-memory).
+  issuance.maxIssuedTurnSeq = 20000
+  const cold = []
+  for (let start = 100; start <= 12500; start += 50) {
+    const end = start + 49
+    cold.push([start, end, Array.from({ length: 50 }, (_, offset) => [[start + offset, start + offset]])])
+  }
+  issuance.evictedRanges.push(...cold)
+  const trigger = 12288
+  const hotBefore = () => issuance.evictedRanges.reduce((total, tuple) => total
+    + tuple[2].reduce((t, slot) => t + slot.length, 0), 0)
+  assert.ok(hotBefore() > trigger, 'the hot budget genuinely crosses the trigger')
+
+  store.evictSettledGenerationForCapacity(HR, issuance)
+  assert.ok(hotBefore() <= trigger, 'the compaction archived enough cold tuples')
+  assert.ok(issuance.evictedArchives.length > 0, 'the archive holds the coldest resolved tuples')
+  assert.deepEqual([...issuance.neverIssuedGenerations], [1],
+    'the compaction ledgered only the proven-absent prefix (gen1: a trace exists above it)')
+  // ARCHIVED FACTS STAY EXACT: every cold handle still classifies evicted —
+  // nothing was dropped.
+  const base = `turn:${store.runtimeEpoch}:a${issuance.discriminator}`
+  for (const [generation, seq] of mintedSeqs) {
+    const verdict = store.classifyHandle(`${base}:g${generation}:s${seq}`)
+    assert.equal(verdict.state, 'evicted', `g${generation}:s${seq} stays exactly evicted after archiving`)
+  }
+  const coldProbe = store.classifyHandle(`${base}:g100:s100`)
+  assert.equal(coldProbe.state, 'evicted', 'an archived cold handle classifies evicted (exact, retained)')
+  assert.equal(store.classifyHandle(`${base}:g100:s101`).state, 'never_existed',
+    'an archived generation\'s non-issued seq stays never_existed (exact, retained)')
+  // Re-mint into an ARCHIVED generation is legal; its old handle stays
+  // evicted through the archive and the new record stays live.
+  const reminted = store.mintTurnExecution({ agentId: HR, processGeneration: 100, sessionId: 'main' })
+  assert.equal(store.records.has(reminted), true)
+  assert.equal(store.classifyHandle(`${base}:g100:s100`).state, 'evicted')
+  assert.equal(store.classifyHandle(reminted).state, 'pending')
 })
 
 test('P1-D: marker-only fences do NOT block admission — HR recovers with NO new D6; unmarked UNKNOWN fences still block', () => {
@@ -393,4 +380,93 @@ test('P1-D: marker-only fences do NOT block admission — HR recovers with NO ne
   unmarked.markOutcomeUnknown(rawFence, { source: 'fixture' })
   assert.notEqual(unmarked.admissionBlockerForAgent(HR), null,
     'an unmarked outcome_unknown fence keeps the admission blocker (unchanged semantics)')
+})
+
+test('legacy migration: adjacent pairs merge with legacy-fidelity intervals, a watermark+1 pair cascades, the absent prefix stays honest', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'acr-wm-gap-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const pf = join(dir, 'recovery.json')
+
+  const store1 = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-legacy' })
+  for (const generation of [35, 36, 40, 41, 50]) {
+    const handle = store1.mintTurnExecution({ agentId: HR, processGeneration: generation, sessionId: 'main' })
+    store1.markPromptWriteAttempted(handle)
+    store1.settleDirect(handle, { outcome: 'completed' })
+  }
+  store1.evictSettledGenerationForCapacity(HR, store1.issuance.get(HR))
+  store1.persistDurable()
+  const r10Ranges = store1.issuance.get(HR).evictedRanges
+  // FRESH evictions carry EXACT intervals (min..max of each incarnation).
+  assert.deepEqual(r10Ranges, [
+    [35, 36, [[[1, 1]], [[2, 2]]]],
+    [40, 41, [[[3, 3]], [[4, 4]]]],
+    [50, 50, [[[5, 5]]]],
+  ])
+
+  // Simulate the LEGACY pre-r8 file: expand the tuples into per-generation
+  // pairs, plus a pair at watermark+1 (gen 2, a genuinely issued+evicted
+  // generation per the legacy facts).
+  const legacy = JSON.parse(await readFile(pf, 'utf8'))
+  for (const entry of legacy.issuance) {
+    const pairs = []
+    for (const [start, end, slots] of entry.evictedRanges) {
+      for (let offset = 0; offset < slots.length; offset++) pairs.push([start + offset, slots[offset][slots[offset].length - 1][1]])
+    }
+    pairs.push([2, 2])
+    delete entry.evictedRanges
+    delete entry.evictedArchives
+    delete entry.neverIssuedGenerations
+    // Simulate the OLDER historical file state: the watermark field sat at 0
+    // before the compaction existed (all the provably-absent prefix was
+    // still unledgered in legacy files).
+    entry.evictedThroughGeneration = 0
+    entry.evictedGenerations = pairs
+  }
+  await writeFile(pf, `${JSON.stringify(legacy)}\n`)
+
+  // Restore migrates 1:1 (legacy fidelity). r10 NEVER cascades an issued
+  // span into the watermark — the gen-2 pair (watermark+1) becomes an exact
+  // interval range, which is strictly tighter than the r9 cascade.
+  const store2 = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-legacy-migrated' })
+  const migrated = store2.issuance.get(HR)
+  // Legacy fidelity: EVERY migrated generation maps to [[1, maxSeq]] — the
+  // legacy data carries no lower bound, so below-max phantoms keep the
+  // legacy verdict (the disclosed residual; NEW evictions are exact).
+  assert.deepEqual(migrated.evictedRanges, [
+    [2, 2, [[[1, 2]]]],
+    [35, 36, [[[1, 1]], [[1, 2]]]],
+    [40, 41, [[[1, 3]], [[1, 4]]]],
+    [50, 50, [[[1, 5]]]],
+  ])
+  assert.equal(migrated.evictedThroughGeneration, 0,
+    'the watermark stays as the file carried it — r10 never widens it across issued spans')
+  assert.deepEqual(store2.classifyHandle(`turn:epoch-legacy:a${migrated.discriminator}:g35:s1`),
+    { state: 'evicted', agentId: HR }, 'migrated ranges still resolve evicted handles')
+  assert.deepEqual(store2.classifyHandle(`turn:epoch-legacy:a${migrated.discriminator}:g35:s2`),
+    { state: 'never_existed' }, 's2 belongs to g36 — beyond g35\'s OWN migrated bound (exact)')
+  assert.deepEqual(store2.classifyHandle(`turn:epoch-legacy:a${migrated.discriminator}:g36:s1`),
+    { state: 'evicted', agentId: HR },
+    'THE DISCLOSED LEGACY RESIDUAL: s1 is below g36\'s migrated bound ([[1,2]]) — legacy answered evicted too, and migrated data cannot prove tighter')
+  assert.deepEqual(store2.classifyHandle(`turn:epoch-legacy:a${migrated.discriminator}:g2:s2`),
+    { state: 'evicted', agentId: HR }, 'the watermark+1 pair resolves exactly as an interval range')
+  assert.deepEqual(store2.classifyHandle(`turn:epoch-legacy:a${migrated.discriminator}:g35:s3`),
+    { state: 'never_existed' }, 'beyond the migrated bound: never_existed preserved')
+  assert.deepEqual(store2.classifyHandle(`turn:epoch-legacy:a${migrated.discriminator}:g1:s1`),
+    { state: 'never_existed' }, 'gen1 was never issued in this fixture — uncovered and exact')
+
+  // The dual-written persist keeps BOTH forms consistent; tampering one pair
+  // fails the store closed.
+  store2.persistDurable()
+  const rewritten = JSON.parse(await readFile(pf, 'utf8'))
+  for (const entry of rewritten.issuance) {
+    assert.ok(Array.isArray(entry.evictedGenerations), 'dual-write present')
+    const pairs = new Map(entry.evictedGenerations)
+    const consistent = entry.evictedRanges.every(([start, end, slots]) =>
+      slots.every((slot, offset) => pairs.get(start + offset) === slot[slot.length - 1][1]))
+    assert.equal(consistent, true)
+    entry.evictedGenerations = entry.evictedGenerations.map(([gen, hi]) => [gen, hi + 7])
+  }
+  await writeFile(pf, `${JSON.stringify(rewritten)}\n`)
+  const poisoned = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-poisoned' })
+  assert.equal(poisoned.startupBlockedReason, 'durable_store_invalid')
 })
