@@ -392,6 +392,10 @@ export async function composeProductionRuntime(options = {}) {
     enabled: productApiCfg.enabled ?? process.env.PRODUCT_API_ENABLED !== '0',
     host: productApiCfg.host ?? process.env.PRODUCT_API_HOST ?? '127.0.0.1',
     port: productApiCfg.port ?? Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10),
+    // R22 exact-generation management route credentials (loopback-only API;
+    // token generated at deploy time, plist env is the operator seam).
+    managementToken: process.env.PRODUCT_API_MANAGEMENT_TOKEN,
+    managementPrincipal: process.env.PRODUCT_API_MANAGEMENT_PRINCIPAL,
     // Dedicated history-only Tailnet config remains pass-through/default-OFF.
     history: productApiCfg.history,
   })
