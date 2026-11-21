@@ -4,7 +4,7 @@ status: proposed
 spec_kind: implementation
 authority_level: governing_spec_amendment
 implementation_authority: none
-revision: r6
+revision: r7
 revision_date: 2026-11-21
 amendment_of: AGENT_PROCESS_LIFECYCLE_HARDENING_V4
 amendment_kind: NEW
@@ -356,6 +356,38 @@ authoring_base: 710fa3a9 (production line head; includes accepted #703/#705)
 > 状态：**proposed / docs+code atomic candidate（V3-adoption bounded route）**。
 > 独立验收（exact-head semantic review PASS, BLOCKERS=NONE，验收人 ≠ 作者）通过前
 > 不 merge。本 delta 不授权任何生产效应。
+
+## 0r7. Seventh-review amendments (Owner regression negatives B1/B2 at the 35c44e1c head; both reproduced, both FAIL→PASS at the r12 head)
+
+- **B1 (transactional snapshot missed evictedArchives)**: `snapshotAuthority`
+  spread-shared the archive array by reference — a transaction that mutated
+  the archive (the capacity walk runs inside the mint transaction) could not
+  be rolled back by `restoreAuthority`; the Owner reproduced the leak at
+  35c44e1c. r12: the snapshot deep-copies the archive exactly like the hot
+  ranges (tuples → slots → intervals). Frozen tests: the full-rollback
+  invariant (mutate archive → restore → deep-equal pre-state) and the REAL
+  transactional path — live generations at the cap, the mint's walk archives
+  a batch, the final persist throws (`disk full`), the transactional catch
+  restores the archive AND the hot ranges unchanged, settled handles keep
+  their verdicts (at 35c the archive leaked through the shared reference).
+- **B2 (archive budget breakthrough)**: the r11 gate ran AFTER the previous
+  batch and before the next — one batch could overflow the horizon silently
+  (Owner-reproduced: 262144 + moved batch = 274594, walk COMPLETED, an
+  unloadable state nearly written). r12: the batch is PEEKED and budget-
+  checked by its ACTUAL increment BEFORE any state modification — at the
+  horizon the walk fails LOUD on the UNTOUCHED state (ranges, archive and
+  accounting unchanged; the durable file stays loadable; the mint's
+  transactional snapshot rolls back cleanly). This is the designed operator-
+  rotation stop (§0r6), never a silent overflow. Contract symmetry: the
+  archive budget is now enforced on BOTH decode forms (the r11 check existed
+  only on the legacy branch). Frozen tests: archive staged exactly at the
+  horizon → the walk throws `RECONCILIATION_CAPACITY_EXHAUSTED` (operator
+  rotation message) with ranges/archive deep-equal pre-state; persist +
+  reload clean; the stop is idempotent; the mint path rolls back without
+  drift (via the B1 transaction test's staging).
+- Reviewer note (Owner): 35c44e1c was not docs-only — it also touched
+  store.js (the mint's issuedIntervals merge); the r12 delta review covers
+  the final head against f46a3a2f AND 35c44e1c.
 
 ## 1. Goal (measured deadlock)
 

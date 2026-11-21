@@ -47,6 +47,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
 
+import { RECONCILIATION_CAPS } from '../../src/reconciliation/capacity.js'
 import { TurnReconciliationStore } from '../../src/reconciliation/index.js'
 
 const HR = 'agt_hr-agent'
@@ -563,6 +564,130 @@ test('r11 P1: joint boundedness with four permanent fences — 2k real evictions
   assert.equal(reloaded.startupBlockedReason, null, 'the archive-heavy file loads')
   assert.equal(reloaded.classifyHandle(probeHandle).state, 'evicted', 'cold exactness survives the reload')
   assert.equal(reloaded.classifyHandle(`${base}:g20025:s20025`).state, 'evicted', 'archived exactness survives the reload')
+})
+
+
+test('r12 B1: the transactional snapshot deep-copies evictedArchives — rollback undoes archive mutations (full invariant)', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-r12-b1' })
+  store.mintTurnExecution({ agentId: HR, processGeneration: 1, sessionId: 'main' })
+  const issuance = store.issuance.get(HR)
+  issuance.evictedRanges.push([10, 12, [[[1, 1]], [[2, 2]], [[3, 3]]]])
+  issuance.evictedArchives.push([100, 101, [[[5, 5]], [[6, 6]]]])
+  const archivesBefore = JSON.parse(JSON.stringify(issuance.evictedArchives))
+
+  // COUNTEREXAMPLE (35c44e1c FAIL): the snapshot spread shared the archives
+  // array by reference — restoreAuthority could not undo archive mutations.
+  const snapshot = store.snapshotAuthority()
+  issuance.evictedArchives.push([200, 202, [[[7, 7]], [[8, 8]], [[9, 9]]]])
+  issuance.evictedArchives[0][2][0][0][1] = 999
+  store.restoreAuthority(snapshot)
+  const restored = store.issuance.get(HR)
+  assert.deepEqual(restored.evictedArchives, archivesBefore,
+    'the archive is deep-restored — no shared-reference leak survives the rollback')
+})
+
+test('r12 B1 (transaction failure): a mint that archives then throws rolls the archive back through the REAL transactional path', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-r12-b1-tx' })
+  // Live generations at the cap (the mint's capacity branch triggers the
+  // walk → compaction → archive loop inside the mint transaction). Persist
+  // is stubbed during staging — the durability discipline is quadratic at
+  // this depth and irrelevant to the transaction mechanics under test.
+  store.persistDurable = () => {}
+  const minted = []
+  for (let generation = 2; generation <= 257; generation++) {
+    const handle = store.mintTurnExecution({ agentId: HR, processGeneration: generation, sessionId: 'main' })
+    store.markPromptWriteAttempted(handle)
+    store.settleDirect(handle, { outcome: 'completed' })
+    minted.push(handle)
+  }
+  const issuance = store.issuance.get(HR)
+  issuance.maxIssuedTurnSeq = 100000
+  // Archive staged at MAX-13096 (non-adjacent tuples — real archives always
+  // carry a gap: adjacent tuples merge while hot); hot = two non-adjacent
+  // tuples totalling 13096 > trigger: batch1 (4096) fits, batch2 (9000)
+  // lands the archive EXACTLY on the horizon, then persist throws.
+  let generation = 300
+  let archived = 0
+  for (const size of [...Array(60).fill(4096), 3288]) {
+    issuance.evictedArchives.push([generation, generation + size - 1, Array.from({ length: size }, (_, o) => [[generation + o, generation + o]])])
+    generation += size + 1
+    archived += size
+  }
+  assert.equal(archived, RECONCILIATION_CAPS.MAX_ARCHIVE_INTERVALS_PER_AGENT - 13096)
+  issuance.evictedRanges.push([100000, 104095, Array.from({ length: 4096 }, (_, o) => [[100000 + o, 100000 + o]])])
+  issuance.evictedRanges.push([200000, 208999, Array.from({ length: 9000 }, (_, o) => [[200000 + o, 200000 + o]])])
+  const rangesBefore = JSON.parse(JSON.stringify(issuance.evictedRanges))
+  const archivesBefore = JSON.parse(JSON.stringify(issuance.evictedArchives))
+
+  // Persistence failure: the mint's walk archives BOTH batches (the second
+  // lands exactly on the horizon — legal), then the final persist throws →
+  // the transactional catch must restore the authority INCLUDING the archive
+  // (35c44e1c leaked it through the shared reference).
+  const realPersist = store.persistDurable.bind(store)
+  store.persistDurable = () => { throw new Error('disk full') }
+  assert.throws(() => store.mintTurnExecution({ agentId: HR, processGeneration: 1000, sessionId: 'main' }), /disk full/)
+  store.persistDurable = realPersist
+  assert.deepEqual(store.issuance.get(HR).evictedArchives, archivesBefore,
+    'the archive survives the persistence-failure rollback unchanged')
+  assert.deepEqual(store.issuance.get(HR).evictedRanges, rangesBefore,
+    'the hot ranges survive the rollback unchanged')
+  // The pre-transaction responsibilities are intact.
+  for (const handle of minted) {
+    assert.ok(!['never_existed'].includes(store.classifyHandle(handle).state),
+      'settled handles keep their verdicts across the rollback')
+  }
+})
+
+test('r12 B2: at the archive horizon the walk fails LOUD on the UNTOUCHED state — never a persisted overflow', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'acr-wm-b2-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const pf = join(dir, 'recovery.json')
+  const store = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-r12-b2' })
+  store.mintTurnExecution({ agentId: HR, processGeneration: 1, sessionId: 'main' })
+  const issuance = store.issuance.get(HR)
+  issuance.maxIssuedTurnSeq = 1000000
+  // Fill the archive to EXACTLY the horizon.
+  let generation = 100
+  while (issuance.evictedArchives.reduce((total, tuple) => total + tuple[2].length, 0) + 4096
+      <= RECONCILIATION_CAPS.MAX_ARCHIVE_INTERVALS_PER_AGENT) {
+    const start = generation
+    // Non-adjacent tuples (a 1-generation gap): real archives always carry
+    // one — adjacent tuples merge while hot, so a legal durable state never
+    // holds adjacent tuples.
+    issuance.evictedArchives.push([start, start + 4095, Array.from({ length: 4096 }, (_, o) => [[start + o, start + o]])])
+    generation += 4097
+  }
+  const archivedBefore = issuance.evictedArchives.reduce((total, tuple) => total + tuple[2].length, 0)
+  assert.equal(archivedBefore, RECONCILIATION_CAPS.MAX_ARCHIVE_INTERVALS_PER_AGENT)
+  // Hot above the trigger: the pre-fix walk SILENTLY overflowed (274594).
+  const cold = []
+  for (let start = 200000; start <= 225336; start += 51) {
+    cold.push([start, start + 49, Array.from({ length: 50 }, (_, o) => [[start + o, start + o]])])
+  }
+  issuance.evictedRanges.push(...cold)
+  const rangesBefore = JSON.parse(JSON.stringify(issuance.evictedRanges))
+  const archivesBefore = JSON.parse(JSON.stringify(issuance.evictedArchives))
+
+  // COUNTEREXAMPLE (35c44e1c FAIL): one batch moved past the horizon.
+  assert.throws(() => store.evictSettledGenerationForCapacity(HR, issuance),
+    error => error.code === 'RECONCILIATION_CAPACITY_EXHAUSTED' && /operator rotation/.test(error.message),
+    'the horizon stop throws loud at the boundary')
+  assert.deepEqual(store.issuance.get(HR).evictedArchives, archivesBefore,
+    'the archive is untouched at the throw')
+  assert.deepEqual(store.issuance.get(HR).evictedRanges, rangesBefore,
+    'the hot ranges are untouched at the throw')
+
+  // The untouched state persists AND reloads (never an unloadable file).
+  store.persistDurable()
+  const reloaded = new TurnReconciliationStore({ persistenceFile: pf, runtimeEpoch: 'epoch-r12-b2' })
+  assert.equal(reloaded.startupBlockedReason, null, 'the at-horizon state loads (the overflow never got written)')
+  // A SECOND walk at the horizon also fails loud on the untouched state
+  // (idempotent operator-rotation stop; the mint-path rollback is covered
+  // by the B1 transaction-failure test).
+  assert.throws(() => store.evictSettledGenerationForCapacity(HR, store.issuance.get(HR)),
+    error => error.code === 'RECONCILIATION_CAPACITY_EXHAUSTED' && /operator rotation/.test(error.message))
+  assert.deepEqual(store.issuance.get(HR).evictedArchives, archivesBefore,
+    'the horizon stop is idempotent without archive drift')
 })
 
 test('P1-D: marker-only fences do NOT block admission — HR recovers with NO new D6; unmarked UNKNOWN fences still block', () => {

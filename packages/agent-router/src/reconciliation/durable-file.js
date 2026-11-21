@@ -362,9 +362,13 @@ function decodeIssuance(entries, discriminatorSeq) {
     }
     const evictedArchives = entry?.evictedArchives
     if (evictedArchives !== undefined) {
+      // r12 (QA B2 contract symmetry): the archive budget is enforced on BOTH
+      // decode forms — the r11 check existed only on the legacy branch, so an
+      // over-horizon archive written through the new form would load anyway.
       if (!Array.isArray(evictedArchives)
           || evictedArchives.some(tuple => !validBoundsSlots(tuple, entry))
-          || evictedArchives.some((range, index) => index > 0 && range[0] <= evictedArchives[index - 1][1] + 1)) {
+          || evictedArchives.some((range, index) => index > 0 && range[0] <= evictedArchives[index - 1][1] + 1)
+          || intervalCountOf(evictedArchives) > RECONCILIATION_CAPS.MAX_ARCHIVE_INTERVALS_PER_AGENT) {
         throw new TypeError('durable issuance evicted archives are invalid')
       }
     }

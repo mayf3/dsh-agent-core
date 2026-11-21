@@ -10,6 +10,12 @@ export const authorityCapacityMethods = {
       ...entry,
       evictedSparseSeqs: new Set(entry.evictedSparseSeqs),
       evictedRanges: entry.evictedRanges.map(range => [range[0], range[1], range[2].map(slot => slot.map(interval => [...interval]))]),
+      // r12 (QA B1): the archive MUST be deep-copied like the ranges — the
+      // spread above shares the array by reference, so a transaction that
+      // mutates the archive (the capacity walk runs inside the mint
+      // transaction) could not be rolled back by restoreAuthority and the
+      // leaked archive state survived the snapshot restore.
+      evictedArchives: (entry.evictedArchives ?? []).map(range => [range[0], range[1], range[2].map(slot => slot.map(interval => [...interval]))]),
       neverIssuedGenerations: new Set(entry.neverIssuedGenerations),
       generations: new Map([...entry.generations].map(([generation, value]) => [generation, {
         ...value,
@@ -254,14 +260,41 @@ export const authorityCapacityMethods = {
       // The archive is exact + queryable, so coldness is purely a budget
       // question; the archive itself is bounded by its own fail-loud cap
       // (the operator rotation horizon, spec §0r6).
-      if (archivedIntervals() > RECONCILIATION_CAPS.MAX_ARCHIVE_INTERVALS_PER_AGENT) {
+      //
+      // r12 (QA B2): the batch is PEEKED and budget-checked by its ACTUAL
+      // increment BEFORE any state mutation — the old post-hoc gate ran
+      // after the previous batch and let one batch overflow the horizon
+      // (262144 + up-to-4096 written, a persist state the loader budget
+      // rejects, reproduced silently at 274594). At the horizon the walk
+      // fails LOUD on the UNTOUCHED state: ranges, archive and accounting
+      // unchanged, the durable file stays loadable, and the mint path's
+      // transactional snapshot rolls back cleanly. This is the designed
+      // operator-rotation stop (spec §0r6), never a silent overflow.
+      let batch = 0
+      let batchEnd = 0
+      while (batchEnd < issuance.evictedRanges.length
+          && batch + issuance.evictedRanges[batchEnd][2].reduce((total, slot) => total + slot.length, 0)
+            <= RECONCILIATION_CAPS.ARCHIVE_BATCH_INTERVALS) {
+        batch += issuance.evictedRanges[batchEnd][2].reduce((total, slot) => total + slot.length, 0)
+        batchEnd += 1
+      }
+      if (batchEnd < issuance.evictedRanges.length
+          && batch + issuance.evictedRanges[batchEnd][2].reduce((total, slot) => total + slot.length, 0) <= RECONCILIATION_CAPS.ARCHIVE_BATCH_INTERVALS) {
+        batch += issuance.evictedRanges[batchEnd][2].reduce((total, slot) => total + slot.length, 0)
+        batchEnd += 1
+      }
+      if (batch === 0) {
+        // A single tuple larger than the batch budget still counts as the
+        // candidate batch (moved whole — tuples are never split).
+        batch = issuance.evictedRanges[0][2].reduce((total, slot) => total + slot.length, 0)
+        batchEnd = 1
+      }
+      if (archivedIntervals() + batch > RECONCILIATION_CAPS.MAX_ARCHIVE_INTERVALS_PER_AGENT) {
         throw new ReconciliationCapacityError(
-          `reconciliation: archived resolution intervals exhausted (${RECONCILIATION_CAPS.MAX_ARCHIVE_INTERVALS_PER_AGENT})`,
+          `reconciliation: archived resolution intervals exhausted (${RECONCILIATION_CAPS.MAX_ARCHIVE_INTERVALS_PER_AGENT}) — operator rotation required before further archiving`,
         )
       }
-      let batch = 0
-      while (issuance.evictedRanges.length > 0 && batch < RECONCILIATION_CAPS.ARCHIVE_BATCH_INTERVALS) {
-        batch += issuance.evictedRanges[0][2].reduce((total, slot) => total + slot.length, 0)
+      for (let moved = 0; moved < batchEnd; moved += 1) {
         issuance.evictedArchives.push(issuance.evictedRanges.shift())
       }
     }
