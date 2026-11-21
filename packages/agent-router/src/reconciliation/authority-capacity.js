@@ -9,7 +9,7 @@ export const authorityCapacityMethods = {
     const issuance = new Map([...this.issuance].map(([agentId, entry]) => [agentId, {
       ...entry,
       evictedSparseSeqs: new Set(entry.evictedSparseSeqs),
-      evictedRanges: entry.evictedRanges.map(range => [...range]),
+      evictedRanges: entry.evictedRanges.map(range => [range[0], range[1], [...range[2]]]),
       generations: new Map([...entry.generations].map(([generation, value]) => [generation, { ...value }])),
     }]))
     return {
@@ -184,22 +184,30 @@ export const authorityCapacityMethods = {
   },
 
   /**
-   * r8 (#707): disjoint evictedRanges metadata compression. A fully-evicted
-   * generation EITHER advances the contiguous `evictedThroughGeneration`
-   * watermark (cascading across any range that now touches it) OR merges into
-   * the sorted, disjoint, NON-ADJACENT `evictedRanges` list
-   * ([startGeneration, endGeneration, maxSeq] tuples — maxSeq is the max
-   * eviction-time turn-seq of every generation merged into the range, the
-   * per-handle `evicted` resolution bound in query.js). Non-adjacent merging
-   * is the soundness core: a range only ever spans CONSECUTIVE
-   * genuinely-evicted generations, so it never covers a never-issued
-   * generation and `never_existed` verdicts are preserved exactly (the
-   * rejected watermark-merge candidate claimed absent generations as evicted —
-   * ranges never do). One range bounds unboundedly many generations, so the
-   * issuance metadata cap (`generations.size + evictedRanges.length`) stops
-   * leaking with history depth — the measured #707 256-cap lockout,
+   * r9 (#707): disjoint evictedRanges metadata compression with EXACT
+   * per-generation resolution bounds. A fully-evicted generation EITHER
+   * advances the contiguous `evictedThroughGeneration` watermark (cascading
+   * across any range that now touches it) OR merges into the sorted,
+   * disjoint, NON-ADJACENT `evictedRanges` list of
+   * `[startGeneration, endGeneration, perGenMaxSeqs]` tuples, where
+   * `perGenMaxSeqs[i]` is the EXACT eviction-time turn-seq bound of the
+   * generation `startGeneration + i` — the identical predicate the legacy
+   * per-generation map answered (`seq <= maxSeq_g`), so C-018 handle
+   * identity is preserved bit-for-bit: a never-issued `(gen, seq)` inside a
+   * range with `seq > perGenMaxSeqs[gen - start]` still classifies
+   * `never_existed` (the r8 range-wide maxSeq collapse was rejected in
+   * review — it widened `evicted` over phantom identities).
+   *
+   * Non-adjacent merging is the soundness core: a range only ever spans
+   * CONSECUTIVE genuinely-evicted generations, so it never covers a
+   * never-issued generation. One tuple bounds arbitrarily many generations,
+   * so the issuance metadata cap (`generations.size + evictedRanges.length`)
+   * stops leaking with history depth — the measured #707 256-cap lockout,
    * where per-generation map entries moved 1:1 between the live map
    * and the evicted map, leaving the sum invariant and the deadlock intact.
+   * The exactness arrays are bounded separately
+   * (MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT) and fail LOUD — never a
+   * silent forgetting.
    */
   markGenerationEvicted(issuance, generation, maxSeq) {
     issuance.generations.delete(generation)
@@ -213,21 +221,49 @@ export const authorityCapacityMethods = {
       return
     }
     const ranges = issuance.evictedRanges
-    let merged = [generation, generation, maxSeq]
+    // Scan for every generation-adjacent (or covering — a re-eviction of a
+    // re-minted generation already inside a range) range around the
+    // singleton, capturing the RANGE OBJECTS (indexes would go stale once we
+    // splice). Absorbed ranges plus the singleton always form a contiguous
+    // union [start, end].
     let index = 0
-    while (index < ranges.length && ranges[index][0] <= merged[1] + 1) {
-      if (ranges[index][1] + 1 >= merged[0]) {
-        merged = [
-          Math.min(ranges[index][0], merged[0]),
-          Math.max(ranges[index][1], merged[1]),
-          Math.max(ranges[index][2], merged[2]),
-        ]
-        ranges.splice(index, 1)
-      } else {
-        index += 1
+    let start = generation
+    let end = generation
+    const absorbed = []
+    while (index < ranges.length && ranges[index][0] <= end + 1) {
+      if (ranges[index][1] + 1 >= start) {
+        absorbed.push(ranges[index])
+        start = Math.min(start, ranges[index][0])
+        end = Math.max(end, ranges[index][1])
+      }
+      index += 1
+    }
+    const boundsBefore = ranges.reduce((total, range) => total + range[2].length, 0)
+    const absorbedBounds = absorbed.reduce((total, range) => total + range[2].length, 0)
+    const covering = absorbed.some(range => range[0] <= generation && generation <= range[1])
+    // Net exactness entries: the absorbed spans collapse into ONE array and
+    // the singleton either fills a new slot or OVERWRITES its own slot
+    // (re-eviction of a re-minted generation).
+    const boundsAfter = boundsBefore - absorbedBounds + (covering ? 0 : 1)
+    if (boundsAfter > RECONCILIATION_CAPS.MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT) {
+      throw new ReconciliationCapacityError(
+        `reconciliation: evicted-generation resolution bounds exhausted for issuance metadata (${RECONCILIATION_CAPS.MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT})`,
+      )
+    }
+    // Compose the exact bounds array slot-by-slot: each absorbed range
+    // restores its own slots, then the singleton slot is set/overwritten.
+    const bounds = new Array(end - start + 1)
+    for (const range of absorbed) {
+      for (let offset = 0; offset < range[2].length; offset++) {
+        bounds[range[0] - start + offset] = range[2][offset]
       }
     }
-    ranges.splice(index, 0, merged)
+    bounds[generation - start] = maxSeq
+    // Remove the absorbed ranges by identity, then insert at the scan's
+    // sorted position (all ranges before `index` that were not absorbed lie
+    // strictly below; all from `index` lie strictly above the merged span).
+    for (const range of absorbed) ranges.splice(ranges.indexOf(range), 1)
+    ranges.splice(index - absorbed.length, 0, [start, end, bounds])
   },
 
   canEvictRecord(record) {

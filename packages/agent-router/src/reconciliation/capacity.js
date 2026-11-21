@@ -25,6 +25,14 @@ export const RECONCILIATION_CAPS = Object.freeze({
   MAX_ISSUANCE_AGENTS_GLOBAL: 8192,
   /** Bounded sparse set of evicted-but-non-contiguous turn sequences. */
   MAX_EVICTED_SPARSE_SEQS_PER_AGENT: 4096,
+  /**
+   * r9 (#707): bounded count of per-generation evicted turnSeq bounds across
+   * an agent's evictedRanges (the exact C-018 resolution data — one entry per
+   * historically evicted generation). Uncapped it would grow with history
+   * depth; this bound is 64x the measured production state (256) and fails
+   * LOUD at eviction/restore when exceeded — never a silent forgetting.
+   */
+  MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT: 16384,
 })
 
 export const REQUIRED_RECORD_EVIDENCE_HEADROOM_BYTES = 1048576 + 65536

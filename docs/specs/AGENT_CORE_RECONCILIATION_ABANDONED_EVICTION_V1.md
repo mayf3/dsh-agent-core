@@ -4,7 +4,7 @@ status: proposed
 spec_kind: implementation
 authority_level: governing_spec_amendment
 implementation_authority: none
-revision: r3
+revision: r4
 revision_date: 2026-11-21
 amendment_of: AGENT_PROCESS_LIFECYCLE_HARDENING_V4
 amendment_kind: NEW
@@ -108,10 +108,6 @@ authoring_base: 710fa3a9 (production line head; includes accepted #703/#705)
   not "passing unchanged"); §4 now includes durable-file.js (the registry
   validator/writer carrying the 6-key surface).
 
-> 状态：**proposed / docs+code atomic candidate（V3-adoption bounded route）**。
-> 独立验收（exact-head semantic review PASS, BLOCKERS=NONE，验收人 ≠ 作者）通过前
-> 不 merge。本 delta 不授权任何生产效应。
-
 ## 0r3. Third-review amendments (Owner-prescribed first-priority 方案：不相交 `evictedRanges` 区间压缩；both r7 candidates measured FAIL, addressed)
 
 - **The measured r7 failure (metadata sum invariant)**: r7's walk (skip
@@ -160,6 +156,73 @@ authoring_base: 710fa3a9 (production line head; includes accepted #703/#705)
   capacity-pressure eviction), and evicts each fully-resolved generation
   through `evictRecord` / the correlation-preserving arm — which under r8
   actually COMPRESSES the metadata instead of relocating it. Idempotent.
+
+## 0r4. Fourth-review amendments (Owner counterexamples P0-A/P0-B/P1-C/P1-D at the r8 head; all reproduced and addressed)
+
+- **P0-A (range maxSeq cannot prove full handle identity)**: r8's
+  `[start, end, maxSeq]` tuple answered `seq <= rangeMax` for EVERY
+  generation under the range — the dense-run counterexample (mint g10:s1,
+  g11:s2, g12:s3, evict → `[10,12,3]`; query the never-issued `g10:s3`)
+  classified a phantom identity as `evicted`, widening C-018 semantics.
+  Reproduced against the REAL production preimage: `g38:s1383` (the seq
+  belongs to g39) classified `evicted` under r8's run-max 4662. r9 tuples
+  are `[startGeneration, endGeneration, perGenMaxSeqs]` where
+  `perGenMaxSeqs[i]` is the EXACT eviction-time turn-seq bound of
+  generation `startGeneration + i` — the IDENTICAL predicate the legacy
+  per-generation map answered (`seq <= maxSeq_g`), preserving C-018 handle
+  identity bit-for-bit; the phantom `g38:s1383` classifies `never_existed`.
+  Merging composes the bounds array slot-by-slot; a re-eviction of a
+  re-minted generation OVERWRITES only its own slot (no unbounded array
+  growth — the r8 draft's concat violated `length === end-start+1`).
+- **P0-B (over-cap legacy durable load)**: r8's decode checked
+  `legacyPairs + live > 256` BEFORE conversion — the real production file
+  (agt_hr-agent at exactly 43 + 213 = 256, one non-contiguous eviction from
+  257) would be rejected at the plain constructor load, bricking the
+  upgrade before compression ever ran. r9: per-tuple validation, THEN
+  conversion, THEN caps on the COMPRESSED form (tuple count at the
+  restored-cap check; exactness arrays bounded by the new frozen
+  `MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT = 16384` — 64x the measured
+  production state — enforced fail-loud at eviction and restore, never a
+  silent forgetting). Live generation entries stay capped 1:1 (they are
+  live metadata, never compressible). Verified against the frozen
+  production preimage (sha256 5d3d2eb2…, read-only copy, isolated load):
+  startup-clean, 6 tuples carrying the exact 43 bounds, new-generation mint
+  proceeds.
+- **P1-C (fixture legality)**: the r8 fixture injected a range covering the
+  LIVE fence generations — not a legal legacy state (the production file's
+  real 43-entry list EXCLUDES the live fences 70/73/78/86, confirming the
+  legality shape). The frozen fixture now seeds exactly the production
+  list; tests assert no range covers a live fence and pin the explicit
+  old/new turnSeq boundary for legal re-issuance into a compacted
+  generation.
+- **P1-D (D6 necessity falsified)**: `admissionBlockerForAgent` skips
+  declaration-MARKED records (marker-only included) — only UNMARKED
+  outcome_unknown fences block admission. The production fences are ALL
+  marker-only (verified in the preimage). Empirically (test + real
+  preimage): with the fences marker-only and NO new D6, the settled
+  generations compress, a NEW HR generation mints (real preimage:
+  gen302:s4947), and admission recovers. The claim "three D6 risk
+  acceptances are a necessary precondition for HR admission recovery" is
+  FALSIFIED. D6 acceptance remains only the path to RELEASING the
+  quarantined generations' own capacity (the P0 walk gate is unchanged);
+  unmarked UNKNOWN fences still block admission (unchanged semantics,
+  frozen by test).
+- **Rollback boundary (Owner addendum)**: after a persist writes the r9
+  layout the legacy `evictedGenerations` field is gone; a PRE-r8 binary's
+  validator (base 24401a34: `!Array.isArray(evictedGenerations)` →
+  TypeError) fails the store CLOSED at startup — never a silent misread.
+  Rollback = the established paired binary+preimage deploy discipline.
+  Note (pre-existing, independent of this slice): a legacy file at 257+
+  metadata entries already fails the OLD binary's own restore cap, so the
+  old-binary restart of HR was already one eviction away from bricking
+  before this work; the upgrade window is the recovery.
+
+
+
+> 状态：**proposed / docs+code atomic candidate（V3-adoption bounded route）**。
+> 独立验收（exact-head semantic review PASS, BLOCKERS=NONE，验收人 ≠ 作者）通过前
+> 不 merge。本 delta 不授权任何生产效应。
+
 
 ## 1. Goal (measured deadlock)
 
@@ -219,23 +282,30 @@ agt_hr-agent at the exact 256 cap, ~130-170 admission failures/day since
 - the existing admin-abandonment suite passes unchanged (marker-only
   quarantine, D6 acceptance stamping, no-replay, restart persistence).
 
-`packages/agent-router/test/process-lifecycle/watermark-gap.test.js` (r8):
+`packages/agent-router/test/process-lifecycle/watermark-gap.test.js` (r9):
 
 - the REAL frozen production shape (watermark 34, fences 70/73/78/86, settled
-  92-343, legacy-evicted 38-42 + 50-91, absent 35-37 + 43-49): the mint at
-  the 256 cap SUCCEEDS after the walk; the metadata sum drops under the cap;
-  the fences stay pinned; the watermark never claims the absent 35-37;
-  a second walk is a no-op;
-- a range never spans a never-issued generation: phantom handles in the
-  43-49 gap classify `never_existed`; a seq beyond the range's maxSeq in a
-  compacted generation classifies `never_existed`;
+  92-343, legal 43-bound legacy-evicted list excluding the live fences,
+  absent 35-37 + 43-49): the mint at the 256 cap SUCCEEDS after the walk;
+  the metadata sum drops under the cap; the fences stay pinned; the
+  watermark never claims the absent 35-37; a second walk is a no-op;
+- P0-A exactness: per-generation bounds — the dense-run counterexample
+  (range [10,12] with bounds [1,2,3]; the never-issued g10:s3) classifies
+  `never_existed`; real minted seqs classify `evicted`; phantom handles in
+  the 43-49 gap classify `never_existed`; a seq beyond ITS OWN generation's
+  bound classifies `never_existed`;
 - a re-mint into a range-covered generation stays live (seq monotonicity
-  above the range bound) while its old handles stay `evicted`; re-evicting
-  merges back into the SAME range and grows its maxSeq;
-- legacy durable files migrate at restore (adjacent pairs merge, a
+  above its own generation's bound) while its old handles stay `evicted`;
+  re-evicting merges back and overwrites ONLY that generation's bound;
+- P0-B: a legacy durable file OVER the 256 metadata sum LOADS (per-tuple
+  validation, conversion, caps on the compressed form); capacity is
+  recovered on that shape;
+- legacy migration: adjacent pairs merge with EXACT bounds preserved, a
   watermark+1 pair cascades honestly, evicted handles still classify
-  `evicted`); the next persist writes only the new form; a both-forms file
-  fails the store CLOSED.
+  `evicted`; the next persist writes only the new form; a both-forms file
+  fails the store CLOSED;
+- P1-D: marker-only fences do NOT block admission (HR recovers with NO new
+  D6); unmarked UNKNOWN fences still block (unchanged).
 
 ## 4. Exact implementation paths
 
@@ -248,18 +318,21 @@ agt_hr-agent at the exact 256 cap, ~130-170 admission failures/day since
   (restore-apply of the registry; recount exclusion)
 - `packages/agent-router/src/reconciliation/durable-file.js`
   (registry entry validator/writer: the 6-key accepted shape)
+- `packages/agent-router/src/reconciliation/capacity.js`
+  (r9: `MAX_EVICTED_GENERATION_BOUNDS_PER_AGENT` frozen cap)
 - `packages/agent-router/src/reconciliation/authority-capacity.js`
-  (compactRuntimeEpochs tombstone-epoch protection; r8
-  `markGenerationEvicted` range insert/merge/cascade, `canEvictRecord` range
-  membership)
+  (compactRuntimeEpochs tombstone-epoch protection; r9
+  `markGenerationEvicted` range insert/slot-compose/cascade with exact
+  per-generation bounds, `canEvictRecord` range membership)
 - `packages/agent-router/src/reconciliation/store.js`
   (r8: fresh-issuance `evictedRanges`, mint/restored cap sums count ranges,
   `highestIssuedGeneration` over range ends)
 - `packages/agent-router/src/reconciliation/query.js`
-  (r8: `classifyHandle` range lookup bounded by the per-range maxSeq)
+  (r9: `classifyHandle` range lookup against the EXACT per-generation bound —
+  identical predicate to the legacy per-generation map)
 - `packages/agent-router/src/reconciliation/durable-file.js`
-  (r8: `encodeIssuance`/`decodeIssuance` both-forms migration,
-  `evictedRangesFromLegacyPairs`)
+  (r9: `encodeIssuance`/`decodeIssuance` two-form migration — convert FIRST,
+  cap the compressed form; `evictedRangesFromLegacyPairs` 1:1 exact bounds)
 - `packages/agent-router/test/process-lifecycle/reconciliation-abandoned-eviction.test.js` (NEW)
 - `packages/agent-router/test/process-lifecycle/watermark-gap.test.js` (NEW, r8)
 

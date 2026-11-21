@@ -139,10 +139,16 @@ export const queryMethods = {
     if (seq > issuance.maxIssuedTurnSeq) return { state: 'never_existed' }
     // Rule 11: compacted (fully evicted) generations resolve as `evicted`.
     if (generation <= issuance.evictedThroughGeneration) return { state: 'evicted', agentId }
-    // r8 (#707): evictedRanges carry the per-range eviction-time max turn-seq;
-    // a seq beyond it falls through to the (possibly re-minted) live entry.
+    // r9 (#707): evictedRanges carry the EXACT eviction-time per-generation
+    // turn-seq bound (identical to the legacy per-generation map predicate
+    // `seq <= maxSeq_g`) — a seq beyond ITS OWN generation's bound falls
+    // through to the (possibly re-minted) live entry or never_existed. The
+    // r8 range-wide maxSeq collapse widened `evicted` over never-issued
+    // (gen, seq) identities and was rejected in review.
     const coveringRange = issuance.evictedRanges.find(range => generation >= range[0] && generation <= range[1])
-    if (coveringRange !== undefined && seq <= coveringRange[2]) return { state: 'evicted', agentId }
+    if (coveringRange !== undefined && seq <= coveringRange[2][generation - coveringRange[0]]) {
+      return { state: 'evicted', agentId }
+    }
     const generationEntry = issuance.generations.get(generation)
     if (generationEntry === undefined || seq < generationEntry.minSeq || seq > generationEntry.maxSeq) {
       return { state: 'never_existed' }
