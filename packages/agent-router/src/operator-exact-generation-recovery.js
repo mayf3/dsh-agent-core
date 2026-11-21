@@ -45,13 +45,21 @@ export async function operatorExactGenerationRecovery(request, {
   const slot = lifecycleSlotSnapshot(agentId)
   const hasLiveOwnership = processes.some(row => row.alive === true)
     || ['READY', 'STARTUP'].includes(slot.state) && slot.generation === generation
-  if (hasLiveOwnership || slot.state === 'REAP' && slot.generation === generation) {
+  // #707 cross-restart recovery: after a runtime restart the lifecycle slot is
+  // EMPTY (children are spawned lazily) — an EMPTY slot with an exact
+  // unresolved durable record IS the frozen-turn evidence, and the operator
+  // recovery is the legitimate clear channel. Only a LIVE/REAP ownership of
+  // the exact generation still refuses.
+  if (hasLiveOwnership
+      || (slot.state === 'REAP' && slot.generation === generation)
+      || (slot.state === 'READY' && slot.generation !== generation)
+      || (slot.state === 'STARTUP' && slot.generation !== generation)) {
     await audit({ type: 'operator.exact_generation_recovery', agentId, generation, handle: record.handle, result: 'rejected', reason: 'LIVE_GENERATION_OWNERSHIP' })
     throw Object.assign(new Error('live ownership or REAP slot remains; refusing fence cleanup'), { code: 'LIVE_GENERATION_OWNERSHIP' })
   }
   // The empty/non-owning slot plus the exact unresolved record is the cleanup
   // proof. markFenceCleared is the store's durable CAS mutation.
-  const changed = reconciliationStore.markFenceCleared(record.handle)
+  const changed = reconciliationStore.markFenceCleared(record.handle, { operator: true })
   if (!changed && reconciliationStore.activeFenceForAgent?.(agentId)) {
     await audit({ type: 'operator.exact_generation_recovery', agentId, generation, handle: record.handle, result: 'rejected', reason: 'FENCE_CAS_FAILED' })
     throw Object.assign(new Error('fence CAS did not clear the exact record'), { code: 'FENCE_CAS_FAILED' })

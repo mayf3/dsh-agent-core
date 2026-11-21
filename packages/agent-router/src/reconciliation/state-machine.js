@@ -154,15 +154,17 @@ export const settlementMethods = {
     return true
   },
 
-  markFenceCleared(handle) {
+  markFenceCleared(handle, options = {}) {
     const record = this.requireRecord(handle)
     if (record.fenceState === 'cleared') return false
     // #707 fail-closed: a recovery-blocked record keeps its fence armed until
-    // it is properly settled (operator exact-generation recovery). Clearing
-    // the fence over a blocked durable `state` produces a
-    // blocked+cleared combination that the durable read path rejects — the
-    // exact restart-bomb shape observed 2026-11-21 (needs-radar/lobster).
-    if (record.recoveryState === 'blocked') return false
+    // it is properly settled. Clearing the fence over a blocked durable
+    // `state` produces a blocked+cleared combination that the durable read
+    // path rejects — the exact restart-bomb shape observed 2026-11-21
+    // (needs-radar/lobster). The AUTOMATIC cleanup paths are guarded; the
+    // AUTHENTICATED operator recovery (R22, receipted) is the legitimate
+    // channel and passes { operator: true }.
+    if (record.recoveryState === 'blocked' && options?.operator !== true) return false
     this.mutateRecord(record, (candidate) => {
       candidate.fenceState = 'cleared'
       if (candidate.state === 'settled') candidate.nextSafeAction = 'send_new_request_after_reopened'
