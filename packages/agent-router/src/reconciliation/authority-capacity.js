@@ -9,7 +9,7 @@ export const authorityCapacityMethods = {
     const issuance = new Map([...this.issuance].map(([agentId, entry]) => [agentId, {
       ...entry,
       evictedSparseSeqs: new Set(entry.evictedSparseSeqs),
-      evictedGenerations: new Map(entry.evictedGenerations),
+      evictedRanges: entry.evictedRanges.map(range => [...range]),
       generations: new Map([...entry.generations].map(([generation, value]) => [generation, { ...value }])),
     }]))
     return {
@@ -98,8 +98,8 @@ export const authorityCapacityMethods = {
    * and resolves as `evicted` through the watermarks below, never as a
    * business settled). Without the abandoned arm, one never-settling record
    * permanently pins its generation entry and the agent deadlocks at
-   * MAX_ISSUANCE_GENERATIONS_PER_AGENT (measured: agt_hr-agent 256-cap
-   * lockout, #707). Iterates the contiguous prefix (progress-guarded) so one
+   * MAX_ISSUANCE_GENERATIONS_PER_AGENT (measured 256-cap lockout, #707).
+   * Iterates the contiguous prefix (progress-guarded) so one
    * call frees every releasable generation, not just the first.
    */
   /**
@@ -177,16 +177,57 @@ export const authorityCapacityMethods = {
       if (generationEntry !== undefined) {
         generationEntry.liveRecords -= 1
         if (generationEntry.liveRecords <= 0) {
-          const generation = record.processGeneration
-          issuance.generations.delete(generation)
-          if (generation === issuance.evictedThroughGeneration + 1) {
-            issuance.evictedThroughGeneration = generation
-          } else {
-            issuance.evictedGenerations.set(generation, generationEntry.maxSeq)
-          }
+          this.markGenerationEvicted(issuance, record.processGeneration, generationEntry.maxSeq)
         }
       }
     }
+  },
+
+  /**
+   * r8 (#707): disjoint evictedRanges metadata compression. A fully-evicted
+   * generation EITHER advances the contiguous `evictedThroughGeneration`
+   * watermark (cascading across any range that now touches it) OR merges into
+   * the sorted, disjoint, NON-ADJACENT `evictedRanges` list
+   * ([startGeneration, endGeneration, maxSeq] tuples — maxSeq is the max
+   * eviction-time turn-seq of every generation merged into the range, the
+   * per-handle `evicted` resolution bound in query.js). Non-adjacent merging
+   * is the soundness core: a range only ever spans CONSECUTIVE
+   * genuinely-evicted generations, so it never covers a never-issued
+   * generation and `never_existed` verdicts are preserved exactly (the
+   * rejected watermark-merge candidate claimed absent generations as evicted —
+   * ranges never do). One range bounds unboundedly many generations, so the
+   * issuance metadata cap (`generations.size + evictedRanges.length`) stops
+   * leaking with history depth — the measured #707 256-cap lockout,
+   * where per-generation map entries moved 1:1 between the live map
+   * and the evicted map, leaving the sum invariant and the deadlock intact.
+   */
+  markGenerationEvicted(issuance, generation, maxSeq) {
+    issuance.generations.delete(generation)
+    if (generation === issuance.evictedThroughGeneration + 1) {
+      issuance.evictedThroughGeneration = generation
+      while (issuance.evictedRanges.length > 0
+          && issuance.evictedRanges[0][0] === issuance.evictedThroughGeneration + 1) {
+        issuance.evictedThroughGeneration = issuance.evictedRanges[0][1]
+        issuance.evictedRanges.shift()
+      }
+      return
+    }
+    const ranges = issuance.evictedRanges
+    let merged = [generation, generation, maxSeq]
+    let index = 0
+    while (index < ranges.length && ranges[index][0] <= merged[1] + 1) {
+      if (ranges[index][1] + 1 >= merged[0]) {
+        merged = [
+          Math.min(ranges[index][0], merged[0]),
+          Math.max(ranges[index][1], merged[1]),
+          Math.max(ranges[index][2], merged[2]),
+        ]
+        ranges.splice(index, 1)
+      } else {
+        index += 1
+      }
+    }
+    ranges.splice(index, 0, merged)
   },
 
   canEvictRecord(record) {
@@ -194,8 +235,8 @@ export const authorityCapacityMethods = {
     const generationEntry = issuance?.generations.get(record.processGeneration)
     if (issuance === undefined || generationEntry === undefined || generationEntry.liveRecords > 1) return true
     return record.processGeneration === issuance.evictedThroughGeneration + 1
-      || issuance.evictedGenerations.has(record.processGeneration)
-      || issuance.evictedGenerations.size < RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT
+      || issuance.evictedRanges.some(range => record.processGeneration >= range[0] && record.processGeneration <= range[1])
+      || issuance.evictedRanges.length < RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT
   },
 
   evictResolvedForByteCapacity(agentId, additionalBytes, excludeHandle = null) {
@@ -292,13 +333,7 @@ export const authorityCapacityMethods = {
       if (generationEntry !== undefined) {
         generationEntry.liveRecords -= 1
         if (generationEntry.liveRecords <= 0) {
-          const generation = record.processGeneration
-          issuance.generations.delete(generation)
-          if (generation === issuance.evictedThroughGeneration + 1) {
-            issuance.evictedThroughGeneration = generation
-          } else {
-            issuance.evictedGenerations.set(generation, generationEntry.maxSeq)
-          }
+          this.markGenerationEvicted(issuance, record.processGeneration, generationEntry.maxSeq)
         }
       }
     }

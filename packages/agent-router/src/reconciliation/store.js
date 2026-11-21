@@ -197,7 +197,7 @@ export class TurnReconciliationStore {
       }
     }
     for (const [agentId, issuance] of this.issuance) {
-      if (issuance.generations.size + issuance.evictedGenerations.size
+      if (issuance.generations.size + issuance.evictedRanges.length
           > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
         throw new ReconciliationCapacityError(`reconciliation: restored issuance capacity exceeds frozen caps for ${agentId}`)
       }
@@ -288,8 +288,8 @@ export class TurnReconciliationStore {
     for (const generation of issuance.generations.keys()) {
       if (generation > highest) highest = generation
     }
-    for (const generation of issuance.evictedGenerations.keys()) {
-      if (generation > highest) highest = generation
+    for (const range of issuance.evictedRanges) {
+      if (range[1] > highest) highest = range[1]
     }
     return highest
   }
@@ -331,7 +331,7 @@ export class TurnReconciliationStore {
       evictedThroughTurnSeq: 0,
       evictedSparseSeqs: new Set(),
       evictedThroughGeneration: 0,
-      evictedGenerations: new Map(),
+      evictedRanges: [],
       generations: new Map(),
     }
     if (!Number.isSafeInteger(issuance.maxIssuedTurnSeq + 1)) {
@@ -341,9 +341,9 @@ export class TurnReconciliationStore {
     try {
     const correlationBytes = correlationKey === null ? 0 : correlationEntryByteSize(correlationKey, `turn:${this.runtimeEpoch}:a${issuance.discriminator}:g${processGeneration}:s${issuance.maxIssuedTurnSeq + 1}`)
     if (!issuance.generations.has(processGeneration)
-        && issuance.generations.size + issuance.evictedGenerations.size >= RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
+        && issuance.generations.size + issuance.evictedRanges.length >= RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
       this.evictSettledGenerationForCapacity(agentId, issuance)
-      if (issuance.generations.size + issuance.evictedGenerations.size >= RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
+      if (issuance.generations.size + issuance.evictedRanges.length >= RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
         throw new ReconciliationCapacityError(`reconciliation: issuance generation capacity exhausted for agent ${agentId}`)
       }
     }

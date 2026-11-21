@@ -311,7 +311,7 @@ test('ROUTER_GLOBAL_RECONCILIATION_CAP: global record cap rejects a mint on anot
   assert.equal(store.occupancy().records, RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_GLOBAL, 'nothing was evicted to make room')
 })
 
-test('B12 issuance metadata fails loud before forgetting sparse legal generations', () => {
+test('B12 issuance metadata never forgets sparse legal generations — at the cap the walk compresses them into ranges and the mint proceeds', () => {
   const store = new TurnReconciliationStore({ runtimeEpoch: 'generations' })
   const unresolved = minted(store, { processGeneration: 1 })
   const oldHandles = []
@@ -321,11 +321,21 @@ test('B12 issuance metadata fails loud before forgetting sparse legal generation
     oldHandles.push(handle)
   }
   const nextGeneration = RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT + 1
-  const before = store.occupancy()
-  assert.throws(() => minted(store, { processGeneration: nextGeneration }), error => error.code === 'RECONCILIATION_CAPACITY_EXHAUSTED')
-  assert.deepEqual(store.occupancy(), before)
+  // r8 (#707): the settled generations 2..256 compress into ONE evictedRanges
+  // tuple, so the mint's capacity branch frees REAL metadata room and
+  // proceeds. Nothing is forgotten: every evicted handle still classifies
+  // `evicted` (never silently dropped), and the unresolved record stays
+  // pending — it pins only its own generation.
+  const nextHandle = minted(store, { processGeneration: nextGeneration })
+  assert.equal(store.getTurnReconciliation(nextHandle).state, 'pending')
   assert.equal(store.getTurnReconciliation(unresolved).state, 'pending')
-  assert.ok(oldHandles.every(handle => store.getTurnReconciliation(handle).state === 'settled'))
+  const issuance = store.issuance.get('agt_a')
+  assert.ok(issuance.generations.size + issuance.evictedRanges.length < RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT,
+    'the compressed metadata sits under the cap')
+  assert.ok(oldHandles.every(handle => store.getTurnReconciliation(handle).state === 'evicted'))
+  // Fail-loud remains for metadata that CANNOT be compressed: a malformed
+  // durable file still fails the store closed (generation-restart-safety
+  // T7/T8; the watermark-gap both-forms case).
 })
 
 test('resolved eviction frees capacity: settled records are evictable, unresolved are not', () => {

@@ -247,9 +247,36 @@ function encodeIssuance(issuance) {
     agentId,
     ...entry,
     evictedSparseSeqs: [...entry.evictedSparseSeqs],
-    evictedGenerations: [...entry.evictedGenerations],
+    evictedRanges: [...entry.evictedRanges],
     generations: [...entry.generations],
   }))
+}
+
+/**
+ * r8 (#707) legacy migration: convert the per-generation evictedGenerations
+ * map pairs into disjoint evictedRanges. Only GENERATION-ADJACENT pairs merge
+ * (a range never spans a never-issued generation — `never_existed` verdicts
+ * are preserved exactly); a run starting at watermark+1 cascades into the
+ * contiguous watermark (those generations were genuinely issued + evicted,
+ * which is what the map entries proved).
+ */
+function evictedRangesFromLegacyPairs(evictedThroughGeneration, legacyPairs) {
+  const ranges = []
+  for (const [generation, maxSeq] of [...legacyPairs].sort((a, b) => a[0] - b[0])) {
+    const last = ranges[ranges.length - 1]
+    if (last !== undefined && last[1] + 1 === generation) {
+      last[1] = generation
+      last[2] = Math.max(last[2], maxSeq)
+    } else {
+      ranges.push([generation, generation, maxSeq])
+    }
+  }
+  let watermark = evictedThroughGeneration
+  while (ranges.length > 0 && ranges[0][0] === watermark + 1) {
+    watermark = ranges[0][1]
+    ranges.shift()
+  }
+  return { watermark, ranges }
 }
 
 function decodeIssuance(entries, discriminatorSeq) {
@@ -260,8 +287,14 @@ function decodeIssuance(entries, discriminatorSeq) {
   const discriminators = new Set()
   for (const entry of entries ?? []) {
     const sparse = entry?.evictedSparseSeqs
-    const evictedGenerations = entry?.evictedGenerations
+    const evictedRanges = entry?.evictedRanges
+    const legacyEvictedGenerations = entry?.evictedGenerations
     const generations = entry?.generations
+    // r8 (#707): exactly one evicted-metadata form — the r8 evictedRanges
+    // tuples or the legacy evictedGenerations pairs (converted at restore).
+    if ((evictedRanges === undefined) === (legacyEvictedGenerations === undefined)) {
+      throw new TypeError('durable issuance evicted metadata form is invalid')
+    }
     if (entry === null || typeof entry !== 'object'
         || typeof entry.agentId !== 'string' || entry.agentId === '' || entry.agentId.length > 256
         || issuance.has(entry.agentId)
@@ -272,19 +305,25 @@ function decodeIssuance(entries, discriminatorSeq) {
         || entry.evictedThroughTurnSeq > entry.maxIssuedTurnSeq
         || !Number.isSafeInteger(entry.evictedThroughGeneration) || entry.evictedThroughGeneration < 0
         || !Array.isArray(sparse) || sparse.length > RECONCILIATION_CAPS.MAX_EVICTED_SPARSE_SEQS_PER_AGENT
-        || !Array.isArray(evictedGenerations) || !Array.isArray(generations)
-        || evictedGenerations.length + generations.length > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
+        || !Array.isArray(generations)) {
       throw new TypeError('durable issuance entry is invalid')
+    }
+    const validRangeTuple = tuple => Array.isArray(tuple) && tuple.length === 3
+      && Number.isSafeInteger(tuple[0]) && tuple[0] > 0 && tuple[0] > entry.evictedThroughGeneration
+      && Number.isSafeInteger(tuple[1]) && tuple[1] >= tuple[0]
+      && Number.isSafeInteger(tuple[2]) && tuple[2] > 0 && tuple[2] <= entry.maxIssuedTurnSeq
+    if (Array.isArray(evictedRanges)) {
+      if (evictedRanges.length + generations.length > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT
+          || evictedRanges.some(tuple => !validRangeTuple(tuple))
+          || evictedRanges.some((range, index) => index > 0 && range[0] <= evictedRanges[index - 1][1] + 1)) {
+        throw new TypeError('durable issuance evicted ranges are invalid')
+      }
     }
     const validGenerationTuple = tuple => Array.isArray(tuple) && tuple.length === 2
       && Number.isSafeInteger(tuple[0]) && tuple[0] > 0
       && tuple[1] !== null && typeof tuple[1] === 'object'
     if (sparse.some(seq => !Number.isSafeInteger(seq) || seq <= entry.evictedThroughTurnSeq || seq > entry.maxIssuedTurnSeq)
         || new Set(sparse).size !== sparse.length
-        || evictedGenerations.some(tuple => !Array.isArray(tuple) || tuple.length !== 2
-          || !Number.isSafeInteger(tuple[0]) || tuple[0] <= 0
-          || tuple[0] <= entry.evictedThroughGeneration
-          || !Number.isSafeInteger(tuple[1]) || tuple[1] <= 0 || tuple[1] > entry.maxIssuedTurnSeq)
         || generations.some(tuple => !validGenerationTuple(tuple)
           || tuple[0] <= entry.evictedThroughGeneration
           || !Number.isSafeInteger(tuple[1].minSeq) || tuple[1].minSeq <= 0
@@ -292,8 +331,27 @@ function decodeIssuance(entries, discriminatorSeq) {
           || tuple[1].maxSeq > entry.maxIssuedTurnSeq)) {
       throw new TypeError('durable issuance metadata is invalid')
     }
-    const generationIds = [...evictedGenerations, ...generations].map(tuple => tuple[0])
-    if (new Set(generationIds).size !== generationIds.length) throw new TypeError('duplicate durable issuance generation')
+    let decodedRanges = null
+    let decodedWatermark = entry.evictedThroughGeneration
+    if (Array.isArray(evictedRanges)) {
+      decodedRanges = evictedRanges.map(tuple => [...tuple])
+    } else {
+      if (!Array.isArray(legacyEvictedGenerations)
+          || legacyEvictedGenerations.length + generations.length > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
+        throw new TypeError('durable issuance entry is invalid')
+      }
+      if (legacyEvictedGenerations.some(tuple => !Array.isArray(tuple) || tuple.length !== 2
+          || !Number.isSafeInteger(tuple[0]) || tuple[0] <= 0
+          || tuple[0] <= entry.evictedThroughGeneration
+          || !Number.isSafeInteger(tuple[1]) || tuple[1] <= 0 || tuple[1] > entry.maxIssuedTurnSeq)) {
+        throw new TypeError('durable issuance metadata is invalid')
+      }
+      const generationIds = [...legacyEvictedGenerations, ...generations].map(tuple => tuple[0])
+      if (new Set(generationIds).size !== generationIds.length) throw new TypeError('duplicate durable issuance generation')
+      const migrated = evictedRangesFromLegacyPairs(entry.evictedThroughGeneration, legacyEvictedGenerations)
+      decodedRanges = migrated.ranges
+      decodedWatermark = migrated.watermark
+    }
     const liveRanges = generations.map(tuple => tuple[1]).sort((a, b) => a.minSeq - b.minSeq)
     if (liveRanges.some((range, index) => index > 0 && range.minSeq <= liveRanges[index - 1].maxSeq)) {
       throw new TypeError('overlapping durable issuance generation ranges')
@@ -304,8 +362,8 @@ function decodeIssuance(entries, discriminatorSeq) {
       maxIssuedTurnSeq: entry.maxIssuedTurnSeq,
       evictedThroughTurnSeq: entry.evictedThroughTurnSeq,
       evictedSparseSeqs: new Set(entry.evictedSparseSeqs ?? []),
-      evictedThroughGeneration: entry.evictedThroughGeneration,
-      evictedGenerations: new Map(entry.evictedGenerations ?? []),
+      evictedThroughGeneration: decodedWatermark,
+      evictedRanges: decodedRanges,
       generations: new Map(entry.generations ?? []),
     })
   }

@@ -4,8 +4,8 @@ status: proposed
 spec_kind: implementation
 authority_level: governing_spec_amendment
 implementation_authority: none
-revision: r2
-revision_date: 2026-11-20
+revision: r3
+revision_date: 2026-11-21
 amendment_of: AGENT_PROCESS_LIFECYCLE_HARDENING_V4
 amendment_kind: NEW
 amendment_route: >-
@@ -112,6 +112,55 @@ authoring_base: 710fa3a9 (production line head; includes accepted #703/#705)
 > 独立验收（exact-head semantic review PASS, BLOCKERS=NONE，验收人 ≠ 作者）通过前
 > 不 merge。本 delta 不授权任何生产效应。
 
+## 0r3. Third-review amendments (Owner-prescribed first-priority 方案：不相交 `evictedRanges` 区间压缩；both r7 candidates measured FAIL, addressed)
+
+- **The measured r7 failure (metadata sum invariant)**: r7's walk (skip
+  unresolved generations, evict resolved ones) fixed the CONTIGUITY half of
+  the deadlock but not the CAPACITY half. `evictRecord`'s generation
+  bookkeeping moved each fully-evicted generation's entry 1:1 from the live
+  `generations` map into the `evictedGenerations` map — the mint-cap sum
+  `generations.size + evictedGenerations.size` stayed invariant (probe on the
+  real frozen shape: 261 → 261), the walk then threw mid-eviction on the same
+  cap ("evicting … would exceed issuance metadata cap"), and the measured
+  agt_hr-agent lockout persisted in a different form. The second candidate
+  (advancing `evictedThroughGeneration` across the gap) was rejected in
+  review: it claims never-issued generations as `evicted` (the
+  `never_existed` violation — a handle that never existed must never
+  classify as evicted).
+- **r8: disjoint `evictedRanges` compression (the Owner-prescribed 方案)**.
+  The per-generation `evictedGenerations` map is replaced by
+  `evictedRanges`: a sorted list of `[startGeneration, endGeneration, maxSeq]`
+  tuples. A fully-evicted generation EITHER advances the contiguous watermark
+  (cascading across any range that then touches it) OR merges into the
+  ranges — and ranges merge ONLY across generation-ADJACENT runs, so a range
+  spans consecutive genuinely-evicted generations and NEVER covers a
+  never-issued one: `never_existed` verdicts are preserved exactly. The mint
+  cap now counts `generations.size + evictedRanges.length` — one tuple bounds
+  arbitrarily many generations, so metadata stops leaking with history depth.
+- **Per-range `maxSeq` soundness (re-mint into a compacted generation)**.
+  A range's `maxSeq` is the max eviction-time turn-seq of every generation
+  merged into it. Re-issuance into a range-covered generation allocates a
+  globally-monotonic seq strictly above it, so `classifyHandle` resolves
+  `seq <= range.maxSeq` as `evicted` (the old handles) while the re-minted
+  live record falls through to its generation entry — the range never
+  swallows a live record.
+- **Durable migration (bounded, fail-closed)**. The persistence-file schema
+  version stays 3: `decodeIssuance` accepts exactly ONE evicted-metadata form
+  — the r8 `evictedRanges` tuples or the legacy `evictedGenerations` pairs
+  (both or neither fails the store CLOSED at startup, `durable_store_invalid`).
+  Legacy pairs convert at restore: generation-adjacent runs merge, and a pair
+  sitting at watermark+1 cascades into the watermark (the map entry proved
+  that generation was genuinely issued + evicted — the honest case; the
+  cascade never touches absent generations). The next persist writes only the
+  new form. Restored-cap and mint-cap checks count ranges.
+- **Walk semantics (r7 shape retained over r8 metadata)**.
+  `evictSettledGenerationForCapacity` iterates every live generation
+  (watermark-exclusive), SKIPS unresolved ones (fences stay pinned — they
+  need evidence-based settlement or Owner risk acceptance, not
+  capacity-pressure eviction), and evicts each fully-resolved generation
+  through `evictRecord` / the correlation-preserving arm — which under r8
+  actually COMPRESSES the metadata instead of relocating it. Idempotent.
+
 ## 1. Goal (measured deadlock)
 
 `MAX_ISSUANCE_GENERATIONS_PER_AGENT = 256` deadlocks an agent whose child
@@ -141,13 +190,17 @@ agt_hr-agent at the exact 256 cap, ~130-170 admission failures/day since
    IS the owner-authorized operation record; pre-seeding it under the
    Owner's directive with the explicit flag is the documented risk
    acceptance.
-4. **Contiguous-prefix eviction, progress-guarded.**
-   `evictSettledGenerationForCapacity` walks `generation ===
-   evictedThroughGeneration + 1` while `unresolvedCount === 0`, evicting
-   settled records via `evictRecord` and declaration-abandoned records
-   via the correlation-preserving arm (settled AND declaration-abandoned
-   records through the store's own watermark machinery; no bare durable-JSON
-   edits), with a progress guard (no candidate-free spin).
+4. **Span-wide eviction of resolved generations (r3: superseded the
+   contiguous-prefix-only walk).**
+   `evictSettledGenerationForCapacity` iterates every live generation beyond
+   the watermark, SKIPPING unresolved ones (a fence pins only its own
+   generation — later fully-resolved generations still release), and evicts
+   settled records via `evictRecord` and declaration-abandoned records via
+   the correlation-preserving arm (settled AND declaration-abandoned records
+   through the store's own watermark machinery; no bare durable-JSON edits).
+   Under the r8 ranges metadata each release COMPRESSES the issuance
+   metadata (merged range or watermark cascade) instead of relocating it,
+   so the walk makes real capacity progress (§0r3).
 5. **What is preserved.** The abandoned record's outcome stays UNKNOWN;
    resolution is `evicted` via the watermarks; replay protection (no-replay
    correlation) and audit linkage are unchanged; admission-fence semantics
@@ -166,6 +219,24 @@ agt_hr-agent at the exact 256 cap, ~130-170 admission failures/day since
 - the existing admin-abandonment suite passes unchanged (marker-only
   quarantine, D6 acceptance stamping, no-replay, restart persistence).
 
+`packages/agent-router/test/process-lifecycle/watermark-gap.test.js` (r8):
+
+- the REAL frozen production shape (watermark 34, fences 70/73/78/86, settled
+  92-343, legacy-evicted 38-42 + 50-91, absent 35-37 + 43-49): the mint at
+  the 256 cap SUCCEEDS after the walk; the metadata sum drops under the cap;
+  the fences stay pinned; the watermark never claims the absent 35-37;
+  a second walk is a no-op;
+- a range never spans a never-issued generation: phantom handles in the
+  43-49 gap classify `never_existed`; a seq beyond the range's maxSeq in a
+  compacted generation classifies `never_existed`;
+- a re-mint into a range-covered generation stays live (seq monotonicity
+  above the range bound) while its old handles stay `evicted`; re-evicting
+  merges back into the SAME range and grows its maxSeq;
+- legacy durable files migrate at restore (adjacent pairs merge, a
+  watermark+1 pair cascades honestly, evicted handles still classify
+  `evicted`); the next persist writes only the new form; a both-forms file
+  fails the store CLOSED.
+
 ## 4. Exact implementation paths
 
 - `packages/agent-router/src/reconciliation/authority-capacity.js`
@@ -178,8 +249,19 @@ agt_hr-agent at the exact 256 cap, ~130-170 admission failures/day since
 - `packages/agent-router/src/reconciliation/durable-file.js`
   (registry entry validator/writer: the 6-key accepted shape)
 - `packages/agent-router/src/reconciliation/authority-capacity.js`
-  (compactRuntimeEpochs tombstone-epoch protection)
+  (compactRuntimeEpochs tombstone-epoch protection; r8
+  `markGenerationEvicted` range insert/merge/cascade, `canEvictRecord` range
+  membership)
+- `packages/agent-router/src/reconciliation/store.js`
+  (r8: fresh-issuance `evictedRanges`, mint/restored cap sums count ranges,
+  `highestIssuedGeneration` over range ends)
+- `packages/agent-router/src/reconciliation/query.js`
+  (r8: `classifyHandle` range lookup bounded by the per-range maxSeq)
+- `packages/agent-router/src/reconciliation/durable-file.js`
+  (r8: `encodeIssuance`/`decodeIssuance` both-forms migration,
+  `evictedRangesFromLegacyPairs`)
 - `packages/agent-router/test/process-lifecycle/reconciliation-abandoned-eviction.test.js` (NEW)
+- `packages/agent-router/test/process-lifecycle/watermark-gap.test.js` (NEW, r8)
 
 ## 5. Alternatives and disposition
 
@@ -190,6 +272,13 @@ agt_hr-agent at the exact 256 cap, ~130-170 admission failures/day since
   evicted handle resolvable.
 - Raising `MAX_ISSUANCE_GENERATIONS_PER_AGENT`: rejected — delays, not
   removes, the deadlock; the contiguity/abandoned-eviction gap is the defect.
+- Advancing `evictedThroughGeneration` across the watermark gap (r7
+  watermark-merge candidate): rejected in review — it classifies handles in
+  never-issued generations as `evicted` (the `never_existed` violation);
+  ranges preserve `never_existed` exactly by merging only adjacent runs.
+- Keeping the per-generation evicted map (r7 skip-walk alone): rejected on
+  measurement — the map-to-map relocation leaves the mint-cap sum invariant
+  (261 → 261) and the deadlock persists in a different form.
 
 ## 6. Production-recovery interlock (deployment note, NOT authorized here)
 
