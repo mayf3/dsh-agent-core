@@ -221,7 +221,13 @@ async function main() {
 
   assertLoopbackBinding()
   try {
-    const result = await runCanonicalOnboarding(deps, input)
+    // Same spread as the status path: the resolved trusted store owner must
+    // reach the accepted storeWriteOptions seam (root writer + explicit
+    // non-root CP owner is the only permitted Part-G root face).
+    const result = await runCanonicalOnboarding(
+      deps,
+      { ...input, storeWriteOwner },
+    )
     emit({ ok: true, mode, proposed_approval_ref_label: 'OWNER-CANONICAL-ONBOARDING-20260909-01', production_operation_authorized: false, ...result })
     process.exit(0)
   } catch (error) {
