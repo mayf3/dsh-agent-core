@@ -14,3 +14,10 @@
 export { RECONCILIATION_CAPS, ReconciliationCapacityError } from './capacity.js'
 export { LATE_OUTCOMES, DIRECT_OUTCOMES, TERMINATION_EVIDENCE_TYPES } from './state-machine.js'
 export { TurnReconciliationStore } from './store.js'
+export {
+  parseDurableRecoveryStoreBytes,
+  parseDurableRecoveryStoreObject,
+  readDurableRecoveryStore,
+  serializeDurableRecoveryStore,
+  writeDurableRecoveryStore,
+} from './durable-file.js'
