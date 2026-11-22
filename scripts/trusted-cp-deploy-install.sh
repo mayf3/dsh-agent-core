@@ -780,9 +780,31 @@ echo "== runtime node anchor: $NODE_CELLAR_BIN ($RUNTIME_NODE_VERSION, arch $RUN
 # fresh (that is where the integration changes live).
 REUSE_HARNESS=0
 REUSE_NODE=0
+# A harness source stamp alone is not sufficient to reuse a closure. Older
+# installs can contain workspace symlinks whose targets point at the previous
+# trusted app tree. The app tree is intentionally rebuilt AFTER the harness
+# gate, so reusing such a closure makes the gate report a large, misleading
+# dead-link census and fail before the target exists. Reuse only when every
+# loader dependency symlink remains self-contained inside the backed-up harness.
+harness_reuse_safe() {
+  local root="$1" link target
+  [ -d "$root/harness/vendor/loader/node_modules" ] || return 1
+  while IFS= read -r -d '' link; do
+    target="$(realpath "$link" 2>/dev/null || true)"
+    case "$target" in
+      "$root/harness"/*) ;;
+      *)
+        echo "  harness closure reuse rejected: external loader link $link -> ${target:-<dead>}" >&2
+        return 1
+        ;;
+    esac
+  done < <(find "$root/harness/vendor/loader/node_modules" -type l -print0)
+  return 0
+}
 if [ -n "${BAK:-}" ]; then
   if [ -n "$HARNESS_STAMP" ] && [ -f "$BAK/harness/.source-stamp" ] \
-     && [ "$(cat "$BAK/harness/.source-stamp" 2>/dev/null)" = "$HARNESS_STAMP_JSON" ]; then
+     && [ "$(cat "$BAK/harness/.source-stamp" 2>/dev/null)" = "$HARNESS_STAMP_JSON" ] \
+     && harness_reuse_safe "$BAK"; then
     rmdir "$TRUSTED_ROOT/harness"
     mv "$BAK/harness" "$TRUSTED_ROOT/harness"
     if [ -d "$BAK/.cache" ]; then

@@ -43,6 +43,10 @@ export function forumMessageFor(event, attempt) {
       return `🤖 Attempt #${generation} dispatched to Agent \`${event.agentId}\`${event.sessionId !== undefined ? ` — session \`${event.sessionId}\` linked` : ''}`
     case 'delivery_failed':
       return `⚠️ Execution delivery failed on visit ${visit}: ${event.reason ?? 'unknown reason'}`
+    case 'needs_review_recheck_started':
+      return `🔎 Attempt #${generation} recheck started for visit ${visit} (reconciliation ${UUID8(event.reconciliationAttemptId)})`
+    case 'needs_review_recheck_result':
+      return `🔎 Attempt #${generation} recheck ${event.outcome ?? 'completed'} for visit ${visit}: ${event.reason ?? 'no reason'}`
     case 'resolution_blocked':
       return `⛔ Execution blocked on visit ${visit}: ${event.code ?? 'unknown code'} (no Run started)`
     case 'stale_superseded':
