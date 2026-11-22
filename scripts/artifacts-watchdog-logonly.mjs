@@ -146,19 +146,7 @@ function run() {
   return findings;
 }
 
+// launchd StartInterval mode: ONE patrol pass per invocation, always exit 0
+// — findings are DATA (JSON lines on stdout/err log), never a failure; a
+// thrown internal error surfaces as a nonzero exit naturally.
 const findings = run();
-if (!ONCE) {
-  // Supervised daemon mode: re-run the read-only pass on an interval without
-  // any crash-loop risk (every pass exits 0; failures are findings).
-  const intervalMs = Number.parseInt(process.env.ARTIFACTS_WATCHDOG_INTERVAL_MS ?? '120000', 10);
-  const timer = setInterval(() => {
-    try {
-      run();
-    } catch (error) {
-      console.log(JSON.stringify({ ts: new Date().toISOString(), finding: 'unreadable', detail: String(error) }));
-    }
-  }, intervalMs);
-  timer.unref?.();
-} else if (findings > 0) {
-  process.exitCode = 2; // findings exist (evidence), still not a crash
-}
