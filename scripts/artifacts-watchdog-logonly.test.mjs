@@ -28,7 +28,7 @@ function fixture(build) {
 function run(homes) {
   const before = JSON.stringify(walk(homes));
   const result = spawnSync(process.execPath, [SCRIPT, '--once'], {
-    env: { ...process.env, ARTIFACTS_HOMES_ROOT: homes },
+    env: { ...process.env, ARTIFACTS_HOMES_ROOT: homes, ARTIFACTS_APP_ROOT: '/usr/local/libexec/agent-core/app' },
     encoding: 'utf8',
   });
   const after = JSON.stringify(walk(homes));
@@ -88,6 +88,18 @@ test('findings: broken link, foreign link, root-owned pkg — exit 2, read-only'
   assert.ok(findings.includes('foreign_link'), 'the out-of-homes link is reported');
   rmSync(homes, { recursive: true, force: true });
 });
+
+test('a link into the SANCTIONED app root is the deployment form — not a finding', () => {
+  const { homes } = fixture(h => {
+    const nm = join(h, 'agt_ok', 'profiles', 'node_modules');
+    mkdirSync(join(nm, '@agent-core'), { recursive: true });
+    // mimic the deployment mechanism: plugin link -> the deployed app tree
+    symlinkSync('/usr/local/libexec/agent-core/app/packages/agent-memory', join(nm, '@agent-core', 'agent-memory'));
+  });
+  const { result, lines } = run(homes);
+  assert.equal(result.status, 0, 'sanctioned deployment links are not findings');
+  assert.equal(lines.filter(l => l.finding).length, 0);
+})
 
 test('non-agt_ homes and deeper nesting are out of contract', () => {
   const { homes } = fixture(h => {

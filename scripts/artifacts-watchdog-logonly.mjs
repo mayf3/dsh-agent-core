@@ -28,6 +28,10 @@ import { readdirSync, lstatSync, readlinkSync, realpathSync, statSync } from 'no
 import { join, isAbsolute, dirname } from 'node:path';
 
 const HOMES_ROOT = process.env.ARTIFACTS_HOMES_ROOT ?? '/Users/authsvc/.agent-core/homes';
+// The SANCTIONED deployment target: plugin links pointing into the deployed
+// app tree are the deployment mechanism's own form (not findings) — the
+// #1357 concern is links to NON-deployed/shared-generation targets.
+const SANCTIONED_APP_ROOT = process.env.ARTIFACTS_APP_ROOT ?? '/usr/local/libexec/agent-core/app';
 const ONCE = process.argv.includes('--once');
 
 function* agentHomes() {
@@ -114,7 +118,7 @@ function patrolNodeModules(home) {
         findings.push({ finding: 'broken_link', path: pkgPath, target });
         continue;
       }
-      if (!real.startsWith(HOMES_ROOT + '/')) {
+      if (!real.startsWith(HOMES_ROOT + '/') && !real.startsWith(SANCTIONED_APP_ROOT + '/')) {
         findings.push({ finding: 'foreign_link', path: pkgPath, target: real });
       }
     }
