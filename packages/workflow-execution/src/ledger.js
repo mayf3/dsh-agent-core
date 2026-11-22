@@ -108,6 +108,7 @@ export class ExecutionLedger {
       onEvidence: (event) => { this.log.warn?.(`workflow-execution ledger lock: ${JSON.stringify(event)}`) },
     })
     this.attempts = new Map() // nodeVisitId -> attempt projection
+    this.retainedUnknownEvents = [] // r14: forward-compat retention (full history preserved)
     this.loaded = false
     this.eventFilePublicationPending = false
     this._queue = Promise.resolve()
@@ -149,7 +150,20 @@ export class ExecutionLedger {
   }
 
   #applyEvent(event) {
-    applyLedgerEvent(this.attempts, event)
+    const retained = applyLedgerEvent(this.attempts, event)
+    // r14 (#707, Owner 2026-11-22): forward compatibility — an event kind
+    // this binary cannot interpret is RETAINED verbatim (full history,
+    // execution identity and business responsibility preserved — never
+    // dropped, never a replay failure) and surfaced in the projection
+    // summary for the newer binary that wrote it.
+    if (retained && retained.retainedUnknown) {
+      this.retainedUnknownEvents.push({
+        kind: retained.kind ?? null,
+        nodeVisitId: typeof event?.nodeVisitId === 'string' ? event.nodeVisitId : null,
+        atMs: Number.isSafeInteger(event?.atMs) ? event.atMs : null,
+        raw: JSON.stringify(event).slice(0, 2048),
+      })
+    }
   }
   #terminalGuard(current, event) {
     terminalRefusal(current, event)

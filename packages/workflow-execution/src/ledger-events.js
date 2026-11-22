@@ -349,7 +349,15 @@ export function applyLedgerEvent(attempts, event) {
       return
     }
     default:
-      throw new Error(`workflow-execution: unknown ledger event kind ${JSON.stringify(event?.kind)}`)
+      // r14 (#707 production incident follow-up, Owner 2026-11-22 ruling):
+      // FORWARD COMPATIBILITY — an event kind written by a NEWER binary must
+      // be RETAINED, never dropped and never a replay failure. The full
+      // history, execution identity and business responsibility stay
+      // preserved verbatim on a per-nodeVisit retention record; the
+      // projection simply cannot interpret it yet (an OLDER binary reading a
+      // NEWER ledger continues). Corruption semantics for KNOWN kinds are
+      // unchanged (the guards above still fail loud).
+      return { retainedUnknown: true, kind: event?.kind, atMs: event?.atMs }
   }
 }
 
