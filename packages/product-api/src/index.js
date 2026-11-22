@@ -427,6 +427,7 @@ export function apply(ctx, config = {}) {
           const code = error?.code ?? 'internal'
           json(res, status, errorBody(code, error?.message ?? 'internal error'))
         }
+      }
       if (req.method === 'POST' && url.pathname === '/agent-process/exact-generation-recovery') {
         const result = await exactGenerationRecovery(req, await readBody(req))
         json(res, 200, result)
