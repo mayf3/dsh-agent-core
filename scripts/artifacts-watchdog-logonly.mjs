@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/local/libexec/agent-core/node-runtime/bin/node
 /**
  * artifacts-watchdog — LOG-ONLY rewrite (zombie-job option b, #707-adjacent lineage).
  *
