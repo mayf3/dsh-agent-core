@@ -375,13 +375,22 @@ function decodeIssuance(entries, discriminatorSeq) {
     // r13 (production incident): the parallel serializer emits its ABSENT
     // legacy field as an EMPTY OBJECT — normalize {} to undefined (absent);
     // any NON-empty non-array form is uninterpretable → fail closed below.
-    if (legacyEvictedGenerations !== undefined && !Array.isArray(legacyEvictedGenerations)) {
-      if (legacyEvictedGenerations === null
+    // r15 (independent-review regression 2 + live durable 2026-11-23): the
+    // current production writer emits its ABSENT legacy field as an EMPTY
+    // ARRAY — same zero-fact semantics as {}, normalize [] to undefined too,
+    // or the dual-write gate sees "both forms present" and hard-fails on the
+    // live turn-recovery-v3.json (startup blocked). An empty legacy array
+    // carries no facts; the compressed form is the sole carrier.
+    if (legacyEvictedGenerations !== undefined) {
+      if (Array.isArray(legacyEvictedGenerations)) {
+        if (legacyEvictedGenerations.length === 0) legacyEvictedGenerations = undefined
+      } else if (legacyEvictedGenerations === null
           || typeof legacyEvictedGenerations !== 'object'
           || Object.keys(legacyEvictedGenerations).length > 0) {
         throw new TypeError('durable issuance legacy evicted generations form is invalid')
+      } else {
+        legacyEvictedGenerations = undefined
       }
-      legacyEvictedGenerations = undefined
     }
     if (entry === null || typeof entry !== 'object'
         || typeof entry.agentId !== 'string' || entry.agentId === '' || entry.agentId.length > 256
@@ -410,8 +419,16 @@ function decodeIssuance(entries, discriminatorSeq) {
       // r12 (QA B2 contract symmetry): the archive budget is enforced on BOTH
       // decode forms — the r11 check existed only on the legacy branch, so an
       // over-horizon archive written through the new form would load anyway.
+      // r15 (independent-review regression 1): d7af75e8 curried
+      // validBoundsSlots(entry) but left the two-argument call here — the
+      // call returned a truthy predicate function, `!fn` was always false and
+      // the WHOLE archive structure/bounds validation was silently skipped
+      // (poisoned archive tuples loaded that r12 rejected). Restore the
+      // curried invocation. An object-form archive tuple now fails the
+      // predicate here → the controlled contract error below, never the raw
+      // intervalCountOf TypeError.
       if (!Array.isArray(evictedArchives)
-          || evictedArchives.some(tuple => !validBoundsSlots(tuple, entry))
+          || evictedArchives.some(tuple => !validBoundsSlots(entry)(tuple))
           || evictedArchives.some((range, index) => index > 0 && range[0] <= evictedArchives[index - 1][1] + 1)
           || intervalCountOf(evictedArchives) > RECONCILIATION_CAPS.MAX_ARCHIVE_INTERVALS_PER_AGENT) {
         throw new TypeError('durable issuance evicted archives are invalid')
@@ -569,10 +586,19 @@ export function serializeDurableRecoveryStore(store) {
 
 export function writeDurableRecoveryStore(file, store) {
   if (file === null) return
+  // r15 (369206aa-equivalent anti-poison gate, independent-review item 4):
+  // decode the EXACT payload bytes through the reader's own contract BEFORE
+  // any write. An illegal in-memory projection (poison) now fails LOUD here —
+  // nothing is written, the caller's existing failure path latches
+  // durable_store_unavailable and no external success is reported — instead
+  // of being persisted and deferring the failure to the next restart (the
+  // store-then-brick path this gate closes).
+  const payload = `${JSON.stringify(serializeDurableRecoveryStore(store))}\n`
+  parseDurableRecoveryStoreBytes(payload)
   mkdirSync(dirname(file), { recursive: true })
   const temp = `${file}.tmp-${process.pid}-${Date.now()}`
   try {
-    writeFileSync(temp, `${JSON.stringify(serializeDurableRecoveryStore(store))}\n`, { encoding: 'utf8', mode: 0o600 })
+    writeFileSync(temp, payload, { encoding: 'utf8', mode: 0o600 })
     const fd = openSync(temp, 'r')
     try { fsyncSync(fd) } finally { closeSync(fd) }
     renameSync(temp, file)
@@ -585,7 +611,14 @@ export function writeDurableRecoveryStore(file, store) {
 
 export function readDurableRecoveryStore(file) {
   if (file === null || !existsSync(file)) return null
-  const parsed = JSON.parse(readFileSync(file, 'utf8'))
+  return parseDurableRecoveryStoreBytes(readFileSync(file, 'utf8'))
+}
+
+/** r15 (369206aa-equivalent anti-poison gate): the byte-level decoder,
+ * factored out of the file reader so the WRITER can prove its own payload
+ * decodable before any bytes reach disk. */
+export function parseDurableRecoveryStoreBytes(text) {
+  const parsed = JSON.parse(text)
   if (parsed === null || typeof parsed !== 'object' || parsed.version !== DURABLE_RECOVERY_VERSION
       || typeof parsed.runtimeEpoch !== 'string' || parsed.runtimeEpoch === ''
       || parsed.runtimeEpoch.length > 128
