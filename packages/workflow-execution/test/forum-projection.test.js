@@ -74,6 +74,8 @@ test('forumMessageFor covers the Goal Scope G execution events', () => {
   assert.match(forumMessageFor({ kind: 'run_delivered', nodeVisitId: VISIT, agentId: 'agt_x', sessionId: 'main' }, { generation: 2 }), /Attempt #2 dispatched to Agent `agt_x`/)
   assert.match(forumMessageFor({ kind: 'reconciled', nodeVisitId: VISIT, judgment: 'run_ended_no_submission' }, { generation: 1 }), /WITHOUT a business transition/)
   assert.match(forumMessageFor({ kind: 'escalation_requested', nodeVisitId: VISIT, reason: 'ATTEMPTS_EXHAUSTED' }), /OWNER_PENDING/)
+  assert.match(forumMessageFor({ kind: 'needs_review_recheck_started', nodeVisitId: VISIT, reconciliationAttemptId: 'wfreconcile-12345678' }, { generation: 3 }), /Attempt #3 recheck started/)
+  assert.match(forumMessageFor({ kind: 'needs_review_recheck_result', nodeVisitId: VISIT, outcome: 'no_transition', reason: 'still current' }), /recheck no_transition/)
   assert.equal(forumMessageFor({ kind: 'attempt_unknown_kind' }, {}), undefined)
 })
 
