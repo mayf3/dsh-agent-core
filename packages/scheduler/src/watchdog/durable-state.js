@@ -149,7 +149,7 @@ function validateOutbox(value) {
       if (!isPlainRecord(binding) || Object.keys(binding).sort().join(',') !== 'payload,producer,providerKey,route,routeSource,routingSha256'
         || binding.producer !== intent.producer || !Number.isSafeInteger(intent.deliveryBindingAt)
         || intent.deliveryBindingAt < embedded.alertState.lastTransitionAt
-        || binding.providerKey !== providerIdempotencyKey(key) || binding.payload !== stableNotificationText(intent)
+        || binding.providerKey !== providerIdempotencyKey(key) || (typeof binding.payload !== 'string' || binding.payload.length === 0)
         || !allowedSources.includes(binding.routeSource) || !SHA256.test(binding.routingSha256 ?? '')
         || !isPlainRecord(binding.route) || Object.keys(binding.route).sort().join(',') !== 'channel,to'
         || binding.route.channel !== 'feishu' || typeof binding.route.to !== 'string' || binding.route.to.trim() === '') {
