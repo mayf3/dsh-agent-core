@@ -1,0 +1,7 @@
+{
+  "name": "workflow-recovery-consumer",
+  "schedule": { "kind": "every", "everyMs": 1000 },
+  "command": "node scripts/local-recovery-consumer-fixture.mjs",
+  "deliveryMode": "none",
+  "channel": "agentcore-cron"
+}
