@@ -133,16 +133,16 @@ function run() {
     if (typeof home !== 'string') {
       // The generator yielded an unreadable-root finding object, not a path.
       findings += 1;
-      console.log(JSON.stringify({ ts: new Date().toISOString(), ...home }));
+      console.error(JSON.stringify({ ts: new Date().toISOString(), ...home }));
       continue;
     }
     homes += 1;
     for (const finding of patrolNodeModules(home)) {
       findings += 1;
-      console.log(JSON.stringify({ ts: new Date().toISOString(), ...finding }));
+      console.error(JSON.stringify({ ts: new Date().toISOString(), ...finding }));
     }
   }
-  console.log(JSON.stringify({ ts: new Date().toISOString(), summary: { homes, findings, mode: 'log-only' } }));
+  console.error(JSON.stringify({ ts: new Date().toISOString(), summary: { homes, findings, mode: 'log-only' } }));
   return findings;
 }
 
