@@ -317,3 +317,23 @@ test('records for unknown NodeVisits fail loud (never fabricate linkage)', async
     cleanup(fixture)
   }
 })
+
+// r15 (independent-review defect A): load() must reset retainedUnknownEvents
+// together with the projection — every mutate()'s reload re-pushed the whole
+// unknown set (84 -> 168 -> ... per poll, unbounded) on the pre-fix code.
+test('r15: retainedUnknownEvents does not accumulate across repeated load()', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'r15-retention-'))
+  try {
+    const unknown = JSON.stringify({ kind: 'mystery_future_event', nodeVisitId: 'd0e2f6a3-4b5c-4d6e-9f0a-1b2c3d4e5f60', atMs: 1001 })
+    writeFileSync(join(dir, 'attempts.jsonl'), `${unknown}\n${unknown}\n`)
+    const clock = (() => { let n = 1000; return () => ++n })()
+    const ledger = new ExecutionLedger({ dir, clock })
+    ledger.load()
+    assert.equal(ledger.retainedUnknownEvents.length, 2)
+    ledger.load()
+    ledger.load()
+    assert.equal(ledger.retainedUnknownEvents.length, 2, 'reload must replay retention from scratch, not re-push')
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})

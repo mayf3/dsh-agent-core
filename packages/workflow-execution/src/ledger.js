@@ -172,6 +172,12 @@ export class ExecutionLedger {
    * tail; the mutation path repairs it under OwnerLock before any append. */
   load({ repairTornTail = false } = {}) {
     this.attempts = new Map()
+    // r15 (independent-review defect A): the replay is the retention array's
+    // owner — resetting only `attempts` made every mutate()'s reload re-push
+    // the whole unknown-event set (84 -> 168 -> ... per poll, unbounded) and
+    // inflated the retained count. The projection replays from scratch, so
+    // the retention array replays from scratch with it.
+    this.retainedUnknownEvents = []
     if (!existsSync(this.eventsFile)) {
       this.loaded = true
       return
