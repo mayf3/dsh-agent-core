@@ -275,18 +275,50 @@ function encodeIssuance(issuance) {
  * immutable archive blocks: sorted intervals, disjoint + non-adjacent within
  * a slot, all within the agent's issued turn-seq bounds.
  */
-function validBoundsSlots(tuple, entry) {
-  return Array.isArray(tuple) && tuple.length === 3
-    && Number.isSafeInteger(tuple[0]) && tuple[0] > 0 && tuple[0] > entry.evictedThroughGeneration
-    && Number.isSafeInteger(tuple[1]) && tuple[1] >= tuple[0]
-    && Array.isArray(tuple[2]) && tuple[2].length === tuple[1] - tuple[0] + 1
-    && tuple[2].every(slot => Array.isArray(slot) && slot.length >= 1
-      && slot.every(interval => Array.isArray(interval) && interval.length === 2
-        && Number.isSafeInteger(interval[0]) && interval[0] > 0
-        && Number.isSafeInteger(interval[1]) && interval[1] >= interval[0]
-        && interval[1] <= entry.maxIssuedTurnSeq)
-      && slot.every((interval, index) => index === 0 || interval[0] > slot[index - 1][1] + 1))
+function validBoundsSlots(entry) {
+  return tuple => {
+    // r12 form: [startGen, endGen, perGenBounds[]] with interval slots.
+    if (Array.isArray(tuple) && tuple.length === 3
+      && Number.isSafeInteger(tuple[0]) && tuple[0] > 0 && tuple[0] > entry.evictedThroughGeneration
+      && Number.isSafeInteger(tuple[1]) && tuple[1] >= tuple[0]
+      && Array.isArray(tuple[2]) && tuple[2].length === tuple[1] - tuple[0] + 1
+      && tuple[2].every(slot => Array.isArray(slot) && slot.length >= 1
+        && slot.every(interval => Array.isArray(interval) && interval.length === 2
+          && Number.isSafeInteger(interval[0]) && interval[0] > 0
+          && Number.isSafeInteger(interval[1]) && interval[1] >= interval[0]
+          && interval[1] <= entry.maxIssuedTurnSeq)
+        && slot.every((interval, index) => index === 0 || interval[0] > slot[index - 1][1] + 1))) {
+      return true
+    }
+    // r13 (#707 production incident 2026-11-21/22): the PARALLEL
+    // implementation's object form {fromGen, toGen, maxTurnSeq} — live in the
+    // production durable file. Migration maps every generation in
+    // [fromGen, toGen] to the legacy-fidelity interval [[1, maxTurnSeq]] (the
+    // parallel data carries no lower bound — the honest no-evidence
+    // representation; disclosed residual per §0r5).
+    if (tuple !== null && typeof tuple === 'object' && !Array.isArray(tuple)) {
+      const { fromGen, toGen, maxTurnSeq } = tuple
+      return Number.isSafeInteger(fromGen) && fromGen > 0 && fromGen > entry.evictedThroughGeneration
+        && Number.isSafeInteger(toGen) && toGen >= fromGen
+        && Number.isSafeInteger(maxTurnSeq) && maxTurnSeq > 0 && maxTurnSeq <= entry.maxIssuedTurnSeq
+    }
+    return false
+  }
 }
+
+function normalizeRangeTuple(tuple) {
+  // r13: normalize BOTH accepted forms into the runtime
+  // [startGen, endGen, perGenBounds] shape (object form → legacy-fidelity
+  // [[1, maxTurnSeq]] slots per generation).
+  if (tuple !== null && typeof tuple === 'object' && !Array.isArray(tuple)) {
+    const { fromGen, toGen, maxTurnSeq } = tuple
+    const slots = []
+    for (let generation = fromGen; generation <= toGen; generation++) slots.push([[1, maxTurnSeq]])
+    return [fromGen, toGen, slots]
+  }
+  return [tuple[0], tuple[1], tuple[2].map(slot => slot.map(interval => [...interval]))]
+}
+
 
 /**
  * r9/r10 (#707) legacy migration: convert the per-generation
@@ -355,8 +387,10 @@ function decodeIssuance(entries, discriminatorSeq) {
       throw new TypeError('durable issuance entry is invalid')
     }
     if (Array.isArray(evictedRanges)) {
-      if (evictedRanges.some(tuple => !validBoundsSlots(tuple, entry))
-          || evictedRanges.some((range, index) => index > 0 && range[0] <= evictedRanges[index - 1][1] + 1)) {
+      const boundsCheck = validBoundsSlots(entry)
+      if (evictedRanges.some(tuple => !boundsCheck(tuple))
+          || evictedRanges.some((range, index) => index > 0
+            && normalizeRangeTuple(range)[0] <= normalizeRangeTuple(evictedRanges[index - 1])[1] + 1)) {
         throw new TypeError('durable issuance evicted ranges are invalid')
       }
     }
@@ -409,7 +443,7 @@ function decodeIssuance(entries, discriminatorSeq) {
     let decodedRanges = null
     let decodedWatermark = entry.evictedThroughGeneration
     if (Array.isArray(evictedRanges)) {
-      decodedRanges = evictedRanges.map(tuple => [tuple[0], tuple[1], tuple[2].map(slot => slot.map(interval => [...interval]))])
+      decodedRanges = evictedRanges.map(normalizeRangeTuple)
       // r11 (QA P0-B second half): the LIVE-generation cap only — the mint
       // caps live generations; evicted metadata (tuples/intervals) has its
       // own budgets. The two capacity contracts must agree.
@@ -477,7 +511,7 @@ function decodeIssuance(entries, discriminatorSeq) {
       evictedSparseSeqs: new Set(entry.evictedSparseSeqs ?? []),
       evictedThroughGeneration: decodedWatermark,
       evictedRanges: decodedRanges,
-      evictedArchives: (evictedArchives ?? []).map(tuple => [tuple[0], tuple[1], tuple[2].map(slot => slot.map(interval => [...interval]))]),
+      evictedArchives: (evictedArchives ?? []).map(normalizeRangeTuple),
       neverIssuedGenerations: new Set(ledger ?? []),
       generations: new Map((entry.generations ?? []).map(([generation, value]) => [generation, {
         ...value,
