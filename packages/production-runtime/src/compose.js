@@ -392,6 +392,10 @@ export async function composeProductionRuntime(options = {}) {
     enabled: productApiCfg.enabled ?? process.env.PRODUCT_API_ENABLED !== '0',
     host: productApiCfg.host ?? process.env.PRODUCT_API_HOST ?? '127.0.0.1',
     port: productApiCfg.port ?? Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10),
+    // OPERATOR_EXACT_GENERATION_RECOVERY_V1: management auth is wired from the
+    // launchd env (fail-closed — empty token keeps every management route 503).
+    managementToken: productApiCfg.managementToken ?? process.env.PRODUCT_API_MANAGEMENT_TOKEN ?? '',
+    managementPrincipal: productApiCfg.managementPrincipal ?? process.env.PRODUCT_API_MANAGEMENT_PRINCIPAL ?? '',
     // Dedicated history-only Tailnet config remains pass-through/default-OFF.
     history: productApiCfg.history,
   })
