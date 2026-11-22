@@ -370,8 +370,19 @@ function decodeIssuance(entries, discriminatorSeq) {
   for (const entry of entries ?? []) {
     const sparse = entry?.evictedSparseSeqs
     const evictedRanges = entry?.evictedRanges
-    const legacyEvictedGenerations = entry?.evictedGenerations
+    let legacyEvictedGenerations = entry?.evictedGenerations
     const generations = entry?.generations
+    // r13 (production incident): the parallel serializer emits its ABSENT
+    // legacy field as an EMPTY OBJECT — normalize {} to undefined (absent);
+    // any NON-empty non-array form is uninterpretable → fail closed below.
+    if (legacyEvictedGenerations !== undefined && !Array.isArray(legacyEvictedGenerations)) {
+      if (legacyEvictedGenerations === null
+          || typeof legacyEvictedGenerations !== 'object'
+          || Object.keys(legacyEvictedGenerations).length > 0) {
+        throw new TypeError('durable issuance legacy evicted generations form is invalid')
+      }
+      legacyEvictedGenerations = undefined
+    }
     if (entry === null || typeof entry !== 'object'
         || typeof entry.agentId !== 'string' || entry.agentId === '' || entry.agentId.length > 256
         || issuance.has(entry.agentId)
