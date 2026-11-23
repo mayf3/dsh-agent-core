@@ -209,7 +209,7 @@ describe('FLEET_CONFIG_V2V3_MIGRATION_V1 hermetic fixtures', () => {
   test('RED: no openai-codex subscription route refuses', async () => {
     const root = scratch()
     try {
-      fleetConfigFixture(root, { route: { routeKind: 'builtin', provider: 'oc-go', model: 'deepseek-v4-flash', credentialReadiness: 'n/a' } })
+      fleetConfigFixture(root, { route: { routeKind: 'builtin', provider: 'zai-explicit', model: 'glm-5.3', credentialReadiness: 'n/a' } })
       const result = await runMigration(migrationArgs(root))
       assert.equal(result.ok, false)
       assert.equal(result.errorCode, 'FLEET_CONFIG_NO_CODEX_ROUTE')

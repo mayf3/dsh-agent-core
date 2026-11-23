@@ -240,7 +240,7 @@ function subscriptionProcessConfigBlock(plugin, pluginVersion, credentialFile, r
  * shape a routeCatalog subscription entry resolves to, so a zero-config Agent
  * mounts the dsh-codex plugin + shared canonical credential exactly like an
  * explicitly configured Luna Agent. A missing canonical credential or plugin
- * artifact fails loud at provision; there is never a silent oc-go fallback.
+ * artifact fails loud at provision; there is never a silent legacy fallback.
  */
 export function canonicalDefaultGlobalRoute(options = {}) {
   const artifactContext = verifyArtifactContext(options)

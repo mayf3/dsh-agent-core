@@ -30,8 +30,8 @@
  * Env:
  *   DSH_MEMORY_V1_RUNTIME  runtime root (default .demo/memory-v1/runtime)
  *   DSH_MEMORY_V1_KEEP=1   keep existing agent homes (default: wipe)
- *   DSH_AGENT_PROVIDER / DSH_AGENT_MODEL  LLM route (default opencode-go /
- *                          deepseek-v4-flash)
+ *   DSH_AGENT_PROVIDER / DSH_AGENT_MODEL  LLM route (default: the canonical
+ *                          built-in openai-codex / gpt-5.6-luna)
  * Exit 0 on full acceptance, 1 on failed assertion, 2 on infra failure.
  */
 
@@ -42,12 +42,13 @@ import {
 } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { cliBin, provisionAgentHome, REPO } from './demo-home.mjs'
+import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../packages/agent-provisioning/src/shared-codex.js'
 
 const RUNTIME = resolve(process.env.DSH_MEMORY_V1_RUNTIME ?? join(REPO, '.demo', 'memory-v1'))
 const AGENTS_DIR = join(RUNTIME, 'agents')
 const KEEP = process.env.DSH_MEMORY_V1_KEEP === '1'
-const PROVIDER = process.env.DSH_AGENT_PROVIDER ?? 'opencode-go'
-const MODEL = process.env.DSH_AGENT_MODEL ?? 'deepseek-v4-flash'
+const PROVIDER = process.env.DSH_AGENT_PROVIDER ?? CANONICAL_DEFAULT_MODEL_ROUTE.provider
+const MODEL = process.env.DSH_AGENT_MODEL ?? CANONICAL_DEFAULT_MODEL_ROUTE.model
 const MAX_TOKENS = 8192
 const PROFILE = 'agent-core-memory'
 const AGENT_A = 'agent-a'
@@ -74,13 +75,6 @@ function agentEnv(home, agentId) {
     DSH_MEMORY_WORKSPACE_ROOT: AGENTS_DIR,
     DSH_TELEMETRY_DISABLED: '1',
     DSH_PERMISSION_MODE: 'danger-full-access',
-  }
-  if (env.OPENCODE_GO_API_KEY === undefined) {
-    const credentialFile = join(home, '.credentials.yaml')
-    if (existsSync(credentialFile)) {
-      const match = readFileSync(credentialFile, 'utf8').match(/^OPENCODE_GO_API_KEY:\s*"?([^"\n]+)"?/m)
-      if (match !== null) env.OPENCODE_GO_API_KEY = match[1]
-    }
   }
   return env
 }

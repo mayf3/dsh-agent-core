@@ -68,7 +68,7 @@ const INSPECT_SCOPE = 'agent.session.inspect_own_dispatch'
 const silentLog = { log() {}, warn() {}, error() {} }
 
 /** The historical builtin env route (see messaging-integration.test.js). */
-const GLOBAL_ROUTE = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
+const GLOBAL_ROUTE = Object.freeze({ provider: 'openai-codex', model: 'gpt-5.6-luna' })
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 const tick = () => new Promise((resolve) => setImmediate(resolve))

@@ -46,7 +46,7 @@ async function rig(t, { deny = false, authFailure = false } = {}) {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
   let spawned = 0
   const runtime = await composeProductionRuntime({
-    globalRoute: { provider: 'oc-go', model: 'deepseek-v4-flash' }, layout, log,
+    globalRoute: { provider: 'openai-codex', model: 'gpt-5.6-luna' }, layout, log,
     productApi: { enabled: false, port: 0 }, notificationIngress: { enabled: false },
     broker: { credentialsFile, authServiceOrigin: `http://127.0.0.1:${server.address().port}` },
     processFactory() { spawned += 1; throw new Error('status must not start a target') },

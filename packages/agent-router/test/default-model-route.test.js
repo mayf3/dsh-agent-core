@@ -51,8 +51,8 @@ test('zero-config construction resolves the canonical Luna built-in default', (t
 
 test('explicit constructor route wins over env; env wins over the default', (t) => {
   withRouteEnv(t, { provider: 'zai', model: 'glm-5.3' })
-  const explicit = new AgentProcess({ ...fixture(t), provider: 'opencode-go', model: 'deepseek-v4-flash' })
-  assert.deepEqual({ provider: explicit.provider, model: explicit.model }, { provider: 'opencode-go', model: 'deepseek-v4-flash' })
+  const explicit = new AgentProcess({ ...fixture(t), provider: 'test-explicit', model: 'test-model' })
+  assert.deepEqual({ provider: explicit.provider, model: explicit.model }, { provider: 'test-explicit', model: 'test-model' })
 
   const fromEnv = new AgentProcess(fixture(t))
   assert.deepEqual({ provider: fromEnv.provider, model: fromEnv.model }, { provider: 'zai', model: 'glm-5.3' })

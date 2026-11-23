@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { composeProductionRuntime, PRODUCTION_AGENT_PROFILE } from '../../src/compose.js'
 import { AGT_ID, FakeProc, seedRuntime, silentLog } from '../compose-fixture.js'
-const GLOBAL_ROUTE = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
+const GLOBAL_ROUTE = Object.freeze({ provider: 'openai-codex', model: 'gpt-5.6-luna' })
 
 test('composition provides the full existing service graph over the production layout', async (t) => {
   const { root, layout } = await seedRuntime(t)

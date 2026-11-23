@@ -43,7 +43,7 @@ import {
 /** These suites pin the historical builtin env route: the wiring under
  * test predates route variance; the zero-config Luna subscription default
  * (DEFAULT_MODEL_ROUTING_CONFIG_V1) has its own dedicated suite. */
-const GLOBAL_ROUTE = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
+const GLOBAL_ROUTE = Object.freeze({ provider: 'openai-codex', model: 'gpt-5.6-luna' })
 test('notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox', async (t) => {
   const { layout } = await seedRuntime(t)
   writeNotificationAuthConfig(layout)

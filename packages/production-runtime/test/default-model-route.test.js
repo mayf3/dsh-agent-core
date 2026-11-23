@@ -7,7 +7,7 @@
  *     > built-in default (openai-codex/gpt-5.6-luna)
  *
  * A-D1 zero config · A-D2 runtime/env + composition override · A-D3 agent
- * override (OpenCode Go stays an explicit route) · unit-level passthrough
+ * override (an explicit builtin route) · unit-level passthrough
  * subscription carry + legacy two-field shape preservation.
  */
 import assert from 'node:assert/strict'
@@ -34,19 +34,19 @@ const OTHER = 'agt_other'
 const CANONICAL = Object.freeze({ provider: 'openai-codex', model: 'gpt-5.6-luna' })
 const ENV_ROUTE = Object.freeze({ provider: 'zai-explicit', model: 'glm-5.3' })
 
-/** A routeCatalog override that pins TARGET to explicit OpenCode Go. */
-const OC_GO_OVERRIDE = {
+/** A routeCatalog override that pins TARGET to an explicit builtin route. */
+const EXPLICIT_BUILTIN_OVERRIDE = {
   version: 3,
   routeCatalog: {
-    'oc-go-explicit': {
+    'zai-explicit': {
       routeKind: 'builtin',
-      provider: 'opencode-go',
-      model: 'deepseek-v4-flash',
-      credentialReadiness: 'oc-go-key-home',
+      provider: 'zai',
+      model: 'glm-5.3',
+      credentialReadiness: 'zai-key-env',
     },
   },
   overrides: {
-    [TARGET]: { model: { primary: 'oc-go-explicit', fallbacks: [] } },
+    [TARGET]: { model: { primary: 'zai-explicit', fallbacks: [] } },
   },
 }
 
@@ -146,9 +146,9 @@ test('passthrough carries the built-in subscription; a plain globalRoute keeps t
     assert.equal(loaded.resolve(OTHER, canonicalDefaultGlobalRoute()).subscription.credentialFile, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)
 
     // Legacy env/opts passthrough (no subscription): byte-equivalent old shape.
-    const legacy = loaded.resolveChain(OTHER, { provider: 'oc-go', model: 'deepseek-v4-flash' })
-    assert.deepEqual(legacy.routes[0].processConfig, { provider: 'oc-go', model: 'deepseek-v4-flash' })
-    assert.deepEqual(loaded.resolve(OTHER, { provider: 'oc-go', model: 'deepseek-v4-flash' }), { provider: 'oc-go', model: 'deepseek-v4-flash' })
+    const legacy = loaded.resolveChain(OTHER, { provider: 'zai', model: 'glm-5.3' })
+    assert.deepEqual(legacy.routes[0].processConfig, { provider: 'zai', model: 'glm-5.3' })
+    assert.deepEqual(loaded.resolve(OTHER, { provider: 'zai', model: 'glm-5.3' }), { provider: 'zai', model: 'glm-5.3' })
   } finally {
     rmSync(missing, { recursive: true, force: true })
   }
@@ -179,18 +179,18 @@ test('A-D2 runtime env override wins over the default; composition config wins o
   assert.match(globalRouteSourceLine(optsRun.lines) ?? '', /source=composition_config/)
 })
 
-test('A-D3 explicit OpenCode Go agent override wins; un-overridden Agents keep the Luna default', async (t) => {
+test('A-D3 explicit builtin agent override wins; un-overridden Agents keep the Luna default', async (t) => {
   withRouteEnv(t, undefined)
-  const { runtime, spawned, provisioned } = await runtimeFixture(t, { overrides: OC_GO_OVERRIDE })
+  const { runtime, spawned, provisioned } = await runtimeFixture(t, { overrides: EXPLICIT_BUILTIN_OVERRIDE })
   await runtime.router.ensureRunning(TARGET)
   await runtime.router.ensureRunning(OTHER)
   assert.equal(spawned.length, 2)
   assert.deepEqual(
     { provider: spawned[0].provider, model: spawned[0].model },
-    { provider: 'opencode-go', model: 'deepseek-v4-flash' },
-    'explicit oc-go agent config stays selectable',
+    { provider: 'zai', model: 'glm-5.3' },
+    'explicit agent config stays selectable',
   )
-  assert.equal(provisioned[0].options.subscription, undefined, 'oc-go builtin route stays off the plugin path')
+  assert.equal(provisioned[0].options.subscription, undefined, 'a builtin route stays off the plugin path')
   assert.deepEqual({ provider: spawned[1].provider, model: spawned[1].model }, CANONICAL)
   assert.equal(provisioned[1].options.subscription?.plugin, CHATGPT_SUBSCRIPTION_V1.plugin)
 })

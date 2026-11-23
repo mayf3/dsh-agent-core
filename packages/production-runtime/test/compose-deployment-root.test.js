@@ -20,7 +20,7 @@ import { resolveProductionLayout } from '../src/paths.js'
 
 const TARGET = 'agt_cto-agent'
 const OTHER = 'agt_other'
-const GLOBAL = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
+const GLOBAL = Object.freeze({ provider: 'openai-codex', model: 'gpt-5.6-luna' })
 
 class FakeProc {
   constructor(options) {

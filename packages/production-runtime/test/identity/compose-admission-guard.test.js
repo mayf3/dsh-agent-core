@@ -16,7 +16,7 @@ import {
   silentLog,
 } from '../compose-fixture.js'
 
-const GLOBAL_ROUTE = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
+const GLOBAL_ROUTE = Object.freeze({ provider: 'openai-codex', model: 'gpt-5.6-luna' })
 
 function withAdmissionEnv(t, value) {
   const saved = process.env.AGENT_DIRECTORY_AUTH_JWKS_URL

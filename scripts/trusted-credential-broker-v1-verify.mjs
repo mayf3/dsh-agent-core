@@ -41,7 +41,8 @@
  * Env:
  *   DSH_TCB_RUNTIME        runtime root (default .demo/trusted-credential-broker-v1/runtime)
  *   DSH_TCB_KEEP=1         keep existing runtime (default: wipe)
- *   DSH_AGENT_PROVIDER / DSH_AGENT_MODEL  LLM route (opencode-go / deepseek-v4-flash)
+ *   DSH_AGENT_PROVIDER / DSH_AGENT_MODEL  LLM route (default: the canonical
+ *                                         built-in openai-codex / gpt-5.6-luna)
  * Exit 0 on PASS, 1 on FAIL (verdict printed), 2 on infra failure.
  */
 

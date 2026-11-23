@@ -35,11 +35,11 @@ export const SWITCH_RPC_METHOD = 'agent-core/switchAgent'
 /**
  * The model tool this adapter registers.
  *
- * The task intent was `agent_core.switch_agent`, but the opencode-go model
- * route rejects tool names outside `^[a-zA-Z0-9_-]+$` (verified live: the
- * provider answers `Invalid 'tools[0].function.name': string does not match
- * pattern` for dotted names). The semantic prefix survives as
- * `agent_core_switch_agent`; the adapter behaviour is unchanged.
+ * The task intent was `agent_core.switch_agent`, but the model route rejects
+ * tool names outside `^[a-zA-Z0-9_-]+$` (verified live: the provider answers
+ * `Invalid 'tools[0].function.name': string does not match pattern` for
+ * dotted names). The semantic prefix survives as `agent_core_switch_agent`;
+ * the adapter behaviour is unchanged.
  */
 export const TOOL_NAME = 'agent_core_switch_agent'
 

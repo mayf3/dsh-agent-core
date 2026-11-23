@@ -611,7 +611,7 @@ test('FLEET_SHARED_CODEX_AUTH A4: provisioning a production-layout home refuses 
   )
 })
 
-test('DEFAULT_MODEL_ROUTING_CONFIG_V1: fresh-home MINIMAL_SETTINGS defaults to the canonical Luna route and keeps OpenCode Go registrable', (t) => {
+test('DEFAULT_MODEL_ROUTING_CONFIG_V1: fresh-home MINIMAL_SETTINGS defaults to the canonical Luna route with the retired provider fully absent', (t) => {
   const dir = mkdtempSync(join(tmpdir(), 'agent-minimal-settings-'))
   t.after(() => rmSync(dir, { recursive: true, force: true }))
   const home = join(dir, 'home')
@@ -627,9 +627,11 @@ test('DEFAULT_MODEL_ROUTING_CONFIG_V1: fresh-home MINIMAL_SETTINGS defaults to t
   provisionAgentHome(home, workspace, { profile: 'agent-core-production' })
   const settings = readFileSync(join(home, 'settings.yaml'), 'utf8')
   assert.match(settings, /agent-default-model:\n {2}provider: openai-codex\n {2}model: gpt-5\.6-luna\n/u)
-  // OpenCode Go stays an explicit selectable route: registration, not selection.
-  assert.match(settings, /opencode-go:\n {6}apiKeyEnv: OPENCODE_GO_API_KEY/u)
-  assert.doesNotMatch(settings, /provider: opencode-go/u)
+  // The retired legacy provider is neither registered nor selectable: the
+  // providers dict stays present and EMPTY (the openai-codex provider
+  // self-registers via the dsh-codex plugin mount, not settings).
+  assert.match(settings, /llm-pi-ai:\n {2}providers:\nagent-default-model:\n/u)
+  assert.doesNotMatch(settings, /apiKeyEnv:/u)
 })
 
 // --- GPT6_LUNA_AND_REASONING_EFFORT_V1: reasoning rides the profile patch ----

@@ -37,7 +37,6 @@
  *   PIV1_PRODUCT_API_PORT  (default 17987)
  *   PIV1_INGRESS_PORT      (default 17990)
  *   PIV1_SCHEDULER_TICK_MS (default 500)
- *   OPENCODE_GO_API_KEY / PIV1_ACCEPTANCE_KEY_FILE  (injected, never echoed)
  */
 
 import { spawn, spawnSync } from 'node:child_process'
@@ -49,6 +48,7 @@ import { fileURLToPath } from 'node:url'
 
 import { adoptAgents } from '../packages/agent-definition/src/config.js'
 import { AgentDefinition } from '../packages/agent-definition/src/definition.js'
+import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../packages/agent-provisioning/src/shared-codex.js'
 import { resolveProductionLayout } from '../packages/production-runtime/src/paths.js'
 
 if (typeof process.getuid === 'function' && process.getuid() !== 0) {
@@ -84,18 +84,14 @@ const SCHEDULER_TICK_MS = Number(process.env.PIV1_SCHEDULER_TICK_MS ?? '500')
 const PRODUCT_API = `http://127.0.0.1:${PRODUCT_API_PORT}`
 const INGRESS = `http://127.0.0.1:${INGRESS_PORT}`
 
-const ACCEPTANCE_MODEL = 'deepseek-v4-flash'
-const ACCEPTANCE_PROVIDER = 'oc-go'
-const ACCEPTANCE_PROVIDER_API = 'openai-completions'
-const ACCEPTANCE_PROVIDER_BASE_URL = 'https://opencode.ai/zen/go/v1'
-// The acceptance key travels in the CP env under BOTH names the chain
-// checks: OC_GO_API_KEY is the settings.yaml apiKeyEnv contract the child's
-// harness reads for the oc-go route (compat-proven), and OPENCODE_GO_API_KEY
-// keeps agentEnv() from reading the child's 0600 502-owned .credentials.yaml
-// (reading it as 505 is EACCES). Same key source + provider block as
-// trusted-cp-hardening-v1-verify.mjs (51/51).
-const ACCEPTANCE_KEY_ENV = 'OC_GO_API_KEY'
-const ACCEPTANCE_KEY_FILE = process.env.PIV1_ACCEPTANCE_KEY_FILE ?? '/Users/yanfenma/.claude/oc-go.txt'
+// The acceptance route IS the canonical built-in default (the retired legacy
+// provider this driver once routed around is removed end-to-end, r16). The
+// canonical route authenticates through the operator-owned shared OAuth
+// store — no API key is injected; a missing store fails loud at the
+// credential boundary instead of passing silently (REASON=oc-go-retired for
+// the removed key-injection segment).
+const ACCEPTANCE_MODEL = CANONICAL_DEFAULT_MODEL_ROUTE.model
+const ACCEPTANCE_PROVIDER = CANONICAL_DEFAULT_MODEL_ROUTE.provider
 
 const REAL_CLIENT_ID = 'mc_oc_AdXrOjACKpodtqSPo3HA5fq_'
 const REAL_SECRET_FILE = '/Users/yanfenma/.openclaw/credentials/agent-knowledge-curator-agent-secret'
@@ -118,18 +114,6 @@ function record(name, ok, detail = '') {
 function sh(cmd, opts = {}) { return spawnSync('sh', ['-c', cmd], { encoding: 'utf8', ...opts }) }
 function as502(cmd) { return sh(`sudo -u '#502' sh -c ${JSON.stringify(cmd)}`) }
 function asAuthsvc(cmd) { return sh(`sudo -u authsvc sh -c ${JSON.stringify(cmd)}`) }
-
-/** Load the acceptance-only model key into env (NEVER echoed). */
-function injectAcceptanceKey() {
-  if (!existsSync(ACCEPTANCE_KEY_FILE)) throw new Error(`acceptance model key file missing: ${ACCEPTANCE_KEY_FILE}`)
-  const key = readFileSync(ACCEPTANCE_KEY_FILE, 'utf8').trim()
-  if (key === '') throw new Error(`acceptance model key file is empty: ${ACCEPTANCE_KEY_FILE}`)
-  // OC_GO_API_KEY: the settings apiKeyEnv contract for the oc-go route.
-  // OPENCODE_GO_API_KEY: keeps agentEnv() from reading the child's 0600
-  // credentials file (EACCES as 505) — the check only needs the name defined.
-  process.env[ACCEPTANCE_KEY_ENV] = key
-  process.env.OPENCODE_GO_API_KEY = key
-}
 
 // ── pick a free port for the acceptance product-api/ingress ──────────────────
 function pickFreePort(from) {
@@ -164,7 +148,6 @@ function runtimeEnv(extra = {}) {
     DSH_AGENT_SPAWN_HELPER: HELPER,
     DSH_AGENT_PROVIDER: ACCEPTANCE_PROVIDER,
     DSH_AGENT_MODEL: ACCEPTANCE_MODEL,
-    [ACCEPTANCE_KEY_ENV]: process.env[ACCEPTANCE_KEY_ENV] ?? '',
     ...extra,
   }
 }
@@ -430,23 +413,16 @@ async function main() {
   const reach = as502(`stat -f '%Sp' ${JSON.stringify(join(PROD_LAYOUT.workspacesRoot, agent.id))} ${JSON.stringify(join(PROD_LAYOUT.homesRoot, agent.id))}`)
   record('CHILD_CAN_REACH_TREES', reach.status === 0, reach.status === 0 ? 'uid 502 traverses to its workspace + home' : `uid-502 stat status=${reach.status} — check the traverse bit on /Users/authsvc and the production root`)
 
-  // ── acceptance-only child settings override (oc-go route) ─────────────────
+  // ── acceptance-only child settings normalization (canonical route) ────────
   // The child loads its OWN home settings.yaml (copied from the authsvc
-  // source at provision time), which routes agent-default-model to the
-  // quota-limited 'opencode-go' provider — the exact empty-reply root cause
-  // TRUSTED_CP_AGENT_DEFINITION_COMPAT_V1 fixed (1ff8dfe). Apply the same
-  // acceptance-only rewrite: rebuild llm-pi-ai + agent-default-model to the
-  // oc-go route, preserve every other block, re-own the file to 502.
+  // source at provision time); the retired provider registration that source
+  // may still carry must never reach an acceptance home. Rebuild
+  // llm-pi-ai (empty providers dict — the openai-codex provider
+  // self-registers via the dsh-codex plugin mount) + agent-default-model to
+  // the canonical route, preserve every other block, re-own the file to 502.
   const providersBlock = [
     'llm-pi-ai:',
     '  providers:',
-    `    ${ACCEPTANCE_PROVIDER}:`,
-    `      apiKeyEnv: ${ACCEPTANCE_KEY_ENV}`,
-    `      api: ${ACCEPTANCE_PROVIDER_API}`,
-    `      baseURL: ${ACCEPTANCE_PROVIDER_BASE_URL}`,
-    '      displayName: oc-go',
-    '      models:',
-    `        - id: ${ACCEPTANCE_MODEL}`,
   ].join('\n')
   const defaultModelBlock = [
     'agent-default-model:',
@@ -472,9 +448,7 @@ async function main() {
   applySettingsOverride(childSettingsPath)
   chownSync(childSettingsPath, USER_YANFENMA.uid, USER_YANFENMA.gid)
   chmodSync(childSettingsPath, 0o644)
-  record('MODEL_OVERRIDE_APPLIED', true, `${ACCEPTANCE_PROVIDER}/${ACCEPTANCE_MODEL} -> child home settings only (production default untouched)`)
-
-  injectAcceptanceKey()
+  record('MODEL_OVERRIDE_APPLIED', true, `${ACCEPTANCE_PROVIDER}/${ACCEPTANCE_MODEL} -> child home settings only (production default untouched; key injection retired, REASON=oc-go-retired)`)
 
   // ── boot the production runtime as uid 505 from the trusted install ────────
   console.log('\n[boot] production runtime from the trusted install as uid 505')

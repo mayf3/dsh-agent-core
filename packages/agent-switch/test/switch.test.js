@@ -45,7 +45,7 @@ test('registers exactly the agent_core_switch_agent tool', () => {
   assert.equal(typeof dispose, 'function', 'arrow apply returns a disposer')
   assert.equal(ctx.registeredTool.name, TOOL_NAME)
   assert.equal(TOOL_NAME, 'agent_core_switch_agent')
-  assert.match(TOOL_NAME, /^[a-zA-Z0-9_-]+$/, 'provider-safe tool name (opencode-go rejects dotted names)')
+  assert.match(TOOL_NAME, /^[a-zA-Z0-9_-]+$/, 'provider-safe tool name (model routes reject dotted names)')
   // defineTool compiles the parameter spec into JSON Schema: targetAgentId
   // is required (top-level required array), targetSessionId optional.
   assert.ok(ctx.registeredTool.parameters.required.includes('targetAgentId'))

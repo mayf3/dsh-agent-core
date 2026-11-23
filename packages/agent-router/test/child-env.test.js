@@ -23,7 +23,7 @@
 
 import assert from 'node:assert/strict'
 import { spawn, spawnSync } from 'node:child_process'
-import { accessSync, chmodSync, mkdtempSync, rmSync, statSync } from 'node:fs'
+import { accessSync, chmodSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -131,11 +131,11 @@ test('T2: no caller channel can override or drop the fixed child TMPDIR', async 
 test('GH credentials RED→GREEN: gh auth fails without opt-in and succeeds with controlled GH_TOKEN injection', async () => {
   const token = 'ghs_test_token_not_logged'
   await withEnv(GITHUB_TOKEN_SOURCE_ENV, token, () => {
-    const noAccess = agentEnv('/tmp/gh-home', {}, [], {}, undefined, false)
+    const noAccess = agentEnv('/tmp/gh-home', {}, [], {}, false)
     const red = spawnSync(process.execPath, ['-e', "process.exit(process.env.GH_TOKEN ? 0 : 1)"], { env: noAccess })
     assert.equal(red.status, 1, 'RED: undeclared GitHub access has no token')
 
-    const greenEnv = agentEnv('/tmp/gh-home', {}, [], {}, undefined, true)
+    const greenEnv = agentEnv('/tmp/gh-home', {}, [], {}, true)
     const green = spawnSync(process.execPath, ['-e', "process.exit(process.env.GH_TOKEN === 'ghs_test_token_not_logged' ? 0 : 1)"], { env: greenEnv })
     assert.equal(green.status, 0, 'GREEN: declared GitHub access exposes GH_TOKEN to child tools')
     assert.equal(greenEnv.GH_TOKEN, token)
@@ -171,9 +171,32 @@ test('T3: real plugin boot under an untraversable parent TMPDIR — plugin tree,
   const previousTmpdir = process.env.TMPDIR
   const previousChildUid = process.env.DSH_AGENT_CHILD_UID
   const previousChildGid = process.env.DSH_AGENT_CHILD_GID
+  const previousSettingsSource = process.env.DSH_SETTINGS_SOURCE
+  // The retired default-route provider is gone from MINIMAL_SETTINGS and the
+  // canonical Luna route self-registers only through the dsh-codex plugin
+  // mount (absent here — this is a child-lifecycle test). A synthetic
+  // settings-source provider gives the boot a registered provider without
+  // any plugin subscription.
+  const settingsSource = join(root, 'settings.yaml')
+  writeFileSync(settingsSource, [
+    'llm-pi-ai:',
+    '  providers:',
+    '    loopback-test:',
+    '      displayName: loopback-test',
+    '      apiKeyEnv: LOOPBACK_TEST_API_KEY',
+    '      api: openai-completions',
+    '      baseURL: http://127.0.0.1:9/no-network-test',
+    '      models:',
+    '        - id: loopback-flash',
+    'agent-default-model:',
+    '  provider: loopback-test',
+    '  model: loopback-flash',
+    '',
+  ].join('\n'), 'utf8')
   process.env.TMPDIR = inaccessible
   process.env.DSH_AGENT_CHILD_UID = String(childUid)
   process.env.DSH_AGENT_CHILD_GID = String(childGid)
+  process.env.DSH_SETTINGS_SOURCE = settingsSource
   try {
     await provisionAgentHome(home, workspace, { profile: PROFILE })
     const proc = new AgentProcess({
@@ -181,11 +204,11 @@ test('T3: real plugin boot under an untraversable parent TMPDIR — plugin tree,
       home,
       workspace,
       profile: PROFILE,
-      // Explicit OpenCode Go route (DEFAULT_MODEL_ROUTING_CONFIG_V1): this is
-      // a child-lifecycle test, so the route is pinned to the explicit oc-go
-      // registration path (no subscription mount to serve the Luna default).
-      provider: 'opencode-go',
-      model: 'deepseek-v4-flash',
+      // Explicit synthetic settings-registered route (DEFAULT_MODEL_ROUTING_CONFIG_V1):
+      // the child-lifecycle assertion needs A registered provider, not the
+      // plugin-mounted Luna subscription route.
+      provider: 'loopback-test',
+      model: 'loopback-flash',
       log: { log() {}, error() {} },
       // Hostile caller attempt: this must not survive agentEnv's final write.
       env: { TMPDIR: '/forbidden' },
@@ -213,6 +236,8 @@ test('T3: real plugin boot under an untraversable parent TMPDIR — plugin tree,
     else process.env.DSH_AGENT_CHILD_UID = previousChildUid
     if (previousChildGid === undefined) delete process.env.DSH_AGENT_CHILD_GID
     else process.env.DSH_AGENT_CHILD_GID = previousChildGid
+    if (previousSettingsSource === undefined) delete process.env.DSH_SETTINGS_SOURCE
+    else process.env.DSH_SETTINGS_SOURCE = previousSettingsSource
   }
 })
 
@@ -270,12 +295,13 @@ test('T4: mkdtemp under the child TMPDIR (spill-local primitive) yields a random
 
 test('T5: sentinel credentials never cross the env/log boundary and no full child env dump is asserted anywhere', () => {
   const sentinel = 'sk-t5-sentinel-0123456789abcdef'
-  const previous = process.env.OPENCODE_GO_API_KEY
-  process.env.OPENCODE_GO_API_KEY = sentinel
+  const SENTINEL_ENV = 'DSH_T5_SENTINEL_CREDENTIAL'
+  const previous = process.env[SENTINEL_ENV]
+  process.env[SENTINEL_ENV] = sentinel
   try {
     // Omit channel strips the credential key entirely (existing contract).
-    const stripped = agentEnv('/tmp/ac-child-env-t5-home', {}, ['OPENCODE_GO_API_KEY'])
-    assert.equal(stripped.OPENCODE_GO_API_KEY, undefined)
+    const stripped = agentEnv('/tmp/ac-child-env-t5-home', {}, [SENTINEL_ENV])
+    assert.equal(stripped[SENTINEL_ENV], undefined)
 
     // Even when a value is inherited (no omit), the only sanctioned output
     // scrubber — redactSensitiveText, applied at every stderr/log boundary —
@@ -288,7 +314,7 @@ test('T5: sentinel credentials never cross the env/log boundary and no full chil
     assert.ok(!redactSensitiveText(JSON.stringify(inherited)).includes(sentinel), 'redaction boundary removes the sentinel')
     assert.ok(!redactSensitiveText(JSON.stringify(stripped)).includes(sentinel))
   } finally {
-    if (previous === undefined) delete process.env.OPENCODE_GO_API_KEY
-    else process.env.OPENCODE_GO_API_KEY = previous
+    if (previous === undefined) delete process.env[SENTINEL_ENV]
+    else process.env[SENTINEL_ENV] = previous
   }
 })

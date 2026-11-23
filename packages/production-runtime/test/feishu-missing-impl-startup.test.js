@@ -26,7 +26,7 @@ import { AGT_ID, FakeProc, seedRuntime, silentLog } from './compose-fixture.js'
 const HERE = dirname(fileURLToPath(import.meta.url))
 register('./fixtures/blocks-lark-channel.mjs', pathToFileURL(HERE + '/').href)
 
-const GLOBAL_ROUTE = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
+const GLOBAL_ROUTE = Object.freeze({ provider: 'openai-codex', model: 'gpt-5.6-luna' })
 
 async function compose(t, { credsPath }) {
   const { root, layout } = await seedRuntime(t)

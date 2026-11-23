@@ -115,7 +115,7 @@ test('agent-core-production profile real boot: plugin loads + initialize handsha
     jsonrpc: '2.0',
     id: initializeId,
     method: 'initialize',
-    params: { cwd: workspace, provider: 'opencode-go', model: 'deepseek-v4-flash', maxTokens: 8192 },
+    params: { cwd: workspace, provider: 'test-explicit', model: 'test-model', maxTokens: 8192 },
   })}\n`)
 
   const response = await waitFor(
@@ -235,7 +235,7 @@ test('DEFAULT_MODEL_ROUTING_CONFIG_V1: no-params initialize resolves the canonic
     jsonrpc: '2.0',
     id: 2,
     method: 'initialize',
-    params: { cwd: workspace, provider: 'opencode-go', model: 'deepseek-v4-flash', maxTokens: 8192 },
+    params: { cwd: workspace, provider: 'test-explicit', model: 'test-model', maxTokens: 8192 },
   })}\n`)
   const explicitResponse = await waitFor(
     () => stdout,
@@ -255,7 +255,7 @@ test('DEFAULT_MODEL_ROUTING_CONFIG_V1: no-params initialize resolves the canonic
   assert.equal(explicitResponse.error, undefined, `initialize returned an error: ${JSON.stringify(explicitResponse.error)}`)
   assert.deepEqual(
     { provider: explicitResponse.result?.route?.provider, model: explicitResponse.result?.route?.model },
-    { provider: 'opencode-go', model: 'deepseek-v4-flash' },
+    { provider: 'test-explicit', model: 'test-model' },
   )
 
   child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'shutdown', params: {} })}\n`)

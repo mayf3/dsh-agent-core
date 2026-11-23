@@ -16,7 +16,7 @@ import { GPT6_LUNA_ROUTE_V1 } from '../../agent-provisioning/src/shared-codex.js
 
 const TARGET = CHATGPT_SUBSCRIPTION_V1.targetAgentId
 const OTHER = 'agt_other'
-const GLOBAL = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
+const GLOBAL = Object.freeze({ provider: 'openai-codex', model: 'gpt-5.6-luna' })
 const VALID_PROVIDER_ENV = Object.freeze({
   HTTP_PROXY: 'http://127.0.0.1:7890',
   HTTPS_PROXY: 'http://127.0.0.1:7890',
