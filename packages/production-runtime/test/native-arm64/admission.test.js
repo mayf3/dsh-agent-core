@@ -65,7 +65,6 @@ test('existing child spawn selects exact parent Node and per-agent overrides can
   delete process.env.DSH_AGENT_CHILD_UID
   delete process.env.DSH_AGENT_SPAWN_HELPER
   process.env.DSH_RUNTIME_ARCH = 'arm64'
-  process.env.OPENCODE_GO_API_KEY = 'synthetic-test-key'
   const childEnv = agentEnv('/nonexistent-arm-test-home', { DSH_RUNTIME_ARCH: 'x64' }, ['DSH_RUNTIME_ARCH'])
   assert.equal(childEnv.DSH_RUNTIME_ARCH, 'arm64')
   const config = childSpawnConfig()

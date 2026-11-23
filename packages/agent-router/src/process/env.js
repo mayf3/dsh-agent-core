@@ -7,9 +7,6 @@
  * Zero DSH imports: only node builtins.
  */
 
-import { existsSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
-
 export const GITHUB_TOKEN_SOURCE_ENV = 'AGENT_CORE_GITHUB_TOKEN'
 
 export const RECOGNIZED_PROXY_ENV_KEYS = Object.freeze([
@@ -85,7 +82,7 @@ export function childSpawnConfig(log = console) {
 export const AGENT_CHILD_TMPDIR = process.platform === 'darwin' ? '/private/tmp' : '/tmp'
 
 /** Base environment for one agent process (its own home, workspace as cwd). */
-export function agentEnv(home, extra = {}, omit = [], providerEnv = {}, provider, githubAccess = false) {
+export function agentEnv(home, extra = {}, omit = [], providerEnv = {}, githubAccess = false) {
   const env = {
     ...process.env,
     DSH_HOME: home,
@@ -106,18 +103,12 @@ export function agentEnv(home, extra = {}, omit = [], providerEnv = {}, provider
   const token = process.env[GITHUB_TOKEN_SOURCE_ENV]
   delete env[GITHUB_TOKEN_SOURCE_ENV]
   if (githubAccess === true && typeof token === 'string' && token !== '') env.GH_TOKEN = token
-  // The already-resolved process provider owns credential roles. Codex uses
-  // its provisioned canonical OAuth reference, never the generic Go key.
-  // Remove inherited/extra/provider-injected keys as well as skipping disk.
-  if (provider === 'openai-codex') {
-    delete env.OPENCODE_GO_API_KEY
-  } else if (env.OPENCODE_GO_API_KEY === undefined) {
-    const credentialFile = join(home, '.credentials.yaml')
-    if (existsSync(credentialFile)) {
-      const match = readFileSync(credentialFile, 'utf8').match(/^OPENCODE_GO_API_KEY:\s*"?([^"\n]+)"?/m)
-      if (match !== null) env.OPENCODE_GO_API_KEY = match[1]
-    }
-  }
+  // Model credentials never cross this boundary as inherited environment:
+  // the resolved provider owns its credential roles through the validated
+  // providerEnv channel (proxy allowlist) and provisioned per-route
+  // references (openai-codex canonical OAuth store via the dsh-codex plugin
+  // mount). The child home's .credentials.yaml is credentials-local plugin
+  // territory, not a spawn-env source — this function never reads it.
   for (const name of omit) delete env[name]
   // Written LAST, after extra/providerEnv/omit: the child's TMPDIR is a
   // fixed runtime property of the uid-502 Agent identity, not configuration.

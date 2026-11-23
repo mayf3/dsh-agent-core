@@ -44,8 +44,8 @@ test('resolved provider/model are immutable initialize inputs for the process th
   const { proc, writes, answer } = fakeProcess()
   const previousProvider = process.env.DSH_AGENT_PROVIDER
   const previousModel = process.env.DSH_AGENT_MODEL
-  process.env.DSH_AGENT_PROVIDER = 'oc-go'
-  process.env.DSH_AGENT_MODEL = 'deepseek-v4-flash'
+  process.env.DSH_AGENT_PROVIDER = 'test-explicit'
+  process.env.DSH_AGENT_MODEL = 'test-model'
   try {
     const ready = proc.ready()
     assert.equal(writes[0].method, 'initialize')

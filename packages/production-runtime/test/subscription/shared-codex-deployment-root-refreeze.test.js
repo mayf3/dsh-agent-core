@@ -168,7 +168,7 @@ test('seam B: loader with options.deploymentRoot accepts the authsvc own canonic
   writeCatalog(file, AUTHSVC_CANONICAL)
   const loaded = loadAgentModelOverrides(file, ['agt_cto-agent'], { deploymentRoot: AUTHSVC_ROOT })
   assert.equal(loaded.filePresent, true)
-  const resolved = loaded.resolve('agt_cto-agent', { provider: 'oc-go', model: 'deepseek-v4-flash' })
+  const resolved = loaded.resolve('agt_cto-agent', { provider: 'openai-codex', model: 'gpt-5.6-luna' })
   assert.equal(resolved.credentialFile, AUTHSVC_CANONICAL)
 })
 
@@ -197,7 +197,7 @@ test('seam B: explicit user-domain deploymentRoot preserves the frozen loader co
   const file = join(dir, 'agent-model-overrides.json')
   writeCatalog(file, YANFENMA_CANONICAL)
   const loaded = loadAgentModelOverrides(file, ['agt_cto-agent'], { deploymentRoot: YANFENMA_ROOT })
-  assert.equal(loaded.resolve('agt_cto-agent', { provider: 'oc-go', model: 'deepseek-v4-flash' }).credentialFile, YANFENMA_CANONICAL)
+  assert.equal(loaded.resolve('agt_cto-agent', { provider: 'openai-codex', model: 'gpt-5.6-luna' }).credentialFile, YANFENMA_CANONICAL)
   // And the authsvc canonical stays foreign on the user domain.
   writeCatalog(file, AUTHSVC_CANONICAL)
   assert.throws(
@@ -212,7 +212,7 @@ test('seam B: loader default (no option) accepts exactly the executing-surface c
   const file = join(dir, 'agent-model-overrides.json')
   writeCatalog(file, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)
   const loaded = loadAgentModelOverrides(file, ['agt_cto-agent'])
-  assert.equal(loaded.resolve('agt_cto-agent', { provider: 'oc-go', model: 'deepseek-v4-flash' }).credentialFile, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)
+  assert.equal(loaded.resolve('agt_cto-agent', { provider: 'openai-codex', model: 'gpt-5.6-luna' }).credentialFile, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)
   writeCatalog(file, AUTHSVC_CANONICAL)
   if (USER_ROOT !== AUTHSVC_ROOT) {
     assert.throws(() => loadAgentModelOverrides(file, ['agt_cto-agent']), (e) => codeOf(e) === 'AGENT_MODEL_OVERRIDE_INVALID')
@@ -290,7 +290,7 @@ test('all three seams agree on the domain owner for a given deployment root', (t
     const file = join(dir, 'agent-model-overrides.json')
     writeCatalog(file, own)
     const loaded = loadAgentModelOverrides(file, ['agt_cto-agent'], { deploymentRoot: root })
-    assert.equal(loaded.resolve('agt_cto-agent', { provider: 'oc-go', model: 'deepseek-v4-flash' }).credentialFile, own)
+    assert.equal(loaded.resolve('agt_cto-agent', { provider: 'openai-codex', model: 'gpt-5.6-luna' }).credentialFile, own)
     assert.equal(own, canonicalOpenAICodexCredentialFileFor(root))
   }
 })

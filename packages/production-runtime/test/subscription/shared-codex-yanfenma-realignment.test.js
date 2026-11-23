@@ -194,17 +194,17 @@ test('ACC-ACT2-003 migrated real-snapshot-shape v3 document loads with providerE
   const registered = ['agt_cto-agent', 'agt_stock_agent', 'agt_ceo-agent', 'agt_other-agent']
   const loaded = loadAgentModelOverrides(file, registered)
   assert.equal(loaded.filePresent, true)
-  const cto = loaded.resolve('agt_cto-agent', { provider: 'oc-go', model: 'deepseek-v4-flash' })
+  const cto = loaded.resolve('agt_cto-agent', { provider: 'openai-codex', model: 'gpt-5.6-luna' })
   assert.equal(cto.provider, 'openai-codex')
   assert.equal(cto.model, 'gpt-5.6-luna')
   assert.equal(cto.credentialFile, YANFENMA_CANONICAL)
   assert.equal(cto.providerEnv.HTTP_PROXY, 'http://127.0.0.1:7890')
   assert.equal(cto.plugin, 'dsh-codex')
-  const stock = loaded.resolve('agt_stock_agent', { provider: 'oc-go', model: 'deepseek-v4-flash' })
+  const stock = loaded.resolve('agt_stock_agent', { provider: 'openai-codex', model: 'gpt-5.6-luna' })
   assert.equal(stock.credentialFile, YANFENMA_CANONICAL)
   assert.equal(stock.providerEnv, undefined)
-  const other = loaded.resolve('agt_other-agent', { provider: 'oc-go', model: 'deepseek-v4-flash' })
-  assert.deepEqual(other, { provider: 'oc-go', model: 'deepseek-v4-flash' })
+  const other = loaded.resolve('agt_other-agent', { provider: 'openai-codex', model: 'gpt-5.6-luna' })
+  assert.deepEqual(other, { provider: 'openai-codex', model: 'gpt-5.6-luna' })
 })
 
 test('loader rejects the migrated document when identical routes are not distinguished', (t) => {

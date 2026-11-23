@@ -51,7 +51,7 @@ import {
   writeNotificationAuthConfig,
 } from './compose-fixture.js'
 
-const GLOBAL_ROUTE = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
+const GLOBAL_ROUTE = Object.freeze({ provider: 'openai-codex', model: 'gpt-5.6-luna' })
 const REQUEST_ID = 'req-a6-restart-handoff'
 const MESSAGE = 'in flight across the restart boundary'
 

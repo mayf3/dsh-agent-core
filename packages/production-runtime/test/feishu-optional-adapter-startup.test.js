@@ -25,7 +25,7 @@ import { join } from 'node:path'
 import { composeProductionRuntime } from '../src/compose.js'
 import { AGT_ID, FakeProc, seedRuntime, silentLog } from './compose-fixture.js'
 
-const GLOBAL_ROUTE = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
+const GLOBAL_ROUTE = Object.freeze({ provider: 'openai-codex', model: 'gpt-5.6-luna' })
 
 const FEISHU_ENV_KEYS = [
   'FEISHU_CREDS_PATH',

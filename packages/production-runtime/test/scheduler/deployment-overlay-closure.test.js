@@ -30,7 +30,7 @@ import { createAgentSessionRuntime } from './agent-session/runtime.js'
 import { createAgentDirectoryAccess } from './agent-directory.js'
 // agent-model-overrides.json version 2
 const defaultRoute = {
-  provider: process.env.DSH_AGENT_PROVIDER ?? 'opencode-go',
+  provider: process.env.DSH_AGENT_PROVIDER ?? 'zai-explicit',
 }
   const rawInvoker = createRouterInvoker(router, { definition })
   // Thin observability (evidence surface, not a framework): one line per
@@ -150,7 +150,7 @@ test('production compose preserves Agent Directory while adding Watchdog wiring'
   assert.match(adapted, /schedulerHealth/)
   assert.match(adapted, /createAgentSessionRuntime/)
   assert.match(adapted, /agent-model-overrides\.json version 2/)
-  assert.match(adapted, /provider: process\.env\.DSH_AGENT_PROVIDER \?\? 'opencode-go'/)
+  assert.match(adapted, /provider: process\.env\.DSH_AGENT_PROVIDER \?\? 'zai-explicit'/)
   assert.doesNotMatch(adapted, /canonicalDefaultGlobalRoute|CANONICAL_DEFAULT_MODEL_ROUTE|mountWorkflowExecutionRuntime/)
 })
 

@@ -265,7 +265,7 @@ const SEND = { targetAgentId: TARGET, message: 'coordination hello', timeoutSeco
 /** These suites pin the historical builtin env route: the wiring under
  * test predates route variance; the zero-config Luna subscription default
  * (DEFAULT_MODEL_ROUTING_CONFIG_V1) has its own dedicated suite. */
-const GLOBAL_ROUTE = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
+const GLOBAL_ROUTE = Object.freeze({ provider: 'openai-codex', model: 'gpt-5.6-luna' })
 test('Case C + G: receipt-only accepted; the provenance sidecar is runtime-owned and exact', async (t) => {
   const { runtime, spawned, auditFile } = await seedRuntime(t)
   const envelope = await gatewayCall(runtime, { agentId: SOURCE, sourceTurnExecutionId: PROOF, args: SEND })

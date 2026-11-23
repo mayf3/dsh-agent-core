@@ -24,7 +24,7 @@ import { FakeProc, seedRuntime, silentLog } from '../compose-fixture.js'
 /** These suites pin the historical builtin env route: the wiring under
  * test predates route variance; the zero-config Luna subscription default
  * (DEFAULT_MODEL_ROUTING_CONFIG_V1) has its own dedicated suite. */
-const GLOBAL_ROUTE = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
+const GLOBAL_ROUTE = Object.freeze({ provider: 'openai-codex', model: 'gpt-5.6-luna' })
 test('cross-agent scheduler authorization flows one target-owned fresh Run into HistoryStore without source authority propagation or replay', async (t) => {
   const sourceAgentId = 'agt_history-source'
   const targetAgentId = 'agt_history-target'

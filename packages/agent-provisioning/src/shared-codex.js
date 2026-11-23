@@ -92,9 +92,8 @@ export function assertSameDomainCredentialFile(agentHome, credentialFile) {
  * The ONE built-in default model route (DEFAULT_MODEL_ROUTING_CONFIG_V1 §2):
  * GPT Luna, reusing the canonical identifiers already frozen across the
  * subscription route family — this constant mints no new model identity.
- * Every former hardcoded 'opencode-go'/'deepseek-v4-flash' fallback composes
- * from here; OpenCode Go stays a valid explicit route, only no longer the
- * implicit default.
+ * Every former hardcoded provider/model fallback composes from here; the
+ * retired legacy Go provider is neither registered nor selectable anywhere.
  */
 export const CANONICAL_DEFAULT_MODEL_ROUTE = Object.freeze({
   provider: 'openai-codex',

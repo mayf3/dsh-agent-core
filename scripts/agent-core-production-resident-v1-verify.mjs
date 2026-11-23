@@ -99,7 +99,7 @@ function cronAdd(agentId, name, at, message) {
   const out = execFileSync(AGENTCORE_CRON,
     ['add', '--agent', agentId, '--name', name, '--at', at, '--message', message,
       '--session', 'isolated', '--no-deliver', '--light-context',
-      '--timeout-seconds', '300', '--model', 'opencode-go/deepseek-v4-flash', '--json'],
+      '--timeout-seconds', '300', '--model', 'openai-codex/gpt-5.6-luna', '--json'],
     { encoding: 'utf8', env })
   return JSON.parse(out).id
 }

@@ -267,14 +267,14 @@ function copyOnce(source, target) {
 
 // DEFAULT_MODEL_ROUTING_CONFIG_V1 §4: the fresh-home child-side default is
 // the canonical built-in Luna route (constant-composed, no route literal
-// here). The opencode-go provider REGISTRATION block stays — OpenCode Go
-// remains an explicit selectable route; registration is not selection. The
-// openai-codex provider self-registers via the dsh-codex plugin mount.
+// here). The retired legacy Go provider is neither registered nor selectable
+// — an explicit route that no longer exists cannot be re-introduced through
+// a fresh home. The openai-codex provider self-registers via the dsh-codex
+// plugin mount; the providers dict stays present and empty (the harness
+// resolves an absent dict to the same dormant route set).
 const MINIMAL_SETTINGS = [
   'llm-pi-ai:',
   '  providers:',
-  '    opencode-go:',
-  '      apiKeyEnv: OPENCODE_GO_API_KEY',
   'agent-default-model:',
   `  provider: ${CANONICAL_DEFAULT_MODEL_ROUTE.provider}`,
   `  model: ${CANONICAL_DEFAULT_MODEL_ROUTE.model}`,

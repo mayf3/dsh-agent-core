@@ -70,7 +70,7 @@ function fakeCtx({ persisted = new Map() } = {}) {
 }
 
 /** A seam over the fake ctx with initialize-time process cwd = WS_A. */
-function makeSeam(fake, route = { provider: 'opencode-go', model: 'deepseek-v4-flash' }) {
+function makeSeam(fake, route = { provider: 'openai-codex', model: 'gpt-5.6-luna' }) {
   return createSessionSeam({
     ctx: fake,
     settings: {

@@ -32,14 +32,15 @@ import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { cliBin, provisionAgentHome, REPO } from './demo-home.mjs'
+import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../packages/agent-provisioning/src/shared-codex.js'
 
 const RUNTIME = resolve(process.env.DSH_DEMO_RUNTIME ?? join(REPO, '.demo', 'runtime'))
 const AGENTS_DIR = join(RUNTIME, 'agents')
 const MAX_AGENTS = Number.parseInt(process.env.DSH_DEMO_MAX_AGENTS ?? '100', 10)
 const RESUME_ITERS = Number.parseInt(process.env.DSH_DEMO_RESUME_ITERS ?? '8', 10)
 const KEEP = process.env.DSH_DEMO_KEEP === '1'
-const MODEL = process.env.DSH_DEMO_MODEL ?? 'deepseek-v4-flash'
-const PROVIDER = process.env.DSH_DEMO_PROVIDER ?? 'opencode-go'
+const MODEL = process.env.DSH_DEMO_MODEL ?? CANONICAL_DEFAULT_MODEL_ROUTE.model
+const PROVIDER = process.env.DSH_DEMO_PROVIDER ?? CANONICAL_DEFAULT_MODEL_ROUTE.provider
 const MAX_TOKENS = 8192
 
 const CLI = cliBin()
@@ -91,13 +92,6 @@ function agentEnv(home) {
     DSH_HOME: home,
     DSH_TELEMETRY_DISABLED: '1',
     DSH_PERMISSION_MODE: 'danger-full-access',
-  }
-  if (env.OPENCODE_GO_API_KEY === undefined) {
-    const credentialFile = join(home, '.credentials.yaml')
-    if (existsSync(credentialFile)) {
-      const match = readFileSync(credentialFile, 'utf8').match(/^OPENCODE_GO_API_KEY:\s*"?([^"\n]+)"?/m)
-      if (match !== null) env.OPENCODE_GO_API_KEY = match[1]
-    }
   }
   return env
 }

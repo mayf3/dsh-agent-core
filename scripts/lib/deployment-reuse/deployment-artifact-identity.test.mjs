@@ -23,7 +23,7 @@ function fixture(t) {
 function loaded(f, context = f.context(), root = f.root) {
   return model.loadAgentModelOverrides(f.config, f.ids, { deploymentRoot: root, artifactContext: context })
 }
-function subscription(f, context = f.context()) { return loaded(f, context).resolveChain(f.ids[0], { provider: 'oc-go', model: 'deepseek-v4-flash' }).routes[0].processConfig.subscription }
+function subscription(f, context = f.context()) { return loaded(f, context).resolveChain(f.ids[0], { provider: 'openai-codex', model: 'gpt-5.6-luna' }).routes[0].processConfig.subscription }
 function verify(f, s) {
   return verifyPluginProvisioningInputs({ ...s, version: s.pluginVersion }, { ...f.paths, deploymentRoot: f.root, harnessRoot: join(f.cohort.trustedRoot, 'harness') })
 }

@@ -100,7 +100,7 @@ const silentLog = { log() {}, warn() {}, error() {} }
 /** These suites pin the historical builtin env route: the wiring under
  * test predates route variance; the zero-config Luna subscription default
  * (DEFAULT_MODEL_ROUTING_CONFIG_V1) has its own dedicated suite. */
-const GLOBAL_ROUTE = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
+const GLOBAL_ROUTE = Object.freeze({ provider: 'openai-codex', model: 'gpt-5.6-luna' })
 test('wiring: the import map reaches workspace-bootstrap AND the spawned process (cwd base + env)', async (t) => {
   const { root, layout, imported } = await seedRuntime(t, { mapAgentToImported: true })
   const spawned = []

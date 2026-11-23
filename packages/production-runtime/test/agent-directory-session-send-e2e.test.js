@@ -188,7 +188,7 @@ async function seedRuntime(t, { targetDisabled = false } = {}) {
     // Test seam (same as main's ASM integration suite): an explicit global
     // route keeps the composed default-route resolution (Luna chain, pinned
     // artifact validation) out of this directory-focused E2E.
-    globalRoute: Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' }),
+    globalRoute: Object.freeze({ provider: 'openai-codex', model: 'gpt-5.6-luna' }),
     productApi: { enabled: false, port: 0 },
     notificationIngress: { enabled: false },
     broker: { credentialsFile, authServiceOrigin: origin },

@@ -36,7 +36,8 @@
  * Usage: node scripts/stock-agent-registry-adoption-v1-verify.mjs
  * Env:   DSH_SAV_RUNTIME   runtime root (default .demo/stock-agent-registry-adoption-v1/runtime)
  *        DSH_SAV_KEEP=1    keep existing runtime (default: wipe)
- *        DSH_AGENT_PROVIDER / DSH_AGENT_MODEL  model route (defaults opencode-go/deepseek-v4-flash)
+ *        DSH_AGENT_PROVIDER / DSH_AGENT_MODEL  model route (default: the canonical
+ *              built-in openai-codex/gpt-5.6-luna)
  * Exit 0 on full acceptance, 1 on failed assertion, 2 on infra failure.
  */
 
@@ -123,7 +124,7 @@ function cronAdd(agentId, name, at, message) {
   const out = execFileSync(AGENTCORE_CRON,
     ['add', '--agent', agentId, '--name', name, '--at', at, '--message', message,
       '--session', 'isolated', '--no-deliver', '--light-context',
-      '--timeout-seconds', '300', '--model', 'opencode-go/deepseek-v4-flash', '--json'],
+      '--timeout-seconds', '300', '--model', 'openai-codex/gpt-5.6-luna', '--json'],
     { encoding: 'utf8', env })
   return JSON.parse(out).id
 }

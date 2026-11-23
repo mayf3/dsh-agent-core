@@ -31,7 +31,10 @@ export function cohortFixture(root, nF = 2, nR = 3, trustedRoot = join(root, 'tr
   const v3 = structuredClone(v2); v3.version = 3; v3.routeCatalog.luna.credentialFile = canonical
   write(canonical, 'SYNTHETIC FIXTURE - NO TOKEN'); fs.chmodSync(join(canonical, '..'), 0o700)
   const runtimeContext = join(root, 'synthetic-runtime-context.json')
-  const globalRoute = { provider: 'oc-go', model: 'deepseek-v4-flash' }
+  // The inherited route stays a PLAIN non-codex builtin pair: cohort binding
+  // forbids a bare openai-codex route (it must be the dsh-codex subscription
+  // with the domain's canonical credential, never a bare passthrough).
+  const globalRoute = { provider: 'zai-explicit', model: 'glm-5.3' }
   copyCandidateClosure(trustedRoot)
 
   const provisioner = join(trustedRoot, 'app/packages/agent-provisioning/src/index.js'), dependencies = join(root, 'synthetic-dependency-closure.json')

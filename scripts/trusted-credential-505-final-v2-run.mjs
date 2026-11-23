@@ -82,7 +82,6 @@ const USER_AUTHSVC = { uid: 505, gid: 601 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const DEBUG_TEE = process.argv.includes('--debug-tee')
 const CHILD_STDERR_TEE = '/tmp/tcb-v2-child-stderr.log'
-let MODEL_KEY = '' // read at phase 0; carried to the CP env only
 
 // ------------------------------------------------------------------ utils
 
@@ -155,9 +154,6 @@ function controlEnvPairs() {
     PRODUCT_API_PORT: String(API_PORT),
     FEISHU_ENABLED: '0',
     DSH_HARNESS_ROOT: process.env.DSH_HARNESS_ROOT,
-    // The model key travels in the CP env (agentEnv() then never reads the
-    // child's 0600 .credentials.yaml, which credentials-local requires).
-    OPENCODE_GO_API_KEY: MODEL_KEY,
   }
   return Object.entries(env).map(([k, v]) => `${k}=${v}`)
 }
@@ -398,14 +394,6 @@ async function main() {
       process.exit(2)
     }
   }
-
-  // Model key for the CP env (the child homes keep their own 0600 file copy).
-  const modelKeyMatch = readFileSync('/Users/yanfenma/.dsh/.credentials.yaml', 'utf8')
-    .match(/^OPENCODE_GO_API_KEY:\s*"?([^"\n]+)"?/m)
-  if (!modelKeyMatch) {
-    throw new Error('cannot read OPENCODE_GO_API_KEY from /Users/yanfenma/.dsh/.credentials.yaml')
-  }
-  MODEL_KEY = modelKeyMatch[1]
 
   // ------------------------------------------------------------- phase 0
   console.log(`\n[phase 0] runtime ${RUNTIME} — provisioning as root, dropping ownership per side`)

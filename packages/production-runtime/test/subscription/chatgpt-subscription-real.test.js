@@ -15,7 +15,7 @@ import { resolveProductionLayout } from '../../src/paths.js'
 
 const TARGET = CHATGPT_SUBSCRIPTION_V1.targetAgentId
 const OTHER = 'agt_real_seam_other'
-const GLOBAL = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
+const GLOBAL = Object.freeze({ provider: 'loopback-test', model: 'loopback-flash' })
 const OVERRIDE = {
   version: 1,
   overrides: {
@@ -31,13 +31,13 @@ const OVERRIDE = {
 const SETTINGS = [
   'llm-pi-ai:',
   '  providers:',
-  '    oc-go:',
-  '      displayName: oc-go',
-  '      apiKeyEnv: OC_GO_API_KEY',
+  '    loopback-test:',
+  '      displayName: loopback-test',
+  '      apiKeyEnv: LOOPBACK_TEST_API_KEY',
   '      api: openai-completions',
   '      baseURL: http://127.0.0.1:9/no-network-test',
   '      models:',
-  '        - id: deepseek-v4-flash',
+  '        - id: loopback-flash',
   '',
 ].join('\n')
 
@@ -113,15 +113,13 @@ test('real production seam: local exact package, create/resume restart, and roll
 
   const envNames = [
     'HOME', 'DSH_SETTINGS_SOURCE', 'DSH_CODEX_PACKAGE_TARBALL', 'OPENAI_API_KEY',
-    'OC_GO_API_KEY', 'OPENCODE_GO_API_KEY', 'DSH_MEMORY_WORKSPACE_ROOT',
+    'DSH_MEMORY_WORKSPACE_ROOT',
   ]
   const envBefore = Object.fromEntries(envNames.map((name) => [name, process.env[name]]))
   process.env.HOME = isolatedUserHome
   process.env.DSH_SETTINGS_SOURCE = settingsSource
   process.env.DSH_CODEX_PACKAGE_TARBALL = artifact
   delete process.env.OPENAI_API_KEY
-  delete process.env.OC_GO_API_KEY
-  delete process.env.OPENCODE_GO_API_KEY
   delete process.env.DSH_MEMORY_WORKSPACE_ROOT
 
   const sharedProfile = join(REPO, 'profile-production', 'package.json')
@@ -167,7 +165,7 @@ test('real production seam: local exact package, create/resume restart, and roll
   const secondOther = await second.router.ensureRunning(OTHER)
   processes.push(secondOther)
   assert.deepEqual(secondOther.initializeEvidence?.route, GLOBAL)
-  assert.ok(secondOther.initializeEvidence?.registeredProviders?.includes('oc-go'))
+  assert.ok(secondOther.initializeEvidence?.registeredProviders?.includes('loopback-test'))
   assert.equal(existsSync(join(otherHome, 'profiles', 'node_modules', 'dsh-codex')), false)
 
   // Mechanical target-only rollback in the SAME production runtime: the
@@ -185,8 +183,8 @@ test('real production seam: local exact package, create/resume restart, and roll
   assert.equal(rolledOther.pid, otherPidBefore)
   assert.deepEqual(rolledTarget.initializeEvidence?.route, GLOBAL)
   assert.deepEqual(rolledOther.initializeEvidence?.route, GLOBAL)
-  assert.ok(rolledTarget.initializeEvidence?.registeredProviders?.includes('oc-go'))
-  assert.ok(rolledOther.initializeEvidence?.registeredProviders?.includes('oc-go'))
+  assert.ok(rolledTarget.initializeEvidence?.registeredProviders?.includes('loopback-test'))
+  assert.ok(rolledOther.initializeEvidence?.registeredProviders?.includes('loopback-test'))
 
   // Both native session paths after rollback carry the new process route:
   // persisted main resumes; a new session is created. The test provider is

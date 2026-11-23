@@ -33,7 +33,8 @@
  * Env:
  *   DSH_PRODUCT_INTEGRATION_RUNTIME  runtime root (default .demo/product-integration-v1/runtime)
  *   DSH_PRODUCT_INTEGRATION_KEEP=1   keep existing agent homes (default: wipe)
- *   DSH_AGENT_PROVIDER / DSH_AGENT_MODEL  LLM route (default opencode-go / deepseek-v4-flash)
+ *   DSH_AGENT_PROVIDER / DSH_AGENT_MODEL  LLM route (default: the canonical
+ *                          built-in openai-codex / gpt-5.6-luna)
  * Exit 0 on full acceptance, 1 on failed assertion, 2 on infra failure.
  */
 
@@ -44,6 +45,7 @@ import {
 } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { cliBin, provisionAgentHome, REPO } from './demo-home.mjs'
+import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../packages/agent-provisioning/src/shared-codex.js'
 import { AgentDefinition } from '../packages/agent-definition/src/definition.js'
 import { adoptAgents } from '../packages/agent-definition/src/config.js'
 import { apply as applyBootstrap } from '../packages/workspace-bootstrap/src/index.js'
@@ -56,8 +58,8 @@ const CONTROL_HOME = join(RUNTIME, 'control', 'home')
 const AGENTS_CONFIG = join(RUNTIME, 'control', 'agents.json')
 const BINDINGS_STORE = join(RUNTIME, 'control', 'bindings.json')
 const KEEP = process.env.DSH_PRODUCT_INTEGRATION_KEEP === '1'
-const PROVIDER = process.env.DSH_AGENT_PROVIDER ?? 'opencode-go'
-const MODEL = process.env.DSH_AGENT_MODEL ?? 'deepseek-v4-flash'
+const PROVIDER = process.env.DSH_AGENT_PROVIDER ?? CANONICAL_DEFAULT_MODEL_ROUTE.provider
+const MODEL = process.env.DSH_AGENT_MODEL ?? CANONICAL_DEFAULT_MODEL_ROUTE.model
 const MAX_TOKENS = 8192
 const AGENT_PROFILE = 'agent-core-integration-agent'
 const CONTROL_PROFILE = 'agent-core-integration'

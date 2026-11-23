@@ -30,8 +30,9 @@
  *
  * Env:
  *   DSH_HARNESS_ROOT       harness checkout (auto-resolved, sibling of repo)
- *   DSH_AGENT_PROVIDER     model provider for spawned agents (default opencode-go)
- *   DSH_AGENT_MODEL        model for spawned agents (default deepseek-v4-flash)
+ *   DSH_AGENT_PROVIDER     model provider for spawned agents (default: the
+ *                          canonical openai-codex)
+ *   DSH_AGENT_MODEL        model for spawned agents (default gpt-5.6-luna)
  *   FEISHU_CREDS_PATH      feishu credentials (recording seam when absent)
  *
  * Signals: SIGTERM / SIGINT → graceful stop (scheduler.stop() → dispose

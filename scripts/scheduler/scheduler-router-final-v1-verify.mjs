@@ -46,7 +46,8 @@
  *   DSH_SRF_FEISHU=0                 disable real feishu delivery phase
  *   DSH_SRF_TEST_CHAT                chat id for announce (default the canary
  *                                    test group oc_92332c45c1cac2ef89857abfee8ed762)
- *   DSH_AGENT_PROVIDER / DSH_AGENT_MODEL   LLM route (default opencode-go / deepseek-v4-flash)
+ *   DSH_AGENT_PROVIDER / DSH_AGENT_MODEL   LLM route (default: the canonical
+ *                                          built-in openai-codex / gpt-5.6-luna)
  * Exit 0 on full acceptance, 1 on failed assertion, 2 on infra failure.
  */
 

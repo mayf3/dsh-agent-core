@@ -43,7 +43,8 @@
  * Env:
  *   DSH_DELIVERY_V0_RUNTIME    runtime root (default .demo/agent-router-delivery-v0/runtime)
  *   DSH_DELIVERY_V0_KEEP=1     keep existing agent homes (default: wipe)
- *   DSH_AGENT_PROVIDER/MODEL   LLM route (default opencode-go / deepseek-v4-flash)
+ *   DSH_AGENT_PROVIDER/MODEL   LLM route (default: the canonical built-in
+ *                              openai-codex / gpt-5.6-luna)
  * Exit 0 on full acceptance, 1 on failed assertion, 2 on infra failure.
  */
 

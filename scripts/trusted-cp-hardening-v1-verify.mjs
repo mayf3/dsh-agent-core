@@ -40,6 +40,7 @@ import {
 } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { cliBin, provisionAgentHome, REPO } from './demo-home.mjs'
+import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../packages/agent-provisioning/src/shared-codex.js'
 import { AgentDefinition } from '../packages/agent-definition/src/definition.js'
 import { adoptAgents } from '../packages/agent-definition/src/config.js'
 
@@ -91,19 +92,15 @@ function cleanupTrustedControlPlanes() {
 const AUTH_ORIGIN = 'http://127.0.0.1:4001'
 const FORUM_ORIGIN = 'http://127.0.0.1:3460'
 
-// --- TRUSTED_CP_AGENT_DEFINITION_COMPAT_V1: acceptance-only model override ---
-// The model provider used by the default (pi-ai catalog) "opencode-go" route
-// hit a 429 QUOTA boundary (external provider monthly-usage limit — not a
-// code issue). For THIS acceptance run only, we point the trusted control
-// plane's test-home at a different, currently-available provider/model and
-// inject its API key at runtime. This does NOT touch the production model
-// default, the install script, or /Users/authsvc/.dsh.
-const ACCEPTANCE_MODEL = 'deepseek-v4-flash'
-const ACCEPTANCE_PROVIDER = 'oc-go'
-const ACCEPTANCE_PROVIDER_API = 'openai-completions'
-const ACCEPTANCE_PROVIDER_BASE_URL = 'https://opencode.ai/zen/go/v1'
-const ACCEPTANCE_KEY_ENV = 'OC_GO_API_KEY'
-const ACCEPTANCE_KEY_FILE = '/Users/yanfenma/.claude/oc-go.txt'
+// --- acceptance model route = the canonical built-in default -----------------
+// The retired legacy Go provider (the former default and the former 429-quota
+// workaround target here) is retired end-to-end (Owner standing directive,
+// r16). The acceptance runs on the canonical Luna route like production does:
+// no synthetic settings provider, no API-key injection (the canonical route
+// authenticates through the operator-owned shared OAuth store and fails loud
+// with credential_missing when it is absent — never a silent pass).
+const ACCEPTANCE_MODEL = CANONICAL_DEFAULT_MODEL_ROUTE.model
+const ACCEPTANCE_PROVIDER = CANONICAL_DEFAULT_MODEL_ROUTE.provider
 
 const AGENT_PROFILE = 'agent-core-integration-agent'
 const CONTROL_PROFILE = 'agent-core-integration'
@@ -323,38 +320,20 @@ function provisionChildRuntime(agentA, agentB) {
 
 // ---------------------------------------------------------------- cp boot
 
-/** Load the acceptance-only API key into the process env (never printed, never
- *  committed, never written into the persisted report). Consumed by the CP /
- *  child via pi-ai's `apiKeyEnv` reference for the oc-go route. */
-function injectOcGoKey() {
-  if (!existsSync(ACCEPTANCE_KEY_FILE)) {
-    throw new Error(`acceptance model key file missing: ${ACCEPTANCE_KEY_FILE}`)
-  }
-  const key = readFileSync(ACCEPTANCE_KEY_FILE, 'utf8').trim()
-  if (key === '') throw new Error('acceptance model key file is empty')
-  process.env[ACCEPTANCE_KEY_ENV] = key
-}
-
-/** Acceptance-only override of the settings.yaml files the trusted CP and each
- *  child actually load, so they route to the oc-go provider (currently
- *  available model). Applies ONLY to the trusted test-home and the per-agent
- *  child homes used by this verify run — never to /Users/authsvc/.dsh or the
- *  install script. Preserves every other existing setting. Re-owns the files
- *  to authsvc (CP) / yanfenma (children) so they remain readable by the
- *  process that loads them.
+/** Acceptance-only normalization of the settings.yaml files the trusted CP and
+ *  each child actually load, so they carry the canonical built-in default and
+ *  no retired provider registration inherited from the settings source.
+ *  Applies ONLY to the trusted test-home and the per-agent child homes used by
+ *  this verify run — never to /Users/authsvc/.dsh or the install script.
+ *  Preserves every other existing setting. Re-owns the files to authsvc (CP) /
+ *  yanfenma (children) so they remain readable by the process that loads them.
  */
-function applyAcceptanceModelOverride(agentA, agentB) {
-  // Provider declaration (oc-go) under llm-pi-ai.providers.
+function applyCanonicalModelSettings(agentA, agentB) {
+  // Providers dict stays present and EMPTY: the openai-codex provider
+  // self-registers via the dsh-codex plugin mount, not settings.
   const providersBlock = [
     'llm-pi-ai:',
     '  providers:',
-    `    ${ACCEPTANCE_PROVIDER}:`,
-    `      apiKeyEnv: ${ACCEPTANCE_KEY_ENV}`,
-    `      api: ${ACCEPTANCE_PROVIDER_API}`,
-    `      baseURL: ${ACCEPTANCE_PROVIDER_BASE_URL}`,
-    '      displayName: oc-go',
-    '      models:',
-    `        - id: ${ACCEPTANCE_MODEL}`,
   ].join('\n')
 
   // Default route -> acceptance provider/model.
@@ -404,12 +383,10 @@ function applyAcceptanceModelOverride(agentA, agentB) {
     chmodSync(path, mode)
   }
   record('MODEL_OVERRIDE_APPLIED', true,
-    `${ACCEPTANCE_PROVIDER}/${ACCEPTANCE_MODEL} -> trusted test home + child homes only (production default untouched)`)
+    `${ACCEPTANCE_PROVIDER}/${ACCEPTANCE_MODEL} -> trusted test home + child homes only (production default untouched; key injection retired, REASON=oc-go-retired)`)
 }
 
 function controlEnv(extra = {}) {
-  const modelKey = readFileSync(join(AUTHSVC_SETTINGS, '.credentials.yaml'), 'utf8')
-    .match(/^OPENCODE_GO_API_KEY:\s*"?([^"\n]+)"?/m)?.[1] ?? ''
   return {
     ...process.env,
     HOME: '/Users/authsvc',
@@ -432,14 +409,11 @@ function controlEnv(extra = {}) {
     DSH_AGENT_CHILD_UID: String(USER_YANFENMA.uid),
     DSH_AGENT_CHILD_GID: String(USER_YANFENMA.gid),
     DSH_AGENT_SPAWN_HELPER: HELPER,
-    // Acceptance-only model route for the child: agent-router/process.js
-    // reads DSH_AGENT_PROVIDER (~= 'opencode-go') to initialize the child
-    // model. Point it at the acceptance provider (oc-go) so the routed child
-    // uses a currently-available provider/model. Production default untouched.
+    // Model route for the routed child: the canonical built-in default
+    // (the router's own process default composes from this exact constant),
+    // so the child runs the production route. Production default untouched.
     DSH_AGENT_PROVIDER: ACCEPTANCE_PROVIDER,
     DSH_AGENT_MODEL: ACCEPTANCE_MODEL,
-    [ACCEPTANCE_KEY_ENV]: process.env[ACCEPTANCE_KEY_ENV] ?? '',
-    OPENCODE_GO_API_KEY: modelKey,
     PRODUCT_API_ENABLED: '1',
     PRODUCT_API_PORT: String(API_PORT),
     FEISHU_ENABLED: '0',
@@ -619,11 +593,13 @@ async function main() {
   cleanupTrustedControlPlanes()
   const { agentA, agentB } = await seedTrustedConfig()
   provisionChildRuntime(agentA, agentB)
-  // Acceptance-only model override (external 429 QUOTA on the default route):
-  // point the trusted test-home at oc-go and inject its key at runtime. Never
-  // touches the production default, the install script, or /Users/authsvc/.dsh.
-  injectOcGoKey()
-  applyAcceptanceModelOverride(agentA, agentB)
+  // Acceptance model route = the canonical built-in default. The former
+  // the retired provider's quota-override key injection has no canonical
+  // equivalent (REASON=oc-go-retired): the canonical route authenticates through the
+  // operator-owned shared OAuth store, so REAL_BROKER_SMOKE fails loud with
+  // credential_missing when that store is absent. Never touches the
+  // production default, the install script, or /Users/authsvc/.dsh.
+  applyCanonicalModelSettings(agentA, agentB)
 
   // ------------------------------------------------------------- phase 3
   console.log('\n[phase 3] booting the REAL control plane from the TRUSTED install as uid 505')
@@ -748,7 +724,7 @@ async function finish(cp, { agentA, agentB, attackOk }) {
     'ROUTER_CORE_CHANGE = NONE',
     'AGENT_DEFINITION_PRODUCT_CHANGE = NONE',
     'KERNEL_CHANGE = NONE',
-    `ACCEPTANCE_MODEL_OVERRIDE = ${ACCEPTANCE_PROVIDER}/${ACCEPTANCE_MODEL} (acceptance-only; key injected at runtime, never committed)`,
+    `ACCEPTANCE_MODEL_OVERRIDE = ${ACCEPTANCE_PROVIDER}/${ACCEPTANCE_MODEL} (acceptance-only normalization; retired legacy key injection removed, REASON=oc-go-retired)`,
     `PRODUCTION_MODEL_CONFIG_CHANGE = NONE`,
     `AUTH_PRODUCTION_BOUNDARY = ${verdict === 'PASS' ? 'CLOSED' : 'NOT_CLOSED'}`,
     `TESTS = ${checks.filter((c) => c.ok).length}/${checks.length} PASS`,

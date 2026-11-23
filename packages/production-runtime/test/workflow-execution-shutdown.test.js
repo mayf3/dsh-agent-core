@@ -42,7 +42,7 @@ test('composition drains auto-reconcile before workflow, scheduler and owned Rou
   })
   const { layout } = await seedRuntime(t)
   const runtime = await composeProductionRuntime({
-    layout, globalRoute: { provider: 'oc-go', model: 'deepseek-v4-flash' },
+    layout, globalRoute: { provider: 'openai-codex', model: 'gpt-5.6-luna' },
     productApi: { enabled: false, port: 0 }, notificationIngress: { enabled: false, port: 0 },
     processFactory: opts => new FakeProc(opts), log: silentLog,
   })
@@ -166,7 +166,7 @@ for (const failedStage of ['workflowExecution', 'scheduler']) {
   test(`runtime stop drains the owned worker after ${failedStage} stop rejects`, async (t) => {
     const { layout } = await seedRuntime(t)
     const runtime = await composeProductionRuntime({
-      layout, globalRoute: { provider: 'oc-go', model: 'deepseek-v4-flash' },
+      layout, globalRoute: { provider: 'openai-codex', model: 'gpt-5.6-luna' },
       productApi: { enabled: false, port: 0 }, notificationIngress: { enabled: false, port: 0 },
       processFactory: (opts) => new FakeProc(opts), log: silentLog,
     })
@@ -257,7 +257,7 @@ test('concurrent plugin disposal callers wait the same owned cleanup', async () 
 test('runtime stop never reports clean success after an owned worker shutdown rejects', async (t) => {
   const { layout } = await seedRuntime(t)
   const runtime = await composeProductionRuntime({
-    layout, globalRoute: { provider: 'oc-go', model: 'deepseek-v4-flash' },
+    layout, globalRoute: { provider: 'openai-codex', model: 'gpt-5.6-luna' },
     productApi: { enabled: false, port: 0 }, notificationIngress: { enabled: false, port: 0 },
     processFactory: (opts) => new FakeProc(opts), log: silentLog,
   })
