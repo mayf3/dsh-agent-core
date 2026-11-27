@@ -1,6 +1,6 @@
 # Model-centered pilot: workflow execution recovery
 
-**Status:** analysis + model mapping complete; Lean kernel verification and consumer PR CI pending.
+**Status:** analysis + model mapping complete; Lean kernel verification passed in primitives workflow run 45917271049; consumer Rust/JS execution remains pending.
 **Scope:** read-only pilot of the existing same-attempt recovery and delivery fence. This report is not a Product Contract, implementation authorization, or production authorization.
 
 ## 1. Exact source and authority
@@ -90,7 +90,7 @@ Specific gaps:
 
 ## 7. Pilot conclusion
 
-**Model fit:** PASS for the narrow same-attempt / pre-delivery fence slice, subject to Lean CI.
+**Model fit:** PASS for the narrow same-attempt / pre-delivery fence slice, Lean model CI passed; implementation execution remains pending.
 **Implementation mapping:** substantially identified; exact execution evidence is pending.
 **Formal implementation refinement:** NOT PROVED.
 **Production / unattended end-to-end acceptance:** NOT RUN / NOT CLAIMED.
