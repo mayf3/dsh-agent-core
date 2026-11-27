@@ -8,7 +8,7 @@
 - Consumer source snapshot inspected: `main@5fe3026eed2d7dcb1972af9c24abded5eb720fcb`.
 - Governing accepted authority: `AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V2` and `AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V5`.
 - Paired business authority remains `mayf3/svc-workflow`; svc-workflow owns workflow instance/visit/assignee/version and business transition truth.
-- Shared model candidate: `mayf3/primitives` PR #12, modules `AgentWorkflow.ExecutionRecovery` and `AgentWorkflow.Outbox`. The model PR must pass its own Lean workflow before it can be treated as kernel-checked.
+- Merged shared model: `mayf3/primitives` commit `9500d8e24730fdbce334b8fdcde71830838c21f4` (PR #12), modules `AgentWorkflow.ExecutionRecovery` and `AgentWorkflow.Outbox`. Pinned Lean 4.19.0 CI passed at workflow run `45917514882` (`PASS_CONDITIONAL_MODEL_PROOFS`; 56 Agent Workflow theorem declarations audited).
 - No accepted Spec is amended or superseded by this pilot.
 
 The governing authorities explicitly preserve UNKNOWN as distinct from success/failure, constrain automatic recovery to eligible pre-delivery situations, and retain separate production-apply authorization. The V2 PPR authority also carries the blocked recovery and read-only responsibility protocols; this pilot does not widen them.
