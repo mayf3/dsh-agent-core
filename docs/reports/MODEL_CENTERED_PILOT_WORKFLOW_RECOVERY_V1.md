@@ -84,7 +84,8 @@ The repository already has focused negative and restart tests; this pilot maps t
 Specific gaps:
 1. The abstract model does not represent Node.js crash points, fsync failure, partial append, directory-entry durability, or cross-process lock implementation.
 2. It does not prove the Router call has exactly the intended side effect or that a remote ACK is truthful.
-3. It does not model all SRE stale-reentry, Owner-resume, RTH terminal-handoff, or scheduler fairness rules. Those are preserved as external accepted obligations, not silently generalized.
+3. The model's UNKNOWN read-only self-loop abstracts original-request correlation, not the full evidence classifier. The implementation path is `reconcileDeliveries()` / `reconcileDeliveryEvidence()`; `recovery/readback.js` is post-delivery business-state readback only.
+4. It does not model all SRE stale-reentry, Owner-resume, RTH terminal-handoff, or scheduler fairness rules. Those are preserved as external accepted obligations, not silently generalized.
 5. The outbox/Agent Workflow generic Lean models do not prove the Core JS implementation. A future refinement model would need explicit event-log replay and crash-prefix semantics.
 
 ## 7. Pilot conclusion
