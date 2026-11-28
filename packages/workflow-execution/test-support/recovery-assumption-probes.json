@@ -1,0 +1,55 @@
+{
+  "schema_version": "core-recovery-assumption-profile/v1",
+  "profile_id": "core-recovery-isolated",
+  "core_revision": "ee4dbefb7f6a8d4726392ed5fa9590fb345b2c1e",
+  "node_version": "26.7.0",
+  "loaded_sources": [
+    {
+      "path": "packages/workflow-execution/src/ledger.js",
+      "export": "ExecutionLedger",
+      "sha256": "7999048f35828027660b580763dd8b42a48b644dc01366f9fe6cfb0e903ed2a2"
+    },
+    {
+      "path": "packages/workflow-execution/src/engine.js",
+      "export": "createWorkflowExecutionEngine",
+      "sha256": "d9dfaf86dd5b52d351f4bdf44b971f68a89be8f86c5586c71fbd59dda63a7dd4"
+    },
+    {
+      "path": "packages/agent-router/src/reconciliation/store.js",
+      "export": "TurnReconciliationStore",
+      "sha256": "9c5fa22a8fb62f1064a4362918f217fd9fa4ad83acd35d1d3a137e60c27ac410"
+    }
+  ],
+  "probes": [
+    {
+      "assumption_id": "CORE.ASM.RESTART-WAL",
+      "probe_id": "CORE.PROBE.RESTART-WAL",
+      "kind": "ledger",
+      "owner": "mayf3/dsh-agent-core",
+      "proposition": "After a local writer is killed at the append boundary, a fresh Core reader in the isolated scratch filesystem replays the same delivery_started attempt identity and native ledger digest.",
+      "ttl_seconds": 300,
+      "failure_behavior": { "condition_false": "FAIL", "timeout": "UNKNOWN" },
+      "blind_spots": ["Power loss, disk/controller failure and production mount or storage health", "Other crash windows, the whole ledger, or continuous fsync and OwnerLock guarantees", "Workflow delivery and original business acceptance"]
+    },
+    {
+      "assumption_id": "CORE.ASM.RECOVERY-RUNTIME",
+      "probe_id": "CORE.PROBE.RECOVERY-RUNTIME",
+      "kind": "runtime",
+      "owner": "mayf3/dsh-agent-core",
+      "proposition": "A fresh isolated child executes on the declared Node release and actually loads the three pinned ledger, engine and Router store entry sources with the expected exports.",
+      "ttl_seconds": 300,
+      "failure_behavior": { "condition_false": "FAIL", "timeout": "UNKNOWN" },
+      "blind_spots": ["Transitive dependency behavior, installed production version, deployment and continuous process liveness", "Fair scheduling and downstream availability"]
+    },
+    {
+      "assumption_id": "CORE.ASM.ROUTER-READBACK",
+      "probe_id": "CORE.PROBE.ROUTER-READBACK",
+      "kind": "router",
+      "owner": "mayf3/dsh-agent-core",
+      "proposition": "At observation time the isolated loopback channel returns the persisted Core Router receipt for the original request identity.",
+      "ttl_seconds": 300,
+      "failure_behavior": { "condition_false": "FAIL", "timeout": "UNKNOWN" },
+      "blind_spots": ["The production Router uses an in-process dependency and follows a separate runtime path", "The successful query establishes receipt readback and leaves the business effect undecided", "Nonresponse or an unrecognized response does not establish Router state"]
+    }
+  ]
+}
